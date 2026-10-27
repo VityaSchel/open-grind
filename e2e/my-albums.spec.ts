@@ -89,7 +89,7 @@ test.describe("my albums", () => {
 	test("Back returns to My Albums as it was, not a loading grid", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openSharedAlbum(page, { platform: "macos" });
 		const loadingShown = await watchRendered(page, {
 			selector: LOADING_TILE,
 		});
@@ -106,7 +106,7 @@ test.describe("my albums", () => {
 	test("an album opens on its own name, date and item count", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		await page.locator(SHARED_ALBUM).click();
 
 		await expect(page).toHaveURL(/\/albums\/903$/);
@@ -123,7 +123,7 @@ test.describe("my albums", () => {
 	test("a rename reaches the server, not just the field", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		await page.locator(SHARED_ALBUM).click();
 
 		const name = page.getByRole("textbox", { name: "Album name" });
@@ -141,7 +141,7 @@ test.describe("my albums", () => {
 	test("the preview opens the album the way a message does", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		await page.locator(SHARED_ALBUM).click();
 
 		await page
@@ -154,7 +154,7 @@ test.describe("my albums", () => {
 	test("deleting an album confirms first, then walks back to a grid one short", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		const before = await page.locator(ALBUM_TILE).count();
 		const atAlbums = await page.evaluate(
 			() => navigation.currentEntry!.index,
@@ -182,7 +182,7 @@ test.describe("my albums", () => {
 	});
 
 	test("Forward does not reopen a deleted album", async ({ page }) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		const atAlbums = await historyEntries(page);
 		await page.locator(SHARED_ALBUM).click();
 		await page
@@ -220,7 +220,7 @@ test.describe("my albums", () => {
 	test("a removal is marked, undoable, and only lands on save", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openSharedAlbum(page, { platform: "macos" });
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 
 		const save = page.getByRole("button", { name: "Save changes" });
@@ -258,7 +258,7 @@ test.describe("my albums", () => {
 	});
 
 	test("leaving the editor abandons pending edits", async ({ page }) => {
-		await openSharedAlbum(page);
+		await openSharedAlbum(page, { platform: "macos" });
 		await page
 			.getByRole("button", { name: /^Remove album photo in slot 1$/ })
 			.click();
@@ -280,7 +280,7 @@ test.describe("my albums", () => {
 	test("the add cell leaves the grid once the albums reach the cap", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		const below = await page.locator(ALBUM_TILE).count();
 		await expect(
 			page.getByRole("link", { name: "Add album" }),

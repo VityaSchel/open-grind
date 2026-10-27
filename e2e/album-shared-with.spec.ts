@@ -23,7 +23,7 @@ function listMetrics(page: Page) {
 }
 
 async function openSharedWith(page: Page) {
-	await openAlbums(page);
+	await openAlbums(page, { platform: "macos" });
 	await page.locator(SHARED_ALBUM).click();
 
 	const sharedWith = page.getByRole("button", { name: /^Shared with/ });
@@ -38,7 +38,7 @@ test.describe("album shared-with drawer", () => {
 	test("the badge counts everyone the album is shared with", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		await page.locator(SHARED_ALBUM).click();
 
 		await expect(

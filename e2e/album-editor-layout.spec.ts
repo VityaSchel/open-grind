@@ -161,7 +161,7 @@ for (const { viewport, twoColumns } of LAYOUTS) {
 			page,
 		}) => {
 			await recordLoadingSkeleton(page);
-			await openAlbums(page);
+			await openAlbums(page, { platform: "macos" });
 			await page.locator(SHARED_ALBUM).click();
 			await expect(
 				page.getByRole("button", { name: "Preview album" }),
@@ -191,7 +191,7 @@ for (const { viewport, twoColumns } of LAYOUTS) {
 		test("a new album lays out its header like the editor", async ({
 			page,
 		}) => {
-			await openAlbum(page, SHARED_ALBUM);
+			await openAlbum(page, SHARED_ALBUM, { platform: "macos" });
 			const editor = await measureHeader(page);
 
 			await back(page);

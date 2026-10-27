@@ -13,7 +13,7 @@ test.describe("media sheet titles", () => {
 	test("the album's previous uploads sheet is titled Previous uploads", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openSharedAlbum(page, { platform: "macos" });
 		await page
 			.getByRole("button", { name: "Add photos or videos" })
 			.click();
@@ -31,7 +31,7 @@ test.describe("media sheet titles", () => {
 	test("the chat attachments sheet is named Attachments for screen readers only", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		const sheet = page.getByRole("dialog", { name: "Attachments" });
 		await expect(sheet).toBeVisible();

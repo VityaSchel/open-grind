@@ -131,10 +131,7 @@ function message({
 
 async function openConversation(
 	page: Page,
-	{
-		width,
-		platform = "macos",
-	}: { width: number; platform?: SupportedPlatform },
+	{ width, platform }: { width: number; platform: SupportedPlatform },
 ): Promise<void> {
 	await page.setViewportSize({ width, height: 800 });
 	await installTauriShim(page, { platform });
@@ -232,7 +229,7 @@ for (const { name, width } of BREAKPOINTS) {
 	test(`a message fits its conversation on ${name} (${width}px)`, async ({
 		page,
 	}) => {
-		await openConversation(page, { width });
+		await openConversation(page, { platform: "macos", width });
 		const { paneLeft, paneRight, paneWidth, paneSidewaysOverflow, rows } =
 			await measure(page);
 

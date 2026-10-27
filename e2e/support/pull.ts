@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./app";
 
 export const BUTTON_ROW_PX = 56;
@@ -62,8 +63,11 @@ export async function installFakeOverscroll(page: Page): Promise<void> {
 	});
 }
 
-export async function openInbox(page: Page) {
-	await installTauriShim(page, { platform: "macos" });
+export async function openInbox(
+	page: Page,
+	{ platform }: { platform: SupportedPlatform },
+) {
+	await installTauriShim(page, { platform });
 	await installFakeOverscroll(page);
 	await page.goto("/chat");
 	await page

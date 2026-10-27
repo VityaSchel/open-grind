@@ -37,7 +37,7 @@ async function expectSingleStop(page: Page) {
 test("swipes replace the history entry, so Back and Browse return to the grid", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const depth = await historyDepth(page);
 	const index = await historyIndex(page);
 
@@ -88,7 +88,7 @@ test("a profile opened from Taps stands alone", async ({ page }) => {
 test("a palette hop stands alone, and Back returns to the swiped track", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	await swipeToNext(page, { tiles, landing: 2 });
 
 	await page.keyboard.press("ControlOrMeta+k");
@@ -108,7 +108,7 @@ test("a palette hop stands alone, and Back returns to the swiped track", async (
 });
 
 test("coming back from a chat keeps the swipe track", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 
 	await activeProfilePane(page)
 		.getByRole("link", { name: "Write a message..." })
@@ -124,7 +124,7 @@ test("coming back from a chat keeps the swipe track", async ({ page }) => {
 });
 
 test("a profile hidden from the pager keeps its place", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 
 	await activeProfilePane(page)
 		.getByRole("button", { name: "Profile menu" })
@@ -174,7 +174,7 @@ async function tileRect(page: Page, profileId: number) {
 }
 
 test("Back reveals the last swiped profile in the grid", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 0 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 0 });
 
 	for (let landing = 1; landing <= 24; landing++) {
 		await swipeProfile(page);
@@ -202,7 +202,7 @@ test("Back reveals the last swiped profile in the grid", async ({ page }) => {
 test("Back lifts a swiped profile out from under the navigation bar", async ({
 	page,
 }) => {
-	const tiles = await openBrowse(page);
+	const tiles = await openBrowse(page, { platform: "macos" });
 	const band = await gridBand(page);
 	const rects = await Promise.all(
 		tiles.map(async (id) => ({ id, rect: await tileRect(page, id) })),

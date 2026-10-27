@@ -19,7 +19,7 @@ export function albumTileNamed(name: string): string {
 
 export async function openAlbums(
 	page: Page,
-	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
+	{ platform }: { platform: SupportedPlatform },
 ): Promise<void> {
 	await installTauriShim(page, { platform });
 	await serveImages(page, CHAT_MEDIA_HOST);
@@ -31,7 +31,7 @@ export async function openAlbums(
 export async function openAlbum(
 	page: Page,
 	tile: string,
-	{ platform }: { platform?: SupportedPlatform } = {},
+	{ platform }: { platform: SupportedPlatform },
 ): Promise<void> {
 	await openAlbums(page, { platform });
 	await page.locator(tile).click();
@@ -42,7 +42,7 @@ export async function openAlbum(
 
 export function openSharedAlbum(
 	page: Page,
-	{ platform }: { platform?: SupportedPlatform } = {},
+	{ platform }: { platform: SupportedPlatform },
 ): Promise<void> {
 	return openAlbum(page, SHARED_ALBUM, { platform });
 }

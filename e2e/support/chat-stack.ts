@@ -24,9 +24,9 @@ export const backToChats = (page: Page) =>
 export async function openInbox(
 	page: Page,
 	{
-		platform = "macos",
+		platform,
 		injectEvents = false,
-	}: { platform?: SupportedPlatform; injectEvents?: boolean } = {},
+	}: { platform: SupportedPlatform; injectEvents?: boolean },
 ) {
 	await installTauriShim(page, { platform });
 	if (injectEvents) await installEventInjection(page);

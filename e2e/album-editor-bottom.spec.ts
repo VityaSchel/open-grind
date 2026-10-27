@@ -108,7 +108,7 @@ test.describe("scrolled to the bottom with unsaved changes", () => {
 		page,
 	}) => {
 		test.setTimeout(120_000);
-		await openAlbum(page, TWO_ROW_ALBUM);
+		await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
 		await makeDirty({
 			page,
 			edit: () =>
@@ -150,7 +150,7 @@ test("on a short album the save button sits where it sticks on a long one", asyn
 }) => {
 	test.setTimeout(120_000);
 	await page.setViewportSize({ width: 420, height: 1100 });
-	await openAlbum(page, SHARED_ALBUM);
+	await openAlbum(page, SHARED_ALBUM, { platform: "macos" });
 	await makeDirty({
 		page,
 		edit: () =>

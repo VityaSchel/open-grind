@@ -37,7 +37,7 @@ test("the navbar avatar shows the main photo saved in Edit profile without a rel
 }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, AVATAR_HOST);
-	await openSettings(page);
+	await openSettings(page, { platform: "macos" });
 
 	const avatar = page.locator(NAVBAR_AVATAR);
 	await expect(avatar).toHaveAttribute("src", LOADED_SRC);

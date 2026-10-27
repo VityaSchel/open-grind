@@ -24,7 +24,7 @@ test.describe("video player size", () => {
 	test("a clip fills the screen between the insets, whatever its cover's shape", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 
 		const area = await safeArea(page);
 		expect(area.y, "test insets are active").toBeGreaterThan(0);
@@ -34,7 +34,7 @@ test.describe("video player size", () => {
 	test("a clip follows the insets when they move without a resize", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 
 		for (const insets of [CUTOUT_LEFT, CUTOUT_RIGHT]) {
 			await sendInsets(page, insets);

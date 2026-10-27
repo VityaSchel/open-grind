@@ -61,7 +61,7 @@ async function pagerHeldAt(page: Page, { fraction }: { fraction: number }) {
 test("a held finger pulls the next profile in and commits only once it lifts", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const { width, activePosition } = await pagerGeometry(page);
 	expect(activePosition).toBe(1);
 	const box = (await profilePager(page).boundingBox())!;
@@ -119,7 +119,7 @@ test("a held finger pulls the next profile in and commits only once it lifts", a
 });
 
 test("a finger held between two profiles never commits", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 
 	const touch = await pagerHeldAt(page, { fraction: 0.6 });
 	const held = await pagerGeometry(page);
@@ -140,7 +140,7 @@ test("a finger held between two profiles never commits", async ({ page }) => {
 test("a finger held past halfway locks only the profile being left, and landing unlocks it", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const left = paneAt(page, { position: 1 });
 	const incoming = paneAt(page, { position: 2 });
 
@@ -160,7 +160,7 @@ test("a finger held past halfway locks only the profile being left, and landing 
 test("a wheel over the profile being left scrolls nothing in it, while the incoming profile scrolls", async ({
 	page,
 }) => {
-	await openGridProfile(page, { nth: 1 });
+	await openGridProfile(page, { platform: "macos", nth: 1 });
 	const pager = profilePager(page);
 	const left = paneAt(page, { position: 1 });
 	const incoming = paneAt(page, { position: 2 });
@@ -186,7 +186,7 @@ test("a wheel over the profile being left scrolls nothing in it, while the incom
 test("a click over the profile being left reaches nothing in it, while the incoming profile takes one", async ({
 	page,
 }) => {
-	await openGridProfile(page, { nth: 1 });
+	await openGridProfile(page, { platform: "macos", nth: 1 });
 	const touch = await pagerHeldAt(page, { fraction: 0.65 });
 	await expect
 		.poll(async () => {
@@ -221,7 +221,7 @@ test("a click over the profile being left reaches nothing in it, while the incom
 });
 
 test("a drag that starts on the photo pages too", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 
 	await swipeProfile(page, {
 		on: activeProfilePane(page).locator(".carousel"),
@@ -232,7 +232,7 @@ test("a drag that starts on the photo pages too", async ({ page }) => {
 });
 
 test("nothing on screen moves when a swipe commits", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const touch = await pagerHeldAt(page, { fraction: 0.6 });
 	const frames = page.evaluate(
 		({ pagerSelector, stopSelector, landedSelector }) => {
@@ -294,7 +294,7 @@ test("nothing on screen moves when a swipe commits", async ({ page }) => {
 test("a second flick the moment the first lands carries on to the profile after", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const depth = await historyDepth(page);
 
 	await swipeProfile(page);
@@ -307,7 +307,7 @@ test("a second flick the moment the first lands carries on to the profile after"
 });
 
 test("a short drag springs back without committing", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const depth = await historyDepth(page);
 
 	const slowerThanAFling = 60;
@@ -323,7 +323,7 @@ test("a short drag springs back without committing", async ({ page }) => {
 test("a vertical drag scrolls the profile and does not page", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const { scrollLeft } = await pagerGeometry(page);
 	const box = (await profilePager(page).boundingBox())!;
 
@@ -349,7 +349,7 @@ test("a vertical drag scrolls the profile and does not page", async ({
 test("only the active profile is reachable, before and after a swipe", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const panes = page.locator(PANE);
 	const neighbors = page.locator(NEIGHBOR_PANE);
 
@@ -380,7 +380,7 @@ test("only the active profile is reachable, before and after a swipe", async ({
 });
 
 test("the first profile has nothing before it to page to", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 0 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 0 });
 	expect((await pagerGeometry(page)).scrollLeft).toBe(0);
 
 	await swipeProfile(page, { from: 0.2, to: 0.8 });
@@ -393,7 +393,7 @@ test("the first profile has nothing before it to page to", async ({ page }) => {
 test("the next profile's photo is the very image that lands", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const nextPhoto = paneAt(page, { position: 2 })
 		.locator(".carousel img")
 		.first();
@@ -443,7 +443,7 @@ test("the next profile's photo is the very image that lands", async ({
 test("the next profile is fully loaded before it is swiped in", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const next = paneAt(page, { position: 2 });
 
 	await expect(next).toHaveAttribute("aria-hidden", "true");

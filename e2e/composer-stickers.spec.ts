@@ -41,7 +41,7 @@ test.describe("composer stickers sheet", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const { short } = await snapTops(page);
 		const b = await box(page);
 		expect(Math.abs(b.top - short), "opens at the short snap").toBeLessThan(
@@ -51,7 +51,7 @@ test.describe("composer stickers sheet", () => {
 	});
 
 	test("the footer sits at the visible bottom edge", async ({ page }) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const b = await box(page);
 		const bottomEdge = b.viewport - b.safeBottom;
 		expect(b.tabListBottom).toBeLessThanOrEqual(bottomEdge + 2);
@@ -61,7 +61,7 @@ test.describe("composer stickers sheet", () => {
 	test("a wheel drags the sheet continuously instead of snapping", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const start = await box(page);
 		const at = { x: 210, y: start.top + 160 };
 		const tops: number[] = [];
@@ -79,7 +79,7 @@ test.describe("composer stickers sheet", () => {
 	test("touch: one unbroken drag resizes, then scrolls the content", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const start = await box(page);
 		await touch.drag(
@@ -101,7 +101,7 @@ test.describe("composer stickers sheet", () => {
 	test("touch: dragging the content down from full size collapses it", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await expandToFull(page);
 		const touch = await TrustedTouch.attach(page);
 		expect((await box(page)).gridScrollTop).toBe(0);
@@ -115,7 +115,7 @@ test.describe("composer stickers sheet", () => {
 	test("touch: while the content is scrolled, dragging does not collapse it", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await expandToFull(page);
 		const touch = await TrustedTouch.attach(page);
 		await touch.drag(page, { x: 210, y: 520 }, { x: 210, y: 220 });
@@ -130,7 +130,7 @@ test.describe("composer stickers sheet", () => {
 	test("a drag does not select the tile under the finger; a tap does", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const tile = gifTiles(page).first();
 		const rect = (await tile.boundingBox())!;
@@ -164,7 +164,7 @@ test.describe("composer stickers sheet", () => {
 		test(`one ${noun} at a time is selected, and Send shows no count`, async ({
 			page,
 		}) => {
-			await openStickers(page);
+			await openStickers(page, { platform: "macos" });
 			await stickersTab(page, { name: tab }).click();
 			const first = tiles(page).nth(0);
 			const second = tiles(page).nth(1);
@@ -190,7 +190,7 @@ test.describe("composer stickers sheet", () => {
 	test("a sent GIF closes the sheet and plays in the chat", async ({
 		page,
 	}) => {
-		await sendGif(page);
+		await sendGif(page, { platform: "macos" });
 
 		await expect(page.locator(DRAWER)).toHaveCount(0);
 		const newest = page.locator(MESSAGE_ROW).last();
@@ -206,7 +206,7 @@ test.describe("composer stickers sheet", () => {
 	});
 
 	test("a sent GIF lines up with the sent text bubbles", async ({ page }) => {
-		await sendGif(page);
+		await sendGif(page, { platform: "macos" });
 		await expect(page.locator(DRAWER)).toHaveCount(0);
 		await page
 			.getByRole("textbox", { name: "Say something..." })
@@ -232,7 +232,7 @@ test.describe("composer stickers sheet", () => {
 	test("a sent Gaymoji closes the sheet and stays a Gaymoji in the chat", async ({
 		page,
 	}) => {
-		await openGaymoji(page);
+		await openGaymoji(page, { platform: "macos" });
 		const tile = gaymojiTiles(page).nth(2);
 		await expect(tile).toBeVisible();
 		const name = (await tile.getAttribute("aria-label")) ?? "";
@@ -253,7 +253,7 @@ test.describe("composer stickers sheet", () => {
 	test("a Send pill flying out turns back from where it is when a tile is picked again", async ({
 		page,
 	}) => {
-		await openGaymoji(page);
+		await openGaymoji(page, { platform: "macos" });
 		const tile = gaymojiTiles(page).nth(0);
 		await tile.click();
 		await expect(stickerSendButton(page)).toBeVisible();
@@ -337,7 +337,7 @@ test.describe("composer stickers sheet", () => {
 	test("switching tabs keeps the GIF search and its results", async ({
 		page,
 	}) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await gifSearchBox(page).fill("party");
 		const firstResult = gifPanel(page).getByRole("button", {
 			name: "Party GIF 1",
@@ -394,7 +394,7 @@ test.describe("sticker grid layout", () => {
 	}
 
 	test("the grids drop columns as the sheet narrows", async ({ page }) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const panelPadding = await page
 			.locator(DRAWER)
 			.locator(SHEET_PANEL)
@@ -434,7 +434,7 @@ test.describe("sticker grid layout", () => {
 		page,
 	}) => {
 		await holdDemoRequests(page, { pathPrefix: GAYMOJI_MANIFEST_PATH });
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await stickersTab(page, { name: "Gaymoji" }).click();
 		const skeleton = gaymojiPanel(page).locator(STICKER_GRID_SKELETON);
 		await expect(skeleton).toBeVisible();
@@ -464,7 +464,7 @@ test.describe("sticker grid layout", () => {
 	});
 
 	test("GIF tiles are 4:3 and Gaymoji tiles are square", async ({ page }) => {
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		const gifRatios = await visibleTileAspectRatios(page);
 		expect(gifRatios.length).toBeGreaterThan(3);
 		for (const ratio of gifRatios) expect(ratio).toBeCloseTo(4 / 3, 1);
@@ -494,7 +494,11 @@ test.describe("composer sheet tab bars", () => {
 		test(`${trigger}: the tab bar is a progressive blur under the Send pill`, async ({
 			page,
 		}) => {
-			await openComposerSheet(page, { trigger, preferences });
+			await openComposerSheet(page, {
+				platform: "macos",
+				trigger,
+				preferences,
+			});
 			const bar = page
 				.locator(DRAWER)
 				.locator('[data-slot="media-sheet-tab-bar"]');

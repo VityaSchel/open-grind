@@ -111,7 +111,7 @@ test.describe("Gaymoji tab", () => {
 		page,
 	}) => {
 		const requests = await recordDemoRequests(page);
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await page.waitForTimeout(500);
 		const beforeTab = await requests();
 		expect(giphyCalls(beforeTab).length).toBeGreaterThan(0);
@@ -134,7 +134,7 @@ test.describe("Gaymoji tab", () => {
 	test("tiles far below the fold are requested only when scrolled near", async ({
 		page,
 	}) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		const first = gaymojiTiles(page).first();
 		const lastMounted = gaymojiTiles(page).last();
 
@@ -163,7 +163,7 @@ test.describe("Gaymoji tab", () => {
 	test("a loaded Gaymoji sits on a transparent tile; an unrequested one keeps a still muted tone", async ({
 		page,
 	}) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		const first = gaymojiTiles(page).first();
 		const lastMounted = gaymojiTiles(page).last();
 
@@ -193,7 +193,7 @@ test.describe("Gaymoji sections", () => {
 	test("the strip and the titled sections follow the manifest, with Featured's originals last as Other", async ({
 		page,
 	}) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 
 		expect(
 			await gaymojiSectionStrip(page)
@@ -214,7 +214,7 @@ test.describe("Gaymoji sections", () => {
 	test("tapping a section lands its title right under the strip and marks it current", async ({
 		page,
 	}) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 
 		for (const title of ["Holidays", "Body", "Mood"]) {
 			await sectionButton(page, title).click();
@@ -228,7 +228,7 @@ test.describe("Gaymoji sections", () => {
 	test("a tap on the next section glides the collapsed sheet up through its sizes to the title", async ({
 		page,
 	}) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		const collapsed = await box(page);
 		expect(collapsed.sheetScrollTop).toBe(0);
 
@@ -266,7 +266,7 @@ test.describe("Gaymoji sections", () => {
 	test("an expanded sheet keeps an opaque backdrop under its rows, so rows painted late never show the chat", async ({
 		page,
 	}) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		const backdrop = page.locator('[data-slot="sheet-backdrop"]');
 		expect(await backdrop.count()).toBe(0);
 
@@ -326,7 +326,7 @@ test.describe("Gaymoji sections", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		expect(await stripScrollLeft(page)).toBe(0);
 
 		await scrollSheetTo(page, { top: "end" });
@@ -340,7 +340,7 @@ test.describe("Gaymoji sections", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		await page.waitForTimeout(600);
 		const touch = await TrustedTouch.attach(page);
 		const before = await box(page);
@@ -359,7 +359,7 @@ test.describe("Gaymoji sections", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		await page.waitForTimeout(600);
 		const touch = await TrustedTouch.attach(page);
 		const before = await box(page);
@@ -395,7 +395,7 @@ for (const { width, columns } of [
 			page,
 		}) => {
 			const churn = await countGaymojiTileChurn(page);
-			await openGaymoji(page, { stretchPanel: false });
+			await openGaymoji(page, { platform: "macos", stretchPanel: false });
 			await afterTwoFrames(page);
 
 			const opened = await windowLayout(page);
@@ -428,7 +428,7 @@ for (const { width, columns } of [
 		test("scrolling through holds every header still, keeps the view filled and mounts every Gaymoji in its slot", async ({
 			page,
 		}) => {
-			await openGaymoji(page, { stretchPanel: false });
+			await openGaymoji(page, { platform: "macos", stretchPanel: false });
 			await afterTwoFrames(page);
 			const start = await windowLayout(page);
 			expectWindowed(start);
@@ -483,7 +483,7 @@ for (const { width, columns } of [
 		test("a selected Gaymoji stays selected after scrolling out of the window and back", async ({
 			page,
 		}) => {
-			await openGaymoji(page, { stretchPanel: false });
+			await openGaymoji(page, { platform: "macos", stretchPanel: false });
 			const first = gaymojiRegion(page, { title: "Wen Ching" }).getByRole(
 				"button",
 				{ name: FIRST_GAYMOJI, exact: true },
@@ -504,7 +504,7 @@ for (const { width, columns } of [
 		test("a jump lands a far section's title under the strip with its tiles mounted, and the last section's at the end", async ({
 			page,
 		}) => {
-			await openGaymoji(page, { stretchPanel: false });
+			await openGaymoji(page, { platform: "macos", stretchPanel: false });
 			expect(await otherTiles(page).count()).toBe(0);
 
 			await sectionButton(page, "Objects").click();
@@ -545,7 +545,7 @@ test.describe("Gaymoji across a width change", () => {
 			page,
 		}) => {
 			await page.setViewportSize({ width: from, height: 844 });
-			await openGaymoji(page, { stretchPanel: false });
+			await openGaymoji(page, { platform: "macos", stretchPanel: false });
 			await afterTwoFrames(page);
 			await scrollIntoRow(page, {
 				title: "Profile",
@@ -576,7 +576,7 @@ test.describe("Gaymoji across a width change", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 844 });
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { platform: "macos", stretchPanel: false });
 		await afterTwoFrames(page);
 		await scrollSheetTo(page, { top: 1500 });
 

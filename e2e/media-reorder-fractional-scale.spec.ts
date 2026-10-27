@@ -26,6 +26,6 @@ test.use({
 test("photos pushed aside by a held one sit on whole device pixels", async ({
 	page,
 }) => {
-	await openAlbum(page, TWO_ROW_ALBUM);
+	await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
 	await expectPreviewOnDevicePixels({ page, from: 0, to: 4 });
 });

@@ -62,7 +62,7 @@ test("remove and undo stay legible over light, gray and dark photos", async ({
 	page,
 }) => {
 	test.setTimeout(120_000);
-	await openAlbum(page, TWO_ROW_ALBUM);
+	await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
 	for (const ratio of await iconContrastOverPhotos(
 		page,
 		"Remove album photo in slot 1",

@@ -5,6 +5,7 @@ import {
 	type Page,
 } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { installTauriShim, openGrid, TrustedTouch } from "./app";
 
 const GRID_TILE = '.photo-grid a[href^="/profile/"]';
@@ -27,8 +28,11 @@ export function profileUrl(profileId: number): RegExp {
 	return new RegExp(`/profile/${profileId}$`);
 }
 
-export async function openBrowse(page: Page): Promise<number[]> {
-	await installTauriShim(page, { platform: "macos" });
+export async function openBrowse(
+	page: Page,
+	{ platform }: { platform: SupportedPlatform },
+): Promise<number[]> {
+	await installTauriShim(page, { platform });
 	await openGrid(page);
 	const tiles = page.locator(GRID_TILE);
 	await tiles.nth(8).waitFor({ timeout: 60_000 });
@@ -56,9 +60,9 @@ export async function openTile(
 
 export async function openGridProfile(
 	page: Page,
-	{ nth }: { nth: number },
+	{ nth, platform }: { nth: number; platform: SupportedPlatform },
 ): Promise<number[]> {
-	const tiles = await openBrowse(page);
+	const tiles = await openBrowse(page, { platform });
 	await openTile(page, { tiles, nth });
 	return tiles;
 }

@@ -21,7 +21,7 @@ const LIGHTBOX = ".pswp";
 test.describe.configure({ timeout: 180_000 });
 
 test("Escape closes a profile opened from Browse", async ({ page }) => {
-	await openGridProfile(page, { nth: 0 });
+	await openGridProfile(page, { platform: "macos", nth: 0 });
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(/\/$/);
@@ -125,7 +125,7 @@ test("Escape closes a settings page", async ({ page }) => {
 test("Escape walks up a deep-linked settings page in place", async ({
 	page,
 }) => {
-	await openDeepLink(page, CREDITS);
+	await openDeepLink(page, CREDITS, { platform: "macos" });
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

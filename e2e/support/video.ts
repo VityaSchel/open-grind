@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { DEMO_CONVERSATION, installTauriShim } from "./app";
 import { CHAT_MEDIA_HOST, serveImages } from "./media";
 
@@ -12,8 +13,11 @@ export const CONTROLS = `${ACTIVE_SURFACE} [data-pswp-interactive]`;
 /** The demo clip is the last item of the conversation's album. */
 const CLIP = "**/picsum.photos/seed/album-5001-2/600/800";
 
-export async function openClip(page: Page): Promise<void> {
-	await installTauriShim(page, { platform: "macos" });
+export async function openClip(
+	page: Page,
+	{ platform }: { platform: SupportedPlatform },
+): Promise<void> {
+	await installTauriShim(page, { platform });
 	await serveImages(page, CHAT_MEDIA_HOST);
 	// left pending on purpose: an errored <video> is swapped for a placeholder
 	await page.route(CLIP, () => {});

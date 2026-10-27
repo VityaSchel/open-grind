@@ -28,7 +28,7 @@ async function settled(page: Page): Promise<void> {
 test("a toast rides 8px above an open sheet and pins under the status bar once the sheet fills the screen", async ({
 	page,
 }) => {
-	await openStickers(page, { stretchPanel: false });
+	await openStickers(page, { platform: "macos", stretchPanel: false });
 
 	const collapsed = await showRestingToast({
 		page,
@@ -91,7 +91,7 @@ test("a toast rides 8px above an open sheet and pins under the status bar once t
 test("the last toast leaving over an open sheet stays above the sheet", async ({
 	page,
 }) => {
-	await openStickers(page, { stretchPanel: false });
+	await openStickers(page, { platform: "macos", stretchPanel: false });
 	const toast = await showRestingToast({
 		page,
 		edge: "bottom",
@@ -117,7 +117,7 @@ test("the last toast leaving over an open sheet stays above the sheet", async ({
 test("a toast glides back above the composer when the sheet closes", async ({
 	page,
 }) => {
-	await openStickers(page, { stretchPanel: false });
+	await openStickers(page, { platform: "macos", stretchPanel: false });
 	const toast = await showRestingToast({
 		page,
 		edge: "bottom",

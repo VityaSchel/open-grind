@@ -36,7 +36,7 @@ declare global {
 
 export async function openTaps(
 	page: Page,
-	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
+	{ platform }: { platform: SupportedPlatform },
 ): Promise<void> {
 	await installTauriShim(page, { platform });
 	await page.addInitScript(

@@ -35,8 +35,8 @@ export async function openSettings(
 	page: Page,
 	{
 		reducedMotion,
-		platform = "macos",
-	}: { reducedMotion?: "reduce"; platform?: SupportedPlatform } = {},
+		platform,
+	}: { reducedMotion?: "reduce"; platform: SupportedPlatform },
 ) {
 	if (reducedMotion) await page.emulateMedia({ reducedMotion });
 	await installTauriShim(page, { platform });
@@ -50,7 +50,7 @@ export async function openSettings(
 export async function openDeepLink(
 	page: Page,
 	path: string,
-	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
+	{ platform }: { platform: SupportedPlatform },
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);

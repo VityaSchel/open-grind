@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import {
 	afterTwoFrames,
 	FIRST_ROUTE_COMPILE_MS,
@@ -17,11 +18,14 @@ const CLIP_MARGIN_PX = 1;
 
 type Band = "red" | "blue";
 
-async function openFourPhotoProfile(page: Page): Promise<void> {
+async function openFourPhotoProfile(
+	page: Page,
+	{ platform }: { platform: SupportedPlatform },
+): Promise<void> {
 	await page.route(AVATAR_HOST, (route) =>
 		route.fulfill({ contentType: "image/svg+xml", body: RED_OVER_BLUE }),
 	);
-	await installTauriShim(page, { platform: "macos" });
+	await installTauriShim(page, { platform });
 	await page.goto(FOUR_PHOTO_PROFILE);
 	await page.locator(CAROUSEL).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
@@ -100,9 +104,12 @@ async function bandsDownTheCarousel(page: Page): Promise<Band[]> {
 
 export async function expectPhotosToRestWithoutNeighbors(
 	page: Page,
-	{ devicePixelRatio }: { devicePixelRatio: number },
+	{
+		devicePixelRatio,
+		platform,
+	}: { devicePixelRatio: number; platform: SupportedPlatform },
 ): Promise<void> {
-	await openFourPhotoProfile(page);
+	await openFourPhotoProfile(page, { platform });
 	for (let index = 0; index < PHOTO_COUNT; index++)
 		await restOnPhoto(page, { index });
 	await everyPhotoLoaded(page);

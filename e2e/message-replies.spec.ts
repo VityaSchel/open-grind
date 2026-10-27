@@ -20,8 +20,8 @@ async function openConversation(
 	page: Page,
 	{
 		path = CONVERSATION,
-		platform = "macos",
-	}: { path?: string; platform?: SupportedPlatform } = {},
+		platform,
+	}: { path?: string; platform: SupportedPlatform },
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);
@@ -37,7 +37,7 @@ async function replyToAMessage(page: Page) {
 }
 
 test("every message row occupies real space", async ({ page }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "macos" });
 	const rows = page.locator(MESSAGE_ROW);
 	const count = await rows.count();
 	expect(count).toBeGreaterThan(0);
@@ -49,7 +49,7 @@ test("every message row occupies real space", async ({ page }) => {
 });
 
 test("replying quotes the message it answers", async ({ page }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "macos" });
 	const quotesBefore = await page.locator(QUOTE).count();
 
 	await replyToAMessage(page);
@@ -68,7 +68,7 @@ test("replying quotes the message it answers", async ({ page }) => {
 });
 
 test("cancelling a reply leaves the message unquoted", async ({ page }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "macos" });
 	const quotesBefore = await page.locator(QUOTE).count();
 
 	await replyToAMessage(page);
@@ -128,7 +128,7 @@ test("a lone sideways jump, the mouse signature, never moves the row", async ({
 test("a double click replies, on their message and on ours alike", async ({
 	page,
 }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "macos" });
 
 	// beside the bubble, where a double click cannot select a word instead
 	const incoming = page.locator(INCOMING_ROW).last();
@@ -276,7 +276,10 @@ test("a vertical touch drag scrolls instead of replying", async ({ page }) => {
 });
 
 test("an unsent message offers no reply", async ({ page }) => {
-	await openConversation(page, { path: WITH_AN_UNSENT_MESSAGE });
+	await openConversation(page, {
+		platform: "macos",
+		path: WITH_AN_UNSENT_MESSAGE,
+	});
 
 	const unsent = page
 		.locator(MESSAGE_ROW)

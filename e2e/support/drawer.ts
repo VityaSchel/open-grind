@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { DEMO_CONVERSATION, installTauriShim } from "./app";
 import { seedPreferences } from "./app-data";
 
@@ -31,8 +32,11 @@ export interface DrawerBox {
 	safeBottom: number;
 }
 
-export function openAttachments(page: Page): Promise<void> {
-	return openComposerSheet(page, { trigger: "Add attachment" });
+export function openAttachments(
+	page: Page,
+	{ platform }: { platform: SupportedPlatform },
+): Promise<void> {
+	return openComposerSheet(page, { trigger: "Add attachment", platform });
 }
 
 export type ComposerSheetTrigger = "Add attachment" | "GIFs and stickers";
@@ -43,13 +47,15 @@ export async function openComposerSheet(
 		trigger,
 		preferences,
 		stretchPanel = true,
+		platform,
 	}: {
 		trigger: ComposerSheetTrigger;
 		preferences?: Record<string, unknown>;
 		stretchPanel?: boolean;
+		platform: SupportedPlatform;
 	},
 ): Promise<void> {
-	await installTauriShim(page, { platform: "macos" });
+	await installTauriShim(page, { platform });
 	if (preferences) await seedPreferences(page, { preferences });
 	await page.goto(DEMO_CONVERSATION);
 	await openSheetFromComposer(page, { trigger, stretchPanel });

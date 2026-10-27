@@ -522,7 +522,7 @@ test("wide screens show the list beside the conversation with no stack", async (
 	page,
 }) => {
 	await page.setViewportSize(WIDE);
-	await openInbox(page);
+	await openInbox(page, { platform: "macos" });
 	await rows(page).nth(1).click();
 	await backToChats(page).waitFor();
 

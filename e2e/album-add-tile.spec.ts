@@ -21,7 +21,7 @@ for (const viewport of [
 			page,
 		}) => {
 			test.setTimeout(120_000);
-			await openAlbum(page, TWO_ROW_ALBUM);
+			await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
 			const tile = await box(page.locator(ADD_TILE));
 			const slot = await box(page.locator(MEDIA_SLOT).first());
 			expect(Math.abs(tile.width - slot.width)).toBeLessThanOrEqual(1);

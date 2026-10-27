@@ -360,7 +360,7 @@ test("wide screens keep the list rendered beside an open conversation", async ({
 	page,
 }) => {
 	await page.setViewportSize(WIDE);
-	await openInbox(page);
+	await openInbox(page, { platform: "macos" });
 	await rows(page).nth(1).click();
 	await backToChats(page).waitFor();
 

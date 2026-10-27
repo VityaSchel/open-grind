@@ -12,7 +12,7 @@ import {
 test.describe.configure({ timeout: 300_000 });
 
 test("arrow keys page between profiles", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const depth = await historyDepth(page);
 
 	await page.keyboard.press("ArrowRight");
@@ -31,7 +31,7 @@ test("arrow keys page between profiles", async ({ page }) => {
 test("arrow keys leave the profile alone while the lightbox is opening", async ({
 	page,
 }) => {
-	await openGridProfile(page, { nth: 1 });
+	await openGridProfile(page, { platform: "macos", nth: 1 });
 	const before = (await pagerGeometry(page)).scrollLeft;
 
 	await activeProfilePane(page).locator("a.item").first().click();
@@ -60,7 +60,7 @@ test("arrow keys leave the profile alone while the lightbox is opening", async (
 test("arrow keys leave the profile alone while a menu is open", async ({
 	page,
 }) => {
-	await openGridProfile(page, { nth: 1 });
+	await openGridProfile(page, { platform: "macos", nth: 1 });
 
 	await activeProfilePane(page).getByLabel("Profile menu").click();
 	await expect(page.getByRole("menu")).toBeFocused({ timeout: 30_000 });

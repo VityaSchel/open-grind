@@ -266,13 +266,13 @@ const SHEETS: {
 	{
 		sheet: "stickers",
 		trigger: "GIFs and stickers",
-		open: (page) => openStickers(page),
+		open: (page) => openStickers(page, { platform: "macos" }),
 		seed: seedStickers,
 	},
 	{
 		sheet: "attachments",
 		trigger: "Add attachment",
-		open: openAttachments,
+		open: (page) => openAttachments(page, { platform: "macos" }),
 		seed: seedAttachments,
 	},
 ];
@@ -338,7 +338,7 @@ test("the GIF feed survives a crossing without asking GIPHY again", async ({
 }) => {
 	const requests = await recordDemoRequests(page);
 	await resizeTo(page, { width: PHONE_WIDTH });
-	await openStickers(page);
+	await openStickers(page, { platform: "macos" });
 	await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
 	const firstTile = await gifTiles(page).first().elementHandle();
 	if (firstTile === null) throw new Error("no GIF tile");
@@ -369,7 +369,7 @@ test("Send after a crossing posts into the conversation on screen", async ({
 	page,
 }) => {
 	await resizeTo(page, { width: PHONE_WIDTH });
-	await openAttachments(page);
+	await openAttachments(page, { platform: "macos" });
 	await page.locator(SELECTABLE_MEDIA_TILE).first().click();
 	await expect(mediaSendButton(page)).toHaveText("Send 1");
 
@@ -389,7 +389,7 @@ test.describe("each conversation gets its own stickers sheet", () => {
 		page,
 	}) => {
 		await resizeTo(page, { width: SPLIT_WIDTH });
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await gifSearchBox(page).fill(GIF_QUERY);
 		await expect(partyGif(page)).toBeVisible();
 		await stickersTab(page, { name: "Gaymoji" }).click();
@@ -423,7 +423,7 @@ test.describe("each conversation gets its own stickers sheet", () => {
 		page,
 	}) => {
 		await resizeTo(page, { width: SPLIT_WIDTH });
-		await openStickers(page);
+		await openStickers(page, { platform: "macos" });
 		await row(page, {
 			href: conversationPathWith({ peer: OTHER_CHAT_PEER }),
 		}).evaluate((link: HTMLAnchorElement) => link.click());

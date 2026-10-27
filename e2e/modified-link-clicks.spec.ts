@@ -32,7 +32,7 @@ for (const gesture of GESTURES) {
 	test(`${gesture.name} on a nav tab navigates inside the running app`, async ({
 		page,
 	}) => {
-		await openTaps(page);
+		await openTaps(page, { platform: "macos" });
 		const escapes = watchForEscapes(page);
 		const born = await documentBirth(page);
 
@@ -50,7 +50,7 @@ for (const gesture of GESTURES) {
 test("Shift-click on an interest tab still replaces the history entry", async ({
 	page,
 }) => {
-	await openTaps(page);
+	await openTaps(page, { platform: "macos" });
 	const atTaps = await historyDepth(page);
 
 	await page

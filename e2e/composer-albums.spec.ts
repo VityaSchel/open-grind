@@ -21,7 +21,7 @@ test.describe("composer albums tab", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		await page.getByRole("tab", { name: "Albums" }).click();
 		await expect(page.locator(SHARED_ALBUM_TILE)).toHaveCount(2, {
@@ -56,7 +56,7 @@ test.describe("composer albums tab", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		await page.getByRole("tab", { name: "Albums" }).click();
 		const shared = page.locator(SHARED_ALBUM_TILE);
@@ -109,7 +109,7 @@ test.describe("composer albums tab", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		await page.getByRole("tab", { name: "Albums" }).click();
 		const shared = page.locator(SHARED_ALBUM_TILE);
@@ -177,7 +177,7 @@ test.describe("composer albums tab", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		await page.getByRole("tab", { name: "Albums" }).click();
 		const tiles = page.locator(ALBUM_TILE);
@@ -207,7 +207,7 @@ test.describe("composer albums tab", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		const ratio = async (selector: string) => {
 			const box = await page.locator(selector).first().boundingBox();

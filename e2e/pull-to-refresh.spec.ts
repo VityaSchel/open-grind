@@ -36,7 +36,7 @@ const BUTTON_CLEARANCE_PX = 12;
 const SLIDE_SLIP_PX = 2;
 
 async function openRefreshableTaps(page: Page) {
-	await openTaps(page);
+	await openTaps(page, { platform: "macos" });
 	await page
 		.locator("[data-refresh-phase]")
 		.first()
@@ -103,7 +103,7 @@ test.describe("pull to refresh", () => {
 	test("a band pull arms, waits for the lift, then refreshes", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["resting", "pulling", "armed", "deep", "held", "fired", "settled"],
@@ -158,7 +158,7 @@ test.describe("pull to refresh", () => {
 	test("a pull released below the threshold cancels, and the hint rides the spring back", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["cancelled", "springing", "collapsed"],
@@ -188,7 +188,7 @@ test.describe("pull to refresh", () => {
 	test("a gesture that arrives from mid-list never engages at the boundary", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["banded", "after"],
@@ -219,7 +219,7 @@ test.describe("pull to refresh", () => {
 	test("a fling into the boundary is ignored, a slow pull to the same depth is not", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["flung", "pulled", "fired"],
@@ -250,7 +250,7 @@ test.describe("pull to refresh", () => {
 	test("a mouse wheel at the boundary offers a button instead of a band hint", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["revealed", "clicked", "settled"],
@@ -280,7 +280,7 @@ test.describe("pull to refresh", () => {
 	test("a pull that starts while the disc of a finished refresh is still leaving shows its hint at the band", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["leaving", "pulled", "gone"],
@@ -335,7 +335,7 @@ test.describe("pull to refresh", () => {
 	test("the disc of a finished refresh stays whole and opaque until it starts leaving", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const steps = await driveInOneGesture(
 			page,
 			["spinning", "finished"],
@@ -360,7 +360,11 @@ test.describe("pull to refresh", () => {
 	});
 
 	for (const list of [
-		{ name: "the inbox", open: openInbox, row: CONVERSATION_ROW },
+		{
+			name: "the inbox",
+			open: (page: Page) => openInbox(page, { platform: "macos" }),
+			row: CONVERSATION_ROW,
+		},
 		{ name: "the taps list", open: openRefreshableTaps, row: TAP_ROW },
 	]) {
 		test(`on ${list.name} the button takes a row of its own above the first entry, and gives it back once the reader scrolls on`, async ({
@@ -428,7 +432,7 @@ test.describe("pull to refresh", () => {
 	test("a clicked refresh spins in the button's row without moving the list", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const firstRow = page.locator(CONVERSATION_ROW).first();
 		const restingTop = await topOf(firstRow);
 		await revealButtonOver(page, { row: firstRow });
@@ -562,7 +566,7 @@ test.describe("pull to refresh", () => {
 	for (const surface of [
 		{
 			name: "an inbox",
-			open: openInbox,
+			open: (page: Page) => openInbox(page, { platform: "macos" }),
 			scroller: CONVERSATIONS_SCROLLER,
 			nearestRow: (page: Page) => page.locator(CONVERSATION_ROW).first(),
 			edgeOf: topOf,

@@ -6,7 +6,7 @@ test.describe("video release", () => {
 	test("a closed lightbox lets go of the clip it was still loading", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 		const video = await page
 			.locator(`${ACTIVE_SURFACE} [data-slot="video-player-media"]`)
 			.elementHandle();

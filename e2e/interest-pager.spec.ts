@@ -35,7 +35,7 @@ declare global {
 test.describe.configure({ timeout: 300_000 });
 
 test.beforeEach(async ({ page }) => {
-	await openTaps(page);
+	await openTaps(page, { platform: "macos" });
 });
 
 test("the pager starts on the routed tab and mounts only that list", async ({

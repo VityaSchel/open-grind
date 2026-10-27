@@ -32,7 +32,7 @@ async function lastCascadeQuery(page: Page): Promise<URLSearchParams> {
 test("the Their Tribes filter offers Trans while the session has no gender filter flag", async ({
 	page,
 }) => {
-	await openBrowse(page);
+	await openBrowse(page, { platform: "macos" });
 	await page.getByRole("button", { name: "All filters" }).click();
 	const filters = page.getByRole("dialog");
 	await filters.getByRole("checkbox", { name: "Their Tribes" }).click();
@@ -49,7 +49,7 @@ test("the Tribes They're Into filter asks the grid for the tribes picked in it",
 	page,
 }) => {
 	await recordCascadeRequests(page);
-	await openBrowse(page);
+	await openBrowse(page, { platform: "macos" });
 	await page.getByRole("button", { name: "All filters" }).click();
 	const filters = page.getByRole("dialog");
 	await filters

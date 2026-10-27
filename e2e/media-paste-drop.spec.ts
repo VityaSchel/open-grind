@@ -435,7 +435,7 @@ test.describe("pasting and dropping media", () => {
 	});
 
 	test("a photo dropped on an album lands in it", async ({ page }) => {
-		await openSharedAlbum(page);
+		await openSharedAlbum(page, { platform: "macos" });
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 		const dataTransfer = await transferOf(page, PNG);
 

@@ -457,7 +457,7 @@ test.describe("keyboard access to context menus", () => {
 	test("the context menu key opens a media tile's menu, again after closing", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const tile = page.locator(MEDIA_TILE).nth(1);
 
 		for (let round = 0; round < 2; round += 1) {

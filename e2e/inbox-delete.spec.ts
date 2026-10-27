@@ -25,7 +25,7 @@ import { PHONE } from "./support/stack-layers";
 
 async function openInboxFromHome(
 	page: Page,
-	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
+	{ platform }: { platform: SupportedPlatform },
 ) {
 	await page.setViewportSize(WIDE);
 	await installTauriShim(page, { platform });
@@ -71,7 +71,7 @@ async function openRows(page: Page, { count }: { count: number }) {
 test("deleting the open conversation from the list walks back to the inbox", async ({
 	page,
 }) => {
-	await openInboxFromHome(page);
+	await openInboxFromHome(page, { platform: "macos" });
 	const atInbox = await historyEntries(page);
 
 	await deleteFromList(page, { href: await openRow(page, { nth: 1 }) });
@@ -94,7 +94,7 @@ test("deleting the open conversation from the list walks back to the inbox", asy
 test("Forward does not reopen a conversation deleted while open", async ({
 	page,
 }) => {
-	await openInboxFromHome(page);
+	await openInboxFromHome(page, { platform: "macos" });
 	const atInbox = await historyEntries(page);
 	const href = await openRow(page, { nth: 1 });
 	await deleteFromList(page, { href });
@@ -120,7 +120,7 @@ test("Forward does not reopen a conversation deleted while open", async ({
 test("Forward still opens a conversation that was not deleted", async ({
 	page,
 }) => {
-	await openInboxFromHome(page);
+	await openInboxFromHome(page, { platform: "macos" });
 	const deleted = (await rows(page).nth(2).getAttribute("href"))!;
 	const kept = await openRow(page, { nth: 1 });
 	await page.goBack();
@@ -152,7 +152,7 @@ test("deleting a conversation opened directly takes its place in history", async
 
 test.describe("Back into a conversation deleted this session", () => {
 	test("skips it to the entry before it", async ({ page }) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [deleted, open] = await openRows(page, { count: 2 });
 		await deleteFromList(page, { href: deleted! });
@@ -180,7 +180,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	});
 
 	test("skips every deleted conversation in a row", async ({ page }) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [first, second, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: first! });
@@ -208,7 +208,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	});
 
 	test("skips it when a jump back lands on it", async ({ page }) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [deleted, kept, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: deleted! });
@@ -230,7 +230,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	test("still opens a conversation that was not deleted on the way", async ({
 		page,
 	}) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [deleted, kept, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: deleted! });
@@ -253,7 +253,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	test("Back to chats skips it and still answers the next tap", async ({
 		page,
 	}) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [kept, deleted, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: deleted! });
@@ -321,7 +321,7 @@ test.describe("Back into a conversation deleted this session", () => {
 		await page.addInitScript(() =>
 			Object.defineProperty(window, "navigation", { value: undefined }),
 		);
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const [first, second] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: first! });
 		await deleteFromList(page, { href: second! });
