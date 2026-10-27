@@ -17,6 +17,7 @@ export default defineConfig(
 			"scripts/",
 			"ci/",
 			"e2e/updater/",
+			"e2e/ios/",
 		],
 	}),
 	{

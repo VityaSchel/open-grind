@@ -25,3 +25,5 @@ keystore.properties
 /coverage
 /.updater-dev/
 /e2e/updater/.state/
+/e2e/ios/build/
+/e2e/ios/OpenGrindUITests.xcodeproj/

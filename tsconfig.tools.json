@@ -16,6 +16,11 @@
 		"noUncheckedIndexedAccess": true,
 		"noImplicitOverride": true
 	},
-	"include": ["ci/**/*.ts", "scripts/**/*.ts", "e2e/updater/**/*.ts"],
+	"include": [
+		"ci/**/*.ts",
+		"scripts/**/*.ts",
+		"e2e/updater/**/*.ts",
+		"e2e/ios/**/*.ts"
+	],
 	"exclude": ["scripts/store-screenshots/"]
 }
