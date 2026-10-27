@@ -14,6 +14,9 @@ const HELPER_URL: &str = "https://web.grindr.com/";
 const HELPER_HOST: &str = "web.grindr.com";
 const WINDOW_LABEL: &str = "google-oauth";
 
+const FLOW_TIMEOUT: std::time::Duration =
+	std::time::Duration::from_secs(10 * 60);
+
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
 #[cfg(target_os = "ios")]
@@ -141,7 +144,12 @@ async fn run_flow(
 	})?;
 
 	#[cfg(target_os = "ios")]
-	crate::api::oauth::sheet::present(&window, "Sign in with Google");
+	if let Err(e) =
+		crate::api::oauth::sheet::present(&window, "Sign in with Google").await
+	{
+		tracing::warn!("[oauth] could not show the sign-in sheet: {e}");
+		bridge.fulfill(Err(CANCELED.to_owned()));
+	}
 
 	let bridge_for_close = bridge.clone();
 	window.on_window_event(move |event| {
@@ -154,9 +162,11 @@ async fn run_flow(
 		}
 	});
 
-	let result = rx.await.map_err(|_| {
-		AppError::Auth("sign-in flow ended unexpectedly".into())
-	})?;
+	let result = match tokio::time::timeout(FLOW_TIMEOUT, rx).await {
+		Ok(Ok(result)) => result,
+		Ok(Err(_)) => Err("sign-in flow ended unexpectedly".to_owned()),
+		Err(_) => Err("Sign-in timed out".to_owned()),
+	};
 
 	let _ = window.clear_all_browsing_data();
 	let _ = window.close();

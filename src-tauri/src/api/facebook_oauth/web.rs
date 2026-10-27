@@ -107,7 +107,13 @@ async fn run_flow(
 	})?;
 
 	#[cfg(target_os = "ios")]
-	crate::api::oauth::sheet::present(&window, "Sign in with Facebook");
+	if let Err(e) =
+		crate::api::oauth::sheet::present(&window, "Sign in with Facebook")
+			.await
+	{
+		tracing::warn!("[fb-oauth] could not show the sign-in sheet: {e}");
+		bridge.fulfill(Err(CANCELED.to_owned()));
+	}
 
 	let bridge_for_close = bridge.clone();
 	window.on_window_event(move |event| {

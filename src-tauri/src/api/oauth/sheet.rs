@@ -15,6 +15,7 @@ use objc2_ui_kit::{
 	UIUserInterfaceStyle, UIView, UIViewAutoresizing, UIViewController,
 };
 use tauri::{AppHandle, Manager, WebviewWindow, WindowEvent};
+use tokio::sync::oneshot;
 
 use crate::MAIN_WINDOW_LABEL;
 
@@ -66,32 +67,38 @@ impl SheetDelegate {
 	}
 }
 
-pub fn present(window: &WebviewWindow, title: &'static str) {
+pub async fn present(
+	window: &WebviewWindow,
+	title: &'static str,
+) -> Result<(), String> {
 	let app = window.app_handle().clone();
-	let Some(main) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
-		return;
-	};
+	let main = app
+		.get_webview_window(MAIN_WINDOW_LABEL)
+		.ok_or("the main window is gone")?;
+	let (shown_tx, shown) = oneshot::channel();
 	let page_window = window.clone();
 	let label = window.label().to_owned();
-	let _ = main.with_webview(move |main_webview| {
+	main.with_webview(move |main_webview| {
 		let host = main_webview.view_controller() as usize;
 		let _ = page_window.with_webview(move |page_webview| {
 			let page = page_webview.inner() as usize;
-			let Some(mtm) = MainThreadMarker::new() else {
-				return;
-			};
 			let sign_in = SignInWindow { app, label };
-			unsafe {
-				show(
-					mtm,
-					host as *mut UIViewController,
-					page as *mut UIView,
-					title,
-					sign_in,
-				);
-			}
+			let outcome = match MainThreadMarker::new() {
+				Some(mtm) => unsafe {
+					show(
+						mtm,
+						host as *mut UIViewController,
+						page as *mut UIView,
+						title,
+						sign_in,
+					)
+				},
+				None => Err("not on the main thread"),
+			};
+			let _ = shown_tx.send(outcome);
 		});
-	});
+	})
+	.map_err(|e| e.to_string())?;
 
 	let app = window.app_handle().clone();
 	window.on_window_event(move |event| {
@@ -99,6 +106,11 @@ pub fn present(window: &WebviewWindow, title: &'static str) {
 			let _ = app.run_on_main_thread(dismiss);
 		}
 	});
+
+	shown
+		.await
+		.unwrap_or(Err("the sign-in page never reached the main thread"))
+		.map_err(str::to_owned)
 }
 
 unsafe fn show(
@@ -107,13 +119,13 @@ unsafe fn show(
 	page: *mut UIView,
 	title: &str,
 	sign_in: SignInWindow,
-) {
+) -> Result<(), &'static str> {
 	let (Some(host), Some(page)) =
 		(unsafe { Retained::retain(host) }, unsafe {
 			Retained::retain(page)
 		})
 	else {
-		return;
+		return Err("the sign-in views are gone");
 	};
 
 	if let Some(window) = page.window() {
@@ -184,6 +196,7 @@ unsafe fn show(
 			_delegate: delegate,
 		});
 	});
+	Ok(())
 }
 
 fn dismiss() {
