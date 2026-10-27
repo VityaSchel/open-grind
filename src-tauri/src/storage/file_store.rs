@@ -6,8 +6,9 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+
+use super::private_file::replace_private;
 
 fn credential_path(
 	base: &std::path::Path,
@@ -16,30 +17,6 @@ fn credential_path(
 ) -> PathBuf {
 	let safe = |s: &str| s.replace(['/', '\\', '\0', ':'], "_");
 	base.join("credentials").join(safe(user))
-}
-
-fn temp_path(path: &std::path::Path) -> PathBuf {
-	static NEXT: AtomicU64 = AtomicU64::new(0);
-	let mut temp = path.to_path_buf().into_os_string();
-	temp.push(format!(
-		".{}.{}.tmp",
-		std::process::id(),
-		NEXT.fetch_add(1, Ordering::Relaxed)
-	));
-	PathBuf::from(temp)
-}
-
-fn write_private(path: &std::path::Path, secret: &[u8]) -> std::io::Result<()> {
-	use std::io::Write;
-	use std::os::unix::fs::OpenOptionsExt;
-
-	let mut file = fs::OpenOptions::new()
-		.write(true)
-		.create_new(true)
-		.mode(0o600)
-		.open(path)?;
-	file.write_all(secret)?;
-	file.sync_all()
 }
 
 #[derive(Debug, Clone)]
@@ -63,13 +40,8 @@ impl CredentialApi for FileCredential {
 			.map_err(|e| Error::PlatformFailure(Box::new(e)))?;
 		fs::set_permissions(dir, fs::Permissions::from_mode(0o700))
 			.map_err(|e| Error::PlatformFailure(Box::new(e)))?;
-		let temp = temp_path(&path);
-		write_private(&temp, secret)
-			.and_then(|()| fs::rename(&temp, &path))
-			.map_err(|e| {
-				fs::remove_file(&temp).ok();
-				Error::PlatformFailure(Box::new(e))
-			})
+		replace_private(&path, secret)
+			.map_err(|e| Error::PlatformFailure(Box::new(e)))
 	}
 
 	fn get_secret(&self) -> Result<Vec<u8>> {
@@ -157,7 +129,7 @@ pub fn init(base: PathBuf) {
 
 #[cfg(test)]
 pub(super) fn scratch_dir() -> PathBuf {
-	use std::sync::atomic::AtomicUsize;
+	use std::sync::atomic::{AtomicUsize, Ordering};
 
 	static NEXT: AtomicUsize = AtomicUsize::new(0);
 	let dir = std::env::temp_dir().join(format!(
@@ -174,6 +146,7 @@ mod tests {
 	use std::os::unix::fs::PermissionsExt;
 
 	use super::*;
+	use crate::storage::private_file::{temp_path, write_private};
 
 	const SERVICE: &str = "open-grind";
 	const USER: &str = "session";

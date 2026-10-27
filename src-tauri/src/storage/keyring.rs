@@ -2,14 +2,9 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use crate::error::AppError;
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub(super) const SERVICE: &str = "org.opengrind.app";
-#[cfg(any(
-	target_os = "android",
-	target_os = "ios",
-	target_os = "linux",
-	target_os = "windows"
-))]
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "windows"))]
 pub(super) const SERVICE: &str = "open-grind";
 
 static KEYRING_LOCK: Mutex<()> = Mutex::new(());

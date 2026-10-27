@@ -6,9 +6,28 @@ mod entries;
 	all(target_os = "macos", not(feature = "keychain"))
 ))]
 mod file_store;
+#[cfg(any(
+	target_os = "ios",
+	all(
+		test,
+		any(
+			target_os = "linux",
+			all(target_os = "macos", not(feature = "keychain"))
+		)
+	)
+))]
+mod install_key;
 mod keyring;
 #[cfg(any(test, all(target_os = "macos", feature = "keychain")))]
 mod legacy;
+#[cfg(any(
+	target_os = "ios",
+	target_os = "linux",
+	all(target_os = "macos", not(feature = "keychain"))
+))]
+mod private_file;
+#[cfg(any(target_os = "ios", test))]
+mod sealed;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
 pub(crate) use keyring::{entry, Entry};
@@ -23,6 +42,11 @@ pub fn init_file_store(base: std::path::PathBuf) {
 	file_store::init(base);
 }
 
+#[cfg(target_os = "ios")]
+pub fn init_install_key(dir: std::path::PathBuf) {
+	install_key::locate(dir);
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum StorageBackend {
@@ -32,6 +56,18 @@ pub enum StorageBackend {
 }
 
 const STARTUP_PROBE: &str = "startup-probe";
+
+#[cfg(any(
+	test,
+	target_os = "ios",
+	all(target_os = "macos", feature = "keychain")
+))]
+const ACCOUNTS: [&str; 4] = [
+	entries::SESSION,
+	entries::DEVICE_INFO,
+	entries::SIGNING_KEY,
+	STARTUP_PROBE,
+];
 
 const HAS_FILE_STORE: bool = cfg!(any(
 	target_os = "linux",
@@ -81,9 +117,9 @@ fn probe_keyring() -> StorageBackend {
 
 #[cfg(target_os = "ios")]
 fn install_platform_store() -> Result<(), String> {
-	let store = apple_native_keyring_store::protected::Store::new()
+	let keychain = apple_native_keyring_store::protected::Store::new()
 		.map_err(|e| e.to_string())?;
-	keyring_core::set_default_store(store);
+	keyring_core::set_default_store(install_key::seal(keychain)?);
 	Ok(())
 }
 
@@ -234,6 +270,16 @@ mod tests {
 			assert!(
 				hooks.contains(&format!("\"{name}.open-grind\"")),
 				"installer-hooks.nsh leaves {name} in Credential Manager"
+			);
+		}
+	}
+
+	#[test]
+	fn a_fresh_ios_install_erases_every_keyring_entry() {
+		for name in PERSISTED_ENTRIES.into_iter().chain([STARTUP_PROBE]) {
+			assert!(
+				ACCOUNTS.contains(&name),
+				"a reinstall keeps {name} from the previous install"
 			);
 		}
 	}

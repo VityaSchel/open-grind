@@ -347,6 +347,8 @@ pub fn run() {
                 all(target_os = "macos", not(feature = "keychain"))
             ))]
             storage::init_file_store(app.path().app_local_data_dir()?);
+            #[cfg(target_os = "ios")]
+            storage::init_install_key(app.path().app_local_data_dir()?);
 
             let backend = storage::init_keyring();
             #[cfg(all(target_os = "macos", feature = "keychain"))]
