@@ -4,7 +4,8 @@ use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
 use crate::api::oauth::{
-	is_allowed_target, new_nonce, without_secrets, CANCELED,
+	is_allowed_target, new_nonce, sign_in_user_agent, without_secrets,
+	SignInPage, CANCELED,
 };
 use crate::error::AppError;
 
@@ -21,9 +22,6 @@ const FLOW_TIMEOUT: std::time::Duration =
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
 #[cfg(target_os = "ios")]
 const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
-
-const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
-     AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
 const RESULT_PATH: &str = "/__open_grind_oauth__";
 
@@ -96,12 +94,10 @@ async fn run_flow(
 	let bridge_for_nav = bridge.clone();
 	let nonce_for_nav = nonce.clone();
 
-	#[allow(unused_mut)]
 	let mut builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
 			.title("Sign in with Google")
 			.inner_size(window_width, window_height)
-			.user_agent(USER_AGENT)
 			.initialization_script(init_script(&nonce))
 			.incognito(true)
 			.general_autofill_enabled(false)
@@ -125,6 +121,10 @@ async fn run_flow(
 				}
 				false
 			});
+
+	if let Some(user_agent) = sign_in_user_agent(SignInPage::Google) {
+		builder = builder.user_agent(&user_agent);
+	}
 
 	#[cfg(target_os = "windows")]
 	{

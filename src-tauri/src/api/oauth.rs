@@ -10,6 +10,9 @@ use crate::error::AppError;
 
 #[cfg(target_os = "ios")]
 pub mod sheet;
+mod user_agent;
+
+pub use user_agent::{sign_in_user_agent, SignInPage};
 
 /// Matched verbatim by the frontend, which stays silent for it.
 pub const CANCELED: &str = "Sign-in canceled";

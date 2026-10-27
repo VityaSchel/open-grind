@@ -6,7 +6,8 @@ use tokio::sync::oneshot;
 use crate::error::AppError;
 
 use crate::api::oauth::{
-	is_allowed_target, new_nonce, without_secrets, CANCELED,
+	is_allowed_target, new_nonce, sign_in_user_agent, without_secrets,
+	SignInPage, CANCELED,
 };
 
 use super::dialog::{
@@ -23,11 +24,6 @@ const FLOW_TIMEOUT: std::time::Duration =
 const WINDOW_INNER_SIZE: (f64, f64) = (600.0, 700.0);
 #[cfg(mobile)]
 const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
-
-#[cfg(any(target_os = "ios", desktop))]
-const DESKTOP_USER_AGENT: &str =
-	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
-	 AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
 pub async fn fetch_access_token(
 	app: &AppHandle,
@@ -53,7 +49,6 @@ async fn run_flow(
 	let bridge_for_nav = bridge.clone();
 	let state_for_nav = state.clone();
 
-	#[allow(unused_mut)]
 	let mut builder = WebviewWindowBuilder::new(
 		app,
 		WINDOW_LABEL,
@@ -79,9 +74,8 @@ async fn run_flow(
 		false
 	});
 
-	#[cfg(any(target_os = "ios", desktop))]
-	{
-		builder = builder.user_agent(DESKTOP_USER_AGENT);
+	if let Some(user_agent) = sign_in_user_agent(SignInPage::Facebook) {
+		builder = builder.user_agent(&user_agent);
 	}
 
 	#[cfg(target_os = "android")]
@@ -99,7 +93,9 @@ async fn run_flow(
 
 	#[cfg(target_os = "ios")]
 	{
-		builder = builder.visible(false);
+		builder = builder
+			.visible(false)
+			.background_color(tauri::window::Color(10, 10, 10, 255));
 	}
 
 	let window = builder.build().map_err(|e| {
