@@ -14,6 +14,7 @@ import {
 } from "../album-uploads/add-album-media";
 import {
 	type AlbumUploads,
+	type InspectedPick,
 	isPlanLimitReached,
 } from "../album-uploads/album-uploads-state.svelte";
 
@@ -30,9 +31,10 @@ export async function createAlbumFromMedia({
 	albumName: string | null;
 	media?: PickedMedia[];
 }): Promise<void> {
+	let inspected: InspectedPick[] = [];
 	try {
 		const limits = await getAlbumStorageLimits();
-		const inspected =
+		inspected =
 			media === undefined
 				? await pickInspectedAlbumMedia({
 						room: albumRoom({ content: [], pending: [], limits }),
@@ -45,7 +47,7 @@ export async function createAlbumFromMedia({
 		enqueueAlbumMedia({ uploads, albumId, inspected, limits, content: [] });
 	} catch (error) {
 		console.error(error);
-		void discardStagedMedia(media ?? []);
+		void discardStagedMedia(media ?? inspected.map((pick) => pick.media));
 		if (isPlanLimitReached(error)) {
 			toast.error(ALBUM_LIMIT_MESSAGE);
 			return;

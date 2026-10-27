@@ -5,7 +5,12 @@ const mediaFile = vi.hoisted(() => ({ inspectMediaFile: vi.fn() }));
 const api = vi.hoisted(() => ({ getAlbumStorageLimits: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
+const core = vi.hoisted(() => ({ invoke: vi.fn() }));
 
+vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
+	invoke: core.invoke,
+}));
 vi.mock("$lib/api/error-toast", () => errorToast);
 vi.mock("$lib/api/messaging/albums", () => api);
 vi.mock("$lib/platform/media-file", async (importOriginal) => ({
@@ -118,6 +123,23 @@ describe("picking media for an album", () => {
 		]);
 		expect(sonner.toast.error).toHaveBeenCalledWith(
 			"That file isn't a photo or video",
+		);
+	});
+
+	it("discards a staged pick it refuses", async () => {
+		picker.pickMultipleMedia.mockResolvedValue([
+			{ source: "staged", key: "s", mimeType: null, id: "staged-1" },
+		]);
+		mediaFile.inspectMediaFile.mockRejectedValue(new Error("gone"));
+
+		expect(
+			await pickInspectedAlbumMedia({
+				room: { photos: true, videos: true },
+			}),
+		).toEqual([]);
+		expect(core.invoke).toHaveBeenCalledExactlyOnceWith(
+			"discard_staged_media",
+			{ id: "staged-1" },
 		);
 	});
 

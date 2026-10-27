@@ -11,7 +11,10 @@
 		getDrawerMedia,
 	} from "$lib/api/messaging/drawer";
 	import MediaSheetGrid from "$lib/components/media-sheet/MediaSheetGrid.svelte";
-	import { mediaFileKindOf } from "$lib/platform/media-file";
+	import {
+		discardStagedMedia,
+		mediaFileKindOf,
+	} from "$lib/platform/media-file";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import { SelectionSet } from "$lib/util/selection.svelte";
@@ -79,6 +82,7 @@
 			} catch (err) {
 				console.error(err);
 				toast.error(chatMediaFailureMessage(err));
+				void discardStagedMedia([item]);
 			} finally {
 				uploadingCount--;
 			}

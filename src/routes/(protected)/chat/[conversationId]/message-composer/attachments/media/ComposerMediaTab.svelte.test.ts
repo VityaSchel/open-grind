@@ -14,11 +14,16 @@ const drawer = vi.hoisted(() => ({
 const chatMedia = vi.hoisted(() => ({ addMediaToDrawer: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
+const mediaFile = vi.hoisted(() => ({ discardStagedMedia: vi.fn() }));
 
 vi.mock("$lib/api/messaging/drawer", () => drawer);
 vi.mock("$lib/api/messaging/chat-media", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	...chatMedia,
+}));
+vi.mock("$lib/platform/media-file", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	...mediaFile,
 }));
 vi.mock("$lib/platform/media-picker", () => picker);
 vi.mock("svelte-sonner", () => sonner);
@@ -185,6 +190,31 @@ describe("composer media tab", () => {
 			expect(sonner.toast.error).toHaveBeenCalledWith(
 				"Couldn't upload photo or video",
 			),
+		);
+	});
+
+	it("discards a picked copy it couldn't upload", async () => {
+		const staged = {
+			source: "staged",
+			key: "picked",
+			mimeType: "image/jpeg",
+			id: "staged-1",
+		};
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([staged]);
+		chatMedia.addMediaToDrawer.mockRejectedValue(new Error("offline"));
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(
+			getByRole("button", { name: "Upload photos or videos" }),
+		);
+
+		await vi.waitFor(() =>
+			expect(
+				mediaFile.discardStagedMedia,
+			).toHaveBeenCalledExactlyOnceWith([staged]),
 		);
 	});
 

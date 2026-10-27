@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { androidFsMock, invokeMock, openMock } = vi.hoisted(() => ({
+const { androidFsMock, invokeMock, openMock, toastMock } = vi.hoisted(() => ({
 	androidFsMock: { showOpenFilePicker: vi.fn() },
 	invokeMock: vi.fn(),
 	openMock: vi.fn(),
+	toastMock: { error: vi.fn() },
 }));
 
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
@@ -12,6 +13,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: openMock }));
 vi.mock("tauri-plugin-android-fs-api", () => ({ AndroidFs: androidFsMock }));
+vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
@@ -35,6 +37,7 @@ beforeEach(() => {
 	invokeMock.mockReset();
 	openMock.mockReset();
 	androidFsMock.showOpenFilePicker.mockReset();
+	toastMock.error.mockReset();
 	runningOn("macos");
 });
 
@@ -85,6 +88,19 @@ describe("pickMedia", () => {
 			"pick_android_media",
 			{ mimeTypes: ["video/*"], multiple: false },
 		);
+	});
+
+	it("returns null without the dialog when the iOS picker is cancelled", async () => {
+		runningOn("ios");
+		invokeMock.mockResolvedValue({ picks: [], failed: 0 });
+
+		await expect(pickMedia("video")).resolves.toBeNull();
+
+		expect(invokeMock).toHaveBeenCalledExactlyOnceWith("pick_ios_media", {
+			kind: "video",
+			multiple: false,
+		});
+		expect(openMock).not.toHaveBeenCalled();
 	});
 });
 
@@ -214,6 +230,51 @@ describe("pickMultipleMedia", () => {
 			multiple: true,
 		});
 		expect(openMock).not.toHaveBeenCalled();
+	});
+
+	it("keeps the iOS selection order", async () => {
+		runningOn("ios");
+		vi.spyOn(crypto, "randomUUID")
+			.mockReturnValueOnce(firstKey)
+			.mockReturnValueOnce(secondKey);
+		invokeMock.mockResolvedValue({
+			picks: [{ id: "staged-2" }, { id: "staged-1" }],
+			failed: 0,
+		});
+
+		await expect(pickMultipleMedia("media")).resolves.toEqual([
+			{ source: "staged", key: firstKey, mimeType: null, id: "staged-2" },
+			{
+				source: "staged",
+				key: secondKey,
+				mimeType: null,
+				id: "staged-1",
+			},
+		]);
+
+		expect(invokeMock).toHaveBeenCalledExactlyOnceWith("pick_ios_media", {
+			kind: "media",
+			multiple: true,
+		});
+		expect(openMock).not.toHaveBeenCalled();
+		expect(toastMock.error).not.toHaveBeenCalled();
+	});
+
+	it("keeps the iOS picks that loaded and says how many did not", async () => {
+		runningOn("ios");
+		vi.spyOn(crypto, "randomUUID").mockReturnValueOnce(firstKey);
+		invokeMock.mockResolvedValue({
+			picks: [{ id: "staged-1" }],
+			failed: 2,
+		});
+
+		await expect(pickMultipleMedia("image")).resolves.toEqual([
+			{ source: "staged", key: firstKey, mimeType: null, id: "staged-1" },
+		]);
+
+		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+			"Couldn't load 2 of the picked items",
+		);
 	});
 
 	it("narrows the Android gallery fallback to videos for the video kind", async () => {

@@ -23,6 +23,8 @@ mod pin_support;
 mod plugin_rejection;
 #[cfg(target_os = "macos")]
 mod predecessor;
+#[cfg(target_os = "ios")]
+mod presenting;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
 mod scroll_phase;
@@ -283,6 +285,8 @@ pub fn run() {
             api::update::commands::updater_discard,
             app_settings::open_app_settings,
             media_picker::pick_android_media,
+            #[cfg(target_os = "ios")]
+            media_picker::ios::pick_ios_media,
             appearance::backdrop_filter_renders,
             appearance::webview_engine,
             app_data::read_app_data,

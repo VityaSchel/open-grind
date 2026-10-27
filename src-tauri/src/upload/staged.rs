@@ -48,6 +48,20 @@ impl StagedMedia {
 		Ok(id)
 	}
 
+	#[cfg(any(test, target_os = "ios"))]
+	pub fn adopt(&self, source: &std::path::Path) -> io::Result<String> {
+		fs::create_dir_all(&self.0)?;
+		let id = Uuid::new_v4().hyphenated().to_string();
+		let target = self.0.join(&id);
+		if fs::rename(source, &target).is_err() {
+			if let Err(error) = fs::copy(source, &target) {
+				let _ = fs::remove_file(&target);
+				return Err(error);
+			}
+		}
+		Ok(id)
+	}
+
 	pub fn appender(&self, id: &str) -> io::Result<File> {
 		OpenOptions::new().append(true).open(self.path(id)?)
 	}
@@ -149,6 +163,36 @@ mod tests {
 			fs::read(stage.0.path(&id).expect("path")).expect("read"),
 			b"first second"
 		);
+	}
+
+	#[test]
+	fn an_adopted_file_moves_into_the_stage() {
+		let stage = TempStage::new();
+		let picked = std::env::temp_dir().join(format!(
+			"og-picked-{}-{}",
+			std::process::id(),
+			NEXT.fetch_add(1, Ordering::Relaxed)
+		));
+		fs::write(&picked, b"picked").expect("write");
+
+		let id = stage.0.adopt(&picked).expect("adopt");
+
+		assert!(!picked.exists());
+		assert_eq!(
+			fs::read(stage.0.path(&id).expect("path")).expect("read"),
+			b"picked"
+		);
+	}
+
+	#[test]
+	fn adopting_a_missing_file_stages_nothing() {
+		let stage = TempStage::new();
+		let missing = stage.0 .0.join("missing");
+
+		let refused = stage.0.adopt(&missing).expect_err("refused");
+
+		assert_eq!(refused.kind(), io::ErrorKind::NotFound);
+		assert_eq!(fs::read_dir(&stage.0 .0).expect("directory").count(), 0);
 	}
 
 	#[test]

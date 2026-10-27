@@ -1,3 +1,6 @@
+#[cfg(target_os = "ios")]
+pub(crate) mod ios;
+
 #[cfg(target_os = "android")]
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "android")]

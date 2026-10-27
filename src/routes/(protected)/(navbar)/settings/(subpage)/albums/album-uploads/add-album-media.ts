@@ -37,6 +37,7 @@ async function inspectPicks(picked: PickedMedia[]): Promise<InspectedPick[]> {
 		const inspection = await inspectMediaFile(media).catch(() => null);
 		if (inspection === null || !isUploadable(inspection)) {
 			toast.error(UNSUPPORTED_MESSAGE);
+			void discardStagedMedia([media]);
 			continue;
 		}
 		inspected.push({ media, inspection });

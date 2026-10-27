@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { toast } from "svelte-sonner";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
+import z from "zod";
 
 import { demoEnabled } from "$lib/demo";
 import { currentPlatform } from "$lib/platform/os";
@@ -39,6 +41,11 @@ const filtersByKind = {
 } satisfies Record<string, MediaFilter>;
 
 export type MediaKind = keyof typeof filtersByKind;
+
+const iosPicksSchema = z.object({
+	picks: z.array(z.object({ id: z.string() })),
+	failed: z.number().int().nonnegative(),
+});
 
 export type PickedMedia = { key: string; mimeType: string | null } & (
 	| { source: "android"; uri: AndroidFsUri }
@@ -90,11 +97,33 @@ async function pick({
 			);
 		}
 		case "ios":
+			return pickIosMedia({ kind, multiple });
 		case "linux":
 		case "macos":
 		case "windows":
 			return pickWithDialog({ filter, multiple });
 	}
+}
+
+async function pickIosMedia({
+	kind,
+	multiple,
+}: {
+	kind: MediaKind;
+	multiple: boolean;
+}): Promise<PickedMedia[]> {
+	const { picks, failed } = iosPicksSchema.parse(
+		await invoke("pick_ios_media", { kind, multiple }),
+	);
+	if (failed > 0) toast.error(`Couldn't load ${failed} of the picked items`);
+	return picks.map(
+		({ id }): PickedMedia => ({
+			source: "staged",
+			key: crypto.randomUUID(),
+			mimeType: null,
+			id,
+		}),
+	);
 }
 
 async function pickWithDialog({
