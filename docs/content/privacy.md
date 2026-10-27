@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-10-18
+Effective date: 2026-10-27
 
 This policy covers the Open Grind app, made by Open Grind Governance. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
