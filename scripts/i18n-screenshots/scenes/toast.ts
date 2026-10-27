@@ -26,6 +26,7 @@ export async function waitForNewToast({
 	const shown = await page.locator(SHOWN_TOAST).count();
 	await action();
 	await page.locator(SHOWN_TOAST).nth(shown).waitFor();
+	await pauseToasts(page);
 }
 
 export async function addingToast({
@@ -36,7 +37,6 @@ export async function addingToast({
 	action: () => Promise<void>;
 }): Promise<void> {
 	await waitForNewToast({ page, action });
-	await pauseToasts(page);
 	await holdToast(page);
 }
 
