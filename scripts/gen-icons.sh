@@ -84,8 +84,8 @@ compile_icon macos --platform macosx --target-device mac \
 cp "$catalog/macos/Assets.car" src-tauri/icons/Assets.car
 cp "$catalog/macos/AppIcon.icns" src-tauri/icons/icon.icns
 
-compile_icon ios --platform iphoneos --target-device iphone --target-device ipad \
+compile_icon ios --platform iphoneos --target-device iphone \
   --minimum-deployment-target "$(bun -e 'console.log((await Bun.file("src-tauri/tauri.ios.conf.json").json()).bundle.iOS.minimumSystemVersion)')"
 rm -rf src-tauri/gen/apple/AppIcon
 mkdir src-tauri/gen/apple/AppIcon
-cp "$catalog/ios/Assets.car" "$catalog"/ios/AppIcon*.png src-tauri/gen/apple/AppIcon/
+cp "$catalog/ios/Assets.car" "$catalog/ios/AppIcon60x60@2x.png" src-tauri/gen/apple/AppIcon/

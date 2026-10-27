@@ -36,11 +36,6 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        UISupportedInterfaceOrientations~ipad:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.1.0
         CFBundleVersion: "11000"
     entitlements:
@@ -60,6 +55,7 @@ targets:
         EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
         COMPRESS_PNG_FILES: false
         STRIP_PNG_TEXT: false
+        TARGETED_DEVICE_FAMILY: "1"
       groups: [app]
     dependencies:
       - framework: libapp.a

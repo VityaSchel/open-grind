@@ -14,7 +14,6 @@
 		35728B2BDB32585945B88172 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 470B8D1ABF84FE4B2C3E5179 /* MetalKit.framework */; };
 		477958747936332C1C0EF88A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 47BE5BC480CEE626C983CE29 /* Security.framework */; };
 		64AC157AC5FB1A2C84B56834 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDC1C337938A7C29DC568A1A /* CoreGraphics.framework */; };
-		8CB3F888AB489233B3F1F689 /* AppIcon76x76@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = DB3830251AA3EAA088A652AB /* AppIcon76x76@2x~ipad.png */; };
 		958AEB08DC253BDEBCDAD1DD /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 24921155B146EBBBD04774DF /* main.mm */; };
 		CC009F7CD2502D7359D5A12F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 945C140FF298948FFB951EB6 /* LaunchScreen.storyboard */; };
 		CC4D74F2B527F040A25EF420 /* AppIcon60x60@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF759DB2FAE7F79210473AA0 /* AppIcon60x60@2x.png */; };
@@ -39,7 +38,6 @@
 		945C140FF298948FFB951EB6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A91A089C261322DFE2F0A2D5 /* open-grind_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "open-grind_iOS.entitlements"; sourceTree = "<group>"; };
 		BF759DB2FAE7F79210473AA0 /* AppIcon60x60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon60x60@2x.png"; sourceTree = "<group>"; };
-		DB3830251AA3EAA088A652AB /* AppIcon76x76@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon76x76@2x~ipad.png"; sourceTree = "<group>"; };
 		EEC93743796E4ECF80423973 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FDC1C337938A7C29DC568A1A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -122,7 +120,6 @@
 			isa = PBXGroup;
 			children = (
 				BF759DB2FAE7F79210473AA0 /* AppIcon60x60@2x.png */,
-				DB3830251AA3EAA088A652AB /* AppIcon76x76@2x~ipad.png */,
 				73A96495117E12D738FA7432 /* Assets.car */,
 			);
 			path = AppIcon;
@@ -213,7 +210,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC4D74F2B527F040A25EF420 /* AppIcon60x60@2x.png in Resources */,
-				8CB3F888AB489233B3F1F689 /* AppIcon76x76@2x~ipad.png in Resources */,
 				20D03BFC35657CE0525D4475 /* Assets.car in Resources */,
 				CC009F7CD2502D7359D5A12F /* LaunchScreen.storyboard in Resources */,
 				E8A5D61B0A5A10B6890873A3 /* assets in Resources */,
@@ -287,7 +283,7 @@
 				PRODUCT_NAME = "Open Grind";
 				SDKROOT = iphoneos;
 				STRIP_PNG_TEXT = NO;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = arm64;
 			};
 			name = release;
@@ -321,7 +317,7 @@
 				PRODUCT_NAME = "Open Grind";
 				SDKROOT = iphoneos;
 				STRIP_PNG_TEXT = NO;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = arm64;
 			};
 			name = debug;
