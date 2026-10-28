@@ -19,7 +19,7 @@ async function openAppSettings(page: Page, platform: SupportedPlatform) {
 const hapticSwitch = (page: Page) =>
 	page.getByRole("switch", { name: /^Haptic feedback/ });
 
-for (const platform of ["android", "macos"] as const) {
+for (const platform of ["android", "ios", "macos"] as const) {
 	test(`${platform} describes haptics without naming gestures`, async ({
 		page,
 	}) => {

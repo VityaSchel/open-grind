@@ -36,14 +36,14 @@ describe("hapticsAvailable", () => {
 		runningOn("android");
 		expect(hapticsAvailable()).toBe(true);
 
+		runningOn("ios");
+		expect(hapticsAvailable()).toBe(true);
+
 		runningOn("macos");
 		expect(hapticsAvailable()).toBe(true);
 	});
 
 	it("is false where nothing can be played", () => {
-		runningOn("ios");
-		expect(hapticsAvailable()).toBe(false);
-
 		runningOn("linux");
 		expect(hapticsAvailable()).toBe(false);
 
@@ -53,15 +53,18 @@ describe("hapticsAvailable", () => {
 });
 
 describe("playHaptic", () => {
-	it("asks the backend for the named kind on a platform that has one", () => {
-		runningOn("android");
+	it.each(["android", "ios", "macos"] as const)(
+		"asks the backend for the named kind on %s",
+		(platform) => {
+			runningOn(platform);
 
-		playHaptic("longPress");
+			playHaptic("longPress");
 
-		expect(invokeMock).toHaveBeenCalledExactlyOnceWith("play_haptic", {
-			kind: "longPress",
-		});
-	});
+			expect(invokeMock).toHaveBeenCalledExactlyOnceWith("play_haptic", {
+				kind: "longPress",
+			});
+		},
+	);
 
 	it("stays quiet where nothing can be played", () => {
 		runningOn("windows");

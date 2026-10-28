@@ -79,7 +79,7 @@ apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "prote
 boring2 = "4.15.11"
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "block2", "NSArray", "NSError", "NSItemProvider", "NSNotification", "NSOperation", "NSProcessInfo", "NSProgress", "NSString", "NSURL"] }
 objc2-photos-ui = { version = "0.3", default-features = false, features = ["std", "PHPicker"] }
-objc2-ui-kit = { version = "0.3", default-features = false, features = ["std", "block2", "objc2-core-foundation", "UIAction", "UIApplication", "UIBarButtonItem", "UIBarItem", "UIColor", "UIGeometry", "UIInterface", "UIMenuElement", "UINavigationController", "UINavigationItem", "UIPresentationController", "UIResponder", "UIView", "UIViewController", "UIViewControllerTransitionCoordinator", "UIWindow"] }
+objc2-ui-kit = { version = "0.3", default-features = false, features = ["std", "block2", "objc2-core-foundation", "UIAction", "UIApplication", "UIBarButtonItem", "UIBarItem", "UIColor", "UIFeedbackGenerator", "UIGeometry", "UIImpactFeedbackGenerator", "UIInterface", "UIMenuElement", "UINavigationController", "UINavigationItem", "UIPresentationController", "UIResponder", "UIView", "UIViewController", "UIViewControllerTransitionCoordinator", "UIWindow"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-native-keyring-store = "1.1.0"

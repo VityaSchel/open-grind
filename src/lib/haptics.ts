@@ -11,9 +11,9 @@ export type HapticKind = "longPress" | "threshold" | "dragStart";
 export function hapticsAvailable(): boolean {
 	switch (currentPlatform()) {
 		case "android":
+		case "ios":
 		case "macos":
 			return true;
-		case "ios":
 		case "linux":
 		case "windows":
 			return false;

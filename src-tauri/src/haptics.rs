@@ -13,13 +13,16 @@ pub fn play_haptic(window: tauri::WebviewWindow, kind: HapticKind) {
 	#[cfg(target_os = "android")]
 	android::play(&window, kind);
 
+	#[cfg(target_os = "ios")]
+	ios::play(kind);
+
 	#[cfg(target_os = "macos")]
 	macos::play(kind);
 
 	#[cfg(any(target_os = "ios", desktop))]
 	let _ = window;
 
-	#[cfg(any(target_os = "ios", target_os = "linux", target_os = "windows"))]
+	#[cfg(any(target_os = "linux", target_os = "windows"))]
 	let _ = kind;
 }
 
@@ -94,6 +97,74 @@ mod android {
 	}
 }
 
+#[cfg(any(target_os = "ios", test))]
+mod ios_feedback {
+	use super::HapticKind;
+
+	#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+	pub enum ImpactStyle {
+		Light,
+		Medium,
+	}
+
+	pub fn impact_style(kind: HapticKind) -> ImpactStyle {
+		match kind {
+			HapticKind::Threshold => ImpactStyle::Light,
+			HapticKind::LongPress | HapticKind::DragStart => {
+				ImpactStyle::Medium
+			}
+		}
+	}
+}
+
+#[cfg(target_os = "ios")]
+mod ios {
+	use std::cell::OnceCell;
+	use std::thread::LocalKey;
+
+	use objc2::rc::Retained;
+	use objc2::{MainThreadMarker, MainThreadOnly};
+	use objc2_ui_kit::{UIImpactFeedbackGenerator, UIImpactFeedbackStyle};
+
+	use super::ios_feedback::{impact_style, ImpactStyle};
+	use super::HapticKind;
+
+	type Generator = OnceCell<Retained<UIImpactFeedbackGenerator>>;
+
+	thread_local! {
+		static LIGHT: Generator = const { OnceCell::new() };
+		static MEDIUM: Generator = const { OnceCell::new() };
+	}
+
+	pub fn play(kind: HapticKind) {
+		let Some(mtm) = MainThreadMarker::new() else {
+			tracing::warn!("[haptics] play_haptic left the main thread");
+			return;
+		};
+		let (generator, style): (&'static LocalKey<Generator>, _) =
+			match impact_style(kind) {
+				ImpactStyle::Light => (&LIGHT, UIImpactFeedbackStyle::Light),
+				ImpactStyle::Medium => (&MEDIUM, UIImpactFeedbackStyle::Medium),
+			};
+		generator.with(|generator| {
+			let generator = generator.get_or_init(|| create(mtm, style));
+			generator.impactOccurred();
+			generator.prepare();
+		});
+	}
+
+	#[allow(deprecated)]
+	fn create(
+		mtm: MainThreadMarker,
+		style: UIImpactFeedbackStyle,
+	) -> Retained<UIImpactFeedbackGenerator> {
+		UIImpactFeedbackGenerator::initWithStyle(
+			UIImpactFeedbackGenerator::alloc(mtm),
+			style,
+		)
+	}
+}
+
 #[cfg(target_os = "macos")]
 mod macos {
 	use objc2_app_kit::{
@@ -120,7 +191,19 @@ mod macos {
 #[cfg(test)]
 mod tests {
 	use super::android_feedback::android_constant;
+	use super::ios_feedback::{impact_style, ImpactStyle};
 	use super::HapticKind;
+
+	#[test]
+	fn a_threshold_plays_a_light_impact_on_ios() {
+		assert_eq!(impact_style(HapticKind::Threshold), ImpactStyle::Light);
+	}
+
+	#[test]
+	fn a_long_press_and_a_drag_start_play_a_medium_impact_on_ios() {
+		assert_eq!(impact_style(HapticKind::LongPress), ImpactStyle::Medium);
+		assert_eq!(impact_style(HapticKind::DragStart), ImpactStyle::Medium);
+	}
 
 	#[test]
 	fn a_long_press_plays_the_long_press_constant_on_every_version() {
