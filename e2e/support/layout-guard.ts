@@ -7,6 +7,10 @@ export const BLUR_MODES = ["max", "medium", "min", "off"] as const;
 export type BlurMode = (typeof BLUR_MODES)[number];
 
 const SIDEWAYS_SCROLLER = '[data-scroll-intent="x"]';
+const SIDE_BAND_CONTENT =
+	"img, video, canvas, input, textarea, select, button, a[href], [role='button'], [role='link'], [role='tab'], [role='switch'], [role='checkbox'], [role='slider'], [role='menuitem']";
+const SIDE_BAND_EXEMPT = ".pswp, [data-slot='safe-area-strip']";
+const EDGE_TO_EDGE_CHROME = ".pblur, [data-slot='safe-area-strip']";
 const UNDER_BAR_MARK = "data-layout-guard-under";
 const SCROLLED_MARK = "data-layout-guard-scrolled";
 const SHOWS_THROUGH = 0.1;
@@ -56,9 +60,23 @@ export type LayoutScan = {
 	scrollersInBars: string[];
 	unintendedSidewaysScrollers: string[];
 	escapes: string[];
+	intoSideBands: string[];
+	fixedChromeShortOfTheEdges: string[];
 };
 
-function scanInPage({ sideways, mark }: { sideways: string; mark: string }) {
+function scanInPage({
+	sideways,
+	mark,
+	sideBandContent,
+	sideBandExempt,
+	edgeToEdgeChrome,
+}: {
+	sideways: string;
+	mark: string;
+	sideBandContent: string;
+	sideBandExempt: string;
+	edgeToEdgeChrome: string;
+}) {
 	const describe = (element: Element) => {
 		const label = element.getAttribute("aria-label");
 		const slot = element.getAttribute("data-slot");
@@ -177,6 +195,47 @@ function scanInPage({ sideways, mark }: { sideways: string; mark: string }) {
 	const safeTop = parseFloat(root.getPropertyValue("--safe-area-top")) || 0;
 	const safeBottom =
 		parseFloat(root.getPropertyValue("--safe-area-bottom")) || 0;
+	const safeLeft = parseFloat(root.getPropertyValue("--safe-area-left")) || 0;
+	const safeRight =
+		parseFloat(root.getPropertyValue("--safe-area-right")) || 0;
+
+	const showsContent = (element: Element) =>
+		element.matches(sideBandContent) ||
+		[...element.childNodes].some(
+			(node) =>
+				node.nodeType === Node.TEXT_NODE &&
+				(node.textContent ?? "").trim() !== "",
+		);
+	const intoSideBands = everything
+		.filter(
+			(element) =>
+				!element.closest(sideBandExempt) && showsContent(element),
+		)
+		.flatMap((element) => {
+			const { left, right, top, bottom } = visibleBox(element);
+			if (right - left <= 1 || bottom - top <= 1) return [];
+			const clear =
+				left >= safeLeft - 1 && right <= innerWidth - safeRight + 1;
+			if (clear) return [];
+			return [
+				`${describe(element)} spans ${Math.round(left)}..${Math.round(right)}`,
+			];
+		});
+	const fixedChromeShortOfTheEdges = everything
+		.filter(
+			(element) =>
+				element.matches(edgeToEdgeChrome) &&
+				getComputedStyle(element).position === "fixed",
+		)
+		.flatMap((element) => {
+			const { left, right } = element.getBoundingClientRect();
+			const edgeToEdge =
+				Math.abs(left) <= 1 && Math.abs(right - innerWidth) <= 1;
+			if (edgeToEdge) return [];
+			return [
+				`${describe(element)} spans ${Math.round(left)}..${Math.round(right)}`,
+			];
+		});
 	const pageScrollers = everything.filter(
 		(element) =>
 			scrollable(getComputedStyle(element).overflowY) &&
@@ -238,6 +297,8 @@ function scanInPage({ sideways, mark }: { sideways: string; mark: string }) {
 		scrollersInBars,
 		unintendedSidewaysScrollers,
 		escapes,
+		intoSideBands,
+		fixedChromeShortOfTheEdges,
 	};
 }
 
@@ -245,6 +306,9 @@ export function scanLayout(page: Page): Promise<LayoutScan> {
 	return page.evaluate(scanInPage, {
 		sideways: SIDEWAYS_SCROLLER,
 		mark: UNDER_BAR_MARK,
+		sideBandContent: SIDE_BAND_CONTENT,
+		sideBandExempt: SIDE_BAND_EXEMPT,
+		edgeToEdgeChrome: EDGE_TO_EDGE_CHROME,
 	});
 }
 
