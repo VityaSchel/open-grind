@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { NavigationType } from "@sveltejs/kit";
+import type { NavigationType } from "$app/navigation";
 
 import {
 	canGoBack,

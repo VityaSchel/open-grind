@@ -6,11 +6,11 @@ Bun applies each hunk at its recorded line number without matching the context, 
 
 ## `@sveltejs/kit`
 
-Sorts the five `fs.readdirSync()` calls whose order decides build output, so a rebuild elsewhere produces the same bytes.
+Sorts the three `fs.readdirSync()` calls in `src/utils/filesystem.js` (`copy`, `walk` and `resolve_entry`) whose order decides build output, so a rebuild elsewhere produces the same bytes. `copy` and `walk` read `Dirent`s, so they sort by name: a plain `.sort()` compares `"[object Dirent]"` and changes nothing.
 
-See [sveltejs/kit#15313](https://github.com/sveltejs/kit/issues/15313). [#16074](https://github.com/sveltejs/kit/pull/16074) is `version-3` only and sorts one of the five, so the patch outlives a v3 upgrade.
+See [sveltejs/kit#15313](https://github.com/sveltejs/kit/issues/15313). Kit 3 sorts the route walker upstream ([#16074](https://github.com/sveltejs/kit/pull/16074)) and replaced the `src/params/` directory with a single file, so those two sites left the patch.
 
-`patchedDependencies` is linked to exact version, and bun silently drops an entry that no longer resolves, so a SvelteKit version bump disables this patch. Re-apply with `bun patch`, replace the old key, confirm `bun.lock` still lists it.
+`patchedDependencies` is linked to exact version, and bun silently drops an entry that no longer resolves, so a SvelteKit version bump disables this patch. Regenerate it as described above, replace the old key, and confirm `bun.lock` still lists it.
 
 ## `vaul-svelte`
 

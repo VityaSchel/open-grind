@@ -1,5 +1,5 @@
 import { flushSync } from "svelte";
-import type { OnNavigate } from "@sveltejs/kit";
+import type { OnNavigate } from "$app/navigation";
 
 import type { StackSurface } from "./surface";
 

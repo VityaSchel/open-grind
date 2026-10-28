@@ -56,7 +56,7 @@
 			)
 				return;
 			restedPane = pane;
-			void goto(landed, { replaceState: true, noScroll: true });
+			void goto(landed, { replace: true, reset: false });
 		},
 	});
 

@@ -44,7 +44,7 @@
 
 	onMount(() => {
 		installScrollGestureBridge();
-		if (env.PUBLIC_TEST_INSETS) {
+		if (PUBLIC_TEST_INSETS) {
 			window.__AndroidInsets = {
 				top() {
 					return 64;
@@ -85,7 +85,7 @@
 		};
 	});
 
-	import { env } from "$env/dynamic/public";
+	import { PUBLIC_TEST_INSETS } from "$app/env/public";
 
 	import faviconPng from "#lib/assets/favicon.png";
 	import AccountStatusAlert from "#lib/components/feedback/AccountStatusAlert.svelte";
@@ -161,8 +161,8 @@
 	class={[
 		"fixed inset-x-0 top-0 z-safe-area",
 		{
-			"bg-background/50": !env.PUBLIC_TEST_INSETS,
-			"bg-red-900": env.PUBLIC_TEST_INSETS,
+			"bg-background/50": !PUBLIC_TEST_INSETS,
+			"bg-red-900": PUBLIC_TEST_INSETS,
 		},
 	]}
 	style:height="var(--safe-area-top)"
@@ -172,8 +172,8 @@
 	class={[
 		"fixed inset-x-0 bottom-0 z-safe-area",
 		{
-			"bg-background/50": !env.PUBLIC_TEST_INSETS,
-			"bg-red-900": env.PUBLIC_TEST_INSETS,
+			"bg-background/50": !PUBLIC_TEST_INSETS,
+			"bg-red-900": PUBLIC_TEST_INSETS,
 		},
 	]}
 	style:height="var(--safe-area-bottom)"

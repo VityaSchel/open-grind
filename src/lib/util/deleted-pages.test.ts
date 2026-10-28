@@ -11,7 +11,7 @@ import type {
 	AfterNavigate,
 	BeforeNavigate,
 	NavigationType,
-} from "@sveltejs/kit";
+} from "$app/navigation";
 
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {

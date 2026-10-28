@@ -1060,7 +1060,7 @@
 			"name": "@sveltejs/kit",
 			"ecosystem": "npm",
 			"versions": [
-				"2.70.3"
+				"3.1.0"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/sveltejs/kit",
@@ -1203,6 +1203,19 @@
 			"url": "https://github.com/date-fns/date-fns",
 			"textHashes": [
 				"e09ccac2a81189df"
+			]
+		},
+		{
+			"id": "devalue",
+			"name": "devalue",
+			"ecosystem": "npm",
+			"versions": [
+				"5.9.4"
+			],
+			"spdx": "MIT",
+			"url": "https://github.com/sveltejs/devalue",
+			"textHashes": [
+				"00bde6f2eced80eb"
 			]
 		},
 		{
@@ -9460,6 +9473,10 @@
 		}
 	],
 	"texts": [
+		{
+			"hash": "00bde6f2eced80eb",
+			"text": "Copyright (c) 2018-19 [these people](https://github.com/rich-harris/devalue/graphs/contributors)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+		},
 		{
 			"hash": "01316da6c16abba7",
 			"text": "Copyright (c) 2019 Ivan Molodetskikh\n\nPermission is hereby granted, free of charge, to any\nperson obtaining a copy of this software and associated\ndocumentation files (the \"Software\"), to deal in the\nSoftware without restriction, including without\nlimitation the rights to use, copy, modify, merge,\npublish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software\nis furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice\nshall be included in all copies or substantial portions\nof the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF\nANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED\nTO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\nPARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT\nSHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR\nIN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\nDEALINGS IN THE SOFTWARE."

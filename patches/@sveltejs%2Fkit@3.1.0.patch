@@ -1,0 +1,35 @@
+diff --git a/src/utils/filesystem.js b/src/utils/filesystem.js
+index c552d12c7bc0644c5cf1d98ca58e0aa092c85c6c..931cbbfcb689996594b21ff799d98ff061f00b93 100644
+--- a/src/utils/filesystem.js
++++ b/src/utils/filesystem.js
+@@ -34,7 +34,9 @@
+ 		if (opts.filter && !opts.filter(path.basename(from))) return;
+ 
+ 		if (is_directory) {
+-			for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
++			for (const entry of fs
++				.readdirSync(from, { withFileTypes: true })
++				.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+ 				const child = path.join(from, entry.name);
+ 				go(
+ 					child,
+@@ -82,7 +84,9 @@
+  * @returns {Generator<string>} the posix paths of all found files, relative to `cwd`
+  */
+ export function* walk(cwd, dir = '') {
+-	for (const entry of fs.readdirSync(path.join(cwd, dir), { withFileTypes: true })) {
++	for (const entry of fs
++		.readdirSync(path.join(cwd, dir), { withFileTypes: true })
++		.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+ 		const joined = dir ? `${dir}/${entry.name}` : entry.name;
+ 		const is_directory = entry.isSymbolicLink()
+ 			? fs.statSync(path.join(cwd, joined)).isDirectory()
+@@ -142,7 +146,7 @@
+ 
+ 	if (fs.existsSync(dir)) {
+ 		const base = path.basename(entry);
+-		const files = fs.readdirSync(dir);
++		const files = fs.readdirSync(dir).sort();
+ 		const found = files.find((file) => {
+ 			const matches = file === base || extensions.some((extension) => file === base + extension);
+ 			return matches && fs.statSync(path.join(dir, file)).isFile();
