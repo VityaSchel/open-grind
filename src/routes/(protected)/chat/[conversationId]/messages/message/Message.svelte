@@ -235,9 +235,9 @@
 				return {
 					oncontextmenu(event) {
 						event.preventDefault();
-						if (openContextMenu() && firedByTouch(event)) {
-							playHaptic("longPress");
-						}
+						if (!openContextMenu() || !firedByTouch(event)) return;
+						swipe?.cancel();
+						playHaptic("longPress");
 					},
 				};
 		}

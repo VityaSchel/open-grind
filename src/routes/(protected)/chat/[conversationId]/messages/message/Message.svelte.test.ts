@@ -346,4 +346,18 @@ describe("message menu on Android", () => {
 		expect(await menuOpened(row)).toBe(false);
 		expect(playHapticMock).not.toHaveBeenCalled();
 	});
+
+	it("drops a swipe the finger starts once the menu is open", async () => {
+		const onReply = vi.fn();
+		const row = renderTextMessage({ onReply });
+
+		row.dispatchEvent(pointerEvent("pointerdown"));
+		row.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
+		expect(await menuOpened(row)).toBe(true);
+		row.dispatchEvent(pointerEvent("pointermove", { x: 90 }));
+		row.dispatchEvent(pointerEvent("pointerup", { x: 90 }));
+
+		expect(onReply).not.toHaveBeenCalled();
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
 });
