@@ -18,11 +18,14 @@
 	import { abortBackdropBlurTrialGesture } from "$lib/blur/calibration/trial.svelte";
 	import { hydrateBackdropCompositing } from "$lib/blur/compositing.svelte";
 	import { applyBackdropBlurQuality } from "$lib/blur/quality.svelte";
-	import { applyAndroidInsets } from "$lib/platform/android-native-bridge";
 	import { blockNativeMenu } from "$lib/platform/block-native-menu";
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { trackHoverPointer } from "$lib/platform/hover-pointer";
 	import { keepLinksInApp } from "$lib/platform/in-app-links";
+	import {
+		installNativeInsets,
+		type NativeInsets,
+	} from "$lib/platform/native-insets";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
 	import { installSystemBack } from "$lib/platform/system-back-gesture";
 	import { reconcileNotifications } from "$lib/push/notifications.svelte";
@@ -40,23 +43,9 @@
 
 	onMount(() => {
 		installScrollGestureBridge();
-		if (env.PUBLIC_TEST_INSETS) {
-			window.__AndroidInsets = {
-				top() {
-					return 64;
-				},
-				bottom() {
-					return 64;
-				},
-				left() {
-					return 0;
-				},
-				right() {
-					return 0;
-				},
-			};
-		}
-		applyAndroidInsets();
+		installNativeInsets({
+			fallback: env.PUBLIC_TEST_INSETS ? TEST_INSETS : undefined,
+		});
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
 		const releaseHoverPointer = trackHoverPointer();
@@ -89,6 +78,14 @@
 	import faviconSvg from "../../contrib/logo/open-grind.svg";
 
 	let { children }: { children?: import("svelte").Snippet } = $props();
+
+	const TEST_INSETS: NativeInsets = {
+		top: 64,
+		bottom: 64,
+		left: 0,
+		right: 0,
+		ime: false,
+	};
 
 	const onboarded = $derived(
 		preferencesLoaded() && preferencesSnapshot().onboardingComplete,

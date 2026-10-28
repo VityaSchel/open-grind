@@ -7,6 +7,7 @@ import {
 	installTauriShim,
 	meTab,
 } from "./support/app";
+import { sendInsets, TEST_INSETS } from "./support/keyboard";
 import { setBlurMode } from "./support/layout-guard";
 import {
 	BOTTOM_TOASTER,
@@ -138,12 +139,10 @@ test.describe("a toast rests 8px above the bottom chrome", () => {
 	}) => {
 		await page.goto(DEMO_CONVERSATION);
 		await composer(page).waitFor({ timeout: 60_000 });
-		await page.evaluate((bottom) => {
-			const insets = window.__AndroidInsets;
-			if (!insets) throw new Error("Test insets are off");
-			insets.bottom = () => bottom;
-			window.__reapplyInsets();
-		}, RAISED_BOTTOM_INSET_PX);
+		await sendInsets(page, {
+			...TEST_INSETS,
+			bottom: RAISED_BOTTOM_INSET_PX,
+		});
 		await expectToastGap({ obstruction: composer(page), edge: "bottom" });
 	});
 

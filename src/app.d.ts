@@ -1,4 +1,4 @@
-import type { NativeInsets } from "$lib/platform/android-native-bridge";
+import type { NativeInsets } from "$lib/platform/native-insets";
 
 declare global {
 	namespace App {
@@ -16,6 +16,7 @@ declare global {
 			right(): number;
 			imeVisible?(): boolean;
 		};
+		__iosInsets?: NativeInsets;
 		__AndroidOnBackGesture?: () => boolean;
 		__AndroidOnBackGestureStart?: () => boolean;
 		__AndroidOnBackGestureCancel?: () => void;

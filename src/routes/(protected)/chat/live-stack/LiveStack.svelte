@@ -14,7 +14,7 @@
 	import {
 		softKeyboardHidden,
 		softKeyboardVisibility,
-	} from "$lib/platform/android-native-bridge";
+	} from "$lib/platform/native-insets";
 	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
 	import { earlierPathnames } from "$lib/util/history";
 	import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";

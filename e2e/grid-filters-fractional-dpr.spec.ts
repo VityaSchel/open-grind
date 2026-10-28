@@ -6,6 +6,7 @@ import {
 	openAllFilters,
 	scrollFiltersToBottom,
 } from "./support/grid-filters";
+import { sendInsets, TEST_INSETS } from "./support/keyboard";
 import { introSizes } from "./support/transitions";
 
 const DEVICE_PIXEL_RATIO = 3.5;
@@ -39,19 +40,11 @@ test("the footer divider hides at the bottom of a sheet with a fractional height
 	page,
 }) => {
 	await openGrid(page);
-	await page.evaluate(
-		({ top, bottom }) => {
-			const insets = window.__AndroidInsets;
-			if (!insets) throw new Error("Test insets are off");
-			insets.top = () => top;
-			insets.bottom = () => bottom;
-			window.__reapplyInsets();
-		},
-		{
-			top: INSETS_DEVICE_PX.top / DEVICE_PIXEL_RATIO,
-			bottom: INSETS_DEVICE_PX.bottom / DEVICE_PIXEL_RATIO,
-		},
-	);
+	await sendInsets(page, {
+		...TEST_INSETS,
+		top: INSETS_DEVICE_PX.top / DEVICE_PIXEL_RATIO,
+		bottom: INSETS_DEVICE_PX.bottom / DEVICE_PIXEL_RATIO,
+	});
 	await openAllFilters(page);
 
 	await scrollFiltersToBottom(page);

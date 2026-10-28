@@ -7,6 +7,7 @@ import {
 	installTauriShim,
 } from "./support/app";
 import { DRAWER, scrollSheetTo, SHEET_PANEL } from "./support/drawer";
+import { TEST_INSETS } from "./support/keyboard";
 import { openStickers } from "./support/stickers";
 import {
 	bottomToaster,
@@ -142,30 +143,31 @@ test("an offset change glides the toasts to their new place instead of jumping",
 	await composer(page).waitFor({ timeout: 60_000 });
 	await showRestingToast({ page, edge: "bottom", label: "Offset probe" });
 
-	const transition = await bottomToaster(page).evaluate((toaster, bottom) => {
-		const insets = window.__AndroidInsets;
-		if (!insets) throw new Error("Test insets are off");
-		const before = toaster.getBoundingClientRect().top;
-		insets.bottom = () => bottom;
-		window.__reapplyInsets();
-		return new Promise<{ gliding: boolean; firstFrameMovedPx: number }>(
-			(measured) =>
-				requestAnimationFrame(() =>
-					measured({
-						gliding: toaster
-							.getAnimations()
-							.some(
-								(animation) =>
-									animation instanceof CSSTransition &&
-									animation.transitionProperty === "bottom",
+	const transition = await bottomToaster(page).evaluate(
+		(toaster, insets) => {
+			const before = toaster.getBoundingClientRect().top;
+			window.__reapplyInsets(insets);
+			return new Promise<{ gliding: boolean; firstFrameMovedPx: number }>(
+				(measured) =>
+					requestAnimationFrame(() =>
+						measured({
+							gliding: toaster
+								.getAnimations()
+								.some(
+									(animation) =>
+										animation instanceof CSSTransition &&
+										animation.transitionProperty ===
+											"bottom",
+								),
+							firstFrameMovedPx: Math.abs(
+								toaster.getBoundingClientRect().top - before,
 							),
-						firstFrameMovedPx: Math.abs(
-							toaster.getBoundingClientRect().top - before,
-						),
-					}),
-				),
-		);
-	}, RAISED_BOTTOM_INSET_PX);
+						}),
+					),
+			);
+		},
+		{ ...TEST_INSETS, bottom: RAISED_BOTTOM_INSET_PX },
+	);
 
 	expect(transition.gliding).toBe(true);
 	expect(transition.firstFrameMovedPx).toBeLessThan(

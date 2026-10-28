@@ -1,7 +1,7 @@
 <script>
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
-	import { softKeyboardVisibility } from "$lib/platform/android-native-bridge";
+	import { softKeyboardVisibility } from "$lib/platform/native-insets";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
 	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
 
