@@ -11,7 +11,17 @@ use objc2_ui_kit::{
 
 const REFUSED: &str = "UIKit refused the presentation";
 
-struct Unanswered<F: FnOnce(Result<(), &'static str>)>(Option<F>);
+struct Unanswered<F: FnOnce(Result<(), &'static str>)>(Cell<Option<F>>);
+
+impl<F: FnOnce(Result<(), &'static str>)> Unanswered<F> {
+	fn new(shown: F) -> Self {
+		Self(Cell::new(Some(shown)))
+	}
+
+	fn take(&self) -> Option<F> {
+		self.0.take()
+	}
+}
 
 impl<F: FnOnce(Result<(), &'static str>)> Drop for Unanswered<F> {
 	fn drop(&mut self) {
@@ -34,15 +44,17 @@ pub fn present_on_top(
 		}
 		presenter = presented;
 	}
+	let unanswered = Unanswered::new(shown);
+	let completion = RcBlock::new(move || {
+		if let Some(shown) = unanswered.take() {
+			shown(Ok(()));
+		}
+	});
 	presenter.presentViewController_animated_completion(
 		&controller,
 		true,
-		None,
+		Some(&completion),
 	);
-	shown(match controller.presentingViewController() {
-		Some(_) => Ok(()),
-		None => Err(REFUSED),
-	});
 }
 
 fn after_dismissal(
@@ -55,18 +67,16 @@ fn after_dismissal(
 		shown(Err(REFUSED));
 		return;
 	};
-	let waiting =
-		Cell::new(Some((presenter, controller, Unanswered(Some(shown)))));
+	let waiting = Cell::new(Some((presenter, controller)));
+	let unanswered = Unanswered::new(shown);
 	let retry = RcBlock::new(
 		move |_: NonNull<
 			ProtocolObject<dyn UIViewControllerTransitionCoordinatorContext>,
 		>| {
-			if let Some((presenter, controller, mut unanswered)) =
-				waiting.take()
+			if let (Some((presenter, controller)), Some(shown)) =
+				(waiting.take(), unanswered.take())
 			{
-				if let Some(shown) = unanswered.0.take() {
-					present_on_top(presenter, controller, shown);
-				}
+				present_on_top(presenter, controller, shown);
 			}
 		},
 	);

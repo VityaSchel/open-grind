@@ -203,17 +203,26 @@ unsafe fn show(
 			controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)))
 		};
 	}
-	let sheet = Presented {
-		navigation: navigation.clone(),
-		_delegate: delegate,
-	};
+	PRESENTED.with(|presented| {
+		*presented.borrow_mut() = Some(Presented {
+			navigation: navigation.clone(),
+			_delegate: delegate,
+		});
+	});
+	let sheet = navigation.clone();
 	crate::presenting::present_on_top(
 		host,
 		Retained::into_super(navigation),
 		move |outcome| {
-			if outcome.is_ok() {
+			if outcome.is_err() {
 				PRESENTED.with(|presented| {
-					*presented.borrow_mut() = Some(sheet);
+					let mut presented = presented.borrow_mut();
+					if presented.as_ref().is_some_and(|current| {
+						Retained::as_ptr(&current.navigation)
+							== Retained::as_ptr(&sheet)
+					}) {
+						presented.take();
+					}
 				});
 			}
 			report(outcome);

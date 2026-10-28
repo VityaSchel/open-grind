@@ -141,16 +141,6 @@ async fn run_flow(
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
-	#[cfg(target_os = "ios")]
-	if let Err(e) =
-		crate::api::oauth::sheet::present(&window, "Sign in with Google").await
-	{
-		bridge.fulfill(Err(format!(
-			"{}: {e}",
-			crate::api::oauth::sheet::UNAVAILABLE
-		)));
-	}
-
 	let bridge_for_close = bridge.clone();
 	window.on_window_event(move |event| {
 		if matches!(
@@ -161,6 +151,16 @@ async fn run_flow(
 			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
 		}
 	});
+
+	#[cfg(target_os = "ios")]
+	if let Err(e) =
+		crate::api::oauth::sheet::present(&window, "Sign in with Google").await
+	{
+		bridge.fulfill(Err(format!(
+			"{}: {e}",
+			crate::api::oauth::sheet::UNAVAILABLE
+		)));
+	}
 
 	let result = match tokio::time::timeout(FLOW_TIMEOUT, rx).await {
 		Ok(Ok(result)) => result,
