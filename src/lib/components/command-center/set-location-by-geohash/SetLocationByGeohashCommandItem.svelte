@@ -4,9 +4,9 @@
 	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { setPreferences } from "$lib/app-data/preferences.svelte";
-	import * as Command from "$lib/components/ui/command";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+	import * as Command from "#lib/components/ui/command/index.ts";
 	import { commandCenterClose } from "../command-center-state.svelte";
 
 	let {

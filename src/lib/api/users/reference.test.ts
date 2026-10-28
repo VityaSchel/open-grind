@@ -2,16 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { getGenders } from "$lib/api/users/genders";
-import { getPronouns } from "$lib/api/users/pronouns";
-import { getTags } from "$lib/api/users/tags";
-import { gendersSchema } from "$lib/model/users/genders";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { getGenders } from "#lib/api/users/genders.ts";
+import { getPronouns } from "#lib/api/users/pronouns.ts";
+import { getTags } from "#lib/api/users/tags.ts";
+import { gendersSchema } from "#lib/model/users/genders.ts";
 
 const reference = [
 	{ path: "/public/v2/genders", get: getGenders },

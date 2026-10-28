@@ -21,14 +21,16 @@ const { goto, callMethod, caches, preferences, markers, push } = vi.hoisted(
 );
 
 vi.mock("$app/navigation", () => ({ goto }));
-vi.mock("$lib/api/methods", () => ({ callMethod }));
-vi.mock("$lib/api/account-caches", () => caches);
-vi.mock("$lib/app-data/preferences.svelte", () => preferences);
-vi.mock("$lib/chat/inbox-last-viewed.svelte", () => ({
+vi.mock("#lib/api/methods.ts", () => ({ callMethod }));
+vi.mock("#lib/api/account-caches.ts", () => caches);
+vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
+vi.mock("#lib/chat/inbox-last-viewed.svelte.ts", () => ({
 	inboxLastViewed: markers,
 }));
-vi.mock("$lib/interest/taps-last-viewed", () => ({ tapsLastViewed: markers }));
-vi.mock("$lib/push", () => push);
+vi.mock("#lib/interest/taps-last-viewed.ts", () => ({
+	tapsLastViewed: markers,
+}));
+vi.mock("#lib/push/index.ts", () => push);
 
 async function freshModule() {
 	vi.resetModules();

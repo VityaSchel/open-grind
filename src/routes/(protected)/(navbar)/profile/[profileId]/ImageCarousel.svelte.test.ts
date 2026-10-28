@@ -10,8 +10,8 @@ import {
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { isPhotoSwipeBusy } from "$lib/util/photoswipe";
-import * as safeArea from "$lib/util/safe-area";
+import { isPhotoSwipeBusy } from "#lib/util/photoswipe/index.ts";
+import * as safeArea from "#lib/util/safe-area.ts";
 import ImageCarousel from "./ImageCarousel.svelte";
 
 const PHOTO_HEIGHT = 540;

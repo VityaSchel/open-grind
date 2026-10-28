@@ -1,12 +1,12 @@
 import { createContext } from "svelte";
 
-import { accountScoped } from "$lib/api/account-caches";
-import { showIncomingMessageToast } from "$lib/components/incoming-message-toast/incoming-message-toast-manager";
-import { announceMessage } from "$lib/push/announce";
+import { accountScoped } from "#lib/api/account-caches.ts";
+import { showIncomingMessageToast } from "#lib/components/incoming-message-toast/incoming-message-toast-manager.ts";
+import { announceMessage } from "#lib/push/announce.ts";
 import {
 	withdrawChatNotification,
 	withdrawShownReadChats,
-} from "$lib/push/chat-withdrawals";
+} from "#lib/push/chat-withdrawals.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 
 export const [getConversations, setConversations] =

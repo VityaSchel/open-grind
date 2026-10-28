@@ -2,9 +2,9 @@ import {
 	accountEpoch,
 	isAccountEpochCurrent,
 	registerAccountCache,
-} from "$lib/api/account-caches";
-import { FetchCache } from "$lib/api/cache";
-import { now } from "$lib/util/clock";
+} from "#lib/api/account-caches.ts";
+import { FetchCache } from "#lib/api/cache.ts";
+import { now } from "#lib/util/clock.ts";
 
 type ListedProfile = { profileId: number };
 

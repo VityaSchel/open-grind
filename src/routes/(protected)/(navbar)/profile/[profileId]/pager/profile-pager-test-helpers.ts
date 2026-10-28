@@ -1,9 +1,9 @@
 import { vi } from "vitest";
 
-import { rendered } from "$lib/grid/grid-test-helpers";
-import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
-import type { GridProfile, RenderedGridProfile } from "$lib/grid/grid";
-import type { Profile } from "$lib/model/users/profiles";
+import { rendered } from "#lib/grid/grid-test-helpers.ts";
+import { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
+import type { GridProfile, RenderedGridProfile } from "#lib/grid/grid.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 import type { ProfileState } from "../profile-state.svelte";
 import {
 	type ProfilePagerSource,

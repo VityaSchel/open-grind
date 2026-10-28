@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { loadWhenVisible } from "$lib/util/load-when-visible";
-	import { firstFrameSrc, releaseVideoOnDestroy } from "$lib/util/media";
+	import { loadWhenVisible } from "#lib/util/load-when-visible.ts";
+	import { firstFrameSrc, releaseVideoOnDestroy } from "#lib/util/media.ts";
 
 	let {
 		src,

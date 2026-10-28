@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { type Gender, primaryGenderRank } from "$lib/model/users/genders";
+import { type Gender, primaryGenderRank } from "#lib/model/users/genders.ts";
 import {
 	AcceptNSFWPics,
 	BodyType,
@@ -10,13 +10,13 @@ import {
 	RelationshipStatus,
 	SexualPosition,
 	Tribe,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import {
 	type ProfileTagsResponse,
 	tagsOf,
 	tagTextByKey,
-} from "$lib/model/users/tags";
-import type { UnitSystem } from "$lib/util/units";
+} from "#lib/model/users/tags.ts";
+import type { UnitSystem } from "#lib/util/units.ts";
 
 export const filterIsFavoriteSchema = z.boolean();
 export const filterIsOnlineSchema = z.boolean();

@@ -7,7 +7,7 @@
 		cn,
 		type WithElementRef,
 		type WithoutChildren,
-	} from "$lib/util/utils.js";
+	} from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

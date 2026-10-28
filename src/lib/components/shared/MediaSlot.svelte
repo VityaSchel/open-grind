@@ -3,8 +3,8 @@
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
 
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
 
 	let {
 		src,

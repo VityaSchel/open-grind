@@ -1,8 +1,8 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { virtualGrid } from "$lib/util/virtual-grid.svelte";
-import type { GridWindow } from "$lib/util/grid-window";
+import { virtualGrid } from "#lib/util/virtual-grid.svelte.ts";
+import type { GridWindow } from "#lib/util/grid-window.ts";
 import { sectionView, SectionWindows } from "./section-windows.svelte";
 
 const COLUMNS = 3;

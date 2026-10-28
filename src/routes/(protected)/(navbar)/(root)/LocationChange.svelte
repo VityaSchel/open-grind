@@ -1,14 +1,14 @@
 <script lang="ts">
 	import MapPinIcon from "phosphor-svelte/lib/MapPinIcon";
 
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		preferencesSnapshot,
 		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
-	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { decodeGeohash } from "$lib/model/geohash";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import LocationChooser from "#lib/components/location-chooser/LocationChooser.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { decodeGeohash } from "#lib/model/geohash.ts";
 
 	let { class: className }: { class?: import("svelte/elements").ClassValue } =
 		$props();

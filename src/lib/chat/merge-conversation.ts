@@ -1,4 +1,4 @@
-import type { Conversation } from "$lib/model/messaging/conversations";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import { flagsOf } from "./conversation-flags";
 
 export type ConversationFlagField = "pinned" | "muted";

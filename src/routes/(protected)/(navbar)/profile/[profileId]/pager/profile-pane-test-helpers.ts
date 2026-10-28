@@ -1,7 +1,7 @@
 import { render } from "@testing-library/svelte";
 
-import { rendered } from "$lib/grid/grid-test-helpers";
-import type { RenderedGridProfile } from "$lib/grid/grid";
+import { rendered } from "#lib/grid/grid-test-helpers.ts";
+import type { RenderedGridProfile } from "#lib/grid/grid.ts";
 import { ProfileState } from "../profile-state.svelte";
 import { OUR_ID } from "./profile-pager-test-helpers";
 import ProfilePane from "./ProfilePane.svelte";

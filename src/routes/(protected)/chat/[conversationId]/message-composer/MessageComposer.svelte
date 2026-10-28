@@ -2,17 +2,17 @@
 	import { onNavigate } from "$app/navigation";
 	import { onDestroy, tick, untrack } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { getConversations } from "$lib/chat/conversations-context.svelte";
-	import MessageTextInput from "$lib/components/shared/MessageTextInput.svelte";
-	import { draftFromMessage } from "$lib/model/messaging/messages";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { below } from "$lib/util/breakpoints.svelte";
-	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { getConversations } from "#lib/chat/conversations-context.svelte.ts";
+	import MessageTextInput from "#lib/components/shared/MessageTextInput.svelte";
+	import { draftFromMessage } from "#lib/model/messaging/messages.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { below } from "#lib/util/breakpoints.svelte.ts";
+	import { bottomChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import type {
 		ApiResponseMessage,
 		MessageDraft,
-	} from "$lib/model/messaging/messages";
+	} from "#lib/model/messaging/messages.ts";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ComposerAttachmentsTrigger from "./attachments/ComposerAttachmentsTrigger.svelte";
 	import {

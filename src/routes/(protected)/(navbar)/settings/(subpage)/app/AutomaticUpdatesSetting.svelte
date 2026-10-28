@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { addonInstallerAvailable } from "$lib/updates/addon.svelte";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { addonInstallerAvailable } from "#lib/updates/addon.svelte.ts";
 	import {
 		updatesSelfManaged,
 		updatesUnsupportedReason,
-	} from "$lib/updates/capability.svelte";
+	} from "#lib/updates/capability.svelte.ts";
 	import {
 		automaticChecksSetting,
 		checkAfterOptIn,
 		manualCheckOffered,
-	} from "$lib/updates/update-checks";
+	} from "#lib/updates/update-checks.ts";
 	import {
 		automaticChecksEnabled,
 		hydrateUpdateSettings,
 		saveAutomaticChecks,
-	} from "$lib/updates/update-settings.svelte";
+	} from "#lib/updates/update-settings.svelte.ts";
 	import CheckForUpdatesButton from "./CheckForUpdatesButton.svelte";
 
 	let pending = $state<boolean | null>(null);

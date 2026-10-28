@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { cachedFetch, FetchCache, TtlCache } from "$lib/api/cache";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { cachedFetch, FetchCache, TtlCache } from "#lib/api/cache.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 
 afterEach(() => {
 	resetNowForTesting();

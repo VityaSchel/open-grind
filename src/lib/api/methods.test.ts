@@ -9,9 +9,9 @@ import {
 	markRequestBlocked,
 	methods,
 	restrictionSchema,
-} from "$lib/api/methods";
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod } from "$lib/demo";
+} from "#lib/api/methods.ts";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
+import { demoCallMethod } from "#lib/demo/index.ts";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 

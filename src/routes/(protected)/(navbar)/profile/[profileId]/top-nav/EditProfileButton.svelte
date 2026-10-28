@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PencilIcon from "phosphor-svelte/lib/PencilIcon";
 
-	import { Button } from "$lib/components/ui/button";
+	import { Button } from "#lib/components/ui/button/index.ts";
 </script>
 
 <Button

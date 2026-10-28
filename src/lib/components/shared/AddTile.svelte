@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 
-	import { cn } from "$lib/util/utils";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		label,

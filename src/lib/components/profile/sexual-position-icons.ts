@@ -10,7 +10,7 @@ import type { Component } from "svelte";
 import {
 	SexualPosition,
 	type SexualPositionId,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 
 export const sexualPositionOrder: SexualPositionId[] = [
 	SexualPosition.Top,

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import ProhibitIcon from "phosphor-svelte/lib/ProhibitIcon";
 
-	import { unblockUser } from "$lib/api/browse/blocks";
-	import { Button } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import { unblockUser } from "#lib/api/browse/blocks.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
 	import {
 		applyViewabilityChange,
 		type PendingViewabilityChange,

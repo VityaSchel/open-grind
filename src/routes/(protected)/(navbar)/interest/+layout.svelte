@@ -3,13 +3,13 @@
 	import { page } from "$app/state";
 	import { onDestroy } from "svelte";
 
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { toggleVariants } from "$lib/components/ui/toggle";
-	import { isAndroidPlatform } from "$lib/platform/os";
-	import { isPlainClick } from "$lib/util/plain-click";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
-	import { cn } from "$lib/util/utils";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { toggleVariants } from "#lib/components/ui/toggle/index.ts";
+	import { isAndroidPlatform } from "#lib/platform/os.ts";
+	import { isPlainClick } from "#lib/util/plain-click.ts";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import InterestPager from "./InterestPager.svelte";
 	import { INTEREST_TABS, interestTabIndex } from "./tabs";
 

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { decodeGeohash, encodeGeohash } from "$lib/model/geohash";
+import { decodeGeohash, encodeGeohash } from "#lib/model/geohash.ts";
 
 const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
 
-vi.mock("$lib/api/transport", () => ({ fetchRest: fetchRestMock }));
+vi.mock("#lib/api/transport.ts", () => ({ fetchRest: fetchRestMock }));
 
 const { getCascadeV4 } = await import("./grid");
 

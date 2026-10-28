@@ -2,9 +2,9 @@
 	import GpsFixIcon from "phosphor-svelte/lib/GpsFixIcon";
 	import { onDestroy } from "svelte";
 
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { reportLocationFailure } from "$lib/location/location-feedback";
-	import { locationRequest } from "$lib/location/location-request.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { reportLocationFailure } from "#lib/location/location-feedback.ts";
+	import { locationRequest } from "#lib/location/location-request.svelte.ts";
 
 	let { onlocate }: { onlocate: (at: { lat: number; lon: number }) => void } =
 		$props();

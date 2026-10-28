@@ -1,8 +1,8 @@
 <script lang="ts" generics="Item">
 	import { untrack } from "svelte";
 
-	import * as Drawer from "$lib/components/ui/drawer";
-	import { SelectionSet } from "$lib/util/selection.svelte";
+	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import MediaSheetActions from "./MediaSheetActions.svelte";
 	import MediaSheetBody from "./MediaSheetBody.svelte";
 	import MediaSheetGrid from "./MediaSheetGrid.svelte";

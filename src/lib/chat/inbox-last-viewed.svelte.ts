@@ -1,5 +1,5 @@
-import { lastViewedMarker } from "$lib/util/last-viewed";
-import type { Conversation } from "$lib/model/messaging/conversations";
+import { lastViewedMarker } from "#lib/util/last-viewed.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 export const inboxLastViewed = lastViewedMarker("chat:inbox-last-viewed:");
 

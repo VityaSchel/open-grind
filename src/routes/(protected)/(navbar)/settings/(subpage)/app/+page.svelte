@@ -4,16 +4,16 @@
 	import { toast } from "svelte-sonner";
 	import type { IconComponentProps } from "phosphor-svelte";
 
-	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { hapticsAvailable } from "$lib/haptics";
-	import { desktopEntryAvailable } from "$lib/platform/desktop-entry.svelte";
-	import { addonInstallerAvailable } from "$lib/updates/addon.svelte";
+	import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { hapticsAvailable } from "#lib/haptics.ts";
+	import { desktopEntryAvailable } from "#lib/platform/desktop-entry.svelte.ts";
+	import { addonInstallerAvailable } from "#lib/updates/addon.svelte.ts";
 	import {
 		updatesSelfManaged,
 		updatesUnsupportedReason,
-	} from "$lib/updates/capability.svelte";
+	} from "#lib/updates/capability.svelte.ts";
 	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";

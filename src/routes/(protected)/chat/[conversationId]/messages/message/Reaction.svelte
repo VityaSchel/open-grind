@@ -1,6 +1,6 @@
 <script lang="ts">
-	import fireEmoji from "$lib/assets/emojis/fire/32px.png";
-	import { Badge } from "$lib/components/ui/badge";
+	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
 
 	let { type }: { type: number } = $props();
 </script>

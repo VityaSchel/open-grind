@@ -4,13 +4,13 @@
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 	import type { Snippet } from "svelte";
 
-	import DisplayName from "$lib/components/profile/DisplayName.svelte";
-	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
-	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
-	import Frost from "$lib/components/shared/Frost.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { profileMediaUrl } from "$lib/util/media";
+	import DisplayName from "#lib/components/profile/DisplayName.svelte";
+	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import Frost from "#lib/components/shared/Frost.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { profileMediaUrl } from "#lib/util/media.ts";
 
 	let {
 		mediaHash = null,

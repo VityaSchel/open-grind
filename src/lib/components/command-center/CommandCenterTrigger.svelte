@@ -1,10 +1,10 @@
 <script>
 	import TerminalIcon from "phosphor-svelte/lib/TerminalIcon";
 
-	import { Button } from "$lib/components/ui/button";
-	import * as Kbd from "$lib/components/ui/kbd";
-	import { modifierKeyLabel } from "$lib/platform/keybindings";
-	import { isMobilePlatform } from "$lib/platform/os";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Kbd from "#lib/components/ui/kbd/index.ts";
+	import { modifierKeyLabel } from "#lib/platform/keybindings.ts";
+	import { isMobilePlatform } from "#lib/platform/os.ts";
 	import { commandCenterState } from "./command-center-state.svelte";
 
 	const isMobile = isMobilePlatform();

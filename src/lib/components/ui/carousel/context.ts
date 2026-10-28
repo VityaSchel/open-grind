@@ -5,7 +5,7 @@ import type {
 } from "embla-carousel-svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
-import type { WithElementRef } from "$lib/util/utils.js";
+import type { WithElementRef } from "#lib/util/utils.ts";
 
 export type CarouselAPI =
 	NonNullable<

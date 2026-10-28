@@ -1,4 +1,4 @@
-import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
+import { ADDON_NAME, FCM_COMPONENT } from "#lib/updates/components.ts";
 import { pushErrorReason } from "./index";
 import type { PushErrorReason } from "./types";
 

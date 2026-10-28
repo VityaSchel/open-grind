@@ -4,9 +4,9 @@ import {
 	FEATURED_CATEGORY,
 	FEATURED_ORIGINAL_IDS,
 	KNOWN_GAYMOJI_CATEGORIES,
-} from "$lib/chat/gaymoji-sections";
-import { demoGaymojiImageUrl, demoRoute } from "$lib/demo";
-import { gaymojiManifestSchema } from "$lib/model/messaging/gaymoji";
+} from "#lib/chat/gaymoji-sections.ts";
+import { demoGaymojiImageUrl, demoRoute } from "#lib/demo/index.ts";
+import { gaymojiManifestSchema } from "#lib/model/messaging/gaymoji.ts";
 
 function manifest() {
 	return gaymojiManifestSchema.parse(

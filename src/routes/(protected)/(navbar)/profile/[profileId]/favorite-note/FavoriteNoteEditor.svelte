@@ -2,21 +2,21 @@
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		deleteFavoriteNote,
 		putFavoriteNote,
-	} from "$lib/api/users/favorites";
-	import MultilineField from "$lib/components/fields/MultilineField.svelte";
-	import TextField from "$lib/components/fields/TextField.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
-	import { Spinner } from "$lib/components/ui/spinner";
+	} from "#lib/api/users/favorites.ts";
+	import MultilineField from "#lib/components/fields/MultilineField.svelte";
+	import TextField from "#lib/components/fields/TextField.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import {
 		type FavoriteNote,
 		favoriteNoteLimits,
-	} from "$lib/model/users/favorites";
-	import type { Profile } from "$lib/model/users/profiles";
+	} from "#lib/model/users/favorites.ts";
+	import type { Profile } from "#lib/model/users/profiles.ts";
 
 	let {
 		profileId,

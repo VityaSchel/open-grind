@@ -1,4 +1,4 @@
-import { coarsenGeohash, encodeGeohash } from "$lib/model/geohash";
+import { coarsenGeohash, encodeGeohash } from "#lib/model/geohash.ts";
 
 type Box = { south: number; north: number; west: number; east: number };
 

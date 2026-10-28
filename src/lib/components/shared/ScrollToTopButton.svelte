@@ -2,8 +2,8 @@
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
-	import { glideScrollTop } from "$lib/util/scroll";
-	import { cn } from "$lib/util/utils";
+	import { glideScrollTop } from "#lib/util/scroll.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
 
 	let {

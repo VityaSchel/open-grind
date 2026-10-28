@@ -1,6 +1,6 @@
 <script lang="ts" generics="Item">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let {
 		target = $bindable(),

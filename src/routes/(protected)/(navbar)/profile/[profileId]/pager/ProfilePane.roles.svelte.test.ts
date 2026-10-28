@@ -8,15 +8,15 @@ const { getProfileMock, dataRefreshControlMock } = vi.hoisted(() => ({
 	dataRefreshControlMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: vi.fn(),
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/util/media", () => ({
+vi.mock("#lib/util/media.ts", () => ({
 	profileMediaUrl: ({
 		mediaHash,
 		size,
@@ -25,11 +25,11 @@ vi.mock("$lib/util/media", () => ({
 		size: string;
 	}) => `https://cdn.test/${size}/${mediaHash}`,
 }));
-vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
+vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: dataRefreshControlMock,
 }));
 
-import { HiddenProfileError } from "$lib/api/users/profiles";
+import { HiddenProfileError } from "#lib/api/users/profiles.ts";
 import { flush, fullProfile } from "./profile-pager-test-helpers";
 import { gridRow, PROFILE_ID, renderPane } from "./profile-pane-test-helpers";
 

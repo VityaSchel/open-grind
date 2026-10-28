@@ -1,8 +1,8 @@
 import { afterNavigate, beforeNavigate } from "$app/navigation";
 import { page } from "$app/state";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import { earlierPathnames, returnTo } from "$lib/util/history";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { earlierPathnames, returnTo } from "#lib/util/history.ts";
 
 const parentsOfDeleted = new Map<string, string>();
 

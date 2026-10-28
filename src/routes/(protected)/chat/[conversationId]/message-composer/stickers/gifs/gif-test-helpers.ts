@@ -1,4 +1,4 @@
-import type { GiphyTile } from "$lib/api/messaging/gifs";
+import type { GiphyTile } from "#lib/api/messaging/gifs.ts";
 
 export function gifTile(
 	id: string,

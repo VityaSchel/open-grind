@@ -1,7 +1,7 @@
 <script lang="ts">
 	import z from "zod";
 
-	import * as Command from "$lib/components/ui/command";
+	import * as Command from "#lib/components/ui/command/index.ts";
 	import { commandCenterState } from "../command-center-state.svelte";
 	import OpenProfileByIdCommandItem from "./OpenProfileByIdCommandItem.svelte";
 

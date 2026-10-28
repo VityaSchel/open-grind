@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { UpdateStage } from "$lib/updates/stage";
+import type { UpdateStage } from "#lib/updates/stage.ts";
 import {
 	googleSignInView,
 	installButton,

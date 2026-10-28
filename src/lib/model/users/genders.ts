@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { arrayOfParsableEntries } from "$lib/model/tolerance";
+import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
 
 export const genderIdSchema = z.int().nonnegative();
 

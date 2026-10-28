@@ -1,7 +1,7 @@
-import { isAssignmentOn } from "$lib/api/analytics/assignments";
-import { ApiError } from "$lib/api/api-error";
-import { callMethod } from "$lib/api/methods";
-import { fetchRest } from "$lib/api/transport";
+import { isAssignmentOn } from "#lib/api/analytics/assignments.ts";
+import { ApiError } from "#lib/api/api-error.ts";
+import { callMethod } from "#lib/api/methods.ts";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	type ProfileReportRequest,
 	type ProfileReportRequestV2,
@@ -10,8 +10,8 @@ import {
 	rightNowPostSubmittedReportResponseSchema,
 	type SubmittedReport,
 	submittedReportSchema,
-} from "$lib/model/safety/reports";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/model/safety/reports.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 const RIGHT_NOW_MODERATION = "right-now-moderation";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { optionsFromMap } from "$lib/util/options";
+	import { optionsFromMap } from "#lib/util/options.ts";
 	import FilterSimpleArray from "./FilterSimpleArray.svelte";
 	import type { OptionFilterDefinition } from "./option-filters";
 

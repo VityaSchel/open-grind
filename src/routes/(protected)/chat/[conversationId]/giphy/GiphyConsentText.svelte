@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import Link from "#lib/components/ui/link/Link.svelte";
 </script>
 
 You can search and send GIFs, and GIFs in your chats will load on their own.

@@ -1,4 +1,4 @@
-import { defaultFilters } from "$lib/model/browse/grid/filters";
+import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 import { filters } from "./definitions";
 import type {
 	Apply,

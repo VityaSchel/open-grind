@@ -8,9 +8,9 @@ const { requestInboxResync, shownPushConversations, focus } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/chat/inbox-resync", () => ({ requestInboxResync }));
+vi.mock("#lib/chat/inbox-resync.ts", () => ({ requestInboxResync }));
 vi.mock("./index", () => ({ shownPushConversations }));
-vi.mock("$lib/platform/window-focus", () => ({
+vi.mock("#lib/platform/window-focus.ts", () => ({
 	windowFocused: () => focus.focused,
 }));
 

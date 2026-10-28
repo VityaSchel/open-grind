@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { demoRoute } from "$lib/demo";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { demoRoute } from "#lib/demo/index.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 
 function send(message: { type: string; body: unknown }) {
 	return apiResponseMessageSchema.parse(

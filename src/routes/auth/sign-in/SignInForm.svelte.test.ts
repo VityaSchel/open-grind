@@ -4,17 +4,17 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ZodType } from "zod";
 
-import { accountStatusState } from "$lib/api/account-status-state.svelte";
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
+import { accountStatusState } from "#lib/api/account-status-state.svelte.ts";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import {
 	refusedCompanionMessage,
 	untrustedCompanionMessage,
-} from "$lib/api/sign-in";
+} from "#lib/api/sign-in.ts";
 import {
 	clearProfileCaches,
 	getProfile,
 	isProfileCached,
-} from "$lib/api/users/profiles";
+} from "#lib/api/users/profiles.ts";
 import SignInForm from "./SignInForm.svelte";
 
 const { callMethodMock, fetchRestMock, gotoMock, toastMock } = vi.hoisted(
@@ -27,13 +27,13 @@ const { callMethodMock, fetchRestMock, gotoMock, toastMock } = vi.hoisted(
 );
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 

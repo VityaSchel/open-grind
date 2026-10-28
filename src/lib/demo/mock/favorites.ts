@@ -1,4 +1,4 @@
-import type { FavoriteNote } from "$lib/model/users/favorites";
+import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 
 const favoriteOverrides = new Map<number, boolean>();
 

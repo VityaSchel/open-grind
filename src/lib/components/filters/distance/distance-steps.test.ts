@@ -6,7 +6,7 @@ import {
 	MAX_DISTANCE_STEPS,
 	maxDistanceLabel,
 	maxDistanceMetres,
-} from "$lib/components/filters/distance/distance-steps";
+} from "#lib/components/filters/distance/distance-steps.ts";
 
 function officialAppMilesToMetres(miles: number): number {
 	return (miles * 5280) / 3.280839895;

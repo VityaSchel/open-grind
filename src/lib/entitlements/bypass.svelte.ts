@@ -1,8 +1,8 @@
 import { toast } from "svelte-sonner";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import { showErrorToast } from "$lib/api/error-toast";
-import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 import { holdInHonduras, type LocationLease } from "./honduras-hold";
 
 type BypassRequest = {

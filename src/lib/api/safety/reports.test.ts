@@ -7,20 +7,20 @@ const { fetchRestMock, callMethodMock, assignmentsOn } = vi.hoisted(() => ({
 	assignmentsOn: new Set<string>(),
 }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
-vi.mock("$lib/api/analytics/assignments", () => ({
+vi.mock("#lib/api/analytics/assignments.ts", () => ({
 	isAssignmentOn: ({ key }: { key: string }) =>
 		Promise.resolve(assignmentsOn.has(key)),
 }));
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	getProfileReport,
 	getProfileReportV31,
@@ -31,11 +31,11 @@ import {
 	reportProfileV4,
 	reportProfileV5,
 	reportRightNowPost,
-} from "$lib/api/safety/reports";
+} from "#lib/api/safety/reports.ts";
 import type {
 	ProfileReportRequest,
 	RightNowPostReportRequest,
-} from "$lib/model/safety/reports";
+} from "#lib/model/safety/reports.ts";
 
 const PROFILE_ID = 42;
 const POST_ID = 7_001;

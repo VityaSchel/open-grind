@@ -3,9 +3,9 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { discardStagedMedia } from "$lib/platform/media-file";
-import { isAndroidPlatform } from "$lib/platform/os";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { discardStagedMedia } from "#lib/platform/media-file.ts";
+import { isAndroidPlatform } from "#lib/platform/os.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const KEYBOARD_MEDIA_EVENT = "keyboard-media";
 

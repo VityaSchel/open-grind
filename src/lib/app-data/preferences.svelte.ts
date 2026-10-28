@@ -2,11 +2,11 @@ import { decode, encode } from "@msgpack/msgpack";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { backdropBlurCalibrationSchema } from "$lib/blur/calibration/decide";
-import { backdropBlurQualitySchema } from "$lib/blur/quality";
-import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
-import { geohashSchema } from "$lib/model/geohash";
-import { unitSystemSchema } from "$lib/util/units";
+import { backdropBlurCalibrationSchema } from "#lib/blur/calibration/decide.ts";
+import { backdropBlurQualitySchema } from "#lib/blur/quality.ts";
+import { gridSearchFiltersSchema } from "#lib/model/browse/grid/filters.ts";
+import { geohashSchema } from "#lib/model/geohash.ts";
+import { unitSystemSchema } from "#lib/util/units.ts";
 import {
 	existsAppDataFile,
 	readAppDataFile,

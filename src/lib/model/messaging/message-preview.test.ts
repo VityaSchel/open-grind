@@ -4,7 +4,7 @@ import {
 	previewFromMessage,
 	previewLabel,
 	quoteLabel,
-} from "$lib/model/messaging/message-preview";
+} from "#lib/model/messaging/message-preview.ts";
 
 describe("previewFromMessage", () => {
 	it("uses profile photo reply text in previews and quotes, including fetched inbox previews", () => {

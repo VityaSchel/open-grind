@@ -15,13 +15,13 @@ const {
 	openExternalLinkMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/safety/reports", () => ({
+vi.mock("#lib/api/safety/reports.ts", () => ({
 	reportProfile: reportProfileMock,
 }));
-vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/browse/blocks.ts", () => ({ blockUser: blockUserMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 vi.mock("./block-failure", () => ({ showBlockFailure: showBlockFailureMock }));
-vi.mock("$lib/platform/link-opener", () => ({
+vi.mock("#lib/platform/link-opener.ts", () => ({
 	openExternalLink: openExternalLinkMock,
 }));
 

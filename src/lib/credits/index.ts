@@ -1,4 +1,4 @@
-import { platformNames } from "$lib/platform/os";
+import { platformNames } from "#lib/platform/os.ts";
 import { highlights } from "./highlights";
 import {
 	type CreditEcosystem,

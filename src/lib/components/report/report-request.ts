@@ -2,7 +2,7 @@ import type {
 	ProfileReportRequest,
 	ReportLocation,
 	ReportReason,
-} from "$lib/model/safety/reports";
+} from "#lib/model/safety/reports.ts";
 
 export function buildProfileReport({
 	reason,

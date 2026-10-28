@@ -1,6 +1,6 @@
-import { edgeGap } from "$lib/components/feedback/refresh/scroll-geometry";
-import { preferredScrollBehavior } from "$lib/util/reduced-motion";
-import { nearestScrollableAncestor } from "$lib/util/scroll";
+import { edgeGap } from "#lib/components/feedback/refresh/scroll-geometry.ts";
+import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
+import { nearestScrollableAncestor } from "#lib/util/scroll.ts";
 import { ElementRegistry } from "./element-registry";
 
 const JUMP_QUIET_MS = 1000;

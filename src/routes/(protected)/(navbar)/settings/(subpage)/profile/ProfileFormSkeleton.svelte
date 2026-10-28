@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import FieldPair from "./fields/FieldPair.svelte";
 	import { maxProfilePhotos } from "./options";
 	import ProfileFormSection from "./ProfileFormSection.svelte";

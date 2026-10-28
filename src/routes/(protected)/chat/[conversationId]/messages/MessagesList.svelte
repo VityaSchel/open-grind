@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { promptCopyError } from "$lib/api/error-copy";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { tieredFeature } from "$lib/api/error-urn";
+	import { promptCopyError } from "#lib/api/error-copy.ts";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { tieredFeature } from "#lib/api/error-urn.ts";
 	import {
 		deleteMessageForMe,
 		unsendMessage,
-	} from "$lib/api/messaging/messages";
-	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
+	} from "#lib/api/messaging/messages.ts";
+	import ReportSheet from "#lib/components/report/ReportSheet.svelte";
 	import {
 		offerEntitlementBypass,
 		reportRefusedDespiteBypass,
-	} from "$lib/entitlements/bypass.svelte";
+	} from "#lib/entitlements/bypass.svelte.ts";
 	import {
 		type ConversationState,
 		getConversationState,

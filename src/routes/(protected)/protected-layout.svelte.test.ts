@@ -6,16 +6,16 @@ const { restoreStrandedLocationMock } = vi.hoisted(() => ({
 	restoreStrandedLocationMock: vi.fn<() => Promise<void>>(),
 }));
 
-vi.mock("$lib/entitlements/honduras-hold", () => ({
+vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	restoreStrandedLocation: restoreStrandedLocationMock,
 }));
-vi.mock("$lib/presence/online-heartbeat", () => ({
+vi.mock("#lib/presence/online-heartbeat.ts", () => ({
 	startOnlineHeartbeat: () => () => {},
 }));
-vi.mock("$lib/util/media-retry-signals", () => ({
+vi.mock("#lib/util/media-retry-signals.ts", () => ({
 	retryBrokenMediaWhenOnline: () => () => {},
 }));
-vi.mock("$lib/components/command-center/CommandCenter.svelte", () => ({
+vi.mock("#lib/components/command-center/CommandCenter.svelte", () => ({
 	default: () => {},
 }));
 

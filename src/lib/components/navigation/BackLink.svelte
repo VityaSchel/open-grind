@@ -4,9 +4,9 @@
 	import { tinykeys } from "tinykeys";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 
-	import { runBackGestureHandlers } from "$lib/platform/back-gesture-event.svelte";
-	import { canGoBack, returnTo } from "$lib/util/history";
-	import { isPlainClick } from "$lib/util/plain-click";
+	import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { canGoBack, returnTo } from "#lib/util/history.ts";
+	import { isPlainClick } from "#lib/util/plain-click.ts";
 	import { escapeMeansBack } from "./escape-back";
 
 	let {

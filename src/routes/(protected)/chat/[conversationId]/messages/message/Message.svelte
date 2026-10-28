@@ -5,18 +5,18 @@
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";
 
-	import { Button } from "$lib/components/ui/button";
-	import { playHaptic } from "$lib/haptics";
-	import { firedByTouch } from "$lib/platform/touch-origin";
-	import { observeIntersection } from "$lib/util/observe-intersection";
-	import { scale } from "$lib/util/reduced-motion";
-	import { returnFocus } from "$lib/util/return-focus";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { playHaptic } from "#lib/haptics.ts";
+	import { firedByTouch } from "#lib/platform/touch-origin.ts";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import { scale } from "#lib/util/reduced-motion.ts";
+	import { returnFocus } from "#lib/util/return-focus.ts";
 	import {
 		MAX_DRAG_PX,
 		SwipeToReply,
 		wheelInputMode,
-	} from "$lib/util/swipe-to-reply.svelte";
-	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+	} from "#lib/util/swipe-to-reply.svelte.ts";
+	import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 	import AlbumContentMessage from "./AlbumContentMessage.svelte";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { type MessageRefs, setMessageContext } from "./context";

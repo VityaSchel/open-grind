@@ -1,8 +1,8 @@
 import { SvelteMap } from "svelte/reactivity";
 import type { Attachment } from "svelte/attachments";
 
-import { playHaptic } from "$lib/haptics";
-import { nearestSlot, previewSlot } from "$lib/util/reorder";
+import { playHaptic } from "#lib/haptics.ts";
+import { nearestSlot, previewSlot } from "#lib/util/reorder.ts";
 
 const TOUCH_LIFT_DELAY_MS = 300;
 const LIFT_TOLERANCE_PX = 10;

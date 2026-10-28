@@ -4,9 +4,9 @@ import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
-import { contextMenuEvent } from "$lib/test/context-menu";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import MediaSheetTile from "./MediaSheetTile.svelte";
 
 const LONG_PRESS_MS = 450;

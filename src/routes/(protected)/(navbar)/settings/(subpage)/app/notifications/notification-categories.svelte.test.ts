@@ -10,7 +10,7 @@ import {
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type * as Os from "$lib/platform/os";
+import type * as Os from "#lib/platform/os.ts";
 import {
 	account,
 	appLifecycle,
@@ -26,33 +26,33 @@ import {
 } from "./notifications-page-test-helpers.svelte";
 
 vi.mock(
-	"$lib/push/index",
+	"#lib/push/index.ts",
 	async () => (await import("./notifications-page-test-helpers.svelte")).push,
 );
 vi.mock(
-	"$lib/api/settings/account",
+	"#lib/api/settings/account.ts",
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).account,
 );
 vi.mock(
-	"$lib/app-data/preferences.svelte",
+	"#lib/app-data/preferences.svelte.ts",
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).preferences,
 );
 vi.mock(
-	"$lib/updates/addon.svelte",
+	"#lib/updates/addon.svelte.ts",
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).addon,
 );
-vi.mock("$lib/api/error-toast", async () => ({
+vi.mock("#lib/api/error-toast.ts", async () => ({
 	showErrorToast: (await import("./notifications-page-test-helpers.svelte"))
 		.showErrorToast,
 }));
-vi.mock("$lib/platform/link-opener", async () => ({
+vi.mock("#lib/platform/link-opener.ts", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => {
+vi.mock("#lib/platform/os.ts", async (importOriginal) => {
 	const { currentPlatform } =
 		await import("./notifications-page-test-helpers.svelte");
 	return {
@@ -61,7 +61,7 @@ vi.mock("$lib/platform/os", async (importOriginal) => {
 		isAndroidPlatform: () => currentPlatform() === "android",
 	};
 });
-vi.mock("$lib/api/app-lifecycle.svelte", async () => ({
+vi.mock("#lib/api/app-lifecycle.svelte.ts", async () => ({
 	appLifecycle: (await import("./notifications-page-test-helpers.svelte"))
 		.appLifecycle,
 }));
@@ -69,7 +69,7 @@ vi.mock("$lib/api/app-lifecycle.svelte", async () => ({
 const NotificationsPage = (await import("./+page.svelte")).default;
 
 const { reconcileNotifications } =
-	await import("$lib/push/notifications.svelte");
+	await import("#lib/push/notifications.svelte.ts");
 
 async function deliveredFast(): Promise<void> {
 	inMode("fast");

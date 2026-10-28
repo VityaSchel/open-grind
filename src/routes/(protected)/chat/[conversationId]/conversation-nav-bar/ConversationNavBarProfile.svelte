@@ -1,10 +1,10 @@
 <script lang="ts">
-	import DisplayName from "$lib/components/profile/DisplayName.svelte";
-	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
-	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
-	import * as Avatar from "$lib/components/ui/avatar";
-	import * as Card from "$lib/components/ui/card";
+	import DisplayName from "#lib/components/profile/DisplayName.svelte";
+	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import * as Avatar from "#lib/components/ui/avatar/index.ts";
+	import * as Card from "#lib/components/ui/card/index.ts";
 	import type { ConversationProfile } from "../conversation-state.svelte";
 
 	let { profile }: { profile: ConversationProfile } = $props();

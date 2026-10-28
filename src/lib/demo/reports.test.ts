@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { demoRoute } from "$lib/demo";
-import { assignmentsResponseSchema } from "$lib/model/analytics/assignments";
+import { demoRoute } from "#lib/demo/index.ts";
+import { assignmentsResponseSchema } from "#lib/model/analytics/assignments.ts";
 import {
 	rightNowPostSubmittedReportResponseSchema,
 	submittedReportSchema,
-} from "$lib/model/safety/reports";
+} from "#lib/model/safety/reports.ts";
 
 const spamReport = { reason: "SPAM", comment: "", locations: ["CHAT_MESSAGE"] };
 

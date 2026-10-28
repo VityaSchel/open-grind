@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
 	previewFromMessage,
 	previewLabel,
-} from "$lib/model/messaging/message-preview";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/message-preview.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { demoAlbumContent } from "./mock/albums";
 import { demoSentMessage } from "./mock/conversations";
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Tabs as TabsPrimitive } from "bits-ui";
 
-	import * as Tabs from "$lib/components/ui/tabs";
-	import { cn } from "$lib/util/utils";
+	import * as Tabs from "#lib/components/ui/tabs/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 
 	let { class: className, ...restProps }: TabsPrimitive.TriggerProps =
 		$props();

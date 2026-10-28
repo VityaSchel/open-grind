@@ -1,7 +1,7 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
-import type { MediaDimensions } from "$lib/util/media-dimensions";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import { applyPhotoSwipeErrorUi } from "./error-ui";
 import {
 	applyPhotoSwipeLoadedSize,

@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
-} from "$lib/demo/mock/albums";
-import type { MyAlbum } from "$lib/model/messaging/albums";
+} from "#lib/demo/mock/albums.ts";
+import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 import AlbumTile from "./AlbumTile.svelte";
 
 function demoAlbum(): MyAlbum {

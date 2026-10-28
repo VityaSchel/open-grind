@@ -8,39 +8,39 @@
 	import { onMount, untrack } from "svelte";
 	import { Toaster } from "svelte-sonner";
 
-	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
-	import { startGoogleHandoffWatch } from "$lib/api/google-handoff";
+	import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+	import { startGoogleHandoffWatch } from "#lib/api/google-handoff.ts";
 	import {
 		hydratePreferences,
 		preferencesLoaded,
 		preferencesSnapshot,
-	} from "$lib/app-data/preferences.svelte";
-	import { abortBackdropBlurTrialGesture } from "$lib/blur/calibration/trial.svelte";
-	import { hydrateBackdropCompositing } from "$lib/blur/compositing.svelte";
-	import { applyBackdropBlurQuality } from "$lib/blur/quality.svelte";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import { abortBackdropBlurTrialGesture } from "#lib/blur/calibration/trial.svelte.ts";
+	import { hydrateBackdropCompositing } from "#lib/blur/compositing.svelte.ts";
+	import { applyBackdropBlurQuality } from "#lib/blur/quality.svelte.ts";
 	import {
 		applyAndroidInsets,
 		applyBackGestureHandler,
 		registerAndroidBackButtonListener,
-	} from "$lib/platform/android-native-bridge";
-	import { blockNativeMenu } from "$lib/platform/block-native-menu";
-	import { blockZoom } from "$lib/platform/block-zoom";
-	import { trackHoverPointer } from "$lib/platform/hover-pointer";
-	import { keepLinksInApp } from "$lib/platform/in-app-links";
-	import { isAndroidPlatform } from "$lib/platform/os";
-	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
-	import { reconcileNotifications } from "$lib/push/notifications.svelte";
-	import { startPushWatch } from "$lib/push/watch";
-	import { startAddonUpdateWatch } from "$lib/updates/addon.svelte";
-	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
-	import { startUpdateWatch } from "$lib/updates/updates-manager";
+	} from "#lib/platform/android-native-bridge.ts";
+	import { blockNativeMenu } from "#lib/platform/block-native-menu.ts";
+	import { blockZoom } from "#lib/platform/block-zoom.ts";
+	import { trackHoverPointer } from "#lib/platform/hover-pointer.ts";
+	import { keepLinksInApp } from "#lib/platform/in-app-links.ts";
+	import { isAndroidPlatform } from "#lib/platform/os.ts";
+	import { installScrollGestureBridge } from "#lib/platform/scroll-gesture.ts";
+	import { reconcileNotifications } from "#lib/push/notifications.svelte.ts";
+	import { startPushWatch } from "#lib/push/watch.ts";
+	import { startAddonUpdateWatch } from "#lib/updates/addon.svelte.ts";
+	import { updatesSelfManaged } from "#lib/updates/capability.svelte.ts";
+	import { startUpdateWatch } from "#lib/updates/updates-manager.ts";
 	import {
 		bottomBlurBarClearance,
 		bottomChromeClearance,
 		screenChromeCovered,
 		topBlurBarClearance,
 		topChromeClearance,
-	} from "$lib/util/screen-chrome.svelte";
+	} from "#lib/util/screen-chrome.svelte.ts";
 
 	onMount(() => {
 		installScrollGestureBridge();
@@ -87,14 +87,14 @@
 
 	import { env } from "$env/dynamic/public";
 
-	import faviconPng from "$lib/assets/favicon.png";
-	import AccountStatusAlert from "$lib/components/feedback/AccountStatusAlert.svelte";
-	import CopyErrorConfirmAlert from "$lib/components/feedback/CopyErrorConfirmAlert.svelte";
-	import EntitlementBypassAlert from "$lib/components/feedback/EntitlementBypassAlert.svelte";
-	import GoogleHandoffConfirmAlert from "$lib/components/feedback/GoogleHandoffConfirmAlert.svelte";
-	import RequestBlockedAlert from "$lib/components/feedback/RequestBlockedAlert.svelte";
-	import SessionErrorAlert from "$lib/components/feedback/SessionErrorAlert.svelte";
-	import FrostFilters from "$lib/components/shared/FrostFilters.svelte";
+	import faviconPng from "#lib/assets/favicon.png";
+	import AccountStatusAlert from "#lib/components/feedback/AccountStatusAlert.svelte";
+	import CopyErrorConfirmAlert from "#lib/components/feedback/CopyErrorConfirmAlert.svelte";
+	import EntitlementBypassAlert from "#lib/components/feedback/EntitlementBypassAlert.svelte";
+	import GoogleHandoffConfirmAlert from "#lib/components/feedback/GoogleHandoffConfirmAlert.svelte";
+	import RequestBlockedAlert from "#lib/components/feedback/RequestBlockedAlert.svelte";
+	import SessionErrorAlert from "#lib/components/feedback/SessionErrorAlert.svelte";
+	import FrostFilters from "#lib/components/shared/FrostFilters.svelte";
 	import faviconSvg from "../../contrib/logo/open-grind.svg";
 
 	let { children }: { children?: import("svelte").Snippet } = $props();

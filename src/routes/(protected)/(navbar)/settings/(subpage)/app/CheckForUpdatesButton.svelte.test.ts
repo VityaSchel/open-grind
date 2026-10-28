@@ -15,7 +15,7 @@ const { checks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("$lib/updates/update-checks", () => checks);
+vi.mock("#lib/updates/update-checks.ts", () => checks);
 
 import CheckForUpdatesButton from "./CheckForUpdatesButton.svelte";
 

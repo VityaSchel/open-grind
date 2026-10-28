@@ -1,8 +1,8 @@
 import {
 	sexualPositionIcons,
 	sexualPositionOrder,
-} from "$lib/components/profile/sexual-position-icons";
-import { type Gender, primaryGenderRank } from "$lib/model/users/genders";
+} from "#lib/components/profile/sexual-position-icons.ts";
+import { type Gender, primaryGenderRank } from "#lib/model/users/genders.ts";
 import {
 	acceptNSFWPics,
 	bodyTypes,
@@ -15,11 +15,14 @@ import {
 	sexualPositions,
 	tribes,
 	vaccines as vaccineLabels,
-} from "$lib/model/users/profiles";
-import { type ProfileTagsResponse, tagTextByKey } from "$lib/model/users/tags";
-import { optionsFromMap } from "$lib/util/options";
-import { cmToInches, formatFeetInches, kgToPounds } from "$lib/util/units";
-import type { Pronoun } from "$lib/model/users/pronouns";
+} from "#lib/model/users/profiles.ts";
+import {
+	type ProfileTagsResponse,
+	tagTextByKey,
+} from "#lib/model/users/tags.ts";
+import { optionsFromMap } from "#lib/util/options.ts";
+import { cmToInches, formatFeetInches, kgToPounds } from "#lib/util/units.ts";
+import type { Pronoun } from "#lib/model/users/pronouns.ts";
 
 export const fieldLimits = { displayName: 25, aboutMe: 255 } as const;
 

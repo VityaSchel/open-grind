@@ -8,7 +8,7 @@ const { canOpenAppSettingsMock, openAppSettingsMock, toastMock } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/platform/app-settings", () => ({
+vi.mock("#lib/platform/app-settings.ts", () => ({
 	canOpenAppSettings: canOpenAppSettingsMock,
 	openAppSettings: openAppSettingsMock,
 }));

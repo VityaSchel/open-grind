@@ -4,10 +4,10 @@
 	import type { Snippet } from "svelte";
 	import type { ComponentProps } from "svelte";
 
-	import ScreenChromeCover from "$lib/components/shared/ScreenChromeCover.svelte";
-	import { Button } from "$lib/components/ui/button/index.js";
-	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
-	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import ScreenChromeCover from "#lib/components/shared/ScreenChromeCover.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
+	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import DialogPortal from "./dialog-portal.svelte";
 	import * as Dialog from "./index.js";
 

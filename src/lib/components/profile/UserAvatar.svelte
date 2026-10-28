@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { env } from "$env/dynamic/public";
 
-	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { profileMediaUrl } from "$lib/util/media";
+	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { profileMediaUrl } from "#lib/util/media.ts";
 
 	let {
 		mediaHash,

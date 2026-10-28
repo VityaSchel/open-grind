@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	confirmAccountSwitch,
 	googleHandoffState,
-} from "$lib/api/google-handoff-state.svelte";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+} from "#lib/api/google-handoff-state.svelte.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import GoogleHandoffConfirmAlert from "./GoogleHandoffConfirmAlert.svelte";
 
 const continueButton = () => screen.getByRole("button", { name: "Continue" });

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Command from "$lib/components/ui/command";
+	import * as Command from "#lib/components/ui/command/index.ts";
 	import QuickGoToCommandItem from "./QuickGoToCommandItem.svelte";
 </script>
 

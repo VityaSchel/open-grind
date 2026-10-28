@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import IncomingMessageToast from "./IncomingMessageToast.svelte";
 
 const { gotoMock, toastMock } = vi.hoisted(() => ({

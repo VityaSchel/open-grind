@@ -10,12 +10,12 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
 }));
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	addDrawerMediaToAlbum,
 	getAlbumContentProcessing,
@@ -25,7 +25,7 @@ import {
 	shareAlbum,
 	unshareAlbum,
 	uploadAlbumContent,
-} from "$lib/api/messaging/albums";
+} from "#lib/api/messaging/albums.ts";
 import {
 	albumProcessingPlaceholderUrl,
 	demoAlbumContent,
@@ -33,10 +33,10 @@ import {
 	demoAlbumShares,
 	demoMyAlbums,
 	demoUploadAlbumContent,
-} from "$lib/demo/mock/albums";
-import { toBase64 } from "$lib/util/base64";
-import type { AlbumUnshareRequest } from "$lib/model/messaging/albums";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/demo/mock/albums.ts";
+import { toBase64 } from "#lib/util/base64.ts";
+import type { AlbumUnshareRequest } from "#lib/model/messaging/albums.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const assertOk = vi.fn();
 const jsonParsed = vi.fn();

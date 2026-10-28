@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { conversationIdFor } from "$lib/chat/conversation-id";
-	import Button from "$lib/components/ui/button/button.svelte";
+	import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+	import Button from "#lib/components/ui/button/button.svelte";
 
 	let {
 		profileId,

@@ -20,8 +20,8 @@ const account = vi.hoisted(() => ({
 }));
 
 vi.mock("./index", () => push);
-vi.mock("$lib/api/settings/account", () => account);
-vi.mock("$lib/platform/os", () => ({ isAndroidPlatform: () => os.android }));
+vi.mock("#lib/api/settings/account.ts", () => account);
+vi.mock("#lib/platform/os.ts", () => ({ isAndroidPlatform: () => os.android }));
 
 const open: PushCategory[] = [
 	{ category: "messages", enabled: true, systemBlocked: false },

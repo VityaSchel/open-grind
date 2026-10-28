@@ -1,8 +1,8 @@
 import z from "zod";
 
-import { cachedFetch } from "$lib/api/cache";
-import { fetchRest, uploadFileRest } from "$lib/api/transport";
-import { demoUploadAlbumContent } from "$lib/demo";
+import { cachedFetch } from "#lib/api/cache.ts";
+import { fetchRest, uploadFileRest } from "#lib/api/transport.ts";
+import { demoUploadAlbumContent } from "#lib/demo/index.ts";
 import {
 	type AlbumContentOrderRequest,
 	albumContentProcessingResponseSchema,
@@ -19,12 +19,12 @@ import {
 	albumStorageLimitsSchema,
 	type AlbumUnshareRequest,
 	myAlbumsResponseSchema,
-} from "$lib/model/messaging/albums";
+} from "#lib/model/messaging/albums.ts";
 import {
 	mediaFileDescriptor,
 	type MediaFileInspection,
-} from "$lib/platform/media-file";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/media-file.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const albumResponseSchema = z.object({
 	...albumMinSchema.shape,

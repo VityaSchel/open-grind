@@ -2,12 +2,12 @@ import { prefersReducedMotion, Spring } from "svelte/motion";
 import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 
-import { playHaptic } from "$lib/haptics";
-import { isMacosPlatform, isMobilePlatform } from "$lib/platform/os";
+import { playHaptic } from "#lib/haptics.ts";
+import { isMacosPlatform, isMobilePlatform } from "#lib/platform/os.ts";
 import {
 	scrollGesture,
 	type ScrollGestureState,
-} from "$lib/platform/scroll-gesture";
+} from "#lib/platform/scroll-gesture.ts";
 
 const TRIGGER_DISTANCE_PX = 64;
 export const MAX_DRAG_PX = 92;

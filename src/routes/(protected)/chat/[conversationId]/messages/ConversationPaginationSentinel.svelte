@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { flushSync } from "svelte";
 
-	import { observeIntersection } from "$lib/util/observe-intersection";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 	import { getConversationState } from "../conversation-state.svelte";
 
 	let { container }: { container: HTMLElement } = $props();

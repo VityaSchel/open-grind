@@ -4,7 +4,7 @@ import type { NativeInsets } from "./android-native-bridge";
 
 const remeasureScreenChrome = vi.hoisted(() => vi.fn());
 
-vi.mock("$lib/util/screen-chrome.svelte", () => ({ remeasureScreenChrome }));
+vi.mock("#lib/util/screen-chrome.svelte.ts", () => ({ remeasureScreenChrome }));
 
 const KEYBOARD_HIDDEN: NativeInsets = {
 	top: 47.42857142857143,
@@ -97,7 +97,7 @@ describe("applyAndroidInsets", () => {
 
 	it("announces each change to the safe area once", async () => {
 		const applyAndroidInsets = await loadApplyAndroidInsets();
-		const { onSafeAreaChange } = await import("$lib/util/safe-area");
+		const { onSafeAreaChange } = await import("#lib/util/safe-area.ts");
 		const changed = vi.fn();
 		onSafeAreaChange(changed);
 

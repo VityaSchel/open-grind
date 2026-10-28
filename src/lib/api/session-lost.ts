@@ -1,8 +1,8 @@
 import { page } from "$app/state";
 
-import { signedInProfileId } from "$lib/api/current-session";
-import { googleHandoffState } from "$lib/api/google-handoff-state.svelte";
-import { signOut } from "$lib/api/sign-out";
+import { signedInProfileId } from "#lib/api/current-session.ts";
+import { googleHandoffState } from "#lib/api/google-handoff-state.svelte.ts";
+import { signOut } from "#lib/api/sign-out.ts";
 
 let pending: Promise<void> | null = null;
 

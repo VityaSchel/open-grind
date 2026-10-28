@@ -1,9 +1,9 @@
 <script lang="ts">
 	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
 
-	import * as Alert from "$lib/components/ui/alert";
-	import { Button } from "$lib/components/ui/button";
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import * as Alert from "#lib/components/ui/alert/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
 </script>
 
 <Alert.Root class="m-auto w-full max-w-sm">

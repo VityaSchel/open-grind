@@ -1,16 +1,16 @@
 import z from "zod";
 
-import { errorUrnFromBody } from "$lib/api/error-urn";
-import { fetchRest } from "$lib/api/transport";
-import { demoSentMessage } from "$lib/demo";
+import { errorUrnFromBody } from "#lib/api/error-urn.ts";
+import { fetchRest } from "#lib/api/transport.ts";
+import { demoSentMessage } from "#lib/demo/index.ts";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
-} from "$lib/model/messaging/messages";
-import { unixTimestampMsSchema } from "$lib/model/types";
-import { ws } from "$lib/ws.svelte";
-import type { Conversation } from "$lib/model/messaging/conversations";
-import type { MessageDraft } from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
+import { unixTimestampMsSchema } from "#lib/model/types.ts";
+import { ws } from "#lib/ws.svelte.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
+import type { MessageDraft } from "#lib/model/messaging/messages.ts";
 
 const conversationMessagesSchema = z.object({
 	lastReadTimestamp: unixTimestampMsSchema.nullable(),

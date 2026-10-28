@@ -13,9 +13,9 @@ vi.mock("../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ send: sendMock }),
 }));
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { profileMediaUrl } from "$lib/util/media";
-import * as photoswipe from "$lib/util/photoswipe";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { profileMediaUrl } from "#lib/util/media.ts";
+import * as photoswipe from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
 
 const PHOTO_HASH = "a".repeat(40);

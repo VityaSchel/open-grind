@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import { formatDistance } from "$lib/util/units";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { formatDistance } from "#lib/util/units.ts";
 
 	let { distance }: { distance: number } = $props();
 

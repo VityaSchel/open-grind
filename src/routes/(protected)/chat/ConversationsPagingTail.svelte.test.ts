@@ -3,8 +3,8 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "$lib/api/api-error";
-import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
+import { ApiError } from "#lib/api/api-error.ts";
+import { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 import ConversationsPagingTail from "./ConversationsPagingTail.svelte";
 
 class FakeIntersectionObserver {

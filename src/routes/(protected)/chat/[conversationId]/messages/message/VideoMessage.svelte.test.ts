@@ -9,18 +9,20 @@ const lightbox = vi.hoisted(() => ({
 const messagesApi = vi.hoisted(() => ({ getSingleMessage: vi.fn() }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
-vi.mock("$lib/util/photoswipe", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/util/photoswipe")>()),
+vi.mock("#lib/util/photoswipe/index.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/util/photoswipe/index.ts")>()),
 	...lightbox,
 }));
-vi.mock("$lib/api/error-toast", () => errorToast);
-vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
+vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/messaging/messages.ts")
+	>()),
 	...messagesApi,
 }));
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import type { openLightbox } from "$lib/util/photoswipe";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import type { openLightbox } from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
 
 const LIST_URL = "https://cdns.grindr.com/videos/chat/list.mp4";

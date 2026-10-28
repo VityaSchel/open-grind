@@ -6,7 +6,7 @@ const { reconcileHandlers } = vi.hoisted(() => ({
 	reconcileHandlers: [] as (() => void)[],
 }));
 
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(handler: () => void) {
 			reconcileHandlers.push(handler);
@@ -16,8 +16,8 @@ vi.mock("$lib/util/reconcile", () => ({
 	},
 }));
 
-import { setVisibility } from "$lib/test/visibility";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import { setVisibility } from "#lib/test/visibility.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import { retryBrokenMediaWhenOnline } from "./media-retry-signals";
 import { mediaRetry } from "./media-retry.svelte";
 

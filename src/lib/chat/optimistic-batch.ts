@@ -1,4 +1,4 @@
-import { showErrorToast } from "$lib/api/error-toast";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 
 export async function applyOptimisticBatch<T>({
 	items,

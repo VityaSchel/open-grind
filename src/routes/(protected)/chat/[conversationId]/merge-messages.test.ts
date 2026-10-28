@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import {
 	mergeServerMessages,
 	type OptimisticMessage,

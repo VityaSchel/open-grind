@@ -2,8 +2,8 @@ import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "@sveltejs/kit";
 
-import { fakePagerLayout, WIDTH } from "$lib/util/snap-pager-test-helpers";
-import type { Profile } from "$lib/model/users/profiles";
+import { fakePagerLayout, WIDTH } from "#lib/util/snap-pager-test-helpers.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 import ProfilePage from "./+page.svelte";
 import {
 	flush,
@@ -54,38 +54,38 @@ const {
 
 vi.mock("$app/navigation", () => ({ goto, afterNavigate }));
 vi.mock("$app/state", () => ({ navigating, page }));
-vi.mock("$lib/grid/grid-state.svelte", () => ({
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 	get gridState() {
 		return grid.source;
 	},
 }));
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: vi.fn(),
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/api/interest/views", () => ({
+vi.mock("#lib/api/interest/views.ts", () => ({
 	recordProfileView: recordProfileViewMock,
 }));
-vi.mock("$lib/app-data/preferences.svelte", async (importOriginal) => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", async (importOriginal) => ({
 	...(await importOriginal<
-		typeof import("$lib/app-data/preferences.svelte")
+		typeof import("#lib/app-data/preferences.svelte.ts")
 	>()),
 	getPreferences: () => Promise.resolve({ revealProfileViews: true }),
 }));
-vi.mock("$lib/util/media", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/util/media")>()),
+vi.mock("#lib/util/media.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/util/media.ts")>()),
 	profileMediaUrl: profileMediaUrlMock,
 }));
-vi.mock("$lib/util/photoswipe", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/util/photoswipe")>()),
+vi.mock("#lib/util/photoswipe/index.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/util/photoswipe/index.ts")>()),
 	isPhotoSwipeBusy: isPhotoSwipeBusyMock,
 	onPhotoSwipeOpening: onPhotoSwipeOpeningMock,
 }));
-vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
+vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: () => {},
 }));
 

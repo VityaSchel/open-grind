@@ -1,7 +1,7 @@
 import {
 	describeMediaFailure,
 	mediaFailure,
-} from "$lib/platform/media-failure";
+} from "#lib/platform/media-failure.ts";
 
 export type MediaDimensions = { width: number; height: number };
 

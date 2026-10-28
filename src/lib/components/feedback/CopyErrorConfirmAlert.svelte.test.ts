@@ -14,8 +14,8 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 const { copyErrorConfirmState } =
-	await import("$lib/api/copy-error-confirm-state.svelte");
-const { promptCopyError } = await import("$lib/api/error-copy");
+	await import("#lib/api/copy-error-confirm-state.svelte.ts");
+const { promptCopyError } = await import("#lib/api/error-copy.ts");
 const CopyErrorConfirmAlert = (await import("./CopyErrorConfirmAlert.svelte"))
 	.default;
 

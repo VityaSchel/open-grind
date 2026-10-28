@@ -4,9 +4,9 @@
 	import ArrowLeftIcon from "phosphor-svelte/lib/ArrowLeftIcon";
 	import type { Snippet } from "svelte";
 
-	import BackLink from "$lib/components/navigation/BackLink.svelte";
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
+	import BackLink from "#lib/components/navigation/BackLink.svelte";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { provideSubpageActions } from "./subpage-actions-context.svelte";
 
 	let {
