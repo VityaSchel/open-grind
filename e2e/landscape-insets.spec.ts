@@ -77,6 +77,7 @@ const DRAWER = '[data-slot="drawer-content"]';
 const SHEET = '[data-slot="sheet-content"]';
 const MESSAGE = '[data-slot="message"]';
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
+const LOW_ROW_OFFSET = { x: 80, y: 110 };
 const PAGES_TO_LOAD = 3;
 const SCROLLED_INTO_GRID = 2500;
 
@@ -508,6 +509,44 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		expect((span.left + span.right) / 2).toBeCloseTo(
 			(safe.left + safe.right) / 2,
 			0,
+		);
+	});
+});
+
+test.describe("with a mouse on a short landscape screen", () => {
+	test.use({ viewport: IPHONE_LANDSCAPE });
+
+	test("a conversation menu opened low in the list shifts up to clear the bottom inset", async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform: "macos" });
+		await page.goto("/chat");
+		await rows(page).nth(3).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await sendInsets(page, IPHONE_LANDSCAPE_INSETS);
+		const low = {
+			x: IPHONE_LANDSCAPE_INSETS.left + LOW_ROW_OFFSET.x,
+			y: IPHONE_LANDSCAPE.height - LOW_ROW_OFFSET.y,
+		};
+		expect(
+			await page.evaluate(
+				({ x, y }) =>
+					document
+						.elementFromPoint(x, y)
+						?.closest('a[href^="/chat/"]') instanceof
+					HTMLAnchorElement,
+				low,
+			),
+			"the point lands on a conversation row",
+		).toBe(true);
+
+		await page.mouse.click(low.x, low.y, { button: "right" });
+		const menu = page.getByRole("menu");
+		await menu.waitFor();
+		await animationsFinished(menu);
+		const box = await menu.boundingBox();
+
+		expect(box!.y + box!.height).toBeLessThan(
+			IPHONE_LANDSCAPE.height - IPHONE_LANDSCAPE_INSETS.bottom + 0.5,
 		);
 	});
 });

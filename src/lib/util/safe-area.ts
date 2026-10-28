@@ -1,3 +1,5 @@
+import { createSubscriber } from "svelte/reactivity";
+
 export const SAFE_AREA_SIDES = ["top", "bottom", "left", "right"] as const;
 
 export type SafeAreaSide = (typeof SAFE_AREA_SIDES)[number];
@@ -24,3 +26,21 @@ export function safeAreaInsets(): Record<SafeAreaSide, number> {
 		left: inset("left"),
 	};
 }
+
+class SafeArea {
+	#subscribe = createSubscriber((update) => {
+		window.addEventListener("resize", update);
+		const stopFollowingInsets = onSafeAreaChange(update);
+		return () => {
+			window.removeEventListener("resize", update);
+			stopFollowingInsets();
+		};
+	});
+
+	get current(): Record<SafeAreaSide, number> {
+		this.#subscribe();
+		return safeAreaInsets();
+	}
+}
+
+export const safeArea = new SafeArea();

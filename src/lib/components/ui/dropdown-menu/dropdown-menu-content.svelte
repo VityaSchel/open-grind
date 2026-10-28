@@ -2,6 +2,7 @@
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
+	import { safeArea } from "$lib/util/safe-area";
 	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
 	import DropdownMenuPortal from "./dropdown-menu-portal.svelte";
 
@@ -9,6 +10,7 @@
 		ref = $bindable(null),
 		sideOffset = 4,
 		align = "start",
+		collisionPadding,
 		portalProps,
 		class: className,
 		...restProps
@@ -25,6 +27,7 @@
 		data-slot="dropdown-menu-content"
 		{sideOffset}
 		{align}
+		collisionPadding={collisionPadding ?? safeArea.current}
 		class={cn(
 			"z-popover w-(--bits-dropdown-menu-anchor-width) min-w-48 overflow-x-hidden overflow-y-auto rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
 			className,

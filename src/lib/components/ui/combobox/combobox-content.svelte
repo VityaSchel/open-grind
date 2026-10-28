@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Combobox as ComboboxPrimitive } from "bits-ui";
 
+	import { safeArea } from "$lib/util/safe-area";
 	import { cn } from "$lib/util/utils.js";
 	import { getComboboxCtx } from "./combobox.svelte";
 
@@ -8,6 +9,7 @@
 		ref = $bindable(null),
 		class: className,
 		sideOffset = 4,
+		collisionPadding,
 		children,
 		...restProps
 	}: ComboboxPrimitive.ContentProps = $props();
@@ -19,6 +21,7 @@
 	<ComboboxPrimitive.Content
 		bind:ref
 		{sideOffset}
+		collisionPadding={collisionPadding ?? safeArea.current}
 		data-slot="combobox-content"
 		data-kb-nav={ctx.keyboardNav ? "" : undefined}
 		onpointerdown={() => ctx.setKeyboardNav(false)}
