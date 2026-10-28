@@ -1,6 +1,3 @@
-export const demoEnabled =
-	!import.meta.env.VITEST && import.meta.env.OPEN_GRIND_DEMO === "1";
-
 export const demoMeProfileId = 123456000;
 
 export const NOW = Date.now();

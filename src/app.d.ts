@@ -1,6 +1,8 @@
 import type { NativeInsets } from "$lib/platform/android-native-bridge";
 
 declare global {
+	const __DEMO__: boolean;
+
 	namespace App {
 		interface PageState {
 			profileOrigin?: "browse";

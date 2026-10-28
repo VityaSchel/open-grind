@@ -5,7 +5,6 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { demoEnabled } from "$lib/demo";
 import {
 	CHAT_MEDIA_MAX_BYTES,
 	CHAT_MEDIA_MAX_LABEL,
@@ -393,7 +392,7 @@ async function deliver<T>({
 async function stageFile(file: File): Promise<PickedMedia> {
 	const key = crypto.randomUUID();
 	const mimeType = file.type === "" ? null : file.type;
-	if (demoEnabled) return { source: "web", key, mimeType, file };
+	if (__DEMO__) return { source: "web", key, mimeType, file };
 	const id = z.string().parse(await invoke("stage_media"));
 	const media: PickedMedia = { source: "staged", key, mimeType, id, file };
 	try {

@@ -14,7 +14,7 @@ import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod, demoEnabled } from "$lib/demo";
+import { demoCallMethod } from "$lib/demo";
 import {
 	type AccountStatusError,
 	accountStatusErrorSchema,
@@ -147,7 +147,7 @@ export async function callMethod<T extends keyof typeof methods>(
 		: [data: z.infer<(typeof methods)[T]["request"]>]
 ): Promise<z.infer<(typeof methods)[T]["response"]>> {
 	type Result = z.infer<(typeof methods)[T]["response"]>;
-	if (demoEnabled) {
+	if (__DEMO__) {
 		return methods[method].response.parse(demoCallMethod(method)) as Result;
 	}
 	try {

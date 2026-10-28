@@ -12,7 +12,7 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { parseJson } from "$lib/api/redact/value";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
-import { demoEnabled, demoRoute } from "$lib/demo";
+import { demoRoute } from "$lib/demo";
 import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
@@ -132,7 +132,7 @@ async function respondFromDemoOrSend({
 	ErrorClass?: ApiErrorClass;
 	send: () => Promise<RestResponse>;
 }): Promise<RestResponse> {
-	if (!demoEnabled) return await send();
+	if (!__DEMO__) return await send();
 	const { path, method } = requestInfo;
 	const { status, body } = demoRoute({
 		path,

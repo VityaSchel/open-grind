@@ -13,7 +13,6 @@ import {
 	markProfileUnviewable,
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
-import { demoEnabled } from "$lib/demo";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import { arrayOfParsableEntries } from "$lib/model/tolerance";
@@ -354,7 +353,7 @@ const uploadProfilePhotoResponseSchema = z.object({
 export async function uploadProfilePhoto(
 	media: PickedMedia,
 ): Promise<{ mediaHash: string; pending: boolean }> {
-	if (demoEnabled) {
+	if (__DEMO__) {
 		throw new Error("Profile photos can't be uploaded in the demo");
 	}
 	const file = mediaFileDescriptor(media);
