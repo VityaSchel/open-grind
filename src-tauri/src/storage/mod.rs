@@ -188,7 +188,7 @@ pub(crate) mod test_support {
 	use std::path::Path;
 	use std::sync::Mutex;
 
-	use super::{file_store, init_file_store};
+	use super::{init_file_store, private_file};
 
 	static DEFAULT_STORE: Mutex<()> = Mutex::new(());
 
@@ -198,7 +198,7 @@ pub(crate) mod test_support {
 
 	pub(crate) fn with_file_store(test: impl FnOnce(&Path)) {
 		let _guard = lock();
-		let base = file_store::scratch_dir();
+		let base = private_file::scratch_dir();
 		init_file_store(base.clone());
 		test(&base);
 		std::fs::remove_dir_all(&base).ok();

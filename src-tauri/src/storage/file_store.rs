@@ -128,25 +128,11 @@ pub fn init(base: PathBuf) {
 }
 
 #[cfg(test)]
-pub(super) fn scratch_dir() -> PathBuf {
-	use std::sync::atomic::{AtomicUsize, Ordering};
-
-	static NEXT: AtomicUsize = AtomicUsize::new(0);
-	let dir = std::env::temp_dir().join(format!(
-		"open-grind-file-store-{}-{}",
-		std::process::id(),
-		NEXT.fetch_add(1, Ordering::Relaxed)
-	));
-	fs::create_dir_all(&dir).unwrap();
-	dir
-}
-
-#[cfg(test)]
 mod tests {
 	use std::os::unix::fs::PermissionsExt;
 
 	use super::*;
-	use crate::storage::private_file::{temp_path, write_private};
+	use crate::storage::private_file::{scratch_dir, temp_path, write_private};
 
 	const SERVICE: &str = "open-grind";
 	const USER: &str = "session";

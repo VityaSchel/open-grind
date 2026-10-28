@@ -33,3 +33,15 @@ pub(super) fn replace_private(path: &Path, secret: &[u8]) -> io::Result<()> {
 			fs::remove_file(&temp).ok();
 		})
 }
+
+#[cfg(test)]
+pub(super) fn scratch_dir() -> PathBuf {
+	static NEXT: AtomicU64 = AtomicU64::new(0);
+	let dir = std::env::temp_dir().join(format!(
+		"open-grind-file-store-{}-{}",
+		std::process::id(),
+		NEXT.fetch_add(1, Ordering::Relaxed)
+	));
+	fs::create_dir_all(&dir).unwrap();
+	dir
+}
