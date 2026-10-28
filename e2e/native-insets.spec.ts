@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import {
+	afterTwoFrames,
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
@@ -11,7 +12,12 @@ import {
 	openInbox,
 	sheet,
 } from "./support/chat-stack";
-import { type Keyboard, sendIosInsets, TEST_INSETS } from "./support/keyboard";
+import {
+	type Keyboard,
+	sendInsets,
+	sendIosInsets,
+	TEST_INSETS,
+} from "./support/keyboard";
 import { LIVE_STACK, PHONE } from "./support/stack-layers";
 
 const KEYBOARD_HEIGHT = 300;
@@ -171,5 +177,38 @@ for (const { keyboard, text, focused } of [
 				(field) => field === document.activeElement,
 			),
 		).toBe(focused);
+	});
+}
+
+for (const { platform, send, revealed } of [
+	{ platform: "ios", send: sendIosInsets, revealed: true },
+	{ platform: "android", send: sendInsets, revealed: false },
+] as const) {
+	test(`a field the keyboard covers on ${platform} ${revealed ? "scrolls into view" : "is left to the WebView"}`, async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform });
+		await page.goto("/settings/profile");
+		const about = page.getByLabel("About me", { exact: true });
+		await about.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		const fieldBottom = () =>
+			about.evaluate((field) => field.getBoundingClientRect().bottom);
+		await about.evaluate((field) => {
+			field.scrollIntoView({ block: "end" });
+			field.focus({ preventScroll: true });
+		});
+		expect(await fieldBottom()).toBeGreaterThan(
+			KEYBOARD_OPEN.viewport.height,
+		);
+
+		await send(page, KEYBOARD_OPEN.insets);
+		await page.setViewportSize(KEYBOARD_OPEN.viewport);
+		await expect.poll(() => safeAreaBottom(page)).toBe("0px");
+		await afterTwoFrames(page);
+
+		expect((await fieldBottom()) <= KEYBOARD_OPEN.viewport.height).toBe(
+			revealed,
+		);
+		await expect(about).toBeFocused();
 	});
 }

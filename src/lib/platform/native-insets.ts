@@ -13,6 +13,8 @@ export type NativeInsets = Record<SafeAreaSide, number> & { ime: boolean };
 let appliedImeVisible: boolean | undefined;
 let deferredInsets: NativeInsets | undefined;
 let deferredInsetsTimeout: ReturnType<typeof setTimeout> | undefined;
+let focusedFieldRevealFrame: number | undefined;
+let revealContainer: { element: Element; observer: ResizeObserver } | undefined;
 
 function readAndroidInsets(): NativeInsets | undefined {
 	const bridge = window.__AndroidInsets;
@@ -54,9 +56,70 @@ function writeSafeAreaInsets(valueOf: (side: SafeAreaSide) => string) {
 	announceSafeAreaChange();
 }
 
+function keyboardCoversFocusedField(): boolean {
+	switch (currentPlatform()) {
+		case "ios":
+			return true;
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
+
+function scrollContainerOf(field: Element): Element | undefined {
+	for (let node = field.parentElement; node; node = node.parentElement) {
+		const { overflowY } = getComputedStyle(node);
+		if (overflowY === "auto" || overflowY === "scroll") return node;
+	}
+	return undefined;
+}
+
+function watchRevealContainer(element: Element | undefined) {
+	if (revealContainer?.element === element) return;
+	revealContainer?.observer.disconnect();
+	revealContainer = undefined;
+	if (!element) return;
+	const observer = new ResizeObserver(revealFocusedFieldUnderKeyboard);
+	observer.observe(element);
+	revealContainer = { element, observer };
+}
+
+function revealFocusedField() {
+	focusedFieldRevealFrame = undefined;
+	if (!appliedImeVisible) return;
+	const field = document.activeElement;
+	const editable =
+		field instanceof HTMLInputElement ||
+		field instanceof HTMLTextAreaElement ||
+		(field instanceof HTMLElement && field.isContentEditable);
+	if (!editable) return;
+	const container = scrollContainerOf(field);
+	watchRevealContainer(container);
+	const visibleBottom = container
+		? Math.min(
+				window.innerHeight,
+				container.getBoundingClientRect().top +
+					container.clientTop +
+					container.clientHeight,
+			)
+		: window.innerHeight;
+	if (field.getBoundingClientRect().bottom <= visibleBottom) return;
+	field.scrollIntoView({ block: "nearest" });
+}
+
+function revealFocusedFieldUnderKeyboard() {
+	if (!appliedImeVisible || !keyboardCoversFocusedField()) return;
+	if (focusedFieldRevealFrame !== undefined) return;
+	focusedFieldRevealFrame = requestAnimationFrame(revealFocusedField);
+}
+
 function applyNativeInsets(insets: NativeInsets) {
+	if (!insets.ime) watchRevealContainer(undefined);
 	appliedImeVisible = insets.ime;
 	writeSafeAreaInsets((side) => `${insets[side]}px`);
+	revealFocusedFieldUnderKeyboard();
 }
 
 function cancelDeferredInsets() {
@@ -84,7 +147,7 @@ function deferInsetsUntilResize(insets: NativeInsets) {
 
 export function installNativeInsets({
 	fallback,
-}: { fallback?: NativeInsets } = {}) {
+}: { fallback?: NativeInsets } = {}): () => void {
 	const reapplyInsets = (dispatch?: NativeInsets) => {
 		const insets = dispatch ?? readNativeInsets() ?? fallback;
 		if (!insets) {
@@ -101,7 +164,16 @@ export function installNativeInsets({
 		applyNativeInsets(insets);
 	};
 	window.__reapplyInsets = reapplyInsets;
+	window.addEventListener("resize", revealFocusedFieldUnderKeyboard);
 	reapplyInsets();
+	return () => {
+		window.removeEventListener("resize", revealFocusedFieldUnderKeyboard);
+		if (focusedFieldRevealFrame !== undefined)
+			cancelAnimationFrame(focusedFieldRevealFrame);
+		focusedFieldRevealFrame = undefined;
+		watchRevealContainer(undefined);
+		cancelDeferredInsets();
+	};
 }
 
 export function softKeyboardVisibility(): boolean | undefined {
