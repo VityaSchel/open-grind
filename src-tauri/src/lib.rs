@@ -544,50 +544,11 @@ mod frontend_method_pins {
 		&haystack[start..start + len]
 	}
 
-	fn without_attributes(source: &str) -> String {
-		let mut kept = String::new();
-		let mut rest = source;
-		while let Some(start) = rest.find("#[") {
-			kept.push_str(&rest[..start]);
-			let mut depth = 0;
-			let end = rest[start..]
-				.char_indices()
-				.find_map(|(offset, character)| {
-					match character {
-						'[' => depth += 1,
-						']' => depth -= 1,
-						_ => return None,
-					}
-					(depth == 0).then_some(start + offset + 1)
-				})
-				.expect("an attribute in generate_handler! never closes");
-			rest = &rest[end..];
-		}
-		kept + rest
-	}
-
-	fn handler_entries(handler: &str) -> Vec<String> {
-		without_attributes(handler)
+	fn registered_commands() -> Vec<&'static str> {
+		between(THIS, "tauri::generate_handler![", "])")
 			.split(',')
-			.map(str::trim)
-			.filter(|entry| !entry.is_empty())
-			.filter_map(|entry| entry.rsplit("::").next())
-			.map(str::to_owned)
+			.filter_map(|entry| entry.trim().rsplit("::").next())
 			.collect()
-	}
-
-	fn registered_commands() -> Vec<String> {
-		handler_entries(between(THIS, "tauri::generate_handler![", "])"))
-	}
-
-	#[test]
-	fn a_platform_gate_on_a_handler_entry_is_not_read_as_a_command() {
-		assert_eq!(
-			handler_entries(
-				"\n\ta::first,\n\t#[cfg(any(target_os = \"android\", desktop))]\n\tb::second,\n"
-			),
-			["first", "second"]
-		);
 	}
 
 	#[test]
@@ -602,7 +563,7 @@ mod frontend_method_pins {
 		assert!(invoked.contains(&"fetch_external"), "{invoked:?}");
 		for command in invoked {
 			assert!(
-				registered.iter().any(|name| name == command),
+				registered.contains(&command),
 				"{command} is invoked by transport.ts but not registered"
 			);
 		}
@@ -621,7 +582,7 @@ mod frontend_method_pins {
 		assert!(!methods.is_empty());
 		for method in methods {
 			assert!(
-				registered.iter().any(|name| name == method),
+				registered.contains(&method),
 				"{method} is called by the frontend but not registered"
 			);
 		}
