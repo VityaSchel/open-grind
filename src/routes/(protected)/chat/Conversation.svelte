@@ -17,6 +17,12 @@
 	import { playHaptic } from "$lib/haptics";
 	import { previewLabel } from "$lib/model/messaging/message-preview";
 	import { firedByTouch } from "$lib/platform/touch-origin";
+	import {
+		type LongPressHandlers,
+		longPressHandlers,
+		menuLongPressSource,
+		type PressPoint,
+	} from "$lib/util/long-press";
 	import type { Conversation } from "$lib/model/messaging/conversations";
 	import type { SelectionSet } from "$lib/util/selection.svelte";
 
@@ -45,6 +51,7 @@
 
 	let contextMenuUsed = $state(false);
 	let pressedByTouch = false;
+	let trigger: HTMLElement | null = $state(null);
 
 	function togglePinned() {
 		void conversations.setPinned({
@@ -63,6 +70,40 @@
 	function toggleSelected() {
 		selection?.toggle(conversationId);
 	}
+
+	function openMenuAt({ x, y }: PressPoint) {
+		trigger?.dispatchEvent(
+			new MouseEvent("contextmenu", {
+				bubbles: true,
+				cancelable: true,
+				clientX: x,
+				clientY: y,
+			}),
+		);
+	}
+
+	function triggerPressHandlers(): LongPressHandlers {
+		switch (menuLongPressSource()) {
+			case "holdTimer": {
+				const hold = longPressHandlers(openMenuAt);
+				return {
+					onpointerdown: hold.onpointerdown,
+					onpointermove: hold.onpointermove,
+					onpointerup: hold.onpointerup,
+					onpointercancel: hold.onpointercancel,
+				};
+			}
+			case "contextMenu":
+				return {
+					onpointerdown: (event) =>
+						(pressedByTouch = firedByTouch(event)),
+					oncontextmenu: (event) =>
+						(pressedByTouch = firedByTouch(event)),
+				};
+		}
+	}
+
+	const triggerPress = triggerPressHandlers();
 </script>
 
 {#snippet titleBadges()}
@@ -167,8 +208,8 @@
 	>
 		<ContextMenu.Trigger
 			class="rounded-2xl"
-			onpointerdown={(event) => (pressedByTouch = firedByTouch(event))}
-			oncontextmenu={(event) => (pressedByTouch = firedByTouch(event))}
+			bind:ref={trigger}
+			{...triggerPress}
 		>
 			{@render row()}
 		</ContextMenu.Trigger>

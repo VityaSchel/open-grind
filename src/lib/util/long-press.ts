@@ -77,6 +77,8 @@ export type LongPressHandlers = Pick<
 	| "oncontextmenu"
 >;
 
+export type PressPoint = { x: number; y: number };
+
 export type MenuLongPressSource = "holdTimer" | "contextMenu";
 
 export function menuLongPressSource(): MenuLongPressSource {
@@ -91,7 +93,9 @@ export function menuLongPressSource(): MenuLongPressSource {
 	}
 }
 
-export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
+export function longPressHandlers(
+	onLongPress: (point: PressPoint) => void,
+): LongPressHandlers {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let originX = 0;
 	let originY = 0;
@@ -118,7 +122,10 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 				timer = null;
 				pressConsumed = true;
 				holdTouch();
-				fireOnce({ onLongPress, byTouch });
+				fireOnce({
+					onLongPress: () => onLongPress({ x: originX, y: originY }),
+					byTouch,
+				});
 			}, LONG_PRESS_DURATION_MS);
 		},
 		onpointermove(event) {
@@ -148,14 +155,15 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 			if (Date.now() < heldTouchUntil) return;
 			if (pressing && pressConsumed) return;
 			pressConsumed = true;
+			const point = { x: event.clientX, y: event.clientY };
 			const { pointerType } = event as Partial<PointerEvent>;
 			if (pointerType === "mouse" || pointerType === "") {
-				onLongPress();
+				onLongPress(point);
 				return;
 			}
 			const byTouch = firedByTouch(event);
 			if (byTouch) holdTouch();
-			fireOnce({ onLongPress, byTouch });
+			fireOnce({ onLongPress: () => onLongPress(point), byTouch });
 		},
 	};
 }

@@ -6,8 +6,13 @@ const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
 import { contextMenuEvent } from "$lib/test/context-menu";
+import { pointerEvent } from "$lib/test/pointer";
 import type { TouchOriginHints } from "$lib/platform/touch-origin";
-import { longPressHandlers } from "./long-press";
+import {
+	type LongPressHandlers,
+	longPressHandlers,
+	type PressPoint,
+} from "./long-press";
 
 function contextMenu(origin?: TouchOriginHints) {
 	return contextMenuEvent(origin) as unknown as Parameters<
@@ -20,6 +25,18 @@ function pointer(type: string, pointerType: string) {
 	Object.defineProperty(event, "pointerType", { value: pointerType });
 	return event as unknown as Parameters<
 		NonNullable<ReturnType<typeof longPressHandlers>["onpointerdown"]>
+	>[0];
+}
+
+function touchDownAt(point: PressPoint) {
+	return pointerEvent("pointerdown", point) as unknown as Parameters<
+		NonNullable<LongPressHandlers["onpointerdown"]>
+	>[0];
+}
+
+function contextMenuAt(options: PressPoint & { pointerType: string }) {
+	return pointerEvent("contextmenu", options) as unknown as Parameters<
+		NonNullable<LongPressHandlers["oncontextmenu"]>
 	>[0];
 }
 
@@ -131,6 +148,33 @@ describe("longPressHandlers", () => {
 		expect(onClick).toHaveBeenCalledOnce();
 		button.remove();
 	});
+
+	it("hands where a held touch started to onLongPress", () => {
+		const onLongPress = vi.fn();
+		const handlers = longPressHandlers(onLongPress);
+
+		handlers.onpointerdown?.(touchDownAt({ x: 30, y: 40 }));
+		vi.advanceTimersByTime(450);
+
+		expect(onLongPress).toHaveBeenCalledExactlyOnceWith({ x: 30, y: 40 });
+	});
+
+	it.each(["mouse", "touch"])(
+		"hands where a %s contextmenu landed to onLongPress",
+		(pointerType) => {
+			const onLongPress = vi.fn();
+			const handlers = longPressHandlers(onLongPress);
+
+			handlers.oncontextmenu?.(
+				contextMenuAt({ pointerType, x: 30, y: 40 }),
+			);
+
+			expect(onLongPress).toHaveBeenCalledExactlyOnceWith({
+				x: 30,
+				y: 40,
+			});
+		},
+	);
 
 	it("still swallows the click a fired touch hold leaves behind", () => {
 		const handlers = longPressHandlers(() => {});

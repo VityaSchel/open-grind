@@ -20,6 +20,8 @@ vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
 import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
 import { contextMenuEvent } from "$lib/test/context-menu";
+import { resetPlatform, runningOn } from "$lib/test/platform";
+import { pointerEvent } from "$lib/test/pointer";
 import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
 import Conversation from "./Conversation.svelte";
 
@@ -28,8 +30,16 @@ const DRAFT_PREFIX = '[data-slot="conversation-draft-prefix"]';
 const MENU_TRIGGER = '[data-slot="context-menu-trigger"]';
 const CONVERSATION_ID = "a:1";
 const BITS_HOLD_MS = 750;
+const LONG_PRESS_MS = 450;
 
 let drafts: Drafts;
+let clock = 1_700_000_000_000;
+
+beforeEach(() => {
+	runningOn("android");
+});
+
+afterEach(resetPlatform);
 
 function conversation(
 	preview: ConversationType["data"]["preview"],
@@ -288,5 +298,57 @@ describe("Conversation menu back gesture", () => {
 			window.__AndroidOnBackGesture?.(),
 			"the next Back goes on to navigation",
 		).toBe(true);
+	});
+});
+
+describe("Conversation menu on iOS", () => {
+	beforeEach(() => {
+		runningOn("ios");
+		conversations.drafts = new Drafts();
+		playHapticMock.mockReset();
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+		vi.setSystemTime((clock += 60_000));
+	});
+
+	afterEach(() => {
+		window.dispatchEvent(new Event("pointerup"));
+		vi.useRealTimers();
+		cleanup();
+	});
+
+	it("opens once a touch is held, with one haptic tap", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.useRealTimers();
+
+		expect(await menuOpened(trigger)).toBe(true);
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("still opens when the finger drifts a little during the hold", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(100);
+		trigger.dispatchEvent(pointerEvent("pointermove", { x: 15 }));
+		vi.advanceTimersByTime(LONG_PRESS_MS - 100);
+		vi.useRealTimers();
+
+		expect(await menuOpened(trigger)).toBe(true);
+	});
+
+	it("stays closed when the finger drifts past the hold's tolerance", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(100);
+		trigger.dispatchEvent(pointerEvent("pointermove", { x: 23 }));
+		vi.advanceTimersByTime(1000);
+		vi.useRealTimers();
+
+		expect(await menuOpened(trigger)).toBe(false);
+		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 });
