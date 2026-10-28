@@ -87,7 +87,9 @@ describe("location messages", () => {
 			renderLocation(isOut);
 
 			expect(screen.getByText("Location")).toBeTruthy();
-			expect(screen.getByText("51.50746, -0.12781")).toBeTruthy();
+			const coordinates = screen.getByText("51.50746, -0.12781");
+			expect(coordinates.getAttribute("translate")).toBe("no");
+			expect(coordinates.getAttribute("dir")).toBe("ltr");
 			const link = screen.getByRole("link", { name: LOCATION_NAME });
 			expect(link.getAttribute("href")).toBe(GEO_URL);
 			expect(link.contains(screen.getByText("Location"))).toBe(true);

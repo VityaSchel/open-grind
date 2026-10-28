@@ -68,7 +68,9 @@
 				{t("chat.message.location.title")}
 			</div>
 			<div class="text-xs opacity-70">
-				{message.lat.toFixed(5)}, {message.lon.toFixed(5)}
+				<span translate="no" dir="ltr"
+					>{message.lat.toFixed(5)}, {message.lon.toFixed(5)}</span
+				>
 			</div>
 			<span class="text-sm underline underline-offset-2">
 				{t("chat.message.location.openMap")}
