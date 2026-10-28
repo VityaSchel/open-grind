@@ -71,7 +71,7 @@
 		tag="nav"
 		aria-label="Interest"
 		data-fixed-header
-		class="fixed top-0 left-0 z-10 w-full px-4 pt-fixed-header pb-2"
+		class="fixed top-0 left-0 z-10 w-full pt-fixed-header px-safe-4 pb-2"
 		bgClass="bg-linear-to-b from-background to-transparent"
 		contentClass="flex items-center w-full *:flex-1 max-w-120 mx-auto"
 		{@attach topChrome}

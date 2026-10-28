@@ -74,7 +74,7 @@
 	direction="bottomToTop"
 	tag="nav"
 	aria-label="Main"
-	class="fixed bottom-0 z-50 w-full pt-2 pb-fixed-nav"
+	class="fixed bottom-0 z-50 w-full pt-2 px-safe pb-fixed-nav"
 	bgClass="bg-linear-to-t from-background to-transparent"
 	contentClass="flex gap-2 overflow-auto no-scrollbar px-1 *:first:ms-auto *:last:me-auto"
 	contentScrollIntent="x"

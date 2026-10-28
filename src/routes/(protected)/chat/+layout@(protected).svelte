@@ -92,7 +92,7 @@
 	</LiveStack>
 {:else}
 	<main
-		class="flex h-dvh w-full flex-1 pt-(--safe-area-top) pb-(--safe-area-bottom)"
+		class="flex h-dvh w-full flex-1 pt-(--safe-area-top) px-safe pb-(--safe-area-bottom)"
 	>
 		<Resizable.PaneGroup
 			direction="horizontal"

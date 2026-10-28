@@ -50,7 +50,9 @@
 	<title>Welcome</title>
 </svelte:head>
 
-<main class="flex min-h-dvh flex-col px-8 pt-[calc(2rem+var(--safe-area-top))]">
+<main
+	class="flex min-h-dvh flex-col pt-[calc(2rem+var(--safe-area-top))] px-safe-8"
+>
 	<div
 		class="flex flex-1 flex-col items-center justify-center gap-6 text-center"
 	>

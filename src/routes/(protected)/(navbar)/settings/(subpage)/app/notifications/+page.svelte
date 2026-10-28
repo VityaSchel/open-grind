@@ -14,7 +14,7 @@
 	<NotificationCategoriesSetting />
 {:else}
 	<p
-		class="fixed inset-x-4 inset-y-0 m-auto size-fit text-center text-sm text-balance text-muted-foreground"
+		class="fixed inset-y-0 right-[calc(1rem+var(--safe-area-right))] left-[calc(1rem+var(--safe-area-left))] m-auto size-fit text-center text-sm text-balance text-muted-foreground"
 	>
 		Notifications are not supported on this platform yet.
 	</p>

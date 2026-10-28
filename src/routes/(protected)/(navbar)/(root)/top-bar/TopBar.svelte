@@ -11,7 +11,7 @@
 
 <ProgressiveBlur
 	data-fixed-header
-	class="fixed top-0 left-0 z-10 w-full"
+	class="fixed top-0 left-0 z-10 w-full px-safe"
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex flex-col pt-fixed-header"
 	direction="topToBottom"

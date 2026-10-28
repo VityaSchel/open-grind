@@ -3,7 +3,7 @@
 </script>
 
 <main
-	class="flex min-h-dvh w-full px-8 pt-[calc(2rem+var(--safe-area-top))] pb-[calc(2rem+var(--safe-area-bottom))]"
+	class="flex min-h-dvh w-full pt-[calc(2rem+var(--safe-area-top))] px-safe-8 pb-[calc(2rem+var(--safe-area-bottom))]"
 >
 	{@render children?.()}
 </main>

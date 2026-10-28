@@ -72,7 +72,7 @@
 		{@attach trackScrolled}
 		data-slot="page-stack-pane"
 		class={[
-			"fixed inset-0 bg-background pt-(--safe-area-top) pb-(--content-pb)",
+			"fixed inset-0 bg-background pt-(--safe-area-top) px-safe pb-(--content-pb)",
 			{ "shadow-(--stack-edge)": motion.edge },
 		]}
 		style:z-index={liveZ}
