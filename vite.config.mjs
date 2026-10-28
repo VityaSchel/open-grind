@@ -63,7 +63,19 @@ export default defineConfig(async ({ command }) => ({
 	// here lets the bundle drop what a store build may not carry.
 	envPrefix: ["VITE_", "OPEN_GRIND_"],
 
-	esbuild: { drop: command === "build" ? ["console", "debugger"] : [] },
+	environments: {
+		client: {
+			build: {
+				rolldownOptions: {
+					output: {
+						minify: {
+							compress: { dropConsole: command === "build" },
+						},
+					},
+				},
+			},
+		},
+	},
 
 	optimizeDeps: { include: ["leaflet", "sveaflet"] },
 
