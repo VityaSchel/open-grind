@@ -199,10 +199,18 @@ mod tests {
 		let sealed = key.seal(ACCOUNT, b"auth-token").unwrap();
 
 		assert_eq!(sealed[0], FORMAT);
-		assert_eq!(sealed.len(), 1 + NONCE_LEN + TAG_LEN + b"auth-token".len());
-		assert!(!sealed
-			.windows(b"auth-token".len())
-			.any(|w| w == b"auth-token"));
+		assert_eq!(
+			decrypt_aead(
+				Cipher::aes_256_gcm(),
+				key.as_bytes(),
+				Some(&sealed[1..1 + NONCE_LEN]),
+				b"\x01session",
+				&sealed[1 + NONCE_LEN + TAG_LEN..],
+				&sealed[1 + NONCE_LEN..1 + NONCE_LEN + TAG_LEN],
+			)
+			.unwrap(),
+			b"auth-token"
+		);
 	}
 
 	#[test]
