@@ -143,8 +143,8 @@ use desktop as platform;
 #[cfg(target_os = "macos")]
 pub use platform::enforce_home;
 pub use platform::{
-	install, install_pending, open_install_permission_settings, sweep_replaced,
-	take_outcome, watch_install,
+	install, install_pending, open_install_permission_settings, take_outcome,
+	watch_install,
 };
 
 #[cfg(test)]

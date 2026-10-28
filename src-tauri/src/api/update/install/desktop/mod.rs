@@ -117,11 +117,6 @@ pub fn open_install_permission_settings(
 	Err(UpdateError::Unsupported(reason()))
 }
 
-pub fn sweep_replaced() {
-	#[cfg(target_os = "linux")]
-	binary::sweep_replaced();
-}
-
 #[cfg(target_os = "macos")]
 pub fn enforce_home() {
 	location::enforce();

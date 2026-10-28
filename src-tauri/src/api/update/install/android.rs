@@ -154,8 +154,6 @@ pub fn probe_package(app: &AppHandle, package: &str) -> Baseline {
 	}
 }
 
-pub fn sweep_replaced() {}
-
 pub fn take_outcome(app: &AppHandle) -> Option<Outcome> {
 	let response: OutcomeResponse = plugin(app)
 		.ok()?

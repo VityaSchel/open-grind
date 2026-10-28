@@ -84,7 +84,6 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<Wry> {
 
 			let app = app.clone();
 			tauri::async_runtime::spawn_blocking(move || {
-				install::sweep_replaced();
 				if let Ok(root) = storage::root(&app) {
 					storage::sweep_foreign(&root);
 				}

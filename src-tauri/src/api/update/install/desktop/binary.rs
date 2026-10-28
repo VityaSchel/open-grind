@@ -9,12 +9,6 @@ pub fn install(payload: &Path) -> Result<(), UpdateError> {
 	swap(&replaceable_file()?, payload)
 }
 
-pub fn sweep_replaced() {
-	if let Ok(current) = replaceable_file() {
-		let _ = fs::remove_file(sibling(&current, ".old"));
-	}
-}
-
 pub fn relaunch_after_exit() {
 	let Some(target) = appimage::path() else {
 		return;
@@ -40,14 +34,12 @@ fn replaceable_file() -> Result<PathBuf, UpdateError> {
 
 fn swap(current: &Path, payload: &Path) -> Result<(), UpdateError> {
 	let staged = sibling(current, ".new");
-	let replaced = sibling(current, ".old");
 	fs::copy(payload, &staged)?;
 	if let Err(error) = make_executable(&staged) {
 		let _ = fs::remove_file(&staged);
 		return Err(error);
 	}
 
-	let _ = fs::remove_file(&replaced);
 	if let Err(error) = fs::rename(&staged, current) {
 		let _ = fs::remove_file(&staged);
 		return Err(error.into());
