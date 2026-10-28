@@ -117,7 +117,6 @@ export interface Messages {
 	"chat.composer.attachments.expiring.a11y.toggle": { count: number };
 	"chat.composer.attachments.expiring.off": undefined;
 	"chat.composer.attachments.location.a11y.description": undefined;
-	"chat.composer.attachments.location.unimplemented": { issueLink: string };
 	"chat.composer.attachments.media.empty.title": undefined;
 	"chat.composer.attachments.media.errors.openPickerFailed": undefined;
 	"chat.composer.attachments.media.errors.uploadFailed": undefined;
@@ -1174,7 +1173,6 @@ export interface RichMessages {
 	"browse.filters.tags.truncated": { count: "count"; shown: "placeholder" };
 	"browse.filters.withinDistance": { distance: "placeholder" };
 	"browse.rightNow.unimplemented": { issueLink: "placeholder" };
-	"chat.composer.attachments.location.unimplemented": { issueLink: "placeholder" };
 	"chat.composer.voiceMessage.unimplemented": { issueLink: "placeholder" };
 	"chat.conversations.empty.description": { gridLink: "tag" };
 	"chat.conversations.row.draft": { draft: "placeholder"; draftPrefix: "tag" };

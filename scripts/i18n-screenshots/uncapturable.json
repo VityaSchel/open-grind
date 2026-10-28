@@ -1,8 +1,4 @@
 {
-	"chat.composer.attachments.location.unimplemented": {
-		"reason": "No screen shows it since the Location tab shares a location instead; it stays in the catalog until the Weblate components drop it.",
-		"explanation": "Note of the Location tab in the chat attachments sheet that the app no longer shows, so this text never appears and needs no translation."
-	},
 	"chat.composer.errors.sendFailed": {
 		"reason": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
 		"explanation": "Error toast for a chat message that couldn’t be sent; today a message that fails to send shows “Not sent” on it instead, so this toast never appears."

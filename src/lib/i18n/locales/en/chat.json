@@ -240,7 +240,6 @@
 				}
 			},
 			"location": {
-				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}.",
 				"a11y": {
 					"description": "Drag the map to place the pin on the location you want to share."
 				}
