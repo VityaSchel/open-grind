@@ -25,7 +25,7 @@
 	}}
 >
 	<AlertDialog.Content
-		class="shrink-0 max-sm:max-w-[calc(100%-2rem)]!"
+		class="shrink-0 max-sm:max-w-[calc(100%-2rem-var(--safe-area-left)-var(--safe-area-right))]!"
 		interactOutsideBehavior="close"
 	>
 		<div class="grid grid-rows-[auto_minmax(0,1fr)_auto] gap-4">

@@ -2,10 +2,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import {
 	afterTwoFrames,
+	animationsFinished,
 	backLink,
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
+	meTab,
 	openGrid,
 } from "./support/app";
 import {
@@ -14,9 +16,12 @@ import {
 	openInbox,
 	rows,
 } from "./support/chat-stack";
+import { openSheetFromComposer } from "./support/drawer";
+import { filtersScroller, openAllFilters } from "./support/grid-filters";
 import { type Keyboard, sendInsets, sendIosInsets } from "./support/keyboard";
 import { pane, stackSettled } from "./support/page-stack";
 import { LIVE_STACK } from "./support/stack-layers";
+import { showRestingToast } from "./support/toast";
 
 type Insets = Keyboard["insets"];
 type Span = { left: number; right: number };
@@ -45,10 +50,31 @@ const NARROW_WINDOW_INSETS: Insets = {
 	right: 0,
 	ime: false,
 };
+const ANDROID_LANDSCAPE = { width: 740, height: 360 };
+const ANDROID_LANDSCAPE_INSETS: Insets = {
+	top: 24,
+	bottom: 0,
+	left: 33,
+	right: 48,
+	ime: false,
+};
+const ANDROID_SPLIT_WINDOW = { width: 560, height: 360 };
+const ANDROID_NAV_ON_THE_RIGHT: Insets = {
+	top: 24,
+	bottom: 0,
+	left: 0,
+	right: 48,
+	ime: false,
+};
+const TINY_WINDOW = { width: 400, height: 360 };
 const GRID_GUTTER = 16;
+const TOAST_GUTTER = 16;
 const GRID_CELLS = '[data-slot="grid-cells"]';
 const GRID_CELL = 'a[href^="/profile/"]';
 const COMPOSER = '[data-slot="message-composer"]';
+const DIALOG = '[data-slot="dialog-content"]';
+const DRAWER = '[data-slot="drawer-content"]';
+const SHEET = '[data-slot="sheet-content"]';
 const MESSAGE = '[data-slot="message"]';
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const PAGES_TO_LOAD = 3;
@@ -94,6 +120,20 @@ async function startOnIos(page: Page, insets: Insets): Promise<void> {
 	await page.addInitScript((preset) => {
 		window.__iosInsets = preset;
 	}, insets);
+}
+
+async function expectCenteredInside(
+	target: Locator,
+	safe: Span,
+	label: string,
+) {
+	await animationsFinished(target);
+	await expectInside(target, safe, label);
+	const span = await spanOf(target);
+	expect(
+		(span.left + span.right) / 2,
+		`${label} is centered between the cutouts`,
+	).toBeCloseTo((safe.left + safe.right) / 2, 0);
 }
 
 function firstGridRow(page: Page) {
@@ -278,6 +318,60 @@ test.describe("on an iPhone in landscape", () => {
 		);
 	});
 
+	test("the filters sheet paints edge to edge and keeps its controls between the cutouts", async ({
+		page,
+	}) => {
+		const safe = safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS);
+		await startOnIos(page, IPHONE_LANDSCAPE_INSETS);
+		await openGrid(page);
+		await openAllFilters(page);
+		await animationsFinished(page.locator(SHEET));
+
+		await expectEdgeToEdge(
+			page.locator(SHEET),
+			IPHONE_LANDSCAPE.width,
+			"the filters sheet",
+		);
+		await expectInside(filtersScroller(page), safe, "the filters");
+		await expectInside(
+			page.getByRole("button", { name: "Apply" }),
+			safe,
+			"the Apply button",
+		);
+	});
+
+	test("the attachments drawer stays between the cutouts", async ({
+		page,
+	}) => {
+		await startOnIos(page, IPHONE_LANDSCAPE_INSETS);
+		await page.goto(DEMO_CONVERSATION);
+		await openSheetFromComposer(page, {
+			trigger: "Add attachment",
+			stretchPanel: false,
+		});
+
+		await expectCenteredInside(
+			page.locator(DRAWER),
+			safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS),
+			"the attachments drawer",
+		);
+	});
+
+	test("the location dialog is centered between the cutouts", async ({
+		page,
+	}) => {
+		await startOnIos(page, IPHONE_LANDSCAPE_INSETS);
+		await openGrid(page);
+		await page.getByRole("button", { name: "Change location" }).click();
+		await page.locator(DIALOG).waitFor();
+
+		await expectCenteredInside(
+			page.locator(DIALOG),
+			safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS),
+			"the location dialog",
+		);
+	});
+
 	test("after rotating into the split layout the newest message sits above the composer, inside the cutouts", async ({
 		page,
 	}) => {
@@ -304,6 +398,54 @@ test.describe("on an iPhone in landscape", () => {
 	});
 });
 
+test.describe("on an Android phone in landscape", () => {
+	test.use({ viewport: ANDROID_LANDSCAPE });
+
+	test("the location drawer stays between the cutout and the navigation bar", async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform: "android" });
+		await openGrid(page);
+		await sendInsets(page, ANDROID_LANDSCAPE_INSETS);
+		await page.getByRole("button", { name: "Change location" }).click();
+		await page.locator(DRAWER).waitFor();
+
+		await expectCenteredInside(
+			page.locator(DRAWER),
+			safeSpan(ANDROID_LANDSCAPE, ANDROID_LANDSCAPE_INSETS),
+			"the location drawer",
+		);
+	});
+});
+
+test.describe("on an Android window as narrow as toasts go full width", () => {
+	test.use({ viewport: ANDROID_SPLIT_WINDOW });
+
+	test("a toast keeps its gutter from the navigation bar on the right", async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform: "android" });
+		await page.goto("/");
+		await meTab(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await sendInsets(page, ANDROID_NAV_ON_THE_RIGHT);
+
+		const toast = await showRestingToast({
+			page,
+			edge: "bottom",
+			label: "Landscape probe",
+		});
+		const span = await spanOf(toast);
+		const safe = safeSpan(
+			ANDROID_SPLIT_WINDOW,
+			ANDROID_NAV_ON_THE_RIGHT,
+			TOAST_GUTTER,
+		);
+
+		expect(span.left).toBeCloseTo(safe.left, 0);
+		expect(span.right).toBeCloseTo(safe.right, 0);
+	});
+});
+
 test.describe("on a made-up narrow window beside a cutout", () => {
 	test.use({ viewport: NARROW_WINDOW });
 
@@ -323,6 +465,30 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 			safe.left - 0.5,
 		);
 		await expectInside(page.locator(COMPOSER), safe, "the composer");
+	});
+
+	test("an alert dialog is centered between the cutout and the far edge", async ({
+		page,
+	}) => {
+		await page.setViewportSize(TINY_WINDOW);
+		await installTauriShim(page, { platform: "android" });
+		await page.goto("/settings");
+		const signOut = page.getByRole("button", {
+			name: "Sign Out",
+			exact: true,
+		});
+		await signOut.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await sendInsets(page, NARROW_WINDOW_INSETS);
+		await signOut.click();
+		const alert = page.getByRole("alertdialog", { name: "Sign out?" });
+		await alert.waitFor();
+
+		await expectCenteredInside(
+			alert,
+			safeSpan(TINY_WINDOW, NARROW_WINDOW_INSETS),
+			"the sign-out alert",
+		);
+		await alert.getByRole("button", { name: "Cancel" }).click();
 	});
 
 	test("the unsupported notifications message stays centered between the cutout and the far edge", async ({

@@ -86,6 +86,10 @@
 		right: 0,
 		ime: false,
 	};
+	const TOAST_SIDE_OFFSETS = {
+		left: "calc(var(--safe-area-left) + 1rem)",
+		right: "calc(var(--safe-area-right) + 1rem)",
+	};
 
 	const onboarded = $derived(
 		preferencesLoaded() && preferencesSnapshot().onboardingComplete,
@@ -132,10 +136,12 @@
 			? {
 					top: "calc(var(--safe-area-top) + 0.5rem)",
 					bottom: "calc(var(--safe-area-bottom) + 0.5rem)",
+					...TOAST_SIDE_OFFSETS,
 				}
 			: {
 					top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px, ${topBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
 					bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px, ${bottomBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
+					...TOAST_SIDE_OFFSETS,
 				},
 	);
 </script>

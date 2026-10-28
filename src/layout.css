@@ -461,6 +461,14 @@ textarea,
 	}
 }
 
+@media (max-width: 600px) {
+	[data-sonner-toaster][data-x-position] [data-sonner-toast] {
+		width: calc(
+			100% - var(--mobile-offset-left) - var(--mobile-offset-right)
+		);
+	}
+}
+
 .incoming-message-toast[data-sonner-toast][data-mounted="false"] {
 	--y: var(--fly-out) !important;
 }

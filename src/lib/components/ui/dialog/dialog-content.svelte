@@ -35,7 +35,7 @@
 		bind:ref
 		data-slot="dialog-content"
 		class={cn(
-			"fixed top-1/2 left-1/2 z-50 grid max-h-[calc(var(--screen-safe)-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 overflow-auto rounded-4xl bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/5 duration-100 outline-none sm:max-w-md dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+			"fixed top-1/2 left-[calc(50%+(var(--safe-area-left)-var(--safe-area-right))/2)] z-50 grid max-h-[calc(var(--screen-safe)-2rem)] w-[calc(100%-var(--safe-area-left)-var(--safe-area-right))] max-w-[calc(100%-2rem-var(--safe-area-left)-var(--safe-area-right))] -translate-x-1/2 -translate-y-1/2 gap-6 overflow-auto rounded-4xl bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/5 duration-100 outline-none sm:max-w-md dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
 			className,
 		)}
 		{preventOverflowTextSelection}
