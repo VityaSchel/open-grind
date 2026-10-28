@@ -25,7 +25,7 @@
 	<title>{title}</title>
 </svelte:head>
 <main
-	class="flex min-h-dvh w-full pt-[calc(2rem+var(--safe-area-top))] px-safe-8 pb-[calc(2rem+var(--safe-area-bottom))]"
+	class="flex h-dvh w-full flex-col overflow-y-auto pt-[calc(2rem+var(--safe-area-top))] px-safe-8 pb-[calc(2rem+var(--safe-area-bottom))]"
 >
 	{#if page.status === 404}
 		<NotFound />
