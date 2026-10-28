@@ -2254,9 +2254,9 @@ dependencies = [
 
 [[package]]
 name = "grindr"
-version = "0.32.0+26.22.0.192710"
+version = "0.32.1+26.22.0.192710"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "843c3f69dbd5f2e15bf5c64957dbb41ddb1c547d20be4d869012b475e65e6178"
+checksum = "46353b32acffb41683eb5521e41d115e09d888aa20882593568ac23b49406412"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -2278,6 +2278,7 @@ dependencies = [
  "tower-service",
  "tracing",
  "uuid",
+ "webpki-root-certs 1.0.10",
  "wreq",
 ]
 
