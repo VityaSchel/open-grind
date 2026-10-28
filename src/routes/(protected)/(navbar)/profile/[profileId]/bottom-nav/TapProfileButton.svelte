@@ -7,6 +7,11 @@
 	import { playHaptic } from "$lib/haptics";
 	import { TapType, tapTypes } from "$lib/model/interest/taps";
 	import { firedByTouch } from "$lib/platform/touch-origin";
+	import {
+		type LongPressHandlers,
+		longPressHandlers,
+		menuLongPressSource,
+	} from "$lib/util/long-press";
 
 	let {
 		profileId,
@@ -21,6 +26,7 @@
 	let customAnchor: HTMLButtonElement | null = $state(null);
 	let open = $state(false);
 	let sending = $state(false);
+	let heldOpen = false;
 
 	async function send(reaction: TapType) {
 		if (sending || tapType !== null) return;
@@ -40,6 +46,35 @@
 	const defaultTapType = TapType.Hot;
 
 	const sent = $derived(tapType !== null);
+
+	function pickerPressHandlers(): LongPressHandlers {
+		switch (menuLongPressSource()) {
+			case "holdTimer": {
+				const hold = longPressHandlers(() => {
+					heldOpen = true;
+					open = true;
+				});
+				return {
+					...hold,
+					onpointerdown(event) {
+						heldOpen = false;
+						hold.onpointerdown?.(event);
+					},
+				};
+			}
+			case "contextMenu":
+				return {
+					oncontextmenu(event) {
+						event.preventDefault();
+						if (!open && firedByTouch(event))
+							playHaptic("longPress");
+						open = true;
+					},
+				};
+		}
+	}
+
+	const pickerPress = pickerPressHandlers();
 </script>
 
 <Button
@@ -49,12 +84,13 @@
 		? `Send a ${tapTypes[defaultTapType]} tap`
 		: `${tapTypes[tapType]} tap sent`}
 	bind:ref={customAnchor}
-	oncontextmenu={(e) => {
-		e.preventDefault();
-		if (!open && firedByTouch(e)) playHaptic("longPress");
-		open = true;
+	{...pickerPress}
+	onclick={(event) => {
+		const holdsClick = heldOpen && event.detail !== 0;
+		heldOpen = false;
+		if (holdsClick) return;
+		void send(defaultTapType);
 	}}
-	onclick={() => send(defaultTapType)}
 	disabled={sent || sending}
 	class={{ "disabled:opacity-100": sent }}
 >
