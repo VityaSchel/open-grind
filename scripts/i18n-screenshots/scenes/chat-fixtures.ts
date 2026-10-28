@@ -263,11 +263,7 @@ export const GIF_INBOX: DemoInbox = {
 			lastActivityAgo: 2,
 			messages: [
 				{ fromMe: true, text: "Lorem ipsum dolor." },
-				wire({
-					fromMe: false,
-					type: "Location",
-					body: { lat: 10, lon: -35 },
-				}),
+				wire({ fromMe: false, type: "VideoCall", body: {} }),
 				{ fromMe: false, kind: "gif" },
 			],
 		}),

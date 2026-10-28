@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { SHARED_ALBUM_ID } from "./support/albums";
 import {
 	backLink,
@@ -16,6 +17,8 @@ import {
 	type ToastEdge,
 	toastGap,
 } from "./support/toast";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const TOAST_LABEL = "Placement probe";
 const LOW_BAR_GAP_PX = 12;

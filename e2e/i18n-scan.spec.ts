@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import type * as Scan from "../src/lib/demo/screenshot-scan";
 import type * as Markers from "../src/lib/i18n/markers";
 import {
@@ -11,6 +12,8 @@ import {
 	scan,
 	switchToMarkers,
 } from "./support/scan";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const FRACTIONAL_SCALE = 1.5;
 

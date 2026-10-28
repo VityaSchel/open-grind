@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { installTauriShim } from "./support/app";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 test("leaflet is not loaded until the location picker opens", async ({
 	page,

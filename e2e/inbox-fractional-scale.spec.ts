@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 
 const DEVICE_PIXEL_RATIO = 2.625;
@@ -15,6 +16,7 @@ const LATER_CONVERSATIONS = 6;
 test.describe.configure({ timeout: 300_000 });
 
 test.use({
+	baseURL: DEV_SERVER_URL,
 	viewport: null,
 	deviceScaleFactor: ({ contextOptions }, use) =>
 		use(contextOptions.deviceScaleFactor),

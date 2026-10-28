@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	DEMO_CONVERSATION,
 	installTauriShim,
@@ -430,37 +431,41 @@ test.describe("sticker grid layout", () => {
 		}
 	});
 
-	test("the Gaymoji skeleton fills three whole rows at every width", async ({
-		page,
-	}) => {
-		await holdDemoRequests(page, { pathPrefix: GAYMOJI_MANIFEST_PATH });
-		await openStickers(page);
-		await stickersTab(page, { name: "Gaymoji" }).click();
-		const skeleton = gaymojiPanel(page).locator(STICKER_GRID_SKELETON);
-		await expect(skeleton).toBeVisible();
+	test.describe(() => {
+		test.use({ baseURL: DEV_SERVER_URL });
 
-		for (const { viewport, gaymoji } of LAYOUTS) {
-			await page.setViewportSize({ width: viewport, height: 800 });
-			await page.waitForTimeout(100);
-			const layout = await skeleton.evaluate((grid) => {
-				const tiles = [...grid.children].filter((tile) =>
-					tile.checkVisibility(),
-				);
-				return {
-					tiles: tiles.length,
-					rows: new Set(
-						tiles.map((tile) =>
-							Math.round(tile.getBoundingClientRect().top),
-						),
-					).size,
-				};
-			});
-			expect({ viewport, ...layout }).toEqual({
-				viewport,
-				tiles: gaymoji * 3,
-				rows: 3,
-			});
-		}
+		test("the Gaymoji skeleton fills three whole rows at every width", async ({
+			page,
+		}) => {
+			await holdDemoRequests(page, { pathPrefix: GAYMOJI_MANIFEST_PATH });
+			await openStickers(page);
+			await stickersTab(page, { name: "Gaymoji" }).click();
+			const skeleton = gaymojiPanel(page).locator(STICKER_GRID_SKELETON);
+			await expect(skeleton).toBeVisible();
+
+			for (const { viewport, gaymoji } of LAYOUTS) {
+				await page.setViewportSize({ width: viewport, height: 800 });
+				await page.waitForTimeout(100);
+				const layout = await skeleton.evaluate((grid) => {
+					const tiles = [...grid.children].filter((tile) =>
+						tile.checkVisibility(),
+					);
+					return {
+						tiles: tiles.length,
+						rows: new Set(
+							tiles.map((tile) =>
+								Math.round(tile.getBoundingClientRect().top),
+							),
+						).size,
+					};
+				});
+				expect({ viewport, ...layout }).toEqual({
+					viewport,
+					tiles: gaymoji * 3,
+					rows: 3,
+				});
+			}
+		});
 	});
 
 	test("GIF tiles are 4:3 and Gaymoji tiles are square", async ({ page }) => {

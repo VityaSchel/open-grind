@@ -167,7 +167,7 @@
 	class={[
 		"group/sheet no-scrollbar overflow-x-hidden overscroll-contain select-none",
 		{
-			"h-full scroll-pb-[calc(--spacing(30)+var(--bar-content-gap))] overflow-y-auto":
+			"h-full scroll-pb-(--sheet-actions-clearance) overflow-y-auto":
 				fullsize,
 			"h-fit": !fullsize,
 			"touch-pan-down": fullsize && atTop,
@@ -184,7 +184,7 @@
 	<div
 		data-slot="sheet-panel"
 		class={[
-			"flex flex-col rounded-t-4xl bg-popover px-4 pb-20 shadow-xl ring-1 ring-border ring-inset",
+			"flex flex-col rounded-t-4xl bg-popover px-4 pb-(--sheet-panel-padding-bottom) shadow-xl ring-1 ring-border ring-inset",
 			{ "min-h-full": fullsize },
 		]}
 	>

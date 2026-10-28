@@ -1,9 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { captureOpenedUrls, installTauriShim } from "./support/app";
 import { routeDemoThroughFaultHook } from "./support/demo-faults";
 import { DRAWER } from "./support/drawer";
 import { expectNoToast } from "./support/toast";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const BLOCKABLE_PROFILE = "/profile/100001";
 const NON_BLOCKABLE_PROFILE = "/profile/100010";

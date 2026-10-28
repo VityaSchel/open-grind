@@ -1,5 +1,6 @@
 <script lang="ts">
 	import GpsFixIcon from "phosphor-svelte/lib/GpsFixIcon";
+	import { onDestroy } from "svelte";
 
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { t } from "$lib/i18n";
@@ -10,14 +11,24 @@
 		$props();
 
 	let locating = $state(false);
+	let generation: number | undefined;
+	let mounted = true;
+	onDestroy(() => {
+		mounted = false;
+		if (generation !== undefined) locationRequest.abortStale(generation);
+	});
 
 	async function locate() {
 		locating = true;
 		try {
-			const outcome = await locationRequest.run();
+			const request = locationRequest.run();
+			generation = locationRequest.generation;
+			const outcome = await request;
+			if (!mounted) return;
 			if (outcome.status === "ok") onlocate(outcome.coords);
 			else reportLocationFailure(outcome);
 		} finally {
+			generation = undefined;
 			locating = false;
 		}
 	}

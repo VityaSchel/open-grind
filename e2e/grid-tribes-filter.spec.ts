@@ -1,9 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { routeDemoThroughFaultHook } from "./support/demo-faults";
 import { openBrowse } from "./support/profile-pager";
 
 test.describe.configure({ timeout: 180_000 });
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 type CascadeWindow = Window & { __cascadeUrls: string[] };
 

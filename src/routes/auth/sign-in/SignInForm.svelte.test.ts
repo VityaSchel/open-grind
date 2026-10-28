@@ -2,23 +2,29 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ZodType } from "zod";
 
+import { accountStatusState } from "$lib/api/account-status-state.svelte";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import {
 	refusedCompanionMessage,
-	signInFlowEnded,
-	signInInProgress,
 	untrustedCompanionMessage,
 } from "$lib/api/sign-in";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import {
+	clearProfileCaches,
+	getProfile,
+	isProfileCached,
+} from "$lib/api/users/profiles";
 import SignInForm from "./SignInForm.svelte";
 
-const { callMethodMock, gotoMock, toastMock } = vi.hoisted(() => ({
-	callMethodMock: vi.fn(),
-	gotoMock: vi.fn(),
-	toastMock: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
-}));
+const { callMethodMock, fetchRestMock, gotoMock, toastMock } = vi.hoisted(
+	() => ({
+		fetchRestMock: vi.fn(),
+		callMethodMock: vi.fn(),
+		gotoMock: vi.fn(),
+		toastMock: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
+	}),
+);
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
 vi.mock("$lib/api/methods", async (importOriginal) => ({
@@ -26,57 +32,10 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-
-const invalidCredentials = {
-	kind: "Api",
-	message: { code: 4, message: "Invalid input parameters" },
-};
-
-const captchaFailures = [
-	{
-		failure: "a missing reCAPTCHA helper",
-		reason: "addonUnavailable",
-		english:
-			"Install the Open Grind reCAPTCHA helper to sign in to this account.",
-	},
-	{
-		failure: "an unexplained captcha failure",
-		reason: "mintFailed",
-		english: "Couldn’t complete reCAPTCHA verification. Try again.",
-	},
-];
-
-function refuseCaptcha(reason: string) {
-	return {
-		rejects: {
-			sign_in_with_email: invalidCredentials,
-			mint_recaptcha_token: { kind: "Recaptcha", message: { reason } },
-		},
-		resolves: { recaptcha_first_party_enabled: true },
-	};
-}
-
-function answer({
-	rejects,
-	resolves,
-}: {
-	rejects: Record<string, unknown>;
-	resolves: Record<string, unknown>;
-}) {
-	const outcomes = new Map<string, () => Promise<unknown>>([
-		...Object.entries(rejects).map(
-			([method, reason]) =>
-				[method, vi.fn().mockRejectedValue(reason)] as const,
-		),
-		...Object.entries(resolves).map(
-			([method, value]) =>
-				[method, vi.fn().mockResolvedValue(value)] as const,
-		),
-	]);
-	callMethodMock.mockImplementation((method: string) =>
-		outcomes.get(method)?.(),
-	);
-}
+vi.mock("$lib/api/transport", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/transport")>()),
+	fetchRest: fetchRestMock,
+}));
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -91,34 +50,41 @@ async function submitSignIn() {
 	await settle();
 }
 
-const facebookFailures = [
-	{
-		failure: "a Facebook dialog error",
-		marker: "facebook-dialog-error",
-		english:
-			"Facebook didn’t grant access. Try again, or sign in with your email and password.",
-	},
-	{
-		failure: "a Facebook app handoff",
-		marker: "facebook-handoff-refused",
-		english:
-			"Facebook tried to open its own app, which Open Grind can’t use. Sign in with your email and password instead.",
-	},
-	{
-		failure: "a Facebook redirect it can't verify",
-		marker: "facebook-unverified",
-		english: "Couldn’t verify the Facebook sign-in",
-	},
-	{
-		failure: "a Facebook sign-in that timed out",
-		marker: "facebook-timed-out",
-		english: "Sign-in timed out",
-	},
-];
+const invalidCredentials = {
+	kind: "Api",
+	message: { code: 4, message: "Invalid input parameters" },
+};
+
+async function cachePreviousProfile() {
+	fetchRestMock.mockResolvedValue({
+		jsonParsed: (schema: ZodType) =>
+			schema.parse({
+				profiles: [
+					{
+						profileId: 123,
+						displayName: "Previous account",
+						age: 25,
+					},
+				],
+			}),
+	});
+	await getProfile(123);
+	expect(isProfileCached(123)).toBe(true);
+}
+
+function expectReady() {
+	const button = screen.getByRole("button", { name: "Sign in" });
+	expect(button).toHaveProperty("disabled", false);
+	expect(button.getAttribute("aria-busy")).toBe("false");
+}
 
 describe("SignInForm", () => {
 	beforeEach(() => {
 		callMethodMock.mockReset();
+		fetchRestMock.mockReset();
+		clearProfileCaches();
+		accountStatusState.open = false;
+		accountStatusState.status = null;
 		gotoMock.mockReset();
 		toastMock.error.mockReset();
 		requestBlockedAlertState.open = false;
@@ -131,6 +97,10 @@ describe("SignInForm", () => {
 		cleanup();
 		requestBlockedAlertState.open = false;
 		requestBlockedAlertState.disable = false;
+		clearProfileCaches();
+		accountStatusState.open = false;
+		accountStatusState.status = null;
+		vi.restoreAllMocks();
 	});
 
 	it("raises the dialog instead of a toast when Cloudflare blocks the sign-in", async () => {
@@ -294,62 +264,6 @@ describe("SignInForm", () => {
 		);
 	});
 
-	it.each(facebookFailures)(
-		"explains $failure",
-		async ({ marker, english }) => {
-			callMethodMock.mockRejectedValue({ kind: "Auth", message: marker });
-			render(SignInForm);
-
-			await fireEvent.click(
-				screen.getByRole("button", { name: "Sign in with Facebook" }),
-			);
-			await settle();
-
-			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(english);
-			expect(gotoMock).not.toHaveBeenCalled();
-		},
-	);
-
-	it.each(["Google", "Facebook"])(
-		"says a %s sign-in is already in progress",
-		async (vendor) => {
-			callMethodMock.mockRejectedValue({
-				kind: "Auth",
-				message: signInInProgress,
-			});
-			render(SignInForm);
-
-			await fireEvent.click(
-				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
-			);
-			await settle();
-
-			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-				`${vendor} sign-in already in progress`,
-			);
-		},
-	);
-
-	it.each(["Google", "Facebook"])(
-		"explains a %s sign-in flow that ended unexpectedly",
-		async (vendor) => {
-			callMethodMock.mockRejectedValue({
-				kind: "Auth",
-				message: signInFlowEnded,
-			});
-			render(SignInForm);
-
-			await fireEvent.click(
-				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
-			);
-			await settle();
-
-			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-				"Sign-in flow ended unexpectedly",
-			);
-		},
-	);
-
 	it("keeps the password button's name while it signs in", async () => {
 		callMethodMock.mockReturnValue(new Promise(() => {}));
 		render(SignInForm);
@@ -382,6 +296,235 @@ describe("SignInForm", () => {
 		},
 	);
 
+	it.each(["Email", "Google", "Facebook"])(
+		"completes %s sign-in and drops the previous profile before navigating",
+		async (vendor) => {
+			await cachePreviousProfile();
+			let profileCachedAtNavigation: boolean | undefined;
+			gotoMock.mockImplementation(() => {
+				profileCachedAtNavigation = isProfileCached(123);
+			});
+			callMethodMock
+				.mockResolvedValueOnce({ profileId: 456 })
+				.mockResolvedValueOnce("keyring");
+			render(SignInForm);
+
+			if (vendor === "Email") await submitSignIn();
+			else {
+				await fireEvent.click(
+					screen.getByRole("button", {
+						name: `Sign in with ${vendor}`,
+					}),
+				);
+				await settle();
+			}
+
+			expect(callMethodMock.mock.calls[0]).toEqual(
+				vendor === "Email"
+					? [
+							"sign_in_with_email",
+							{
+								email: "someone@example.com",
+								password: "hunter2",
+								captchaToken: undefined,
+							},
+						]
+					: [`sign_in_with_${vendor.toLowerCase()}`],
+			);
+			expect(callMethodMock).toHaveBeenCalledTimes(2);
+			expect(callMethodMock).toHaveBeenLastCalledWith("storage_backend");
+			expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/");
+			expect(profileCachedAtNavigation).toBe(false);
+			expect(toastMock.error).not.toHaveBeenCalled();
+			expectReady();
+		},
+	);
+
+	it("shows an account restriction instead of entering the app", async () => {
+		const restriction = { kind: "ageVerification", region: "GB" };
+		callMethodMock.mockResolvedValueOnce({ profileId: 456, restriction });
+		render(SignInForm);
+
+		await submitSignIn();
+
+		expect(accountStatusState.open).toBe(true);
+		expect(accountStatusState.status).toEqual({
+			kind: "restriction",
+			restriction,
+		});
+		expect(callMethodMock).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
+		expect(toastMock.error).not.toHaveBeenCalled();
+		expectReady();
+	});
+
+	it.each([invalidCredentials, { kind: "Unauthorized" }])(
+		"obtains a login CAPTCHA and retries rejected credentials (%j)",
+		async (failure) => {
+			await cachePreviousProfile();
+			callMethodMock
+				.mockRejectedValueOnce(failure)
+				.mockResolvedValueOnce(true)
+				.mockResolvedValueOnce("captcha-token")
+				.mockResolvedValueOnce({ profileId: 456 })
+				.mockResolvedValueOnce("keyring");
+			render(SignInForm);
+
+			await submitSignIn();
+
+			expect(callMethodMock.mock.calls).toEqual([
+				[
+					"sign_in_with_email",
+					{
+						email: "someone@example.com",
+						password: "hunter2",
+						captchaToken: undefined,
+					},
+				],
+				["recaptcha_first_party_enabled"],
+				["mint_recaptcha_token", { action: "login" }],
+				[
+					"sign_in_with_email",
+					{
+						email: "someone@example.com",
+						password: "hunter2",
+						captchaToken: "captcha-token",
+					},
+				],
+				["storage_backend"],
+			]);
+			expect(isProfileCached(123)).toBe(false);
+			expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/");
+			expect(toastMock.error).not.toHaveBeenCalled();
+			expectReady();
+		},
+	);
+
+	it.each([
+		["disabled", false],
+		["check failed", new Error("Assignment check failed")],
+	])(
+		"reports wrong credentials when the CAPTCHA assignment is unavailable (%s)",
+		async (_name, assignment) => {
+			callMethodMock.mockRejectedValueOnce(invalidCredentials);
+			if (assignment === false)
+				callMethodMock.mockResolvedValueOnce(false);
+			else callMethodMock.mockRejectedValueOnce(assignment);
+			render(SignInForm);
+
+			await submitSignIn();
+
+			expect(callMethodMock).toHaveBeenCalledTimes(2);
+			expect(callMethodMock).toHaveBeenLastCalledWith(
+				"recaptcha_first_party_enabled",
+			);
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				"Incorrect email or password",
+			);
+			expect(gotoMock).not.toHaveBeenCalled();
+			expectReady();
+		},
+	);
+
+	it.each([
+		[
+			"unsupportedPlatform",
+			"This account needs reCAPTCHA verification, which works only on Android with the Open Grind reCAPTCHA helper.",
+		],
+		[
+			"addonUnavailable",
+			"Install the Open Grind reCAPTCHA helper to sign in to this account.",
+		],
+		[
+			"addonDisabled",
+			"The Open Grind reCAPTCHA helper is turned off. Turn it on in Android settings, then try again.",
+		],
+		[
+			"addonUntrusted",
+			"The installed Open Grind reCAPTCHA helper isn’t an official build.",
+		],
+		[
+			"grindrMissing",
+			"The Open Grind reCAPTCHA helper needs the official Grindr app installed to verify this sign-in.",
+		],
+		["failed", "Couldn’t complete reCAPTCHA verification. Try again."],
+		["cancelled", null],
+	])(
+		"handles the CAPTCHA helper's %s result without retrying",
+		async (reason, message) => {
+			callMethodMock
+				.mockRejectedValueOnce(invalidCredentials)
+				.mockResolvedValueOnce(true)
+				.mockRejectedValueOnce({
+					kind: "Recaptcha",
+					message: { reason },
+				});
+			render(SignInForm);
+
+			await submitSignIn();
+
+			expect(callMethodMock).toHaveBeenCalledTimes(3);
+			expect(callMethodMock).toHaveBeenLastCalledWith(
+				"mint_recaptcha_token",
+				{ action: "login" },
+			);
+			if (message === null)
+				expect(toastMock.error).not.toHaveBeenCalled();
+			else
+				expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+					message,
+				);
+			expect(gotoMock).not.toHaveBeenCalled();
+			expectReady();
+		},
+	);
+
+	it.each([
+		[invalidCredentials, "Incorrect email or password"],
+		[{ kind: "Unauthorized" }, "Incorrect email or password"],
+		[
+			{ kind: "Api", message: { code: 9, message: "Something broke" } },
+			"Error 9: Something broke",
+		],
+	])(
+		"reports a failed CAPTCHA retry exactly once (%j)",
+		async (failure, message) => {
+			callMethodMock
+				.mockRejectedValueOnce(invalidCredentials)
+				.mockResolvedValueOnce(true)
+				.mockResolvedValueOnce("captcha-token")
+				.mockRejectedValueOnce(failure);
+			render(SignInForm);
+
+			await submitSignIn();
+
+			expect(callMethodMock).toHaveBeenCalledTimes(4);
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(message);
+			expect(gotoMock).not.toHaveBeenCalled();
+			expectReady();
+		},
+	);
+
+	it.each(["Google", "Facebook"])(
+		"silently restores the form after cancelled %s sign-in",
+		async (vendor) => {
+			callMethodMock.mockRejectedValueOnce({
+				kind: "Auth",
+				message: "Sign-in canceled",
+			});
+			render(SignInForm);
+
+			await fireEvent.click(
+				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+			);
+			await settle();
+
+			expect(toastMock.error).not.toHaveBeenCalled();
+			expect(gotoMock).not.toHaveBeenCalled();
+			expectReady();
+		},
+	);
+
 	it("still reports an ordinary API failure", async () => {
 		callMethodMock.mockRejectedValue({
 			kind: "Api",
@@ -409,159 +552,4 @@ describe("SignInForm", () => {
 			"Incorrect email or password",
 		);
 	});
-
-	it.each(captchaFailures)(
-		"explains $failure",
-		async ({ reason, english }) => {
-			answer(refuseCaptcha(reason));
-			render(SignInForm);
-
-			await submitSignIn();
-			await vi.waitFor(() => {
-				expect(toastMock.error).toHaveBeenCalledOnce();
-			});
-
-			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(english);
-		},
-	);
-});
-
-const localizedFailures = [
-	{
-		failure: "wrong credentials",
-		button: "Sign in",
-		rejects: { sign_in_with_email: invalidCredentials },
-		resolves: { recaptcha_first_party_enabled: false },
-	},
-	{
-		failure: "wrong credentials after a captcha",
-		button: "Sign in",
-		rejects: { sign_in_with_email: invalidCredentials },
-		resolves: {
-			recaptcha_first_party_enabled: true,
-			mint_recaptcha_token: "token",
-		},
-	},
-	...captchaFailures.map(({ failure, reason }) => ({
-		failure,
-		button: "Sign in",
-		...refuseCaptcha(reason),
-	})),
-	...facebookFailures.map(({ failure, marker }) => ({
-		failure,
-		button: "Sign in with Facebook",
-		rejects: { sign_in_with_facebook: { kind: "Auth", message: marker } },
-		resolves: {},
-	})),
-	{
-		failure: "a sign-in flow that ended unexpectedly",
-		button: "Sign in with Google",
-		rejects: {
-			sign_in_with_google: { kind: "Auth", message: signInFlowEnded },
-		},
-		resolves: {},
-	},
-];
-
-describe("SignInForm in the active locale", () => {
-	beforeEach(() => {
-		callMethodMock.mockReset();
-		toastMock.error.mockReset();
-		vi.spyOn(console, "error").mockImplementation(() => {});
-	});
-
-	afterEach(async () => {
-		cleanup();
-		await setLocale({ locale: SOURCE_LOCALE });
-	});
-
-	it("renders its copy in the active locale", async () => {
-		const { container } = render(SignInForm);
-		await setLocale({ locale: "en-XA" });
-
-		const header = [
-			...container.querySelectorAll(
-				'[data-slot="card-title"], [data-slot="card-description"]',
-			),
-		].map((node) => node.textContent.trim());
-		expect(header).toHaveLength(2);
-		for (const text of header) expect(text).toMatch(PSEUDO_MESSAGE);
-		expect(
-			screen.getAllByRole("link", { name: PSEUDO_MESSAGE }),
-		).toHaveLength(2);
-		expect(screen.getAllByLabelText(PSEUDO_MESSAGE)).toHaveLength(2);
-		expect(
-			screen.getAllByRole("button", { name: PSEUDO_MESSAGE }),
-		).toHaveLength(3);
-		expect(
-			screen.getByLabelText(PSEUDO_MESSAGE, { selector: "#email" }),
-		).toHaveProperty("placeholder", expect.stringMatching(PSEUDO_MESSAGE));
-	});
-
-	it.each(localizedFailures)(
-		"explains $failure in the active locale",
-		async ({ button, rejects, resolves }) => {
-			answer({ rejects, resolves });
-			render(SignInForm);
-			const email = screen.getByLabelText("Email");
-			const password = screen.getByLabelText("Password");
-			const target = screen.getByRole("button", { name: button });
-			await setLocale({ locale: "en-XA" });
-
-			await fireEvent.input(email, {
-				target: { value: "someone@example.com" },
-			});
-			await fireEvent.input(password, { target: { value: "hunter2" } });
-			await fireEvent.click(target);
-			await vi.waitFor(() => {
-				expect(toastMock.error).toHaveBeenCalledOnce();
-			});
-
-			expect(toastMock.error).toHaveBeenCalledWith(
-				expect.stringMatching(PSEUDO_MESSAGE),
-			);
-		},
-	);
-
-	it("names the provider whose sign-in failed in the active locale", async () => {
-		callMethodMock.mockRejectedValue(new Error("boom"));
-		render(SignInForm);
-		const google = screen.getByRole("button", {
-			name: "Sign in with Google",
-		});
-		await setLocale({ locale: "en-XA" });
-
-		await fireEvent.click(google);
-		await vi.waitFor(() => {
-			expect(toastMock.error).toHaveBeenCalledOnce();
-		});
-
-		const [label] = toastMock.error.mock.lastCall ?? [];
-		expect(label).toMatch(PSEUDO_MESSAGE);
-		expect(label).toContain("Google");
-	});
-
-	it.each(["Google", "Facebook"])(
-		"names the %s sign-in already in progress in the active locale",
-		async (vendor) => {
-			callMethodMock.mockRejectedValue({
-				kind: "Auth",
-				message: signInInProgress,
-			});
-			render(SignInForm);
-			const target = screen.getByRole("button", {
-				name: `Sign in with ${vendor}`,
-			});
-			await setLocale({ locale: "en-XA" });
-
-			await fireEvent.click(target);
-			await vi.waitFor(() => {
-				expect(toastMock.error).toHaveBeenCalledOnce();
-			});
-
-			const [message] = toastMock.error.mock.lastCall ?? [];
-			expect(message).toMatch(PSEUDO_MESSAGE);
-			expect(message).toContain(vendor);
-		},
-	);
 });

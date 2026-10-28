@@ -1,5 +1,6 @@
 import { type ElementHandle, expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	afterTwoFrames,
 	DEMO_CONVERSATION,
@@ -333,36 +334,40 @@ for (const { sheet, trigger, open, seed } of SHEETS) {
 	});
 }
 
-test("the GIF feed survives a crossing without asking GIPHY again", async ({
-	page,
-}) => {
-	const requests = await recordDemoRequests(page);
-	await resizeTo(page, { width: PHONE_WIDTH });
-	await openStickers(page);
-	await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
-	const firstTile = await gifTiles(page).first().elementHandle();
-	if (firstTile === null) throw new Error("no GIF tile");
-	const before = giphyCalls(await requests());
-	expect(before.map(({ endpoint }) => endpoint)).toEqual(["trending"]);
+test.describe(() => {
+	test.use({ baseURL: DEV_SERVER_URL });
 
-	await crossTo(page, { width: SPLIT_WIDTH });
+	test("the GIF feed survives a crossing without asking GIPHY again", async ({
+		page,
+	}) => {
+		const requests = await recordDemoRequests(page);
+		await resizeTo(page, { width: PHONE_WIDTH });
+		await openStickers(page);
+		await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
+		const firstTile = await gifTiles(page).first().elementHandle();
+		if (firstTile === null) throw new Error("no GIF tile");
+		const before = giphyCalls(await requests());
+		expect(before.map(({ endpoint }) => endpoint)).toEqual(["trending"]);
 
-	expect(await isConnected(firstTile)).toBe(true);
-	await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
-	expect(giphyCalls(await requests())).toEqual(before);
+		await crossTo(page, { width: SPLIT_WIDTH });
 
-	await gifSearchBox(page).fill(SECOND_QUERY);
-	await expect(
-		gifPanel(page).getByRole("button", {
-			name: FIRST_WINK_GIF,
-			exact: true,
-		}),
-	).toBeVisible();
-	expect(
-		giphyCalls(await requests())
-			.slice(before.length)
-			.map(({ endpoint, query }) => ({ endpoint, query })),
-	).toEqual([{ endpoint: "search", query: SECOND_QUERY }]);
+		expect(await isConnected(firstTile)).toBe(true);
+		await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
+		expect(giphyCalls(await requests())).toEqual(before);
+
+		await gifSearchBox(page).fill(SECOND_QUERY);
+		await expect(
+			gifPanel(page).getByRole("button", {
+				name: FIRST_WINK_GIF,
+				exact: true,
+			}),
+		).toBeVisible();
+		expect(
+			giphyCalls(await requests())
+				.slice(before.length)
+				.map(({ endpoint, query }) => ({ endpoint, query })),
+		).toEqual([{ endpoint: "search", query: SECOND_QUERY }]);
+	});
 });
 
 test("Send after a crossing posts into the conversation on screen", async ({

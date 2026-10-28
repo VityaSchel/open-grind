@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
@@ -18,6 +19,8 @@ import {
 	refreshButton,
 	topOf,
 } from "./support/pull";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const ARM_PX = 18;
 const SHALLOW_PX = 6;

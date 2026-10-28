@@ -8,12 +8,13 @@ export const tabLabelKeys = {
 	location: "chat.composer.attachments.tabs.location",
 } as const satisfies Record<Tab, MessageKey>;
 
-export type SelectionAction = "send" | "share" | "unshare";
+export type SelectionAction = "send" | "share" | "unshare" | "sendLocation";
 
 export const selectionActionKeys = {
 	send: "chat.composer.attachments.actions.send",
 	share: "chat.composer.attachments.actions.share",
 	unshare: "chat.composer.attachments.actions.unshare",
+	sendLocation: "chat.composer.attachments.actions.sendLocation",
 } as const satisfies Record<SelectionAction, MessageKey>;
 
 export type TabSelection = { count: number; action: SelectionAction };

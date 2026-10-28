@@ -486,15 +486,17 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 			...overlay,
 		};
 	}
-	const sticker = outboundMessageSchema.safeParse({
+	const attachment = outboundMessageSchema.safeParse({
 		type: sent.type,
 		body: sent.body,
 	});
 	if (
-		sticker.success &&
-		(sticker.data.type === "Giphy" || sticker.data.type === "Gaymoji")
+		attachment.success &&
+		(attachment.data.type === "Giphy" ||
+			attachment.data.type === "Gaymoji" ||
+			attachment.data.type === "Location")
 	) {
-		return { ...sticker.data, ...overlay };
+		return { ...attachment.data, ...overlay };
 	}
 	return {
 		type: "Text",

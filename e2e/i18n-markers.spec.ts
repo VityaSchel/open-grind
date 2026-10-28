@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import sharp from "sharp";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	brokenImagesOnceReady,
 	renderTwoFrames,
@@ -8,6 +9,8 @@ import {
 import type * as Markers from "../src/lib/i18n/markers";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const I18N_MODULE = "/src/lib/i18n/index.ts";
 const MARKERS_MODULE = "/src/lib/i18n/markers.ts";

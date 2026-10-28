@@ -1,8 +1,11 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { installTauriShim, openGrid, wheel } from "./support/app";
 import { routeDemoThroughFaultHook } from "./support/demo-faults";
 import { refreshButton } from "./support/pull";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const SCROLLER = ".pull-scroller";
 const GRID = '[data-slot="grid-cells"]';

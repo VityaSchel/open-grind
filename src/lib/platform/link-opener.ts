@@ -1,6 +1,6 @@
 export function openExternalLink(url: string) {
 	const urlObj = new URL(url);
-	if (["https:", "http:"].includes(urlObj.protocol)) {
+	if (["https:", "http:", "geo:"].includes(urlObj.protocol)) {
 		void import("@tauri-apps/plugin-opener").then(({ openUrl }) =>
 			openUrl(urlObj.href),
 		);

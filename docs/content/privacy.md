@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-10-18
+Effective date: 2026-10-27
 
 This policy covers the Open Grind app, made by Open Grind Governance. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
@@ -13,7 +13,7 @@ The app contacts each service below only for the features you use, over encrypte
 - **Google**, if you choose Fast Mode for notifications: the FCM service add-on registers this device with Firebase Cloud Messaging through Google Play services or microG, and Grindr sends your notifications through it, including sender names and message text. See [Google's Privacy Policy](https://policies.google.com/privacy).
 - **Meta**, if you sign in with Facebook: what you enter on Facebook's sign-in page. See [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
 - **GIPHY**, if you turn it on in the GIF tab, in Settings, or from a GIF in a chat: your search terms and language (GIF search only), which GIFs the app loads, and that the requests come from a Grindr app, because they use Grindr's GIPHY key and the app's Grindr user agent. See [GIPHY's Privacy Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy).
-- **OpenStreetMap**, when the app shows a map for picking your location: requests for the map tiles of the area shown. See the [OpenStreetMap Foundation's Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy).
+- **OpenStreetMap**, when you pick your browse location or open the Location tab in a chat: requests for the map tiles of the area shown. Opening a shared location on openstreetmap.org also sends its coordinates to that website. See the [OpenStreetMap Foundation's Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy).
 - **git.opengrind.org**, if you check for updates, allow automatic update checks, or install or update an add-on: requests for release lists and files, with no account details or device identifiers. The file names can show your operating system and processor type.
 
 ## On your device

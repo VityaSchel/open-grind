@@ -43,7 +43,7 @@
 	<Drawer.Content
 		bind:ref={content}
 		class={[
-			"mx-auto max-w-media-panel border-none bg-transparent p-0 shadow-none before:hidden",
+			"mx-auto max-w-media-panel border-none bg-transparent p-0 shadow-none [--sheet-actions-clearance:calc(--spacing(30)+var(--bar-content-gap))] [--sheet-panel-padding-bottom:--spacing(20)] before:hidden",
 			{ "h-full": fullsize, "h-fit": !fullsize },
 		]}
 		handle={null}

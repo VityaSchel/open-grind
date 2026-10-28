@@ -3,7 +3,9 @@
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
 	import TimerIcon from "phosphor-svelte/lib/TimerIcon";
+	import { untrack } from "svelte";
 
+	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
 	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
 	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
@@ -14,8 +16,10 @@
 	import { Toggle } from "$lib/components/ui/toggle";
 	import { t } from "$lib/i18n";
 	import { formatNumber } from "$lib/i18n/format";
+	import { decodeGeohash } from "$lib/model/geohash";
+	import type { Coordinates } from "$lib/location/location-request.svelte";
 	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
-	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
+	import ComposerLocationTab from "./location/ComposerLocationTab.svelte";
 	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";
 	import {
 		selectionActionKeys,
@@ -33,22 +37,28 @@
 		onCloseAutoFocus,
 	}: { open: boolean; onCloseAutoFocus?: (event: Event) => void } = $props();
 
-	let selectedTab = $state<Tab>("media");
+	const locationHintId = $props.id();
 
-	const isFullsizeTab = $derived(FULLSIZE_TABS.includes(selectedTab));
+	let selectedTab = $state<Tab>("media");
 
 	let tabs = $state<Partial<Record<Tab, SelectionTab | null>>>({});
 	let selections = $state<Partial<Record<Tab, TabSelection>>>({});
 	let expiring = $state(false);
+	let locationPin: Coordinates | undefined = $state();
 
 	const selection = $derived(selections[selectedTab]);
+	const isFullsizeTab = $derived(FULLSIZE_TABS.includes(selectedTab));
 
 	function submitSelection() {
 		tabs[selectedTab]?.submitSelection();
 	}
 
-	$effect(() => {
-		if (open) return;
+	$effect.pre(() => {
+		if (open) {
+			const geohash = untrack(() => preferencesSnapshot().geohash);
+			locationPin = geohash ? decodeGeohash(geohash) : undefined;
+			return;
+		}
 		selections = {};
 		expiring = false;
 	});
@@ -80,11 +90,17 @@
 					onClose={() => (open = false)}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value="location">
-				<ComposerUnimplementedTab
-					message="chat.composer.attachments.location.unimplemented"
-					issue={35}
-				/>
+			<Tabs.Content value="location" aria-describedby={locationHintId}>
+				{#if selectedTab === "location"}
+					<ComposerLocationTab
+						bind:this={tabs.location}
+						bind:pinPos={locationPin}
+						hintId={locationHintId}
+						onSelectionChange={(locationSelection) =>
+							(selections.location = locationSelection)}
+						onClose={() => (open = false)}
+					/>
+				{/if}
 			</Tabs.Content>
 		</MediaSheetBody>
 
@@ -94,6 +110,7 @@
 				? ""
 				: t(selectionActionKeys[selection.action])}
 			count={selection?.count ?? 0}
+			showCount={selectedTab !== "location"}
 			onSubmit={submitSelection}
 		>
 			{#snippet leading()}
