@@ -166,9 +166,7 @@
 			"description": "Blocking a user automatically deletes the conversation for both of you."
 		},
 		{
-			"name": "browse/discover",
-			"x-wip": true,
-			"x-wip-note": "Help needed."
+			"name": "browse/discover"
 		},
 		{
 			"name": "browse/entitlements"
@@ -182,9 +180,7 @@
 			"description": "Unknown how it's different from [blocks](/grindr-api/browse/blocks), WIP. Blocks API is preferred until this is figured out."
 		},
 		{
-			"name": "browse/links",
-			"x-wip": true,
-			"x-wip-note": "Unknown, WIP"
+			"name": "browse/links"
 		},
 		{
 			"name": "browse/location"
@@ -3052,6 +3048,11 @@
 					"right-now"
 				],
 				"operationId": "getOtherUserRightNowPost",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"$ref": "#/components/parameters/ProfileIdIntegerPath"
@@ -3069,7 +3070,6 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post, including for a nonexistent profile ID. Behavior for hidden or expired posts is undocumented."
 			}
 		},
@@ -3392,6 +3392,11 @@
 					"right-now"
 				],
 				"operationId": "uploadRightNowMedia",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "img_1_bottom",
@@ -3445,7 +3450,6 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"summary": "Upload Right Now media",
 				"description": "Upload raw image bytes as application/octet-stream. Attach the returned mediaId using an image_v1/data.id post edit."
 			}
@@ -5071,6 +5075,11 @@
 					"browse/discover"
 				],
 				"operationId": "passDiscoverProfile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"$ref": "#/components/parameters/ProfileIdIntegerPath"
@@ -5081,8 +5090,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Post a pass",
-				"x-wip": true
+				"summary": "Post a pass"
 			}
 		},
 		"/v1/rightnow/entitlements/posts": {
@@ -5806,6 +5814,11 @@
 					"browse/links"
 				],
 				"operationId": "resolveLinkKey",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "key",
@@ -5834,8 +5847,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Get link",
-				"x-wip": true
+				"summary": "Get link"
 			}
 		},
 		"/v3/places/search": {
@@ -13778,6 +13790,11 @@
 					"right-now"
 				],
 				"operationId": "uploadRightNowMediaV2",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"summary": "Upload Right Now media (v2)",
 				"description": "Upload raw, uncropped image bytes as application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId using an image_v1/data.id post edit.",
 				"parameters": [
@@ -13885,8 +13902,7 @@
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v5/media/upload": {
@@ -16163,7 +16179,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, `mediaId` from [POST /v2/media/upload](/grindr-api/right-now#upload-right-now-media-v2-wip)"
+											"description": "long integer, `mediaId` from [POST /v2/media/upload](/grindr-api/right-now#upload-right-now-media-v2)"
 										}
 									}
 								}
@@ -16493,7 +16509,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media-wip) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2-wip)"
+											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2)"
 										}
 									}
 								}
@@ -16537,7 +16553,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media-wip) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2-wip)"
+											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2)"
 										}
 									}
 								}
