@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from "svelte/elements";
 
 import { playHaptic } from "$lib/haptics";
+import { currentPlatform } from "$lib/platform/os";
 import { firedByTouch } from "$lib/platform/touch-origin";
 
 const LONG_PRESS_DURATION_MS = 450;
@@ -67,7 +68,7 @@ function holdTouch(): void {
 	window.addEventListener("pointercancel", release, true);
 }
 
-type LongPressHandlers = Pick<
+export type LongPressHandlers = Pick<
 	HTMLAttributes<HTMLElement>,
 	| "onpointerdown"
 	| "onpointermove"
@@ -75,6 +76,20 @@ type LongPressHandlers = Pick<
 	| "onpointercancel"
 	| "oncontextmenu"
 >;
+
+export type MenuLongPressSource = "holdTimer" | "contextMenu";
+
+export function menuLongPressSource(): MenuLongPressSource {
+	switch (currentPlatform()) {
+		case "ios":
+			return "holdTimer";
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return "contextMenu";
+	}
+}
 
 export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 	let timer: ReturnType<typeof setTimeout> | null = null;

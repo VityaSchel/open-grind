@@ -8,6 +8,11 @@
 	import { Button } from "$lib/components/ui/button";
 	import { playHaptic } from "$lib/haptics";
 	import { firedByTouch } from "$lib/platform/touch-origin";
+	import {
+		type LongPressHandlers,
+		longPressHandlers,
+		menuLongPressSource,
+	} from "$lib/util/long-press";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { scale } from "$lib/util/reduced-motion";
 	import { returnFocus } from "$lib/util/return-focus";
@@ -220,6 +225,26 @@
 	// tell a double tap (react) from a double click (reply).
 	let lastPointerType = "";
 
+	function rowPressHandlers(): LongPressHandlers {
+		switch (menuLongPressSource()) {
+			case "holdTimer":
+				return longPressHandlers(() => {
+					if (openContextMenu()) swipe?.cancel();
+				});
+			case "contextMenu":
+				return {
+					oncontextmenu(event) {
+						event.preventDefault();
+						if (openContextMenu() && firedByTouch(event)) {
+							playHaptic("longPress");
+						}
+					},
+				};
+		}
+	}
+
+	const rowPress = rowPressHandlers();
+
 	const wheelMode = wheelInputMode();
 	const railWheel = wheelMode === "rail";
 	const touchOnly = wheelMode === "none";
@@ -345,7 +370,13 @@
 					},
 				]}
 				role="article"
-				onpointerdown={(event) => (lastPointerType = event.pointerType)}
+				onpointerdown={(event) => {
+					lastPointerType = event.pointerType;
+					if (hasMenuActions) rowPress.onpointerdown?.(event);
+				}}
+				onpointermove={rowPress.onpointermove}
+				onpointerup={rowPress.onpointerup}
+				onpointercancel={rowPress.onpointercancel}
 				ondblclick={(event) => {
 					const selection = window.getSelection();
 					if (
@@ -368,12 +399,7 @@
 						selection?.removeAllRanges();
 					}
 				}}
-				oncontextmenu={(event) => {
-					event.preventDefault();
-					if (openContextMenu() && firedByTouch(event)) {
-						playHaptic("longPress");
-					}
-				}}
+				oncontextmenu={rowPress.oncontextmenu}
 				style:visibility={contextMenuOpen ? "hidden" : undefined}
 				style:transform={swipe?.deltaX
 					? `translateX(${swipe.deltaX}px)`

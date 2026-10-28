@@ -372,6 +372,10 @@ export class SwipeToReply {
 		this.#release();
 	}
 
+	cancel(): void {
+		this.#release();
+	}
+
 	#release(): void {
 		this.#pointerId = null;
 		this.#axis = "undecided";
