@@ -10,7 +10,7 @@ use objc2::runtime::{
 use objc2::{
 	define_class, msg_send, sel, DefinedClass, MainThreadMarker, MainThreadOnly,
 };
-use objc2_core_foundation::{CGRect, CGSize};
+use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{
 	NSArray, NSError, NSNotification, NSNotificationCenter, NSNotificationName,
 	NSNumber, NSOperationQueue, NSString, NSValue,
@@ -22,18 +22,21 @@ use objc2_ui_kit::{
 	UIKeyboardDidChangeFrameNotification, UIKeyboardDidShowNotification,
 	UIKeyboardFrameEndUserInfoKey, UIKeyboardIsLocalUserInfoKey,
 	UIKeyboardWillChangeFrameNotification, UIKeyboardWillHideNotification,
-	UIKeyboardWillShowNotification, UIResponder, UIView, UIViewAutoresizing,
-	UIWindow,
+	UIKeyboardWillShowNotification, UIResponder, UIScrollView,
+	UIScrollViewKeyboardDismissMode, UIView, UIViewAutoresizing, UIWindow,
 };
 use tauri::webview::{PageLoadEvent, PageLoadPayload};
 use tauri::WebviewWindow;
 
-use super::geometry::{self, Edges, KeyboardMotion, NativeInsets, Rect};
+use super::geometry::{
+	self, Edges, KeyboardMotion, NativeInsets, PagePoint, Rect,
+};
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
 const OPEN_LEAD_MS: f64 = 20.0;
 const CLOSE_LEAD_MS: f64 = 3.0;
+const SHORTEST_CLOSE_SECONDS: f64 = 0.35;
 
 thread_local! {
 	static DRIVER: RefCell<Option<Driver>> = const { RefCell::new(None) };
@@ -51,6 +54,8 @@ struct Placement {
 	travelled: Cell<f64>,
 	opening: Cell<Option<Timing>>,
 	sent: Cell<Option<NativeInsets>>,
+	drag_target: Cell<Option<CGPoint>>,
+	drag_scroller: RefCell<Option<Weak<UIScrollView>>>,
 }
 
 #[derive(Clone, Copy)]
@@ -107,6 +112,8 @@ impl KeyboardFrame {
 			travelled: Cell::new(0.0),
 			opening: Cell::new(None),
 			sent: Cell::new(None),
+			drag_target: Cell::new(None),
+			drag_scroller: RefCell::new(None),
 		});
 		unsafe { msg_send![super(this), initWithFrame: frame] }
 	}
@@ -145,6 +152,9 @@ impl KeyboardFrame {
 				height: frame.size.height - covered,
 			},
 		});
+		if page_follows && overlap > 0.0 {
+			self.aim_drag_dismiss();
+		}
 	}
 
 	fn keyboard_overlap(&self) -> f64 {
@@ -168,10 +178,18 @@ impl KeyboardFrame {
 			self.layoutIfNeeded();
 			return;
 		}
-		if self.keyboard_overlap() < self.ivars().travelled.get() {
+		let overlap = self.keyboard_overlap();
+		let travelled = self.ivars().travelled.get();
+		if overlap < travelled {
 			self.ivars().opening.set(None);
-			self.ride(change.timing, CLOSE_LEAD_MS);
-		} else if self.ivars().opening.replace(Some(change.timing)).is_none() {
+			let mut timing = change.timing;
+			if overlap == 0.0 && timing.duration > 0.0 {
+				timing.duration = timing.duration.max(SHORTEST_CLOSE_SECONDS);
+			}
+			self.ride(timing, CLOSE_LEAD_MS);
+		} else if overlap > travelled
+			&& self.ivars().opening.replace(Some(change.timing)).is_none()
+		{
 			self.after_this_turn(sel!(startKeyboardOpening));
 		}
 	}
@@ -232,12 +250,57 @@ impl KeyboardFrame {
 				curve: geometry::timing_curve(0),
 			});
 		}
+		if !page_follows {
+			self.aim_drag_dismiss();
+		}
+	}
+
+	fn let_drag_dismiss(&self, target: Option<CGPoint>) {
+		self.ivars().drag_target.set(target);
+		let page_follows = self.ivars().page_follows.get();
+		if target.is_none() || (page_follows && self.keyboard_overlap() > 0.0) {
+			self.aim_drag_dismiss();
+		}
+	}
+
+	fn aim_drag_dismiss(&self) {
+		let Some(webview) = self.ivars().webview.load() else {
+			return;
+		};
+		let scroller = self
+			.ivars()
+			.drag_target
+			.get()
+			.filter(|_| self.ivars().page_follows.get())
+			.and_then(|target| child_scroller_at(&webview, target));
+		let previous = self
+			.ivars()
+			.drag_scroller
+			.replace(scroller.as_deref().map(Weak::new))
+			.and_then(|previous| previous.load());
+		if let Some(previous) = previous {
+			let kept = scroller
+				.as_deref()
+				.is_some_and(|scroller| std::ptr::eq(scroller, &*previous));
+			if !kept {
+				previous.setKeyboardDismissMode(
+					UIScrollViewKeyboardDismissMode::None,
+				);
+			}
+		}
+		if let Some(scroller) = scroller {
+			scroller.setKeyboardDismissMode(
+				UIScrollViewKeyboardDismissMode::Interactive,
+			);
+		}
 	}
 
 	fn reseed(&self, document_replaced: bool) {
 		if document_replaced {
 			self.ivars().page_follows.set(false);
 			self.ivars().opening.set(None);
+			self.ivars().drag_target.set(None);
+			self.aim_drag_dismiss();
 		}
 		self.ivars().sent.set(None);
 		self.setNeedsLayout();
@@ -280,6 +343,27 @@ fn presenting(window: &UIWindow) -> bool {
 		.rootViewController()
 		.and_then(|root| root.presentedViewController())
 		.is_some_and(|presented| !presented.isBeingDismissed())
+}
+
+fn child_scroller_at(
+	webview: &UIView,
+	target: CGPoint,
+) -> Option<Retained<UIScrollView>> {
+	let page: Option<Retained<UIScrollView>> =
+		unsafe { msg_send![webview, scrollView] };
+	let mut view = webview.hitTest_withEvent(target, None);
+	while let Some(current) = view {
+		match current.downcast::<UIScrollView>() {
+			Ok(scroller) => {
+				let is_page = page
+					.as_deref()
+					.is_some_and(|page| std::ptr::eq(page, &*scroller));
+				return (!is_page).then_some(scroller);
+			}
+			Err(current) => view = current.superview(),
+		}
+	}
+	None
 }
 
 fn evaluate(webview: &UIView, script: &str) {
@@ -428,6 +512,27 @@ pub fn set_keyboard_follow(window: WebviewWindow, follow: bool) {
 		DRIVER.with_borrow(|driver| {
 			if let Some(driver) = driver {
 				driver.frame.let_page_follow(follow);
+			}
+		});
+	});
+	if let Err(error) = dispatched {
+		tracing::warn!("[keyboard] could not reach the main thread: {error}");
+	}
+}
+
+#[tauri::command]
+pub fn set_keyboard_drag_dismiss(
+	window: WebviewWindow,
+	target: Option<PagePoint>,
+) {
+	let target = target.map(|point| CGPoint {
+		x: point.x,
+		y: point.y,
+	});
+	let dispatched = window.run_on_main_thread(move || {
+		DRIVER.with_borrow(|driver| {
+			if let Some(driver) = driver {
+				driver.frame.let_drag_dismiss(target);
 			}
 		});
 	});

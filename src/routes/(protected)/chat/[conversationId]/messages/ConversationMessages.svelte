@@ -5,6 +5,7 @@
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { edgeGap } from "$lib/components/feedback/refresh/scroll-geometry";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { keyboardDragDismiss } from "$lib/platform/keyboard-drag-dismiss";
 	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ConversationError from "./ConversationError.svelte";
@@ -262,6 +263,7 @@
 		style:padding-bottom="calc({composerHeight}px + var(--spacing) * 3)"
 		onscroll={onContainerScroll}
 		onscrollend={onContainerScrollEnd}
+		{@attach keyboardDragDismiss}
 	>
 		{#if conversationState.loading}
 			{#key conversationState.conversationId}
