@@ -108,6 +108,8 @@ mod tests {
 	const NATIVE_INSETS: &str =
 		include_str!("../../../src/lib/platform/native-insets.ts");
 	const SAFE_AREA: &str = include_str!("../../../src/lib/util/safe-area.ts");
+	const KEYBOARD_FOLLOW: &str =
+		include_str!("../../../src/lib/platform/keyboard-follow.ts");
 
 	const PORTRAIT: Rect = Rect {
 		x: 0.0,
@@ -272,6 +274,38 @@ mod tests {
 			.collect();
 		fields.sort_unstable();
 		assert_eq!(fields, read);
+	}
+
+	#[test]
+	fn the_motion_fields_are_the_ones_the_follower_reads() {
+		let declared = KEYBOARD_FOLLOW
+			.split_once("export type KeyboardMotion = {")
+			.and_then(|(_, rest)| rest.split_once("};"))
+			.expect("keyboard-follow.ts declares KeyboardMotion")
+			.0;
+		let mut read: Vec<&str> = declared
+			.lines()
+			.filter_map(|line| line.trim().split_once(':'))
+			.map(|(field, _)| field)
+			.collect();
+		read.sort_unstable();
+		let motion = serde_json::to_value(KeyboardMotion {
+			from: 0.0,
+			to: 0.0,
+			duration: 0.0,
+			started_at: 0.0,
+			curve: timing_curve(7),
+		})
+		.unwrap();
+		let mut fields: Vec<&str> = motion
+			.as_object()
+			.unwrap()
+			.keys()
+			.map(String::as_str)
+			.collect();
+		fields.sort_unstable();
+		assert_eq!(fields, read);
+		assert!(KEYBOARD_FOLLOW.contains("window.__iosKeyboardMotion = "));
 	}
 
 	#[test]

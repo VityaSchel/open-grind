@@ -12,6 +12,10 @@
 	} from "$lib/components/navigation/stack/motion";
 	import { paneSurface } from "$lib/components/navigation/stack/surface";
 	import {
+		followedKeyboardClosed,
+		followedKeyboardMoving,
+	} from "$lib/platform/keyboard-follow";
+	import {
 		softKeyboardHidden,
 		softKeyboardVisibility,
 	} from "$lib/platform/native-insets";
@@ -54,8 +58,10 @@
 		scope: untrack(() => basePath),
 		reducedMotion: () => prefersReducedMotion.current,
 		backLandsOnBase: () => earlierPathnames()[0] === basePath,
-		keyboardVisible: () => softKeyboardVisibility() === true,
+		keyboardVisible: () =>
+			softKeyboardVisibility() === true || followedKeyboardMoving(),
 		keyboardHidden: () =>
+			followedKeyboardClosed({ settleMs: KEYBOARD_SETTLE_MS }) ??
 			softKeyboardHidden({ settleMs: KEYBOARD_SETTLE_MS }),
 	});
 

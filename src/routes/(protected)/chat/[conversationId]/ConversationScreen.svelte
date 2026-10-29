@@ -4,6 +4,7 @@
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import { setScreenLeaving } from "$lib/platform/back-gesture-event.svelte";
+	import { followSoftKeyboard } from "$lib/platform/keyboard-follow";
 	import type { MessageDraft } from "$lib/model/messaging/messages";
 	import ChatNavBar from "./conversation-nav-bar/ConversationNavBar.svelte";
 	import {
@@ -70,13 +71,20 @@
 
 <ChatNavBar />
 <Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
-	<ConversationMessages {composerHeight} />
-	<MessageComposer
-		conversationId={conversationState.conversationId}
-		onSend={(drafts: MessageDraft[]) => conversationState.send(drafts)}
-		disabled={conversationState.loading || conversationState.error !== null}
-		replyTo={conversationState.replyTo}
-		onCancelReply={() => conversationState.clearReplyTo()}
-		bind:height={composerHeight}
-	/>
+	<div
+		data-slot="keyboard-follower"
+		class="relative flex min-h-0 flex-1 flex-col"
+		{@attach followSoftKeyboard}
+	>
+		<ConversationMessages {composerHeight} />
+		<MessageComposer
+			conversationId={conversationState.conversationId}
+			onSend={(drafts: MessageDraft[]) => conversationState.send(drafts)}
+			disabled={conversationState.loading ||
+				conversationState.error !== null}
+			replyTo={conversationState.replyTo}
+			onCancelReply={() => conversationState.clearReplyTo()}
+			bind:height={composerHeight}
+		/>
+	</div>
 </Card.Content>

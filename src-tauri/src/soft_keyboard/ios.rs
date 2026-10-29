@@ -214,6 +214,26 @@ impl KeyboardFrame {
 		}
 	}
 
+	fn let_page_follow(&self, page_follows: bool) {
+		if self.ivars().page_follows.replace(page_follows) == page_follows {
+			return;
+		}
+		self.ivars().opening.set(None);
+		let overlap = self.keyboard_overlap();
+		self.ivars().travelled.set(overlap);
+		self.setNeedsLayout();
+		self.layoutIfNeeded();
+		if page_follows && overlap > 0.0 {
+			self.push_motion(KeyboardMotion {
+				from: overlap,
+				to: overlap,
+				duration: 0.0,
+				started_at: epoch_milliseconds(),
+				curve: geometry::timing_curve(0),
+			});
+		}
+	}
+
 	fn reseed(&self, document_replaced: bool) {
 		if document_replaced {
 			self.ivars().page_follows.set(false);
@@ -399,6 +419,20 @@ pub fn install(window: &WebviewWindow) {
 	});
 	if let Err(error) = reached {
 		tracing::warn!("[keyboard] could not reach the webview: {error}");
+	}
+}
+
+#[tauri::command]
+pub fn set_keyboard_follow(window: WebviewWindow, follow: bool) {
+	let dispatched = window.run_on_main_thread(move || {
+		DRIVER.with_borrow(|driver| {
+			if let Some(driver) = driver {
+				driver.frame.let_page_follow(follow);
+			}
+		});
+	});
+	if let Err(error) = dispatched {
+		tracing::warn!("[keyboard] could not reach the main thread: {error}");
 	}
 }
 

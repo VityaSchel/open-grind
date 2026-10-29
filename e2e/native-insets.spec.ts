@@ -30,6 +30,9 @@ const KEYBOARD_OPEN: Keyboard = {
 	insets: { ...KEYBOARD_CLOSED.insets, bottom: 0, ime: true },
 };
 const SLIDE_HOLD_MS = 120;
+const CLOSE_RIDE_MS = 1500;
+const CLOSE_HOLD_MS = 400;
+const LINEAR = [0, 0, 1, 1] as const;
 const SAFE_AREA_STRIP = '[data-slot="safe-area-strip"]';
 
 test.describe.configure({ timeout: 180_000 });
@@ -61,7 +64,31 @@ async function switchIosKeyboard(
 	await expect.poll(() => safeAreaBottom(page)).toBe(`${insets.bottom}px`);
 }
 
-async function slidingSoonAfterBack(page: Page): Promise<boolean> {
+async function rideIosKeyboard(
+	page: Page,
+	{ from, to, duration }: { from: number; to: number; duration: number },
+): Promise<void> {
+	await page.evaluate(
+		({ insets, motion }) => {
+			window.__iosInsets = insets;
+			window.__reapplyInsets(window.__iosInsets);
+			window.__iosKeyboardMotion?.({
+				...motion,
+				curve: [...motion.curve],
+				startedAt: Date.now(),
+			});
+		},
+		{
+			insets: { ...KEYBOARD_CLOSED.insets, ime: to > 0 },
+			motion: { from, to, duration, curve: LINEAR },
+		},
+	);
+}
+
+async function slidingSoonAfterBack(
+	page: Page,
+	{ holdMs = SLIDE_HOLD_MS }: { holdMs?: number } = {},
+): Promise<boolean> {
 	const watch = await page.evaluateHandle(
 		({ baseSelector, sheetSelector, holdMs }) => {
 			const basePane = document.querySelector(baseSelector);
@@ -95,7 +122,7 @@ async function slidingSoonAfterBack(page: Page): Promise<boolean> {
 		{
 			baseSelector: LIVE_STACK.base,
 			sheetSelector: LIVE_STACK.sheet,
-			holdMs: SLIDE_HOLD_MS,
+			holdMs,
 		},
 	);
 	await backToChats(page).click();
@@ -129,24 +156,38 @@ for (const { platform, reads, heights } of [
 	});
 }
 
-for (const { keyboard, slides } of [
-	{ keyboard: KEYBOARD_OPEN, slides: "only after the keyboard hides" },
-	{ keyboard: KEYBOARD_CLOSED, slides: "at once with the keyboard closed" },
-]) {
-	test(`Back on iOS slides the conversation out ${slides}`, async ({
-		page,
-	}) => {
-		await openInbox(page, { platform: "ios" });
-		await openConversation(page);
-		await switchIosKeyboard(page, keyboard);
-
-		expect(await slidingSoonAfterBack(page)).toBe(!keyboard.insets.ime);
-
-		await switchIosKeyboard(page, KEYBOARD_CLOSED);
-		await expect(page).toHaveURL(/\/chat$/);
-		await expect(sheet(page)).toHaveCount(0);
+test("Back on iOS slides the conversation out only after it rode the keyboard down", async ({
+	page,
+}) => {
+	await openInbox(page, { platform: "ios" });
+	await openConversation(page);
+	await rideIosKeyboard(page, { from: 0, to: KEYBOARD_HEIGHT, duration: 0 });
+	await rideIosKeyboard(page, {
+		from: KEYBOARD_HEIGHT,
+		to: 0,
+		duration: CLOSE_RIDE_MS,
 	});
-}
+
+	expect(await slidingSoonAfterBack(page, { holdMs: CLOSE_HOLD_MS })).toBe(
+		false,
+	);
+
+	await expect(page).toHaveURL(/\/chat$/);
+	await expect(sheet(page)).toHaveCount(0);
+});
+
+test("Back on iOS slides the conversation out at once with the keyboard closed", async ({
+	page,
+}) => {
+	await openInbox(page, { platform: "ios" });
+	await openConversation(page);
+	await switchIosKeyboard(page, KEYBOARD_CLOSED);
+
+	expect(await slidingSoonAfterBack(page)).toBe(true);
+
+	await expect(page).toHaveURL(/\/chat$/);
+	await expect(sheet(page)).toHaveCount(0);
+});
 
 for (const { keyboard, text, focused } of [
 	{

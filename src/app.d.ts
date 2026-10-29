@@ -1,3 +1,4 @@
+import type { KeyboardMotion } from "$lib/platform/keyboard-follow";
 import type { NativeInsets } from "$lib/platform/native-insets";
 
 declare global {
@@ -17,6 +18,7 @@ declare global {
 			imeVisible?(): boolean;
 		};
 		__iosInsets?: NativeInsets;
+		__iosKeyboardMotion?: (motion: KeyboardMotion) => void;
 		__AndroidOnBackGesture?: () => boolean;
 		__AndroidOnBackGestureStart?: () => boolean;
 		__AndroidOnBackGestureCancel?: () => void;
