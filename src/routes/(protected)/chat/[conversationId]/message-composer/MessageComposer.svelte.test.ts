@@ -464,3 +464,41 @@ describe("MessageComposer sheet triggers", () => {
 		expect(sheets.composer).toBeNull();
 	});
 });
+
+describe("MessageComposer send button on ios", () => {
+	beforeEach(() => {
+		drafts = new Drafts();
+		conversations.drafts = drafts;
+		runningOn("ios");
+	});
+
+	afterEach(() => {
+		cleanup();
+		delete window.__iosInsets;
+	});
+
+	for (const { ime, held } of [
+		{ ime: true, held: true },
+		{ ime: false, held: false },
+	]) {
+		it(`${held ? "holds" : "lets go of"} the composer focus on the tap's mouse press while the keyboard is ${ime ? "up" : "down"}`, async () => {
+			window.__iosInsets = {
+				top: 62,
+				bottom: ime ? 0 : 34,
+				left: 0,
+				right: 0,
+				ime,
+			};
+			const { textarea, getByRole } = renderComposer();
+			await type(textarea, "see you soon");
+			const press = new MouseEvent("mousedown", {
+				bubbles: true,
+				cancelable: true,
+			});
+
+			getByRole("button", { name: "Send message" }).dispatchEvent(press);
+
+			expect(press.defaultPrevented).toBe(held);
+		});
+	}
+});

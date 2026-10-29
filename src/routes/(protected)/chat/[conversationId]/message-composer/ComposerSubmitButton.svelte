@@ -6,15 +6,18 @@
 	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
 
 	const { disabled } = $derived(getMessageComposerContext()());
+
+	function keepKeyboardUp(event) {
+		if (softKeyboardVisibility() !== false) event.preventDefault();
+	}
 </script>
 
 <PrimaryComposerButton
 	type="submit"
 	aria-label="Send message"
 	{disabled}
-	onpointerdown={(event) => {
-		if (softKeyboardVisibility() !== false) event.preventDefault();
-	}}
+	onpointerdown={keepKeyboardUp}
+	onmousedown={keepKeyboardUp}
 >
 	{#snippet icon({ ...props })}
 		<PaperPlaneRightIcon weight="fill" {...props} />
