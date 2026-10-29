@@ -110,7 +110,7 @@ describe("returnTo", () => {
 
 		returnTo("/chat");
 
-		expect(goto).toHaveBeenCalledWith("/chat", { replaceState: true });
+		expect(goto).toHaveBeenCalledWith("/chat", { replace: true });
 		expect(go).not.toHaveBeenCalled();
 	});
 });
