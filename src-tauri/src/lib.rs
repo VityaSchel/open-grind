@@ -30,6 +30,8 @@ mod presenting;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
 mod scroll_phase;
+#[cfg(any(target_os = "ios", test))]
+mod soft_keyboard;
 mod state;
 mod storage;
 mod transfer;
@@ -332,12 +334,16 @@ pub fn run() {
                 #[cfg(any(target_os = "macos", target_os = "windows"))]
                 let builder = builder.disable_drag_drop_handler();
                 #[cfg(target_os = "ios")]
-                let builder = builder.with_input_accessory_view_builder(|_| None);
+                let builder = builder
+                    .with_input_accessory_view_builder(|_| None)
+                    .on_page_load(soft_keyboard::reseed);
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
                 );
                 let window = builder.build()?;
+                #[cfg(target_os = "ios")]
+                soft_keyboard::install(&window);
                 #[cfg(target_os = "linux")]
                 media::serve_element_opens(&window);
                 #[cfg(target_os = "linux")]
