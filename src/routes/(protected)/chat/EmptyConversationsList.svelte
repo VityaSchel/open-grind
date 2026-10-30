@@ -2,11 +2,16 @@
 	import ChatCircleSlashIcon from "phosphor-svelte/lib/ChatCircleSlashIcon";
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import PumpkinLanternIcon from "$lib/components/halloween/PumpkinLanternIcon.svelte";
 	import * as Empty from "$lib/components/ui/empty";
 
 	let { filtered = false }: { filtered?: boolean } = $props();
 
-	const Icon = $derived(filtered ? FunnelIcon : ChatCircleSlashIcon);
+	const Icon = $derived.by(() => {
+		if (filtered) return FunnelIcon;
+		return isHalloween() ? PumpkinLanternIcon : ChatCircleSlashIcon;
+	});
 </script>
 
 <Empty.Root>

@@ -8,6 +8,16 @@
 	import UsersIcon from "phosphor-svelte/lib/UsersIcon";
 	import UsersThreeIcon from "phosphor-svelte/lib/UsersThreeIcon";
 
+	import AubergineIcon from "$lib/components/halloween/AubergineIcon.svelte";
+	import CastleIcon from "$lib/components/halloween/CastleIcon.svelte";
+	import DryEyesIcon from "$lib/components/halloween/DryEyesIcon.svelte";
+	import GooeyDaemonIcon from "$lib/components/halloween/GooeyDaemonIcon.svelte";
+	import GravestoneIcon from "$lib/components/halloween/GravestoneIcon.svelte";
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import LiverIcon from "$lib/components/halloween/LiverIcon.svelte";
+	import PoisonBottleIcon from "$lib/components/halloween/PoisonBottleIcon.svelte";
+	import RingedPlanetIcon from "$lib/components/halloween/RingedPlanetIcon.svelte";
+	import WitchFaceIcon from "$lib/components/halloween/WitchFaceIcon.svelte";
 	import {
 		acceptNSFWPics,
 		ethnicities,
@@ -104,43 +114,43 @@
 		<ProfileSection title="Stats">
 			<Genders {genders} {pronouns} />
 			<LookupField
-				icon={UsersThreeIcon}
+				icon={isHalloween() ? GravestoneIcon : UsersThreeIcon}
 				value={grindrTribes}
 				options={tribes}
 			/>
 			<LookupField
-				icon={GlobeStandIcon}
+				icon={isHalloween() ? RingedPlanetIcon : GlobeStandIcon}
 				value={ethnicity}
 				options={ethnicities}
 			/>
 			<LookupField
-				icon={UsersIcon}
+				icon={isHalloween() ? WitchFaceIcon : UsersIcon}
 				value={relationshipStatus}
 				options={relationshipStatuses}
 			/>
 		</ProfileSection>
 		<ProfileSection title="Expectations">
 			<LookupField
-				icon={UsersThreeIcon}
+				icon={isHalloween() ? GooeyDaemonIcon : UsersThreeIcon}
 				label="I'm Into"
 				value={tribesImInto}
 				options={tribes}
 			/>
 			<LookupField
-				icon={EyesIcon}
+				icon={isHalloween() ? DryEyesIcon : EyesIcon}
 				weight="fill"
 				label="Looking For"
 				value={lookingFor}
 				options={lookingForLabels}
 			/>
 			<LookupField
-				icon={HouseIcon}
+				icon={isHalloween() ? CastleIcon : HouseIcon}
 				label="Meet At"
 				value={meetAt}
 				options={meetAtLabels}
 			/>
 			<LookupField
-				icon={CameraIcon}
+				icon={isHalloween() ? AubergineIcon : CameraIcon}
 				label="NSFW Pics?"
 				value={nsfw}
 				options={acceptNSFWPics}
@@ -155,13 +165,13 @@
 			/>
 			<LastTested lastTestedDate={lastTestedDateValue} />
 			<LookupField
-				icon={SyringeIcon}
+				icon={isHalloween() ? PoisonBottleIcon : SyringeIcon}
 				label="Vaccinated for"
 				value={vaccines}
 				options={vaccineLabels}
 			/>
 			<LookupField
-				icon={HeartbeatIcon}
+				icon={isHalloween() ? LiverIcon : HeartbeatIcon}
 				label="Health Practices"
 				value={sexualHealthValue}
 				options={healthPracticeLabels}

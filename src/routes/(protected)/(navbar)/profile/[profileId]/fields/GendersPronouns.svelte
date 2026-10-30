@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { getGenders } from "$lib/api/users/genders";
 	import { getPronouns } from "$lib/api/users/pronouns";
+	import GhostIcon from "$lib/components/halloween/GhostIcon.svelte";
+	import { isHalloween } from "$lib/components/halloween/halloween";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import ProfileField from "./ProfileField.svelte";
@@ -16,28 +18,32 @@
 
 {#if (genders !== null && genders.length > 0) || (pronouns !== null && pronouns.length > 0)}
 	<ProfileField>
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="1em"
-			height="1em"
-			viewBox="0 0 24 24"
-			aria-hidden="true"
-			class="shrink-0"
-		>
-			<!-- Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE -->
-			<g
-				fill="none"
-				stroke="currentColor"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				stroke-width="2"
+		{#if isHalloween()}
+			<GhostIcon aria-hidden="true" class="shrink-0" />
+		{:else}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="1em"
+				height="1em"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+				class="shrink-0"
 			>
-				<path
-					d="M12 16v6m2-2h-4m8-18h4v4M2 2l7.17 7.17M2 5.355V2h3.357M22 2l-7.17 7.17M8 5L5 8"
-				/>
-				<circle cx="12" cy="12" r="4" />
-			</g>
-		</svg>
+				<!-- Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE -->
+				<g
+					fill="none"
+					stroke="currentColor"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+				>
+					<path
+						d="M12 16v6m2-2h-4m8-18h4v4M2 2l7.17 7.17M2 5.355V2h3.357M22 2l-7.17 7.17M8 5L5 8"
+					/>
+					<circle cx="12" cy="12" r="4" />
+				</g>
+			</svg>
+		{/if}
 		<span class="flex min-w-0 flex-wrap items-center gap-x-1.5">
 			{#if genders !== null && genders.length > 0}
 				{#await allGenders}

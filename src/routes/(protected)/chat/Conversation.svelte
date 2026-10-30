@@ -7,6 +7,8 @@
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import KnifeIcon from "$lib/components/halloween/KnifeIcon.svelte";
 	import FavoriteStar from "$lib/components/profile/FavoriteStar.svelte";
 	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
 	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
@@ -131,7 +133,9 @@
 				<span
 					class="flex max-w-full items-center gap-1 font-medium text-muted-foreground"
 				>
-					{#if conversation.data.pinned}
+					{#if conversation.data.pinned && isHalloween()}
+						<KnifeIcon class="size-4 shrink-0" />
+					{:else if conversation.data.pinned}
 						<PushPinIcon weight="fill" class="size-4 shrink-0" />
 					{/if}
 					<span class="truncate text-right">
@@ -178,6 +182,9 @@
 					{#if conversation.data.pinned}
 						<PushPinSlashIcon weight="fill" class="size-5" />
 						Unpin
+					{:else if isHalloween()}
+						<KnifeIcon class="size-5" />
+						Pin
 					{:else}
 						<PushPinIcon weight="fill" class="size-5" />
 						Pin

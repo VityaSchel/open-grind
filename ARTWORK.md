@@ -17,6 +17,7 @@ To the extent possible under law, Open Grind Governance has waived all copyright
 - `5.jpeg` shows [Noto Emoji](https://github.com/googlefonts/noto-emoji), Copyright Google LLC, under the [Apache License 2.0](./src/lib/assets/emojis/LICENSE), and a [Lorelei](https://www.dicebear.com/styles/lorelei/) avatar by Lisa Wischofsky under CC0 1.0
 - `6.jpeg` shows map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), available under the Open Database License
 - `src/lib/assets/emojis/` holds Noto Emoji images, under the Apache License 2.0 as described in its `LICENSE` and `NOTICE`
+- `src/lib/components/halloween/` holds [Game Icons](https://game-icons.net) by Lorc, Delapouite, Skoll and Cathelineau under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), Material Design Icons under the Apache License 2.0, and Boxicons, Tabler Icons, Health Icons, Fluent Emoji and Phosphor Icons under the MIT License
 
 ## Not covered
 

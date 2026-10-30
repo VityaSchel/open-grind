@@ -2,6 +2,8 @@
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import UserCircleIcon from "phosphor-svelte/lib/UserCircleIcon";
 
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import VampireIcon from "$lib/components/halloween/VampireIcon.svelte";
 	import * as Item from "$lib/components/ui/item";
 </script>
 
@@ -9,7 +11,11 @@
 	{#snippet child({ props })}
 		<a href="/settings/account" {...props}>
 			<Item.Media>
-				<UserCircleIcon weight="fill" class="size-5" />
+				{#if isHalloween()}
+					<VampireIcon class="size-5" />
+				{:else}
+					<UserCircleIcon weight="fill" class="size-5" />
+				{/if}
 			</Item.Media>
 			<Item.Content class="min-w-0">
 				<Item.Title

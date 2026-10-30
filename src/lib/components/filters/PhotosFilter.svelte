@@ -4,6 +4,8 @@
 	import SmileyWinkIcon from "phosphor-svelte/lib/SmileyWinkIcon";
 	import type z from "zod";
 
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import JasonMaskIcon from "$lib/components/halloween/JasonMaskIcon.svelte";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import type { filterPhotosSchema } from "$lib/model/browse/grid/filters";
 	import FilterBoolean from "./FilterBoolean.svelte";
@@ -33,7 +35,11 @@
 				Has Photos
 			</ToggleGroup.Item>
 			<ToggleGroup.Item value="has-face-pics">
-				<SmileyWinkIcon />
+				{#if isHalloween()}
+					<JasonMaskIcon />
+				{:else}
+					<SmileyWinkIcon />
+				{/if}
 				Has Face Pics
 			</ToggleGroup.Item>
 			<ToggleGroup.Item value="has-albums">

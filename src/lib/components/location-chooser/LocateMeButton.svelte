@@ -2,6 +2,8 @@
 	import GpsFixIcon from "phosphor-svelte/lib/GpsFixIcon";
 	import { onDestroy } from "svelte";
 
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import ReticuleIcon from "$lib/components/halloween/ReticuleIcon.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { reportLocationFailure } from "$lib/location/location-feedback";
 	import { locationRequest } from "$lib/location/location-request.svelte";
@@ -42,6 +44,10 @@
 		disabled={locating}
 		onclick={locate}
 	>
-		<GpsFixIcon weight="fill" class="size-6" />
+		{#if isHalloween()}
+			<ReticuleIcon class="size-6" />
+		{:else}
+			<GpsFixIcon weight="fill" class="size-6" />
+		{/if}
 	</Button>
 </div>

@@ -3,6 +3,8 @@
 	import SignOutIcon from "phosphor-svelte/lib/SignOutIcon";
 
 	import { signOut } from "$lib/api/sign-out";
+	import { isHalloween } from "$lib/components/halloween/halloween";
+	import RestingVampireIcon from "$lib/components/halloween/RestingVampireIcon.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as Item from "$lib/components/ui/item";
 	import { Spinner } from "$lib/components/ui/spinner";
@@ -40,7 +42,11 @@
 			onclick={() => (alertOpen = true)}
 		>
 			<Item.Media>
-				<SignOutIcon weight="fill" class="size-5" />
+				{#if isHalloween()}
+					<RestingVampireIcon class="size-5" />
+				{:else}
+					<SignOutIcon weight="fill" class="size-5" />
+				{/if}
 			</Item.Media>
 			<Item.Content class="min-w-0">
 				<Item.Title
