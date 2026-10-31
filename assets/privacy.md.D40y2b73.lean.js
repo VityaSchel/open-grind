@@ -1,0 +1,1 @@
+import{_ as r,o,c as a,ao as i}from"./chunks/framework.DlOpO9-F.js";const g=JSON.parse('{"title":"Privacy Policy","description":"","frontmatter":{},"headers":[],"relativePath":"privacy.md","filePath":"privacy.md"}'),t={name:"privacy.md"};function n(s,e,c,l,d,h){return o(),a("div",null,[...e[0]||(e[0]=[i("",11)])])}const y=r(t,[["render",n]]);export{g as __pageData,y as default};
