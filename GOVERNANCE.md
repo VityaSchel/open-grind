@@ -29,6 +29,7 @@ Listed in order of their contributions' value[^1]:
 | [@SCX (aka Martin Georgiev)](https://git.opengrind.org/SCX)     |       |
 | [@KinkyMonk](https://git.opengrind.org/KinkyMonk)               |       |
 | [@imaoreo (aka kezza2k7)](https://git.opengrind.org/imaoreo)    |       |
+| [@peddling638](https://git.opengrind.org/peddling638)           |       |
 | [@sealad886](https://git.opengrind.org/sealad886)               |       |
 | [@Meowl_Lover](https://git.opengrind.org/Meowl_Lover)           |       |
 | [@desumax](https://git.opengrind.org/desumax)                   |       |
