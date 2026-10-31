@@ -19,9 +19,9 @@ cask "open-grind" do
   app "Open Grind.app"
 
   zap trash: [
-    "~/Library/Application Support/org.opengrind*",
-    "~/Library/Caches/org.opengrind*",
-    "~/Library/Preferences/org.opengrind*.plist",
-    "~/Library/WebKit/org.opengrind*",
+    "~/Library/Application Support/org.opengrind{,.app}",
+    "~/Library/Caches/org.opengrind{,.app}",
+    "~/Library/Preferences/org.opengrind{,.app}.plist",
+    "~/Library/WebKit/org.opengrind{,.app}",
   ]
 end
