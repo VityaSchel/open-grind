@@ -1,7 +1,12 @@
 name: fdroid
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: release tag to rebuild (empty builds the dispatched commit)
+        type: string
+        default: ""
 
 concurrency:
   group: open-grind-fdroid
@@ -11,6 +16,8 @@ jobs:
   fdroid:
     runs-on: ["debian", "8c16g", "hetzner"]
     timeout-minutes: 70
+    env:
+      FDROID_TAG: ${{ inputs.tag }}
     steps:
       - name: Checkout
         run: |
@@ -18,6 +25,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
+          [ -z "$FDROID_TAG" ] || git fetch -q --depth 1 origin tag "$FDROID_TAG"
       - name: Set up the build environment
         run: sh ci/fdroid/setup.sh
       - name: Build the F-Droid way, print hash

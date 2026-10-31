@@ -164,7 +164,9 @@ if (process.argv[2] === "emit") {
 	process.exit(0);
 }
 
-const sha = await resolveCommit(process.env.FORGEJO_SHA ?? "HEAD");
+const sha = await resolveCommit(
+	process.env.FDROID_TAG || process.env.FORGEJO_SHA || "HEAD",
+);
 const conf = await readConf(sha);
 const splits = await readSplits(sha);
 const baseCode = conf.bundle.android.versionCode;
