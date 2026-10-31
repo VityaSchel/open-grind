@@ -25,6 +25,7 @@ Listed in order of their contributions' value[^1]:
 
 | Username                                                        | Links |
 | --------------------------------------------------------------- | ----- |
+| [@Enucatl](https://git.opengrind.org/Enucatl)                   |       |
 | [@SCX (aka Martin Georgiev)](https://git.opengrind.org/SCX)     |       |
 | [@KinkyMonk](https://git.opengrind.org/KinkyMonk)               |       |
 | [@imaoreo (aka kezza2k7)](https://git.opengrind.org/imaoreo)    |       |
