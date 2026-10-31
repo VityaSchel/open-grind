@@ -34,29 +34,13 @@
 }
 
 .pswp .pswp__button--close {
-	@apply size-11 rounded-full bg-black/55 scrim text-white opacity-100 backdrop-filter-(--bd-veil) transition-colors;
+	@apply media-disc opacity-100;
 	margin-top: 0.75rem;
 	margin-right: 0.75rem;
-
-	@variant hover {
-		@apply bg-black/75;
-	}
 }
 
 .pswp .pswp__button--close .pswp__icn {
 	@apply inset-0 m-auto size-6 text-white;
-}
-
-.pswp .pswp__button--close path {
-	d: path("M7 7 25 25M7 25 25 7");
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 3;
-	stroke-linecap: round;
-}
-
-.pswp .pswp__button--close .pswp__icn-shadow {
-	display: none;
 }
 
 .pswp .pswp__button--arrow--prev {

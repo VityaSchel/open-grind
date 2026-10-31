@@ -269,13 +269,10 @@ test.describe("lightbox layout", () => {
 		expect(await chromeStyle(page.locator(CLOSE_BUTTON))).toEqual(
 			backStyle,
 		);
-		await expect(page.locator(`${CLOSE_BUTTON} path`)).toHaveCSS(
-			"stroke-width",
-			"3px",
+		await expect(page.locator(`${CLOSE_BUTTON} svg`)).toHaveAttribute(
+			"viewBox",
+			"0 0 256 256",
 		);
-		await expect(
-			page.locator(`${CLOSE_BUTTON} .pswp__icn-shadow`),
-		).toBeHidden();
 		await expect.poll(() => openLightboxIndex(page)).toBe(0);
 		await page.getByRole("button", { name: "Close", exact: true }).click();
 		await expect(page.locator(LIGHTBOX)).toHaveCount(0);

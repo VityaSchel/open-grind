@@ -7,6 +7,7 @@ import {
 	applyPhotoSwipeErrorUi,
 	applyPhotoSwipeThumbDimensions,
 	applyPhotoSwipeViewportSync,
+	CLOSE_SVG,
 } from "$lib/util/photoswipe";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
@@ -127,6 +128,7 @@ export function attachGalleryLightbox({
 				mainClass: "pswp--buttons-visible",
 				showAnimationDuration: 500,
 				hideAnimationDuration: 500,
+				closeSVG: CLOSE_SVG,
 			});
 			configure({ lightbox, gallery, thumbScale });
 			lightbox.init();

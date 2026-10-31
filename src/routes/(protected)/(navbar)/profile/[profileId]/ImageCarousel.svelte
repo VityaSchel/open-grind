@@ -12,6 +12,7 @@
 		applyPhotoSwipeOpenTracking,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
+		CLOSE_SVG,
 	} from "$lib/util/photoswipe";
 	import { applyProfilePhotoReply } from "$lib/util/photoswipe/profile-photo-reply";
 	import { devicePixelHeight } from "./device-pixel-height";
@@ -58,6 +59,7 @@
 					children: ".item[href]",
 					pswpModule: () => import("photoswipe"),
 					mainClass,
+					closeSVG: CLOSE_SVG,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
