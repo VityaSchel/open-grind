@@ -237,7 +237,7 @@ describe("ViewsState", () => {
 		});
 	});
 
-	it("reconciles after initial load and reports refresh failures", async () => {
+	it("reconciles after initial load and reports pull-to-refresh failures", async () => {
 		getViewsMock
 			.mockResolvedValueOnce({ profiles: [profile(1)], previews: [] })
 			.mockResolvedValueOnce({ profiles: [profile(2)], previews: [] })
@@ -252,7 +252,7 @@ describe("ViewsState", () => {
 			profile: { profileId: 2 },
 		});
 
-		await reconcileHandlers[0]?.();
+		await state.refresh();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith({
 			label: "Failed to refresh views",

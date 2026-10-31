@@ -151,7 +151,7 @@ class GridState {
 			staysOnline() ||
 			(attended && (await showsOnReturn({ viewActive: this.viewActive })))
 		)
-			return this.refresh();
+			return this.refresh({ automatic: true });
 		this.#stale = true;
 	}
 
@@ -164,7 +164,8 @@ class GridState {
 	attachView(): () => void {
 		this.viewActive = true;
 		untrack(() => {
-			if (this.#stale && !this.loading) void this.refresh();
+			if (this.#stale && !this.loading)
+				void this.refresh({ automatic: true });
 		});
 		return () => {
 			this.viewActive = false;
@@ -173,6 +174,7 @@ class GridState {
 
 	async refresh({
 		background = false,
+		automatic = background,
 		keepLoadedPages = true,
 	} = {}): Promise<void> {
 		const geohash = this.#geohash ?? preferencesSnapshot().geohash;
@@ -183,6 +185,7 @@ class GridState {
 			await this.#fetchProfiles(geohash, {
 				silent: true,
 				background,
+				automatic,
 				sampleLocation: !background || this.viewActive,
 				keepLoadedPages,
 			});
@@ -292,6 +295,7 @@ class GridState {
 		opts?: {
 			silent?: boolean;
 			background?: boolean;
+			automatic?: boolean;
 			sampleLocation?: boolean;
 			keepLoadedPages?: boolean;
 		},
@@ -342,7 +346,7 @@ class GridState {
 			if (this.#generation.isStale(generation)) return;
 			console.error(err);
 			this.loading = false;
-			if (opts?.background) return;
+			if (opts?.automatic) return;
 			if (opts?.silent) {
 				showErrorToast({
 					label: "Failed to refresh profiles",

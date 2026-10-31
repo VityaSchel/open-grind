@@ -85,7 +85,9 @@ class ConversationsState {
 	#wsPromises: Promise<() => void>[] = [];
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- read only by getCachedConversation(), never from a template or $derived
 	#messageCache = new Map<string, CachedConversation>();
-	#unsubscribeReconcile: () => void;
+	#unsubscribeReconcile = reconciler.subscribe(() =>
+		this.refresh({ automatic: true }),
+	);
 	#unsubscribeInboxResync = onInboxResync(() => void this.#syncLatest({}));
 	#destroyed = false;
 	#pendingFlags = new PendingFlags<ConversationFlagField>();
@@ -135,10 +137,6 @@ class ConversationsState {
 			cursor: () => this.nextPage,
 		});
 		void this.#hardLoad();
-
-		this.#unsubscribeReconcile = reconciler.subscribe(() =>
-			this.#fetches.track(this.#reconcile()),
-		);
 
 		this.#wsPromises.push(
 			ws.on(
@@ -235,7 +233,7 @@ class ConversationsState {
 		});
 	}
 
-	async #reconcile(): Promise<void> {
+	async #reconcile({ automatic }: { automatic: boolean }): Promise<void> {
 		if (this.#destroyed) return;
 		if (this.refreshing) {
 			this.#refreshRequestedSinceFetchStart = true;
@@ -326,6 +324,7 @@ class ConversationsState {
 		} catch (error) {
 			if (this.#destroyed) return;
 			console.error(error);
+			if (automatic) return;
 			showErrorToast({
 				label: "Failed to refresh conversations",
 				error,
@@ -341,7 +340,7 @@ class ConversationsState {
 	#runRequestedRefresh(): void {
 		if (!this.#refreshRequestedSinceFetchStart) return;
 		this.#refreshRequestedSinceFetchStart = false;
-		void this.refresh();
+		void this.refresh({ automatic: true });
 	}
 
 	#syncLatest(args: { errorLabel?: string }): Promise<boolean> {
@@ -423,8 +422,8 @@ class ConversationsState {
 		this.#reads.readOpenChat();
 	}
 
-	refresh(): Promise<void> {
-		return this.#fetches.track(this.#reconcile());
+	refresh({ automatic = false } = {}): Promise<void> {
+		return this.#fetches.track(this.#reconcile({ automatic }));
 	}
 
 	retry(): void {
