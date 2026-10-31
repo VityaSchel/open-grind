@@ -29,6 +29,7 @@ Builds:
       - apt-get install -y gcc libc-dev rustup golang-go
       - apt-get install -y -t trixie-backports libclang1-${libclangMajor} libclang-common-${libclangMajor}-dev
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
+      - 'printf "Package: *\nPin: release n=forky\nPin-Priority: 100\n" > /etc/apt/preferences.d/forky'
       - apt-get update
       - apt-get install -y -t forky nodejs
     output: src-tauri/gen/android/app/build/outputs/apk/*/release/open-grind-v*-android-${abi}-unsigned.apk
