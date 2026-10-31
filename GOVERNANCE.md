@@ -23,18 +23,20 @@ Community guidelines are defined in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). 
 
 Listed in order of their contributions' value[^1]:
 
-| Username                                                        | Links |
-| --------------------------------------------------------------- | ----- |
-| [@Enucatl](https://git.opengrind.org/Enucatl)                   |       |
-| [@SCX (aka Martin Georgiev)](https://git.opengrind.org/SCX)     |       |
-| [@KinkyMonk](https://git.opengrind.org/KinkyMonk)               |       |
-| [@imaoreo (aka kezza2k7)](https://git.opengrind.org/imaoreo)    |       |
-| [@peddling638](https://git.opengrind.org/peddling638)           |       |
-| [@sealad886](https://git.opengrind.org/sealad886)               |       |
-| [@Meowl_Lover](https://git.opengrind.org/Meowl_Lover)           |       |
-| [@desumax](https://git.opengrind.org/desumax)                   |       |
-| [@TheFantasticLoki](https://git.opengrind.org/TheFantasticLoki) |       |
-| [@cbcouxgsi](https://git.opengrind.org/cbcouxgsi)               |       |
+| Username                                                                                                                                                    | Links |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| [Enucatl](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Aenucatl%40noreply.localhost&all=false)                      |       |
+| [SCX](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Ascx%40users.noreply.invalid&all=false)                          |       |
+| [peddling638](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Aopengrind.peddling638%40passmail.net&all=false)         |       |
+| [Martin Georgiev](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Amartin.georgiev%40gmail.com&all=false)              |       |
+| [KinkyMonk](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3AKinkyMonk+author%3Agreekkoala%40yahoo.com&all=false)      |       |
+| [kezza2k7](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Ajaygithub%40estopia.net)                                   |       |
+| [sealad886](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Asealad886%40users.noreply.github.com)                     |       |
+| [Meowl_Lover](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Amipaw25904%40proton.me)                                 |       |
+| [desumax](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Amaksym_9889%40hotmail.com)                                  |       |
+| [harj](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Axz4de4098%40mozmail.com)                                       |       |
+| [The Fantastic Loki](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Athefantasticloki%2Bgithub%40proton.me&all=false) |       |
+| [cbcouxgsi](https://git.opengrind.org/open-grind/open-grind/commits/branch/main/search?q=author%3Acbcouxgsi%40mozmail.com)                                  |       |
 
 ## Communication Channels
 
@@ -45,4 +47,4 @@ Listed in order of their contributions' value[^1]:
 - For general talk and questions: [#general:opengrind.org in Matrix](https://matrix.to/#/#general:opengrind.org)
 - For private inquiries and disclosure: refer to [**decision making authority's** contacts](#maintainers)
 
-[^1]: Primarily determined by the amount of code contributed, counted on [Contributors](https://git.opengrind.org/open-grind/open-grind/activity/contributors) page
+[^1]: Primarily determined by the amount of code contributed to the main branch, counted on the [Contributors](https://git.opengrind.org/open-grind/open-grind/activity/contributors) page
