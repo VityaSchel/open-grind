@@ -53,10 +53,10 @@ source_aarch64=(
 )
 
 sha256sums=('18b347191b86bde3646ab8c21910f01fda8d3d2caca5ebc8fe402a62f3425f5e')
-sha256sums_x86_64=('fa14b94a49ea3594ae8d3158d4dc4131dce65c35c675d558e56c176e1c0e2bd3'
-                   'c5229848b8a4bb836105195072d135abe0863954e92d611900dded60684fc6e9')
-sha256sums_aarch64=('fb6bbe693e183e49da64b7b8a438f1173b524f236c3a6e7a1d366e6d0d9150ba'
-                    'f5260426d58a0f68539fc36d5a25d40a9c2ed534f8072096b8ed7bf459e8d241')
+sha256sums_x86_64=('80e27be35b22cc7c027841ac46653ed9c201963ee912ee10f4bdae064a291e28'
+                   'ad1e23d129d9a74d52b7cdb939160727b4fc8a880ce32c468f51eda3caecab8b')
+sha256sums_aarch64=('6f715f4d89593944fd4edd59a241223ac414c6c01d0d981334413a0875b6e347'
+                    '5203efa600fd82054f11f2d94d2337cd341a55fbf32109b13533101dfb23f56a')
 
 # Published in the project's KEYS.md.
 _minisign_key='RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+'
