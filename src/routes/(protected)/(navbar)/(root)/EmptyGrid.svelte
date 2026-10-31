@@ -23,8 +23,9 @@
 		sentFilters.some((key) => key !== "favorites"),
 	);
 	const Icon = $derived.by(() => {
-		if (!favorites) return isHalloween() ? TrapMaskIcon : EmptyIcon;
-		return otherFilters ? FunnelIcon : StarIcon;
+		if (favorites && !otherFilters) return StarIcon;
+		if (isHalloween()) return TrapMaskIcon;
+		return favorites ? FunnelIcon : EmptyIcon;
 	});
 </script>
 

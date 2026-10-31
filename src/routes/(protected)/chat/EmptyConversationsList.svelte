@@ -9,8 +9,8 @@
 	let { filtered = false }: { filtered?: boolean } = $props();
 
 	const Icon = $derived.by(() => {
-		if (filtered) return FunnelIcon;
-		return isHalloween() ? PumpkinLanternIcon : ChatCircleSlashIcon;
+		if (isHalloween()) return PumpkinLanternIcon;
+		return filtered ? FunnelIcon : ChatCircleSlashIcon;
 	});
 </script>
 
