@@ -22,7 +22,8 @@ as_vagrant() {
 		"$@"
 }
 for versionCode in ${versionCodes}; do
-	apt-get install -qqy sudo >/dev/null
+	apt-get install -qqy sudo openjdk-21-jdk-headless >/dev/null
+	update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
 	as_vagrant fdroid fetchsrclibs --verbose "${APPID}:${versionCode}"
 	as_vagrant fdroid build --verbose --test --refresh-scanner --scan-binary --on-server --no-tarball "${APPID}:${versionCode}"
 done
