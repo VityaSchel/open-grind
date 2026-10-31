@@ -107,6 +107,9 @@
 			href="/right-now"
 			data-active={page.route.id === "/(protected)/(navbar)/right-now"}
 			onclick={tabNavigation({ href: "/right-now" })}
+			style:--accent={isHalloween()
+				? "color(display-p3 1 0.215 0.215)"
+				: undefined}
 		>
 			{#if isHalloween()}
 				<BloodyStashIcon />
@@ -124,6 +127,9 @@
 				href: "/interest",
 				landsOn: "/interest/taps",
 			})}
+			style:--accent={isHalloween()
+				? "color(display-p3 1 0.285 0.7962)"
+				: undefined}
 		>
 			{#if isHalloween()}
 				<CandyIcon />
@@ -141,6 +147,9 @@
 			href="/chat"
 			data-active={page.route.id === "/(protected)/chat"}
 			onclick={tabNavigation({ href: "/chat" })}
+			style:--accent={isHalloween()
+				? "color(display-p3 0.97 0.4222 0)"
+				: undefined}
 		>
 			{#if isHalloween()}
 				<PumpkinIcon />
