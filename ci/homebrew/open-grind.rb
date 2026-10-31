@@ -1,5 +1,5 @@
 cask "open-grind" do
-  version "0.1.0-beta.5.1"
+  version "0.1.0-rc.1"
   sha256 "36b09bad2853e624e676e53539fb57ddc3a7619e3ec7901583f737ab31ad2e93"
 
   url "https://git.opengrind.org/open-grind/open-grind/releases/download/v#{version}/open-grind-v#{version}-macos.zip"
