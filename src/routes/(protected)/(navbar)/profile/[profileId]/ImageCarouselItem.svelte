@@ -4,11 +4,13 @@
 
 	let {
 		src,
+		mediaHash,
 		eager,
 		createdAt,
 		label,
 	}: {
 		src: string;
+		mediaHash: string;
 		eager: boolean;
 		createdAt: number | null;
 		label: string;
@@ -26,6 +28,7 @@
 	data-pswp-width={width}
 	data-pswp-height={height}
 	data-created-at={createdAt}
+	data-media-hash={mediaHash}
 	href={failed ? undefined : src}
 	aria-disabled={failed ? "true" : undefined}
 	aria-label={label}

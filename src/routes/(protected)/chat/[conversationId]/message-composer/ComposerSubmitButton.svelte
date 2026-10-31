@@ -1,9 +1,9 @@
 <script>
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
+	import PrimaryComposerButton from "$lib/components/shared/PrimaryComposerButton.svelte";
 	import { softKeyboardVisibility } from "$lib/platform/android-native-bridge";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
-	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
 
 	const { disabled } = $derived(getMessageComposerContext()());
 </script>

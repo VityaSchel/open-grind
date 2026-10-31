@@ -49,8 +49,10 @@
 
 <div
 	{@attach attachFrame}
+	style:pointer-events={clone ? "none" : undefined}
 	class={[
 		"flex w-full flex-col",
+		{ "*:pointer-events-auto": clone },
 		{
 			"items-end": isOut,
 			"ps-3": !clone && !isOut,

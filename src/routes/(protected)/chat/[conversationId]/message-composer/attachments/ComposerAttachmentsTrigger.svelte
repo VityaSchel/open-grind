@@ -2,8 +2,8 @@
 	import PaperclipIcon from "phosphor-svelte/lib/PaperclipIcon";
 	import { expoOut } from "svelte/easing";
 
+	import ComposerButton from "$lib/components/shared/ComposerButton.svelte";
 	import { scale } from "$lib/util/reduced-motion";
-	import ComposerButton from "../ComposerButton.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	let {

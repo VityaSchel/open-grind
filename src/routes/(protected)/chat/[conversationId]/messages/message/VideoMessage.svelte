@@ -1,5 +1,4 @@
 <script lang="ts">
-	import "photoswipe/style.css";
 	import VideoCameraIcon from "phosphor-svelte/lib/VideoCameraIcon";
 	import { untrack } from "svelte";
 

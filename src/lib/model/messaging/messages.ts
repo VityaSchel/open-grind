@@ -474,3 +474,34 @@ export type SharedShapeMessage = Extract<
 export function draftFromMessage(message: SharedShapeMessage): MessageDraft {
 	return { outbound: message, optimistic: message };
 }
+
+export type AlbumReplyTarget = Omit<
+	AlbumContentReplyMessage["body"],
+	"albumContentReply"
+>;
+
+export function draftFromAlbumContent({
+	target,
+	text,
+}: {
+	target: AlbumReplyTarget;
+	text: string;
+}): MessageDraft {
+	const optimistic = {
+		type: "AlbumContentReply" as const,
+		body: { ...target, albumContentReply: text },
+	};
+	return { outbound: outboundMessageSchema.parse(optimistic), optimistic };
+}
+
+export function draftFromAlbumReaction({
+	target,
+}: {
+	target: AlbumReplyTarget;
+}): MessageDraft {
+	const optimistic = {
+		type: "AlbumContentReaction" as const,
+		body: albumContentReactionMessageSchema.shape.body.parse(target),
+	};
+	return { outbound: outboundMessageSchema.parse(optimistic), optimistic };
+}

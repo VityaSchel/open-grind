@@ -384,9 +384,9 @@ export class ConversationState {
 
 	// One call per batch: the target is read once and cleared once, so every
 	// message of a multi-photo reply quotes it, not just the first.
-	send(drafts: MessageDraft[]): void {
+	send(drafts: MessageDraft[], { includeReply = true } = {}): void {
 		if (!this.profile) return;
-		const replyToMessage = this.replyTo;
+		const replyToMessage = includeReply ? this.replyTo : null;
 		for (const draft of drafts) this.#sendOne({ draft, replyToMessage });
 		if (replyToMessage) this.clearReplyTo();
 	}
