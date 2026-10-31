@@ -189,7 +189,11 @@ const buildScript = await Bun.file(path.join(root, "ci/fdroid/build.sh"))
 		s
 			.replaceAll("${APPID}", APPID)
 			.replaceAll("${commit}", sha)
-			.replaceAll("${repoUrl}", repoUrl),
+			.replaceAll("${repoUrl}", repoUrl)
+			.replaceAll(
+				"${versionCodes}",
+				splits.map(({ offset }) => baseCode + offset).join(" "),
+			),
 	);
 await $`docker run --rm -v ${fdd}:/repo ${IMAGE} bash -lc ${buildScript}`;
 

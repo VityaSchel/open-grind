@@ -15,7 +15,10 @@ for d in logs tmp unsigned "$home_vagrant/.android" "$home_vagrant/.gradle"; do
 	mkdir -p "$d"; chown -R vagrant "$d"
 done
 export GRADLE_USER_HOME="$home_vagrant/.gradle"
-sudo --preserve-env --user vagrant \
-	env PATH="$fdroidserver:$PATH" PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
-	PYTHONUNBUFFERED=true HOME="$home_vagrant" GRADLE_USER_HOME="$GRADLE_USER_HOME" \
-	fdroid build --verbose --test --refresh-scanner --scan-binary --on-server --no-tarball "${APPID}"
+for versionCode in ${versionCodes}; do
+	command -v sudo >/dev/null || apt-get install -qqy sudo >/dev/null
+	sudo --preserve-env --user vagrant \
+		env PATH="$fdroidserver:$PATH" PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
+		PYTHONUNBUFFERED=true HOME="$home_vagrant" GRADLE_USER_HOME="$GRADLE_USER_HOME" \
+		fdroid build --verbose --test --refresh-scanner --scan-binary --on-server --no-tarball "${APPID}:${versionCode}"
+done
