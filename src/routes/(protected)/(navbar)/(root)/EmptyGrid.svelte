@@ -4,8 +4,6 @@
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
 	import { genderFilterFlag } from "$lib/api/feature-flags-state.svelte";
-	import { isHalloween } from "$lib/components/halloween/halloween";
-	import TrapMaskIcon from "$lib/components/halloween/TrapMaskIcon.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { sentFilterKeys } from "$lib/grid/grid-query";
@@ -23,9 +21,8 @@
 		sentFilters.some((key) => key !== "favorites"),
 	);
 	const Icon = $derived.by(() => {
-		if (favorites && !otherFilters) return StarIcon;
-		if (isHalloween()) return TrapMaskIcon;
-		return favorites ? FunnelIcon : EmptyIcon;
+		if (!favorites) return EmptyIcon;
+		return otherFilters ? FunnelIcon : StarIcon;
 	});
 </script>
 

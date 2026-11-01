@@ -7,8 +7,6 @@
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import XIcon from "phosphor-svelte/lib/XIcon";
 
-	import { isHalloween } from "$lib/components/halloween/halloween";
-	import KnifeIcon from "$lib/components/halloween/KnifeIcon.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
@@ -39,11 +37,7 @@
 		{
 			key: "pin" as const,
 			label: allPinned ? "Unpin selected" : "Pin selected",
-			icon: allPinned
-				? PushPinSlashIcon
-				: isHalloween()
-					? KnifeIcon
-					: PushPinIcon,
+			icon: allPinned ? PushPinSlashIcon : PushPinIcon,
 			weight: "fill" as const,
 			destructive: false,
 			onSelect: onPin,

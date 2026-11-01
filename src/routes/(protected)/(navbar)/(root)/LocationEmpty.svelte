@@ -7,8 +7,6 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { setPreferences } from "$lib/app-data/preferences.svelte";
 	import AutoLocationToast from "$lib/components/feedback/AutoLocationToast.svelte";
-	import { isHalloween } from "$lib/components/halloween/halloween";
-	import ReticuleIcon from "$lib/components/halloween/ReticuleIcon.svelte";
 	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
@@ -80,11 +78,7 @@
 					onclick={handleDetectLocation}
 					{disabled}
 				>
-					{#if isHalloween()}
-						<ReticuleIcon />
-					{:else}
-						<GpsFixIcon color="currentColor" weight="fill" />
-					{/if}
+					<GpsFixIcon color="currentColor" weight="fill" />
 					Use current location
 				</Button>
 			{/if}

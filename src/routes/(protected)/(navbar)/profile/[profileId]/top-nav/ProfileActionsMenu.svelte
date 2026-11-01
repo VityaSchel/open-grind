@@ -9,8 +9,6 @@
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { hideUser } from "$lib/api/browse/hides";
 	import { showErrorToast } from "$lib/api/error-toast";
-	import BatteredAxeIcon from "$lib/components/halloween/BatteredAxeIcon.svelte";
-	import { isHalloween } from "$lib/components/halloween/halloween";
 	import { showBlockFailure } from "$lib/components/report/block-failure";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -93,11 +91,7 @@
 			Hide profile
 		</DropdownMenu.Item>
 		<DropdownMenu.Item onSelect={block}>
-			{#if isHalloween()}
-				<BatteredAxeIcon class="size-5" />
-			{:else}
-				<ProhibitIcon class="size-5" />
-			{/if}
+			<ProhibitIcon class="size-5" />
 			Block profile
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>

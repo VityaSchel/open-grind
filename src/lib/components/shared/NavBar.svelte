@@ -8,11 +8,6 @@
 
 	import { getProfile, onProfileEdit } from "$lib/api/users/profiles";
 	import { getOrCreateConversationsState } from "$lib/chat/conversations-context.svelte";
-	import BloodyStashIcon from "$lib/components/halloween/BloodyStashIcon.svelte";
-	import CandyIcon from "$lib/components/halloween/CandyIcon.svelte";
-	import ChocolateIcon from "$lib/components/halloween/ChocolateIcon.svelte";
-	import { isHalloween } from "$lib/components/halloween/halloween";
-	import PumpkinIcon from "$lib/components/halloween/PumpkinIcon.svelte";
 	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
@@ -96,26 +91,15 @@
 			data-active={page.route.id === "/(protected)/(navbar)/(root)"}
 			onclick={tabNavigation({ href: "/" })}
 		>
-			{#if isHalloween()}
-				<ChocolateIcon />
-			{:else}
-				<DotsNineIcon weight="fill" />
-			{/if}
+			<DotsNineIcon weight="fill" />
 			{@render label("Browse")}
 		</a>
 		<a
 			href="/right-now"
 			data-active={page.route.id === "/(protected)/(navbar)/right-now"}
 			onclick={tabNavigation({ href: "/right-now" })}
-			style:--accent={isHalloween()
-				? "color(display-p3 1 0.215 0.215)"
-				: undefined}
 		>
-			{#if isHalloween()}
-				<BloodyStashIcon />
-			{:else}
-				<DropIcon weight="fill" />
-			{/if}
+			<DropIcon weight="fill" />
 			{@render label("Right Now")}
 		</a>
 		<a
@@ -127,15 +111,8 @@
 				href: "/interest",
 				landsOn: "/interest/taps",
 			})}
-			style:--accent={isHalloween()
-				? "color(display-p3 1 0.285 0.7962)"
-				: undefined}
 		>
-			{#if isHalloween()}
-				<CandyIcon />
-			{:else}
-				<FireIcon weight="fill" />
-			{/if}
+			<FireIcon weight="fill" />
 			{@render label("Interest")}
 			{#if hasUnseenTaps}
 				<Badge
@@ -147,15 +124,8 @@
 			href="/chat"
 			data-active={page.route.id === "/(protected)/chat"}
 			onclick={tabNavigation({ href: "/chat" })}
-			style:--accent={isHalloween()
-				? "color(display-p3 0.97 0.4222 0)"
-				: undefined}
 		>
-			{#if isHalloween()}
-				<PumpkinIcon />
-			{:else}
-				<ChatCircleIcon weight="fill" />
-			{/if}
+			<ChatCircleIcon weight="fill" />
 			{@render label("Inbox")}
 			{#if hasUnread}
 				<Badge

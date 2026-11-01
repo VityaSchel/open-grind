@@ -3,8 +3,6 @@
 	import HeartIcon from "phosphor-svelte/lib/HeartIcon";
 	import LockSimpleIcon from "phosphor-svelte/lib/LockSimpleIcon";
 
-	import { isHalloween } from "$lib/components/halloween/halloween";
-	import MouthWateringIcon from "$lib/components/halloween/MouthWateringIcon.svelte";
 	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
 	import Frost from "$lib/components/shared/Frost.svelte";
 	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
@@ -36,14 +34,7 @@
 					photoClass="top-1/2 left-1/2 -translate-1/2"
 				/>
 				{#if preview.isSecretAdmirer}
-					{#if isHalloween()}
-						<MouthWateringIcon class="size-4.5 text-rose-400" />
-					{:else}
-						<HeartIcon
-							weight="fill"
-							class="size-4.5 text-rose-400"
-						/>
-					{/if}
+					<HeartIcon weight="fill" class="size-4.5 text-rose-400" />
 					<span class="sr-only">Secret admirer</span>
 				{:else}
 					<LockSimpleIcon weight="fill" class="size-4.5" />

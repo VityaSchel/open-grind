@@ -2,8 +2,6 @@
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import GearIcon from "phosphor-svelte/lib/GearIcon";
 
-	import BrainIcon from "$lib/components/halloween/BrainIcon.svelte";
-	import { isHalloween } from "$lib/components/halloween/halloween";
 	import * as Item from "$lib/components/ui/item";
 </script>
 
@@ -11,11 +9,7 @@
 	{#snippet child({ props })}
 		<a href="/settings/app" {...props}>
 			<Item.Media>
-				{#if isHalloween()}
-					<BrainIcon class="size-5" />
-				{:else}
-					<GearIcon weight="fill" class="size-5" />
-				{/if}
+				<GearIcon weight="fill" class="size-5" />
 			</Item.Media>
 			<Item.Content class="min-w-0">
 				<Item.Title
