@@ -3435,6 +3435,12 @@
 								"type": "string",
 								"format": "binary"
 							}
+						},
+						"image/jpeg": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
 						}
 					}
 				},
@@ -3451,7 +3457,7 @@
 					}
 				},
 				"summary": "Upload Right Now media",
-				"description": "Upload raw image bytes as application/octet-stream. Attach the returned mediaId using an image_v1/data.id post edit."
+				"description": "Upload raw image bytes as image/jpeg or application/octet-stream. Attach the returned mediaId as image_v1 data.id when creating or editing a post."
 			}
 		},
 		"/v1/rightnow/googleplay/sku": {
@@ -13796,7 +13802,7 @@
 					}
 				],
 				"summary": "Upload Right Now media (v2)",
-				"description": "Upload raw, uncropped image bytes as application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId using an image_v1/data.id post edit.",
+				"description": "Upload raw, uncropped image bytes as image/jpeg or application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId as image_v1 data.id when creating or editing a post.",
 				"parameters": [
 					{
 						"name": "crop_top",
@@ -13888,6 +13894,12 @@
 								"type": "string",
 								"format": "binary"
 							}
+						},
+						"image/jpeg": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
 						}
 					}
 				},
@@ -13901,6 +13913,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:bad_request` (`Invalid request`, detail `Bytes too few`) for a very small file, such as a 5 KB JPEG."
 					}
 				}
 			}
@@ -25480,8 +25495,13 @@
 			},
 			"RightNowMediaUploadResponse": {
 				"type": "object",
-				"description": "Response from either Right Now media upload version. Attach mediaId using the image_v1/data.id edit payload.",
+				"description": "Response from either Right Now media upload version. Attach mediaId as image_v1 data.id when creating or editing a post.",
 				"x-render-on-tag": "right-now",
+				"required": [
+					"mediaId",
+					"url",
+					"thumbnailUrl"
+				],
 				"properties": {
 					"mediaId": {
 						"type": "integer",
