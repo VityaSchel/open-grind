@@ -176,6 +176,10 @@ class GridState {
 		background = false,
 		automatic = background,
 		keepLoadedPages = true,
+	}: {
+		background?: boolean;
+		automatic?: boolean;
+		keepLoadedPages?: boolean;
 	} = {}): Promise<void> {
 		const geohash = this.#geohash ?? preferencesSnapshot().geohash;
 		if (!geohash || this.refreshing) return;
