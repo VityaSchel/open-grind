@@ -186,6 +186,7 @@
 			offset={toastOffset}
 			mobileOffset={toastOffset}
 			toastOptions={{ class: "toast" }}
+			closeButton
 			expand
 		/>
 	</div>
