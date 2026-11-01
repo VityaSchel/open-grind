@@ -3556,27 +3556,40 @@
 					"right-now"
 				],
 				"operationId": "createRightNowRequest",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"postId"
 								],
-								"x-original-type": "RightNowCreateRequestData"
+								"properties": {
+									"postId": {
+										"type": "integer",
+										"format": "int64"
+									}
+								}
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"201": {
+						"description": "Created"
+					},
+					"409": {
+						"description": "`urn:gr:err:internal_error` when the caller already sent a request for this post."
 					}
 				},
-				"x-wip": true
+				"summary": "Send Right Now request",
+				"description": "Ask the author of a Right Now post to chat, discreet posts included, whose feed items carry no `profileId`. The author sees the request in [Get received Right Now requests](/grindr-api/right-now#get-received-right-now-requests) while the post is active and answers it with [Update Right Now request](/grindr-api/right-now#update-right-now-request)."
 			}
 		},
 		"/v3/store/googleplay/products/store": {
@@ -14536,11 +14549,82 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"requests"
+									],
 									"properties": {
 										"requests": {
 											"type": "array",
-											"items": {},
-											"description": "Item structure is undocumented."
+											"items": {
+												"type": "object",
+												"required": [
+													"id",
+													"profileId",
+													"displayName",
+													"primaryMediaHash",
+													"distance",
+													"status",
+													"postId",
+													"createdAt",
+													"updatedAt",
+													"onlineUntil",
+													"favorite"
+												],
+												"properties": {
+													"id": {
+														"type": "integer",
+														"format": "int64",
+														"description": "long integer, the `requestId` for [Update Right Now request](/grindr-api/right-now#update-right-now-request)"
+													},
+													"profileId": {
+														"type": "integer",
+														"format": "int64",
+														"description": "long integer, profile ID of the sender"
+													},
+													"displayName": {
+														"type": "string",
+														"nullable": true
+													},
+													"primaryMediaHash": {
+														"allOf": [
+															{
+																"$ref": "#/components/schemas/MediaHash"
+															}
+														],
+														"nullable": true
+													},
+													"distance": {
+														"type": "integer",
+														"nullable": true,
+														"description": "integer or `null`, distance in meters"
+													},
+													"status": {
+														"type": "string",
+														"description": "string, `\"PENDING\"`, `\"ACCEPTED\"` or `\"REJECTED\"`"
+													},
+													"postId": {
+														"type": "integer",
+														"format": "int64"
+													},
+													"createdAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"updatedAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"onlineUntil": {
+														"allOf": [
+															{
+																"$ref": "#/components/schemas/TimestampMs"
+															}
+														],
+														"nullable": true
+													},
+													"favorite": {
+														"type": "boolean"
+													}
+												}
+											}
 										}
 									},
 									"x-original-type": "RightNowGetReceivedRequestsResponse"
@@ -14551,7 +14635,7 @@
 					}
 				},
 				"summary": "Get received Right Now requests",
-				"x-wip": true
+				"description": "Requests for the caller's post. A hidden post's requests are left out until it is shown again, and an expired post's requests are gone."
 			}
 		},
 		"/v1/rightnow/requests/outbox": {
@@ -14571,11 +14655,44 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"requests"
+									],
 									"properties": {
 										"requests": {
 											"type": "array",
-											"items": {},
-											"description": "Item structure is undocumented."
+											"items": {
+												"type": "object",
+												"required": [
+													"recipientProfileId",
+													"status",
+													"postId",
+													"createdAt",
+													"updatedAt"
+												],
+												"properties": {
+													"recipientProfileId": {
+														"type": "integer",
+														"format": "int64",
+														"nullable": true,
+														"description": "long integer or `null`, the post author's profile ID once the request is `\"ACCEPTED\"`, otherwise `null`"
+													},
+													"status": {
+														"type": "string",
+														"description": "string, `\"PENDING\"`, `\"ACCEPTED\"` or `\"REJECTED\"`"
+													},
+													"postId": {
+														"type": "integer",
+														"format": "int64"
+													},
+													"createdAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"updatedAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													}
+												}
+											}
 										}
 									},
 									"x-original-type": "RightNowGetSentRequestsResponse"
@@ -14586,7 +14703,7 @@
 					}
 				},
 				"summary": "Get sent Right Now requests",
-				"x-wip": true
+				"description": "Requests the caller sent, including accepted ones for expired posts."
 			}
 		},
 		"/v1/rightnow/requests/{requestId}": {
@@ -14616,23 +14733,27 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"status"
 								],
-								"x-original-type": "UpdateRightNowRequestData"
+								"properties": {
+									"status": {
+										"type": "string",
+										"description": "`\"ACCEPTED\"` or `\"REJECTED\"`"
+									}
+								}
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"204": {
+						"description": "No Content"
 					}
 				},
 				"summary": "Update Right Now request",
-				"x-wip": true
+				"description": "`requestId` is the `id` of a request from [Get received Right Now requests](/grindr-api/right-now#get-received-right-now-requests). Accepting adds a `RightNowRequest` message from the post author to the conversation with the sender and reveals the author in the sender's [Get sent Right Now requests](/grindr-api/right-now#get-sent-right-now-requests). A rejected request can still be accepted later."
 			}
 		},
 		"/v8/users/thirdparty": {
@@ -21303,7 +21424,7 @@
 					"postStatus": {
 						"type": "string",
 						"nullable": true,
-						"description": "string or `null`. Opaque: the chat body carries it as a plain string, and nothing compares it against the Right Now post statuses (`AWAITING_PAYMENT`, `AWAITING_MODERATION`, `ACTIVE`, `EXPIRED`, `HIDDEN`), so reusing those values is a suspicion rather than a fact."
+						"description": "string or `null`, the post's `postStatus`, e.g. `\"ACTIVE\"`"
 					},
 					"postId": {
 						"type": "integer",
@@ -21317,7 +21438,7 @@
 						}
 					}
 				},
-				"description": "Body for `\"RightNowRequest\"` message type. Receive-only — there is no send payload for it.",
+				"description": "Body for `\"RightNowRequest\"` message type. Receive-only — there is no send payload for it. The post author sends it when accepting a request with [Update Right Now request](/grindr-api/right-now#update-right-now-request).",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
 					"requestId",
