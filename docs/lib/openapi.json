@@ -126,8 +126,7 @@
 			"x-wip": true
 		},
 		{
-			"name": "right-now",
-			"x-wip": true
+			"name": "right-now"
 		},
 		{
 			"name": "commerce/storeapirest",
@@ -3374,7 +3373,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v5)",
-				"description": "Get the Right Now feed (v5), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
+				"description": "Get the Right Now feed (v5), with the same items, response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -3385,6 +3384,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"500": {
+						"description": "`urn:gr:err:internal_error` for a `sexualPositions` value that is not a list of integers, such as `abc`."
 					}
 				},
 				"parameters": [
@@ -15193,7 +15195,7 @@
 					}
 				],
 				"summary": "Get Right Now feed",
-				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
+				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets. A post stays listed near where it was posted after its author moves, while `distance`, `lat` and `lon` follow the author's current location. Reading the feed refreshes the caller's `onlineUntil`. v4, v5 and v6 return the same items, discreet posts included.",
 				"parameters": [
 					{
 						"name": "sort",
@@ -15248,6 +15250,12 @@
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:client_action` (`Action not allowed at this time`) until the caller sets a location with [Update location](/grindr-api/browse/location#update-location)."
+					},
+					"500": {
+						"description": "`urn:gr:err:internal_error` for a `sexualPositions` value that is not a list of integers, such as `abc`."
 					}
 				}
 			}
@@ -15264,7 +15272,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v6)",
-				"description": "Get the Right Now feed (v6), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
+				"description": "Get the Right Now feed (v6), with the same items, response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -15275,6 +15283,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"500": {
+						"description": "`urn:gr:err:internal_error` for a `sexualPositions` value that is not a list of integers, such as `abc`."
 					}
 				},
 				"parameters": [
@@ -25261,6 +25272,10 @@
 			},
 			"RightNowFeedResponse": {
 				"type": "object",
+				"required": [
+					"items",
+					"viewerCount"
+				],
 				"properties": {
 					"items": {
 						"type": "array",
@@ -25277,7 +25292,10 @@
 			},
 			"RightNowFeedResponseItem": {
 				"type": "object",
-				"description": "A feed item, discriminated by `type`. Unrecognized `type` values are tolerated by the client (mapped to an unknown/ignored item), so new post kinds may appear.",
+				"required": [
+					"type"
+				],
+				"description": "A feed item, discriminated by `type`.",
 				"properties": {
 					"type": {
 						"type": "string",
@@ -25288,7 +25306,8 @@
 							"discreet_right_now_post_v1",
 							"discreet_locked_post_v1",
 							"upsell_insert_v1"
-						]
+						],
+						"description": "string, `\"right_now_post_v3\"` ([RightNowPost](/grindr-api/right-now#rightnowpost)), `\"locked_post_v1\"` ([LockedPost](/grindr-api/right-now#lockedpost)), `\"curated_post_v1\"` ([CuratedPost](/grindr-api/right-now#curatedpost)), `\"discreet_right_now_post_v1\"` ([DiscreetPost](/grindr-api/right-now#discreetpost)), `\"discreet_locked_post_v1\"` ([DiscreetLockedPost](/grindr-api/right-now#discreetlockedpost)) or `\"upsell_insert_v1\"` ([UpsellInsert](/grindr-api/right-now#upsellinsert))"
 					},
 					"data": {
 						"type": "object"
@@ -25329,12 +25348,16 @@
 			},
 			"CuratedPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"curated_post_v1"
-						]
+						],
+						"description": "string, `\"curated_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/CuratedPostData"
@@ -25344,12 +25367,16 @@
 			},
 			"RightNowPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"right_now_post_v3"
-						]
+						],
+						"description": "string, `\"right_now_post_v3\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/PostData"
@@ -25359,12 +25386,16 @@
 			},
 			"LockedPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"locked_post_v1"
-						]
+						],
+						"description": "string, `\"locked_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/PostData"
@@ -25374,6 +25405,17 @@
 			},
 			"PostData": {
 				"type": "object",
+				"required": [
+					"@type",
+					"id",
+					"profileId",
+					"media",
+					"hosting",
+					"posted",
+					"expiration",
+					"recentlyChatted",
+					"favorite"
+				],
 				"properties": {
 					"@type": {
 						"type": "string",
@@ -25425,7 +25467,7 @@
 							"xtra_post_v1",
 							"unlimited_post_v1"
 						],
-						"description": "locked-post kind; present only on `locked_post_v1`; may be absent"
+						"description": "string, `\"xtra_post_v1\"` or `\"unlimited_post_v1\"`, locked-post kind; present only on `locked_post_v1`; may be absent"
 					},
 					"hosting": {
 						"type": "boolean"
@@ -25449,16 +25491,16 @@
 					"lat": {
 						"type": "number",
 						"format": "double",
-						"description": "Latitude; may be absent."
+						"description": "number, latitude; may be absent"
 					},
 					"lon": {
 						"type": "number",
 						"format": "double",
-						"description": "Longitude; may be absent."
+						"description": "number, longitude; may be absent"
 					},
 					"isOnPrep": {
 						"type": "boolean",
-						"description": "Whether the profile is on PrEP."
+						"description": "boolean, whether the profile is on PrEP; absent on `locked_post_v1`"
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -25471,7 +25513,8 @@
 						"enum": [
 							"image_v1",
 							"album_v1"
-						]
+						],
+						"description": "string, `\"image_v1\"` or `\"album_v1\"`"
 					},
 					"data": {
 						"type": "object",
@@ -25494,7 +25537,7 @@
 							},
 							"state": {
 								"type": "string",
-								"description": "moderation state, e.g. `APPROVED`"
+								"description": "string, moderation state, known values: `\"PENDING\"`, `\"APPROVED\"`, `\"REJECTED\"`, `\"DELETED\"`"
 							},
 							"reason": {
 								"type": "string",
@@ -25533,7 +25576,8 @@
 							"tutorial_australia_v1",
 							"tutorial_hosting_v1",
 							"tutorial_dense_market_v1"
-						]
+						],
+						"description": "string, `\"tutorial_australia_v1\"`, `\"tutorial_hosting_v1\"` or `\"tutorial_dense_market_v1\"`"
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -25550,7 +25594,8 @@
 						"enum": [
 							"xtra_upsell_v1",
 							"unlimited_upsell_v1"
-						]
+						],
+						"description": "string, `\"xtra_upsell_v1\"` or `\"unlimited_upsell_v1\"`"
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -25560,7 +25605,7 @@
 				"properties": {
 					"@type": {
 						"type": "string",
-						"description": "server post-data label"
+						"description": "server post-data label, e.g. `RightNowFeedItemData$DiscreetRightNowPostV1`"
 					},
 					"id": {
 						"type": "integer",
@@ -25585,6 +25630,24 @@
 						"type": "integer",
 						"description": "distance in meters; may be absent"
 					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"description": "number, latitude; may be absent"
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"description": "number, longitude; may be absent"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"xtra_post_v1",
+							"unlimited_post_v1"
+						],
+						"description": "string, `\"xtra_post_v1\"` or `\"unlimited_post_v1\"`, locked-post kind; may be absent"
+					},
 					"hosting": {
 						"type": "boolean"
 					},
@@ -25600,20 +25663,49 @@
 					},
 					"profileFields": {
 						"type": "object",
-						"description": "discreet profile fields; may be absent"
+						"description": "object, the author's profile values",
+						"properties": {
+							"age": {
+								"type": "integer",
+								"nullable": true
+							},
+							"height": {
+								"type": "number",
+								"nullable": true
+							},
+							"weight": {
+								"type": "number",
+								"nullable": true
+							},
+							"position": {
+								"type": "integer",
+								"nullable": true
+							}
+						}
 					}
 				},
+				"required": [
+					"id",
+					"hosting",
+					"posted",
+					"expiration",
+					"profileFields"
+				],
 				"x-render-on-tag": "right-now",
-				"description": "Discreet posts were not present in available captures; shape derived from the app model (`RightNowDiscreetPostResponse`)."
+				"description": "Has no `profileId`; reach the author with [Send Right Now request](/grindr-api/right-now#send-right-now-request)."
 			},
 			"DiscreetPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"discreet_right_now_post_v1"
-						]
+						],
+						"description": "string, `\"discreet_right_now_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/DiscreetPostData"
@@ -25623,12 +25715,16 @@
 			},
 			"DiscreetLockedPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"discreet_locked_post_v1"
-						]
+						],
+						"description": "string, `\"discreet_locked_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/DiscreetPostData"
@@ -25638,12 +25734,16 @@
 			},
 			"UpsellInsert": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"upsell_insert_v1"
-						]
+						],
+						"description": "string, `\"upsell_insert_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/UpsellInsertData"
