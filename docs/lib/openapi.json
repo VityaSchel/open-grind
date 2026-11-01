@@ -3026,6 +3026,11 @@
 					"right-now"
 				],
 				"operationId": "getActiveRightNowPost",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"responses": {
 					"200": {
 						"content": {
@@ -3038,7 +3043,7 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
+				"summary": "Get own Right Now post",
 				"description": "Get the current Right Now post, including a hidden post before expiration. Returns {\"post\":null} when there is no current post or it has expired."
 			}
 		},
@@ -3070,7 +3075,8 @@
 						"description": "OK"
 					}
 				},
-				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post, including for a nonexistent profile ID. Behavior for hidden or expired posts is undocumented."
+				"summary": "Get Right Now post by profile",
+				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post or its post is hidden, expired or discreet, including for a nonexistent profile ID. `locationRadius` is `null` for another profile's post."
 			}
 		},
 		"/{version}/rightnow/posts/{postId}": {
@@ -3079,6 +3085,11 @@
 					"right-now"
 				],
 				"operationId": "updateRightNowPost",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "version",
@@ -3098,7 +3109,8 @@
 						"in": "path",
 						"required": true,
 						"schema": {
-							"type": "string"
+							"type": "integer",
+							"format": "int64"
 						}
 					}
 				],
@@ -3110,15 +3122,16 @@
 								"type": "object",
 								"properties": {
 									"hosting": {
-										"type": "boolean"
+										"type": "boolean",
+										"description": "boolean, optional"
 									},
 									"text": {
 										"type": "string",
-										"description": "Submitted for moderation; read moderatedText before assuming activeText has changed."
+										"description": "string, submitted for moderation, so read `moderatedText` before assuming `activeText` has changed, optional"
 									},
 									"media": {
 										"type": "array",
-										"description": "Replaces the attached media array.",
+										"description": "array of objects that replaces the attached media, optional",
 										"items": {
 											"type": "object",
 											"required": [
@@ -3128,8 +3141,7 @@
 											"properties": {
 												"type": {
 													"type": "string",
-													"description": "Media kind, e.g. `image_v1`.",
-													"example": "image_v1"
+													"description": "`\"image_v1\"`"
 												},
 												"data": {
 													"type": "object",
@@ -3140,7 +3152,7 @@
 														"id": {
 															"type": "integer",
 															"format": "int64",
-															"description": "The integer mediaId returned by POST /v1/media/upload or /v2/media/upload. The request uses data.id; own-post readback uses mediaId."
+															"description": "long integer, the `mediaId` returned by [Upload Right Now media](/grindr-api/right-now#upload-right-now-media) or [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2); one `mediaId` can be attached to more than one post"
 														}
 													}
 												}
@@ -3149,23 +3161,29 @@
 									},
 									"hidden": {
 										"type": "boolean",
-										"description": "Whether the post is hidden."
+										"description": "boolean, whether the post is hidden, optional"
 									},
 									"shareLocation": {
-										"$ref": "#/components/schemas/RightNowShareLocation"
+										"description": "[RightNowShareLocation](/grindr-api/right-now#rightnowsharelocation), optional",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RightNowShareLocation"
+											}
+										]
 									},
 									"locationRadius": {
 										"type": "integer",
 										"minimum": 0,
 										"maximum": 100,
-										"description": "Location precision value. On this edit route, locationRadius = 100 − slider value. This is not a distance in meters."
+										"description": "integer, location precision value. On this edit route, locationRadius = 100 − slider value. This is not a distance in meters, optional"
 									},
 									"isDiscreet": {
-										"description": "Discreet-post setting. The request value type is undocumented.",
-										"x-wip": true
+										"type": "boolean",
+										"description": "boolean, applied on v5 only, optional"
 									},
 									"sharedFields": {
 										"type": "array",
+										"description": "array of strings, `\"AGE\"`, `\"HEIGHT\"`, `\"WEIGHT\"`, `\"POSITION\"`, applied on v5 only, optional",
 										"items": {
 											"type": "string"
 										}
@@ -3181,12 +3199,11 @@
 						"description": "No Content"
 					},
 					"400": {
-						"description": "`urn:gr:err:resource_not_found` when no post has this ID."
+						"description": "`urn:gr:err:resource_not_found` when no post has this ID. `urn:gr:err:internal_error` for a `hosting` that is not a boolean, such as `\"yes\"`, checked before the post ID. `urn:gr:err:client_action` on v5 for `isDiscreet: false` on a discreet post or for a `sharedFields` value outside the list."
 					}
 				},
-				"x-wip": true,
 				"summary": "Update Right Now post",
-				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration."
+				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration. A new `locationRadius` also picks a new offset for the post's `lat` and `lon`. `text` accepts at least 500 characters. The v4 route ignores `isDiscreet` and `sharedFields` and turns a `NOT_SELECTED` `isDiscreet` into `FALSE`; v5 applies them. On v5, `isDiscreet: false` on a `TRUE` post is rejected."
 			}
 		},
 		"/v4/rightnow/posts": {
@@ -3195,35 +3212,43 @@
 					"right-now"
 				],
 				"operationId": "createRightNowPostV4",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "CreatePostRequest"
+								"$ref": "#/components/schemas/RightNowPostRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
+					"201": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowCreatePostResponse"
+									"type": "object",
+									"required": [
+										"post"
+									],
+									"properties": {
+										"post": {
+											"$ref": "#/components/schemas/RightNowPostDetails"
+										}
+									}
 								}
 							}
 						},
-						"description": "OK"
+						"description": "Created"
 					}
 				},
-				"x-wip": true
+				"summary": "Create Right Now post (v4)",
+				"description": "Same as [Create Right Now post](/grindr-api/right-now#create-right-now-post), but the post starts `HIDDEN`; show it with [Update Right Now post settings](/grindr-api/right-now#update-right-now-post-settings) `hidden: false`. It lowers `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements) by one."
 			}
 		},
 		"/v3/rightnow/posts": {
@@ -3232,35 +3257,46 @@
 					"right-now"
 				],
 				"operationId": "createRightNowPostV3",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "CreatePostRequest"
+								"$ref": "#/components/schemas/RightNowPostRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
+					"201": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowCreatePostResponse"
+									"type": "object",
+									"required": [
+										"post"
+									],
+									"properties": {
+										"post": {
+											"$ref": "#/components/schemas/RightNowPostDetails"
+										}
+									}
 								}
 							}
 						},
-						"description": "OK"
+						"description": "Created"
+					},
+					"400": {
+						"description": "`urn:gr:err:client_action` while the account has an active or hidden post."
 					}
 				},
-				"x-wip": true
+				"summary": "Create Right Now post",
+				"description": "Start a Right Now post. It is `ACTIVE` at once and expires 60 minutes after `posted`. Without `lat` and `lon` it takes the location set by [Update location](/grindr-api/browse/location#update-location). The text waits in `moderatedText` with `textStatus` `AWAITING_MODERATION` and moves to `activeText` once approved. Each post lowers `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements) by one. With `count` at 0 the request still succeeds, but the post has `postStatus` `AWAITING_PAYMENT` with `posted` and `expiration` `null`; [Get own Right Now post](/grindr-api/right-now#get-own-right-now-post) then returns `{\"post\":null}`, the post is absent from the feed, and [Get Right Now post by profile](/grindr-api/right-now#get-right-now-post-by-profile) returns `{\"post\":null}` for it."
 			}
 		},
 		"/v1/rightnow/posts/{postId}/settings": {
@@ -3269,13 +3305,19 @@
 					"right-now"
 				],
 				"operationId": "updateRightNowPostSettings",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "postId",
 						"in": "path",
 						"required": true,
 						"schema": {
-							"type": "string"
+							"type": "integer",
+							"format": "int64"
 						}
 					}
 				],
@@ -3287,14 +3329,20 @@
 								"type": "object",
 								"properties": {
 									"shareLocation": {
-										"$ref": "#/components/schemas/RightNowShareLocation"
+										"description": "[RightNowShareLocation](/grindr-api/right-now#rightnowsharelocation), optional",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RightNowShareLocation"
+											}
+										]
 									},
 									"hosting": {
-										"type": "boolean"
+										"type": "boolean",
+										"description": "boolean, optional"
 									},
 									"hidden": {
 										"type": "boolean",
-										"description": "true hides the post; false makes it active again."
+										"description": "boolean, `true` hides the post and `false` makes it active again, optional"
 									}
 								},
 								"x-original-type": "UpdatePostSettingsRequest"
@@ -3307,12 +3355,11 @@
 						"description": "No Content"
 					},
 					"400": {
-						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:resource_not_found` when no post has this ID."
+						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:internal_error` for an unknown `shareLocation` value. `urn:gr:err:resource_not_found` when no post has this ID. `urn:gr:err:client_action` for `hidden: false` on an expired post."
 					}
 				},
-				"x-wip": true,
 				"summary": "Update Right Now post settings",
-				"description": "Update hosting, location sharing, or visibility. Send hidden: true to deactivate the post and hidden: false to reactivate it before expiration; this preserves its identity and expiration."
+				"description": "Update hosting, location sharing, or visibility. Send hidden: true to deactivate the post and hidden: false to reactivate it before expiration; this preserves its identity and expiration. A hidden post has `postStatus` `HIDDEN`, leaves the feed, and [Get Right Now post by profile](/grindr-api/right-now#get-right-now-post-by-profile) returns `{\"post\":null}` for it. Hiding and unhiding do not change `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements)."
 			}
 		},
 		"/v5/rightnow/feed": {
@@ -5105,14 +5152,22 @@
 					"browse/entitlements"
 				],
 				"operationId": "getRightNowPostEntitlements",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"summary": "Get Right Now post entitlements",
-				"description": "Post-specific Right Now entitlement.",
+				"description": "Post-specific Right Now entitlement. `count` depends on the caller's location set by [Update location](/grindr-api/browse/location#update-location). Creating a post lowers it by one; editing, hiding, unhiding and expiry do not change it. It refills over time.",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"type"
+									],
 									"properties": {
 										"type": {
 											"type": "string",
@@ -25517,6 +25572,73 @@
 					}
 				}
 			},
+			"RightNowPostRequest": {
+				"type": "object",
+				"required": [
+					"shareLocation",
+					"media",
+					"hosting"
+				],
+				"properties": {
+					"text": {
+						"type": "string",
+						"description": "string, optional"
+					},
+					"shareLocation": {
+						"$ref": "#/components/schemas/RightNowShareLocation"
+					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"description": "number, optional"
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"description": "number, optional"
+					},
+					"locationRadius": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "integer, location precision from 0 to 100, not a distance in meters, optional"
+					},
+					"media": {
+						"type": "array",
+						"description": "array of objects",
+						"items": {
+							"type": "object",
+							"required": [
+								"type",
+								"data"
+							],
+							"properties": {
+								"type": {
+									"type": "string",
+									"description": "`\"image_v1\"`"
+								},
+								"data": {
+									"type": "object",
+									"required": [
+										"id"
+									],
+									"properties": {
+										"id": {
+											"type": "integer",
+											"format": "int64",
+											"description": "long integer, the `mediaId` returned by [Upload Right Now media](/grindr-api/right-now#upload-right-now-media) or [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2); one `mediaId` can be attached to more than one post"
+										}
+									}
+								}
+							}
+						}
+					},
+					"hosting": {
+						"type": "boolean"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
 			"RightNowPostDetails": {
 				"type": "object",
 				"properties": {
@@ -25545,8 +25667,7 @@
 						"nullable": true
 					},
 					"hosting": {
-						"type": "boolean",
-						"description": "boolean, may be absent"
+						"type": "boolean"
 					},
 					"activeText": {
 						"type": "string",
@@ -25584,6 +25705,7 @@
 							"rejectReasons": {
 								"type": "array",
 								"nullable": true,
+								"description": "array of strings or `null`, known values: `\"BULLYING\"`, `\"SELF_HARM\"`, `\"DRUG_PATTERNS\"`, `\"HATE_SPEECH\"`, `\"SOL_SEX\"`, `\"SPAM_DISRUPT\"`, `\"UNDERAGE\"`, `\"OTHER\"`",
 								"items": {
 									"type": "string"
 								}
@@ -25625,7 +25747,7 @@
 								},
 								"state": {
 									"type": "string",
-									"description": "moderation state, e.g. `APPROVED`"
+									"description": "string, moderation state, known values: `\"PENDING\"`, `\"APPROVED\"`, `\"REJECTED\"`, `\"DELETED\"`"
 								},
 								"reason": {
 									"type": "string",
@@ -25653,16 +25775,18 @@
 					"lat": {
 						"type": "number",
 						"format": "double",
-						"nullable": true
+						"nullable": true,
+						"description": "number or `null`, the author's current location set by [Update location](/grindr-api/browse/location#update-location); about 10 s after creation a fixed displacement (same distance and direction) is added, except in the create response and on an `AWAITING_PAYMENT` post. The post moves with the author, and a new `locationRadius` picks a new displacement"
 					},
 					"lon": {
 						"type": "number",
 						"format": "double",
-						"nullable": true
+						"nullable": true,
+						"description": "number or `null`, same as `lat`"
 					},
 					"postStatus": {
 						"type": "string",
-						"description": "Post visibility status, including ACTIVE and HIDDEN. Hiding a post retains its data."
+						"description": "string, known values: `\"AWAITING_PAYMENT\"`, `\"AWAITING_MODERATION\"`, `\"ACTIVE\"`, `\"EXPIRED\"`, `\"HIDDEN\"`; a hidden post keeps its data"
 					},
 					"shareLocation": {
 						"allOf": [
@@ -25682,11 +25806,12 @@
 					"isDiscreet": {
 						"type": "string",
 						"nullable": true,
-						"description": "string, `\"TRUE\"`, `\"FALSE\"` or `null`"
+						"description": "string or `null`: `\"NOT_SELECTED\"` on a new post, `\"FALSE\"` after a v4 edit of a `NOT_SELECTED` post, `\"TRUE\"` once the post is discreet"
 					},
 					"sharedFields": {
 						"type": "array",
 						"nullable": true,
+						"description": "array of strings or `null`, `\"AGE\"`, `\"HEIGHT\"`, `\"WEIGHT\"`, `\"POSITION\"`",
 						"items": {
 							"type": "string"
 						}
@@ -25701,10 +25826,24 @@
 					}
 				},
 				"x-render-on-tag": "right-now",
-				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state.",
+				"description": "Right Now post returned by the own-post, profile-post and create endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state.",
 				"required": [
 					"id",
-					"profileId"
+					"profileId",
+					"posted",
+					"expiration",
+					"hosting",
+					"activeText",
+					"moderatedText",
+					"media",
+					"lat",
+					"lon",
+					"postStatus",
+					"shareLocation",
+					"locationRadius",
+					"isDiscreet",
+					"sharedFields",
+					"boostUpsellOfferAvailableUntil"
 				]
 			},
 			"RightNowPostResponse": {
