@@ -332,7 +332,7 @@ describe("ConversationsState unread accounting", () => {
 		await microtasks();
 
 		expect(entryFor(state, "b:2").data.unreadCount).toBe(1);
-		expect(getConversationsMock).toHaveBeenCalledOnce();
+		expect(getConversationsMock).toHaveBeenCalledTimes(2);
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
@@ -681,7 +681,7 @@ describe("ConversationsState refresh failures", () => {
 
 		await reconcileHandlers[0]?.();
 
-		expect(getConversationsMock).toHaveBeenCalledTimes(2);
+		expect(getConversationsMock).toHaveBeenCalledOnce();
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
 			"a:1",
