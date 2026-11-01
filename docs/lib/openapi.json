@@ -1892,17 +1892,44 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowConsentAgreementResponse"
+									"type": "object",
+									"required": [
+										"agreement"
+									],
+									"properties": {
+										"agreement": {
+											"type": "object",
+											"nullable": true,
+											"description": "object or `null`",
+											"properties": {
+												"profileId": {
+													"type": "integer",
+													"format": "int64"
+												},
+												"version": {
+													"type": "integer"
+												},
+												"locale": {
+													"type": "string"
+												},
+												"clientVersion": {
+													"type": "string"
+												},
+												"createdAt": {
+													"$ref": "#/components/schemas/TimestampMs"
+												}
+											}
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.13.0. The client no longer fetches a Right Now consent agreement, and creating a Right Now post no longer requires accepting one."
+				"description": "Removed in the official Android client v26.13.0.",
+				"x-wip": true
 			},
 			"post": {
 				"tags": [
@@ -1914,12 +1941,19 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"version",
+									"locale"
 								],
-								"x-original-type": "RightNowAcceptConsentRequest"
+								"properties": {
+									"version": {
+										"type": "integer"
+									},
+									"locale": {
+										"type": "string"
+									}
+								}
 							}
 						}
 					}
@@ -1929,9 +1963,9 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.13.0. The client no longer accepts a Right Now consent agreement, and creating a Right Now post no longer requires one."
+				"description": "Removed in the official Android client v26.13.0.",
+				"x-wip": true
 			}
 		},
 		"/v3/legal-agreements": {
