@@ -16888,7 +16888,7 @@
 					"ACTIVE_WITH_BOOST",
 					"NONE"
 				],
-				"description": "Right Now attribution status. Sent as a plain string under key `rightNowStatus`; unrecognized/absent values are treated as NONE by the official client.",
+				"description": "Right Now attribution status. Sent as a plain string under key `rightNowStatus`.",
 				"x-render-on-tag": "right-now"
 			},
 			"RightNowShareLocation": {
