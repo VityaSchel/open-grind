@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { tapTypeOrNoneSchema } from "#lib/model/interest/taps.ts";
-import { rightNowAttributionStatusSchema } from "#lib/model/right-now.ts";
+import { rightNowAttributionStatusSchema } from "#lib/model/right-now/index.ts";
 import { knownValueOrNull } from "#lib/model/tolerance.ts";
 import { unixTimestampMsSchema } from "#lib/model/types.ts";
 import {

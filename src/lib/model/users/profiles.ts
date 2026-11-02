@@ -6,7 +6,7 @@ import { mediaHashPublicSchema } from "#lib/model/media.ts";
 import {
 	rightNowShareLocationSchema,
 	rightNowStatusSchema,
-} from "#lib/model/right-now.ts";
+} from "#lib/model/right-now/index.ts";
 import {
 	knownValueOr,
 	knownValueOrNull,
