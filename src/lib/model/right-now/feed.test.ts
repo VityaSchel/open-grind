@@ -151,6 +151,18 @@ describe("rightNowFeedResponseSchema", () => {
 		).toEqual({ age: 18, height: 123, weight: null, position: null });
 	});
 
+	it("accepts curated and upsell items without data", () => {
+		const { items } = parse([
+			{ type: "curated_post_v1" },
+			{ type: "upsell_insert_v1" },
+		]);
+
+		expect(items).toEqual([
+			{ type: "curated_post_v1", data: {} },
+			{ type: "upsell_insert_v1", data: {} },
+		]);
+	});
+
 	it("drops an item of an unknown type and keeps the rest", () => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
 

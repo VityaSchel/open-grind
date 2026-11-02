@@ -126,12 +126,12 @@ export const discreetLockedPostSchema = z.object({
 
 export const curatedPostSchema = z.object({
 	type: z.literal("curated_post_v1"),
-	data: curatedPostDataSchema,
+	data: curatedPostDataSchema.default({}),
 });
 
 export const upsellInsertSchema = z.object({
 	type: z.literal("upsell_insert_v1"),
-	data: upsellInsertDataSchema,
+	data: upsellInsertDataSchema.default({}),
 });
 
 export const rightNowFeedResponseItemSchema = z.discriminatedUnion("type", [

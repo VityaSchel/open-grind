@@ -6,6 +6,7 @@ import { backdropBlurCalibrationSchema } from "#lib/blur/calibration/decide.ts";
 import { backdropBlurQualitySchema } from "#lib/blur/quality.ts";
 import { gridSearchFiltersSchema } from "#lib/model/browse/grid/filters.ts";
 import { geohashSchema } from "#lib/model/geohash.ts";
+import { rightNowFeedFiltersSchema } from "#lib/model/right-now/filters.ts";
 import { unitSystemSchema } from "#lib/util/units.ts";
 import {
 	existsAppDataFile,
@@ -32,6 +33,7 @@ const preferencesSchema = z.object({
 	notificationsEnabled: z.boolean().default(false),
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
+	rightNowFeedFilters: rightNowFeedFiltersSchema.optional(),
 	stayOnline: z.boolean().default(true),
 	units: unitSystemSchema.default("metric"),
 });
@@ -145,6 +147,7 @@ const accountPreferenceKeys = [
 	"geohash",
 	"gridSearchFilters",
 	"notificationsEnabled",
+	"rightNowFeedFilters",
 ] as const;
 
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
