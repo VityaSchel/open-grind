@@ -9,7 +9,7 @@
 <Item.Root
 	variant="outline"
 	data-slot="field-pair"
-	class="flex-col items-stretch gap-1 p-3 pb-1"
+	class="flex-col flex-nowrap items-stretch gap-1 p-3 pb-1"
 >
 	{@render children()}
 </Item.Root>

@@ -34,12 +34,16 @@
 						{...props}
 						aria-labelledby="{labelId} {props.id}"
 						variant="outline"
-						class="h-auto min-h-9 w-full justify-between gap-2 py-1.5 text-left font-normal"
+						class="w-full justify-between gap-2 font-normal"
 					>
 						<span
-							class={{
-								"text-muted-foreground": !selectedLabels.length,
-							}}
+							class={[
+								"truncate",
+								{
+									"text-muted-foreground":
+										!selectedLabels.length,
+								},
+							]}
 						>
 							{selectedLabels.length
 								? selectedLabels.join(", ")
