@@ -221,6 +221,40 @@ describe("ReconcilingListState", () => {
 		expect(state.refreshing).toBe(false);
 	});
 
+	it("keeps loading until the newest of two overlapping loads finishes", async () => {
+		const firstGate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(firstGate.promise);
+		const state = new TestList();
+
+		const secondGate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(secondGate.promise);
+		state.retry();
+
+		firstGate.resolve([item(1)]);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(state.loading).toBe(true);
+		expect(ids(state)).toEqual([]);
+
+		secondGate.resolve([item(2)]);
+		await waitForLoaded(state);
+		expect(ids(state)).toEqual([2]);
+	});
+
+	it("stays active while any attached view remains", async () => {
+		fetchMock.mockResolvedValueOnce([item(1)]);
+		const state = new TestList();
+		await waitForLoaded(state);
+
+		const detachFirst = state.attachView();
+		const detachSecond = state.attachView();
+		detachFirst();
+		detachFirst();
+		expect(state.viewActive).toBe(true);
+
+		detachSecond();
+		expect(state.viewActive).toBe(false);
+	});
+
 	it("stays silent when a superseded refresh fails", async () => {
 		fetchMock.mockResolvedValueOnce([item(1)]);
 		const state = new TestList();

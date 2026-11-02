@@ -24,6 +24,8 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	#unlisten: Promise<() => void> | null = null;
 	#buffer: TItem[] | null = null;
 	#generation = new Generation();
+	#hardLoads = new Generation();
+	#attachedViews = 0;
 	#refreshRequestedSinceFetchStart = false;
 
 	constructor({
@@ -63,13 +65,18 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	}
 
 	attachView(): () => void {
+		this.#attachedViews += 1;
 		this.viewActive = true;
 		untrack(() => {
 			if (!this.#loaded) this.load();
 			else if (this.#stale) void this.refresh({ automatic: true });
 		});
+		let attached = true;
 		return () => {
-			this.viewActive = false;
+			if (!attached) return;
+			attached = false;
+			this.#attachedViews -= 1;
+			this.viewActive = this.#attachedViews > 0;
 		};
 	}
 
@@ -141,6 +148,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	}
 
 	async #hardLoad(): Promise<void> {
+		const hardLoad = this.#hardLoads.next();
 		this.#attempted = true;
 		this.loading = true;
 		this.error = null;
@@ -150,8 +158,10 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			this.error =
 				error instanceof Error ? error : new Error(String(error));
 		} finally {
-			this.loading = false;
-			this.#runRequestedRefresh();
+			if (!this.#hardLoads.isStale(hardLoad)) {
+				this.loading = false;
+				this.#runRequestedRefresh();
+			}
 		}
 	}
 
