@@ -61,7 +61,9 @@ vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => ({ geohash: "u33dbc" }),
 }));
 vi.mock("./top-bar/TopBar.svelte", () => ({ default: () => {} }));
-vi.mock("./LocationEmpty.svelte", () => ({ default: () => {} }));
+vi.mock("#lib/components/location-chooser/LocationEmpty.svelte", () => ({
+	default: () => {},
+}));
 vi.mock("./EmptyGrid.svelte", () => ({ default: () => {} }));
 vi.mock("./GridProfileMiniCard.svelte", () => ({ default: () => {} }));
 vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({

@@ -4,12 +4,12 @@
 		preferencesSnapshot,
 	} from "#lib/app-data/preferences.svelte.ts";
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import LocationChooser from "#lib/components/location-chooser/LocationEmpty.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { revealedGridScrollTop } from "./grid-reveal";
 	import Grid from "./Grid.svelte";
-	import LocationChooser from "./LocationEmpty.svelte";
 	import TopBar from "./top-bar/TopBar.svelte";
 
 	const preferencesHydrated = hydratePreferences();

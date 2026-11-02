@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RadioMark from "#lib/components/shared/RadioMark.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
 	import * as RadioGroup from "#lib/components/ui/radio-group/index.ts";
@@ -82,20 +83,7 @@
 					{#if enabling}
 						<Spinner aria-hidden="true" />
 					{:else}
-						<span
-							class={[
-								"flex size-5 items-center justify-center rounded-full border-2",
-								{
-									"border-primary": checked,
-									"border-muted-foreground/70": !checked,
-								},
-							]}
-						>
-							{#if checked}
-								<span class="size-2.5 rounded-full bg-primary"
-								></span>
-							{/if}
-						</span>
+						<RadioMark {checked} />
 					{/if}
 				</Item.Actions>
 			{/snippet}
