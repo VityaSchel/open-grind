@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-10-27
+Effective date: 2026-11-03
 
 This policy covers the Open Grind app, made by Open Grind Governance. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
@@ -22,6 +22,8 @@ The app keeps your session, device identifiers, settings and saved location on y
 
 ## Our servers
 
-Open Grind Governance runs opengrind.org and git.opengrind.org on servers in Germany. They receive your IP address and the page or file you request, and use them only to send it to you. The legal basis is our legitimate interest in delivering what you request (GDPR Art. 6(1)(f)). The servers keep no access logs and store no IP addresses.
+Open Grind Governance runs opengrind.org, git.opengrind.org and apns.opengrind.org on servers in Germany. They receive your IP address and the page or file you request, and use them only to send it to you. The legal basis is our legitimate interest in delivering what you request (GDPR Art. 6(1)(f)). The servers keep no access logs and store no IP addresses.
+
+If you turn on iOS notifications through your self-hosted fcm-relay, apns.opengrind.org receives your iPhone's push token and each encrypted notification from your fcm-relay, and passes them on to Apple Push Notification service, which delivers them to your iPhone. It can't read the notifications. It keeps the newest resync message for your iPhone in memory for up to 24 hours and stores nothing on disk. The legal basis is our legitimate interest in delivering the notifications you asked for (GDPR Art. 6(1)(f)).
 
 You have the right to access, correct or delete your personal data and to restrict its processing. You have the right to object to this processing at any time. You can also complain to a data protection authority.
