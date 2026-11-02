@@ -5,7 +5,7 @@ import { latLng, Map, Marker } from "leaflet";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { encodeGeohash } from "$lib/model/geohash";
+import { encodeGeohash } from "#lib/model/geohash.ts";
 import { PIN_ZOOM } from "./constants";
 import { stubMapResizeObserver } from "./map-test-helpers";
 
@@ -29,22 +29,22 @@ const {
 	refreshStaleFixMock: vi.fn(),
 }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: preferencesSnapshotMock,
 	preferencesLoaded: () => true,
 	setPreferences: setPreferencesMock,
 }));
-vi.mock("$lib/location/auto-location", () => ({
+vi.mock("#lib/location/auto-location.ts", () => ({
 	autoLocation: {
 		suspend: suspendMock,
 		resume: resumeMock,
 		refreshStaleFix: refreshStaleFixMock,
 	},
 }));
-vi.mock("$lib/location/location-feedback", () => ({
+vi.mock("#lib/location/location-feedback.ts", () => ({
 	reportLocationFailure: reportFailureMock,
 }));
-vi.mock("$lib/location/location-request.svelte", () => ({
+vi.mock("#lib/location/location-request.svelte.ts", () => ({
 	locationRequest: {
 		run: runMock,
 		abort: abortMock,
@@ -68,8 +68,8 @@ function reportFix(fix: { lat: number; lon: number; accuracyMeters: number }) {
 	lastFix = fix;
 	return { status: "ok" as const, coords: fix };
 }
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: () => true }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({
+vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => true }));
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	above: () => ({ current: true }),
 }));
 

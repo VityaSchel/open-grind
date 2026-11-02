@@ -13,14 +13,14 @@ const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
 vi.mock("$app/navigation", () => navigation);
-vi.mock("$lib/api/error-toast", () => errorToast);
-vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
 vi.mock("../album-uploads/add-album-media", () => media);
 vi.mock("svelte-sonner", () => sonner);
 
-import { ApiError } from "$lib/api/api-error";
-import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { ApiError } from "#lib/api/api-error.ts";
+import type { MyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import type { AlbumUploads } from "../album-uploads/album-uploads-state.svelte";
 import { createAlbumFromMedia } from "./create-album-media";
 
@@ -74,7 +74,7 @@ describe("creating an album from its first upload", () => {
 			"My Albums drops its list rather than show one without the new album",
 		).toHaveBeenCalledOnce();
 		expect(navigation.goto).toHaveBeenCalledWith("/settings/albums/904", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(media.enqueueAlbumMedia).toHaveBeenCalledWith({
 			uploads,

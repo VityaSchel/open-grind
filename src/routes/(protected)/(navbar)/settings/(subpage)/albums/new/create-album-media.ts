@@ -1,13 +1,16 @@
 import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
 
-import { showErrorToast } from "$lib/api/error-toast";
-import { createAlbum, getAlbumStorageLimits } from "$lib/api/messaging/albums";
-import { albumRoom } from "$lib/components/album/album";
-import { discardStagedMedia } from "$lib/platform/media-file";
-import { screenMedia } from "$lib/platform/media-intake.svelte";
-import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import {
+	createAlbum,
+	getAlbumStorageLimits,
+} from "#lib/api/messaging/albums.ts";
+import { albumRoom } from "#lib/components/album/album.ts";
+import { discardStagedMedia } from "#lib/platform/media-file.ts";
+import { screenMedia } from "#lib/platform/media-intake.svelte.ts";
+import type { MyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import {
 	enqueueAlbumMedia,
 	pickInspectedAlbumMedia,
@@ -41,7 +44,7 @@ export async function createAlbumFromMedia({
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });
 		void myAlbums.reload();
-		await goto(`/settings/albums/${albumId}`, { replaceState: true });
+		await goto(`/settings/albums/${albumId}`, { replace: true });
 		enqueueAlbumMedia({ uploads, albumId, inspected, limits, content: [] });
 	} catch (error) {
 		console.error(error);

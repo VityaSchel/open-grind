@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import z from "zod";
 
-import { demoRoute } from "$lib/demo";
-import { DAY, demoMeProfileId, NOW } from "$lib/demo/config";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { DAY, demoMeProfileId, NOW } from "#lib/demo/config.ts";
+import { demoRoute } from "#lib/demo/index.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 
 const route = (options: Parameters<typeof demoRoute>[0]) =>
 	demoRoute(options).body;

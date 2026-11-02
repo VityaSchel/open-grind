@@ -18,7 +18,7 @@
 		relationshipStatuses,
 		tribes,
 		vaccines as vaccineLabels,
-	} from "$lib/model/users/profiles";
+	} from "#lib/model/users/profiles.ts";
 	import AboutMe from "./AboutMe.svelte";
 	import Distance from "./Distance.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";

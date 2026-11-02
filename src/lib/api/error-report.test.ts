@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { ApiError } from "$lib/api/api-error";
-import { errorReport } from "$lib/api/error-report";
+import { ApiError } from "#lib/api/api-error.ts";
+import { errorReport } from "#lib/api/error-report.ts";
 
 const gridError = () =>
 	new ApiError({

@@ -1,12 +1,12 @@
-import { cachedFetch } from "$lib/api/cache";
-import { fetchExternal } from "$lib/api/transport";
-import { demoEnabled, demoGaymojiImageUrl } from "$lib/demo";
+import { cachedFetch } from "#lib/api/cache.ts";
+import { fetchExternal } from "#lib/api/transport.ts";
+import { demoGaymojiImageUrl } from "#lib/demo/index.ts";
 import {
 	type Gaymoji,
 	type GaymojiManifest,
 	gaymojiManifestSchema,
-} from "$lib/model/messaging/gaymoji";
-import { proxyMediaUrl } from "$lib/util/media";
+} from "#lib/model/messaging/gaymoji.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 
 const GAYMOJI_MANIFEST_URL = "https://cdns.grindr.com/grindr/chat/gaymoji";
 
@@ -31,7 +31,7 @@ function gaymojiLabel(name: string): string {
 }
 
 function gaymojiImageUrl(id: string): string {
-	if (demoEnabled) return demoGaymojiImageUrl(id);
+	if (__DEMO__) return demoGaymojiImageUrl(id);
 	return proxyMediaUrl(`${GAYMOJI_MANIFEST_URL}/${encodeURIComponent(id)}`);
 }
 

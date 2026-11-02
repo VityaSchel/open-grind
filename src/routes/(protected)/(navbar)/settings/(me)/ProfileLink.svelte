@@ -1,12 +1,12 @@
 <script lang="ts">
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
-	import { getProfile } from "$lib/api/users/profiles";
-	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";
-	import DisplayName from "$lib/components/profile/DisplayName.svelte";
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { getProfile } from "#lib/api/users/profiles.ts";
+	import BrokenUserAvatar from "#lib/components/profile/BrokenUserAvatar.svelte";
+	import DisplayName from "#lib/components/profile/DisplayName.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 
 	let { id }: { id: number } = $props();
 

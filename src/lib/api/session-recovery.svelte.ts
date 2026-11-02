@@ -4,13 +4,13 @@ import {
 	blockedKindOf,
 	callMethod,
 	markRequestBlocked,
-} from "$lib/api/methods";
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
+} from "#lib/api/methods.ts";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import {
 	clearSessionError,
 	type SessionErrorKind,
 	sessionErrorState,
-} from "$lib/api/session-error-state.svelte";
+} from "#lib/api/session-error-state.svelte.ts";
 
 const STALE_REPORT_MS = 60_000;
 

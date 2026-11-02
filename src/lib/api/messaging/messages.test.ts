@@ -5,12 +5,12 @@ const { fetchRestMock, sendCommandMock } = vi.hoisted(() => ({
 	sendCommandMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
-vi.mock("$lib/ws.svelte", () => ({ ws: { sendCommand: sendCommandMock } }));
+vi.mock("#lib/ws.svelte.ts", () => ({ ws: { sendCommand: sendCommandMock } }));
 
 import {
 	ConversationUnavailableError,
@@ -21,7 +21,7 @@ import {
 	refreshMessagesById,
 	sendMessage,
 	unsendMessage,
-} from "$lib/api/messaging/messages";
+} from "#lib/api/messaging/messages.ts";
 
 function apiMessage(overrides = {}) {
 	return {

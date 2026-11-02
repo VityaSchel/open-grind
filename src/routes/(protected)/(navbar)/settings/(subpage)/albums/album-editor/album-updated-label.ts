@@ -1,6 +1,6 @@
 import { format, isSameYear } from "date-fns";
 
-import { now } from "$lib/util/clock";
+import { now } from "#lib/util/clock.ts";
 
 export function albumUpdatedLabel(updatedAt: string): string {
 	const date = new Date(updatedAt);

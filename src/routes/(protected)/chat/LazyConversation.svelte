@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { observeIntersection } from "$lib/util/observe-intersection";
-	import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
-	import type { SelectionSet } from "$lib/util/selection.svelte";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import type { Conversation as ConversationType } from "#lib/model/messaging/conversations.ts";
+	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import Conversation from "./Conversation.svelte";
 	import type { MountQueue, MountTicket } from "./mount-queue";
 

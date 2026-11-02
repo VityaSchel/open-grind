@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type z from "zod";
 
-	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
-	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
+	import PositionFilterToggle from "#lib/components/filters/position/PositionFilterToggle.svelte";
+	import type { filterPositionSchema } from "#lib/model/browse/grid/filters.ts";
 	import FilterBoolean from "../FilterBoolean.svelte";
 
 	let {

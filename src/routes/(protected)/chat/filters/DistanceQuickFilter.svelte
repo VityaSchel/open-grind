@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 	import {
 		closestMaxDistanceStep,
 		DEFAULT_MAX_DISTANCE_STEP,
 		maxDistanceLabel,
 		maxDistanceMetres,
-	} from "$lib/components/filters/distance/distance-steps";
-	import DistanceFilterSlider from "$lib/components/filters/distance/DistanceFilterSlider.svelte";
-	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
+	} from "#lib/components/filters/distance/distance-steps.ts";
+	import DistanceFilterSlider from "#lib/components/filters/distance/DistanceFilterSlider.svelte";
+	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
 
 	let {
 		open = $bindable(),

@@ -9,13 +9,15 @@ const { holdInHondurasMock, showErrorToastMock, toastMock, preferencesMock } =
 	}));
 
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: preferencesMock,
 }));
 vi.mock("./honduras-hold", () => ({ holdInHonduras: holdInHondurasMock }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	dismissEntitlementBypass,
 	entitlementBypassState,

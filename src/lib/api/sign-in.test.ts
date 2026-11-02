@@ -5,9 +5,9 @@ const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }));
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { accountStatusState } from "$lib/api/account-status-state.svelte";
-import { reportSignInFailure } from "$lib/api/sign-in";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { accountStatusState } from "#lib/api/account-status-state.svelte.ts";
+import { reportSignInFailure } from "#lib/api/sign-in.ts";
 
 beforeEach(() => {
 	vi.clearAllMocks();

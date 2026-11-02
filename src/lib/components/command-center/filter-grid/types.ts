@@ -1,4 +1,4 @@
-import type { GridSearchFilters } from "$lib/model/browse/grid/filters";
+import type { GridSearchFilters } from "#lib/model/browse/grid/filters.ts";
 
 export type ParsedFilter = {
 	key: string;

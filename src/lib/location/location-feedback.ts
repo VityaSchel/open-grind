@@ -1,10 +1,10 @@
 import { toast } from "svelte-sonner";
 
-import { showErrorToast } from "$lib/api/error-toast";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	canOpenAppSettings,
 	openAppSettings,
-} from "$lib/platform/app-settings";
+} from "#lib/platform/app-settings.ts";
 import type { LocationOutcome } from "./location-request.svelte";
 
 const PERMISSION_TOAST_ID = "location-permission";

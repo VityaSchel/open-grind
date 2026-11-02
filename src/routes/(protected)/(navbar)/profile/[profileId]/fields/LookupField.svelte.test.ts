@@ -4,7 +4,7 @@ import { render } from "@testing-library/svelte";
 import UsersThreeIcon from "phosphor-svelte/lib/UsersThreeIcon";
 import { describe, expect, it } from "vitest";
 
-import { Tribe, tribes } from "$lib/model/users/profiles";
+import { Tribe, tribes } from "#lib/model/users/profiles.ts";
 import LookupField from "./LookupField.svelte";
 
 const icon = UsersThreeIcon;

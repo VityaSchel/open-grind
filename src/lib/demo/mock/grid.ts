@@ -3,12 +3,12 @@ import type z from "zod";
 import type {
 	cascadeV4ResponseFullProfileV1Schema,
 	cascadeV4ResponsePartialProfileV1Schema,
-} from "$lib/model/browse/grid/cascade/response/v4";
+} from "#lib/model/browse/grid/cascade/response/v4.ts";
 import type {
 	Profile,
 	profileRightNowSchema,
 	profileShortSchema,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import {
 	DAY,
 	DEMO_ID_START,

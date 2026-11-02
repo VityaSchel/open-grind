@@ -1,4 +1,4 @@
-import { Generation } from "$lib/util/generation";
+import { Generation } from "#lib/util/generation.ts";
 import {
 	APP_COMPONENT,
 	COMPONENT_PACKAGE,

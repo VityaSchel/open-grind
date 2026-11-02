@@ -9,9 +9,9 @@
 	} from "@floating-ui/dom";
 	import { type Snippet, untrack } from "svelte";
 
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { followViewportResizes } from "$lib/util/follow-viewport-resizes";
-	import { safeAreaInsets } from "$lib/util/safe-area";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { followViewportResizes } from "#lib/util/follow-viewport-resizes.ts";
+	import { safeAreaInsets } from "#lib/util/safe-area.ts";
 
 	let {
 		anchor,

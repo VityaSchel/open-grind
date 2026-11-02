@@ -8,8 +8,8 @@ const { callMethodMock, platformMock, toastErrorMock, toastWarningMock } =
 		toastWarningMock: vi.fn(),
 	}));
 
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: platformMock }));

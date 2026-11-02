@@ -2,13 +2,13 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-import { sessionErrorState } from "$lib/api/session-error-state.svelte";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
+import { sessionErrorState } from "#lib/api/session-error-state.svelte.ts";
 import {
 	type SessionErrorReport,
 	sessionRecovery,
-} from "$lib/api/session-recovery.svelte";
-import { setVisibility } from "$lib/test/visibility";
+} from "#lib/api/session-recovery.svelte.ts";
+import { setVisibility } from "#lib/test/visibility.ts";
 
 const { callMethodMock, toastErrorMock, toastDismissMock } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(),
@@ -16,8 +16,8 @@ const { callMethodMock, toastErrorMock, toastDismissMock } = vi.hoisted(() => ({
 	toastDismissMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({

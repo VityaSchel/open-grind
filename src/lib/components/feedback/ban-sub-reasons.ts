@@ -1,7 +1,7 @@
 import {
 	type BanSubReason,
 	banSubReasonSchema,
-} from "$lib/model/authentication";
+} from "#lib/model/authentication.ts";
 
 const labels: Record<BanSubReason, string | null> = {
 	UNDERAGE_ACCESS: "Underage access",

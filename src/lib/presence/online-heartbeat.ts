@@ -1,6 +1,6 @@
-import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
-import { gridState } from "$lib/grid/grid-state.svelte";
-import { now } from "$lib/util/clock";
+import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+import { gridState } from "#lib/grid/grid-state.svelte.ts";
+import { now } from "#lib/util/clock.ts";
 import { onlineRefreshedAt } from "./online-clock";
 import { staysOnline } from "./presence-gate";
 

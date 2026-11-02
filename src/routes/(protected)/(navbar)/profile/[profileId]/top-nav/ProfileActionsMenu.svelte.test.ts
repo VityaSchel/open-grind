@@ -11,17 +11,17 @@ const { reportSheetMock, blockUserMock, showBlockFailureMock } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/components/report/ReportSheet.svelte", () => ({
+vi.mock("#lib/components/report/ReportSheet.svelte", () => ({
 	default: reportSheetMock,
 }));
-vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
-vi.mock("$lib/api/browse/hides", () => ({ hideUser: vi.fn() }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/components/report/block-failure", () => ({
+vi.mock("#lib/api/browse/blocks.ts", () => ({ blockUser: blockUserMock }));
+vi.mock("#lib/api/browse/hides.ts", () => ({ hideUser: vi.fn() }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/components/report/block-failure.ts", () => ({
 	showBlockFailure: showBlockFailureMock,
 }));
 
-import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
+import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100010;

@@ -2,8 +2,8 @@
 	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 
-	import { googleHandoffState } from "$lib/api/google-handoff-state.svelte";
-	import { callMethod } from "$lib/api/methods";
+	import { googleHandoffState } from "#lib/api/google-handoff-state.svelte.ts";
+	import { callMethod } from "#lib/api/methods.ts";
 	import {
 		companionDisabled,
 		companionRefused,
@@ -14,25 +14,28 @@
 		refusedCompanionMessage,
 		reportSignInFailure,
 		untrustedCompanionMessage,
-	} from "$lib/api/sign-in";
-	import { Button } from "$lib/components/ui/button";
-	import * as Card from "$lib/components/ui/card";
-	import { Label } from "$lib/components/ui/label";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { Textarea } from "$lib/components/ui/textarea";
-	import { openExternalLink } from "$lib/platform/link-opener";
-	import { isAndroidPlatform } from "$lib/platform/os";
-	import { isPlayBuild } from "$lib/platform/store";
-	import { getInstalledVersion, GOOGLE_OAUTH_COMPONENT } from "$lib/updates";
+	} from "#lib/api/sign-in.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Card from "#lib/components/ui/card/index.ts";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { Textarea } from "#lib/components/ui/textarea/index.ts";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
+	import { isAndroidPlatform } from "#lib/platform/os.ts";
+	import { isPlayBuild } from "#lib/platform/store.ts";
 	import {
 		addonActivity,
 		addonInstallerAvailable,
 		addonPublishedHere,
 		addonUpdates,
-	} from "$lib/updates/addon.svelte";
-	import { installedFromFdroid } from "$lib/updates/capability.svelte";
-	import { manualInstallHref } from "$lib/updates/manual-install";
+	} from "#lib/updates/addon.svelte.ts";
+	import { installedFromFdroid } from "#lib/updates/capability.svelte.ts";
+	import {
+		getInstalledVersion,
+		GOOGLE_OAUTH_COMPONENT,
+	} from "#lib/updates/index.ts";
+	import { manualInstallHref } from "#lib/updates/manual-install.ts";
 	import {
 		googleSignInView,
 		installButton,

@@ -6,13 +6,13 @@
 		HiddenProfileError,
 		isUnviewableProfileError,
 		ProfileUnavailableError,
-	} from "$lib/api/users/profiles";
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
-	import NotFound from "$lib/components/feedback/NotFound.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import type { RenderedGridProfile } from "$lib/grid/grid";
+	} from "#lib/api/users/profiles.ts";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import NotFound from "#lib/components/feedback/NotFound.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import type { RenderedGridProfile } from "#lib/grid/grid.ts";
 	import BlockedProfile from "../BlockedProfile.svelte";
 	import ProfileBottomNavBar from "../bottom-nav/ProfileBottomNavBar.svelte";
 	import FavoriteNoteButton from "../favorite-note/FavoriteNoteButton.svelte";

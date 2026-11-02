@@ -1,5 +1,5 @@
-import { fetchExternal } from "$lib/api/transport";
-import { demoEnabled, demoGiphyMediaUrl } from "$lib/demo";
+import { fetchExternal } from "#lib/api/transport.ts";
+import { demoGiphyMediaUrl } from "#lib/demo/index.ts";
 import {
 	GIPHY_MEDIA_HOST,
 	type GiphyBody,
@@ -7,9 +7,9 @@ import {
 	type GiphyGif,
 	type GiphyPagination,
 	giphyResponseSchema,
-} from "$lib/model/messaging/gifs";
-import { systemLanguage } from "$lib/util/language";
-import { proxyMediaUrl } from "$lib/util/media";
+} from "#lib/model/messaging/gifs.ts";
+import { systemLanguage } from "#lib/util/language.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 
 const GIPHY_ORIGIN = "https://api.giphy.com";
 const GIPHY_API_KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
@@ -65,7 +65,7 @@ function nextGiphyOffset({
 }
 
 export function giphyMediaSrc(url: string): string {
-	return demoEnabled ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
+	return __DEMO__ ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
 }
 
 function isGiphyMediaUrl(url: string): boolean {

@@ -8,9 +8,9 @@
 	import type { Snippet } from "svelte";
 	import type { ComponentProps } from "svelte";
 
-	import { Button } from "$lib/components/ui/button/index.js";
-	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
-	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
+	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import SheetOverlay from "./sheet-overlay.svelte";
 	import SheetPortal from "./sheet-portal.svelte";
 

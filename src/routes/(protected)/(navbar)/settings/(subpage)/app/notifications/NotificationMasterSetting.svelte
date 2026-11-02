@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { preferencesLoaded } from "$lib/app-data/preferences.svelte";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { notificationSettings } from "$lib/push/notification-state.svelte";
-	import { toggleNotifications } from "$lib/push/notifications.svelte";
+	import { preferencesLoaded } from "#lib/app-data/preferences.svelte.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
+	import { toggleNotifications } from "#lib/push/notifications.svelte.ts";
 </script>
 
 <SwitchField

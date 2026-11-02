@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { FilterPosition } from "$lib/model/browse/grid/filters";
+import { FilterPosition } from "#lib/model/browse/grid/filters.ts";
 import PositionFilterToggle from "./PositionFilterToggle.svelte";
 
 afterEach(cleanup);

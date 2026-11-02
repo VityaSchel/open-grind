@@ -1,15 +1,15 @@
-import { registerAccountCache } from "$lib/api/account-caches";
-import { conversationIdFor } from "$lib/chat/conversation-id";
-import { previewFromMessage } from "$lib/model/messaging/message-preview";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { previewFromMessage } from "#lib/model/messaging/message-preview.ts";
 import {
 	type AlbumReplyTarget,
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
 	outboundMessageSchema,
-} from "$lib/model/messaging/messages";
-import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
-import type { AlbumExpirationType } from "$lib/model/messaging/albums";
-import type { Conversation } from "$lib/model/messaging/conversations";
+} from "#lib/model/messaging/messages.ts";
+import type { InboxFilterRequest } from "#lib/api/messaging/conversations.ts";
+import type { AlbumExpirationType } from "#lib/model/messaging/albums.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import { DAY, demoMeProfileId, MINUTE, NOW, SECOND } from "../config";
 import { albumCoverUrl, demoAlbumContent, demoAlbumExists } from "./albums";
 import { hashFromSeed, picsum } from "./avatars";

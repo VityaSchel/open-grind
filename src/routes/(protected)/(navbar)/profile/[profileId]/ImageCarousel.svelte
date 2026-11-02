@@ -4,8 +4,8 @@
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
-	import { profileMediaUrl } from "$lib/util/media";
+	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import { profileMediaUrl } from "#lib/util/media.ts";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
@@ -13,8 +13,8 @@
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 		CLOSE_SVG,
-	} from "$lib/util/photoswipe";
-	import { applyProfilePhotoReply } from "$lib/util/photoswipe/profile-photo-reply";
+	} from "#lib/util/photoswipe/index.ts";
+	import { applyProfilePhotoReply } from "#lib/util/photoswipe/profile-photo-reply.ts";
 	import { devicePixelHeight } from "./device-pixel-height";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 

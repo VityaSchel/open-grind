@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { demoRoute } from "$lib/demo";
-import { demoMeProfileId } from "$lib/demo/config";
-import { photosOf } from "$lib/demo/mock/profiles";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { demoMeProfileId } from "#lib/demo/config.ts";
+import { demoRoute } from "#lib/demo/index.ts";
+import { photosOf } from "#lib/demo/mock/profiles.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 
 describe("demo profile photo replies", () => {
 	it("includes incoming replies to our profile photo", () => {

@@ -3,9 +3,9 @@
 		ApiError,
 		type ApiErrorKind,
 		blockedAndStaleMessages,
-	} from "$lib/api/api-error";
-	import { promptCopyError } from "$lib/api/error-copy";
-	import { Button } from "$lib/components/ui/button";
+	} from "#lib/api/api-error.ts";
+	import { promptCopyError } from "#lib/api/error-copy.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
 
 	let {
 		error,
@@ -16,7 +16,7 @@
 		error: unknown;
 		onRetry?: () => void;
 		class?: import("svelte/elements").ClassValue;
-		buttonVariant?: import("$lib/components/ui/button").ButtonVariant;
+		buttonVariant?: import("#lib/components/ui/button/index.ts").ButtonVariant;
 	} = $props();
 
 	const kindMessages: Partial<Record<ApiErrorKind, string>> = {

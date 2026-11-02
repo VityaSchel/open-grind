@@ -4,10 +4,10 @@
 	import type { IconComponentProps } from "phosphor-svelte";
 	import type { Component } from "svelte";
 
-	import Field from "$lib/components/fields/Field.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import type { Option } from "$lib/util/options";
+	import Field from "#lib/components/fields/Field.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import type { Option } from "#lib/util/options.ts";
 
 	let {
 		label,

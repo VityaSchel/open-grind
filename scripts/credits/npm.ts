@@ -9,7 +9,7 @@ const repoRoot = path.resolve(import.meta.dir, "../..");
 const textsDir = path.join(import.meta.dir, "texts");
 const sourceDir = path.join(repoRoot, "src");
 const collectClient = path.join(import.meta.dir, "collect-client.ts");
-const svelteConfig = path.join(repoRoot, "svelte.config.js");
+const viteConfig = path.join(repoRoot, "vite.config.mjs");
 
 const licenseFilePattern =
 	/^((third[-._]?party[-._]?)?(licen[cs]es?|copying|unlicen[cs]e|notices?))([-._][a-z0-9._+-]*)?$/i;
@@ -141,8 +141,8 @@ const isFile = (file: string) =>
 	fs.existsSync(file) && fs.statSync(file).isFile();
 
 const serviceWorkerEntry = () => {
-	if (fs.readFileSync(svelteConfig, "utf-8").includes("serviceWorker")) {
-		return "a service worker path configured in svelte.config.js";
+	if (fs.readFileSync(viteConfig, "utf-8").includes("serviceWorker")) {
+		return "a service worker path configured in vite.config.mjs";
 	}
 	const entry = [
 		serviceWorkerBase,

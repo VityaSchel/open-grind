@@ -4,11 +4,11 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/context-menu";
+import { rightClick } from "#lib/test/context-menu.ts";
 
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
-vi.mock("$lib/api/error-toast", () => errorToast);
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
 
 import PreviousUploadsSheet from "./PreviousUploadsSheet.svelte";
 

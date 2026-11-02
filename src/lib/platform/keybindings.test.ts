@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 async function labelOn(platform: string) {
 	vi.resetModules();
 	vi.stubGlobal("navigator", { platform });
-	const { modifierKeyLabel } = await import("$lib/platform/keybindings");
+	const { modifierKeyLabel } = await import("#lib/platform/keybindings.ts");
 	return modifierKeyLabel();
 }
 

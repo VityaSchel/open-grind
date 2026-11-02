@@ -2,11 +2,11 @@
 	import VideoCameraIcon from "phosphor-svelte/lib/VideoCameraIcon";
 	import { untrack } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { getSingleMessage } from "$lib/api/messaging/messages";
-	import { proxyMediaUrl } from "$lib/util/media";
-	import { openLightbox } from "$lib/util/photoswipe";
-	import type { VideoMessage } from "$lib/model/messaging/messages";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { getSingleMessage } from "#lib/api/messaging/messages.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { openLightbox } from "#lib/util/photoswipe/index.ts";
+	import type { VideoMessage } from "#lib/model/messaging/messages.ts";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	type VideoBody = VideoMessage["body"];

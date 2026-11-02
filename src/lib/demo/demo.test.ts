@@ -1,39 +1,39 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { demoRoute } from "$lib/demo";
-import { demoMeProfileId } from "$lib/demo/config";
-import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
-import { FilterPosition } from "$lib/model/browse/grid/filters";
-import { searchProfileSchema } from "$lib/model/browse/grid/search";
-import { tapProfileSchema } from "$lib/model/interest/tap-profile";
+import { demoMeProfileId } from "#lib/demo/config.ts";
+import { demoRoute } from "#lib/demo/index.ts";
+import { cascadeV4ResponseSchema } from "#lib/model/browse/grid/cascade/response/v4.ts";
+import { FilterPosition } from "#lib/model/browse/grid/filters.ts";
+import { searchProfileSchema } from "#lib/model/browse/grid/search.ts";
+import { tapProfileSchema } from "#lib/model/interest/tap-profile.ts";
 import {
 	viewerProfileSchema,
 	viewPreviewSchema,
-} from "$lib/model/interest/views";
+} from "#lib/model/interest/views.ts";
 import {
 	albumContentSchema,
 	albumDetailsSchema,
 	albumMinSchema,
-} from "$lib/model/messaging/albums";
+} from "#lib/model/messaging/albums.ts";
 import {
 	conversationEntrySchema,
 	fullConversationSchema,
-} from "$lib/model/messaging/conversations";
-import { previewLabel } from "$lib/model/messaging/message-preview";
+} from "#lib/model/messaging/conversations.ts";
+import { previewLabel } from "#lib/model/messaging/message-preview.ts";
 import {
 	apiResponseMessageSchema,
 	expiringImageMessageSchema,
-} from "$lib/model/messaging/messages";
-import { gendersSchema } from "$lib/model/users/genders";
+} from "#lib/model/messaging/messages.ts";
+import { gendersSchema } from "#lib/model/users/genders.ts";
 import {
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
-} from "$lib/model/users/profiles";
-import { pronounsSchema } from "$lib/model/users/pronouns";
-import { profileTagsResponseSchema } from "$lib/model/users/tags";
-import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
+} from "#lib/model/users/profiles.ts";
+import { pronounsSchema } from "#lib/model/users/pronouns.ts";
+import { profileTagsResponseSchema } from "#lib/model/users/tags.ts";
+import type { InboxFilterRequest } from "#lib/api/messaging/conversations.ts";
 
 const shortProfileSchema = z.object({
 	...profileShortSchema.shape,

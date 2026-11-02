@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { isAndroidPlatform } from "$lib/platform/os";
-	import { pushAvailableHere } from "$lib/push";
+	import { isAndroidPlatform } from "#lib/platform/os.ts";
+	import { pushAvailableHere } from "#lib/push/index.ts";
 	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
 	import NotificationMasterSetting from "./NotificationMasterSetting.svelte";
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";

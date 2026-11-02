@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Slider } from "$lib/components/ui/slider";
+	import { Slider } from "#lib/components/ui/slider/index.ts";
 	import { AGE_SLIDER_SCALE } from "../slider-scale";
 
 	let { value = $bindable() }: { value: number[] } = $props();

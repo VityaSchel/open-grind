@@ -5,11 +5,11 @@
 	import { expoOut } from "svelte/easing";
 	import { fade } from "svelte/transition";
 
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import SelectionOverlay from "$lib/components/shared/SelectionOverlay.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { proxyMediaUrl } from "$lib/util/media";
-	import type { MyAlbum } from "$lib/model/messaging/albums";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import SelectionOverlay from "#lib/components/shared/SelectionOverlay.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 	import {
 		albumCoverContent,
 		albumDisplayName,

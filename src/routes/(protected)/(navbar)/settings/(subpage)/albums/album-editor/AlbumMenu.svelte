@@ -3,13 +3,13 @@
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import { toast } from "svelte-sonner";
 
-	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { deleteAlbum } from "$lib/api/messaging/albums";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { leaveDeletedPages } from "$lib/util/deleted-pages";
+	import { getMyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { deleteAlbum } from "#lib/api/messaging/albums.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { leaveDeletedPages } from "#lib/util/deleted-pages.ts";
 
 	let {
 		albumId,

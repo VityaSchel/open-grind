@@ -1,14 +1,14 @@
 import z from "zod";
 
-import { mediaHashPublicSchema } from "$lib/model/media";
-import { rightNowStatusSchema } from "$lib/model/right-now";
+import { mediaHashPublicSchema } from "#lib/model/media.ts";
+import { rightNowStatusSchema } from "#lib/model/right-now.ts";
 import {
 	knownValueOr,
 	knownValueOrNull,
 	serverDefault,
-} from "$lib/model/tolerance";
-import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
-import { sexualPositionSchema } from "$lib/model/users/profiles";
+} from "#lib/model/tolerance.ts";
+import { unixTimestampMsSchema, unmodeledSchema } from "#lib/model/types.ts";
+import { sexualPositionSchema } from "#lib/model/users/profiles.ts";
 
 const conversationDataSchema = z.object({
 	conversationId: z.string(),

@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 	import type { ClassValue } from "svelte/elements";
 
-	import SelectionOverlay from "$lib/components/shared/SelectionOverlay.svelte";
+	import SelectionOverlay from "#lib/components/shared/SelectionOverlay.svelte";
 
 	let {
 		label,

@@ -4,20 +4,20 @@ import { toast } from "svelte-sonner";
 import {
 	chatMediaFailureMessage,
 	uploadChatMediaFile,
-} from "$lib/api/messaging/chat-media";
-import { uploadRefusalMessage } from "$lib/api/methods";
-import { CHAT_MEDIA_MAX_LABEL } from "$lib/model/messaging/chat-media-limits";
+} from "#lib/api/messaging/chat-media.ts";
+import { uploadRefusalMessage } from "#lib/api/methods.ts";
+import { CHAT_MEDIA_MAX_LABEL } from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	discardStagedMedia,
 	type MediaPreview,
 	previewMedia,
-} from "$lib/platform/media-file";
+} from "#lib/platform/media-file.ts";
 import {
 	type ScreenedMedia,
 	screenMedia,
-} from "$lib/platform/media-intake.svelte";
-import { createSerialQueue } from "$lib/util/serial-queue";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/media-intake.svelte.ts";
+import { createSerialQueue } from "#lib/util/serial-queue.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { sendNowDraft } from "../attachments/media/media-messages";
 import type { MessageComposerContext } from "../message-composer-context.svelte";
 

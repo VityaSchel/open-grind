@@ -7,10 +7,10 @@
 	import { fade } from "svelte/transition";
 	import type { SvelteMediaTimeRange } from "svelte/elements";
 
-	import { Button } from "$lib/components/ui/button";
-	import { now } from "$lib/util/clock";
-	import { formatMediaDuration } from "$lib/util/format-time";
-	import { firstFrameSrc, releaseVideoOnDestroy } from "$lib/util/media";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { now } from "#lib/util/clock.ts";
+	import { formatMediaDuration } from "#lib/util/format-time.ts";
+	import { firstFrameSrc, releaseVideoOnDestroy } from "#lib/util/media.ts";
 	import VideoScrubber from "./VideoScrubber.svelte";
 
 	let {

@@ -1,7 +1,7 @@
 import { platform } from "@tauri-apps/plugin-os";
 import { toast } from "svelte-sonner";
 
-import { callMethod } from "$lib/api/methods";
+import { callMethod } from "#lib/api/methods.ts";
 
 export async function noticeStorageBackend(): Promise<void> {
 	const backend = await callMethod("storage_backend").catch(() => null);

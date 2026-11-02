@@ -6,7 +6,7 @@ import {
 	isLinuxPlatform,
 	isMacosPlatform,
 	isMobilePlatform,
-} from "$lib/platform/os";
+} from "#lib/platform/os.ts";
 
 const tauri = globalThis as {
 	isTauri?: boolean;

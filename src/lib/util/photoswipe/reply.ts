@@ -2,8 +2,8 @@ import { flushSync, mount, unmount } from "svelte";
 import type PhotoSwipe from "photoswipe";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import ReplyComposer from "$lib/components/shared/ReplyComposer.svelte";
-import { safeAreaInsets } from "$lib/util/safe-area";
+import ReplyComposer from "#lib/components/shared/ReplyComposer.svelte";
+import { safeAreaInsets } from "#lib/util/safe-area.ts";
 import { applyPhotoSwipeSafeAreaSync } from "./sizing";
 
 export function applyPhotoSwipeReply(

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { PIN_ZOOM } from "$lib/components/location-chooser/constants";
-	import GeoMapPicker from "$lib/components/location-chooser/GeoMapPicker.svelte";
-	import { draftFromMessage } from "$lib/model/messaging/messages";
-	import type { Coordinates } from "$lib/location/location-request.svelte";
+	import { PIN_ZOOM } from "#lib/components/location-chooser/constants.ts";
+	import GeoMapPicker from "#lib/components/location-chooser/GeoMapPicker.svelte";
+	import { draftFromMessage } from "#lib/model/messaging/messages.ts";
+	import type { Coordinates } from "#lib/location/location-request.svelte.ts";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import type { TabSelection } from "../tabs";
 

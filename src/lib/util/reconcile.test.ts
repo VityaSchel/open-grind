@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setVisibility } from "$lib/test/visibility";
+import { setVisibility } from "#lib/test/visibility.ts";
 
 const {
 	callMethodMock,
@@ -20,15 +20,17 @@ const {
 	awaitHomeLocationMock: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
-vi.mock("$lib/entitlements/honduras-hold", () => ({
+vi.mock("#lib/platform/os.ts", () => ({
+	isMobilePlatform: isMobilePlatformMock,
+}));
+vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	awaitHomeLocation: awaitHomeLocationMock,
 }));
-vi.mock("$lib/ws.svelte", () => ({
+vi.mock("#lib/ws.svelte.ts", () => ({
 	ws: {
 		onConnected(handler: () => void) {
 			connectedHandlers.push(handler);

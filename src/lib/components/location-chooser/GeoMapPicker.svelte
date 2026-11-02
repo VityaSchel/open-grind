@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Spinner } from "$lib/components/ui/spinner";
-	import type { Coordinates } from "$lib/location/location-request.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import type { Coordinates } from "#lib/location/location-request.svelte.ts";
 
 	let {
 		pinPos = $bindable(),

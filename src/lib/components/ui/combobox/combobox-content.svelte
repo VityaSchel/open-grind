@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Combobox as ComboboxPrimitive } from "bits-ui";
 
-	import { cn } from "$lib/util/utils.js";
+	import { cn } from "#lib/util/utils.ts";
 	import { getComboboxCtx } from "./combobox.svelte";
 
 	let {

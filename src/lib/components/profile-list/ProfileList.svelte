@@ -2,13 +2,13 @@
 	import { beforeNavigate } from "$app/navigation";
 	import { onDestroy } from "svelte";
 
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
-	import * as Empty from "$lib/components/ui/empty";
-	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-	import { nearestScrollableAncestor } from "$lib/util/scroll";
-	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
-	import { virtualList } from "$lib/util/virtual-list.svelte";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
+	import { nearestScrollableAncestor } from "#lib/util/scroll.ts";
+	import { virtualList } from "#lib/util/virtual-list.svelte.ts";
 	import type { ProfileListToggle } from "./profile-list";
 	import { ProfileListState } from "./profile-list-state.svelte";
 	import ProfileListRow from "./ProfileListRow.svelte";

@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import ApiErrorDisplay from "./ApiErrorDisplay.svelte";
 
 const request = { method: "GET", path: "/v4/cascade", body: undefined };

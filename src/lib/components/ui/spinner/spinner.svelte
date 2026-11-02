@@ -2,7 +2,7 @@
 	import SpinnerIcon from "phosphor-svelte/lib/SpinnerIcon";
 	import type { SVGAttributes } from "svelte/elements";
 
-	import { cn } from "$lib/util/utils.js";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		class: className,

@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import {
 		continueToAddon,
 		dismissAddonDialog,
-	} from "$lib/push/delivery.svelte";
-	import { notificationSettings } from "$lib/push/notification-state.svelte";
-	import { installedFromFdroid } from "$lib/updates/capability.svelte";
-	import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
+	} from "#lib/push/delivery.svelte.ts";
+	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
+	import { installedFromFdroid } from "#lib/updates/capability.svelte.ts";
+	import { ADDON_NAME, FCM_COMPONENT } from "#lib/updates/components.ts";
 
 	let { onCloseAutoFocus }: { onCloseAutoFocus: (event: Event) => void } =
 		$props();

@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { fromBase64 } from "$lib/util/base64";
+import { fromBase64 } from "#lib/util/base64.ts";
 import {
 	isProxiedMediaUrl,
 	profileMediaUrl,
 	proxyMediaUrl,
-} from "$lib/util/media";
+} from "#lib/util/media.ts";
 
 const PHOTO = "https://cdns.grindr.com/images/thumb/320x320/deadbeef";
 const SIGNED =

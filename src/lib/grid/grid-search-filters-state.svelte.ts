@@ -1,16 +1,16 @@
-import { showErrorToast } from "$lib/api/error-toast";
-import { getTags } from "$lib/api/users/tags";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { getTags } from "#lib/api/users/tags.ts";
 import {
 	getPreferences,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
+} from "#lib/app-data/preferences.svelte.ts";
 import {
 	defaultFilters,
 	type GridSearchFilters,
 	tagCatalog,
-} from "$lib/model/browse/grid/filters";
-import { withDeadline } from "$lib/util/deadline";
-import { deepEqual } from "$lib/util/deep-equal";
+} from "#lib/model/browse/grid/filters.ts";
+import { withDeadline } from "#lib/util/deadline.ts";
+import { deepEqual } from "#lib/util/deep-equal.ts";
 
 const TAG_LOOKUP_DEADLINE_MS = 5_000;
 

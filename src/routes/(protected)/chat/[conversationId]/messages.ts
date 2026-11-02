@@ -1,5 +1,5 @@
-import { getConversationMessages } from "$lib/api/messaging/messages";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { getConversationMessages } from "#lib/api/messaging/messages.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 
 type StackedMessage = Pick<ApiResponseMessage, "messageId" | "timestamp"> & {
 	indexInStack: number;

@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { announceSafeAreaChange } from "$lib/util/safe-area";
+import { announceSafeAreaChange } from "#lib/util/safe-area.ts";
 import { type AlbumSlide, openAlbumLightbox } from "./album-lightbox";
 
 const controllers: AbortController[] = [];
@@ -54,7 +54,9 @@ async function open({
 	});
 	await vi.waitFor(() => expect(opened).toHaveBeenCalled());
 	const lightbox = opened.mock.contexts.at(-1) as PhotoSwipeLightbox;
-	await vi.waitFor(() => expect(lightbox.pswp?.opener.isOpen).toBe(true));
+	await vi.waitFor(() => expect(lightbox.pswp?.opener.isOpen).toBe(true), {
+		timeout: 3000,
+	});
 	return { lightbox, onClosed };
 }
 

@@ -6,12 +6,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const preferences = vi.hoisted(() => ({ units: "metric" }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
 }));
 
-import { HEIGHT_CM_MAX, HEIGHT_CM_MIN } from "$lib/model/browse/grid/filters";
-import { formatHeight } from "$lib/util/units";
+import {
+	HEIGHT_CM_MAX,
+	HEIGHT_CM_MIN,
+} from "#lib/model/browse/grid/filters.ts";
+import { formatHeight } from "#lib/util/units.ts";
 import HeightFilter from "./HeightFilter.svelte";
 
 const thumb = (name: string) => screen.getByRole("slider", { name });

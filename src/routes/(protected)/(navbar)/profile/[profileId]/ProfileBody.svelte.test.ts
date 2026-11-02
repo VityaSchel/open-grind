@@ -10,7 +10,7 @@ import {
 	type Profile,
 	Tribe,
 	Vaccine,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import { fullProfile, OUR_ID } from "./pager/profile-pager-test-helpers";
 import { ProfileState } from "./profile-state.svelte";
 import ProfileBody from "./ProfileBody.svelte";

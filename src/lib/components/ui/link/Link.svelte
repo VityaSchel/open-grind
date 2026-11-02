@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { openExternalLink } from "$lib/platform/link-opener";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
 
 	let {
 		onclick,

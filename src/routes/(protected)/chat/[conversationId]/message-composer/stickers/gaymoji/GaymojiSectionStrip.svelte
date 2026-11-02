@@ -1,7 +1,7 @@
 <script lang="ts">
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
-	import type { GaymojiSection } from "$lib/chat/gaymoji-sections";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
+	import type { GaymojiSection } from "#lib/chat/gaymoji-sections.ts";
 	import { ElementRegistry } from "./element-registry";
 
 	let {

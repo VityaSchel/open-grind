@@ -9,19 +9,19 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	accountStatusState,
 	dismissAccountStatus,
-} from "$lib/api/account-status-state.svelte";
-import { ApiError } from "$lib/api/api-error";
+} from "#lib/api/account-status-state.svelte.ts";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	fetchRest,
 	parseApiResponse,
 	schemaMismatchMessage,
-} from "$lib/api/transport";
-import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
-import { toBase64 } from "$lib/util/base64";
+} from "#lib/api/transport.ts";
+import { cascadeV4ResponseSchema } from "#lib/model/browse/grid/cascade/response/v4.ts";
+import { toBase64 } from "#lib/util/base64.ts";
 
 function respondWith({ status, body }: { status: number; body: string }) {
 	invokeMock.mockResolvedValue(

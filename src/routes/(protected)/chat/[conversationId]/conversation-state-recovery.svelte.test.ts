@@ -38,23 +38,25 @@ vi.mock("@tauri-apps/api/event", () => ({
 	},
 }));
 vi.mock("$app/state", () => ({ page: { route: { id: "/(protected)/chat" } } }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/sign-out.ts", () => ({ signOut: signOutMock }));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ revealMessageRead: false }),
 }));
-vi.mock("$lib/entitlements/honduras-hold", () => ({
+vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	awaitHomeLocation: () => Promise.resolve(),
 }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	below: () => ({ current: false }),
 }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
+vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/messaging/messages.ts")
+	>()),
 	sendMessage: sendMessageMock,
 }));
 vi.mock("./messages", () => ({ getConversation: getConversationMock }));
@@ -62,23 +64,23 @@ vi.mock("svelte-sonner", () => ({
 	toast: { error: vi.fn(), dismiss: vi.fn() },
 }));
 
-import { sessionRecovery } from "$lib/api/session-recovery.svelte";
-import { ConversationsState } from "$lib/chat/conversations-state.svelte";
+import { sessionRecovery } from "#lib/api/session-recovery.svelte.ts";
+import { ConversationsState } from "#lib/chat/conversations-state.svelte.ts";
 import {
 	conversation,
 	deferred,
 	microtasks,
 	OUR_ID,
 	PEER_ID,
-} from "$lib/chat/conversations-test-helpers";
-import SessionErrorAlert from "$lib/components/feedback/SessionErrorAlert.svelte";
-import { previewFromMessage } from "$lib/model/messaging/message-preview";
+} from "#lib/chat/conversations-test-helpers.ts";
+import SessionErrorAlert from "#lib/components/feedback/SessionErrorAlert.svelte";
+import { previewFromMessage } from "#lib/model/messaging/message-preview.ts";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
-} from "$lib/model/messaging/messages";
-import { setVisibility } from "$lib/test/visibility";
-import { ws } from "$lib/ws.svelte";
+} from "#lib/model/messaging/messages.ts";
+import { setVisibility } from "#lib/test/visibility.ts";
+import { ws } from "#lib/ws.svelte.ts";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CHAT = "1:2";

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { schemaName } from "$lib/model/schema-names";
+import { cascadeV4ResponseSchema } from "#lib/model/browse/grid/cascade/response/v4.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { schemaName } from "#lib/model/schema-names.ts";
 
 describe("schemaName", () => {
 	it("names an exported schema after its binding", () => {

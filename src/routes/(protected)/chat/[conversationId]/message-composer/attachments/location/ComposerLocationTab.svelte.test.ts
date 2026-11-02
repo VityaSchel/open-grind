@@ -3,9 +3,9 @@ import { latLng, Map, Marker } from "leaflet";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PIN_ZOOM } from "$lib/components/location-chooser/constants";
-import { stubMapResizeObserver } from "$lib/components/location-chooser/map-test-helpers";
-import { decodeGeohash, encodeGeohash } from "$lib/model/geohash";
+import { PIN_ZOOM } from "#lib/components/location-chooser/constants.ts";
+import { stubMapResizeObserver } from "#lib/components/location-chooser/map-test-helpers.ts";
+import { decodeGeohash, encodeGeohash } from "#lib/model/geohash.ts";
 
 vi.hoisted(() => {
 	vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
@@ -25,8 +25,8 @@ const mocks = vi.hoisted(() => ({
 	disabled: false,
 	reducedMotion: { current: false },
 }));
-vi.mock("$lib/api/browse/location", () => ({ getPlaces: vi.fn() }));
-vi.mock("$lib/location/location-request.svelte", () => ({
+vi.mock("#lib/api/browse/location.ts", () => ({ getPlaces: vi.fn() }));
+vi.mock("#lib/location/location-request.svelte.ts", () => ({
 	locationRequest: {
 		abortStale: mocks.abortStale,
 		generation: 1,
@@ -40,7 +40,7 @@ vi.mock("../../message-composer-context.svelte", () => ({
 		sendMessages: mocks.send,
 	}),
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: () => true }));
+vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => true }));
 vi.mock("svelte/motion", async (importOriginal) => ({
 	...(await importOriginal<typeof import("svelte/motion")>()),
 	prefersReducedMotion: mocks.reducedMotion,
@@ -48,7 +48,7 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 
 import ComposerLocationTab from "./ComposerLocationTab.svelte";
 
-await import("$lib/components/location-chooser/GeoMap.svelte");
+await import("#lib/components/location-chooser/GeoMap.svelte");
 
 const geohash = encodeGeohash({ lat: 48.8566, lon: 2.3522 });
 

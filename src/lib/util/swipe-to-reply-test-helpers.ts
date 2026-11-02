@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
-import { ScrollGestureState } from "$lib/platform/scroll-gesture";
-import { MAX_DRAG_PX, SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
+import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
+import { MAX_DRAG_PX, SwipeToReply } from "#lib/util/swipe-to-reply.svelte.ts";
 
 export const TRIGGER_DISTANCE_PX = 64;
 export const RAIL_WHEEL_CHAIN_MS = 300;

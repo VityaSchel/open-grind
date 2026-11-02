@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Label } from "$lib/components/ui/label";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { Switch } from "$lib/components/ui/switch";
-	import { cn } from "$lib/util/utils";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { Switch } from "#lib/components/ui/switch/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		title,

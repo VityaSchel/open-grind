@@ -1,9 +1,9 @@
 <script lang="ts">
-	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
-	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Checkbox } from "$lib/components/ui/checkbox";
-	import * as Item from "$lib/components/ui/item";
+	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import ProfileItem from "#lib/components/profile/ProfileItem.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
 	import type { ProfileListProfile, ProfileListToggle } from "./profile-list";
 
 	let {

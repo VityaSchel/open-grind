@@ -5,14 +5,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const preferences = vi.hoisted(() => ({ units: "metric" }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
 }));
-vi.mock("$lib/api/users/profiles", () => ({
+vi.mock("#lib/api/users/profiles.ts", () => ({
 	getProfile: () => Promise.resolve({ showDistance: true }),
 	patchOwnProfile: () => Promise.resolve(),
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
 import ShowDistanceSetting from "./ShowDistanceSetting.svelte";
 

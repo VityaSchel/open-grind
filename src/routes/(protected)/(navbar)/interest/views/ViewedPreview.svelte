@@ -3,10 +3,10 @@
 	import HeartIcon from "phosphor-svelte/lib/HeartIcon";
 	import LockSimpleIcon from "phosphor-svelte/lib/LockSimpleIcon";
 
-	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
-	import Frost from "$lib/components/shared/Frost.svelte";
-	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
-	import type { ViewPreview } from "$lib/model/interest/views";
+	import ProfileMiniCard from "#lib/components/profile/ProfileMiniCard.svelte";
+	import Frost from "#lib/components/shared/Frost.svelte";
+	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
+	import type { ViewPreview } from "#lib/model/interest/views.ts";
 
 	let { preview }: { preview: ViewPreview } = $props();
 

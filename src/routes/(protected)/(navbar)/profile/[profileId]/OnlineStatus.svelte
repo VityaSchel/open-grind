@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { formatDistanceStrict } from "date-fns";
 
-	import { getNow } from "$lib/util/now";
+	import { getNow } from "#lib/util/now.ts";
 
 	let {
 		onlineUntil,

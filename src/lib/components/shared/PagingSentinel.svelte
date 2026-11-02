@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { HTMLAttributes } from "svelte/elements";
 
-	import { observeIntersection } from "$lib/util/observe-intersection";
-	import type { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import type { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 
 	let {
 		paging,

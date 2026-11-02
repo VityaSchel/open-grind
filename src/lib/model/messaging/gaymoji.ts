@@ -1,7 +1,7 @@
 import z from "zod";
 
-import { arrayOfParsableEntries } from "$lib/model/tolerance";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
+import { unixTimestampMsSchema } from "#lib/model/types.ts";
 
 export const gaymojiCategorySchema = z.string().min(1);
 

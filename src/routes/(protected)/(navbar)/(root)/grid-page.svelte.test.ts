@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { flushSync, tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { GridProfile } from "$lib/grid/grid";
+import type { GridProfile } from "#lib/grid/grid.ts";
 import GridPage from "./+page.svelte";
 import { revealedGridScrollTop } from "./grid-reveal";
 
@@ -51,12 +51,12 @@ class FakeGridState {
 
 let fakeGrid = new FakeGridState();
 
-vi.mock("$lib/grid/grid-state.svelte", () => ({
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 	get gridState() {
 		return fakeGrid;
 	},
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	hydratePreferences: () => Promise.resolve(),
 	preferencesSnapshot: () => ({ geohash: "u33dbc" }),
 }));
@@ -64,7 +64,7 @@ vi.mock("./top-bar/TopBar.svelte", () => ({ default: () => {} }));
 vi.mock("./LocationEmpty.svelte", () => ({ default: () => {} }));
 vi.mock("./EmptyGrid.svelte", () => ({ default: () => {} }));
 vi.mock("./GridProfileMiniCard.svelte", () => ({ default: () => {} }));
-vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
+vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: () => {},
 }));
 

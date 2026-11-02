@@ -1,6 +1,6 @@
-import { isMacosPlatform } from "$lib/platform/os";
-import { isProxiedMediaUrl } from "$lib/util/media";
-import { isPlainClick } from "$lib/util/plain-click";
+import { isMacosPlatform } from "#lib/platform/os.ts";
+import { isProxiedMediaUrl } from "#lib/util/media.ts";
+import { isPlainClick } from "#lib/util/plain-click.ts";
 
 const MIDDLE_BUTTON = 1;
 

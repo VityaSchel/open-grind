@@ -1,24 +1,24 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		preferencesLoaded,
 		preferencesSnapshot,
 		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import {
+		backdropBlurRenderable,
+		backdropBlurTrialPending,
+		settledBackdropBlurQuality,
+	} from "#lib/blur/quality.svelte.ts";
 	import {
 		BACKDROP_BLUR_QUALITY_DESCRIPTIONS,
 		BACKDROP_BLUR_QUALITY_LABELS,
 		BACKDROP_BLUR_QUALITY_ORDER,
 		type BackdropBlurQuality,
 		UNCALIBRATED_BACKDROP_BLUR_QUALITY,
-	} from "$lib/blur/quality";
-	import {
-		backdropBlurRenderable,
-		backdropBlurTrialPending,
-		settledBackdropBlurQuality,
-	} from "$lib/blur/quality.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import { Slider } from "$lib/components/ui/slider";
+	} from "#lib/blur/quality.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { Slider } from "#lib/components/ui/slider/index.ts";
 
 	const supported = $derived(backdropBlurRenderable());
 	let pending = $state<BackdropBlurQuality | null>(null);

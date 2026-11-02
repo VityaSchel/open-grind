@@ -3,8 +3,8 @@
 import { cleanup, render, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import { albumProcessingPlaceholderUrl } from "#lib/demo/mock/albums.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import {
 	getAlbumUploads,
 	type PendingUpload,

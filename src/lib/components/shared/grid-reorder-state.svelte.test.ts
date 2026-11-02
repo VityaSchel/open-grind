@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import { GridReorderState } from "./grid-reorder-state.svelte";
 

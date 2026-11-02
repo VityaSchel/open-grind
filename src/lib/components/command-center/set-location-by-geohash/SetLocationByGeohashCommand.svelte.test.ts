@@ -13,7 +13,7 @@ const { readMock, writeMock, writeTextMock, toastMock, showErrorToastMock } =
 		showErrorToastMock: vi.fn(),
 	}));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
@@ -23,12 +23,14 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/grid/grid-state.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 	gridState: { filters: { set: vi.fn() } },
 }));
 
-import { setPreferences } from "$lib/app-data/preferences.svelte";
+import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
 import { commandCenterState } from "../command-center-state.svelte";
 import CommandCenter from "../CommandCenter.svelte";
 

@@ -8,13 +8,13 @@ const { getAlbumSharesMock, shareAlbumMock, unshareAlbumMock } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/api/messaging/albums", () => ({
+vi.mock("#lib/api/messaging/albums.ts", () => ({
 	getAlbumShares: getAlbumSharesMock,
 	shareAlbum: shareAlbumMock,
 	unshareAlbum: unshareAlbumMock,
 }));
 
-import { albumShares } from "$lib/chat/album-shares.svelte";
+import { albumShares } from "#lib/chat/album-shares.svelte.ts";
 import { AlbumSharedWith } from "./shared-with-state.svelte";
 
 const ALBUM_ID = 903;

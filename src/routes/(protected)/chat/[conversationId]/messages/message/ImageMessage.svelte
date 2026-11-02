@@ -1,8 +1,8 @@
 <script lang="ts">
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { proxyMediaUrl } from "$lib/util/media";
-	import { stableSignedUrl } from "$lib/util/signed-url";
-	import type { ImageMessage } from "$lib/model/messaging/messages";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { stableSignedUrl } from "#lib/util/signed-url.ts";
+	import type { ImageMessage } from "#lib/model/messaging/messages.ts";
 	import { mediaRenewal } from "./media-renewal";
 	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MeasuredSize, MessageMediaState } from "./message-media.svelte";

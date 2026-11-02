@@ -4,10 +4,10 @@ import {
 	requestPermissions,
 } from "@tauri-apps/plugin-geolocation";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import { isMobilePlatform } from "$lib/platform/os";
-import { now } from "$lib/util/clock";
-import { Generation } from "$lib/util/generation";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { isMobilePlatform } from "#lib/platform/os.ts";
+import { now } from "#lib/util/clock.ts";
+import { Generation } from "#lib/util/generation.ts";
 
 export type Coordinates = { lat: number; lon: number };
 type Fix = Coordinates & { accuracyMeters: number };

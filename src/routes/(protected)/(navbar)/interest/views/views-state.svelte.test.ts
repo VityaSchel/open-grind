@@ -27,17 +27,19 @@ const {
 	viewHandlers: [] as ((event: unknown) => void)[],
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/interest/views", () => ({ getViews: getViewsMock }));
-vi.mock("$lib/api/settings/account", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/api/interest/views.ts", () => ({ getViews: getViewsMock }));
+vi.mock("#lib/api/settings/account.ts", () => ({
 	getAccountPreferences: getAccountPreferencesMock,
 	setAccountPreferences: setAccountPreferencesMock,
 }));
-vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
+vi.mock("#lib/api/browse/blocks.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/browse/blocks.ts")>()),
 	markBlockedProfilesUnviewable: markBlockedProfilesUnviewableMock,
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
 			reconcileHandlers.push(handler);
@@ -45,17 +47,17 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
-import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
+} from "#lib/api/users/profile-viewability.ts";
+import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
+import type { ViewerProfile, ViewPreview } from "#lib/model/interest/views.ts";
 import { getViewsState, ViewsState } from "./views-state.svelte";
 
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(
 			eventType: string,

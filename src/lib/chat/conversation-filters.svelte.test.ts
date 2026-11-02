@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultConversationFilters } from "$lib/model/messaging/conversation-filters";
-import { SexualPosition } from "$lib/model/users/profiles";
+import { defaultConversationFilters } from "#lib/model/messaging/conversation-filters.ts";
+import { SexualPosition } from "#lib/model/users/profiles.ts";
 import {
 	ConversationFilters,
 	inboxFilterRequest,

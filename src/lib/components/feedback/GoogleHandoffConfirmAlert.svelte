@@ -2,11 +2,11 @@
 	import {
 		answerAccountSwitch,
 		googleHandoffState,
-	} from "$lib/api/google-handoff-state.svelte";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button } from "$lib/components/ui/button";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	} from "#lib/api/google-handoff-state.svelte.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	const switching = $derived(googleHandoffState.phase === "switchingAccount");
 	const open = $derived(

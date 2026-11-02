@@ -3,21 +3,21 @@
 	import { page } from "$app/state";
 	import { onDestroy, onMount, type Snippet, untrack } from "svelte";
 	import { prefersReducedMotion } from "svelte/motion";
-	import type { NavigationTarget } from "@sveltejs/kit";
+	import type { NavigationTarget } from "$app/navigation";
 	import type { Attachment } from "svelte/attachments";
 
 	import {
 		STACK_Z,
 		stackMotion,
-	} from "$lib/components/navigation/stack/motion";
-	import { paneSurface } from "$lib/components/navigation/stack/surface";
+	} from "#lib/components/navigation/stack/motion.ts";
+	import { paneSurface } from "#lib/components/navigation/stack/surface.ts";
 	import {
 		softKeyboardHidden,
 		softKeyboardVisibility,
-	} from "$lib/platform/android-native-bridge";
-	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
-	import { earlierPathnames } from "$lib/util/history";
-	import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+	} from "#lib/platform/android-native-bridge.ts";
+	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.ts";
+	import { earlierPathnames } from "#lib/util/history.ts";
+	import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { LiveStackState } from "./live-stack-state.svelte";
 
 	let {
@@ -28,7 +28,7 @@
 	}: {
 		basePath: string;
 		keyOf: (
-			target: Pick<NavigationTarget, "params" | "route" | "url">,
+			target: Pick<NavigationTarget, "params" | "route">,
 		) => string | null;
 		base: Snippet<[{ covered: boolean; uncovering: boolean }]>;
 		sheet: Snippet<[string, { leaving: boolean }]>;

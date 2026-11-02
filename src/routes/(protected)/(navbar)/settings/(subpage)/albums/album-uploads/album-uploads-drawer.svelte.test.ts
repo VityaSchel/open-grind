@@ -1,29 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { ApiError } from "$lib/api/api-error";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { ApiError } from "#lib/api/api-error.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import { getAlbumUploads } from "./album-uploads-state.svelte";
 
 vi.mock("svelte-sonner", () => ({
 	toast: { error: vi.fn(), success: vi.fn() },
 }));
 
-vi.mock("$lib/api/messaging/albums", async (importOriginal) => ({
+vi.mock("#lib/api/messaging/albums.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	addDrawerMediaToAlbum: vi.fn(),
 	getAlbumContent: vi.fn(),
 	getAlbumContentProcessing: vi.fn(),
 }));
 
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	forgetAlbumSlides: vi.fn(),
 }));
 
 const { addDrawerMediaToAlbum, getAlbumContent, getAlbumContentProcessing } =
-	await import("$lib/api/messaging/albums");
+	await import("#lib/api/messaging/albums.ts");
 const { forgetAlbumSlides } =
-	await import("$lib/components/album/album-lightbox");
+	await import("#lib/components/album/album-lightbox.ts");
 
 const ALBUM_ID = 4;
 

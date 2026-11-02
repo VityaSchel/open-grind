@@ -1,18 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
-import { build } from "vite";
+import { createBuilder } from "vite";
 import { collectedRoots } from "./collected-roots.ts";
 
 const [rootsFile] = process.argv.slice(2);
 if (!rootsFile) throw new Error("usage: node collect-client.ts <roots file>");
 
-const failure = await build({
+const failure = await createBuilder({
 	configFile: path.join(import.meta.dirname, "vite.config.collect.ts"),
 	logLevel: "silent",
-}).then(
-	() => null,
-	(error: unknown) => error,
-);
+})
+	.then((builder) => builder.buildApp())
+	.then(
+		() => null,
+		(error: unknown) => error,
+	);
 
 const roots = collectedRoots();
 if (roots.size === 0) {

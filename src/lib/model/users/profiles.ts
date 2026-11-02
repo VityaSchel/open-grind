@@ -1,18 +1,18 @@
 import z from "zod";
 
-import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
-import { viewSourceEnumSchema } from "$lib/model/interest/view-source";
-import { mediaHashPublicSchema } from "$lib/model/media";
+import { tapTypeOrNoneSchema } from "#lib/model/interest/taps.ts";
+import { viewSourceEnumSchema } from "#lib/model/interest/view-source.ts";
+import { mediaHashPublicSchema } from "#lib/model/media.ts";
 import {
 	rightNowShareLocationSchema,
 	rightNowStatusSchema,
-} from "$lib/model/right-now";
+} from "#lib/model/right-now.ts";
 import {
 	knownValueOr,
 	knownValueOrNull,
 	serverDefault,
-} from "$lib/model/tolerance";
-import { unmodeledSchema } from "$lib/model/types";
+} from "#lib/model/tolerance.ts";
+import { unmodeledSchema } from "#lib/model/types.ts";
 
 export const SexualPosition = {
 	Top: 1,

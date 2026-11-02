@@ -1,4 +1,4 @@
-import type { UpdateStage } from "$lib/updates/stage";
+import type { UpdateStage } from "#lib/updates/stage.ts";
 
 export type GoogleSignInView = "install" | "continue" | "paste";
 

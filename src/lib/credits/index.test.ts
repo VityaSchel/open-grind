@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { loadCredits } from "$lib/credits";
-import generated from "$lib/credits/generated.json";
-import type { CreditPlatform } from "$lib/credits/types";
+import generated from "#lib/credits/generated.json";
+import { loadCredits } from "#lib/credits/index.ts";
+import type { CreditPlatform } from "#lib/credits/types.ts";
 
 const PLATFORM_SECTIONS: [title: string, platform: CreditPlatform][] = [
 	["Android libraries", "android"],

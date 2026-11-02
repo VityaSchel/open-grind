@@ -1,8 +1,8 @@
 import * as clipboard from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "svelte-sonner";
 
-import { confirmCopyError } from "$lib/api/copy-error-confirm-state.svelte";
-import { errorReport, type RedactionOptions } from "$lib/api/error-report";
+import { confirmCopyError } from "#lib/api/copy-error-confirm-state.svelte.ts";
+import { errorReport, type RedactionOptions } from "#lib/api/error-report.ts";
 
 export function getErrorText(
 	error: unknown,

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import fireEmoji from "$lib/assets/emojis/fire/72px.png";
-	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
+	import fireEmoji from "#lib/assets/emojis/fire/72px.png";
+	import AlbumPreview from "#lib/components/album/AlbumPreview.svelte";
 	import type {
 		AlbumContentReactionMessage,
 		AlbumContentReplyMessage,
-	} from "$lib/model/messaging/messages";
+	} from "#lib/model/messaging/messages.ts";
 	import { AlbumMessageState } from "./album-message.svelte";
 	import { getMessageMetaContext, messageRef } from "./context";
 	import LockedMedia from "./LockedMedia.svelte";

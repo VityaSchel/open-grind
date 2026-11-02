@@ -26,7 +26,7 @@ vi.mock("./grid", () => ({
 	resolveLazyProfile: vi.fn(),
 	setCachedProfile: vi.fn(),
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe: (
 			handler: (cause: string) => unknown,
@@ -39,7 +39,7 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
-vi.mock("$lib/app-data/preferences.svelte", async () => {
+vi.mock("#lib/app-data/preferences.svelte.ts", async () => {
 	const { SvelteMap } = await import("svelte/reactivity");
 	const revision = new SvelteMap([["writes", 0]]);
 	preferenceWrites.read = () => void revision.get("writes");
@@ -55,7 +55,7 @@ vi.mock("$lib/app-data/preferences.svelte", async () => {
 		setPreferences: vi.fn(() => Promise.resolve()),
 	};
 });
-vi.mock("$lib/push/opening-deeplink", () => ({
+vi.mock("#lib/push/opening-deeplink.ts", () => ({
 	pushDeeplinkAhead: async () => {
 		await deeplink.checked;
 		return deeplink.ahead;
@@ -63,15 +63,15 @@ vi.mock("$lib/push/opening-deeplink", () => ({
 	untilPushDeeplinkOpened: () =>
 		new Promise<void>((resolve) => openedListeners.add(resolve)),
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/location/auto-location", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/location/auto-location.ts", () => ({
 	autoLocation: {
 		resolveGeohash: (geohash: string) => Promise.resolve(geohash),
 	},
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { markProfileViewable } from "$lib/api/users/profile-viewability";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { markProfileViewable } from "#lib/api/users/profile-viewability.ts";
 import { gridState } from "./grid-state.svelte";
 
 const GEOHASH = "9q8yyk8ytpxr";

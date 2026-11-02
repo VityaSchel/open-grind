@@ -1,11 +1,11 @@
-import { onWindowReturn, windowFocused } from "$lib/platform/window-focus";
+import { onWindowReturn, windowFocused } from "#lib/platform/window-focus.ts";
 import {
 	onPushDeeplinkOpened,
 	openingPushDeeplink,
 	pushDeeplinkAhead,
-} from "$lib/push/opening-deeplink";
-import { chatV1ConversationReadEventSchema, ws } from "$lib/ws.svelte";
-import type { Conversation } from "$lib/model/messaging/conversations";
+} from "#lib/push/opening-deeplink.ts";
+import { chatV1ConversationReadEventSchema, ws } from "#lib/ws.svelte.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 export type ConversationReadHandler = (conversationId: string) => void;
 export type FetchedReadsHandler = (conversationIds: string[]) => void;

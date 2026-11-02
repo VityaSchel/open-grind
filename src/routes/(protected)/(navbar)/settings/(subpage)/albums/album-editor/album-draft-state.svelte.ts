@@ -1,17 +1,17 @@
 import { format } from "date-fns";
 
-import { httpStatusOf } from "$lib/api/api-error";
+import { httpStatusOf } from "#lib/api/api-error.ts";
 import {
 	deleteAlbumContent,
 	getAlbumContent,
 	renameAlbum,
 	reorderAlbumContent,
-} from "$lib/api/messaging/albums";
-import { forgetAlbumSlides } from "$lib/components/album/album-lightbox";
-import { now } from "$lib/util/clock";
-import { deepEqual } from "$lib/util/deep-equal";
-import { moveItem } from "$lib/util/reorder";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+} from "#lib/api/messaging/albums.ts";
+import { forgetAlbumSlides } from "#lib/components/album/album-lightbox.ts";
+import { now } from "#lib/util/clock.ts";
+import { deepEqual } from "#lib/util/deep-equal.ts";
+import { moveItem } from "#lib/util/reorder.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 
 function idsOf(content: AlbumContent[]): number[] {
 	return content.map((item) => item.contentId);

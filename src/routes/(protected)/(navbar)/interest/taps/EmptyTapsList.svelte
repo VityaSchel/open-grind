@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 
-	import * as Empty from "$lib/components/ui/empty";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
 </script>
 
 <Empty.Root>

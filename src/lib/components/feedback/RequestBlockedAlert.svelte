@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
 
-	import { callMethod } from "$lib/api/methods";
-	import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Checkbox } from "$lib/components/ui/checkbox";
-	import { Label } from "$lib/components/ui/label";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { callMethod } from "#lib/api/methods.ts";
+	import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.ts";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let submitting = $state(false);
 

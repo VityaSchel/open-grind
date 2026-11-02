@@ -1,4 +1,4 @@
-import { Generation } from "$lib/util/generation";
+import { Generation } from "#lib/util/generation.ts";
 
 export class FetchEpochs extends Generation {
 	#inFlight = new Set<Promise<unknown>>();

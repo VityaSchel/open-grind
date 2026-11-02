@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Badge } from "$lib/components/ui/badge";
-	import * as Item from "$lib/components/ui/item";
-	import * as RadioGroup from "$lib/components/ui/radio-group";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { selectNotificationMode } from "$lib/push/delivery.svelte";
-	import { notificationSettings } from "$lib/push/notification-state.svelte";
-	import { cn } from "$lib/util/utils";
-	import type { NotificationMode } from "$lib/push/types";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import * as RadioGroup from "#lib/components/ui/radio-group/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { selectNotificationMode } from "#lib/push/delivery.svelte.ts";
+	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
+	import { cn } from "#lib/util/utils.ts";
+	import type { NotificationMode } from "#lib/push/types.ts";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
 
 	const modes: {

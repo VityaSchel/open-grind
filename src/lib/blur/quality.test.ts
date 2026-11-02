@@ -17,14 +17,14 @@ const ENGINE = "2.52.6";
 
 const { linuxMock } = vi.hoisted(() => ({ linuxMock: vi.fn(() => false) }));
 
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	isLinuxPlatform: linuxMock,
 }));
 
 const { remeasureMock } = vi.hoisted(() => ({ remeasureMock: vi.fn() }));
 
-vi.mock("$lib/util/screen-chrome.svelte", () => ({
+vi.mock("#lib/util/screen-chrome.svelte.ts", () => ({
 	remeasureScreenChrome: remeasureMock,
 }));
 
@@ -35,14 +35,14 @@ vi.mock("./compositing.svelte", () => ({
 	webviewEngine: () => ENGINE,
 }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
 
-import { setPreferences } from "$lib/app-data/preferences.svelte";
+import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
 import { DEMOTE_MIN_PAIRS, REFERENCE_PERIOD_MS } from "./calibration/constants";
 import {
 	backdropBlurTrialArm,

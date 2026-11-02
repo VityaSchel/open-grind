@@ -4,7 +4,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Profile } from "$lib/model/users/profiles";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 const OUR_ID = 100;
 const OTHER_ID = 200;
@@ -19,23 +19,23 @@ const { getProfileMock, page } = vi.hoisted(() => ({
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("$app/state", () => ({ page }));
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 }));
-vi.mock("$lib/chat/conversations-context.svelte", () => ({
+vi.mock("#lib/chat/conversations-context.svelte.ts", () => ({
 	getOrCreateConversationsState: () => ({ hasUnread: false }),
 }));
-vi.mock("$lib/interest/taps-state.svelte", () => ({
+vi.mock("#lib/interest/taps-state.svelte.ts", () => ({
 	getTapsState: () => ({ hasUnseen: false }),
 }));
-vi.mock("$lib/util/media", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/util/media")>()),
+vi.mock("#lib/util/media.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/util/media.ts")>()),
 	profileMediaUrl: ({ mediaHash }: { mediaHash: string }) =>
 		`https://cdn.test/${mediaHash}`,
 }));
 
-import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
+import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
 import NavBar from "./NavBar.svelte";
 
 function medias(...mediaHashes: string[]): Profile["medias"] {

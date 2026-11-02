@@ -4,7 +4,7 @@
 	import MinusIcon from "phosphor-svelte/lib/MinusIcon";
 	import type { Snippet } from "svelte";
 
-	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

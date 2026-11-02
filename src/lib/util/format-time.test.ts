@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	formatMediaDuration,
 	formatTimeRelativeCustom,
-} from "$lib/util/format-time";
+} from "#lib/util/format-time.ts";
 
 afterEach(() => {
 	vi.useRealTimers();

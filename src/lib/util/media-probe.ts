@@ -1,7 +1,7 @@
 import {
 	acquireMediaLoadSlot,
 	releaseWhenSettled,
-} from "$lib/util/media-load-slots";
+} from "#lib/util/media-load-slots.ts";
 
 const PROBE_TIMEOUT_MS = 30 * 1000;
 

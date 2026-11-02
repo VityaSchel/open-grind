@@ -2,8 +2,8 @@ import {
 	FEATURED_CATEGORY,
 	FEATURED_ORIGINAL_IDS,
 	KNOWN_GAYMOJI_CATEGORIES,
-} from "$lib/chat/gaymoji-sections";
-import { hashString } from "$lib/util/random";
+} from "#lib/chat/gaymoji-sections.ts";
+import { hashString } from "#lib/util/random.ts";
 
 const LAST_UPDATE_TIME = 1605145583000;
 const EXPIRED_TIME = 1621843200000;

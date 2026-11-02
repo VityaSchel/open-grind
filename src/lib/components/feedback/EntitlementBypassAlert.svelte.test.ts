@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
 	HondurasHold,
 	LocationLease,
-} from "$lib/entitlements/honduras-hold";
+} from "#lib/entitlements/honduras-hold.ts";
 
 const {
 	holdInHondurasMock,
@@ -21,11 +21,13 @@ const {
 	HOME_GEOHASH: "u33dc0cpnp0m",
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/entitlements/honduras-hold", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	holdInHonduras: holdInHondurasMock,
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: preferencesMock,
 }));
 
@@ -33,9 +35,9 @@ const {
 	dismissEntitlementBypass,
 	entitlementBypassState,
 	offerEntitlementBypass,
-} = await import("$lib/entitlements/bypass.svelte");
+} = await import("#lib/entitlements/bypass.svelte.ts");
 const { backGestureEventHandlers } =
-	await import("$lib/platform/back-gesture-event.svelte");
+	await import("#lib/platform/back-gesture-event.svelte.ts");
 const EntitlementBypassAlert = (await import("./EntitlementBypassAlert.svelte"))
 	.default;
 

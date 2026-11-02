@@ -5,21 +5,23 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { demoEnabled } from "$lib/demo";
 import {
 	CHAT_MEDIA_MAX_BYTES,
 	CHAT_MEDIA_MAX_LABEL,
-} from "$lib/model/messaging/chat-media-limits";
+} from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	discardStagedMedia,
 	inspectMediaFile,
 	type MediaFileInspection,
 	type MediaFileKind,
 	mediaFileKindOf,
-} from "$lib/platform/media-file";
-import { mimeTypeFromPath, type PickedMedia } from "$lib/platform/media-picker";
-import { isAndroidPlatform, isLinuxPlatform } from "$lib/platform/os";
-import { toBase64 } from "$lib/util/base64";
+} from "#lib/platform/media-file.ts";
+import {
+	mimeTypeFromPath,
+	type PickedMedia,
+} from "#lib/platform/media-picker.ts";
+import { isAndroidPlatform, isLinuxPlatform } from "#lib/platform/os.ts";
+import { toBase64 } from "#lib/util/base64.ts";
 
 const STAGE_CHUNK_BYTES = 4 * 1024 * 1024;
 
@@ -393,7 +395,7 @@ async function deliver<T>({
 async function stageFile(file: File): Promise<PickedMedia> {
 	const key = crypto.randomUUID();
 	const mimeType = file.type === "" ? null : file.type;
-	if (demoEnabled) return { source: "web", key, mimeType, file };
+	if (__DEMO__) return { source: "web", key, mimeType, file };
 	const id = z.string().parse(await invoke("stage_media"));
 	const media: PickedMedia = { source: "staged", key, mimeType, id, file };
 	try {

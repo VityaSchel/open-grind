@@ -2,8 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 
-import { demoEnabled } from "$lib/demo";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { isAndroidPlatform } from "#lib/platform/os.ts";
 
 type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
 
@@ -65,7 +64,7 @@ async function pick({
 }): Promise<PickedMedia[]> {
 	const filter = filtersByKind[kind];
 
-	if (demoEnabled) {
+	if (__DEMO__) {
 		const files = await pickWebFiles({ filter, multiple });
 		return files.map(
 			(file): PickedMedia => ({
