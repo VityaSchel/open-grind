@@ -1,3 +1,5 @@
+import { untrack } from "svelte";
+
 import {
 	accountEpoch,
 	accountScoped,
@@ -15,7 +17,9 @@ import {
 	onProfileViewabilityChange,
 } from "#lib/api/users/profile-viewability.ts";
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
 import { atHomeLocation } from "#lib/entitlements/honduras-hold.ts";
+import { storeLocation } from "#lib/grid/grid.ts";
 import { now } from "#lib/util/clock.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
 import type {
@@ -72,6 +76,8 @@ export class RightNowFeedState extends ReconcilingListState<
 	#entries: RightNowFeedEntry[] = $state.raw([]);
 	#fetchStartedAt = 0;
 	#poll: ReturnType<typeof setInterval> | null = null;
+	#startOverListeners: (() => void)[] = [];
+	#fetchedGeohash: string | null = null;
 	#unsubscribeProfileEdits = onProfileEdit(({ profileId, patch }) => {
 		if (patch.isFavorite === undefined) return;
 		this.#setFavorite({ profileId, favorite: patch.isFavorite });
@@ -111,6 +117,22 @@ export class RightNowFeedState extends ReconcilingListState<
 		};
 	}
 
+	followLocation(geohash: string): void {
+		if (this.#fetchedGeohash === null || this.#fetchedGeohash === geohash)
+			return;
+		this.#fetchedGeohash = geohash;
+		untrack(() => this.#startOver());
+	}
+
+	onStartOver(listener: () => void): () => void {
+		this.#startOverListeners = [...this.#startOverListeners, listener];
+		return () => {
+			this.#startOverListeners = this.#startOverListeners.filter(
+				(existing) => existing !== listener,
+			);
+		};
+	}
+
 	override destroy(): void {
 		this.#stopPolling();
 		this.#unsubscribeProfileEdits();
@@ -134,9 +156,12 @@ export class RightNowFeedState extends ReconcilingListState<
 		await this.filters.ready;
 		const version = await rightNowFeedVersion();
 		const query = rightNowFeedQuery(this.filters.snapshot());
-		return atHomeLocation(() => {
+		return atHomeLocation(async () => {
 			if (!isAccountEpochCurrent(epoch))
 				throw new SignedOutBeforeFeedRequest();
+			const { geohash = null } = await getPreferences();
+			this.#fetchedGeohash = geohash;
+			if (geohash !== null) await storeLocation({ geohash });
 			return getRightNowFeed({ version, query });
 		});
 	}
@@ -176,6 +201,7 @@ export class RightNowFeedState extends ReconcilingListState<
 		this.#entries = [];
 		this.visibleCount = PAGE_SIZE;
 		this.scrollY = 0;
+		for (const listener of this.#startOverListeners) listener();
 		this.retry();
 	}
 

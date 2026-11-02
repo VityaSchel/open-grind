@@ -290,6 +290,22 @@ describe("RightNowFeedState", () => {
 		expect(state.error?.message).toBe("offline");
 	});
 
+	it("tells start-over listeners when a filter changes until they unsubscribe", async () => {
+		const state = createState();
+		await waitForLoaded(state);
+		const listener = vi.fn();
+		const unsubscribe = state.onStartOver(listener);
+
+		state.filters.set({ sort: "DISTANCE" });
+
+		expect(listener).toHaveBeenCalledOnce();
+
+		unsubscribe();
+		state.filters.set({ sort: "NEWEST" });
+
+		expect(listener).toHaveBeenCalledOnce();
+	});
+
 	it("records initial load errors and retries", async () => {
 		getRightNowFeedMock.mockRejectedValueOnce(new Error("offline"));
 
