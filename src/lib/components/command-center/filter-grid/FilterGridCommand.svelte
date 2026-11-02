@@ -52,14 +52,18 @@
 				<div class="flex flex-wrap gap-1">
 					{#each result.parsed as filter, index (index)}
 						{#if filter.valid}
-							<Badge variant="secondary">
-								<span class="opacity-60">{filter.key}</span>
-								{filter.valueText}
+							<Badge variant="secondary" class="max-w-full">
+								<span class="truncate">
+									<span class="opacity-60">{filter.key}</span>
+									{filter.valueText}
+								</span>
 							</Badge>
 						{:else}
-							<Badge variant="destructive">
-								<span class="opacity-80">{filter.key}</span>
-								{filter.error}
+							<Badge variant="destructive" class="max-w-full">
+								<span class="truncate">
+									<span class="opacity-80">{filter.key}</span>
+									{filter.error}
+								</span>
 							</Badge>
 						{/if}
 					{/each}
