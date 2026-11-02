@@ -1,35 +1,25 @@
-import {
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	type Mock,
-	vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
+import { runningOn } from "$lib/test/platform";
 import type { SafeAreaSide } from "$lib/util/safe-area";
 import type { NativeInsets } from "./native-insets";
+import {
+	androidBridge,
+	FALLBACK_INSETS,
+	IOS_INSETS,
+	KEYBOARD_HIDDEN,
+	KEYBOARD_SHOWN,
+	loadNativeInsets,
+	resetNativeInsets,
+} from "./native-insets-test-helpers";
 import type { SupportedPlatform } from "./os";
 
 const remeasureScreenChrome = vi.hoisted(() => vi.fn());
 
-vi.mock("$lib/util/screen-chrome.svelte", () => ({ remeasureScreenChrome }));
-
-const KEYBOARD_HIDDEN: NativeInsets = {
-	top: 47.42857142857143,
-	bottom: 24,
-	left: 0,
-	right: 0,
-	ime: false,
-};
-
-const KEYBOARD_SHOWN: NativeInsets = {
-	...KEYBOARD_HIDDEN,
-	bottom: 0,
-	ime: true,
-};
+vi.mock("$lib/util/screen-chrome.svelte", () => ({
+	remeasureScreenChrome,
+	topChromeClearance: () => 0,
+}));
 
 const ANDROID_INSETS: NativeInsets = {
 	top: 24,
@@ -37,22 +27,6 @@ const ANDROID_INSETS: NativeInsets = {
 	left: 0,
 	right: 0,
 	ime: true,
-};
-
-const IOS_INSETS: NativeInsets = {
-	top: 62,
-	bottom: 34,
-	left: 0,
-	right: 0,
-	ime: false,
-};
-
-const FALLBACK_INSETS: NativeInsets = {
-	top: 64,
-	bottom: 64,
-	left: 0,
-	right: 0,
-	ime: false,
 };
 
 const ENV_SAFE_AREA = {
@@ -68,39 +42,6 @@ function pxSafeArea({ top, bottom, left, right }: NativeInsets) {
 		bottom: `${bottom}px`,
 		left: `${left}px`,
 		right: `${right}px`,
-	};
-}
-
-function androidBridge({
-	top,
-	bottom,
-	left,
-	right,
-	ime,
-}: NativeInsets): NonNullable<Window["__AndroidInsets"]> {
-	return {
-		top: () => top,
-		bottom: () => bottom,
-		left: () => left,
-		right: () => right,
-		imeVisible: () => ime,
-	};
-}
-
-let uninstallNativeInsets: (() => void) | undefined;
-
-async function loadNativeInsets() {
-	vi.resetModules();
-	const nativeInsets = await import("./native-insets");
-	return {
-		...nativeInsets,
-		installNativeInsets: (
-			...options: Parameters<typeof nativeInsets.installNativeInsets>
-		) => {
-			uninstallNativeInsets = nativeInsets.installNativeInsets(
-				...options,
-			);
-		},
 	};
 }
 
@@ -123,17 +64,7 @@ beforeEach(() => {
 	remeasureScreenChrome.mockClear();
 });
 
-afterEach(() => {
-	uninstallNativeInsets?.();
-	uninstallNativeInsets = undefined;
-	vi.useRealTimers();
-	vi.restoreAllMocks();
-	vi.unstubAllGlobals();
-	resetPlatform();
-	delete window.__AndroidInsets;
-	delete window.__iosInsets;
-	document.documentElement.removeAttribute("style");
-});
+afterEach(resetNativeInsets);
 
 describe("installNativeInsets on Android", () => {
 	beforeEach(() => {
@@ -368,306 +299,4 @@ describe("installNativeInsets with fallback insets", () => {
 
 		expect(safeArea("bottom")).toBe("120px");
 	});
-});
-
-describe("revealing the focused field under the keyboard", () => {
-	const SCREEN_HEIGHT = 874;
-	const KEYBOARD_HEIGHT = 328;
-	const IOS_KEYBOARD_SHOWN: NativeInsets = {
-		...IOS_INSETS,
-		bottom: 0,
-		ime: true,
-	};
-
-	let field: HTMLTextAreaElement;
-	let scrollIntoView: Mock<HTMLElement["scrollIntoView"]>;
-
-	function focusFieldWithBottomAt(
-		bottom: number,
-		element: HTMLElement,
-		{ inside = document.body }: { inside?: HTMLElement } = {},
-	) {
-		inside.append(element);
-		element.focus();
-		vi.spyOn(element, "getBoundingClientRect").mockReturnValue({
-			top: bottom - 40,
-			bottom,
-		} as DOMRect);
-		element.scrollIntoView = scrollIntoView;
-	}
-
-	function scrollContainer({ top, height }: { top: number; height: number }) {
-		const container = document.createElement("div");
-		container.style.overflowY = "auto";
-		let clientHeight = height;
-		Object.defineProperty(container, "clientHeight", {
-			get: () => clientHeight,
-		});
-		vi.spyOn(container, "getBoundingClientRect").mockImplementation(
-			() => ({ top, bottom: top + clientHeight }) as DOMRect,
-		);
-		document.body.append(container);
-		return {
-			container,
-			shrinkTo: (next: number) => {
-				clientHeight = next;
-			},
-		};
-	}
-
-	function resizeViewport(height: number) {
-		vi.stubGlobal("innerHeight", height);
-		window.dispatchEvent(new Event("resize"));
-	}
-
-	function openKeyboard(insets: NativeInsets = IOS_KEYBOARD_SHOWN) {
-		window.__iosInsets = insets;
-		window.__reapplyInsets(insets);
-		resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
-	}
-
-	beforeEach(() => {
-		vi.useFakeTimers({
-			toFake: [
-				"setTimeout",
-				"clearTimeout",
-				"requestAnimationFrame",
-				"cancelAnimationFrame",
-				"performance",
-			],
-		});
-		vi.stubGlobal("innerHeight", SCREEN_HEIGHT);
-		scrollIntoView = vi.fn();
-		field = document.createElement("textarea");
-	});
-
-	afterEach(() => {
-		document.body.replaceChildren();
-	});
-
-	describe("on ios", () => {
-		beforeEach(() => {
-			runningOn("ios");
-			window.__iosInsets = IOS_INSETS;
-		});
-
-		it("scrolls a field the keyboard covers into view a frame after the keyboard opens", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
-
-			openKeyboard();
-			expect(scrollIntoView).not.toHaveBeenCalled();
-
-			vi.advanceTimersToNextFrame();
-			expect(scrollIntoView).toHaveBeenCalledExactlyOnceWith({
-				block: "nearest",
-			});
-		});
-
-		it("reveals the field when the keyboard flip lands without a resize", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
-			vi.stubGlobal("innerHeight", SCREEN_HEIGHT - KEYBOARD_HEIGHT);
-
-			window.__reapplyInsets(IOS_KEYBOARD_SHOWN);
-			vi.advanceTimersByTime(150);
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).toHaveBeenCalledOnce();
-		});
-
-		it("reveals the field again on each resize while the keyboard stays open", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(500, field);
-			openKeyboard();
-			vi.advanceTimersToNextFrame();
-			expect(scrollIntoView).not.toHaveBeenCalled();
-
-			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT - 52);
-			vi.advanceTimersToNextFrame();
-			expect(scrollIntoView).toHaveBeenCalledOnce();
-
-			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT - 80);
-			vi.advanceTimersToNextFrame();
-			expect(scrollIntoView).toHaveBeenCalledTimes(2);
-		});
-
-		it("scrolls once for several resizes in one frame", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
-			openKeyboard();
-
-			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT - 20);
-			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT - 40);
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).toHaveBeenCalledOnce();
-		});
-
-		it("leaves a field above the keyboard where it is", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(SCREEN_HEIGHT - KEYBOARD_HEIGHT, field);
-
-			openKeyboard();
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).not.toHaveBeenCalled();
-		});
-
-		it("scrolls a field its scroll container clips although the screen still shows it", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			const { container } = scrollContainer({ top: 62, height: 400 });
-			focusFieldWithBottomAt(500, field, { inside: container });
-
-			openKeyboard();
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).toHaveBeenCalledExactlyOnceWith({
-				block: "nearest",
-			});
-		});
-
-		describe("while its scroll container settles", () => {
-			let resized: ResizeObserverCallback[];
-			let disconnected: number;
-
-			function reportResize() {
-				for (const callback of resized)
-					callback([], {} as ResizeObserver);
-			}
-
-			beforeEach(() => {
-				resized = [];
-				disconnected = 0;
-				vi.stubGlobal(
-					"ResizeObserver",
-					class {
-						constructor(callback: ResizeObserverCallback) {
-							resized.push(callback);
-						}
-						observe() {}
-						disconnect() {
-							disconnected += 1;
-						}
-					},
-				);
-			});
-
-			it("scrolls the field once its scroll container shrinks under it", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
-				const { container, shrinkTo } = scrollContainer({
-					top: 62,
-					height: SCREEN_HEIGHT - 62,
-				});
-				focusFieldWithBottomAt(500, field, { inside: container });
-				openKeyboard();
-				vi.advanceTimersToNextFrame();
-				expect(scrollIntoView).not.toHaveBeenCalled();
-
-				shrinkTo(400);
-				reportResize();
-				vi.advanceTimersToNextFrame();
-
-				expect(scrollIntoView).toHaveBeenCalledOnce();
-			});
-
-			it("stops watching the scroll container once the keyboard closes", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
-				const { container } = scrollContainer({
-					top: 62,
-					height: SCREEN_HEIGHT - 62,
-				});
-				focusFieldWithBottomAt(500, field, { inside: container });
-				openKeyboard();
-				vi.advanceTimersToNextFrame();
-				expect(disconnected).toBe(0);
-
-				window.__iosInsets = IOS_INSETS;
-				window.__reapplyInsets(IOS_INSETS);
-				resizeViewport(SCREEN_HEIGHT);
-
-				expect(disconnected).toBe(1);
-			});
-		});
-
-		it("never scrolls while the keyboard is closed", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
-
-			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).not.toHaveBeenCalled();
-		});
-
-		it("stops revealing once the keyboard closes", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(500, field);
-			openKeyboard();
-			vi.advanceTimersToNextFrame();
-
-			window.__iosInsets = IOS_INSETS;
-			window.__reapplyInsets(IOS_INSETS);
-			resizeViewport(SCREEN_HEIGHT);
-			resizeViewport(400);
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).not.toHaveBeenCalled();
-		});
-
-		it("leaves a focused control that takes no typing alone", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, document.createElement("button"));
-
-			openKeyboard();
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).not.toHaveBeenCalled();
-		});
-	});
-
-	it("never scrolls the focused field on android, where the WebView reveals it", async () => {
-		runningOn("android");
-		window.__AndroidInsets = androidBridge(KEYBOARD_HIDDEN);
-		const { installNativeInsets } = await loadNativeInsets();
-		installNativeInsets();
-		focusFieldWithBottomAt(700, field);
-
-		window.__reapplyInsets(KEYBOARD_SHOWN);
-		resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
-		vi.advanceTimersToNextFrame();
-
-		expect(scrollIntoView).not.toHaveBeenCalled();
-	});
-
-	it.each(["linux", "macos", "windows"] as const)(
-		"never scrolls the focused field on %s",
-		async (platform) => {
-			runningOn(platform);
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets({ fallback: FALLBACK_INSETS });
-			focusFieldWithBottomAt(700, field);
-
-			window.__reapplyInsets({
-				...FALLBACK_INSETS,
-				bottom: 0,
-				ime: true,
-			});
-			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
-			vi.advanceTimersToNextFrame();
-
-			expect(scrollIntoView).not.toHaveBeenCalled();
-		},
-	);
 });

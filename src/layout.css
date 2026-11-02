@@ -201,6 +201,11 @@ body {
 	shape-rendering: geometricPrecision;
 }
 
+:root[data-keyboard-shrinks-page],
+:root[data-keyboard-shrinks-page] body {
+	--nav-height: 0px;
+}
+
 a {
 	-webkit-user-drag: none;
 }

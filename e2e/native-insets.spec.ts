@@ -34,10 +34,14 @@ const CLOSE_RIDE_MS = 1500;
 const CLOSE_HOLD_MS = 400;
 const LINEAR = [0, 0, 1, 1] as const;
 const SAFE_AREA_STRIP = '[data-slot="safe-area-strip"]';
+const SAVE_CHANGES_BAR = '[data-slot="save-changes-bar"]';
 
 test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
 
+const mainNav = (page: Page) => page.locator('nav[aria-label="Main"]');
+const landHeldInsets = (page: Page) =>
+	page.evaluate(() => window.dispatchEvent(new Event("resize")));
 const composerField = (page: Page) =>
 	page.getByRole("textbox", { name: "Say something..." });
 const sentBubble = (page: Page, { text }: { text: string }) =>
@@ -253,3 +257,155 @@ for (const { platform, send, revealed } of [
 		await expect(about).toBeFocused();
 	});
 }
+
+for (const { platform, send, revealed } of [
+	{ platform: "ios", send: sendIosInsets, revealed: true },
+	{ platform: "android", send: sendInsets, revealed: false },
+] as const) {
+	test(`a field the save bar lands on while typing on ${platform} ${revealed ? "scrolls above it" : "is left to the WebView"}`, async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform });
+		await page.goto("/settings/profile");
+		const instagram = page.getByRole("textbox", {
+			name: "Instagram",
+			exact: true,
+		});
+		await instagram.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await instagram.evaluate((field) =>
+			field.focus({ preventScroll: true }),
+		);
+		await send(page, KEYBOARD_OPEN.insets);
+		await page.setViewportSize(KEYBOARD_OPEN.viewport);
+		await expect(mainNav(page)).toBeHidden();
+		await instagram.evaluate((field) =>
+			field.scrollIntoView({ block: "end" }),
+		);
+		await afterTwoFrames(page);
+
+		const watch = await page.evaluateHandle((selector) => {
+			const landed = new Promise<void>((resolve) => {
+				window.addEventListener(
+					"introend",
+					({ target }) => {
+						if (
+							target instanceof Element &&
+							target.matches(selector)
+						)
+							resolve();
+					},
+					{ capture: true },
+				);
+			});
+			return { landed };
+		}, SAVE_CHANGES_BAR);
+		await page.keyboard.type("y");
+		await watch.evaluate(({ landed }) => landed);
+		await afterTwoFrames(page);
+
+		const overlap = await instagram.evaluate((field, selector) => {
+			const bar = document.querySelector(selector);
+			if (!bar) throw new Error("The save bar is gone");
+			return (
+				field.getBoundingClientRect().bottom -
+				bar.getBoundingClientRect().top
+			);
+		}, SAVE_CHANGES_BAR);
+		expect(overlap < 1).toBe(revealed);
+		await expect(instagram).toBeFocused();
+	});
+}
+
+for (const { platform, send } of [
+	{ platform: "ios", send: sendIosInsets },
+	{ platform: "android", send: sendInsets },
+] as const) {
+	test(`the nav bar on ${platform} steps aside while the keyboard is up so a field can sit right on it, and comes back once it closes`, async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform });
+		await page.goto("/settings/profile");
+		const about = page.getByLabel("About me", { exact: true });
+		await about.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await expect(mainNav(page)).toBeVisible();
+		await about.evaluate((field) => field.focus({ preventScroll: true }));
+
+		await send(page, KEYBOARD_OPEN.insets);
+		await page.setViewportSize(KEYBOARD_OPEN.viewport);
+		await expect(mainNav(page)).toBeHidden();
+		await about.evaluate((field) => field.scrollIntoView({ block: "end" }));
+		await afterTwoFrames(page);
+
+		expect(
+			await about.evaluate((field) => {
+				const { left, right, bottom } = field.getBoundingClientRect();
+				const hit = document.elementFromPoint(
+					(left + right) / 2,
+					bottom - 2,
+				);
+				return {
+					bottom: Math.round(bottom),
+					uncovered: hit !== null && field.contains(hit),
+				};
+			}),
+		).toEqual({ bottom: KEYBOARD_OPEN.viewport.height, uncovered: true });
+
+		await send(page, KEYBOARD_CLOSED.insets);
+		await page.setViewportSize(KEYBOARD_CLOSED.viewport);
+		await expect(mainNav(page)).toBeVisible();
+	});
+}
+
+test("the nav bar on macOS stays whatever the insets say about a keyboard", async ({
+	page,
+}) => {
+	await installTauriShim(page, { platform: "macos" });
+	await page.goto("/settings/profile");
+	await mainNav(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+
+	await sendInsets(page, KEYBOARD_OPEN.insets);
+	await page.setViewportSize(KEYBOARD_OPEN.viewport);
+	await afterTwoFrames(page);
+
+	await expect(mainNav(page)).toBeVisible();
+});
+
+test("the nav bar on iOS stays under a conversation that follows the keyboard and never blinks on the inbox after Back with the keyboard up", async ({
+	page,
+}) => {
+	await openInbox(page, { platform: "ios" });
+	await openConversation(page);
+	await rideIosKeyboard(page, { from: 0, to: KEYBOARD_HEIGHT, duration: 0 });
+	await landHeldInsets(page);
+	await afterTwoFrames(page);
+
+	expect(
+		await mainNav(page).evaluate((nav) => nav.hasAttribute("hidden")),
+	).toBe(false);
+
+	const navHiddenChanges = await page.evaluateHandle(() => {
+		const changes: boolean[] = [];
+		new MutationObserver((records) => {
+			for (const { target } of records)
+				if (
+					target instanceof Element &&
+					target.matches('nav[aria-label="Main"]')
+				)
+					changes.push(target.hasAttribute("hidden"));
+		}).observe(document.body, {
+			attributes: true,
+			attributeFilter: ["hidden"],
+			subtree: true,
+		});
+		return changes;
+	});
+	await rideIosKeyboard(page, {
+		from: KEYBOARD_HEIGHT,
+		to: 0,
+		duration: CLOSE_RIDE_MS,
+	});
+	await backToChats(page).click();
+	await expect(sheet(page)).toHaveCount(0);
+	await expect(mainNav(page)).toBeVisible();
+	expect(await navHiddenChanges.jsonValue()).toEqual([]);
+});

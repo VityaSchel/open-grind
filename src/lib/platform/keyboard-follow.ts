@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { Attachment } from "svelte/attachments";
 
 import { currentPlatform } from "$lib/platform/os";
+import { notePageFollowsSoftKeyboard } from "$lib/platform/soft-keyboard.svelte";
 import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 
 const KEYFRAMES = 32;
@@ -179,6 +180,7 @@ function followMotion(motion: KeyboardMotion) {
 function letPageFollow(follow: boolean) {
 	if (following === follow) return;
 	following = follow;
+	notePageFollowsSoftKeyboard(follow);
 	if (!follow) {
 		travel = undefined;
 		for (const [element, follower] of followers) rest(element, follower);

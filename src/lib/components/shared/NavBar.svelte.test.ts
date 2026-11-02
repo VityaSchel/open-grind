@@ -36,6 +36,10 @@ vi.mock("$lib/util/media", async (importOriginal) => ({
 }));
 
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
+import {
+	notePageFollowsSoftKeyboard,
+	noteSoftKeyboardOpen,
+} from "$lib/platform/soft-keyboard.svelte";
 import { runningOn } from "$lib/test/platform";
 import NavBar from "./NavBar.svelte";
 
@@ -60,6 +64,12 @@ function avatarSrc(container: HTMLElement): string | null {
 			.querySelector('a[aria-label="Me"] img')
 			?.getAttribute("src") ?? null
 	);
+}
+
+function mainNav(container: HTMLElement): HTMLElement {
+	const nav = container.querySelector<HTMLElement>('nav[aria-label="Main"]');
+	if (!nav) throw new Error("the main nav is not rendered");
+	return nav;
 }
 
 async function renderedAvatar(container: HTMLElement): Promise<string | null> {
@@ -132,4 +142,62 @@ describe("navbar avatar", () => {
 
 		expect(avatarSrc(container)).toBe("https://cdn.test/saved");
 	});
+});
+
+describe("navbar under the soft keyboard", () => {
+	beforeEach(() => {
+		getProfileMock.mockResolvedValue(profileWith(medias("first")));
+	});
+
+	afterEach(() => {
+		noteSoftKeyboardOpen(false);
+		notePageFollowsSoftKeyboard(false);
+	});
+
+	it.each(["android", "ios"] as const)(
+		"steps aside on %s while the keyboard shrinks the page and comes back once it closes",
+		async (platform) => {
+			runningOn(platform);
+			const { container } = render(NavBar, {
+				props: { ourProfileId: OUR_ID },
+			});
+			expect(mainNav(container).hidden).toBe(false);
+
+			noteSoftKeyboardOpen(true);
+			await tick();
+			expect(mainNav(container).hidden).toBe(true);
+
+			noteSoftKeyboardOpen(false);
+			await tick();
+			expect(mainNav(container).hidden).toBe(false);
+		},
+	);
+
+	it("stays on ios while a conversation follows the keyboard", async () => {
+		runningOn("ios");
+		const { container } = render(NavBar, {
+			props: { ourProfileId: OUR_ID },
+		});
+
+		notePageFollowsSoftKeyboard(true);
+		noteSoftKeyboardOpen(true);
+		await tick();
+
+		expect(mainNav(container).hidden).toBe(false);
+	});
+
+	it.each(["linux", "macos", "windows"] as const)(
+		"stays on %s",
+		async (platform) => {
+			runningOn(platform);
+			const { container } = render(NavBar, {
+				props: { ourProfileId: OUR_ID },
+			});
+
+			noteSoftKeyboardOpen(true);
+			await tick();
+
+			expect(mainNav(container).hidden).toBe(false);
+		},
+	);
 });

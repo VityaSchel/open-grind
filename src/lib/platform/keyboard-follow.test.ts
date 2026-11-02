@@ -461,6 +461,37 @@ describe("on ios", () => {
 		expect(followRequests()).toEqual([{ follow: true }, { follow: false }]);
 	});
 
+	it("keeps the page whole while the keyboard rides with a follower and shrinks it once the last follower is gone", async () => {
+		await follow();
+		const { noteSoftKeyboardOpen, softKeyboardShrinksPage } =
+			await import("./soft-keyboard.svelte");
+		const detach = attach(follower());
+		noteSoftKeyboardOpen(true);
+		move(showing({ duration: 0 }));
+
+		expect(softKeyboardShrinksPage()).toBe(false);
+
+		detach();
+		await flush();
+
+		expect(softKeyboardShrinksPage()).toBe(true);
+	});
+
+	it("shrinks the page while a field outside the follower has the keyboard", async () => {
+		await follow(follower());
+		const { noteSoftKeyboardOpen, softKeyboardShrinksPage } =
+			await import("./soft-keyboard.svelte");
+		noteSoftKeyboardOpen(true);
+		const search = document.createElement("input");
+		document.body.append(search);
+
+		focus(search);
+		expect(softKeyboardShrinksPage()).toBe(true);
+
+		blur(search);
+		expect(softKeyboardShrinksPage()).toBe(false);
+	});
+
 	it("ignores focus on controls that raise no keyboard", async () => {
 		await follow(follower());
 		const button = document.createElement("button");

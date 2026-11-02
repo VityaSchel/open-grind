@@ -14,6 +14,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { tabsListVariants } from "$lib/components/ui/tabs";
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
+	import { softKeyboardShrinksPage } from "$lib/platform/soft-keyboard.svelte";
 	import { returnTo } from "$lib/util/history";
 	import { isWithin } from "$lib/util/pathname";
 	import { isPlainClick } from "$lib/util/plain-click";
@@ -78,6 +79,7 @@
 	bgClass="bg-linear-to-t from-background to-transparent"
 	contentClass="flex gap-2 overflow-auto no-scrollbar px-1 *:first:ms-auto *:last:me-auto"
 	contentScrollIntent="x"
+	hidden={softKeyboardShrinksPage()}
 	{@attach bottomChrome}
 >
 	<div

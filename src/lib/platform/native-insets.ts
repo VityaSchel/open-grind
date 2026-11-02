@@ -1,12 +1,17 @@
 import { currentPlatform } from "$lib/platform/os";
+import { noteSoftKeyboardOpen } from "$lib/platform/soft-keyboard.svelte";
 import {
 	announceSafeAreaChange,
 	SAFE_AREA_SIDES,
 	type SafeAreaSide,
 } from "$lib/util/safe-area";
-import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+import {
+	remeasureScreenChrome,
+	topChromeClearance,
+} from "$lib/util/screen-chrome.svelte";
 
 const IME_RESIZE_FALLBACK_MS = 150;
+const BOTTOM_CHROME = '[data-screen-chrome="bottom"]';
 
 export type NativeInsets = Record<SafeAreaSide, number> & { ime: boolean };
 
@@ -68,6 +73,18 @@ function keyboardCoversFocusedField(): boolean {
 	}
 }
 
+function shrinksPageBeforeResize(): boolean {
+	switch (currentPlatform()) {
+		case "ios":
+			return true;
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
+
 function scrollContainerOf(field: Element): Element | undefined {
 	for (let node = field.parentElement; node; node = node.parentElement) {
 		const { overflowY } = getComputedStyle(node);
@@ -86,6 +103,42 @@ function watchRevealContainer(element: Element | undefined) {
 	revealContainer = { element, observer };
 }
 
+function bottomChromeTop({
+	field,
+	container,
+}: {
+	field: Element;
+	container: Element;
+}): number {
+	let top = Infinity;
+	for (const chrome of container.querySelectorAll(BOTTOM_CHROME)) {
+		const below =
+			field.compareDocumentPosition(chrome) &
+			Node.DOCUMENT_POSITION_FOLLOWING;
+		const box = chrome.getBoundingClientRect();
+		if (below && box.height > 0) top = Math.min(top, box.top);
+	}
+	return top;
+}
+
+function visibleBandOf({
+	field,
+	container,
+}: {
+	field: Element;
+	container: Element;
+}): { top: number; bottom: number } {
+	const top = container.getBoundingClientRect().top + container.clientTop;
+	return {
+		top: Math.max(top, topChromeClearance()),
+		bottom: Math.min(
+			window.innerHeight,
+			top + container.clientHeight,
+			bottomChromeTop({ field, container }),
+		),
+	};
+}
+
 function revealFocusedField() {
 	focusedFieldRevealFrame = undefined;
 	if (!appliedImeVisible) return;
@@ -97,16 +150,15 @@ function revealFocusedField() {
 	if (!editable) return;
 	const container = scrollContainerOf(field);
 	watchRevealContainer(container);
-	const visibleBottom = container
-		? Math.min(
-				window.innerHeight,
-				container.getBoundingClientRect().top +
-					container.clientTop +
-					container.clientHeight,
-			)
-		: window.innerHeight;
-	if (field.getBoundingClientRect().bottom <= visibleBottom) return;
-	field.scrollIntoView({ block: "nearest" });
+	const box = field.getBoundingClientRect();
+	if (!container) {
+		if (box.bottom > window.innerHeight)
+			field.scrollIntoView({ block: "nearest" });
+		return;
+	}
+	const band = visibleBandOf({ field, container });
+	const shift = Math.min(box.bottom - band.bottom, box.top - band.top);
+	if (shift > 0) container.scrollBy({ top: shift });
 }
 
 function revealFocusedFieldUnderKeyboard() {
@@ -118,6 +170,7 @@ function revealFocusedFieldUnderKeyboard() {
 function applyNativeInsets(insets: NativeInsets) {
 	if (!insets.ime) watchRevealContainer(undefined);
 	appliedImeVisible = insets.ime;
+	noteSoftKeyboardOpen(insets.ime);
 	writeSafeAreaInsets((side) => `${insets[side]}px`);
 	revealFocusedFieldUnderKeyboard();
 }
@@ -157,6 +210,8 @@ export function installNativeInsets({
 		const imeFlipped =
 			appliedImeVisible !== undefined && insets.ime !== appliedImeVisible;
 		if (imeFlipped) {
+			if (insets.ime && shrinksPageBeforeResize())
+				noteSoftKeyboardOpen(true);
 			deferInsetsUntilResize(insets);
 			return;
 		}
@@ -165,9 +220,19 @@ export function installNativeInsets({
 	};
 	window.__reapplyInsets = reapplyInsets;
 	window.addEventListener("resize", revealFocusedFieldUnderKeyboard);
+	window.addEventListener("focusin", revealFocusedFieldUnderKeyboard);
+	window.addEventListener("introend", revealFocusedFieldUnderKeyboard, {
+		capture: true,
+	});
 	reapplyInsets();
 	return () => {
 		window.removeEventListener("resize", revealFocusedFieldUnderKeyboard);
+		window.removeEventListener("focusin", revealFocusedFieldUnderKeyboard);
+		window.removeEventListener(
+			"introend",
+			revealFocusedFieldUnderKeyboard,
+			{ capture: true },
+		);
 		if (focusedFieldRevealFrame !== undefined)
 			cancelAnimationFrame(focusedFieldRevealFrame);
 		focusedFieldRevealFrame = undefined;

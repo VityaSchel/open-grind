@@ -27,6 +27,7 @@
 		type NativeInsets,
 	} from "$lib/platform/native-insets";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
+	import { applySoftKeyboardLayout } from "$lib/platform/soft-keyboard.svelte";
 	import { installSystemBack } from "$lib/platform/system-back-gesture";
 	import { reconcileNotifications } from "$lib/push/notifications.svelte";
 	import { startPushWatch } from "$lib/push/watch";
@@ -99,6 +100,10 @@
 
 	$effect(() => {
 		applyBackdropBlurQuality();
+	});
+
+	$effect(() => {
+		applySoftKeyboardLayout();
 	});
 
 	$effect(() => {
