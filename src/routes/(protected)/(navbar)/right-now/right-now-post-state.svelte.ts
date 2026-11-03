@@ -20,6 +20,7 @@ import {
 	updateRightNowPost,
 } from "#lib/api/right-now/post.ts";
 import {
+	type FreeRightNowPosts,
 	freeRightNowPostsLeft,
 	type RightNowPostChanges,
 	type RightNowPostDetails,
@@ -56,7 +57,7 @@ export type RightNowPostRejection = {
 
 export class RightNowPostState {
 	post: RightNowPostDetails | null = $state.raw(null);
-	freePostsLeft: number | "unlimited" | null = $state(null);
+	freePostsLeft: FreeRightNowPosts = $state(null);
 	loading = $state(true);
 	joining = $state(false);
 	saving = $state(false);

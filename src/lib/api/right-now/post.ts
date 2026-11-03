@@ -5,6 +5,7 @@ import { fetchRest } from "#lib/api/transport.ts";
 import {
 	freeRightNowPostsLeft,
 	type RightNowPostChanges,
+	rightNowPostChangesSchema,
 	type RightNowPostDetails,
 	rightNowPostDetailsSchema,
 	rightNowPostEntitlementsResponseSchema,
@@ -35,8 +36,6 @@ export class RightNowSessionEndedError extends Error {
 }
 
 const createdPostResponseSchema = z.object({ post: rightNowPostDetailsSchema });
-
-const rightNowPostChangesSchema = rightNowPostRequestSchema.partial();
 
 const sessionEndedUrns = new Set([
 	"urn:gr:err:client_action",

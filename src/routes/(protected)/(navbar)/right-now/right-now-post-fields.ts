@@ -1,10 +1,10 @@
 import type {
+	RightNowModeratedText,
+	RightNowOwnPostMedia,
 	RightNowPostDetails,
 	RightNowPostRequest,
 } from "#lib/model/right-now/post.ts";
 import { liveModeratedText } from "./post/post-form";
-
-type PostMedia = RightNowPostDetails["media"][number];
 
 const textRejectReasonLabels = new Map([
 	["BULLYING", "Bullying"],
@@ -35,8 +35,8 @@ export function isAwaitingModeration(post: RightNowPostDetails): boolean {
 }
 
 export function rejectedParts(post: RightNowPostDetails | null): {
-	text: RightNowPostDetails["moderatedText"];
-	photos: PostMedia[];
+	text: RightNowModeratedText | null;
+	photos: RightNowOwnPostMedia[];
 } {
 	return {
 		text:

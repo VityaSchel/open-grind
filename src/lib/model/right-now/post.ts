@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "#lib/model/media.ts";
+import { rightNowPostMediaDataSchema } from "#lib/model/right-now/feed.ts";
 import { rightNowShareLocationSchema } from "#lib/model/right-now/index.ts";
 import {
 	arrayOfParsableEntries,
@@ -20,9 +21,11 @@ export type RightNowPostEntitlementsResponse = z.infer<
 	typeof rightNowPostEntitlementsResponseSchema
 >;
 
+export type FreeRightNowPosts = number | "unlimited" | null;
+
 export function freeRightNowPostsLeft(
 	entitlements: RightNowPostEntitlementsResponse,
-): number | "unlimited" | null {
+): FreeRightNowPosts {
 	if (entitlements.type === "UNLIMITED") return "unlimited";
 	if (entitlements.type !== "GRANTED") return null;
 	return Math.max(0, entitlements.count ?? 0);
@@ -50,19 +53,16 @@ const moderatedTextSchema = z.object({
 	updatedAt: unixTimestampMsSchema,
 	deleted: serverDefault({ value: z.boolean(), fallback: false }),
 });
+export type RightNowModeratedText = z.infer<typeof moderatedTextSchema>;
 
-const ownPostMediaSchema = z.object({
-	mediaId: z.int(),
-	thumbnailUrl: mediaUrlSchema,
-	fullImageUrl: mediaUrlSchema,
+const ownPostMediaSchema = rightNowPostMediaDataSchema.extend({
 	state: knownValueOrNull({
 		value: z.enum(["PENDING", "APPROVED", "REJECTED", "DELETED"]),
 		label: "right now post media state",
 	}),
 	reason: z.string().nullable().default(null),
-	shouldBlur: serverDefault({ value: z.boolean(), fallback: false }),
-	isNsfw: serverDefault({ value: z.boolean(), fallback: false }),
 });
+export type RightNowOwnPostMedia = z.infer<typeof ownPostMediaSchema>;
 
 export const rightNowPostDetailsSchema = z.object({
 	id: z.int(),
@@ -103,16 +103,23 @@ const rightNowPostMediaReferenceSchema = z.object({
 	data: z.object({ id: z.int() }),
 });
 
+export const rightNowLocationRadiusRange = { min: 0, max: 100 } as const;
+
 export const rightNowPostRequestSchema = z.object({
 	text: z.string().optional(),
 	shareLocation: rightNowShareLocationSchema,
-	locationRadius: z.int().min(0).max(100).optional(),
+	locationRadius: z
+		.int()
+		.min(rightNowLocationRadiusRange.min)
+		.max(rightNowLocationRadiusRange.max)
+		.optional(),
 	media: z.array(rightNowPostMediaReferenceSchema),
 	hosting: z.boolean(),
 });
 export type RightNowPostRequest = z.infer<typeof rightNowPostRequestSchema>;
 
-export type RightNowPostChanges = Partial<RightNowPostRequest>;
+export const rightNowPostChangesSchema = rightNowPostRequestSchema.partial();
+export type RightNowPostChanges = z.infer<typeof rightNowPostChangesSchema>;
 
 export const rightNowMediaUploadResponseSchema = z.object({
 	mediaId: z.int(),

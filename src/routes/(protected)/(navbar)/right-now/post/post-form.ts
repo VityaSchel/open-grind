@@ -1,10 +1,12 @@
-import type {
-	RightNowPostChanges,
-	RightNowPostDetails,
+import {
+	rightNowLocationRadiusRange,
+	type RightNowModeratedText,
+	type RightNowPostChanges,
+	type RightNowPostDetails,
 } from "#lib/model/right-now/post.ts";
 
 export const POST_TEXT_MAX_LENGTH = 140;
-export const LEAST_PRECISE_RADIUS = 100;
+export const LEAST_PRECISE_RADIUS: number = rightNowLocationRadiusRange.max;
 
 const NEAREST_RADIUS_METERS = 100;
 const METERS_PER_RADIUS_STEP = 19;
@@ -53,15 +55,13 @@ export function approximateRadiusMeters({
 	return NEAREST_RADIUS_METERS + METERS_PER_RADIUS_STEP * locationRadius;
 }
 
-type ModeratedText = NonNullable<RightNowPostDetails["moderatedText"]>;
-
 export function liveModeratedText({
 	post,
 	status,
 }: {
 	post: RightNowPostDetails;
-	status?: ModeratedText["textStatus"];
-}): ModeratedText | null {
+	status?: RightNowModeratedText["textStatus"];
+}): RightNowModeratedText | null {
 	const { moderatedText } = post;
 	if (moderatedText === null || moderatedText.deleted) return null;
 	if (status !== undefined && moderatedText.textStatus !== status)
