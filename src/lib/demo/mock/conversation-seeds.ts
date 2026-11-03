@@ -28,6 +28,8 @@ export type DemoMessage = {
 	| { kind: "wire"; type: string; body: unknown }
 );
 
+export type DemoPreview = { type: string };
+
 export type DemoConversation = {
 	withId: number;
 	name?: string;
@@ -39,6 +41,7 @@ export type DemoConversation = {
 	rightNow?: DemoRightNow;
 	chemistry?: boolean;
 	hidesDistance?: boolean;
+	preview?: DemoPreview;
 	messages: DemoMessage[];
 };
 

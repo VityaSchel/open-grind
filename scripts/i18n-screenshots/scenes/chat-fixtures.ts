@@ -4,6 +4,7 @@ import type {
 	DemoInbox,
 	DemoMessage,
 } from "../../../src/lib/demo/mock/conversation-seeds";
+import { albumContentId, albumThumbUrl } from "./album-fixtures";
 
 export const KINDS_ID = 100004;
 export const QUOTES_ID = 100005;
@@ -15,6 +16,12 @@ const NAMELESS_ID = 100003;
 export const PINNED_ID = 100009;
 export const PINNED_MUTED_ID = 100014;
 export const GIF_ID = 100017;
+export const MEDIA_REPLIES_ID = 100001;
+const ALBUM_REACTION_ID = 100019;
+const PHOTO_REPLY_ID = 100020;
+const THEIR_ALBUM_ID = 5001;
+const OUR_ALBUM_ID = 901;
+const OUR_HIDDEN_ALBUM_ID = 900;
 
 const HOUR_MINUTES = 60;
 const YESTERDAY_MINUTES = 25 * HOUR_MINUTES;
@@ -265,6 +272,106 @@ export const GIF_INBOX: DemoInbox = {
 				{ fromMe: true, text: "Lorem ipsum dolor." },
 				wire({ fromMe: false, type: "VideoCall", body: {} }),
 				{ fromMe: false, kind: "gif" },
+			],
+		}),
+	],
+};
+
+function albumReaction({
+	fromMe,
+	albumId,
+	ownerProfileId,
+	slot,
+	viewable,
+}: {
+	fromMe: boolean;
+	albumId: number;
+	ownerProfileId: number;
+	slot: number;
+	viewable: boolean;
+}): DemoMessage {
+	return wire({
+		fromMe,
+		type: "AlbumContentReaction",
+		body: {
+			albumId,
+			ownerProfileId,
+			albumContentId: albumContentId({ albumId, slot }),
+			previewUrl: viewable ? albumThumbUrl({ albumId, slot }) : null,
+			expiresAt: null,
+			viewable,
+		},
+	});
+}
+
+export const MEDIA_REPLIES_INBOX: DemoInbox = {
+	nextPage: null,
+	conversations: [
+		conversation({
+			withId: MEDIA_REPLIES_ID,
+			lastActivityAgo: 2,
+			messages: [
+				{
+					fromMe: false,
+					kind: "albumReply",
+					albumId: OUR_ALBUM_ID,
+					albumContentId: albumContentId({
+						albumId: OUR_ALBUM_ID,
+						slot: 1,
+					}),
+					text: "Lorem ipsum dolor.",
+				},
+				albumReaction({
+					fromMe: true,
+					albumId: THEIR_ALBUM_ID,
+					ownerProfileId: MEDIA_REPLIES_ID,
+					slot: 0,
+					viewable: true,
+				}),
+				albumReaction({
+					fromMe: false,
+					albumId: OUR_HIDDEN_ALBUM_ID,
+					ownerProfileId: demoMeProfileId,
+					slot: 0,
+					viewable: false,
+				}),
+				{
+					fromMe: false,
+					kind: "profilePhotoReply",
+					text: "Sit amet consectetur.",
+				},
+				{
+					fromMe: true,
+					kind: "profilePhotoReply",
+					text: "Adipiscing elit.",
+				},
+			],
+		}),
+		conversation({
+			withId: ALBUM_REACTION_ID,
+			lastActivityAgo: 30,
+			messages: [
+				{ fromMe: true, text: "Sed do eiusmod." },
+				albumReaction({
+					fromMe: false,
+					albumId: OUR_ALBUM_ID,
+					ownerProfileId: demoMeProfileId,
+					slot: 1,
+					viewable: true,
+				}),
+			],
+		}),
+		conversation({
+			withId: PHOTO_REPLY_ID,
+			lastActivityAgo: 90,
+			unread: 1,
+			preview: { type: "ProfilePhotoReply" },
+			messages: [
+				{
+					fromMe: false,
+					kind: "profilePhotoReply",
+					text: "Tempor incididunt.",
+				},
 			],
 		}),
 	],

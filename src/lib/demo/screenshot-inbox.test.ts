@@ -143,6 +143,32 @@ describe("a scene's inbox", () => {
 		expect(previewLabel(nameless?.data.preview)).toBe("Photo");
 	});
 
+	it("previews a conversation with the scene's preview when it has one", () => {
+		screenshotScene.inbox = {
+			nextPage: null,
+			conversations: [
+				{
+					withId: NAMELESS_ID,
+					unread: 0,
+					pinned: false,
+					favorite: false,
+					muted: false,
+					lastActivityAgo: 1,
+					preview: { type: "ProfilePhotoReply" },
+					messages: [
+						{
+							fromMe: false,
+							kind: "profilePhotoReply",
+							text: "Lorem ipsum.",
+						},
+					],
+				},
+			],
+		};
+		const [entry] = inboxPage(1).entries;
+		expect(previewLabel(entry?.data.preview)).toBe("Replied to a photo");
+	});
+
 	it("builds wire messages and quotes that the real schemas accept", () => {
 		screenshotScene.inbox = inbox;
 		const [reply, location] = messagesOf(QUOTING_ID).messages;

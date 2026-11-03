@@ -341,7 +341,7 @@ export function demoConversations({
 					],
 					lastActivityTimestamp: lastActivityOf(conv),
 					unreadCount: conv.unread,
-					preview: previewFromMessage(latest),
+					preview: conv.preview ?? previewFromMessage(latest),
 					muted: mutedOverrides.get(conversationId) ?? conv.muted,
 					pinned: pinnedOverrides.get(conversationId) ?? conv.pinned,
 					favorite: demoFavoriteOf({

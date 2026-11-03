@@ -99,6 +99,11 @@ import {
 	inboxSelection,
 	rowMenus,
 } from "./chat-inbox";
+import {
+	mediaReplies,
+	photoReplyOpenFailure,
+	profilePhotoReply,
+} from "./chat-replies";
 import { sendPhotos, sendPreviewFailure, sendVideos } from "./chat-send-media";
 import {
 	gifsLoadingMore,
@@ -383,6 +388,8 @@ export const scenes: Scene[] = [
 	unsentMessage,
 	markReadFailure,
 	syncFailure,
+	mediaReplies,
+	photoReplyOpenFailure,
 	replyPreview,
 	voiceMessage,
 	attachmentTabs,
@@ -420,6 +427,7 @@ export const scenes: Scene[] = [
 	copyProfileId,
 	profileRefreshFailure,
 	profileLightbox,
+	profilePhotoReply,
 	albumVideoPlayer,
 	albumPreviewFailures,
 	videoPlayFailed,

@@ -56,6 +56,16 @@ function photoUrl({
 	return `https://picsum.photos/seed/album-${albumId}-${slot}/${width}/${height}`;
 }
 
+export function albumThumbUrl({
+	albumId,
+	slot,
+}: {
+	albumId: number;
+	slot: number;
+}): string {
+	return photoUrl({ albumId, slot, ...THUMB });
+}
+
 export function albumMediaUrl({
 	albumId,
 	slot,
@@ -74,7 +84,7 @@ function contentItem({
 }: AlbumSlot & { albumId: number; slot: number }) {
 	const thumb = processing
 		? PROCESSING_URL
-		: photoUrl({ albumId, slot, ...THUMB });
+		: albumThumbUrl({ albumId, slot });
 	return {
 		contentId: albumContentId({ albumId, slot }),
 		contentType: video ? "video/mp4" : "image/jpeg",
