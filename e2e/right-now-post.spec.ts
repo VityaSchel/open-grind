@@ -1,10 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { installTauriShim, openGrid } from "./support/app";
+import { installTauriShim } from "./support/app";
 import { routeDemoThroughFaultHook } from "./support/demo-faults";
+import {
+	goToRightNow,
+	RIGHT_NOW_FEED_TIMEOUT,
+	rightNowJoinPill,
+} from "./support/right-now";
 
-const FEED_TIMEOUT = 60_000;
 const POST_TEXT = "Coffee at mine?";
 const OFF_NOTE = "Your timer keeps running while you're off.";
 const ENTITLEMENTS_PATH = "/v1/rightnow/entitlements/posts";
@@ -14,24 +18,12 @@ const ownCard = (page: Page) =>
 	articles(page).filter({
 		has: page.getByRole("button", { name: "Edit your post" }),
 	});
-const joinPill = (page: Page) =>
-	page.getByRole("button", { name: "Join · 3 free" });
 const timeLeftPill = (page: Page) =>
 	page.getByRole("button", { name: /^Your Right Now post, .+ left$/ });
 const postSheet = (page: Page) =>
 	page.getByRole("dialog", { name: "Right Now" });
 const showMyPost = (page: Page) =>
 	postSheet(page).getByRole("switch", { name: "Show my post" });
-
-async function goToRightNow(page: Page): Promise<void> {
-	await openGrid(page);
-	await page
-		.getByRole("navigation", { name: "Main" })
-		.getByRole("link", { name: "Right Now" })
-		.click();
-	await expect(page).toHaveURL(/\/right-now$/);
-	await articles(page).first().waitFor({ timeout: FEED_TIMEOUT });
-}
 
 async function closeSheet(page: Page): Promise<void> {
 	await expect(showMyPost(page)).toBeEnabled();
@@ -40,13 +32,15 @@ async function closeSheet(page: Page): Promise<void> {
 }
 
 async function join(page: Page): Promise<void> {
-	await joinPill(page).click({ timeout: FEED_TIMEOUT });
+	await rightNowJoinPill(page).click({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 	const confirm = page.getByRole("alertdialog", { name: "Join Right Now?" });
 	await confirm.getByRole("button", { name: "Join now" }).click();
 	await expect(confirm).toBeHidden();
 	await expect(postSheet(page)).toBeVisible();
 	await closeSheet(page);
-	await expect(ownCard(page)).toHaveCount(1, { timeout: FEED_TIMEOUT });
+	await expect(ownCard(page)).toHaveCount(1, {
+		timeout: RIGHT_NOW_FEED_TIMEOUT,
+	});
 }
 
 async function setShown(page: Page, shown: boolean): Promise<void> {
@@ -63,11 +57,9 @@ test.describe("our own Right Now post in the demo", () => {
 		test.setTimeout(240_000);
 		await installTauriShim(page);
 		await goToRightNow(page);
-	});
-
-	test("the pill offers the free posts left", async ({ page }) => {
-		await expect(joinPill(page)).toBeEnabled({ timeout: FEED_TIMEOUT });
-		await expect(ownCard(page)).toHaveCount(0);
+		await articles(page)
+			.first()
+			.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 	});
 
 	test("joining lists our Joined card and shows the time left on the pill", async ({
@@ -97,7 +89,7 @@ test.describe("our own Right Now post in the demo", () => {
 		await expect(sheet).toBeHidden();
 
 		await expect(ownCard(page).getByRole("heading")).toHaveText(POST_TEXT, {
-			timeout: FEED_TIMEOUT,
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
 		});
 	});
 
@@ -108,7 +100,9 @@ test.describe("our own Right Now post in the demo", () => {
 
 		await setShown(page, false);
 
-		await expect(ownCard(page)).toHaveCount(0, { timeout: FEED_TIMEOUT });
+		await expect(ownCard(page)).toHaveCount(0, {
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
 		await expect(
 			page.getByRole("button", {
 				name: /^Your Right Now post, off, .+ left$/,
@@ -117,7 +111,9 @@ test.describe("our own Right Now post in the demo", () => {
 
 		await setShown(page, true);
 
-		await expect(ownCard(page)).toHaveCount(1, { timeout: FEED_TIMEOUT });
+		await expect(ownCard(page)).toHaveCount(1, {
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
 	});
 });
 
@@ -141,7 +137,7 @@ test.describe("an area with no free posts left", () => {
 		const join = page.getByRole("button", {
 			name: "Join · 0 free. No free posts left in this area",
 		});
-		await expect(join).toBeDisabled({ timeout: FEED_TIMEOUT });
+		await expect(join).toBeDisabled({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 		await expect(join).toHaveText("Join · 0 free");
 	});
 });
