@@ -19,20 +19,13 @@ vi.mock("#lib/api/right-now/photo.ts", () => ({
 vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: vi.fn() }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
-import {
-	FakeRightNowPostState,
-	MINUTE,
-	postDetails,
-} from "./post-test-helpers.svelte";
+import { MINUTE, ownPost } from "../right-now-post-test-helpers";
+import { runningPost } from "./post-test-helpers.svelte";
 import {
 	renderSheet,
-	runningPost,
 	sheetShown,
-	stubResizeObserver,
 	textField,
 } from "./sheet-test-helpers.svelte";
-
-stubResizeObserver();
 
 const visibilitySwitch = () =>
 	screen.getByRole("switch", { name: "Show my post" });
@@ -165,9 +158,7 @@ describe("the Right Now post sheet rejections", () => {
 	});
 
 	it("shows no rejection while nothing is rejected", async () => {
-		const fake = runningPost();
-		fake.pendingModeration = true;
-		await renderSheet(fake);
+		await renderSheet(runningPost());
 
 		expect(screen.queryByRole("alert")).toBeNull();
 	});
@@ -175,16 +166,16 @@ describe("the Right Now post sheet rejections", () => {
 
 describe("the Right Now post sheet form", () => {
 	it("starts from the post's text, hosting and location", async () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost({
-			activeText: "Coffee?",
-			hosting: true,
-			shareLocation: "DISTANCE_AND_MAP",
-			locationRadius: 30,
-		});
-		await renderSheet(fake);
+		await renderSheet(
+			runningPost({
+				activeText: "Coffee?",
+				hosting: true,
+				shareLocation: "DISTANCE_AND_MAP",
+				locationRadius: 30,
+			}),
+		);
 
-		expect((textField() as HTMLTextAreaElement).value).toBe("Coffee?");
+		expect(textField().value).toBe("Coffee?");
 		expect(
 			screen
 				.getByRole("switch", { name: "Hosting" })
@@ -206,9 +197,9 @@ describe("the Right Now post sheet form", () => {
 		const fake = runningPost();
 		await renderSheet(fake);
 
-		fake.post = postDetails({ activeText: "Approved" });
+		fake.post = ownPost({ activeText: "Approved" });
 		flushSync();
 
-		expect((textField() as HTMLTextAreaElement).value).toBe("Approved");
+		expect(textField().value).toBe("Approved");
 	});
 });

@@ -54,6 +54,7 @@ import {
 	moderatedText,
 	ownPost,
 	POST_ID,
+	POST_LIFETIME,
 	postPhoto,
 	SECOND,
 } from "./right-now-post-test-helpers";
@@ -314,7 +315,7 @@ describe("RightNowPostState expiry", () => {
 		return ownPost({
 			id: POST_ID + 1,
 			posted: Date.now(),
-			expiration: Date.now() + 60 * MINUTE,
+			expiration: Date.now() + POST_LIFETIME,
 		});
 	}
 

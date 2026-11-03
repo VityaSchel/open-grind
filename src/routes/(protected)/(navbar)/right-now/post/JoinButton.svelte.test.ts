@@ -4,10 +4,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { MINUTE } from "../right-now-post-test-helpers";
 import JoinButton from "./JoinButton.svelte";
-import { FakeRightNowPostState, MINUTE } from "./post-test-helpers.svelte";
-
-const RING_LENGTH = 2 * Math.PI * 9;
+import { FakeRightNowPostState, runningPost } from "./post-test-helpers.svelte";
 
 function renderButton(fake = new FakeRightNowPostState()) {
 	const onjoin = vi.fn();
@@ -16,17 +15,20 @@ function renderButton(fake = new FakeRightNowPostState()) {
 	return { fake, onjoin, onopen };
 }
 
-function ringOffset(): number {
+function ringElapsed(): number {
 	const progress = document.querySelector(
 		"[data-slot=join-button-ring-progress]",
 	);
-	return Number(progress?.getAttribute("stroke-dashoffset"));
+	return (
+		Number(progress?.getAttribute("stroke-dashoffset")) /
+		Number(progress?.getAttribute("stroke-dasharray"))
+	);
 }
 
 afterEach(cleanup);
 
 describe("the Right Now join pill", () => {
-	it.each<[number | "unlimited" | null, string]>([
+	it.each<[FakeRightNowPostState["freePostsLeft"], string]>([
 		[3, "Join · 3 free"],
 		[1, "Join · 1 free"],
 		["unlimited", "Join · Free"],
@@ -88,9 +90,7 @@ describe("the Right Now join pill", () => {
 	});
 
 	it("shows the time left with a ring and opens the post during a post", async () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost();
-		const { onjoin, onopen } = renderButton(fake);
+		const { onjoin, onopen } = renderButton(runningPost());
 
 		const button = screen.getByRole("button", {
 			name: "Your Right Now post, 42m left",
@@ -98,15 +98,13 @@ describe("the Right Now join pill", () => {
 		await fireEvent.click(button);
 
 		expect(button.textContent.trim()).toBe("42m left");
-		expect(ringOffset()).toBeCloseTo(RING_LENGTH * 0.3);
+		expect(ringElapsed()).toBeCloseTo(0.3);
 		expect(onopen).toHaveBeenCalledOnce();
 		expect(onjoin).not.toHaveBeenCalled();
 	});
 
 	it("counts down as the time left changes", () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost();
-		renderButton(fake);
+		const { fake } = renderButton(runningPost());
 
 		fake.timeLeftMs = 30_000;
 		flushSync();
@@ -116,22 +114,19 @@ describe("the Right Now join pill", () => {
 				name: "Your Right Now post, 30s left",
 			}),
 		).toBeTruthy();
-		expect(ringOffset()).toBeCloseTo(RING_LENGTH * (1 - 0.5 / 60));
+		expect(ringElapsed()).toBeCloseTo(1 - 0.5 / 60);
 	});
 
-	it("measures the ring against a full hour when the post has no times", () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost({ posted: null, expiration: null });
+	it("measures the ring against a full hour when the post has no posted time", () => {
+		const fake = runningPost({ posted: null });
 		fake.timeLeftMs = 15 * MINUTE;
 		renderButton(fake);
 
-		expect(ringOffset()).toBeCloseTo(RING_LENGTH * 0.75);
+		expect(ringElapsed()).toBeCloseTo(0.75);
 	});
 
 	it("says the post is off while it is hidden", () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost({ postStatus: "HIDDEN" });
-		renderButton(fake);
+		renderButton(runningPost({ postStatus: "HIDDEN" }));
 
 		expect(
 			screen.getByRole("button", {
@@ -141,12 +136,11 @@ describe("the Right Now join pill", () => {
 	});
 
 	it("goes back to joining once the post ends", () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost();
-		renderButton(fake);
+		const { fake } = renderButton(runningPost());
 
 		fake.post = null;
 		fake.status = "none";
+		fake.freePostsLeft = 2;
 		flushSync();
 
 		expect(

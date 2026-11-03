@@ -4,6 +4,15 @@ import { cleanup, fireEvent, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const { photoApi, pickMediaMock } = vi.hoisted(() => ({
+	photoApi: {
+		uploadRightNowPhotoFromUrl: vi.fn(),
+		uploadRightNowPickedPhoto: vi.fn(),
+		RightNowPhotoTooSmallError: class extends Error {},
+	},
+	pickMediaMock: vi.fn(),
+}));
+
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => ({ units: "metric" }),
 }));
@@ -11,28 +20,20 @@ vi.mock("#lib/api/messaging/drawer.ts", () => ({
 	getAllDrawerMedia: vi.fn(() => Promise.resolve([])),
 	deleteDrawerMedia: vi.fn(),
 }));
-vi.mock("#lib/api/right-now/photo.ts", () => ({
-	uploadRightNowPhotoFromUrl: vi.fn(),
-	uploadRightNowPickedPhoto: vi.fn(),
-	RightNowPhotoTooSmallError: class extends Error {},
-}));
-vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: vi.fn() }));
+vi.mock("#lib/api/right-now/photo.ts", () => photoApi);
+vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: pickMediaMock }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
-import { postDetails } from "./post-test-helpers.svelte";
+import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import type { RightNowMediaUploadResponse } from "#lib/model/right-now/post.ts";
+import { ownPost } from "../right-now-post-test-helpers";
+import { runningPost } from "./post-test-helpers.svelte";
 import {
-	goBack,
 	renderSheet,
-	runningPost,
 	saveButton,
 	sheetShown,
-	stubResizeObserver,
 	textField,
 } from "./sheet-test-helpers.svelte";
-
-stubResizeObserver();
-
-const textValue = () => (textField() as HTMLTextAreaElement).value;
 
 async function type(value: string) {
 	await fireEvent.input(textField(), { target: { value } });
@@ -66,8 +67,7 @@ describe("saving the Right Now post", () => {
 	});
 
 	it("still saves other fields when the post's own text is over 140 characters", async () => {
-		const fake = runningPost();
-		fake.post = postDetails({ activeText: "a".repeat(200) });
+		const fake = runningPost({ activeText: "a".repeat(200) });
 		await renderSheet(fake);
 
 		await fireEvent.click(screen.getByRole("switch", { name: "Hosting" }));
@@ -79,8 +79,7 @@ describe("saving the Right Now post", () => {
 	});
 
 	it("stops sharing a distance-only post's location once the map switch is turned on and off", async () => {
-		const fake = runningPost();
-		fake.post = postDetails({ shareLocation: "DISTANCE_ONLY" });
+		const fake = runningPost({ shareLocation: "DISTANCE_ONLY" });
 		await renderSheet(fake);
 		const mapSwitch = screen.getByRole("switch", {
 			name: "Show me on map",
@@ -117,7 +116,7 @@ describe("saving the Right Now post", () => {
 
 		await type("Coffee?\nNow");
 
-		expect(textValue()).toBe("Coffee? Now");
+		expect(textField().value).toBe("Coffee? Now");
 	});
 
 	it("blocks saving text over 140 characters", async () => {
@@ -148,9 +147,8 @@ describe("saving the Right Now post", () => {
 		expect(
 			screen
 				.getByRole("switch", { name: "Hosting" })
-				.closest('[data-slot="label"]')
-				?.getAttribute("aria-disabled"),
-		).toBe("true");
+				.matches(":disabled"),
+		).toBe(true);
 	});
 
 	it("stays open with the edits when saving fails", async () => {
@@ -163,7 +161,7 @@ describe("saving the Right Now post", () => {
 
 		await vi.waitFor(() => expect(fake.save).toHaveBeenCalledOnce());
 		expect(stored.open).toBe(true);
-		expect(textValue()).toBe("Coffee?");
+		expect(textField().value).toBe("Coffee?");
 	});
 
 	it("keeps the edits when the post updates underneath them", async () => {
@@ -171,10 +169,51 @@ describe("saving the Right Now post", () => {
 		await renderSheet(fake);
 
 		await type("Mine");
-		fake.post = postDetails({ activeText: "Theirs" });
+		fake.post = ownPost({ activeText: "Theirs" });
 		flushSync();
 
-		expect(textValue()).toBe("Mine");
+		expect(textField().value).toBe("Mine");
+	});
+
+	it("keeps Save locked while the photo uploads and then sends it as media", async () => {
+		const fake = runningPost();
+		await renderSheet(fake);
+		await type("Coffee?");
+		pickMediaMock.mockResolvedValueOnce({
+			key: "picked",
+			mimeType: "image/jpeg",
+			source: "desktop",
+			path: "/tmp/photo.jpg",
+		});
+		const upload = Promise.withResolvers<RightNowMediaUploadResponse>();
+		photoApi.uploadRightNowPickedPhoto.mockReturnValueOnce(upload.promise);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Add photo" }),
+		);
+		await fireEvent.click(
+			await screen.findByRole("button", { name: "Upload a photo" }),
+		);
+
+		expect(await screen.findByText("Uploading photo")).toBeTruthy();
+		expect(saveButton().matches(":disabled")).toBe(true);
+
+		upload.resolve({
+			mediaId: 88,
+			url: "https://cdns.grindr.com/rightnow/full/88",
+			thumbnailUrl: "https://cdns.grindr.com/rightnow/thumb/88",
+		});
+		await vi.waitFor(() =>
+			expect(saveButton().matches(":disabled")).toBe(false),
+		);
+		await fireEvent.click(saveButton());
+
+		expect(fake.save).toHaveBeenCalledExactlyOnceWith({
+			changes: {
+				text: "Coffee?",
+				media: [{ type: "image_v1", data: { id: 88 } }],
+			},
+		});
 	});
 });
 
@@ -185,7 +224,7 @@ describe("closing the Right Now post sheet", () => {
 	it("closes at once without asking when nothing changed", async () => {
 		const stored = await renderSheet(runningPost());
 
-		goBack();
+		runBackGestureHandlers();
 		flushSync();
 
 		expect(stored.open).toBe(false);
@@ -196,7 +235,7 @@ describe("closing the Right Now post sheet", () => {
 		const stored = await renderSheet(runningPost());
 		await type("Coffee?");
 
-		goBack();
+		runBackGestureHandlers();
 
 		expect(
 			await screen.findByRole("alertdialog", {
@@ -209,16 +248,16 @@ describe("closing the Right Now post sheet", () => {
 		);
 		await vi.waitFor(() => expect(discardPrompt()).toBeNull());
 		expect(stored.open).toBe(true);
-		expect(textValue()).toBe("Coffee?");
+		expect(textField().value).toBe("Coffee?");
 	});
 
 	it("closes only the prompt on a second back gesture", async () => {
 		const stored = await renderSheet(runningPost());
 		await type("Coffee?");
-		goBack();
+		runBackGestureHandlers();
 		await screen.findByRole("alertdialog", { name: "Discard changes?" });
 
-		goBack();
+		runBackGestureHandlers();
 
 		await vi.waitFor(() => expect(discardPrompt()).toBeNull());
 		expect(stored.open).toBe(true);
@@ -242,7 +281,7 @@ describe("closing the Right Now post sheet", () => {
 		const fake = runningPost();
 		const stored = await renderSheet(fake);
 		await type("Coffee?");
-		goBack();
+		runBackGestureHandlers();
 
 		await fireEvent.click(
 			await screen.findByRole("button", { name: "Discard" }),
@@ -259,7 +298,7 @@ describe("closing the Right Now post sheet", () => {
 		fake.saving = true;
 		flushSync();
 
-		goBack();
+		runBackGestureHandlers();
 		flushSync();
 
 		expect(stored.open).toBe(true);
@@ -268,7 +307,7 @@ describe("closing the Right Now post sheet", () => {
 	it("starts over from the post when opened again after closing", async () => {
 		const stored = await renderSheet(runningPost());
 		await type("Coffee?");
-		goBack();
+		runBackGestureHandlers();
 		await fireEvent.click(
 			await screen.findByRole("button", { name: "Discard" }),
 		);
@@ -276,6 +315,6 @@ describe("closing the Right Now post sheet", () => {
 
 		stored.open = true;
 
-		await vi.waitFor(() => expect(textValue()).toBe(""));
+		await vi.waitFor(() => expect(textField().value).toBe(""));
 	});
 });

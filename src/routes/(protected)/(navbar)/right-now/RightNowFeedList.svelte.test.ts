@@ -80,22 +80,15 @@ describe("the Right Now feed list", () => {
 		});
 
 		expect(screen.getAllByRole("article")).toHaveLength(4);
-		for (const { name, author } of [
-			{ name: "Standard post", author: "Author 1" },
-			{ name: "Locked post", author: "Author 2" },
-		]) {
+		for (const name of ["Standard post", "Locked post"]) {
 			const card = screen.getByRole("article", { name });
 			expect(card.getAttribute("data-slot")).toBe("right-now-post");
-			expect(
-				within(card).getByRole("link", { name: `Message ${author}` }),
-			).toBeTruthy();
 		}
 		for (const name of ["Discreet post text", "Discreet locked post"]) {
 			const card = screen.getByRole("article", { name });
 			expect(card.getAttribute("data-slot")).toBe(
 				"right-now-discreet-post",
 			);
-			expect(within(card).queryAllByRole("link")).toHaveLength(0);
 		}
 	});
 
@@ -114,21 +107,12 @@ describe("the Right Now feed list", () => {
 							profileId: OUR_PROFILE_ID,
 						},
 					},
-					{
-						type: "right_now_post_v3",
-						data: postData({ id: 2, text: "Their post" }),
-					},
 				]),
 			},
 		});
 
 		const ours = screen.getByRole("article", { name: "Our post" });
-		const theirs = screen.getByRole("article", { name: "Their post" });
 		expect(within(ours).getByText("Under review")).toBeTruthy();
-		expect(within(theirs).queryByText("Under review")).toBeNull();
-		expect(
-			within(theirs).queryByRole("button", { name: "Edit your post" }),
-		).toBeNull();
 
 		await fireEvent.click(
 			within(ours).getByRole("button", { name: "Edit your post" }),

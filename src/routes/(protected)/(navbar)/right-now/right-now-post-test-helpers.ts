@@ -6,9 +6,10 @@ import type {
 
 export const SECOND = 1_000;
 export const MINUTE = 60 * SECOND;
+export const POST_LIFETIME = 60 * MINUTE;
 export const POST_ID = 254;
 export const POSTED = Date.now() - MINUTE;
-export const EXPIRATION = POSTED + 60 * MINUTE;
+export const EXPIRATION = POSTED + POST_LIFETIME;
 
 export function ownPost(
 	overrides: Partial<RightNowPostDetails> = {},

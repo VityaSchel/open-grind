@@ -19,11 +19,8 @@ vi.mock("#lib/api/right-now/photo.ts", () => ({
 vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: vi.fn() }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
-import { FakeRightNowPostState } from "./post-test-helpers.svelte";
+import { FakeRightNowPostState, runningPost } from "./post-test-helpers.svelte";
 import RightNowPostControls from "./RightNowPostControls.svelte";
-import { stubResizeObserver } from "./sheet-test-helpers.svelte";
-
-stubResizeObserver();
 
 const sheet = () => screen.findByRole("dialog", { name: "Right Now" });
 
@@ -68,9 +65,7 @@ describe("the Right Now post controls", () => {
 	});
 
 	it("opens the post sheet from the pill during a post", async () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost();
-		renderControls(fake);
+		renderControls(runningPost());
 
 		await fireEvent.click(
 			screen.getByRole("button", {
@@ -82,9 +77,7 @@ describe("the Right Now post controls", () => {
 	});
 
 	it("opens the post sheet when the state asks for it", async () => {
-		const fake = new FakeRightNowPostState();
-		fake.startPost();
-		renderControls(fake);
+		const { fake } = renderControls(runningPost());
 		const listener = fake.onSheetRequest.mock.lastCall?.[0];
 
 		expect(listener).toBeTypeOf("function");

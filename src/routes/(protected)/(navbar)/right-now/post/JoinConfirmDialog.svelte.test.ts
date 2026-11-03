@@ -77,6 +77,20 @@ describe("the Join Right Now confirmation", () => {
 		expect(cancelButton().matches(":disabled")).toBe(true);
 	});
 
+	it("keeps Escape from closing the dialog while joining", async () => {
+		const { fake } = await renderDialog();
+
+		fake.joining = true;
+		flushSync();
+		await fireEvent.keyDown(document, { key: "Escape" });
+
+		expect(
+			screen
+				.getByRole("alertdialog", { name: "Join Right Now?" })
+				.getAttribute("data-state"),
+		).toBe("open");
+	});
+
 	it("swallows the back gesture while joining", async () => {
 		const { fake } = await renderDialog();
 

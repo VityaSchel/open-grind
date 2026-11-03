@@ -8,9 +8,6 @@ import type {
 import { discreetPostData, postData } from "./feed-post-test-helpers";
 import { RightNowFeedState } from "./right-now-feed-state.svelte";
 
-export const SECOND = 1_000;
-export const MINUTE = 60 * SECOND;
-
 const createdStates: RightNowFeedState[] = [];
 
 export function createState(): RightNowFeedState {

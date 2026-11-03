@@ -144,16 +144,6 @@ describe("a Right Now post card", () => {
 		).toBe(`/chat/${conversationId}`);
 	});
 
-	it("leaves the chat button off our own post", () => {
-		renderCard({ ourProfileId: AUTHOR_ID });
-
-		expect(
-			screen.getByRole("link", { name: "View Simon's profile" }),
-		).toBeTruthy();
-		expect(screen.queryByRole("link", { name: /^Message/ })).toBeNull();
-		expect(screen.getAllByRole("link")).toHaveLength(1);
-	});
-
 	it("offers Edit instead of Message on our own post", async () => {
 		const onedit = vi.fn();
 		renderCard({ ourProfileId: AUTHOR_ID, onedit });
@@ -164,6 +154,7 @@ describe("a Right Now post card", () => {
 
 		expect(onedit).toHaveBeenCalledOnce();
 		expect(screen.queryByRole("link", { name: /^Message/ })).toBeNull();
+		expect(screen.getAllByRole("link")).toHaveLength(1);
 	});
 
 	it("offers neither Edit nor Message on our own post until our post is loaded", () => {
