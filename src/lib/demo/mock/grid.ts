@@ -17,7 +17,6 @@ import {
 	GRID_PAGE_SIZE,
 	MINUTE,
 	NOW,
-	screenshotsEnabled,
 } from "../config";
 import { sceneProfile } from "../screenshot-scene";
 import { demoProfileResolves } from "./blocks";
@@ -176,7 +175,7 @@ function cascadeProfileData(seed: DemoSeed) {
 		onlineUntil = onlineUntilOf(seed),
 		unreadCount = seed.unread,
 		isVisiting = false,
-	} = screenshotsEnabled ? sceneProfile(seed.id) : {};
+	} = __SCREENSHOTS__ ? sceneProfile(seed.id) : {};
 	return {
 		profileId: seed.id,
 		onlineUntil,

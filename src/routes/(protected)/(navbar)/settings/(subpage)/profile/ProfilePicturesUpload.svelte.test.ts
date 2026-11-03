@@ -17,15 +17,10 @@ const profiles = vi.hoisted(() => ({
 }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
-const demo = vi.hoisted(() => ({
-	demoEnabled: false,
-	screenshotsEnabled: false,
-}));
 
 vi.mock("$lib/api/users/profiles", () => profiles);
 vi.mock("$lib/platform/media-picker", () => picker);
 vi.mock("svelte-sonner", () => sonner);
-vi.mock("$lib/demo", () => demo);
 
 import { ApiError } from "$lib/api/api-error";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
@@ -77,8 +72,7 @@ beforeEach(() => previousUploads());
 afterEach(async () => {
 	cleanup();
 	vi.clearAllMocks();
-	demo.demoEnabled = false;
-	demo.screenshotsEnabled = false;
+	vi.unstubAllGlobals();
 	restoreCountFormatter();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
@@ -228,7 +222,7 @@ describe("profile pictures upload", () => {
 	});
 
 	it("offers no uploads in the demo", () => {
-		demo.demoEnabled = true;
+		vi.stubGlobal("__DEMO__", true);
 		const { queryByRole } = render(ProfilePicturesUpload, {
 			props: { ourProfileId: 1, medias: [] },
 		});
@@ -237,8 +231,8 @@ describe("profile pictures upload", () => {
 	});
 
 	it("offers uploads in a screenshot build of the demo", () => {
-		demo.demoEnabled = true;
-		demo.screenshotsEnabled = true;
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
 		const { queryByRole } = render(ProfilePicturesUpload, {
 			props: { ourProfileId: 1, medias: [] },
 		});

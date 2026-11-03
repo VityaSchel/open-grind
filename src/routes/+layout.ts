@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 
 import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { demo, screenshotsEnabled } from "$lib/demo";
+import { demo } from "$lib/demo";
 import { hydrateDesktopEntryState } from "$lib/platform/desktop-entry.svelte";
 import { updatesAvailableHere } from "$lib/updates";
 import { hydrateUpdateCapability } from "$lib/updates/capability.svelte";
@@ -13,7 +13,7 @@ export const csr = true;
 export const load: LayoutLoad = async ({ url }) => {
 	await hydrateUpdateCapability();
 	await hydrateDesktopEntryState();
-	const onboardingComplete = screenshotsEnabled
+	const onboardingComplete = __SCREENSHOTS__
 		? !demo().screenshotScene.onboarding
 		: !updatesAvailableHere() ||
 			(await getPreferences()

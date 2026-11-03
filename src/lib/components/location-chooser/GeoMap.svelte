@@ -19,7 +19,6 @@
 	} from "leaflet";
 
 	import { Spinner } from "$lib/components/ui/spinner";
-	import { screenshotsEnabled } from "$lib/demo/config";
 	import { t } from "$lib/i18n";
 	import { locationRequest } from "$lib/location/location-request.svelte";
 	import { openExternalLink } from "$lib/platform/link-opener";
@@ -228,7 +227,7 @@
 		options={{
 			center: initial
 				? [initial.lat, initial.lon]
-				: screenshotsEnabled
+				: __SCREENSHOTS__
 					? OPEN_OCEAN
 					: DEFAULT_CENTER,
 			zoom: initial?.zoom ?? 2,

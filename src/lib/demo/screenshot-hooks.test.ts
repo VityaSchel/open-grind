@@ -73,7 +73,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	delete window.__openGrindScreenshots;
 	delete window.__openGrindScreenshotScene;
 	document.documentElement.lang = "en";
@@ -86,17 +86,12 @@ describe("without OPEN_GRIND_SCREENSHOTS", FRESH_IMPORTS, () => {
 		const { screenshotScene } = await import("./screenshot-scene");
 		expect(screenshotScene.signedOut).toBe(false);
 	});
-
-	it("installs none outside the demo either", async () => {
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
-		expect(await startApp()).toBeUndefined();
-	});
 });
 
 describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 	beforeEach(() => {
-		vi.stubEnv("OPEN_GRIND_DEMO", "1");
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
 	});
 
 	it("installs the hooks before the app starts", async () => {

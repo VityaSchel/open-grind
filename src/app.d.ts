@@ -1,6 +1,9 @@
 import type { NativeInsets } from "$lib/platform/android-native-bridge";
 
 declare global {
+	const __DEMO__: boolean;
+	const __SCREENSHOTS__: boolean;
+
 	namespace App {
 		interface Error {
 			message: string;

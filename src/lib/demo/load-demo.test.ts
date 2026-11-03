@@ -1,19 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { flags, connect } = vi.hoisted(() => ({
-	flags: { demo: true },
-	connect: vi.fn(),
-}));
+const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		get demoEnabled() {
-			return flags.demo;
-		},
-	};
-});
 vi.mock("$lib/ws.svelte", () => ({ ws: { connect } }));
 vi.mock("$lib/platform/regional-settings", () => ({
 	startRegionalSettings: vi.fn(() => Promise.resolve()),
@@ -33,9 +21,13 @@ async function freshApp() {
 	return { init, demo };
 }
 
+beforeEach(() => {
+	vi.stubGlobal("__DEMO__", true);
+});
+
 afterEach(() => {
-	flags.demo = true;
 	connect.mockReset();
+	vi.unstubAllGlobals();
 });
 
 describe("the demo runtime", FRESH_IMPORTS, () => {
@@ -52,7 +44,7 @@ describe("the demo runtime", FRESH_IMPORTS, () => {
 	});
 
 	it("stays unloaded outside the demo", async () => {
-		flags.demo = false;
+		vi.stubGlobal("__DEMO__", false);
 		const { init, demo } = await freshApp();
 		await init();
 		expect(() => demo()).toThrow("The demo is not loaded yet");

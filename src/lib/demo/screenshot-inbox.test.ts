@@ -1,17 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
-
-const flags = vi.hoisted(() => ({ screenshots: true }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
 
 import { conversationIdFor } from "$lib/chat/conversation-id";
 import { conversationEntrySchema } from "$lib/model/messaging/conversations";
@@ -113,9 +101,13 @@ function messagesOf(withId: number) {
 	);
 }
 
+beforeEach(() => {
+	vi.stubGlobal("__SCREENSHOTS__", true);
+});
+
 afterEach(() => {
 	screenshotScene.inbox = null;
-	flags.screenshots = true;
+	vi.unstubAllGlobals();
 });
 
 describe("a scene's inbox", () => {
@@ -206,7 +198,7 @@ describe("a scene's inbox", () => {
 	});
 
 	it("keeps the demo conversations without the flag", () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		screenshotScene.inbox = inbox;
 		const ids = inboxPage(1).entries.map(
 			({ data }) => data.participants[0]?.profileId,

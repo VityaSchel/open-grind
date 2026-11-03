@@ -1,19 +1,12 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-
-const flags = vi.hoisted(() => ({ demo: true, screenshots: true }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		get demoEnabled() {
-			return flags.demo;
-		},
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 
 import { ApiError } from "$lib/api/api-error";
 import { callMethod } from "$lib/api/methods";
@@ -41,12 +34,16 @@ function setScene(scene: Partial<ScreenshotScene>): void {
 
 beforeAll(loadDemo);
 
+beforeEach(() => {
+	vi.stubGlobal("__DEMO__", true);
+	vi.stubGlobal("__SCREENSHOTS__", true);
+});
+
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));
-	flags.demo = true;
-	flags.screenshots = true;
 	requestBlockedAlertState.open = false;
 	delete (window as { isTauri?: boolean }).isTauri;
+	vi.unstubAllGlobals();
 });
 
 describe("REST faults", () => {
@@ -118,7 +115,7 @@ describe("REST faults", () => {
 	});
 
 	it("leaves requests alone without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({ restFaults: [{ path: "/v2/taps/received", status: 503 }] });
 		expect((await fetchRest("/v2/taps/received")).status).toBe(200);
 	});
@@ -194,7 +191,7 @@ describe("method faults", () => {
 	});
 
 	it("leaves commands alone without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({
 			methodFaults: [
 				{
@@ -207,7 +204,7 @@ describe("method faults", () => {
 	});
 
 	it("ignores answers without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({ methodAnswers: { storage_backend: "unavailable" } });
 		await expect(callMethod("storage_backend")).resolves.toBe("keyring");
 	});
@@ -223,7 +220,7 @@ describe("signed out", () => {
 	});
 
 	it("stays signed in without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({ signedOut: true });
 		expect((await callMethod("current_session")).profileId).toBe(
 			demoMeProfileId,
@@ -245,7 +242,7 @@ describe("account status", () => {
 	});
 
 	it("reports none without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({ restriction });
 		await expect(callMethod("account_restriction")).resolves.toBeNull();
 	});
@@ -312,7 +309,7 @@ describe("empty lists", () => {
 	}
 
 	it("keeps every list without the flag", () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({ emptyLists: [...demoLists] });
 		for (const list of demoLists) {
 			expect(itemCount(list), list).toBeGreaterThan(0);
@@ -336,7 +333,7 @@ describe("updates", () => {
 		expect(updatesAvailableHere()).toBe(false);
 		setScene({ updates: true });
 		expect(updatesAvailableHere()).toBe(true);
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		expect(updatesAvailableHere()).toBe(false);
 	});
 });
@@ -346,7 +343,7 @@ describe("play build", () => {
 		expect(isPlayBuild()).toBe(false);
 		setScene({ playBuild: true });
 		expect(isPlayBuild()).toBe(true);
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		expect(isPlayBuild()).toBe(false);
 	});
 });
@@ -369,7 +366,7 @@ describe("onboarding", () => {
 	});
 
 	it("never opens it in the demo without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		setScene({ onboarding: true });
 		expect(await redirectFrom("/")).toBeNull();
 	});

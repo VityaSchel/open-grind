@@ -1,7 +1,5 @@
 import type * as DemoRuntime from "./runtime";
 
-export { demoEnabled, screenshotsEnabled } from "./config";
-
 let runtime: typeof DemoRuntime | undefined;
 
 export async function loadDemo(): Promise<void> {

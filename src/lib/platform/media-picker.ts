@@ -6,7 +6,6 @@ import {
 	type AndroidOpenFilePickerOptions,
 } from "tauri-plugin-android-fs-api";
 
-import { demoEnabled } from "$lib/demo";
 import { type PlainMessageKey, t } from "$lib/i18n";
 import { isAndroidPlatform } from "$lib/platform/os";
 
@@ -77,7 +76,7 @@ async function pick({
 }): Promise<PickedMedia[]> {
 	const filter = filtersByKind[kind];
 
-	if (demoEnabled) {
+	if (__DEMO__) {
 		const files = await pickWebFiles({ filter, multiple });
 		return files.map(
 			(file): PickedMedia => ({

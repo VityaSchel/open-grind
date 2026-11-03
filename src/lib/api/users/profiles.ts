@@ -13,7 +13,6 @@ import {
 	markProfileUnviewable,
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
-import { demoEnabled } from "$lib/demo";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import { arrayOfParsableEntries } from "$lib/model/tolerance";
@@ -363,7 +362,7 @@ export async function uploadProfilePhoto(
 	media: PickedMedia,
 ): Promise<{ mediaHash: string; pending: boolean }> {
 	const path = "/v4/media/upload?takenOnGrindr=false";
-	const response = demoEnabled
+	const response = __DEMO__
 		? await demoProfilePhotoUpload(path)
 		: await invokeRest("upload_media", {
 				args: {

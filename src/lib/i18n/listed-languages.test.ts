@@ -21,8 +21,8 @@ async function buildWith({
 }) {
 	vi.stubEnv("DEV", dev);
 	if (screenshots) {
-		vi.stubEnv("OPEN_GRIND_DEMO", "1");
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
 	}
 	vi.resetModules();
 	if (shippedLanguages !== undefined) {
@@ -47,6 +47,7 @@ function catalogsOf(names: readonly { catalog: string }[]): string[] {
 afterEach(() => {
 	vi.doUnmock("./shipped-files");
 	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	vi.resetModules();
 });
 

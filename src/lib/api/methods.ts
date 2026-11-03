@@ -14,7 +14,7 @@ import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
-import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
+import { demo } from "$lib/demo";
 import {
 	type MessageKey,
 	type PlainMessageKey,
@@ -224,9 +224,7 @@ export const methods = {
 
 function demoMethodAnswer(method: string): unknown {
 	const { demoCallMethod, neverSettles, sceneMethodOutcome } = demo();
-	const scripted = screenshotsEnabled
-		? sceneMethodOutcome(method)
-		: undefined;
+	const scripted = __SCREENSHOTS__ ? sceneMethodOutcome(method) : undefined;
 	if (scripted === undefined) return demoCallMethod(method);
 	// eslint-disable-next-line @typescript-eslint/only-throw-error -- Tauri commands reject with the bare AppError object
 	if ("error" in scripted) throw scripted.error;
@@ -263,7 +261,7 @@ export async function callMethod<T extends keyof typeof methods>(
 		? [data?: z.infer<(typeof methods)[T]["request"]>]
 		: [data: z.infer<(typeof methods)[T]["request"]>]
 ): Promise<MethodResult<T>> {
-	if (demoEnabled) {
+	if (__DEMO__) {
 		return parseAnswer({ method, answer: () => demoMethodAnswer(method) });
 	}
 	return parseAnswer({ method, answer: () => invoke(method, args[0]) });

@@ -1245,19 +1245,6 @@
 			]
 		},
 		{
-			"id": "esm-env",
-			"name": "esm-env",
-			"ecosystem": "npm",
-			"versions": [
-				"1.2.2"
-			],
-			"spdx": "MIT",
-			"url": "https://github.com/benmccann/esm-env",
-			"textHashes": [
-				"c6cc76cbbf3a3094"
-			]
-		},
-		{
 			"id": "inline-style-parser",
 			"name": "inline-style-parser",
 			"ecosystem": "npm",
@@ -1382,7 +1369,7 @@
 			"name": "svelte",
 			"ecosystem": "npm",
 			"versions": [
-				"5.57.0"
+				"5.57.2"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/sveltejs/svelte",
@@ -10536,10 +10523,6 @@
 		{
 			"hash": "c6aa4d8c98db0b58",
 			"text": "/*\n * // Copyright (c) Radzivon Bartoshyk 6/2025. All rights reserved.\n * //\n * // Redistribution and use in source and binary forms, with or without modification,\n * // are permitted provided that the following conditions are met:\n * //\n * // 1.  Redistributions of source code must retain the above copyright notice, this\n * // list of conditions and the following disclaimer.\n * //\n * // 2.  Redistributions in binary form must reproduce the above copyright notice,\n * // this list of conditions and the following disclaimer in the documentation\n * // and/or other materials provided with the distribution.\n * //\n * // 3.  Neither the name of the copyright holder nor the names of its\n * // contributors may be used to endorse or promote products derived from\n * // this software without specific prior written permission.\n * //\n * // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\n * // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n * // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\n * // DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\n * // FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n * // DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n * // SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n * // CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\n * // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n * // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n */\nuse num_traits::AsPrimitive;\n\npub(crate) trait DiscontinuitySpike {\n    const SPIKE: f64;\n}\n\nimpl DiscontinuitySpike for u8 {\n    const SPIKE: f64 = 16.0;\n}\n\nimpl DiscontinuitySpike for u16 {\n    const SPIKE: f64 = 2100.;\n}\n\nimpl DiscontinuitySpike for f32 {\n    const SPIKE: f64 = 0.07;\n}\n\n/// Searches LUT curve for discontinuity\npub(crate) fn does_curve_have_discontinuity<\n    T: Copy + PartialEq + DiscontinuitySpike + AsPrimitive<f64> + 'static,\n>(\n    curve: &[T],\n) -> bool {\n    if curve.len() < 2 {\n        return false;\n    }\n    let threshold: f64 = T::SPIKE;\n    let mut discontinuities = 0u64;\n    let mut previous_element: f64 = curve[0].as_();\n    let diff: f64 = (curve[1].as_() - previous_element).abs();\n    if diff > threshold {\n        discontinuities += 1;\n    }\n    for element in curve.iter().skip(1) {\n        let new_diff: f64 = (element.as_() - previous_element).abs();\n        if new_diff > threshold {\n            discontinuities += 1;\n            if discontinuities > 3 {\n                break;\n            }\n        }\n        previous_element = element.as_();\n    }\n    discontinuities > 3\n}"
-		},
-		{
-			"hash": "c6cc76cbbf3a3094",
-			"text": "Copyright 2022 Benjamin McCann\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
 		},
 		{
 			"hash": "c7495b7b3a525563",

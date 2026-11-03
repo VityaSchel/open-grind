@@ -275,8 +275,14 @@ export const GRID_READY_SELECTOR = '[aria-label="All filters"]';
 export async function ensureGridLocation(page: Page): Promise<void> {
 	const allFilters = page.locator(GRID_READY_SELECTOR);
 	if ((await allFilters.count()) === 0) {
-		// tinykeys reads navigator.platform, so the CI runner wants Control
-		await runPaletteCommand(page, `@${DEMO_GEOHASH}`);
+		await Promise.all([
+			page.waitForEvent("framenavigated", {
+				predicate: (frame) => frame === page.mainFrame(),
+			}),
+			// tinykeys reads navigator.platform, so the CI runner wants Control
+			runPaletteCommand(page, `@${DEMO_GEOHASH}`),
+		]);
+		await page.getByRole("combobox").waitFor({ state: "detached" });
 	}
 	await allFilters.waitFor({ timeout: 60_000 });
 }

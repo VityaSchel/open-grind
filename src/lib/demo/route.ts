@@ -12,7 +12,7 @@ import {
 import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { FavoriteNote } from "$lib/model/users/favorites";
-import { demoMeProfileId, screenshotsEnabled } from "./config";
+import { demoMeProfileId } from "./config";
 import {
 	demoAddToAlbum,
 	demoAlbumContent,
@@ -93,19 +93,19 @@ function ok(body: unknown): DemoResponse {
 }
 
 function emptied(list: DemoList): boolean {
-	return screenshotsEnabled && screenshotScene.emptyLists.includes(list);
+	return __SCREENSHOTS__ && screenshotScene.emptyLists.includes(list);
 }
 
 function signedOut(): boolean {
-	return screenshotsEnabled && screenshotScene.signedOut;
+	return __SCREENSHOTS__ && screenshotScene.signedOut;
 }
 
 function masked(profileId: number): boolean {
-	return screenshotsEnabled && sceneMasksProfile(profileId);
+	return __SCREENSHOTS__ && sceneMasksProfile(profileId);
 }
 
 function patchOf(profileId: number): DemoProfilePatch {
-	return screenshotsEnabled ? sceneProfile(profileId) : {};
+	return __SCREENSHOTS__ ? sceneProfile(profileId) : {};
 }
 
 export function demoCallMethod(method: string): unknown {
@@ -129,7 +129,7 @@ export function demoCallMethod(method: string): unknown {
 				stale: false,
 			};
 		case "account_restriction":
-			return screenshotsEnabled ? screenshotScene.restriction : null;
+			return __SCREENSHOTS__ ? screenshotScene.restriction : null;
 		case "storage_backend":
 			return "keyring";
 		case "session_feature_flags":

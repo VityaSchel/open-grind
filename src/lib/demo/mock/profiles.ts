@@ -25,14 +25,7 @@ import {
 	type Rng,
 	subset,
 } from "$lib/util/random";
-import {
-	DAY,
-	demoMeProfileId,
-	HOUR,
-	MINUTE,
-	NOW,
-	screenshotsEnabled,
-} from "../config";
+import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { registerPhoto } from "./avatars";
 import { neutralText } from "./neutral";
 
@@ -395,7 +388,7 @@ export const meSeed: DemoSeed = {
 const seedCache = new Map<number, DemoSeed>();
 
 function neutralSeed(seed: DemoSeed): DemoSeed {
-	if (!screenshotsEnabled) return seed;
+	if (!__SCREENSHOTS__) return seed;
 	const { name, bio } = seed;
 	return {
 		...seed,

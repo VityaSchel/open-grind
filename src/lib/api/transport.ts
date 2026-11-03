@@ -13,7 +13,7 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { parseJson } from "$lib/api/redact/value";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
-import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
+import { demo } from "$lib/demo";
 import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
@@ -140,7 +140,7 @@ async function respondFromDemoOrSend({
 	invokeError: InvokeError;
 	send: () => Promise<RestResponse>;
 }): Promise<RestResponse> {
-	if (!demoEnabled) return await send();
+	if (!__DEMO__) return await send();
 	const faulted = await sceneFault({ requestInfo, ErrorClass, invokeError });
 	if (faulted !== undefined) return faulted;
 	const { path, method } = requestInfo;
@@ -271,7 +271,7 @@ async function sceneFault({
 	invokeError: InvokeError;
 }) {
 	const { path, method } = requestInfo;
-	const fault = screenshotsEnabled
+	const fault = __SCREENSHOTS__
 		? demo().sceneRestFault({ path, method })
 		: undefined;
 	if (fault === undefined) return undefined;

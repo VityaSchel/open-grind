@@ -3,7 +3,7 @@ import z from "zod";
 import { signedInProfileId } from "$lib/api/current-session";
 import { uploadRefusalMessage } from "$lib/api/methods";
 import { invokeRest, uploadFileRest } from "$lib/api/transport";
-import { demo, demoEnabled } from "$lib/demo";
+import { demo } from "$lib/demo";
 import { t } from "$lib/i18n";
 import { mediaUrlSchema } from "$lib/model/media";
 import {
@@ -75,7 +75,7 @@ async function uploadChatMedia({
 	contentType: string;
 	takenOnGrindr: boolean;
 }): Promise<MediaUploadResponse> {
-	if (demoEnabled) {
+	if (__DEMO__) {
 		if (media.source !== "web") {
 			throw new Error("The demo only reads files picked in the browser");
 		}

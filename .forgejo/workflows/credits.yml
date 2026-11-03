@@ -12,7 +12,6 @@ on:
       - bun.lock
       - patches/**
       - scripts/patch-deps.ts
-      - svelte.config.js
       - vite.config.mjs
       - src-tauri/Cargo.toml
       - src-tauri/Cargo.lock
@@ -32,7 +31,6 @@ on:
       - bun.lock
       - patches/**
       - scripts/patch-deps.ts
-      - svelte.config.js
       - vite.config.mjs
       - src-tauri/Cargo.toml
       - src-tauri/Cargo.lock

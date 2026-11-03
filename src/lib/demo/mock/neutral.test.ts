@@ -1,17 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const flags = vi.hoisted(() => ({ screenshots: false }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("../config")>();
-	return {
-		...actual,
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
-
 const EMOJI = /\p{Extended_Pictographic}/u;
 const FRESH_IMPORTS = { timeout: 60_000 };
 const FEATURED_IDS = Array.from(
@@ -20,7 +8,7 @@ const FEATURED_IDS = Array.from(
 );
 
 async function demoFixtures({ screenshots }: { screenshots: boolean }) {
-	flags.screenshots = screenshots;
+	vi.stubGlobal("__SCREENSHOTS__", screenshots);
 	vi.resetModules();
 	const [{ DEMO_ID_START, DEMO_PROFILE_COUNT }, profiles, conversations] =
 		await Promise.all([
@@ -43,12 +31,12 @@ async function demoFixtures({ screenshots }: { screenshots: boolean }) {
 }
 
 afterEach(() => {
-	flags.screenshots = false;
+	vi.unstubAllGlobals();
 });
 
 describe("neutralText", () => {
 	it("drops emoji and keeps the words in screenshot builds", async () => {
-		flags.screenshots = true;
+		vi.stubGlobal("__SCREENSHOTS__", true);
 		const { neutralText } = await import("./neutral");
 		expect(neutralText("theo 🌊")).toBe("theo");
 		expect(neutralText("👀 just  here 🏖️ to chat")).toBe(

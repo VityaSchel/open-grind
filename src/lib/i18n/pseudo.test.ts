@@ -17,6 +17,7 @@ const source = new Map([
 
 afterEach(async () => {
 	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -116,18 +117,10 @@ describe("pseudo-locales at runtime", () => {
 		}
 	});
 
-	it("stay out of builds that set the screenshot flag without the demo", async () => {
-		vi.stubEnv("DEV", false);
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
-		vi.resetModules();
-		const production = await import("./index");
-		expect(production.locales).not.toContain("en-XM");
-	});
-
 	it("are listed in screenshot builds", async () => {
 		vi.stubEnv("DEV", false);
-		vi.stubEnv("OPEN_GRIND_DEMO", "1");
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
 		vi.resetModules();
 		const screenshots = await import("./index");
 		expect(screenshots.locales).toEqual(

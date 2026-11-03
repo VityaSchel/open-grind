@@ -1,27 +1,111 @@
+import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
-import { realpathSync } from "node:fs";
-import { env } from "node:process";
-import { searchForWorkspaceRoot } from "vite";
+import { execSync } from "node:child_process";
+import { readFileSync, realpathSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { loadEnv, searchForWorkspaceRoot } from "vite";
 import { defineConfig } from "vitest/config";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
+const root = path.dirname(fileURLToPath(import.meta.url));
+
+const SCREENSHOT_VERSION_NAME = "OpenGrind/0.0.0\ngrindr3/0.0.0;0";
+
+function releaseVersionName() {
+	const projectVersion = JSON.parse(
+		readFileSync(path.join(root, "package.json"), "utf-8"),
+	).version;
+	const cargoMetadata = JSON.parse(
+		execSync("cargo metadata --format-version 1", {
+			cwd: path.join(root, "src-tauri"),
+			maxBuffer: 16 * 1024 * 1024,
+		}),
+	);
+	const grindrManifest = cargoMetadata.packages.find(
+		(p) => p.name === "grindr",
+	)?.manifest_path;
+	if (!grindrManifest)
+		throw new Error("grindr crate not found in cargo metadata");
+	const headersRs = readFileSync(
+		path.join(path.dirname(grindrManifest), "src", "headers.rs"),
+		"utf-8",
+	);
+	function scrapeHeaderConst(name) {
+		const match = headersRs.match(
+			new RegExp(`const ${name}: &str = "([^"]+)";`),
+		);
+		if (!match)
+			throw new Error(`${name} not found in the grindr crate headers`);
+		return match[1];
+	}
+	const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
+	const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
+	return `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`;
+}
+
+function versionName() {
+	if (process.env.OPEN_GRIND_SCREENSHOTS !== "1") return releaseVersionName();
+	if (process.env.OPEN_GRIND_DEMO !== "1") {
+		throw new Error(
+			"OPEN_GRIND_SCREENSHOTS=1 only builds the demo, so it needs OPEN_GRIND_DEMO=1",
+		);
+	}
+	return SCREENSHOT_VERSION_NAME;
+}
+
 // https://vite.dev/config/
-export default defineConfig(async ({ command }) => ({
-	plugins: [sveltekit(), tailwindcss()],
-	resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
+export default defineConfig(async ({ command, mode }) => ({
+	plugins: [
+		sveltekit({
+			preprocess: vitePreprocess(),
+			compilerOptions: { experimental: { async: true } },
+			adapter: adapter({ fallback: "index.html" }),
+			version: { name: versionName() },
+		}),
+		tailwindcss(),
+	],
+	resolve: {
+		alias: { $layout: path.join(root, "src/layout.css") },
+		...(process.env.VITEST ? { conditions: ["browser"] } : {}),
+	},
 
 	// OPEN_GRIND_STORE already selects the Android manifest overlay; exposing it
 	// here lets the bundle drop what a store build may not carry.
 	envPrefix: ["VITE_", "OPEN_GRIND_"],
 
-	esbuild: {
-		drop:
-			command === "build" && env.OPEN_GRIND_SCREENSHOTS !== "1"
-				? ["console", "debugger"]
-				: [],
+	define: {
+		__DEMO__: JSON.stringify(
+			!process.env.VITEST &&
+				loadEnv(mode, root, "OPEN_GRIND_").OPEN_GRIND_DEMO === "1",
+		),
+		__SCREENSHOTS__: JSON.stringify(
+			!process.env.VITEST &&
+				process.env.OPEN_GRIND_DEMO === "1" &&
+				process.env.OPEN_GRIND_SCREENSHOTS === "1",
+		),
+	},
+
+	environments: {
+		client: {
+			build: {
+				rolldownOptions: {
+					output: {
+						minify: {
+							compress: {
+								dropConsole:
+									command === "build" &&
+									process.env.OPEN_GRIND_SCREENSHOTS !== "1",
+							},
+						},
+					},
+				},
+			},
+		},
 	},
 
 	optimizeDeps: { include: ["leaflet", "sveaflet"] },

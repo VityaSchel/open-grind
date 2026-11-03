@@ -10,7 +10,6 @@
 	import PreviousUploadsSheet from "$lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
-	import { demoEnabled, screenshotsEnabled } from "$lib/demo";
 	import { t } from "$lib/i18n";
 	import { formatInteger } from "$lib/i18n/format";
 	import { PROFILE_PHOTO_AWAITING_REVIEW } from "$lib/model/users/profiles";
@@ -51,7 +50,7 @@
 	});
 
 	const room = $derived(maxProfilePhotos - medias.length - uploading.length);
-	const canAdd = $derived(room > 0 && (!demoEnabled || screenshotsEnabled));
+	const canAdd = $derived(room > 0 && (!__DEMO__ || __SCREENSHOTS__));
 
 	function slotKey(mediaHash: string, index: number): string {
 		return `${mediaHash}${index}`;

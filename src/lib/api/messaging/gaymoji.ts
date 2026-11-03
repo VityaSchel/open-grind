@@ -1,6 +1,6 @@
 import { cachedFetch } from "$lib/api/cache";
 import { fetchExternal } from "$lib/api/transport";
-import { demo, demoEnabled } from "$lib/demo";
+import { demo } from "$lib/demo";
 import {
 	type Gaymoji,
 	type GaymojiManifest,
@@ -31,7 +31,7 @@ function gaymojiLabel(name: string): string {
 }
 
 function gaymojiImageUrl(id: string): string {
-	if (demoEnabled) return demo().demoGaymojiImageUrl(id);
+	if (__DEMO__) return demo().demoGaymojiImageUrl(id);
 	return proxyMediaUrl(`${GAYMOJI_MANIFEST_URL}/${encodeURIComponent(id)}`);
 }
 

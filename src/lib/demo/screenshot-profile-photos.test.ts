@@ -1,17 +1,12 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-
-const flags = vi.hoisted(() => ({ screenshots: true }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		demoEnabled: true,
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 
 import { ApiError, httpStatusOf } from "$lib/api/api-error";
 import { uploadProfilePhoto } from "$lib/api/users/profiles";
@@ -57,9 +52,14 @@ function answered(state: string): UploadAnswer {
 
 beforeAll(loadDemo);
 
+beforeEach(() => {
+	vi.stubGlobal("__DEMO__", true);
+	vi.stubGlobal("__SCREENSHOTS__", true);
+});
+
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));
-	flags.screenshots = true;
+	vi.unstubAllGlobals();
 });
 
 describe("profile photo upload faults", () => {
@@ -106,7 +106,7 @@ describe("profile photo upload faults", () => {
 	});
 
 	it("ignores faults without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		faultUploads(answered("Pending"));
 		await expect(uploadProfilePhoto(picked)).rejects.toThrow(
 			"Profile photos can't be uploaded in the demo",

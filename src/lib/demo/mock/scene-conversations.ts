@@ -1,5 +1,5 @@
 import { conversationIdFor } from "$lib/chat/conversation-id";
-import { demoMeProfileId, screenshotsEnabled } from "../config";
+import { demoMeProfileId } from "../config";
 import { screenshotScene } from "../screenshot-scene";
 import {
 	type DemoConversation,
@@ -7,7 +7,7 @@ import {
 } from "./conversation-seeds";
 
 export function sceneInbox() {
-	return screenshotsEnabled ? screenshotScene.inbox : null;
+	return __SCREENSHOTS__ ? screenshotScene.inbox : null;
 }
 
 export function conversationSeeds(): DemoConversation[] {
