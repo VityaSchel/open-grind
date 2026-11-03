@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ScrollGestureState } from "$lib/platform/scroll-gesture";
+import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
 import { attachPullInputs } from "./attach-inputs";
 import { PullModel } from "./pull-model.svelte";
 import { makeScrollable } from "./pull-test-helpers";

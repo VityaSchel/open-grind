@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "@sveltejs/kit";
 import type { ResolvedPathname } from "$app/types";
 
-import { runningOn } from "$lib/test/platform";
-import { fakePagerLayout, WIDTH } from "$lib/util/snap-pager-test-helpers";
+import { runningOn } from "#lib/test/platform.ts";
+import { fakePagerLayout, WIDTH } from "#lib/util/snap-pager-test-helpers.ts";
 import InterestPager from "./InterestPager.svelte";
 
 const TAPS = "/interest/taps";

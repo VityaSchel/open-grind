@@ -4,7 +4,7 @@ import { expoOut } from "svelte/easing";
 import { Tween } from "svelte/motion";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	BUTTON_REST_HEIGHT,
 	BUTTON_REST_PX,

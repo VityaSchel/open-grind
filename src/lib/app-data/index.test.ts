@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fromBase64 } from "$lib/util/base64";
+import { fromBase64 } from "#lib/util/base64.ts";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 

@@ -1,6 +1,6 @@
 import type { ClientInit, HandleClientError } from "@sveltejs/kit";
 
-import { ws } from "$lib/ws.svelte";
+import { ws } from "#lib/ws.svelte.ts";
 
 export const init: ClientInit = () => {
 	ws.connect();

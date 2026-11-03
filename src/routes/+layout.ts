@@ -1,9 +1,9 @@
 import { redirect } from "@sveltejs/kit";
 
-import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { demoEnabled } from "$lib/demo";
-import { hydrateDesktopEntryState } from "$lib/platform/desktop-entry.svelte";
-import { hydrateUpdateCapability } from "$lib/updates/capability.svelte";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { demoEnabled } from "#lib/demo/index.ts";
+import { hydrateDesktopEntryState } from "#lib/platform/desktop-entry.svelte.ts";
+import { hydrateUpdateCapability } from "#lib/updates/capability.svelte.ts";
 import type { LayoutLoad } from "./$types";
 
 export const ssr = false;

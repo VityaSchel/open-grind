@@ -6,19 +6,19 @@
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 	import { untrack } from "svelte";
 
-	import { getProfile, onProfileEdit } from "$lib/api/users/profiles";
-	import { getOrCreateConversationsState } from "$lib/chat/conversations-context.svelte";
-	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { tabsListVariants } from "$lib/components/ui/tabs";
-	import { getTapsState } from "$lib/interest/taps-state.svelte";
-	import { softKeyboardShrinksPage } from "$lib/platform/soft-keyboard.svelte";
-	import { returnTo } from "$lib/util/history";
-	import { isWithin } from "$lib/util/pathname";
-	import { isPlainClick } from "$lib/util/plain-click";
-	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
+	import { getProfile, onProfileEdit } from "#lib/api/users/profiles.ts";
+	import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
+	import BrokenUserAvatar from "#lib/components/profile/BrokenUserAvatar.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { tabsListVariants } from "#lib/components/ui/tabs/index.ts";
+	import { getTapsState } from "#lib/interest/taps-state.svelte.ts";
+	import { softKeyboardShrinksPage } from "#lib/platform/soft-keyboard.svelte.ts";
+	import { returnTo } from "#lib/util/history.ts";
+	import { isWithin } from "#lib/util/pathname.ts";
+	import { isPlainClick } from "#lib/util/plain-click.ts";
+	import { bottomChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
 

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import SlidersHorizontalIcon from "phosphor-svelte/lib/SlidersHorizontalIcon";
 
-	import { genderFilterFlag } from "$lib/api/feature-flags-state.svelte";
-	import QuickFilterButton from "$lib/components/filters/QuickFilterButton.svelte";
-	import { buttonVariants } from "$lib/components/ui/button";
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { defaultFilters } from "$lib/model/browse/grid/filters";
+	import { genderFilterFlag } from "#lib/api/feature-flags-state.svelte.ts";
+	import QuickFilterButton from "#lib/components/filters/QuickFilterButton.svelte";
+	import { buttonVariants } from "#lib/components/ui/button/index.ts";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 	import AgeQuickFilter from "./AgeQuickFilter.svelte";
 	import PositionQuickFilter from "./PositionQuickFilter.svelte";
 	import { sentFilterKeysWithoutQuickFilter } from "./quick-filters";

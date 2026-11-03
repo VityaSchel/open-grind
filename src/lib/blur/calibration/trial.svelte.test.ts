@@ -12,7 +12,7 @@ const ENGINE = "2.52.6";
 
 vi.mock("../compositing.svelte", () => ({ webviewEngine: () => ENGINE }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
@@ -23,8 +23,8 @@ import {
 	hydratePreferences,
 	preferencesSnapshot,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { runningOn } from "$lib/test/platform";
+} from "#lib/app-data/preferences.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	ARM_TRAVEL_PX,
 	DEMOTE_MIN_PAIRS,

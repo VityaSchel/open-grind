@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 
 const { checkPermissionsMock, getCurrentPositionMock, requestPermissionsMock } =
 	vi.hoisted(() => ({

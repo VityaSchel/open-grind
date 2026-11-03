@@ -2,7 +2,7 @@
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import GearIcon from "phosphor-svelte/lib/GearIcon";
 
-	import * as Item from "$lib/components/ui/item";
+	import * as Item from "#lib/components/ui/item/index.ts";
 </script>
 
 <Item.Root variant="outline">

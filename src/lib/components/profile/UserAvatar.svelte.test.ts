@@ -3,8 +3,8 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
-import { profileMediaUrl } from "$lib/util/media";
+import { runningOn } from "#lib/test/platform.ts";
+import { profileMediaUrl } from "#lib/util/media.ts";
 import UserAvatar from "./UserAvatar.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';

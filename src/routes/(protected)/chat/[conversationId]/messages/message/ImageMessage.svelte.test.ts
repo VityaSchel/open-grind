@@ -10,8 +10,8 @@ vi.hoisted(() => {
 	});
 });
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { proxyMediaUrl } from "$lib/util/media";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
 const signed = ({ file, signature }: { file: string; signature: string }) =>

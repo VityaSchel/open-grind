@@ -17,7 +17,7 @@ const preferences = vi.hoisted(() => ({
 const reducedMotion = vi.hoisted(() => ({ current: false }));
 const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn() }));
 
-vi.mock("$lib/app-data/preferences.svelte", async () => {
+vi.mock("#lib/app-data/preferences.svelte.ts", async () => {
 	const { SvelteMap } = await import("svelte/reactivity");
 	preferences.values = new SvelteMap();
 	return {
@@ -36,9 +36,9 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
-import { proxyMediaUrl } from "$lib/util/media";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
 const GIF_URL = "https://media.giphy.com/media/abc/200.gif";

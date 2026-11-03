@@ -8,13 +8,13 @@ const { getProfileMock, refreshProfileMock, isProfileCachedMock } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: vi.fn(),
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 	refreshProfile: refreshProfileMock,
 	isProfileCached: isProfileCachedMock,
@@ -23,8 +23,8 @@ vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 import {
 	BlockedProfileError,
 	HiddenProfileError,
-} from "$lib/api/users/profiles";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profiles.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 import { ProfileState } from "./profile-state.svelte";
 
 const PROFILE_ID = 100001;

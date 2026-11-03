@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import VideoPreview from "$lib/components/shared/VideoPreview.svelte";
-	import { longPressHandlers } from "$lib/util/long-press";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import VideoPreview from "#lib/components/shared/VideoPreview.svelte";
+	import { longPressHandlers } from "#lib/util/long-press.ts";
 	import MediaTileOverlay from "./MediaTileOverlay.svelte";
 
 	let {

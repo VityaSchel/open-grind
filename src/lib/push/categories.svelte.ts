@@ -1,5 +1,5 @@
-import { getPushSettings, setPushSettings } from "$lib/api/settings/account";
-import { currentPlatform } from "$lib/platform/os";
+import { getPushSettings, setPushSettings } from "#lib/api/settings/account.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import {
 	openPushCategorySettings,
 	pushAvailableHere,

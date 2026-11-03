@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
-	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { observeIntersection } from "$lib/util/observe-intersection";
-	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import UntrackedViewsGrid from "./UntrackedViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";

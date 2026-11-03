@@ -5,8 +5,8 @@ import {
 	isDesktopPlatform,
 	isMobilePlatform,
 	type SupportedPlatform,
-} from "$lib/platform/os";
-import { resetPlatform, runningOn } from "$lib/test/platform";
+} from "#lib/platform/os.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 
 const families = {
 	android: "mobile",

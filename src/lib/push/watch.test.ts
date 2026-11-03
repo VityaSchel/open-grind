@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import type { PushErrorReason, PushToken } from "./types";
 
 type PushWatcher = (event: {
@@ -49,8 +49,8 @@ const push = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/navigation", () => ({ goto }));
-vi.mock("$lib/api/sign-out", () => signOut);
-vi.mock("$lib/api/settings/account", () => account);
+vi.mock("#lib/api/sign-out.ts", () => signOut);
+vi.mock("#lib/api/settings/account.ts", () => account);
 vi.mock("./teardown", () => teardown);
 vi.mock("./notifications.svelte", () => notifications);
 vi.mock("./delivery.svelte", () => delivery);

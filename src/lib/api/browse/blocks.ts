@@ -1,13 +1,13 @@
 import z from "zod";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import { EditableServerList } from "$lib/api/browse/editable-server-list";
-import { fetchRest } from "$lib/api/transport";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { EditableServerList } from "#lib/api/browse/editable-server-list.ts";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profile-viewability.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 const getBlockedUsersResponseSchema = z.object({
 	blocking: z.array(

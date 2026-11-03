@@ -3,10 +3,10 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-import { sessionErrorState } from "$lib/api/session-error-state.svelte";
-import { sessionRecovery } from "$lib/api/session-recovery.svelte";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
+import { sessionErrorState } from "#lib/api/session-error-state.svelte.ts";
+import { sessionRecovery } from "#lib/api/session-recovery.svelte.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import SessionErrorAlert from "./SessionErrorAlert.svelte";
 
 const {
@@ -35,7 +35,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 		return Promise.resolve(() => tauriListeners.delete(name));
 	},
 }));
-vi.mock("$lib/ws.svelte", () => ({
+vi.mock("#lib/ws.svelte.ts", () => ({
 	ws: {
 		onConnected: (handler: () => void) => {
 			wsConnectedHandlers.push(handler);
@@ -43,12 +43,12 @@ vi.mock("$lib/ws.svelte", () => ({
 		},
 	},
 }));
-vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
+vi.mock("#lib/api/sign-out.ts", () => ({ signOut: signOutMock }));
 vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({

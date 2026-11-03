@@ -1,7 +1,7 @@
 import type {
 	AccountPreferences,
 	AccountPreferencesPatch,
-} from "$lib/model/settings/account";
+} from "#lib/model/settings/account.ts";
 import { demoMeProfileId } from "../config";
 
 const preferences: AccountPreferences = {

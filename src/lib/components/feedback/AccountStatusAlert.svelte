@@ -11,23 +11,23 @@
 		noticeAccountStatusError,
 		showAccountRestriction,
 		showAccountStatus,
-	} from "$lib/api/account-status-state.svelte";
+	} from "#lib/api/account-status-state.svelte.ts";
 	import {
 		asAccountStatusError,
 		banInfoSchema,
 		callMethod,
 		restrictionSchema,
-	} from "$lib/api/methods";
-	import { signOut } from "$lib/api/sign-out";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button, buttonVariants } from "$lib/components/ui/button";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
-	import { checkForUpdatesNow } from "$lib/updates/update-checks";
-	import { now } from "$lib/util/clock";
-	import { BAN_APPEAL_URL, grindrHelpUrl } from "$lib/util/grindr-help";
+	} from "#lib/api/methods.ts";
+	import { signOut } from "#lib/api/sign-out.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { updatesSelfManaged } from "#lib/updates/capability.svelte.ts";
+	import { checkForUpdatesNow } from "#lib/updates/update-checks.ts";
+	import { now } from "#lib/util/clock.ts";
+	import { BAN_APPEAL_URL, grindrHelpUrl } from "#lib/util/grindr-help.ts";
 	import {
 		banOffersAppeal,
 		banSubReasonLabel,

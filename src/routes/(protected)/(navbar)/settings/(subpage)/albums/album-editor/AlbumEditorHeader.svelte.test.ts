@@ -3,14 +3,14 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	loadAlbumSlides: vi.fn(),
 	openAlbumLightbox: vi.fn(),
 }));
 
-import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
-import { runningOn } from "$lib/test/platform";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import { albumProcessingPlaceholderUrl } from "#lib/demo/mock/albums.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import type { UploadLimits } from "../album-uploads/album-uploads-state.svelte";
 import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
 

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { systemLanguage } from "$lib/util/language";
+import { systemLanguage } from "#lib/util/language.ts";
 
 afterEach(() => {
 	vi.restoreAllMocks();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isWithin } from "$lib/util/pathname";
+import { isWithin } from "#lib/util/pathname.ts";
 
 describe("isWithin", () => {
 	it("includes the root itself", () => {

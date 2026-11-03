@@ -3,16 +3,16 @@ import { listen } from "@tauri-apps/api/event";
 import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
 
-import { signedInProfileId } from "$lib/api/current-session";
+import { signedInProfileId } from "#lib/api/current-session.ts";
 import {
 	confirmAccountSwitch,
 	googleHandoffState,
 	googleSignInMode,
-} from "$lib/api/google-handoff-state.svelte";
-import { signInResultSchema } from "$lib/api/methods";
-import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
-import { signOut } from "$lib/api/sign-out";
-import { delay } from "$lib/util/delay";
+} from "#lib/api/google-handoff-state.svelte.ts";
+import { signInResultSchema } from "#lib/api/methods.ts";
+import { finishSignIn, reportSignInFailure } from "#lib/api/sign-in.ts";
+import { signOut } from "#lib/api/sign-out.ts";
+import { delay } from "#lib/util/delay.ts";
 
 const HANDOFF_EVENT = "google-oauth:handoff";
 const GOOGLE_SIGN_IN = "/auth/sign-in/google";

@@ -2,20 +2,20 @@
 	import { onDestroy, untrack } from "svelte";
 	import type { Attachment } from "svelte/attachments";
 
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { mediaFailure, remedyFor } from "$lib/platform/media-failure";
-	import { now } from "$lib/util/clock";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { mediaFailure, remedyFor } from "#lib/platform/media-failure.ts";
+	import { now } from "#lib/util/clock.ts";
 	import {
 		loadWhenVisible,
 		TRANSPARENT_PIXEL,
-	} from "$lib/util/load-when-visible";
-	import { retryMediaSrc } from "$lib/util/media";
+	} from "#lib/util/load-when-visible.ts";
 	import {
 		acquireMediaLoadSlot,
 		releaseWhenSettled,
-	} from "$lib/util/media-load-slots";
-	import { probeMedia } from "$lib/util/media-probe";
-	import { mediaRetry } from "$lib/util/media-retry.svelte";
+	} from "#lib/util/media-load-slots.ts";
+	import { probeMedia } from "#lib/util/media-probe.ts";
+	import { mediaRetry } from "#lib/util/media-retry.svelte.ts";
+	import { retryMediaSrc } from "#lib/util/media.ts";
 	import BrokenMedia from "./BrokenMedia.svelte";
 
 	let {

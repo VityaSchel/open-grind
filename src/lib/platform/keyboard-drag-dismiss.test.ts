@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { keyboardDragDismiss } from "./keyboard-drag-dismiss";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));

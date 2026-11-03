@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { signOutIfSessionLost } from "$lib/api/session-lost";
+import { signOutIfSessionLost } from "#lib/api/session-lost.ts";
 
 const { page, handoff, callMethodMock, signOutMock } = vi.hoisted(() => ({
 	page: { route: { id: "/(protected)/chat" } },
@@ -10,9 +10,9 @@ const { page, handoff, callMethodMock, signOutMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/state", () => ({ page }));
-vi.mock("$lib/api/methods", () => ({ callMethod: callMethodMock }));
-vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
-vi.mock("$lib/api/google-handoff-state.svelte", () => ({
+vi.mock("#lib/api/methods.ts", () => ({ callMethod: callMethodMock }));
+vi.mock("#lib/api/sign-out.ts", () => ({ signOut: signOutMock }));
+vi.mock("#lib/api/google-handoff-state.svelte.ts", () => ({
 	googleHandoffState: handoff,
 }));
 

@@ -22,27 +22,29 @@ const {
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/browse/hides", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/browse/hides")>()),
+vi.mock("#lib/api/browse/hides.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/browse/hides.ts")>()),
 	hideUser: hideUserMock,
 	unhideUser: unhideUserMock,
 }));
-vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
+vi.mock("#lib/api/browse/blocks.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/browse/blocks.ts")>()),
 	blockUser: blockUserMock,
 	unblockUser: unblockUserMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: vi.fn(),
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/util/media", () => ({
+vi.mock("#lib/util/media.ts", () => ({
 	profileMediaUrl: ({
 		mediaHash,
 		size,
@@ -51,17 +53,17 @@ vi.mock("$lib/util/media", () => ({
 		size: string;
 	}) => `https://cdn.test/${size}/${mediaHash}`,
 }));
-vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
+vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: dataRefreshControlMock,
 }));
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	BlockedProfileError,
 	HiddenProfileError,
-} from "$lib/api/users/profiles";
-import { runningOn } from "$lib/test/platform";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profiles.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import {
 	gridRow,

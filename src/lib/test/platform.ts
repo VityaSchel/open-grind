@@ -1,4 +1,4 @@
-import type { SupportedPlatform } from "$lib/platform/os";
+import type { SupportedPlatform } from "#lib/platform/os.ts";
 
 const runtime = globalThis as {
 	__TAURI_OS_PLUGIN_INTERNALS__?: { platform: string };

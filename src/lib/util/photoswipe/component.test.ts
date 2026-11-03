@@ -4,7 +4,7 @@ import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { mount } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import VideoPlayer from "$lib/components/shared/VideoPlayer.svelte";
+import VideoPlayer from "#lib/components/shared/VideoPlayer.svelte";
 import { applyPhotoSwipeComponent } from "./component";
 
 const VIDEO = '[data-slot="video-player-media"]';

@@ -3,20 +3,20 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Drafts } from "$lib/chat/drafts.svelte";
+import { Drafts } from "#lib/chat/drafts.svelte.ts";
 
 const { conversations } = vi.hoisted(() => ({
 	conversations: { drafts: null as Drafts | null },
 }));
 
 vi.mock("$app/state", () => ({ page: { params: {} } }));
-vi.mock("$lib/chat/conversations-context.svelte", () => ({
+vi.mock("#lib/chat/conversations-context.svelte.ts", () => ({
 	getConversations: () => conversations,
 }));
-vi.mock("$lib/haptics", () => ({ playHaptic: vi.fn() }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: vi.fn() }));
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
-import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import type { Conversation as ConversationType } from "#lib/model/messaging/conversations.ts";
 import LazyConversation from "./LazyConversation.svelte";
 import { MountQueue, type MountTicket } from "./mount-queue";
 

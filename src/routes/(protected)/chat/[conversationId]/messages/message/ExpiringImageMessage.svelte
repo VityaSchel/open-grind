@@ -2,18 +2,18 @@
 	import "photoswipe/style.css";
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { getSingleMessage } from "$lib/api/messaging/messages";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { getSingleMessage } from "#lib/api/messaging/messages.ts";
 	import {
 		type ExpiringImageMessage,
 		expiringImageMessageSchema,
-	} from "$lib/model/messaging/messages";
-	import { proxyMediaUrl } from "$lib/util/media";
+	} from "#lib/model/messaging/messages.ts";
 	import {
 		measureImage,
 		type MediaDimensions,
-	} from "$lib/util/media-dimensions";
-	import { openLightbox } from "$lib/util/photoswipe";
+	} from "#lib/util/media-dimensions.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { openLightbox } from "#lib/util/photoswipe/index.ts";
 	import LockedMedia from "./LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
 

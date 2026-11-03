@@ -3,16 +3,16 @@
 	import SmileyIcon from "phosphor-svelte/lib/SmileyIcon";
 	import { untrack } from "svelte";
 
-	import poweredByGiphyBoxed from "$lib/assets/giphy/powered-by-giphy-boxed.png";
-	import poweredByGiphy from "$lib/assets/giphy/powered-by-giphy.png";
-	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
-	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
-	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
-	import MediaSheetTab from "$lib/components/media-sheet/MediaSheetTab.svelte";
-	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
-	import * as Drawer from "$lib/components/ui/drawer";
-	import * as Tabs from "$lib/components/ui/tabs";
-	import { draftFromMessage } from "$lib/model/messaging/messages";
+	import poweredByGiphyBoxed from "#lib/assets/giphy/powered-by-giphy-boxed.png";
+	import poweredByGiphy from "#lib/assets/giphy/powered-by-giphy.png";
+	import MediaSheet from "#lib/components/media-sheet/MediaSheet.svelte";
+	import MediaSheetActions from "#lib/components/media-sheet/MediaSheetActions.svelte";
+	import MediaSheetBody from "#lib/components/media-sheet/MediaSheetBody.svelte";
+	import MediaSheetTab from "#lib/components/media-sheet/MediaSheetTab.svelte";
+	import MediaSheetTabBar from "#lib/components/media-sheet/MediaSheetTabBar.svelte";
+	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import * as Tabs from "#lib/components/ui/tabs/index.ts";
+	import { draftFromMessage } from "#lib/model/messaging/messages.ts";
 	import { giphyConsented } from "../../giphy/giphy-consent";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 	import ComposerGaymojiTab from "./gaymoji/ComposerGaymojiTab.svelte";

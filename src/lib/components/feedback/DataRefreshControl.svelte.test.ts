@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	BUTTON_REST_HEIGHT,
 	distinctBands,

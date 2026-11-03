@@ -1,9 +1,9 @@
 import {
 	preferencesSnapshot,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { currentPlatform } from "$lib/platform/os";
-import { consumesScrollKeys, scrollKeys } from "$lib/util/scroll-keys";
+} from "#lib/app-data/preferences.svelte.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
+import { consumesScrollKeys, scrollKeys } from "#lib/util/scroll-keys.ts";
 import { webviewEngine } from "../compositing.svelte";
 import {
 	ARM_MIN_EVENTS,

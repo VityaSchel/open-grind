@@ -1,11 +1,11 @@
-import { showErrorToast } from "$lib/api/error-toast";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	preferencesSnapshot,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { decodeGeohash, encodeGeohash } from "$lib/model/geohash";
-import { isMobilePlatform } from "$lib/platform/os";
-import { now } from "$lib/util/clock";
+} from "#lib/app-data/preferences.svelte.ts";
+import { decodeGeohash, encodeGeohash } from "#lib/model/geohash.ts";
+import { isMobilePlatform } from "#lib/platform/os.ts";
+import { now } from "#lib/util/clock.ts";
 import { distanceMeters } from "./distance";
 import {
 	reportLocationFailure,

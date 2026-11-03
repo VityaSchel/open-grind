@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import AgeFilterSlider from "$lib/components/filters/age/AgeFilterSlider.svelte";
-	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
-	import { gridState } from "$lib/grid/grid-state.svelte";
+	import AgeFilterSlider from "#lib/components/filters/age/AgeFilterSlider.svelte";
+	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
 	import {
 		ageRangeLabel,
 		defaultFilters,
-	} from "$lib/model/browse/grid/filters";
+	} from "#lib/model/browse/grid/filters.ts";
 
 	let { open = $bindable() }: { open: boolean } = $props();
 

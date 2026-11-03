@@ -12,22 +12,22 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
 }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	markRequestBlocked: markRequestBlockedMock,
 }));
-vi.mock("$lib/api/session-lost", () => ({
+vi.mock("#lib/api/session-lost.ts", () => ({
 	signOutIfSessionLost: signOutIfSessionLostMock,
 }));
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	getTrendingGifs,
 	receivedGiphySrc,
 	searchGifs,
-} from "$lib/api/messaging/gifs";
-import { toBase64 } from "$lib/util/base64";
-import { proxyMediaUrl } from "$lib/util/media";
+} from "#lib/api/messaging/gifs.ts";
+import { toBase64 } from "#lib/util/base64.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 
 const KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
 const media =

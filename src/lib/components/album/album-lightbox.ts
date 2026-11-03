@@ -4,20 +4,23 @@ import {
 	accountEpoch,
 	isAccountEpochCurrent,
 	registerAccountCache,
-} from "$lib/api/account-caches";
+} from "#lib/api/account-caches.ts";
 import {
 	type AlbumContentResponse,
 	getAlbumContent,
-} from "$lib/api/messaging/albums";
-import { mediaFailure, remedyFor } from "$lib/platform/media-failure";
-import { now } from "$lib/util/clock";
-import { proxyMediaUrl } from "$lib/util/media";
-import { measureImage, type MediaDimensions } from "$lib/util/media-dimensions";
+} from "#lib/api/messaging/albums.ts";
+import { mediaFailure, remedyFor } from "#lib/platform/media-failure.ts";
+import { now } from "#lib/util/clock.ts";
+import {
+	measureImage,
+	type MediaDimensions,
+} from "#lib/util/media-dimensions.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import {
 	applyPhotoSwipeComponent,
 	type LightboxItem,
 	openLightbox,
-} from "$lib/util/photoswipe";
+} from "#lib/util/photoswipe/index.ts";
 import { hasNoPlaysLeft, isVideoContent } from "./album";
 import NoPlaysLeftSlide from "./NoPlaysLeftSlide.svelte";
 

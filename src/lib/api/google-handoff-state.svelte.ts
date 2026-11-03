@@ -1,4 +1,4 @@
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export type GoogleSignInMode = "companion" | "paste";
 

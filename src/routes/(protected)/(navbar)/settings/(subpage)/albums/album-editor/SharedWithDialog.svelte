@@ -2,8 +2,8 @@
 	import CheckCircleIcon from "phosphor-svelte/lib/CheckCircleIcon";
 	import ShareNetworkIcon from "phosphor-svelte/lib/ShareNetworkIcon";
 
-	import ProfileList from "$lib/components/profile-list/ProfileList.svelte";
-	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
+	import ProfileList from "#lib/components/profile-list/ProfileList.svelte";
+	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import type { AlbumSharedWith } from "./shared-with-state.svelte";
 
 	let {

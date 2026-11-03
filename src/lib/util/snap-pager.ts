@@ -5,7 +5,7 @@ import {
 	type ReleaseVelocity,
 	scrollGestureHere,
 	type ScrollGestureState,
-} from "$lib/platform/scroll-gesture";
+} from "#lib/platform/scroll-gesture.ts";
 
 const ALIGNED_PX = 1;
 const CLIENT_WIDTH_ROUNDING_PX = 1;

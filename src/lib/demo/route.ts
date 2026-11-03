@@ -3,15 +3,15 @@ import {
 	albumNameRequestSchema,
 	albumShareRequestSchema,
 	albumUnshareRequestSchema,
-} from "$lib/model/messaging/albums";
+} from "#lib/model/messaging/albums.ts";
 import {
 	profileReportRequestSchema,
 	profileReportRequestV2Schema,
 	rightNowPostReportRequestSchema,
-} from "$lib/model/safety/reports";
-import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
-import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
-import type { FavoriteNote } from "$lib/model/users/favorites";
+} from "#lib/model/safety/reports.ts";
+import { accountPreferencesUpdateSchema } from "#lib/model/settings/account.ts";
+import type { InboxFilterRequest } from "#lib/api/messaging/conversations.ts";
+import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 import { demoMeProfileId } from "./config";
 import {
 	demoAddToAlbum,

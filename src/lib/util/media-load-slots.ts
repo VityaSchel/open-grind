@@ -1,4 +1,4 @@
-import { currentPlatform, type SupportedPlatform } from "$lib/platform/os";
+import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
 
 const MIN_ANDROID_INTERCEPT_WORKERS = 3;
 const CORES_WITHOUT_ANDROID_INTERCEPT_WORKER = 2;

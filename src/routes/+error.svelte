@@ -5,11 +5,11 @@
 	import ExclamationMarkIcon from "phosphor-svelte/lib/ExclamationMarkIcon";
 	import { toast } from "svelte-sonner";
 
-	import NotFound from "$lib/components/feedback/NotFound.svelte";
-	import { Button, buttonVariants } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { cn } from "$lib/util/utils";
+	import NotFound from "#lib/components/feedback/NotFound.svelte";
+	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { cn } from "#lib/util/utils.ts";
 
 	const title = $derived.by(() => {
 		switch (page.status) {

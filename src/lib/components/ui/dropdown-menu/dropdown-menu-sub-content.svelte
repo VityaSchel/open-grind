@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 
-	import { safeArea } from "$lib/util/safe-area";
-	import { cn } from "$lib/util/utils.js";
+	import { safeArea } from "#lib/util/safe-area.ts";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

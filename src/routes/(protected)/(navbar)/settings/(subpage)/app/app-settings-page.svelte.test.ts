@@ -11,9 +11,12 @@ import {
 	vi,
 } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
-import { toastsFake, updateApiFake } from "$lib/updates/updates-test-helpers";
-import type { Capability } from "$lib/updates/types";
+import { runningOn } from "#lib/test/platform.ts";
+import {
+	toastsFake,
+	updateApiFake,
+} from "#lib/updates/updates-test-helpers.ts";
+import type { Capability } from "#lib/updates/types.ts";
 
 const PRIVACY_POLICY = "https://opengrind.org/privacy";
 
@@ -28,21 +31,21 @@ const { updateSettings, linkOpener } = vi.hoisted(() => ({
 	linkOpener: { openExternalLink: vi.fn() },
 }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: () => Promise.resolve(encode({})),
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: () => Promise.resolve(),
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/updates/index", async () => ({
-	...(await import("$lib/updates/types")),
-	...(await import("$lib/updates/components")),
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/updates/index.ts", async () => ({
+	...(await import("#lib/updates/types.ts")),
+	...(await import("#lib/updates/components.ts")),
 	...fake.api,
 	...updateSettings,
 }));
-vi.mock("$lib/updates/toasts", () => toasts);
-vi.mock("$lib/platform/link-opener", () => linkOpener);
+vi.mock("#lib/updates/toasts.ts", () => toasts);
+vi.mock("#lib/platform/link-opener.ts", () => linkOpener);
 
 let testing: typeof import("@testing-library/svelte");
 
@@ -50,7 +53,7 @@ async function opened(capability: Capability) {
 	updateSettings.getUpdateCapability.mockResolvedValue(capability);
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
-		await import("$lib/updates/capability.svelte");
+		await import("#lib/updates/capability.svelte.ts");
 	await hydrateUpdateCapability();
 	const { default: AppSettingsPage } = await import("./+page.svelte");
 	testing.render(AppSettingsPage);
@@ -141,10 +144,9 @@ describe("the Updates section of the app settings on Android", () => {
 describe("the app settings on iOS", () => {
 	it("have no Updates section, because the app ships no updater", async () => {
 		runningOn("ios");
-		const actual =
-			await vi.importActual<typeof import("$lib/updates/index")>(
-				"$lib/updates/index",
-			);
+		const actual = await vi.importActual<
+			typeof import("#lib/updates/index.ts")
+		>("#lib/updates/index.ts");
 		fake.api.updatesAvailableHere.mockImplementation(
 			actual.updatesAvailableHere,
 		);

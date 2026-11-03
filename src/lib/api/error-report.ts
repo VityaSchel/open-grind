@@ -1,18 +1,18 @@
 import z from "zod";
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	capText,
 	redactPath,
 	redactStack,
 	scrubText,
-} from "$lib/api/redact/text";
+} from "#lib/api/redact/text.ts";
 import {
 	readResponseBody,
 	redactResponseBody,
 	redactValue,
 	valuePathKey,
-} from "$lib/api/redact/value";
+} from "#lib/api/redact/value.ts";
 
 export type RedactionOptions = { redact: boolean };
 

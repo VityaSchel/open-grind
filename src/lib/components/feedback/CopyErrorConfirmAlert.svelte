@@ -2,12 +2,12 @@
 	import {
 		copyErrorConfirmState,
 		settleCopyErrorConfirm,
-	} from "$lib/api/copy-error-confirm-state.svelte";
-	import { getErrorText } from "$lib/api/error-copy";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button } from "$lib/components/ui/button";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Switch from "$lib/components/ui/switch/switch.svelte";
+	} from "#lib/api/copy-error-confirm-state.svelte.ts";
+	import { getErrorText } from "#lib/api/error-copy.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import Label from "#lib/components/ui/label/label.svelte";
+	import Switch from "#lib/components/ui/switch/switch.svelte";
 
 	let redact = $state(true);
 	const preview = $derived(

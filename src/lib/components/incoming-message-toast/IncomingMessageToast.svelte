@@ -3,12 +3,12 @@
 	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
 	import {
 		previewFromMessage,
 		previewLabel,
-	} from "$lib/model/messaging/message-preview";
-	import { type ApiResponseMessage } from "$lib/model/messaging/messages";
+	} from "#lib/model/messaging/message-preview.ts";
+	import { type ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 
 	let {
 		conversationId,

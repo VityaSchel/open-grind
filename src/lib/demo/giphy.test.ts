@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { demoGiphyMediaUrl, demoRoute } from "$lib/demo";
-import { demoGiphyMessageBody } from "$lib/demo/mock/giphy";
-import { giphyResponseSchema } from "$lib/model/messaging/gifs";
+import { demoGiphyMediaUrl, demoRoute } from "#lib/demo/index.ts";
+import { demoGiphyMessageBody } from "#lib/demo/mock/giphy.ts";
+import { giphyResponseSchema } from "#lib/model/messaging/gifs.ts";
 
 const key = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
 

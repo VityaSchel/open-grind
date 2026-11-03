@@ -6,9 +6,9 @@ const api = vi.hoisted(() => ({
 	unshareAlbum: vi.fn(),
 }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
 
-import { albumShares } from "$lib/chat/album-shares.svelte";
+import { albumShares } from "#lib/chat/album-shares.svelte.ts";
 import { AlbumShareActions } from "./album-share-actions.svelte";
 
 const PEER = 100001;

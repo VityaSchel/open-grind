@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import { cmToInches, inchesToCm } from "$lib/util/units";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { cmToInches, inchesToCm } from "#lib/util/units.ts";
 	import { heightCmRange, heightInchOptions } from "../options";
 	import NumberField from "./NumberField.svelte";
 	import SelectField from "./SelectField.svelte";

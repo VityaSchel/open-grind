@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	errorUrn,
 	errorUrnFromBody,
 	tieredFeature,
 	tieredFeatureFromBody,
-} from "$lib/api/error-urn";
+} from "#lib/api/error-urn.ts";
 
 const request = { method: "POST", path: "/v4/chat/message/send" };
 

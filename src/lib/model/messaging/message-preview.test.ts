@@ -4,7 +4,7 @@ import {
 	previewFromMessage,
 	previewLabel,
 	quoteLabel,
-} from "$lib/model/messaging/message-preview";
+} from "#lib/model/messaging/message-preview.ts";
 
 describe("previewFromMessage", () => {
 	it("extracts preview text from text messages", () => {

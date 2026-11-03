@@ -1,8 +1,8 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api/transport";
-import { mediaUrlSchema } from "$lib/model/media";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { fetchRest } from "#lib/api/transport.ts";
+import { mediaUrlSchema } from "#lib/model/media.ts";
+import { unixTimestampMsSchema } from "#lib/model/types.ts";
 
 const drawerMediaSchema = z.object({
 	id: z.int(),

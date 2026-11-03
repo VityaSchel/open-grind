@@ -9,9 +9,9 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { demoGenders } from "$lib/demo/mock/reference";
-import { GENDER_ASK_ME } from "$lib/model/browse/grid/filters";
-import type { Gender } from "$lib/model/users/genders";
+import { demoGenders } from "#lib/demo/mock/reference.ts";
+import { GENDER_ASK_ME } from "#lib/model/browse/grid/filters.ts";
+import type { Gender } from "#lib/model/users/genders.ts";
 
 const MAN = 1;
 const CIS_MAN = 4;
@@ -28,7 +28,7 @@ const catalog: Gender[] = [
 	},
 ];
 
-vi.mock("$lib/api/users/genders", () => ({
+vi.mock("#lib/api/users/genders.ts", () => ({
 	getGenders: () => Promise.resolve(catalog),
 }));
 

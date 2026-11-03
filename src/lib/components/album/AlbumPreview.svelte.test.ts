@@ -14,8 +14,8 @@ const sonner = vi.hoisted(() => ({
 vi.mock("./album-lightbox", () => lightbox);
 vi.mock("svelte-sonner", () => sonner);
 
-import { runningOn } from "$lib/test/platform";
-import { proxyMediaUrl } from "$lib/util/media";
+import { runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import AlbumPreview from "./AlbumPreview.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';

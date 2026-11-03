@@ -9,7 +9,7 @@ import {
 	applyPhotoSwipeErrorUi,
 	applyPhotoSwipeThumbDimensions,
 	applyPhotoSwipeViewportSync,
-} from "$lib/util/photoswipe";
+} from "#lib/util/photoswipe/index.ts";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
 

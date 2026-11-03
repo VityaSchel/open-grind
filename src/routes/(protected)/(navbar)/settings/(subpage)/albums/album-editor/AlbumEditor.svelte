@@ -2,14 +2,14 @@
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		type AlbumContentResponse,
 		getAlbumStorageLimits,
-	} from "$lib/api/messaging/albums";
-	import { albumItemCountLabel } from "$lib/components/album/album";
-	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
-	import { setSubpageActions } from "$lib/components/shared/subpage-actions-context.svelte";
+	} from "#lib/api/messaging/albums.ts";
+	import { albumItemCountLabel } from "#lib/components/album/album.ts";
+	import SaveChangesBar from "#lib/components/shared/SaveChangesBar.svelte";
+	import { setSubpageActions } from "#lib/components/shared/subpage-actions-context.svelte.ts";
 	import {
 		getAlbumUploads,
 		type UploadLimits,

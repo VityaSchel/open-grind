@@ -1,9 +1,9 @@
 import { untrack } from "svelte";
 
-import { showErrorToast } from "$lib/api/error-toast";
-import { showsOnReturn, staysOnline } from "$lib/presence/presence-gate";
-import { Generation } from "$lib/util/generation";
-import { reconciler } from "$lib/util/reconcile";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { showsOnReturn, staysOnline } from "#lib/presence/presence-gate.ts";
+import { Generation } from "#lib/util/generation.ts";
+import { reconciler } from "#lib/util/reconcile.ts";
 
 export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	loading = $state(true);

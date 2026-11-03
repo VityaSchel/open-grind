@@ -1,4 +1,4 @@
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export const INTEREST_TABS = [
 	{ href: "/interest/views", label: "Views" },

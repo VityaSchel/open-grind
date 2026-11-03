@@ -2,9 +2,9 @@ import {
 	type MediaFileInspection,
 	mediaFileKindOf,
 	type MediaPreview,
-} from "$lib/platform/media-file";
-import type { DrawerMedia } from "$lib/api/messaging/drawer";
-import type { MessageDraft } from "$lib/model/messaging/messages";
+} from "#lib/platform/media-file.ts";
+import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
+import type { MessageDraft } from "#lib/model/messaging/messages.ts";
 
 const VIEW_ONCE_MAX_VIEWS = 1;
 

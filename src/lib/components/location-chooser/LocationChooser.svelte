@@ -4,17 +4,17 @@
 	import {
 		preferencesLoaded,
 		preferencesSnapshot,
-	} from "$lib/app-data/preferences.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Label } from "$lib/components/ui/label";
-	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
-	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { Switch } from "$lib/components/ui/switch";
-	import { autoLocation } from "$lib/location/auto-location";
-	import { reportLocationFailure } from "$lib/location/location-feedback";
-	import { locationRequest } from "$lib/location/location-request.svelte";
-	import { encodeGeohash } from "$lib/model/geohash";
-	import { isMobilePlatform } from "$lib/platform/os";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
+	import Spinner from "#lib/components/ui/spinner/spinner.svelte";
+	import { Switch } from "#lib/components/ui/switch/index.ts";
+	import { autoLocation } from "#lib/location/auto-location.ts";
+	import { reportLocationFailure } from "#lib/location/location-feedback.ts";
+	import { locationRequest } from "#lib/location/location-request.svelte.ts";
+	import { encodeGeohash } from "#lib/model/geohash.ts";
+	import { isMobilePlatform } from "#lib/platform/os.ts";
 	import { PIN_ZOOM } from "./constants";
 	import type GeoMapPickerComponent from "./GeoMapPicker.svelte";
 

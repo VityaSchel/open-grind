@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { KeyboardCurve, KeyboardMotion } from "./keyboard-follow";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));

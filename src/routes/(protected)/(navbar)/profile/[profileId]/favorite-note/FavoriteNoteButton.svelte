@@ -1,9 +1,9 @@
 <script lang="ts">
 	import NotePencilIcon from "phosphor-svelte/lib/NotePencilIcon";
 
-	import { Button } from "$lib/components/ui/button";
-	import type { FavoriteNote } from "$lib/model/users/favorites";
-	import type { Profile } from "$lib/model/users/profiles";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import type { FavoriteNote } from "#lib/model/users/favorites.ts";
+	import type { Profile } from "#lib/model/users/profiles.ts";
 	import FavoriteNoteEditor from "./FavoriteNoteEditor.svelte";
 
 	let {

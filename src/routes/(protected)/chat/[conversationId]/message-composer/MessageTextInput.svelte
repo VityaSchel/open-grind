@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Textarea } from "$lib/components/ui/textarea";
-	import { isMobilePlatform } from "$lib/platform/os";
+	import { Textarea } from "#lib/components/ui/textarea/index.ts";
+	import { isMobilePlatform } from "#lib/platform/os.ts";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
 
 	let {

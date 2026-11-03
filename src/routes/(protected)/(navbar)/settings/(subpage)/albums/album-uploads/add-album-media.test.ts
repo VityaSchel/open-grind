@@ -11,17 +11,17 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: core.invoke,
 }));
-vi.mock("$lib/api/error-toast", () => errorToast);
-vi.mock("$lib/api/messaging/albums", () => api);
-vi.mock("$lib/platform/media-file", async (importOriginal) => ({
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
+vi.mock("#lib/platform/media-file.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	...mediaFile,
 }));
-vi.mock("$lib/platform/media-picker", () => picker);
+vi.mock("#lib/platform/media-picker.ts", () => picker);
 vi.mock("svelte-sonner", () => sonner);
 
-import type { AlbumContent } from "$lib/model/messaging/albums";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { addAlbumMedia, pickInspectedAlbumMedia } from "./add-album-media";
 import type { AlbumUploads } from "./album-uploads-state.svelte";
 

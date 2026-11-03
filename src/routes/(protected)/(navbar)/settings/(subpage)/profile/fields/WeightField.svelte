@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import { kgToPounds, poundsToKg } from "$lib/util/units";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { kgToPounds, poundsToKg } from "#lib/util/units.ts";
 	import { weightKgRange, weightPoundRange } from "../options";
 	import NumberField from "./NumberField.svelte";
 

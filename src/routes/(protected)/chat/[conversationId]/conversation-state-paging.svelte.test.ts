@@ -9,23 +9,23 @@ const { getConversationMock } = vi.hoisted(() => ({
 	getConversationMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ revealMessageRead: true }),
 }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	markConversationAsRead: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => vi.fn() },
 }));
 vi.mock("./messages", () => ({ getConversation: getConversationMock }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: { on: () => Promise.resolve(vi.fn()) },
 }));
 
-import { Drafts } from "$lib/chat/drafts.svelte";
+import { Drafts } from "#lib/chat/drafts.svelte.ts";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CONVERSATION_ID = "1:2";

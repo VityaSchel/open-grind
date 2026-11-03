@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
-} from "$lib/demo/mock/albums";
-import { runningOn } from "$lib/test/platform";
-import type { MyAlbum } from "$lib/model/messaging/albums";
+} from "#lib/demo/mock/albums.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 import AlbumTile from "./AlbumTile.svelte";
 
 function demoAlbum(): MyAlbum {

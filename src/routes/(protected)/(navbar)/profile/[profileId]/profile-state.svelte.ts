@@ -1,8 +1,8 @@
-import { showErrorToast } from "$lib/api/error-toast";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	getFavoriteNote,
 	invalidateFavoriteNote,
-} from "$lib/api/users/favorites";
+} from "#lib/api/users/favorites.ts";
 import {
 	BlockedProfileError,
 	getProfile,
@@ -12,11 +12,11 @@ import {
 	mergeProfileEditIntoCaches,
 	ProfileUnavailableError,
 	refreshProfile,
-} from "$lib/api/users/profiles";
-import { Generation } from "$lib/util/generation";
-import type { TapType } from "$lib/model/interest/taps";
-import type { FavoriteNote } from "$lib/model/users/favorites";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profiles.ts";
+import { Generation } from "#lib/util/generation.ts";
+import type { TapType } from "#lib/model/interest/taps.ts";
+import type { FavoriteNote } from "#lib/model/users/favorites.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 export type FetchedProfile = { profile: Profile; note: FavoriteNote | null };
 

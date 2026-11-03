@@ -3,8 +3,8 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
-import { isPhotoSwipeBusy } from "$lib/util/photoswipe";
+import { runningOn } from "#lib/test/platform.ts";
+import { isPhotoSwipeBusy } from "#lib/util/photoswipe/index.ts";
 import ImageCarousel from "./ImageCarousel.svelte";
 
 const PHOTO_HEIGHT = 540;

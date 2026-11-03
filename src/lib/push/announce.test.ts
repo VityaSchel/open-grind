@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { runningOn } from "#lib/test/platform.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import type { Announcement } from "./types";
 
 const push = vi.hoisted(() => ({

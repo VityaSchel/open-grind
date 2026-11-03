@@ -1,8 +1,8 @@
 <script lang="ts">
 	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
 
-	import * as Alert from "$lib/components/ui/alert";
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import * as Alert from "#lib/components/ui/alert/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
 </script>
 
 <main class="flex flex-1 px-8">

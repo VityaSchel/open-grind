@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import type { PushCategory } from "./types";
 
 const push = vi.hoisted(() => ({
@@ -20,7 +20,7 @@ const account = vi.hoisted(() => ({
 }));
 
 vi.mock("./index", () => push);
-vi.mock("$lib/api/settings/account", () => account);
+vi.mock("#lib/api/settings/account.ts", () => account);
 
 const open: PushCategory[] = [
 	{ category: "messages", enabled: true, systemBlocked: false },

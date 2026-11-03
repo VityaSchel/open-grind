@@ -4,7 +4,7 @@ import {
 	coarsenGeohash,
 	decodeGeohash,
 	geohashSchema,
-} from "$lib/model/geohash";
+} from "#lib/model/geohash.ts";
 import { HONDURAS_INLAND_BOXES, randomHondurasGeohash } from "./honduras";
 
 const HONDURAS_INSET_OUTLINE: { lat: number; lon: number }[] = [

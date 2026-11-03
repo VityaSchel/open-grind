@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { getConversations } from "$lib/chat/conversations-context.svelte";
-	import * as Card from "$lib/components/ui/card";
-	import { setScreenLeaving } from "$lib/platform/back-gesture-event.svelte";
-	import { followSoftKeyboard } from "$lib/platform/keyboard-follow";
-	import type { MessageDraft } from "$lib/model/messaging/messages";
+	import { getConversations } from "#lib/chat/conversations-context.svelte.ts";
+	import * as Card from "#lib/components/ui/card/index.ts";
+	import { setScreenLeaving } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { followSoftKeyboard } from "#lib/platform/keyboard-follow.ts";
+	import type { MessageDraft } from "#lib/model/messaging/messages.ts";
 	import ChatNavBar from "./conversation-nav-bar/ConversationNavBar.svelte";
 	import {
 		ConversationState,

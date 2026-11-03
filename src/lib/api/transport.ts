@@ -2,21 +2,21 @@ import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { noticeAccountStatusError } from "$lib/api/account-status-state.svelte";
-import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
+import { noticeAccountStatusError } from "#lib/api/account-status-state.svelte.ts";
+import { ApiError, type ApiErrorKind } from "#lib/api/api-error.ts";
 import {
 	asAppError,
 	blockedKindOf,
 	markRequestBlocked,
-} from "$lib/api/methods";
-import { redactPath } from "$lib/api/redact/text";
-import { parseJson } from "$lib/api/redact/value";
-import { signOutIfSessionLost } from "$lib/api/session-lost";
-import { demoEnabled, demoRoute } from "$lib/demo";
-import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
-import { schemaName } from "$lib/model/schema-names";
-import { fromBase64, toBase64 } from "$lib/util/base64";
-import type { MediaFileDescriptor } from "$lib/platform/media-file";
+} from "#lib/api/methods.ts";
+import { redactPath } from "#lib/api/redact/text.ts";
+import { parseJson } from "#lib/api/redact/value.ts";
+import { signOutIfSessionLost } from "#lib/api/session-lost.ts";
+import { demoEnabled, demoRoute } from "#lib/demo/index.ts";
+import { deprecatedClientVersionErrorSchema } from "#lib/model/authentication.ts";
+import { schemaName } from "#lib/model/schema-names.ts";
+import { fromBase64, toBase64 } from "#lib/util/base64.ts";
+import type { MediaFileDescriptor } from "#lib/platform/media-file.ts";
 
 type RequestInfo = { method: string; path: string; body?: unknown };
 

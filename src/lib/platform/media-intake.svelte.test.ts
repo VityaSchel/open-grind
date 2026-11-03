@@ -34,16 +34,16 @@ vi.mock("@tauri-apps/api/event", () => ({
 }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 
-import { CHAT_MEDIA_MAX_BYTES } from "$lib/model/messaging/chat-media-limits";
+import { CHAT_MEDIA_MAX_BYTES } from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	listenForMedia,
 	mediaDrop,
 	type MediaTarget,
 	receiveMedia,
 	screenMedia,
-} from "$lib/platform/media-intake.svelte";
-import { runningOn } from "$lib/test/platform";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/media-intake.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 let stopListening: () => void;
 let unregister: (() => void)[] = [];

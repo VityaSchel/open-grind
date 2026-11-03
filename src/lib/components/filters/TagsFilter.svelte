@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { isTagKeyOfferedNow } from "$lib/api/feature-flags-state.svelte";
-	import { getTags } from "$lib/api/users/tags";
-	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { tagCatalog } from "$lib/model/browse/grid/filters";
-	import { deepEqual } from "$lib/util/deep-equal";
+	import { isTagKeyOfferedNow } from "#lib/api/feature-flags-state.svelte.ts";
+	import { getTags } from "#lib/api/users/tags.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Input } from "#lib/components/ui/input/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { tagCatalog } from "#lib/model/browse/grid/filters.ts";
+	import { deepEqual } from "#lib/util/deep-equal.ts";
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {

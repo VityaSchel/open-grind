@@ -1,16 +1,16 @@
 import { goto } from "$app/navigation";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { callMethod } from "$lib/api/methods";
-import { clearAccountPreferences } from "$lib/app-data/preferences.svelte";
-import { inboxLastViewed } from "$lib/chat/inbox-last-viewed.svelte";
-import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { callMethod } from "#lib/api/methods.ts";
+import { clearAccountPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { inboxLastViewed } from "#lib/chat/inbox-last-viewed.svelte.ts";
+import { tapsLastViewed } from "#lib/interest/taps-last-viewed.ts";
 import {
 	deletePushToken,
 	fcmServiceInstalled,
 	pushAvailableHere,
 	setNotificationsEnabled,
-} from "$lib/push";
+} from "#lib/push/index.ts";
 
 const releases = new Set<() => Promise<void>>();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { albumShares } from "$lib/chat/album-shares.svelte";
-	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
-	import type { AlbumMessage } from "$lib/model/messaging/messages";
+	import { albumShares } from "#lib/chat/album-shares.svelte.ts";
+	import AlbumPreview from "#lib/components/album/AlbumPreview.svelte";
+	import type { AlbumMessage } from "#lib/model/messaging/messages.ts";
 	import { getConversationState } from "../../conversation-state.svelte";
 	import LockedMedia from "./LockedMedia.svelte";
 	import { mediaRenewal } from "./media-renewal";

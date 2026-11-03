@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Combobox as ComboboxPrimitive } from "bits-ui";
 
-	import { safeArea } from "$lib/util/safe-area";
-	import { cn } from "$lib/util/utils.js";
+	import { safeArea } from "#lib/util/safe-area.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import { getComboboxCtx } from "./combobox.svelte";
 
 	let {

@@ -2,11 +2,11 @@ import { render, screen } from "@testing-library/svelte";
 import { SvelteSet } from "svelte/reactivity";
 import { vi } from "vitest";
 
-import { currentPlatform, type SupportedPlatform } from "$lib/platform/os";
-import { runningOn } from "$lib/test/platform";
-import type * as AccountApi from "$lib/api/settings/account";
-import type * as PushApi from "$lib/push/index";
-import type { PushCategory, PushToken } from "$lib/push/types";
+import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type * as AccountApi from "#lib/api/settings/account.ts";
+import type * as PushApi from "#lib/push/index.ts";
+import type { PushCategory, PushToken } from "#lib/push/types.ts";
 import type NotificationsPage from "./+page.svelte";
 
 type InstallListener = () => Promise<void>;
@@ -125,10 +125,10 @@ export async function resetNotificationsPage(): Promise<void> {
 	push.pushCategories.mockResolvedValue(categories());
 	account.getPushSettings.mockResolvedValue({ tapPushNotification: true });
 	const { notificationCategories } =
-		await import("$lib/push/categories.svelte");
-	const { dismissAddonDialog } = await import("$lib/push/delivery.svelte");
+		await import("#lib/push/categories.svelte.ts");
+	const { dismissAddonDialog } = await import("#lib/push/delivery.svelte.ts");
 	const { reconcileNotifications } =
-		await import("$lib/push/notifications.svelte");
+		await import("#lib/push/notifications.svelte.ts");
 	notificationCategories.list = [];
 	await reconcileNotifications();
 	dismissAddonDialog();

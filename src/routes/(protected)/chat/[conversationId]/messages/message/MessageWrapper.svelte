@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 	import type { Attachment } from "svelte/attachments";
 
-	import type { QuotedMessage } from "$lib/model/messaging/messages";
+	import type { QuotedMessage } from "#lib/model/messaging/messages.ts";
 	import {
 		getMessageContext,
 		type MessageRefs,

@@ -17,10 +17,10 @@
 		LeafletMouseEventHandlerFn,
 	} from "leaflet";
 
-	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { locationRequest } from "$lib/location/location-request.svelte";
-	import { openExternalLink } from "$lib/platform/link-opener";
-	import { isMobilePlatform } from "$lib/platform/os";
+	import Spinner from "#lib/components/ui/spinner/spinner.svelte";
+	import { locationRequest } from "#lib/location/location-request.svelte.ts";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
+	import { isMobilePlatform } from "#lib/platform/os.ts";
 	import { PIN_ZOOM } from "./constants";
 	import LocateMeButton from "./LocateMeButton.svelte";
 	import PlaceSearch from "./PlaceSearch.svelte";

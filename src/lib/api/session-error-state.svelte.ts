@@ -1,5 +1,5 @@
-import { registerAccountCache } from "$lib/api/account-caches";
-import type { ApiErrorKind } from "$lib/api/api-error";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import type { ApiErrorKind } from "#lib/api/api-error.ts";
 
 export const sessionErrorKinds = [
 	"Http",

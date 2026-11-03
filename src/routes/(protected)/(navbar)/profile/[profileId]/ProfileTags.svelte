@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge } from "$lib/components/ui/badge";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
 
 	let { tags }: { tags: string[] | null } = $props();
 </script>

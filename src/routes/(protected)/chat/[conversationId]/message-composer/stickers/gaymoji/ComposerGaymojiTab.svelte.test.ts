@@ -6,10 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({ getGaymoji: vi.fn() }));
 
-vi.mock("$lib/api/messaging/gaymoji", () => api);
+vi.mock("#lib/api/messaging/gaymoji.ts", () => api);
 
-import { runningOn } from "$lib/test/platform";
-import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
+import { runningOn } from "#lib/test/platform.ts";
+import type {
+	GaymojiCategory,
+	GaymojiItem,
+} from "#lib/api/messaging/gaymoji.ts";
 import type { StickerPick } from "../sticker-pick";
 import ComposerGaymojiTab from "./ComposerGaymojiTab.svelte";
 

@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export function canOpenAppSettings(): boolean {
 	switch (currentPlatform()) {

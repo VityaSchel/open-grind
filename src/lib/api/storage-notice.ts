@@ -1,7 +1,7 @@
 import { toast } from "svelte-sonner";
 
-import { callMethod } from "$lib/api/methods";
-import { currentPlatform } from "$lib/platform/os";
+import { callMethod } from "#lib/api/methods.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 function fileStoreIsAFallback(): boolean {
 	switch (currentPlatform()) {

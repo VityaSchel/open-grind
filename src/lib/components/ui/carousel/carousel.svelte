@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from "$lib/util/utils.js";
+	import { cn, type WithElementRef } from "#lib/util/utils.ts";
 	import {
 		type CarouselAPI,
 		type CarouselProps,

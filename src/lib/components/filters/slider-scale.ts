@@ -1,9 +1,9 @@
 import {
 	type SliderScale,
 	TRACK_RESOLUTION,
-} from "$lib/components/ui/slider/scale";
-import { AGE_MAX, AGE_MIN } from "$lib/model/browse/grid/filters";
-import type { UnitSystem } from "$lib/util/units";
+} from "#lib/components/ui/slider/scale.ts";
+import { AGE_MAX, AGE_MIN } from "#lib/model/browse/grid/filters.ts";
+import type { UnitSystem } from "#lib/util/units.ts";
 import { type UnitStops, WEIGHT_STOPS } from "./unit-stops";
 
 type Curve = (share: number) => number;

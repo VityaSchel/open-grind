@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 const PROPS = {

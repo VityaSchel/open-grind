@@ -4,8 +4,8 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/context-menu";
-import { runningOn } from "$lib/test/platform";
+import { rightClick } from "#lib/test/context-menu.ts";
+import { runningOn } from "#lib/test/platform.ts";
 
 const drawer = vi.hoisted(() => ({
 	getDrawerMedia: vi.fn(),
@@ -16,16 +16,16 @@ const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const mediaFile = vi.hoisted(() => ({ discardStagedMedia: vi.fn() }));
 
-vi.mock("$lib/api/messaging/drawer", () => drawer);
-vi.mock("$lib/api/messaging/chat-media", async (importOriginal) => ({
+vi.mock("#lib/api/messaging/drawer.ts", () => drawer);
+vi.mock("#lib/api/messaging/chat-media.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	...chatMedia,
 }));
-vi.mock("$lib/platform/media-file", async (importOriginal) => ({
+vi.mock("#lib/platform/media-file.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	...mediaFile,
 }));
-vi.mock("$lib/platform/media-picker", () => picker);
+vi.mock("#lib/platform/media-picker.ts", () => picker);
 vi.mock("svelte-sonner", () => sonner);
 vi.mock("../../message-composer-context.svelte", () => ({
 	getMessageComposerContext: () => () => ({}),
@@ -34,8 +34,8 @@ vi.mock("../../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ conversationId: "100001:100002" }),
 }));
 
-import { proxyMediaUrl } from "$lib/util/media";
-import type { DrawerMedia } from "$lib/api/messaging/drawer";
+import { proxyMediaUrl } from "#lib/util/media.ts";
+import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
 import ComposerMediaTab from "./ComposerMediaTab.svelte";
 
 const PENDING = '[data-slot="media-image-pending"]';

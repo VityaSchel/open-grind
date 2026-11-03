@@ -1,8 +1,8 @@
 import { mount } from "svelte";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import VideoPlayer from "$lib/components/shared/VideoPlayer.svelte";
-import { onSafeAreaChange, safeAreaInsets } from "$lib/util/safe-area";
+import VideoPlayer from "#lib/components/shared/VideoPlayer.svelte";
+import { onSafeAreaChange, safeAreaInsets } from "#lib/util/safe-area.ts";
 import { applyPhotoSwipeComponent } from "./component";
 import { type Failure, failures } from "./error-ui";
 

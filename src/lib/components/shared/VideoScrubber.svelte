@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { SvelteMediaTimeRange } from "svelte/elements";
 
-	import { formatMediaDuration } from "$lib/util/format-time";
+	import { formatMediaDuration } from "#lib/util/format-time.ts";
 
 	const STEP_SECONDS = 5;
 

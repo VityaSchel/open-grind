@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import { Slider } from "$lib/components/ui/slider";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { Slider } from "#lib/components/ui/slider/index.ts";
 	import { MAX_DISTANCE_STEPS, maxDistanceLabel } from "./distance-steps";
 
 	let { value = $bindable() }: { value: number } = $props();

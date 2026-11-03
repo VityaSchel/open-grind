@@ -1,6 +1,6 @@
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
-import { registerAccountCache } from "$lib/api/account-caches";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
 
 export class AlbumShareRegistry {
 	#sharedWith = new SvelteMap<number, SvelteSet<number>>();

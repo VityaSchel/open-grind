@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	apiResponseMessageSchema,
 	messageSchema,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 
 function incoming(messageId: string) {
 	return {
@@ -20,7 +20,7 @@ function incoming(messageId: string) {
 
 async function freshApiResponseMessageSchema() {
 	vi.resetModules();
-	const messages = await import("$lib/model/messaging/messages");
+	const messages = await import("#lib/model/messaging/messages.ts");
 	return messages.apiResponseMessageSchema;
 }
 

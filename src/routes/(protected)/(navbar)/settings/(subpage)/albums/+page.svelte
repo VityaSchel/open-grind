@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
-	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
-	import AddTile from "$lib/components/shared/AddTile.svelte";
-	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
+	import { getMyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+	import AlbumTile from "#lib/components/album/AlbumTile.svelte";
+	import AddTile from "#lib/components/shared/AddTile.svelte";
+	import MediaGrid from "#lib/components/shared/MediaGrid.svelte";
 
 	const { data }: import("./$types").PageProps = $props();
 

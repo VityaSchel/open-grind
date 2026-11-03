@@ -1,5 +1,5 @@
-import { currentPlatform } from "$lib/platform/os";
-import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+import { currentPlatform } from "#lib/platform/os.ts";
+import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 const SHRUNK_PAGE_ROOT_ATTRIBUTE = "data-keyboard-shrinks-page";
 

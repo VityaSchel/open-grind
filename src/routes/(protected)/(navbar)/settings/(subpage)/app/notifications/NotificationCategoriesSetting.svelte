@@ -2,20 +2,20 @@
 	import { untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 
-	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
+	import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import {
 		loadNotificationCategories,
 		notificationCategories,
 		toggleNotificationCategory,
-	} from "$lib/push/categories.svelte";
-	import { pushFailures } from "$lib/push/error-copy";
+	} from "#lib/push/categories.svelte.ts";
+	import { pushFailures } from "#lib/push/error-copy.ts";
 	import {
 		notificationSettings,
 		offersDeliveryModes,
-	} from "$lib/push/notification-state.svelte";
-	import type { PushCategoryName } from "$lib/push/types";
+	} from "#lib/push/notification-state.svelte.ts";
+	import type { PushCategoryName } from "#lib/push/types.ts";
 
 	const TITLES: Record<PushCategoryName, string> = {
 		messages: "New messages",

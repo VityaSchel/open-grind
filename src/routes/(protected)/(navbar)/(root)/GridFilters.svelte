@@ -2,21 +2,21 @@
 	import { untrack } from "svelte";
 	import type { Attachment } from "svelte/attachments";
 
-	import { edgeGap } from "$lib/components/feedback/refresh/scroll-geometry";
-	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
-	import FilterBoolean from "$lib/components/filters/FilterBoolean.svelte";
-	import GendersFilter from "$lib/components/filters/GendersFilter.svelte";
-	import HeightFilter from "$lib/components/filters/HeightFilter.svelte";
-	import { optionFilters } from "$lib/components/filters/option-filters";
-	import OptionFilter from "$lib/components/filters/OptionFilter.svelte";
-	import PhotosFilter from "$lib/components/filters/PhotosFilter.svelte";
-	import PositionFilter from "$lib/components/filters/position/PositionFilterField.svelte";
-	import TagsFilter from "$lib/components/filters/TagsFilter.svelte";
-	import WeightFilter from "$lib/components/filters/WeightFilter.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as Sheet from "$lib/components/ui/sheet";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { edgeGap } from "#lib/components/feedback/refresh/scroll-geometry.ts";
+	import AgeFilter from "#lib/components/filters/age/AgeFilterField.svelte";
+	import FilterBoolean from "#lib/components/filters/FilterBoolean.svelte";
+	import GendersFilter from "#lib/components/filters/GendersFilter.svelte";
+	import HeightFilter from "#lib/components/filters/HeightFilter.svelte";
+	import { optionFilters } from "#lib/components/filters/option-filters.ts";
+	import OptionFilter from "#lib/components/filters/OptionFilter.svelte";
+	import PhotosFilter from "#lib/components/filters/PhotosFilter.svelte";
+	import PositionFilter from "#lib/components/filters/position/PositionFilterField.svelte";
+	import TagsFilter from "#lib/components/filters/TagsFilter.svelte";
+	import WeightFilter from "#lib/components/filters/WeightFilter.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Sheet from "#lib/components/ui/sheet/index.ts";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let { open = $bindable() }: { open: boolean } = $props();
 

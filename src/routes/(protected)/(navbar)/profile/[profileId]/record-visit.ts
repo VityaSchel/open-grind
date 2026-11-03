@@ -1,7 +1,7 @@
-import { registerAccountCache } from "$lib/api/account-caches";
-import { showErrorToast } from "$lib/api/error-toast";
-import { recordProfileView } from "$lib/api/interest/views";
-import { getPreferences } from "$lib/app-data/preferences.svelte";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { recordProfileView } from "#lib/api/interest/views.ts";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
 
 const visitedProfileIds = new Set<number>();
 

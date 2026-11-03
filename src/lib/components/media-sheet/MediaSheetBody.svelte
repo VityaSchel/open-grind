@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 	import type { Attachment } from "svelte/attachments";
 
-	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
+	import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
 
 	let {
 		fullsize = true,

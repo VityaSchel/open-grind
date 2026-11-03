@@ -8,7 +8,7 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/context-menu";
+import { rightClick } from "#lib/test/context-menu.ts";
 
 const profiles = vi.hoisted(() => ({
 	uploadProfilePhoto: vi.fn(),
@@ -19,13 +19,13 @@ const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const demo = vi.hoisted(() => ({ demoEnabled: false }));
 
-vi.mock("$lib/api/users/profiles", () => profiles);
-vi.mock("$lib/platform/media-picker", () => picker);
+vi.mock("#lib/api/users/profiles.ts", () => profiles);
+vi.mock("#lib/platform/media-picker.ts", () => picker);
 vi.mock("svelte-sonner", () => sonner);
-vi.mock("$lib/demo", () => demo);
+vi.mock("#lib/demo/index.ts", () => demo);
 
-import { ApiError } from "$lib/api/api-error";
-import { runningOn } from "$lib/test/platform";
+import { ApiError } from "#lib/api/api-error.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
 
 function picks(count: number) {

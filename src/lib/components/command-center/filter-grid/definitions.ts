@@ -1,5 +1,5 @@
-import { isTribeOfferedNow } from "$lib/api/feature-flags-state.svelte";
-import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { isTribeOfferedNow } from "#lib/api/feature-flags-state.svelte.ts";
+import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -22,7 +22,7 @@ import {
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
 	weightGramsToKg,
-} from "$lib/model/browse/grid/filters";
+} from "#lib/model/browse/grid/filters.ts";
 import {
 	acceptNSFWPics,
 	bodyTypes,
@@ -32,8 +32,8 @@ import {
 	relationshipStatuses,
 	sexualPositions,
 	tribes,
-} from "$lib/model/users/profiles";
-import { formatHeight, formatWeightKg } from "$lib/util/units";
+} from "#lib/model/users/profiles.ts";
+import { formatHeight, formatWeightKg } from "#lib/util/units.ts";
 import {
 	booleanApply,
 	boundApply,

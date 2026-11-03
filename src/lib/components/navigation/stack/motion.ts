@@ -1,4 +1,4 @@
-import { currentPlatform, type SupportedPlatform } from "$lib/platform/os";
+import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
 
 export const STACK_Z = { back: "10", dim: "11", front: "12" } as const;
 

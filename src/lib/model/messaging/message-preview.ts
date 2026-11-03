@@ -1,7 +1,7 @@
 import type {
 	ApiResponseMessage,
 	QuotedMessage,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 
 export type MessagePreview = {
 	type: string;

@@ -14,8 +14,8 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
-} from "$lib/platform/back-gesture-event.svelte";
-import { resetPlatform, runningOn } from "$lib/test/platform";
+} from "#lib/platform/back-gesture-event.svelte.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	attachSystemBackGesture,
 	installSystemBack,

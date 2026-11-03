@@ -7,11 +7,11 @@ const { toastError, promptCopyError } = vi.hoisted(() => ({
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
-vi.mock("$lib/api/error-copy", () => ({ promptCopyError }));
+vi.mock("#lib/api/error-copy.ts", () => ({ promptCopyError }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { accountStatusState } from "$lib/api/account-status-state.svelte";
-import { reportSignInFailure } from "$lib/api/sign-in";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { accountStatusState } from "#lib/api/account-status-state.svelte.ts";
+import { reportSignInFailure } from "#lib/api/sign-in.ts";
 
 beforeEach(() => {
 	vi.clearAllMocks();

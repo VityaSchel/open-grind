@@ -2,8 +2,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ScrollGestureState } from "$lib/platform/scroll-gesture";
-import { runningOn } from "$lib/test/platform";
+import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { PullModel } from "./pull-model.svelte";
 import { attachTouchpadPull } from "./touchpad-adapter";
 

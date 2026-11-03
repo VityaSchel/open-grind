@@ -4,14 +4,14 @@
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
 	import TimerIcon from "phosphor-svelte/lib/TimerIcon";
 
-	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
-	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
-	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
-	import MediaSheetTab from "$lib/components/media-sheet/MediaSheetTab.svelte";
-	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
-	import * as Drawer from "$lib/components/ui/drawer";
-	import * as Tabs from "$lib/components/ui/tabs";
-	import { Toggle } from "$lib/components/ui/toggle";
+	import MediaSheet from "#lib/components/media-sheet/MediaSheet.svelte";
+	import MediaSheetActions from "#lib/components/media-sheet/MediaSheetActions.svelte";
+	import MediaSheetBody from "#lib/components/media-sheet/MediaSheetBody.svelte";
+	import MediaSheetTab from "#lib/components/media-sheet/MediaSheetTab.svelte";
+	import MediaSheetTabBar from "#lib/components/media-sheet/MediaSheetTabBar.svelte";
+	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import * as Tabs from "#lib/components/ui/tabs/index.ts";
+	import { Toggle } from "#lib/components/ui/toggle/index.ts";
 	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
 	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";

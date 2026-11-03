@@ -1,13 +1,13 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { NativeInsets } from "./native-insets";
 import type { SupportedPlatform } from "./os";
 
 const remeasureScreenChrome = vi.hoisted(() => vi.fn());
 
-vi.mock("$lib/util/screen-chrome.svelte", () => ({ remeasureScreenChrome }));
+vi.mock("#lib/util/screen-chrome.svelte.ts", () => ({ remeasureScreenChrome }));
 
 const ROOT_ATTRIBUTE = "data-keyboard-shrinks-page";
 

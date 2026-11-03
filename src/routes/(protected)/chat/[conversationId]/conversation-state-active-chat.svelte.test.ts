@@ -13,30 +13,30 @@ const { getConversationsMock, getConversationMock } = vi.hoisted(() => ({
 vi.mock("$app/state", () => ({
 	page: { route: { id: "/(protected)/chat/[conversationId]" } },
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: vi.fn(() => Promise.resolve()),
 	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: vi.fn(() => Promise.resolve()),
 	setConversationMuted: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ revealMessageRead: true }),
 }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	below: () => ({ current: true }),
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => vi.fn() },
 }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: { on: () => Promise.resolve(vi.fn()) },
 }));
 vi.mock("./messages", () => ({ getConversation: getConversationMock }));
 
-import { ConversationsState } from "$lib/chat/conversations-state.svelte";
+import { ConversationsState } from "#lib/chat/conversations-state.svelte.ts";
 import {
 	conversation,
 	fromPeer,
@@ -44,7 +44,7 @@ import {
 	OUR_ID,
 	PEER_ID,
 	settled,
-} from "$lib/chat/conversations-test-helpers";
+} from "#lib/chat/conversations-test-helpers.ts";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CHAT = "1:2";

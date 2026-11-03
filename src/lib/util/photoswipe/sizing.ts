@@ -1,6 +1,6 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
+import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
 
 const LAYOUT_UNIT_PX = 1 / 64;
 

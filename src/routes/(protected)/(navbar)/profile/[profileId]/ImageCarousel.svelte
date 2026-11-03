@@ -4,15 +4,15 @@
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
-	import { profileMediaUrl } from "$lib/util/media";
+	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import { profileMediaUrl } from "#lib/util/media.ts";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
 		applyPhotoSwipeOpenTracking,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
-	} from "$lib/util/photoswipe";
+	} from "#lib/util/photoswipe/index.ts";
 	import { devicePixelHeight } from "./device-pixel-height";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 

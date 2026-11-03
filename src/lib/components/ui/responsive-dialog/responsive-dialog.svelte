@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import * as Dialog from "$lib/components/ui/dialog";
-	import * as Drawer from "$lib/components/ui/drawer";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { above } from "$lib/util/breakpoints.svelte";
+	import * as Dialog from "#lib/components/ui/dialog/index.ts";
+	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { above } from "#lib/util/breakpoints.svelte.ts";
 	import { setResponsiveDialogContext } from "./context.js";
 
 	let {

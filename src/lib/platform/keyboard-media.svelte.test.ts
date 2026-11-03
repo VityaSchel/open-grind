@@ -27,9 +27,9 @@ vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 import {
 	listenForKeyboardMedia,
 	receiveKeyboardMedia,
-} from "$lib/platform/keyboard-media.svelte";
-import { runningOn } from "$lib/test/platform";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/keyboard-media.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 let stop: () => void;
 let unregister: (() => void) | null = null;

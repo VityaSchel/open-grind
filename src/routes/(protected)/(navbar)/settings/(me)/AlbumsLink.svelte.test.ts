@@ -8,16 +8,16 @@ const api = vi.hoisted(() => ({
 	getAlbumStorageLimits: vi.fn(() => Promise.resolve({ maxAlbums: 10 })),
 }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
-} from "$lib/demo/mock/albums";
-import { runningOn } from "$lib/test/platform";
-import { proxyMediaUrl } from "$lib/util/media";
-import type { MyAlbum } from "$lib/model/messaging/albums";
+} from "#lib/demo/mock/albums.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
+import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 import AlbumsLink from "./AlbumsLink.svelte";
 
 const MEDIA = '[data-slot="item-media"]';

@@ -1,4 +1,4 @@
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 
 export type CachedConversation = {
 	messages: ApiResponseMessage[];

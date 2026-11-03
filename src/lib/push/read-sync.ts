@@ -1,5 +1,5 @@
-import { requestInboxResync } from "$lib/chat/inbox-resync";
-import { windowFocused } from "$lib/platform/window-focus";
+import { requestInboxResync } from "#lib/chat/inbox-resync.ts";
+import { windowFocused } from "#lib/platform/window-focus.ts";
 import { shownPushConversations } from "./index";
 
 const AWAY_RECHECK_MS = 2 * 60 * 1000;

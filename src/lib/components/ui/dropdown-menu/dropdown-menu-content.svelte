@@ -2,8 +2,8 @@
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
-	import { safeArea } from "$lib/util/safe-area";
-	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { safeArea } from "#lib/util/safe-area.ts";
+	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import DropdownMenuPortal from "./dropdown-menu-portal.svelte";
 
 	let {

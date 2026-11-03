@@ -1,9 +1,9 @@
-import { androidSystemBack } from "$lib/platform/android-native-bridge";
+import { androidSystemBack } from "#lib/platform/android-native-bridge.ts";
 import {
 	backGestureEventHandlers,
 	topBackGestureHandler,
-} from "$lib/platform/back-gesture-event.svelte";
-import { currentPlatform } from "$lib/platform/os";
+} from "#lib/platform/back-gesture-event.svelte.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export type SwipeBackStack = {
 	readonly tracking: boolean;

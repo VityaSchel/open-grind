@@ -6,15 +6,15 @@ const { callMethodMock, toastErrorMock, toastWarningMock } = vi.hoisted(() => ({
 	toastWarningMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({
 	toast: { error: toastErrorMock, warning: toastWarningMock },
 }));
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 
 const { noticeStorageBackend } = await import("./storage-notice");
 

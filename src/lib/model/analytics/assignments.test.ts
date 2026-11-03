@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { assignmentsResponseSchema } from "$lib/model/analytics/assignments";
+import { assignmentsResponseSchema } from "#lib/model/analytics/assignments.ts";
 
 const flag = {
 	key: "right-now-moderation",

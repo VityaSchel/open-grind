@@ -3,11 +3,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
-import { contextMenuEvent } from "$lib/test/context-menu";
-import { pointerEvent } from "$lib/test/pointer";
-import type { TouchOriginHints } from "$lib/platform/touch-origin";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
+import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
 import {
 	type LongPressHandlers,
 	longPressHandlers,

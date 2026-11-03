@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
-	import { Slider } from "$lib/components/ui/slider";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import FilterDropdown from "#lib/components/filters/FilterDropdown.svelte";
+	import { Slider } from "#lib/components/ui/slider/index.ts";
 	import {
 		HEIGHT_CM_MAX,
 		HEIGHT_CM_MIN,
 		rangeBoundTexts,
-	} from "$lib/model/browse/grid/filters";
-	import { formatHeight } from "$lib/util/units";
+	} from "#lib/model/browse/grid/filters.ts";
+	import { formatHeight } from "#lib/util/units.ts";
 	import { HEIGHT_STOPS, storedAfterMove } from "./unit-stops";
 
 	let {

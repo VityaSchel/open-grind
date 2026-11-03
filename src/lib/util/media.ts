@@ -1,7 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import { demoEnabled, demoMediaUrl } from "$lib/demo";
-import { toBase64Url } from "$lib/util/base64";
+import { demoEnabled, demoMediaUrl } from "#lib/demo/index.ts";
+import { toBase64Url } from "#lib/util/base64.ts";
 
 const MEDIA_SCHEME = "ogmedia";
 

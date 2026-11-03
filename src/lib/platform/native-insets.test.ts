@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
-import type { SafeAreaSide } from "$lib/util/safe-area";
+import { runningOn } from "#lib/test/platform.ts";
+import type { SafeAreaSide } from "#lib/util/safe-area.ts";
 import type { NativeInsets } from "./native-insets";
 import {
 	androidBridge,
@@ -16,7 +16,7 @@ import type { SupportedPlatform } from "./os";
 
 const remeasureScreenChrome = vi.hoisted(() => vi.fn());
 
-vi.mock("$lib/util/screen-chrome.svelte", () => ({
+vi.mock("#lib/util/screen-chrome.svelte.ts", () => ({
 	remeasureScreenChrome,
 	topChromeClearance: () => 0,
 }));
@@ -127,7 +127,7 @@ describe("installNativeInsets on Android", () => {
 
 	it("announces each change to the safe area once", async () => {
 		const { installNativeInsets } = await loadNativeInsets();
-		const { onSafeAreaChange } = await import("$lib/util/safe-area");
+		const { onSafeAreaChange } = await import("#lib/util/safe-area.ts");
 		const changed = vi.fn();
 		onSafeAreaChange(changed);
 		window.__AndroidInsets = androidBridge(KEYBOARD_HIDDEN);

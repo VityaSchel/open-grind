@@ -2,10 +2,10 @@
 	import GifIcon from "phosphor-svelte/lib/GifIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
-	import { receivedGiphySrc } from "$lib/api/messaging/gifs";
-	import { giphyOriginalUrl } from "$lib/api/messaging/giphy-link";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import type { GiphyMessage } from "$lib/model/messaging/messages";
+	import { receivedGiphySrc } from "#lib/api/messaging/gifs.ts";
+	import { giphyOriginalUrl } from "#lib/api/messaging/giphy-link.ts";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import type { GiphyMessage } from "#lib/model/messaging/messages.ts";
 	import GifBadge from "../../giphy/GifBadge.svelte";
 	import { giphyConsented } from "../../giphy/giphy-consent";
 	import GiphyConsentDialog from "../../giphy/GiphyConsentDialog.svelte";

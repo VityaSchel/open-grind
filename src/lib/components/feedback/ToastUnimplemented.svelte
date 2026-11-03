@@ -1,7 +1,7 @@
 <script lang="ts">
 	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import Link from "#lib/components/ui/link/Link.svelte";
 
 	let { feature, issue }: { feature: string; issue: number } = $props();
 </script>

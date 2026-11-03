@@ -1,11 +1,11 @@
 import { tick } from "svelte";
 import type { NavigationTarget, OnNavigate } from "@sveltejs/kit";
 
-import { StackSettle } from "$lib/components/navigation/stack/settle";
-import { Generation } from "$lib/util/generation";
-import { isWithin } from "$lib/util/pathname";
-import type { StackMotion } from "$lib/components/navigation/stack/motion";
-import type { StackSurface } from "$lib/components/navigation/stack/surface";
+import { StackSettle } from "#lib/components/navigation/stack/settle.ts";
+import { Generation } from "#lib/util/generation.ts";
+import { isWithin } from "#lib/util/pathname.ts";
+import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
+import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
 
 const BACK_WATCHDOG_MS = 1000;
 

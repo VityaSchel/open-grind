@@ -7,13 +7,13 @@ const { playHapticMock, sendTapMock } = vi.hoisted(() => ({
 	playHapticMock: vi.fn(),
 	sendTapMock: vi.fn(() => Promise.resolve({ isMutual: false })),
 }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
-vi.mock("$lib/api/interest/taps", () => ({ sendTap: sendTapMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/api/interest/taps.ts", () => ({ sendTap: sendTapMock }));
 
-import { TapType } from "$lib/model/interest/taps";
-import { contextMenuEvent } from "$lib/test/context-menu";
-import { resetPlatform, runningOn } from "$lib/test/platform";
-import { pointerEvent } from "$lib/test/pointer";
+import { TapType } from "#lib/model/interest/taps.ts";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
 import TapProfileButton from "./TapProfileButton.svelte";
 
 const LONG_PRESS_MS = 450;

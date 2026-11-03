@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ArrowLeftIcon from "phosphor-svelte/lib/ArrowLeftIcon";
 
-	import BackLink from "$lib/components/navigation/BackLink.svelte";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
+	import BackLink from "#lib/components/navigation/BackLink.svelte";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 </script>
 
 <nav aria-label="Back">

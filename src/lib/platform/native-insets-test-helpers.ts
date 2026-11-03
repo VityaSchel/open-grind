@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { resetPlatform } from "$lib/test/platform";
+import { resetPlatform } from "#lib/test/platform.ts";
 import type { NativeInsets } from "./native-insets";
 
 export const KEYBOARD_HIDDEN: NativeInsets = {

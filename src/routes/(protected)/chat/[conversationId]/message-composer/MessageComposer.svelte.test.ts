@@ -4,13 +4,13 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { flushSync, tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Drafts } from "$lib/chat/drafts.svelte";
-import { draftFromMessage } from "$lib/model/messaging/messages";
+import { Drafts } from "#lib/chat/drafts.svelte.ts";
+import { draftFromMessage } from "#lib/model/messaging/messages.ts";
 import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
-} from "$lib/platform/back-gesture-event.svelte";
-import { runningOn } from "$lib/test/platform";
+} from "#lib/platform/back-gesture-event.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { ComposerSheetsState } from "./composer-sheets-state.svelte";
 
 const { conversations, composerSheets, conversationState } = vi.hoisted(() => ({
@@ -20,7 +20,7 @@ const { conversations, composerSheets, conversationState } = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/navigation", () => ({ onNavigate: vi.fn() }));
-vi.mock("$lib/chat/conversations-context.svelte", () => ({
+vi.mock("#lib/chat/conversations-context.svelte.ts", () => ({
 	getConversations: () => conversations,
 }));
 vi.mock("./send-media/send-media-offer.svelte", () => ({

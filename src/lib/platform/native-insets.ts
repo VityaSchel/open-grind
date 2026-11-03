@@ -1,14 +1,14 @@
-import { currentPlatform } from "$lib/platform/os";
-import { noteSoftKeyboardOpen } from "$lib/platform/soft-keyboard.svelte";
+import { currentPlatform } from "#lib/platform/os.ts";
+import { noteSoftKeyboardOpen } from "#lib/platform/soft-keyboard.svelte.ts";
 import {
 	announceSafeAreaChange,
 	SAFE_AREA_SIDES,
 	type SafeAreaSide,
-} from "$lib/util/safe-area";
+} from "#lib/util/safe-area.ts";
 import {
 	remeasureScreenChrome,
 	topChromeClearance,
-} from "$lib/util/screen-chrome.svelte";
+} from "#lib/util/screen-chrome.svelte.ts";
 
 const IME_RESIZE_FALLBACK_MS = 150;
 const BOTTOM_CHROME = '[data-screen-chrome="bottom"]';

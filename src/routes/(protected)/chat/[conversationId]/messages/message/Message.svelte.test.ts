@@ -10,15 +10,15 @@ vi.hoisted(() => {
 	});
 });
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("$lib/haptics", () => ({
+vi.mock("#lib/haptics.ts", () => ({
 	hapticsAvailable: () => true,
 	playHaptic: playHapticMock,
 }));
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { contextMenuEvent } from "$lib/test/context-menu";
-import { runningOn } from "$lib/test/platform";
-import { pointerEvent } from "$lib/test/pointer";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';

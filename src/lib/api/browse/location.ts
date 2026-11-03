@@ -1,7 +1,7 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api/transport";
-import { coarsenGeohash } from "$lib/model/geohash";
+import { fetchRest } from "#lib/api/transport.ts";
+import { coarsenGeohash } from "#lib/model/geohash.ts";
 
 const placesResponseSchema = z.object({
 	places: z.array(

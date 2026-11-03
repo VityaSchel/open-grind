@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { preferencesLoaded } from "$lib/app-data/preferences.svelte";
+	import { preferencesLoaded } from "#lib/app-data/preferences.svelte.ts";
 	import { giphyConsented } from "../../../giphy/giphy-consent";
 	import type { StickerPick } from "../sticker-pick";
 	import { GifFeed } from "./gif-feed.svelte";

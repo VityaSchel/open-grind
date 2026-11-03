@@ -1,12 +1,12 @@
 import z from "zod";
 
-import { EditableServerList } from "$lib/api/browse/editable-server-list";
-import { fetchRest } from "$lib/api/transport";
+import { EditableServerList } from "#lib/api/browse/editable-server-list.ts";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profile-viewability.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 const getHiddenUsersResponseSchema = z.object({
 	hides: z.array(z.object({ profileId: z.coerce.number() })),

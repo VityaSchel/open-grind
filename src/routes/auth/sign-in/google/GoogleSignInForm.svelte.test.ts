@@ -10,7 +10,7 @@ import {
 	vi,
 } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	awaitingPermission,
 	installedBy,
@@ -22,8 +22,8 @@ import {
 	settled,
 	toastsFake,
 	updateApiFake,
-} from "$lib/updates/updates-test-helpers";
-import type { Capability } from "$lib/updates/types";
+} from "#lib/updates/updates-test-helpers.ts";
+import type { Capability } from "#lib/updates/types.ts";
 
 const COMPANION_RELEASES =
 	"https://git.opengrind.org/open-grind/google-oauth-app/releases#install";
@@ -51,19 +51,19 @@ const {
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
 vi.mock("$app/state", () => ({ page: pageMock }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("$lib/updates/index", async () => ({
-	...(await import("$lib/updates/types")),
-	...(await import("$lib/updates/components")),
+vi.mock("#lib/updates/index.ts", async () => ({
+	...(await import("#lib/updates/types.ts")),
+	...(await import("#lib/updates/components.ts")),
 	...fake.api,
 	getUpdateCapability,
 }));
-vi.mock("$lib/updates/toasts", () => toasts);
-vi.mock("$lib/platform/link-opener", () => ({ openExternalLink }));
+vi.mock("#lib/updates/toasts.ts", () => toasts);
+vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink }));
 
 let testing: typeof import("@testing-library/svelte");
 
@@ -75,7 +75,7 @@ const releaseSigned: Capability = {
 async function opened() {
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
-		await import("$lib/updates/capability.svelte");
+		await import("#lib/updates/capability.svelte.ts");
 	await hydrateUpdateCapability();
 	const { default: GoogleSignInForm } =
 		await import("./GoogleSignInForm.svelte");
@@ -95,7 +95,7 @@ function expectBusy(name: string) {
 }
 
 async function addonFlow() {
-	return import("$lib/updates/addon.svelte");
+	return import("#lib/updates/addon.svelte.ts");
 }
 
 function textOf(element: HTMLElement) {
@@ -428,7 +428,7 @@ describe("GoogleSignInForm", () => {
 
 	it("keeps the signing-in card while a handoff is being exchanged", async () => {
 		const { googleHandoffState } =
-			await import("$lib/api/google-handoff-state.svelte");
+			await import("#lib/api/google-handoff-state.svelte.ts");
 		googleHandoffState.phase = "signingIn";
 		try {
 			const { screen } = await opened();
@@ -473,7 +473,7 @@ describe("GoogleSignInForm", () => {
 	it("falls back to the pasted token when the Google OAuth app is untrusted", async () => {
 		api.getInstalledVersion.mockResolvedValue("1.1.0");
 		const { screen, fireEvent } = await opened();
-		const { untrustedCompanionMessage } = await import("$lib/api/sign-in");
+		const signIn = await import("#lib/api/sign-in.ts");
 		callMethodMock.mockRejectedValue({
 			kind: "Auth",
 			message: "companion-untrusted",
@@ -483,7 +483,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			untrustedCompanionMessage,
+			signIn.untrustedCompanionMessage,
 		);
 		expect(screen.getByLabelText("Token")).toBeTruthy();
 	});
@@ -495,7 +495,7 @@ describe("GoogleSignInForm", () => {
 		});
 		api.getInstalledVersion.mockResolvedValue("1.1.0");
 		const { screen, fireEvent } = await opened();
-		const { refusedCompanionMessage } = await import("$lib/api/sign-in");
+		const { refusedCompanionMessage } = await import("#lib/api/sign-in.ts");
 		callMethodMock.mockRejectedValue({
 			kind: "Auth",
 			message: "companion-refused",

@@ -3,7 +3,7 @@
 	import CheckIcon from "phosphor-svelte/lib/CheckIcon";
 	import MinusIcon from "phosphor-svelte/lib/MinusIcon";
 
-	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

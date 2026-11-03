@@ -1,9 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { Attachment } from "svelte/attachments";
 
-import { currentPlatform } from "$lib/platform/os";
-import { notePageFollowsSoftKeyboard } from "$lib/platform/soft-keyboard.svelte";
-import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+import { currentPlatform } from "#lib/platform/os.ts";
+import { notePageFollowsSoftKeyboard } from "#lib/platform/soft-keyboard.svelte.ts";
+import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 const KEYFRAMES = 32;
 const SETTLED_PX = 0.5;

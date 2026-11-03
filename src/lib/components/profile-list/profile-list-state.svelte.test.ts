@@ -6,8 +6,10 @@ const { getProfilesMock, showErrorToastMock } = vi.hoisted(() => ({
 	showErrorToastMock: vi.fn<(options: { label?: string }) => void>(),
 }));
 
-vi.mock("$lib/api/users/profiles", () => ({ getProfiles: getProfilesMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/users/profiles.ts", () => ({ getProfiles: getProfilesMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
 import type { ProfileListProfile } from "./profile-list";
 import { ProfileListState } from "./profile-list-state.svelte";

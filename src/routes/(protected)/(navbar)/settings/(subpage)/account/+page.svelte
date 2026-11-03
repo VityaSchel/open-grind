@@ -2,8 +2,8 @@
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import { toast } from "svelte-sonner";
 
-	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
-	import * as Item from "$lib/components/ui/item";
+	import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
+	import * as Item from "#lib/components/ui/item/index.ts";
 </script>
 
 {#snippet item({ title }: { title: string })}

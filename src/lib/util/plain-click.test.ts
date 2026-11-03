@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isPlainClick } from "$lib/util/plain-click";
+import { isPlainClick } from "#lib/util/plain-click.ts";
 
 describe("isPlainClick", () => {
 	it("accepts a primary click without modifiers", () => {

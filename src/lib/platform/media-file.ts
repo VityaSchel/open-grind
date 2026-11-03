@@ -1,8 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { demoEnabled } from "$lib/demo";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { demoEnabled } from "#lib/demo/index.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const mediaFileKindSchema = z.enum(["photo", "video", "unsupported"]);
 

@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { Attachment } from "svelte/attachments";
 
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export type DragDismissTarget = { x: number; y: number };
 

@@ -1,16 +1,16 @@
 import { toast } from "svelte-sonner";
 
-import { showErrorToast } from "$lib/api/error-toast";
-import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
-import { type AlbumRoom, albumRoom } from "$lib/components/album/album";
-import { discardStagedMedia } from "$lib/platform/media-file";
-import { screenMedia } from "$lib/platform/media-intake.svelte";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { getAlbumStorageLimits } from "#lib/api/messaging/albums.ts";
+import { type AlbumRoom, albumRoom } from "#lib/components/album/album.ts";
+import { discardStagedMedia } from "#lib/platform/media-file.ts";
+import { screenMedia } from "#lib/platform/media-intake.svelte.ts";
 import {
 	type MediaKind,
 	type PickedMedia,
 	pickMultipleMedia,
-} from "$lib/platform/media-picker";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+} from "#lib/platform/media-picker.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import {
 	type AlbumUploads,
 	type InspectedPick,

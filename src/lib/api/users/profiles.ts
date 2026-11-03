@@ -1,31 +1,31 @@
 import z from "zod";
 
-import { ApiError } from "$lib/api/api-error";
-import { getBlockedUsers } from "$lib/api/browse/blocks";
-import { getHiddenUsers } from "$lib/api/browse/hides";
-import { FetchCache } from "$lib/api/cache";
-import { fetchRest, invokeRest } from "$lib/api/transport";
+import { ApiError } from "#lib/api/api-error.ts";
+import { getBlockedUsers } from "#lib/api/browse/blocks.ts";
+import { getHiddenUsers } from "#lib/api/browse/hides.ts";
+import { FetchCache } from "#lib/api/cache.ts";
+import { fetchRest, invokeRest } from "#lib/api/transport.ts";
 import {
 	ProfileModerationError,
 	readBannedTerms,
-} from "$lib/api/users/profile-moderation";
+} from "#lib/api/users/profile-moderation.ts";
 import {
 	markProfileUnviewable,
 	onProfileViewabilityChange,
-} from "$lib/api/users/profile-viewability";
-import { demoEnabled } from "$lib/demo";
-import { mediaHashPublicSchema } from "$lib/model/media";
-import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
-import { arrayOfParsableEntries } from "$lib/model/tolerance";
+} from "#lib/api/users/profile-viewability.ts";
+import { demoEnabled } from "#lib/demo/index.ts";
+import { mediaHashPublicSchema } from "#lib/model/media.ts";
+import { rightNowAttributionStatusSchema } from "#lib/model/right-now.ts";
+import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
 import {
 	type Profile,
 	PROFILE_PHOTO_AWAITING_REVIEW,
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
-} from "$lib/model/users/profiles";
-import { mediaFileDescriptor } from "$lib/platform/media-file";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/model/users/profiles.ts";
+import { mediaFileDescriptor } from "#lib/platform/media-file.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [

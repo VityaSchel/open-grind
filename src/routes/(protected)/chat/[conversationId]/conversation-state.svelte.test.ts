@@ -25,19 +25,23 @@ const {
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ revealMessageRead: true }),
 }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	markConversationAsRead: markConversationAsReadMock,
 }));
-vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
+vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/messaging/messages.ts")
+	>()),
 	reactToMessage: vi.fn(),
 	sendMessage: sendMessageMock,
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
 			reconcileHandlers.push(handler);
@@ -46,8 +50,8 @@ vi.mock("$lib/util/reconcile", () => ({
 	},
 }));
 vi.mock("./messages", () => ({ getConversation: getConversationMock }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
 			if (eventType === "chat.v1.conversation_read")
@@ -59,14 +63,14 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
-import { ApiError } from "$lib/api/api-error";
-import { ConversationUnavailableError } from "$lib/api/messaging/messages";
-import { Drafts } from "$lib/chat/drafts.svelte";
+import { ApiError } from "#lib/api/api-error.ts";
+import { ConversationUnavailableError } from "#lib/api/messaging/messages.ts";
+import { Drafts } from "#lib/chat/drafts.svelte.ts";
 import type {
 	Message,
 	MessageDraft,
 	OutboundMessage,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CONVERSATION_ID = "1:2";

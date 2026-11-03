@@ -1,11 +1,11 @@
-import { fetchRest } from "$lib/api/transport";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	type AccountPreferences,
 	type AccountPreferencesPatch,
 	accountPreferencesSchema,
 	type PushSettings,
 	pushSettingsSchema,
-} from "$lib/model/settings/account";
+} from "#lib/model/settings/account.ts";
 
 export async function getAccountPreferences(): Promise<AccountPreferences> {
 	return await fetchRest("/v3/me/prefs/settings").then((res) =>

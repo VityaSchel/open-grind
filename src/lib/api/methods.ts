@@ -7,19 +7,19 @@ import {
 	apiErrorKinds,
 	blockedAndStaleMessages,
 	httpStatusOf,
-} from "$lib/api/api-error";
-import { capText } from "$lib/api/redact/text";
-import { summariseNonJson } from "$lib/api/redact/value";
+} from "#lib/api/api-error.ts";
+import { capText } from "#lib/api/redact/text.ts";
+import { summariseNonJson } from "#lib/api/redact/value.ts";
 import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
-} from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod, demoEnabled } from "$lib/demo";
+} from "#lib/api/request-blocked-state.svelte.ts";
+import { demoCallMethod, demoEnabled } from "#lib/demo/index.ts";
 import {
 	type AccountStatusError,
 	accountStatusErrorSchema,
-} from "$lib/model/authentication";
-import { geohashSchema } from "$lib/model/geohash";
+} from "#lib/model/authentication.ts";
+import { geohashSchema } from "#lib/model/geohash.ts";
 
 const maxPrettyMessageChars = 200;
 

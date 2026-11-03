@@ -1,5 +1,5 @@
-import type { KeyboardMotion } from "$lib/platform/keyboard-follow";
-import type { NativeInsets } from "$lib/platform/native-insets";
+import type { KeyboardMotion } from "#lib/platform/keyboard-follow.ts";
+import type { NativeInsets } from "#lib/platform/native-insets.ts";
 
 declare global {
 	namespace App {

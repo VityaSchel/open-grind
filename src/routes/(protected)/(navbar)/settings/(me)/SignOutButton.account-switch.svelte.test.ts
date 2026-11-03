@@ -9,8 +9,8 @@ import {
 	vi,
 } from "vitest";
 
-import { conversation, settled } from "$lib/chat/conversations-test-helpers";
-import { defaultFilters } from "$lib/model/browse/grid/filters";
+import { conversation, settled } from "#lib/chat/conversations-test-helpers.ts";
+import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 
 const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 	native: vi.fn(),
@@ -39,7 +39,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => "android" }));
 vi.mock("$app/navigation", () => ({ goto }));
 vi.mock("$app/state", () => ({ page }));
-vi.mock("$lib/push", () => push);
+vi.mock("#lib/push/index.ts", () => push);
 vi.mock("svelte-sonner", () => ({ toast }));
 
 const FIRST = 101;
@@ -62,10 +62,10 @@ function response(body: unknown): string {
 beforeAll(async () => {
 	await Promise.all([
 		import("@testing-library/svelte"),
-		import("$lib/chat/conversations-context.svelte"),
+		import("#lib/chat/conversations-context.svelte.ts"),
 		import("./SignOutButton.svelte"),
 		import("../../../../auth/sign-in/SignInForm.svelte"),
-		import("$lib/components/feedback/GoogleHandoffConfirmAlert.svelte"),
+		import("#lib/components/feedback/GoogleHandoffConfirmAlert.svelte"),
 	]);
 }, 30_000);
 
@@ -151,12 +151,12 @@ beforeEach(async () => {
 afterEach(() => testing.cleanup());
 
 async function firstAccount() {
-	const preferences = await import("$lib/app-data/preferences.svelte");
-	const favorites = await import("$lib/api/users/favorites");
+	const preferences = await import("#lib/app-data/preferences.svelte.ts");
+	const favorites = await import("#lib/api/users/favorites.ts");
 	const conversations =
-		await import("$lib/chat/conversations-context.svelte");
-	const markers = await import("$lib/chat/inbox-last-viewed.svelte");
-	const taps = await import("$lib/interest/taps-last-viewed");
+		await import("#lib/chat/conversations-context.svelte.ts");
+	const markers = await import("#lib/chat/inbox-last-viewed.svelte.ts");
+	const taps = await import("#lib/interest/taps-last-viewed.ts");
 	const { load } = await import("../../../+layout");
 	expect(await load({} as Parameters<typeof load>[0])).toEqual({
 		ourProfileId: FIRST,
@@ -192,7 +192,7 @@ async function firstAccount() {
 async function assertSecondAccount(
 	app: Awaited<ReturnType<typeof firstAccount>>,
 ) {
-	const { signedInProfileId } = await import("$lib/api/current-session");
+	const { signedInProfileId } = await import("#lib/api/current-session.ts");
 	expect(await signedInProfileId()).toBe(SECOND);
 	const { load } = await import("../../../+layout");
 	expect(await load({} as Parameters<typeof load>[0])).toEqual({
@@ -236,7 +236,7 @@ async function assertSecondAccount(
 	expect(stored).toBeDefined();
 	await next.destroy();
 	vi.resetModules();
-	const restarted = await import("$lib/app-data/preferences.svelte");
+	const restarted = await import("#lib/app-data/preferences.svelte.ts");
 	await restarted.hydratePreferences();
 	expect(restarted.preferencesSnapshot()).toMatchObject({
 		units: "imperial",
@@ -288,9 +288,9 @@ describe("account changes through the real auth, cache and preferences flow", ()
 		const { render, fireEvent, screen } = testing;
 		const app = await firstAccount();
 		const { consumeGoogleHandoff } =
-			await import("$lib/api/google-handoff");
+			await import("#lib/api/google-handoff.ts");
 		const { default: Confirm } =
-			await import("$lib/components/feedback/GoogleHandoffConfirmAlert.svelte");
+			await import("#lib/components/feedback/GoogleHandoffConfirmAlert.svelte");
 		render(Confirm);
 		const switching = consumeGoogleHandoff();
 		await fireEvent.click(

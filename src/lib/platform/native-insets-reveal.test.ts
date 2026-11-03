@@ -8,7 +8,7 @@ import {
 	vi,
 } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import type { NativeInsets } from "./native-insets";
 import {
 	androidBridge,
@@ -22,7 +22,7 @@ import {
 
 const topChromeClearance = vi.hoisted(() => vi.fn(() => 0));
 
-vi.mock("$lib/util/screen-chrome.svelte", () => ({
+vi.mock("#lib/util/screen-chrome.svelte.ts", () => ({
 	remeasureScreenChrome: vi.fn(),
 	topChromeClearance,
 }));

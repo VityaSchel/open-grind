@@ -10,20 +10,20 @@
 		callMethod,
 		markRequestBlocked,
 		summarizeServerMessage,
-	} from "$lib/api/methods";
-	import { capText } from "$lib/api/redact/text";
+	} from "#lib/api/methods.ts";
+	import { capText } from "#lib/api/redact/text.ts";
 	import {
 		clearSessionError,
 		sessionErrorKinds,
 		sessionErrorState,
-	} from "$lib/api/session-error-state.svelte";
-	import { sessionRecovery } from "$lib/api/session-recovery.svelte";
-	import { signOut } from "$lib/api/sign-out";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button } from "$lib/components/ui/button";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { ws } from "$lib/ws.svelte";
+	} from "#lib/api/session-error-state.svelte.ts";
+	import { sessionRecovery } from "#lib/api/session-recovery.svelte.ts";
+	import { signOut } from "#lib/api/sign-out.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { ws } from "#lib/ws.svelte.ts";
 
 	const payloadSchema = z.object({
 		message: z.string(),

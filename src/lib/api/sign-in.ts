@@ -5,8 +5,8 @@ import {
 	showAccountRestriction,
 	showAccountStatus,
 	showAccountStatusForError,
-} from "$lib/api/account-status-state.svelte";
-import { showErrorToast } from "$lib/api/error-toast";
+} from "#lib/api/account-status-state.svelte.ts";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	asAccountStatusError,
 	asAppError,
@@ -14,9 +14,9 @@ import {
 	blockedKindOf,
 	markRequestBlocked,
 	type Restriction,
-} from "$lib/api/methods";
-import { noticeStorageBackend } from "$lib/api/storage-notice";
-import { clearProfileCaches } from "$lib/api/users/profiles";
+} from "#lib/api/methods.ts";
+import { noticeStorageBackend } from "#lib/api/storage-notice.ts";
+import { clearProfileCaches } from "#lib/api/users/profiles.ts";
 
 type AppErrorView = NonNullable<ReturnType<typeof asAppError>>;
 

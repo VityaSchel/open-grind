@@ -17,9 +17,9 @@ vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
-import { pickMedia, pickMultipleMedia } from "$lib/platform/media-picker";
-import { runningOn } from "$lib/test/platform";
-import type { SupportedPlatform } from "$lib/platform/os";
+import { pickMedia, pickMultipleMedia } from "#lib/platform/media-picker.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import type { SupportedPlatform } from "#lib/platform/os.ts";
 
 const photoUri = {
 	uri: "content://photo/1",

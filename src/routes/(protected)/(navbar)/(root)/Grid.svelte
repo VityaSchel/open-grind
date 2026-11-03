@@ -1,8 +1,8 @@
 <script lang="ts">
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import PagingSentinel from "$lib/components/shared/PagingSentinel.svelte";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { virtualGrid } from "$lib/util/virtual-grid.svelte";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import PagingSentinel from "#lib/components/shared/PagingSentinel.svelte";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { virtualGrid } from "#lib/util/virtual-grid.svelte.ts";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridCellSkeleton from "./GridCellSkeleton.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";

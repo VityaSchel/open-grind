@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 
 const { invokeMock, preferences } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
@@ -8,7 +8,7 @@ const { invokeMock, preferences } = vi.hoisted(() => ({
 }));
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve(preferences),
 }));
 

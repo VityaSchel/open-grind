@@ -2,8 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
-import { demoEnabled } from "$lib/demo";
-import { currentPlatform } from "$lib/platform/os";
+import { demoEnabled } from "#lib/demo/index.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
 	type Capability,

@@ -4,9 +4,9 @@
 	import {
 		type GaymojiCategory,
 		getGaymoji,
-	} from "$lib/api/messaging/gaymoji";
-	import { gaymojiSections } from "$lib/chat/gaymoji-sections";
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	} from "#lib/api/messaging/gaymoji.ts";
+	import { gaymojiSections } from "#lib/chat/gaymoji-sections.ts";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import type { StickerPick } from "../sticker-pick";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";

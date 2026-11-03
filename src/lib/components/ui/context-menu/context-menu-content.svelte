@@ -2,9 +2,9 @@
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
-	import { safeArea } from "$lib/util/safe-area";
-	import { cn } from "$lib/util/utils.js";
-	import type { WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { safeArea } from "#lib/util/safe-area.ts";
+	import { cn } from "#lib/util/utils.ts";
+	import type { WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import ContextMenuPortal from "./context-menu-portal.svelte";
 
 	let {

@@ -1,7 +1,7 @@
-import { fetchExternal } from "$lib/api/transport";
-import { demoEnabled, demoLinkedGifSize } from "$lib/demo";
-import { GIPHY_MEDIA_HOST, giphyBody } from "$lib/model/messaging/gifs";
-import type { MediaDimensions } from "$lib/util/media-dimensions";
+import { fetchExternal } from "#lib/api/transport.ts";
+import { demoEnabled, demoLinkedGifSize } from "#lib/demo/index.ts";
+import { GIPHY_MEDIA_HOST, giphyBody } from "#lib/model/messaging/gifs.ts";
+import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import { giphyMediaSrc, type GiphyTile } from "./gifs";
 
 const GIPHY_MEDIA = "https://media.giphy.com/media";

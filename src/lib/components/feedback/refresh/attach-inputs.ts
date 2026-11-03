@@ -1,13 +1,13 @@
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform } from "#lib/platform/os.ts";
 import {
 	scrollGestureHere,
 	type ScrollGestureState,
-} from "$lib/platform/scroll-gesture";
+} from "#lib/platform/scroll-gesture.ts";
 import {
 	consumesScrollKeys,
 	keyScrollsToward,
 	scrollKeysToward,
-} from "$lib/util/scroll-keys";
+} from "#lib/util/scroll-keys.ts";
 import { attachOverscrollPull } from "./overscroll-adapter";
 import type { PullModel } from "./pull-model.svelte";
 import type { RestingButtonModel } from "./resting-button.svelte";

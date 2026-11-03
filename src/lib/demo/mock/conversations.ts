@@ -1,11 +1,11 @@
-import { previewFromMessage } from "$lib/model/messaging/message-preview";
+import { previewFromMessage } from "#lib/model/messaging/message-preview.ts";
 import {
 	type ApiResponseMessage,
 	outboundMessageSchema,
-} from "$lib/model/messaging/messages";
-import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
-import type { AlbumExpirationType } from "$lib/model/messaging/albums";
-import type { Conversation } from "$lib/model/messaging/conversations";
+} from "#lib/model/messaging/messages.ts";
+import type { InboxFilterRequest } from "#lib/api/messaging/conversations.ts";
+import type { AlbumExpirationType } from "#lib/model/messaging/albums.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import { DAY, demoMeProfileId, MINUTE, NOW, SECOND } from "../config";
 import { albumCoverUrl, demoAlbumContent } from "./albums";
 import { hashFromSeed, picsum } from "./avatars";

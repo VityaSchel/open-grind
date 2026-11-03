@@ -2,8 +2,8 @@
 	import { Command as CommandPrimitive } from "bits-ui";
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 
-	import * as InputGroup from "$lib/components/ui/input-group/index.js";
-	import { cn } from "$lib/util/utils.js";
+	import * as InputGroup from "#lib/components/ui/input-group/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

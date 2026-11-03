@@ -2,7 +2,7 @@
 	import ChatCircleSlashIcon from "phosphor-svelte/lib/ChatCircleSlashIcon";
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
-	import * as Empty from "$lib/components/ui/empty";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
 
 	let { filtered = false }: { filtered?: boolean } = $props();
 

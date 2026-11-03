@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { keepLinksInApp, staysInApp } from "$lib/platform/in-app-links";
-import { runningOn } from "$lib/test/platform";
-import { isPlainClick } from "$lib/util/plain-click";
+import { keepLinksInApp, staysInApp } from "#lib/platform/in-app-links.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { isPlainClick } from "#lib/util/plain-click.ts";
 
 const MODIFIERS = ["shiftKey", "ctrlKey", "altKey", "metaKey"] as const;
 const CLICK_TYPES = ["click", "auxclick"] as const;

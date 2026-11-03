@@ -1,4 +1,4 @@
-import { isTribeOfferedNow } from "$lib/api/feature-flags-state.svelte";
+import { isTribeOfferedNow } from "#lib/api/feature-flags-state.svelte.ts";
 import {
 	acceptNSFWPics,
 	bodyTypes,
@@ -7,7 +7,7 @@ import {
 	meetAt,
 	relationshipStatuses,
 	tribes,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 
 export type OptionFilterDefinition = {
 	id: string;

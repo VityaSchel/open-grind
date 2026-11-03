@@ -4,8 +4,8 @@ import { toast } from "svelte-sonner";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 import z from "zod";
 
-import { demoEnabled } from "$lib/demo";
-import { currentPlatform } from "$lib/platform/os";
+import { demoEnabled } from "#lib/demo/index.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
 

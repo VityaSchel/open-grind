@@ -4,13 +4,13 @@ import {
 	mediaHashPrivateSchema,
 	mediaHashPublicSchema,
 	mediaUrlSchema,
-} from "$lib/model/media";
+} from "#lib/model/media.ts";
 import {
 	albumExpirationSchema,
 	albumPreviewSchema,
-} from "$lib/model/messaging/albums";
-import { serverDefault } from "$lib/model/tolerance";
-import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
+} from "#lib/model/messaging/albums.ts";
+import { serverDefault } from "#lib/model/tolerance.ts";
+import { unixTimestampMsSchema, unmodeledSchema } from "#lib/model/types.ts";
 
 const messageBaseSchema = z.object({ type: z.string(), body: unmodeledSchema });
 

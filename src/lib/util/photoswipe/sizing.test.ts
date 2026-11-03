@@ -3,7 +3,7 @@
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { describe, expect, it, vi } from "vitest";
 
-import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
+import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
 import {
 	applyPhotoSwipeLoadedSize,
 	applyPhotoSwipeThumbDimensions,

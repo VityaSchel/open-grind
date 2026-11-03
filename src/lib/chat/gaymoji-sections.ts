@@ -1,4 +1,7 @@
-import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
+import type {
+	GaymojiCategory,
+	GaymojiItem,
+} from "#lib/api/messaging/gaymoji.ts";
 
 export type GaymojiSection = {
 	key: string;

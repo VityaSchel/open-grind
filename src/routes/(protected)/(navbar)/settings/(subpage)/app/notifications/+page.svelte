@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { pushAvailableHere } from "$lib/push";
-	import { offersDeliveryModes } from "$lib/push/notification-state.svelte";
+	import { pushAvailableHere } from "#lib/push/index.ts";
+	import { offersDeliveryModes } from "#lib/push/notification-state.svelte.ts";
 	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
 	import NotificationMasterSetting from "./NotificationMasterSetting.svelte";
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";

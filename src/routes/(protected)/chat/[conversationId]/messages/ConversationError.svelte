@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { ConversationUnavailableError } from "$lib/api/messaging/messages";
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import { ConversationUnavailableError } from "#lib/api/messaging/messages.ts";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import { getConversationState } from "../conversation-state.svelte";
 
 	const conversationState = $derived(getConversationState()());

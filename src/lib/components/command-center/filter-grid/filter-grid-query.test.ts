@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { featureFlagsState } from "$lib/api/feature-flags-state.svelte";
-import { sentFilterKeys } from "$lib/grid/grid-query";
+import { featureFlagsState } from "#lib/api/feature-flags-state.svelte.ts";
+import { sentFilterKeys } from "#lib/grid/grid-query.ts";
 import {
 	defaultFilters,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
+} from "#lib/model/browse/grid/filters.ts";
 import { parseFilterGridQuery } from "./filter-grid-query";
 
 function parsedAt<T>(entries: readonly T[], index: number): T {

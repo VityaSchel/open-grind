@@ -9,10 +9,10 @@ const { probeMediaMock, slotRequests } = vi.hoisted(() => ({
 	probeMediaMock: vi.fn(),
 	slotRequests: { count: 0 },
 }));
-vi.mock("$lib/util/media-probe", () => ({ probeMedia: probeMediaMock }));
-vi.mock("$lib/util/media-load-slots", async (importOriginal) => {
+vi.mock("#lib/util/media-probe.ts", () => ({ probeMedia: probeMediaMock }));
+vi.mock("#lib/util/media-load-slots.ts", async (importOriginal) => {
 	const actual =
-		await importOriginal<typeof import("$lib/util/media-load-slots")>();
+		await importOriginal<typeof import("#lib/util/media-load-slots.ts")>();
 	return {
 		...actual,
 		acquireMediaLoadSlot: (grant: () => void) => {
@@ -22,15 +22,17 @@ vi.mock("$lib/util/media-load-slots", async (importOriginal) => {
 	};
 });
 
-vi.mock("$lib/platform/media-failure", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/media-failure")>()),
+vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/platform/media-failure.ts")
+	>()),
 	...failures,
 }));
 
-import { runningOn } from "$lib/test/platform";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
-import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
-import { mediaRetry } from "$lib/util/media-retry.svelte";
+import { runningOn } from "#lib/test/platform.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
+import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
+import { mediaRetry } from "#lib/util/media-retry.svelte.ts";
 import MediaImage from "./MediaImage.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { runningOn } from "$lib/test/platform";
+import { runningOn } from "#lib/test/platform.ts";
 import { makeModel, makeScrollable, touchEvent } from "./pull-test-helpers";
 import { scrollGeometry } from "./scroll-geometry";
 import { attachTouchPull } from "./touch-adapter";

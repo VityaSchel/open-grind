@@ -8,9 +8,9 @@ const { invokeMock, listenMock, demo } = vi.hoisted(() => ({
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
-vi.mock("$lib/demo", () => demo);
+vi.mock("#lib/demo/index.ts", () => demo);
 
-import { resetPlatform, runningOn } from "$lib/test/platform";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	asUpdateError,
 	cancelUpdateDownload,
@@ -26,9 +26,9 @@ import {
 	setAutomaticUpdateChecks,
 	startUpdateDownload,
 	updatesAvailableHere,
-} from "$lib/updates";
-import { stageOf } from "$lib/updates/stage";
-import type { Progress } from "$lib/updates/types";
+} from "#lib/updates/index.ts";
+import { stageOf } from "#lib/updates/stage.ts";
+import type { Progress } from "#lib/updates/types.ts";
 
 const release = {
 	component: "app",

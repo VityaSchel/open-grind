@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { receiveKeyboardMedia } from "$lib/platform/keyboard-media.svelte";
-	import { receiveMedia } from "$lib/platform/media-intake.svelte";
-	import type { PickedMedia } from "$lib/platform/media-picker";
+	import { receiveKeyboardMedia } from "#lib/platform/keyboard-media.svelte.ts";
+	import { receiveMedia } from "#lib/platform/media-intake.svelte.ts";
+	import type { PickedMedia } from "#lib/platform/media-picker.ts";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 	import { getSendMediaOffer } from "./send-media-offer.svelte";
 

@@ -1,7 +1,7 @@
 import { toast } from "svelte-sonner";
 
-import { accountScoped } from "$lib/api/account-caches";
-import { httpStatusOf } from "$lib/api/api-error";
+import { accountScoped } from "#lib/api/account-caches.ts";
+import { httpStatusOf } from "#lib/api/api-error.ts";
 import {
 	addDrawerMediaToAlbum,
 	type AlbumContentResponse,
@@ -9,22 +9,22 @@ import {
 	getAlbumContentProcessing,
 	getMyAlbums,
 	uploadAlbumContent,
-} from "$lib/api/messaging/albums";
-import { errorKindOf, uploadRefusalMessage } from "$lib/api/methods";
-import { albumMediaCounts } from "$lib/components/album/album";
-import { forgetAlbumSlides } from "$lib/components/album/album-lightbox";
+} from "#lib/api/messaging/albums.ts";
+import { errorKindOf, uploadRefusalMessage } from "#lib/api/methods.ts";
+import { forgetAlbumSlides } from "#lib/components/album/album-lightbox.ts";
+import { albumMediaCounts } from "#lib/components/album/album.ts";
 import {
 	discardStagedMedia,
 	type MediaFileInspection,
 	type MediaFileKind,
-} from "$lib/platform/media-file";
-import { delay } from "$lib/util/delay";
-import { Generation } from "$lib/util/generation";
+} from "#lib/platform/media-file.ts";
+import { delay } from "#lib/util/delay.ts";
+import { Generation } from "#lib/util/generation.ts";
 import type {
 	AlbumContent,
 	AlbumStorageLimits,
-} from "$lib/model/messaging/albums";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/model/messaging/albums.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 type UploadKind = Exclude<MediaFileKind, "unsupported">;
 
