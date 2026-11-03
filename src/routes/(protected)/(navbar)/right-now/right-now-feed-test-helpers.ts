@@ -1,3 +1,5 @@
+import { expect, vi } from "vitest";
+
 import type {
 	PostData,
 	RightNowFeedResponse,
@@ -85,12 +87,6 @@ export function shown(state: RightNowFeedState) {
 	);
 }
 
-export function deferred<T>() {
-	let resolve!: (value: T) => void;
-	let reject!: (reason: unknown) => void;
-	const promise = new Promise<T>((onResolve, onReject) => {
-		resolve = onResolve;
-		reject = onReject;
-	});
-	return { promise, resolve, reject };
+export async function waitForLoaded(state: RightNowFeedState) {
+	await vi.waitFor(() => expect(state.loading).toBe(false));
 }

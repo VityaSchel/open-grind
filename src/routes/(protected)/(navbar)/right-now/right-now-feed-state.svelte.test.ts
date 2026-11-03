@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-	atHomeLocationMock,
 	getPreferencesMock,
 	getRightNowFeedMock,
 	markBlockedProfilesUnviewableMock,
@@ -13,8 +12,6 @@ const {
 	showErrorToastMock,
 	unsubscribeReconcileMock,
 } = vi.hoisted(() => ({
-	atHomeLocationMock:
-		vi.fn<(request: () => Promise<unknown>) => Promise<unknown>>(),
 	getPreferencesMock: vi.fn(),
 	getRightNowFeedMock: vi.fn(),
 	markBlockedProfilesUnviewableMock: vi.fn(() => Promise.resolve()),
@@ -55,7 +52,7 @@ vi.mock("#lib/app-data/preferences.svelte.ts", async (importOriginal) => ({
 	setPreferences: setPreferencesMock,
 }));
 vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
-	atHomeLocation: atHomeLocationMock,
+	atHomeLocation: (request: () => Promise<unknown>) => request(),
 }));
 vi.mock("#lib/push/opening-deeplink.ts", () => ({
 	pushDeeplinkAhead: () => Promise.resolve(false),
@@ -83,7 +80,6 @@ import {
 import {
 	createState,
 	curatedPost,
-	deferred,
 	destroyCreatedStates,
 	discreetPost,
 	feed,
@@ -91,6 +87,7 @@ import {
 	post,
 	shown,
 	upsellInsert,
+	waitForLoaded,
 } from "./right-now-feed-test-helpers";
 
 function favorites(state: RightNowFeedState) {
@@ -99,15 +96,9 @@ function favorites(state: RightNowFeedState) {
 	);
 }
 
-async function waitForLoaded(state: RightNowFeedState) {
-	await vi.waitFor(() => expect(state.loading).toBe(false));
-}
-
 beforeEach(() => {
 	clearAccountCaches();
 	preferences.stayOnline = true;
-	atHomeLocationMock.mockReset();
-	atHomeLocationMock.mockImplementation((request) => request());
 	getPreferencesMock.mockReset();
 	getPreferencesMock.mockResolvedValue({ geohash: null });
 	getRightNowFeedMock.mockReset();
@@ -195,45 +186,6 @@ describe("RightNowFeedState", () => {
 			version: "v6",
 			query: { sort: "DISTANCE", hosting: false, ageMin: 25, ageMax: 40 },
 		});
-	});
-
-	it("requests the feed only once the location is back home", async () => {
-		const home = deferred<void>();
-		atHomeLocationMock.mockImplementationOnce(async (request) => {
-			await home.promise;
-			return request();
-		});
-
-		const state = createState();
-		await vi.waitFor(() =>
-			expect(atHomeLocationMock).toHaveBeenCalledOnce(),
-		);
-
-		expect(getRightNowFeedMock).not.toHaveBeenCalled();
-
-		home.resolve();
-		await waitForLoaded(state);
-
-		expect(getRightNowFeedMock).toHaveBeenCalledOnce();
-	});
-
-	it("never requests the feed for an account signed out while waiting for the home location", async () => {
-		const home = deferred<void>();
-		atHomeLocationMock.mockImplementationOnce(async (request) => {
-			await home.promise;
-			return request();
-		});
-
-		const state = getRightNowFeedState(99);
-		await vi.waitFor(() =>
-			expect(atHomeLocationMock).toHaveBeenCalledOnce(),
-		);
-
-		clearAccountCaches();
-		home.resolve();
-		await waitForLoaded(state);
-
-		expect(getRightNowFeedMock).not.toHaveBeenCalled();
 	});
 
 	it("refetches with the new query when a filter changes", async () => {
@@ -399,7 +351,7 @@ describe("RightNowFeedState", () => {
 		const state = createState();
 		await waitForLoaded(state);
 
-		const gate = deferred<RightNowFeedResponse>();
+		const gate = Promise.withResolvers<RightNowFeedResponse>();
 		getRightNowFeedMock.mockReturnValueOnce(gate.promise);
 
 		const reconciled = reconcileHandlers[0]?.();

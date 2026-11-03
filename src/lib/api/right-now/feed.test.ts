@@ -47,11 +47,14 @@ describe("rightNowFeedVersion", () => {
 		expect(await rightNowFeedVersion()).toBe("v5");
 	});
 
-	it("reads v6 with explicit images on, discreet posting or not", async () => {
-		assignmentsOn.add("right-now-explicit-images");
-		assignmentsOn.add("right-now-discreet");
-		expect(await rightNowFeedVersion()).toBe("v6");
-	});
+	it.each([false, true])(
+		"reads v6 with explicit images on and discreet posting %s",
+		async (discreet) => {
+			assignmentsOn.add("right-now-explicit-images");
+			if (discreet) assignmentsOn.add("right-now-discreet");
+			expect(await rightNowFeedVersion()).toBe("v6");
+		},
+	);
 });
 
 describe("getRightNowFeed", () => {

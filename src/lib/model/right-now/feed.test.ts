@@ -142,7 +142,13 @@ describe("rightNowFeedResponseSchema", () => {
 
 	it("keeps unset discreet profile fields as null", () => {
 		const [item] = parse([
-			{ type: "discreet_right_now_post_v1", data: discreetPost },
+			{
+				type: "discreet_right_now_post_v1",
+				data: {
+					...discreetPost,
+					profileFields: { age: 18, height: 123, weight: null },
+				},
+			},
 		]).items;
 
 		expect(

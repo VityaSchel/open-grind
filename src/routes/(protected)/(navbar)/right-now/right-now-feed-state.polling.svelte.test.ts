@@ -58,7 +58,6 @@ import type { RightNowFeedResponse } from "#lib/model/right-now/feed.ts";
 import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
 	createState,
-	deferred,
 	destroyCreatedStates,
 	feed,
 	MINUTE,
@@ -149,7 +148,7 @@ describe("RightNowFeedState polling", () => {
 	it("waits two minutes from the start of a failed poll before polling again", async () => {
 		const state = createState();
 		await settle();
-		const failedPoll = deferred<RightNowFeedResponse>();
+		const failedPoll = Promise.withResolvers<RightNowFeedResponse>();
 		getRightNowFeedMock.mockReturnValueOnce(failedPoll.promise);
 		const detach = state.attachView();
 

@@ -51,25 +51,18 @@ vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => () => {} },
 }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
-import {
-	getRightNowFeedState,
-	type RightNowFeedState,
-} from "./right-now-feed-state.svelte";
+import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
 	createState,
-	deferred,
 	destroyCreatedStates,
 	feed,
 	post,
 	shown,
+	waitForLoaded,
 } from "./right-now-feed-test-helpers";
 
 const BERLIN = "u33dc0cpgp00";
 const MUNICH = "u281z7j5c0e0";
-
-async function waitForLoaded(state: RightNowFeedState) {
-	await vi.waitFor(() => expect(state.loading).toBe(false));
-}
 
 beforeEach(() => {
 	clearAccountCaches();
@@ -159,7 +152,7 @@ describe("RightNowFeedState location", () => {
 	});
 
 	it("stores the location saved while the first request waited for its feed version", async () => {
-		const version = deferred<string>();
+		const version = Promise.withResolvers<string>();
 		rightNowFeedVersionMock.mockReturnValueOnce(version.promise);
 		const state = createState();
 		await vi.waitFor(() =>
@@ -177,8 +170,8 @@ describe("RightNowFeedState location", () => {
 		expect(getRightNowFeedMock).toHaveBeenCalledOnce();
 	});
 
-	it("stores the location only once the home location is back", async () => {
-		const home = deferred<void>();
+	it("stores the location and requests the feed only once the home location is back", async () => {
+		const home = Promise.withResolvers<void>();
 		atHomeLocationMock.mockImplementationOnce(async (request) => {
 			await home.promise;
 			return request();
@@ -190,6 +183,7 @@ describe("RightNowFeedState location", () => {
 		);
 
 		expect(storeLocationMock).not.toHaveBeenCalled();
+		expect(getRightNowFeedMock).not.toHaveBeenCalled();
 
 		home.resolve();
 		await waitForLoaded(state);
@@ -197,10 +191,11 @@ describe("RightNowFeedState location", () => {
 		expect(storeLocationMock).toHaveBeenCalledExactlyOnceWith({
 			geohash: BERLIN,
 		});
+		expect(getRightNowFeedMock).toHaveBeenCalledOnce();
 	});
 
 	it("never stores a location for an account signed out while waiting for the home location", async () => {
-		const home = deferred<void>();
+		const home = Promise.withResolvers<void>();
 		atHomeLocationMock.mockImplementationOnce(async (request) => {
 			await home.promise;
 			return request();
