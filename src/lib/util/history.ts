@@ -4,6 +4,8 @@ import { navigating, page } from "$app/state";
 import { liveHistoryIndex } from "#lib/util/history-index.ts";
 import { historyLog } from "#lib/util/history-log.svelte.ts";
 
+const BACK_WATCHDOG_MS = 1000;
+
 function trustedNavigation():
 	| { navigation: Navigation; index: number }
 	| undefined {
@@ -57,6 +59,28 @@ export function traverseBackTo(pathname: string): boolean {
 
 export function returnTo(pathname: string): void {
 	if (!traverseBackTo(pathname)) void goto(pathname, { replace: true });
+}
+
+export function goBack({ parent }: { parent: string }): void {
+	if (!canGoBack()) {
+		returnTo(parent);
+		return;
+	}
+
+	const from = location.href;
+	const leaving = new AbortController();
+	const left = () => leaving.abort();
+	addEventListener("popstate", left, { signal: leaving.signal });
+	addEventListener("pagehide", left, { signal: leaving.signal });
+	setTimeout(() => {
+		const stalled =
+			!leaving.signal.aborted &&
+			location.href === from &&
+			navigating.type === null;
+		leaving.abort();
+		if (stalled) returnTo(parent);
+	}, BACK_WATCHDOG_MS);
+	history.back();
 }
 
 export function navigationPending({

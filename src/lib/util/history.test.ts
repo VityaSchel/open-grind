@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "$app/navigation";
 
 import { HISTORY_METADATA_KEY } from "#lib/util/history-index.ts";
 import {
 	canGoBack,
 	earlierPathnames,
+	goBack,
 	navigationPending,
 	returnTo,
 	traverseBackTo,
@@ -131,6 +132,78 @@ describe("returnTo", () => {
 
 		expect(goto).toHaveBeenCalledWith("/chat", { replace: true });
 		expect(go).not.toHaveBeenCalled();
+	});
+});
+
+describe("goBack", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+		navigating.type = null;
+	});
+
+	function stubBack(paths: string[], index: number) {
+		const go = stubEntries(paths, index);
+		const back = vi.fn();
+		vi.stubGlobal("history", { go, back, length: paths.length });
+		return { go, back };
+	}
+
+	it("goes back when there is a screen behind this one", () => {
+		const { back } = stubBack(["/chat", "/chat/1:2"], 1);
+
+		goBack({ parent: "/chat" });
+
+		expect(back).toHaveBeenCalledOnce();
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it("takes this entry's place with the parent when nothing is behind it", () => {
+		const { back } = stubBack(["/chat/1:2"], 0);
+
+		goBack({ parent: "/chat" });
+
+		expect(back).not.toHaveBeenCalled();
+		expect(goto).toHaveBeenCalledExactlyOnceWith("/chat", {
+			replace: true,
+		});
+	});
+
+	it("returns to the parent when the back has not left within a second", () => {
+		stubBack(["/", "/chat/1:2"], 1);
+
+		goBack({ parent: "/chat" });
+		vi.advanceTimersByTime(999);
+		expect(goto).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(1);
+
+		expect(goto).toHaveBeenCalledExactlyOnceWith("/chat", {
+			replace: true,
+		});
+	});
+
+	it("leaves the back alone once it has started", () => {
+		const { go } = stubBack(["/chat", "/chat/1:2"], 1);
+
+		goBack({ parent: "/chat" });
+		dispatchEvent(new PopStateEvent("popstate"));
+		vi.advanceTimersByTime(1000);
+
+		expect(goto).not.toHaveBeenCalled();
+		expect(go).not.toHaveBeenCalled();
+	});
+
+	it("leaves another navigation started meanwhile alone", () => {
+		stubBack(["/", "/chat/1:2"], 1);
+
+		goBack({ parent: "/chat" });
+		navigating.type = "goto";
+		vi.advanceTimersByTime(1000);
+
+		expect(goto).not.toHaveBeenCalled();
 	});
 });
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import { HISTORY_METADATA_KEY } from "#lib/util/history-index.ts";
@@ -20,6 +20,19 @@ vi.mock("$app/navigation", () => ({
 }));
 
 const LAUNCH = 1_762_200_000_000;
+let seededLogs = 0;
+
+function seedHistoryLog(pathnames: string[]): number {
+	const first = LAUNCH + 1000 * seededLogs++;
+	for (const [step, pathname] of pathnames.entries())
+		historyLog.record({
+			index: first + step,
+			pathname,
+			type: step === 0 ? "enter" : "link",
+			length: step + 1,
+		});
+	return first + pathnames.length - 1;
+}
 
 function renderBackLink({
 	canGoBack,
@@ -100,7 +113,12 @@ function completeNavigation() {
 }
 
 describe("BackButton", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
 	afterEach(() => {
+		vi.useRealTimers();
 		cleanup();
 		document.body.replaceChildren();
 		vi.unstubAllGlobals();
@@ -171,24 +189,43 @@ describe("BackButton", () => {
 	});
 
 	it("goes back where the Navigation API is missing and the history log has a screen behind", () => {
-		historyLog.record({
-			index: LAUNCH,
-			pathname: "/",
-			type: "enter",
-			length: 1,
-		});
-		historyLog.record({
-			index: LAUNCH + 1,
-			pathname: "/profile/7",
-			type: "link",
-			length: 2,
-		});
 		const { back, link } = renderBackLink({
 			historyLength: 2,
-			historyIndex: LAUNCH + 1,
+			historyIndex: seedHistoryLog(["/", "/profile/7"]),
 		});
 
 		expect(clickFollowsLink(link)).toBe(false);
+		expect(back).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
+	});
+
+	it("replaces the profile with Browse when Back has not left it within a second", () => {
+		const { back, link } = renderBackLink({
+			historyLength: 2,
+			historyIndex: seedHistoryLog(["/settings/profile", "/profile/7"]),
+		});
+
+		clickFollowsLink(link);
+		expect(back).toHaveBeenCalledOnce();
+		vi.advanceTimersByTime(999);
+		expect(gotoMock).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(1);
+
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replace: true,
+		});
+	});
+
+	it("lets a Back that has started leaving finish on its own", () => {
+		const { back, link } = renderBackLink({
+			historyLength: 2,
+			historyIndex: seedHistoryLog(["/settings/profile", "/profile/7"]),
+		});
+
+		clickFollowsLink(link);
+		window.dispatchEvent(new PopStateEvent("popstate"));
+		vi.advanceTimersByTime(1000);
+
 		expect(back).toHaveBeenCalledOnce();
 		expect(gotoMock).not.toHaveBeenCalled();
 	});
