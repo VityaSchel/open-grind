@@ -15,7 +15,7 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Open Grind can use your GPS to automatically set your location for the grid.</string>
+	<string>Open Grind uses your location to set your grid location and, when you choose, to share it in a chat.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
