@@ -1,12 +1,12 @@
 <script lang="ts">
+	import RadioList from "#lib/components/shared/RadioList.svelte";
+	import RadioListItem from "#lib/components/shared/RadioListItem.svelte";
 	import RadioMark from "#lib/components/shared/RadioMark.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
-	import * as RadioGroup from "#lib/components/ui/radio-group/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { selectNotificationMode } from "#lib/push/delivery.svelte.ts";
 	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
-	import { cn } from "#lib/util/utils.ts";
 	import type { NotificationMode } from "#lib/push/types.ts";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
 
@@ -41,11 +41,11 @@
 	}
 </script>
 
-<RadioGroup.Root
+<RadioList
 	bind:ref={group}
 	aria-label="Delivery mode"
 	disabled={notificationSettings.busy || !notificationSettings.enabled}
-	class="overflow-hidden rounded-2xl border border-border transition-opacity data-disabled:opacity-60"
+	class="transition-opacity data-disabled:opacity-60"
 	bind:value={
 		() => notificationSettings.mode,
 		(next) => void selectNotificationMode(next as NotificationMode)
@@ -54,14 +54,7 @@
 	{#each modes as { mode, title, description, recommended } (mode)}
 		{@const enabling =
 			mode === "fast" && notificationSettings.phase === "enablingFast"}
-		<RadioGroup.Item
-			value={mode}
-			aria-busy={enabling}
-			class={cn(
-				Item.itemVariants(),
-				"items-start rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset",
-			)}
-		>
+		<RadioListItem value={mode} aria-busy={enabling} class="items-start">
 			{#snippet children({ checked })}
 				<Item.Content>
 					<Item.Title>
@@ -87,7 +80,7 @@
 					{/if}
 				</Item.Actions>
 			{/snippet}
-		</RadioGroup.Item>
+		</RadioListItem>
 	{/each}
-</RadioGroup.Root>
+</RadioList>
 <PushAddonAlert onCloseAutoFocus={focusSelectedMode} />

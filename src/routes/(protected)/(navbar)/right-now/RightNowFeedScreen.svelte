@@ -2,11 +2,12 @@
 	import { untrack } from "svelte";
 
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 	import RightNowFeedList from "./RightNowFeedList.svelte";
-	import TopBar from "./top-bar/TopBar.svelte";
+	import QuickFilters from "./top-bar/QuickFilters.svelte";
 
 	let { ourProfileId, geohash }: { ourProfileId: number; geohash: string } =
 		$props();
@@ -29,7 +30,9 @@
 </script>
 
 <main class="screen-nav-host">
-	<TopBar filters={feed.filters} />
+	<QuickFiltersBar>
+		<QuickFilters filters={feed.filters} />
+	</QuickFiltersBar>
 	{#if !feed.loading && !feed.error}
 		<DataRefreshControl
 			{container}

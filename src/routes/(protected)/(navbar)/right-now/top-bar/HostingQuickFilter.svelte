@@ -4,7 +4,10 @@
 	import { untrack } from "svelte";
 
 	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
-	import FilterRadioList from "#lib/components/filters/FilterRadioList.svelte";
+	import RadioList from "#lib/components/shared/RadioList.svelte";
+	import RadioListItem from "#lib/components/shared/RadioListItem.svelte";
+	import RadioMark from "#lib/components/shared/RadioMark.svelte";
+	import * as Item from "#lib/components/ui/item/index.ts";
 	import { defaultRightNowFeedFilters } from "#lib/model/right-now/filters.ts";
 	import type { RightNowFeedFiltersState } from "../right-now-feed-filters-state.svelte";
 
@@ -38,9 +41,8 @@
 	}}
 	onapply={() => filters.set({ hostingEnabled: enabled, hosting: value })}
 >
-	<FilterRadioList
-		label="Hosting"
-		{options}
+	<RadioList
+		aria-label="Hosting"
 		bind:value={
 			() => String(value),
 			(next: string) => {
@@ -48,5 +50,21 @@
 				value = next === "true";
 			}
 		}
-	/>
+	>
+		{#each options as { value: optionValue, label, icon: Icon } (optionValue)}
+			<RadioListItem value={optionValue}>
+				{#snippet children({ checked })}
+					<Item.Media>
+						<Icon class="size-5" />
+					</Item.Media>
+					<Item.Content>
+						<Item.Title>{label}</Item.Title>
+					</Item.Content>
+					<Item.Actions>
+						<RadioMark {checked} />
+					</Item.Actions>
+				{/snippet}
+			</RadioListItem>
+		{/each}
+	</RadioList>
 </FilterDrawer>

@@ -1,10 +1,8 @@
 <script lang="ts">
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
-	import type { RightNowFeedFiltersState } from "../right-now-feed-filters-state.svelte";
-	import QuickFilters from "./QuickFilters.svelte";
 
-	let { filters }: { filters: RightNowFeedFiltersState } = $props();
+	let { children }: { children: import("svelte").Snippet } = $props();
 </script>
 
 <ProgressiveBlur
@@ -19,6 +17,6 @@
 		data-scroll-intent="x"
 		class="scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0"
 	>
-		<QuickFilters {filters} />
+		{@render children()}
 	</div>
 </ProgressiveBlur>
