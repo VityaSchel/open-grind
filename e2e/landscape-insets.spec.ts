@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	afterTwoFrames,
 	animationsFinished,
@@ -420,7 +421,7 @@ test.describe("on an Android phone in landscape", () => {
 });
 
 test.describe("on an Android window as narrow as toasts go full width", () => {
-	test.use({ viewport: ANDROID_SPLIT_WINDOW });
+	test.use({ viewport: ANDROID_SPLIT_WINDOW, baseURL: DEV_SERVER_URL });
 
 	test("a toast keeps its gutter from the navigation bar on the right", async ({
 		page,
