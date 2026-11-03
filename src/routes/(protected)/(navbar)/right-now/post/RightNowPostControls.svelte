@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { untrack } from "svelte";
-
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import JoinButton from "./JoinButton.svelte";
 	import JoinConfirmDialog from "./JoinConfirmDialog.svelte";
@@ -13,19 +11,9 @@
 
 	let confirmOpen = $state(false);
 
-	$effect(() => {
-		const current = post;
-		return untrack(() => current.attachView());
-	});
+	$effect(() => post.attachView());
 
-	$effect(() => {
-		const current = post;
-		return untrack(() =>
-			current.onSheetRequest(() => {
-				sheetOpen = true;
-			}),
-		);
-	});
+	$effect(() => post.onSheetRequest(() => (sheetOpen = true)));
 </script>
 
 <JoinButton

@@ -9,6 +9,7 @@ vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
 }));
 
+import type { PostForm } from "./post-form";
 import PostLocationField from "./PostLocationField.svelte";
 
 const mapSwitch = () => screen.getByRole("switch", { name: "Show me on map" });
@@ -16,17 +17,20 @@ const accuracy = () =>
 	screen.queryByRole("slider", { name: "Location accuracy" });
 
 function renderField({
-	showOnMap = false,
+	shareLocation = "NONE",
 	locationRadius = 0,
-}: { showOnMap?: boolean; locationRadius?: number } = {}) {
-	const stored = $state({ showOnMap, locationRadius });
+}: {
+	shareLocation?: PostForm["shareLocation"];
+	locationRadius?: number;
+} = {}) {
+	const stored = $state({ shareLocation, locationRadius });
 	render(PostLocationField, {
 		props: {
-			get showOnMap() {
-				return stored.showOnMap;
+			get shareLocation() {
+				return stored.shareLocation;
 			},
-			set showOnMap(next: boolean) {
-				stored.showOnMap = next;
+			set shareLocation(next: PostForm["shareLocation"]) {
+				stored.shareLocation = next;
 			},
 			get locationRadius() {
 				return stored.locationRadius;
@@ -57,7 +61,10 @@ describe("the post location field", () => {
 
 		await fireEvent.click(mapSwitch());
 
-		expect(stored).toEqual({ showOnMap: true, locationRadius: 100 });
+		expect(stored).toEqual({
+			shareLocation: "DISTANCE_AND_MAP",
+			locationRadius: 100,
+		});
 		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("0");
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
 			"Within about 2.0 km",
@@ -66,7 +73,10 @@ describe("the post location field", () => {
 	});
 
 	it("narrows the radius as the slider moves toward More", async () => {
-		const stored = renderField({ showOnMap: true, locationRadius: 100 });
+		const stored = renderField({
+			shareLocation: "DISTANCE_AND_MAP",
+			locationRadius: 100,
+		});
 
 		await fireEvent.keyDown(accuracy() as HTMLElement, { key: "End" });
 
@@ -78,17 +88,20 @@ describe("the post location field", () => {
 
 	it("labels the radius in the user's units", () => {
 		preferences.units = "imperial";
-		renderField({ showOnMap: true, locationRadius: 100 });
+		renderField({ shareLocation: "DISTANCE_AND_MAP", locationRadius: 100 });
 
 		expect(screen.getByText("Within about 1.2 mi")).toBeTruthy();
 	});
 
 	it("hides the slider when switched off", async () => {
-		const stored = renderField({ showOnMap: true, locationRadius: 40 });
+		const stored = renderField({
+			shareLocation: "DISTANCE_AND_MAP",
+			locationRadius: 40,
+		});
 
 		await fireEvent.click(mapSwitch());
 
-		expect(stored.showOnMap).toBe(false);
+		expect(stored.shareLocation).toBe("NONE");
 		expect(accuracy()).toBeNull();
 	});
 });

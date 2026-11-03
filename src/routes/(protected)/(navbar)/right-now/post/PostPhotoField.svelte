@@ -4,16 +4,11 @@
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
-		deleteDrawerMedia,
-		type DrawerMedia,
-		getAllDrawerMedia,
-	} from "#lib/api/messaging/drawer.ts";
-	import {
 		RightNowPhotoTooSmallError,
 		uploadRightNowPhotoFromUrl,
 		uploadRightNowPickedPhoto,
 	} from "#lib/api/right-now/photo.ts";
-	import { isVideoContent } from "#lib/components/album/album.ts";
+	import { drawerPhotoUploads } from "#lib/components/media-sheet/drawer-photos.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
@@ -23,6 +18,7 @@
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { type PickedMedia, pickMedia } from "#lib/platform/media-picker.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
 	import type { RightNowMediaUploadResponse } from "#lib/model/right-now/post.ts";
 	import type { PostPhoto } from "./post-form";
 
@@ -54,11 +50,6 @@
 			confirmingRemoval = false;
 		},
 	});
-
-	async function loadDrawerPhotos(): Promise<DrawerMedia[]> {
-		const drawer = await getAllDrawerMedia();
-		return drawer.filter((item) => !isVideoContent(item.contentType));
-	}
 
 	async function upload({
 		send,
@@ -127,7 +118,6 @@
 				alt={rejected ? "Post photo, rejected" : "Post photo"}
 				class="size-full"
 				aspectRatio="1 / 1"
-				fallbackAspectRatio="1 / 1"
 				tone="photo"
 				size="sm"
 				skeleton
@@ -158,14 +148,8 @@
 	uploadLabel="Upload a photo"
 	submitLabel="Add to post"
 	max={1}
-	load={loadDrawerPhotos}
-	describe={(item) => ({
-		key: item.id,
-		src: proxyMediaUrl(item.url),
-		video: false,
-	})}
+	{...drawerPhotoUploads}
 	onUpload={() => void addFromDevice()}
-	onDelete={(item) => deleteDrawerMedia(item.id)}
 	onSubmit={addFromUploads}
 />
 

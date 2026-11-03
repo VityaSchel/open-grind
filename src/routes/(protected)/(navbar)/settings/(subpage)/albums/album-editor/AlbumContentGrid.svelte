@@ -1,10 +1,6 @@
 <script lang="ts">
-	import {
-		deleteDrawerMedia,
-		type DrawerMedia,
-		getAllDrawerMedia,
-	} from "#lib/api/messaging/drawer.ts";
 	import { albumRoom, isVideoContent } from "#lib/components/album/album.ts";
+	import { drawerPhotoUploads } from "#lib/components/media-sheet/drawer-photos.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
@@ -95,11 +91,6 @@
 			: limits.maxContentItemsPerAlbum - content.length - pending.length,
 	);
 
-	async function loadDrawerPhotos(): Promise<DrawerMedia[]> {
-		const drawer = await getAllDrawerMedia();
-		return drawer.filter((item) => !isVideoContent(item.contentType));
-	}
-
 	async function add(media?: PickedMedia[]) {
 		adding = true;
 		try {
@@ -156,14 +147,8 @@
 	uploadLabel="Upload photos or videos"
 	submitLabel="Add to album"
 	max={itemRoom}
-	load={loadDrawerPhotos}
-	describe={(item) => ({
-		key: item.id,
-		src: proxyMediaUrl(item.url),
-		video: false,
-	})}
+	{...drawerPhotoUploads}
 	onUpload={() => void add()}
-	onDelete={(item) => deleteDrawerMedia(item.id)}
 	onSubmit={(chosen) =>
 		addPreviousUploads({
 			uploads,

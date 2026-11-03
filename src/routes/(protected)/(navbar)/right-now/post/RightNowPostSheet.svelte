@@ -18,9 +18,6 @@
 		postChangesOf,
 		type PostForm,
 		postFormOf,
-		type PostPhoto,
-		shareLocationFor,
-		showsOnMap,
 		singleLinePostText,
 	} from "./post-form";
 	import PostLocationField from "./PostLocationField.svelte";
@@ -41,27 +38,18 @@
 	};
 
 	let baseline = $state.raw<PostForm>(EMPTY_FORM);
-	let text = $state("");
-	let photo = $state.raw<PostPhoto | null>(null);
-	let hosting = $state(false);
-	let shareLocation = $state<PostForm["shareLocation"]>("NONE");
-	let locationRadius = $state(LEAST_PRECISE_RADIUS);
+	let form = $state<PostForm>({ ...EMPTY_FORM });
 	let uploading = $state(false);
 	let pendingVisible = $state<boolean | null>(null);
 	let confirmingDiscard = $state(false);
 	let wasOpen = false;
 
-	const current = $derived<PostForm>({
-		text,
-		photo,
-		hosting,
-		shareLocation,
-		locationRadius,
-	});
-	const changes = $derived(postChangesOf({ initial: baseline, current }));
+	const changes = $derived(
+		postChangesOf({ initial: baseline, current: form }),
+	);
 	const dirty = $derived(Object.keys(changes).length > 0);
 	const over = $derived(
-		changes.text !== undefined && text.length > POST_TEXT_MAX_LENGTH,
+		changes.text !== undefined && form.text.length > POST_TEXT_MAX_LENGTH,
 	);
 	const toggling = $derived(pendingVisible !== null);
 	const busy = $derived(post.saving || toggling);
@@ -77,15 +65,6 @@
 		return "Your text was rejected";
 	});
 
-	function reset(form: PostForm) {
-		baseline = form;
-		text = form.text;
-		photo = form.photo;
-		hosting = form.hosting;
-		shareLocation = form.shareLocation;
-		locationRadius = form.locationRadius;
-	}
-
 	$effect(() => {
 		const details = post.post;
 		const opening = open && !wasOpen;
@@ -96,7 +75,11 @@
 			return;
 		}
 		untrack(() => {
-			if (opening || !dirty) reset(postFormOf({ post: details }));
+			if (opening || !dirty) {
+				const next = postFormOf({ post: details });
+				baseline = next;
+				form = { ...next };
+			}
 		});
 	});
 
@@ -130,7 +113,7 @@
 
 	async function save() {
 		if (busy || !dirty || over || uploading) return;
-		const sent = current;
+		const sent = $state.snapshot(form);
 		if (!(await post.save({ changes }))) return;
 		baseline = sent;
 		open = false;
@@ -202,31 +185,25 @@
 					placeholder="What are you looking for?"
 					maxLength={POST_TEXT_MAX_LENGTH}
 					bind:value={
-						() => text,
+						() => form.text,
 						(next: string) =>
-							(text = singleLinePostText({ text: next }))
+							(form.text = singleLinePostText({ text: next }))
 					}
 				/>
 				<PostPhotoField
-					bind:photo
+					bind:photo={form.photo}
 					bind:uploading
 					disabled={busy}
 					rejected={post.rejected.photo}
 				/>
 				<SwitchField
 					title="Hosting"
-					bind:checked={hosting}
+					bind:checked={form.hosting}
 					disabled={busy}
 				/>
 				<PostLocationField
-					bind:showOnMap={
-						() => showsOnMap({ shareLocation }),
-						(next: boolean) =>
-							(shareLocation = shareLocationFor({
-								showOnMap: next,
-							}))
-					}
-					bind:locationRadius
+					bind:shareLocation={form.shareLocation}
+					bind:locationRadius={form.locationRadius}
 					disabled={busy}
 				/>
 			</Drawer.Body>

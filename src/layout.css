@@ -570,6 +570,14 @@ a {
 	}
 }
 
+@utility floating-chip {
+	@apply rounded-4xl scrim backdrop-filter-(--bd-chip);
+
+	@variant dark {
+		@apply bg-background/60;
+	}
+}
+
 /* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
 :root {
 	--bar-content-gap: 0px;

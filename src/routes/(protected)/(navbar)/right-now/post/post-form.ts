@@ -31,20 +31,8 @@ export function showsOnMap({
 	return shareLocation === "DISTANCE_AND_MAP";
 }
 
-export function shareLocationFor({
-	showOnMap,
-}: {
-	showOnMap: boolean;
-}): ShareLocation {
-	return showOnMap ? "DISTANCE_AND_MAP" : "NONE";
-}
-
 export function singleLinePostText({ text }: { text: string }): string {
 	return text.replace(/\r\n|\r|\n/g, " ");
-}
-
-export function normalizePostText({ text }: { text: string }): string {
-	return singleLinePostText({ text }).trim();
 }
 
 export function approximateRadiusMeters({
@@ -71,10 +59,12 @@ export function liveModeratedText({
 
 export function submittedPostText({
 	post,
+	status,
 }: {
 	post: RightNowPostDetails;
+	status?: RightNowModeratedText["textStatus"];
 }): string {
-	return liveModeratedText({ post })?.text ?? post.activeText ?? "";
+	return liveModeratedText({ post, status })?.text ?? post.activeText ?? "";
 }
 
 export function postFormOf({ post }: { post: RightNowPostDetails }): PostForm {
@@ -102,8 +92,9 @@ export function postChangesOf({
 	current: PostForm;
 }): RightNowPostChanges {
 	const changes: RightNowPostChanges = {};
-	const text = normalizePostText({ text: current.text });
-	if (text !== normalizePostText({ text: initial.text })) changes.text = text;
+	const text = singleLinePostText({ text: current.text }).trim();
+	if (text !== singleLinePostText({ text: initial.text }).trim())
+		changes.text = text;
 	if (current.photo?.mediaId !== initial.photo?.mediaId) {
 		changes.media =
 			current.photo === null

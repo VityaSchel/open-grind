@@ -3,18 +3,24 @@
 	import { Slider } from "#lib/components/ui/slider/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import { formatDistance } from "#lib/util/units.ts";
-	import { approximateRadiusMeters, LEAST_PRECISE_RADIUS } from "./post-form";
+	import {
+		approximateRadiusMeters,
+		LEAST_PRECISE_RADIUS,
+		type PostForm,
+		showsOnMap,
+	} from "./post-form";
 
 	let {
-		showOnMap = $bindable(),
+		shareLocation = $bindable(),
 		locationRadius = $bindable(),
 		disabled = false,
 	}: {
-		showOnMap: boolean;
+		shareLocation: PostForm["shareLocation"];
 		locationRadius: number;
 		disabled?: boolean;
 	} = $props();
 
+	const showOnMap = $derived(showsOnMap({ shareLocation }));
 	const units = $derived(preferencesSnapshot().units);
 	const radiusLabel = $derived(
 		`Within about ${formatDistance(approximateRadiusMeters({ locationRadius }), units)}`,
@@ -28,7 +34,7 @@
 		bind:checked={
 			() => showOnMap,
 			(next: boolean) => {
-				showOnMap = next;
+				shareLocation = next ? "DISTANCE_AND_MAP" : "NONE";
 				if (next) locationRadius = LEAST_PRECISE_RADIUS;
 			}
 		}

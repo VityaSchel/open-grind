@@ -4,7 +4,7 @@ import type {
 	RightNowPostDetails,
 	RightNowPostRequest,
 } from "#lib/model/right-now/post.ts";
-import { liveModeratedText } from "./post/post-form";
+import { liveModeratedText, submittedPostText } from "./post/post-form";
 
 const textRejectReasonLabels = new Map([
 	["BULLYING", "Bullying"],
@@ -55,16 +55,8 @@ export function rejectionKeys(post: RightNowPostDetails | null): string[] {
 	];
 }
 
-function repostText(post: RightNowPostDetails): string {
-	return (
-		liveModeratedText({ post, status: "AWAITING_MODERATION" })?.text ??
-		post.activeText ??
-		""
-	);
-}
-
 export function repostRequest(post: RightNowPostDetails): RightNowPostRequest {
-	const text = repostText(post);
+	const text = submittedPostText({ post, status: "AWAITING_MODERATION" });
 	const photo = post.media.find(
 		({ state }) => state !== "REJECTED" && state !== "DELETED",
 	);

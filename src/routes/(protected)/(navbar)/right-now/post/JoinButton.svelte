@@ -7,24 +7,18 @@
 		post,
 		onjoin,
 		onopen,
-		class: className,
-	}: {
-		post: RightNowPostState;
-		onjoin: () => void;
-		onopen: () => void;
-		class?: import("svelte/elements").ClassValue;
-	} = $props();
+	}: { post: RightNowPostState; onjoin: () => void; onopen: () => void } =
+		$props();
 
 	const RING_RADIUS = 9;
 	const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 	const DEFAULT_LIFETIME_MS = 60 * 60_000;
 
-	const running = $derived(post.post !== null && post.status !== "none");
+	const running = $derived(post.status !== "none");
 	const off = $derived(post.status === "off");
-	const free = $derived(post.freePostsLeft);
-	const exhausted = $derived(!running && free === 0);
+	const exhausted = $derived(post.freePostsLeft === 0);
 	const unknown = $derived(
-		post.post === null && free === null && post.loading,
+		post.post === null && post.freePostsLeft === null && post.loading,
 	);
 	const timeLeft = $derived(formatTimeLeft({ ms: post.timeLeftMs }));
 	const lifetimeMs = $derived.by(() => {
@@ -38,9 +32,9 @@
 		Math.min(1, Math.max(0, post.timeLeftMs / lifetimeMs)),
 	);
 	const joinLabel = $derived.by(() => {
-		if (free === "unlimited") return "Join · Free";
-		if (free === null) return "Join";
-		return `Join · ${free} free`;
+		if (post.freePostsLeft === "unlimited") return "Join · Free";
+		if (post.freePostsLeft === null) return "Join";
+		return `Join · ${post.freePostsLeft} free`;
 	});
 	const runningLabel = $derived(
 		off
@@ -53,12 +47,8 @@
 	<div
 		data-slot="join-button"
 		class={[
-			"absolute end-4 bottom-nav-clear z-10 max-w-[calc(50%-var(--spacing)*11)] rounded-4xl",
-			{
-				"scrim backdrop-filter-(--bd-chip) dark:bg-background/60":
-					running,
-			},
-			className,
+			"absolute end-4 bottom-nav-clear z-10 max-w-[calc(50%-var(--spacing)*11)]",
+			{ "floating-chip": running },
 		]}
 	>
 		{#if running}
@@ -67,7 +57,7 @@
 				size="lg"
 				aria-label={runningLabel}
 				class={["max-w-full ps-2.5 shadow-sm", { "opacity-60": off }]}
-				onclick={() => onopen()}
+				onclick={onopen}
 			>
 				<svg
 					data-slot="join-button-ring"
@@ -106,7 +96,7 @@
 				aria-label={exhausted
 					? `${joinLabel}. No free posts left in this area`
 					: undefined}
-				onclick={() => onjoin()}
+				onclick={onjoin}
 			>
 				<span class="truncate">{joinLabel}</span>
 			</Button>

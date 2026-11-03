@@ -8,11 +8,9 @@ import {
 } from "../right-now-post-test-helpers";
 import {
 	approximateRadiusMeters,
-	normalizePostText,
 	postChangesOf,
 	type PostForm,
 	postFormOf,
-	shareLocationFor,
 	showsOnMap,
 	singleLinePostText,
 } from "./post-form";
@@ -34,10 +32,6 @@ const joined: PostForm = {
 describe("post text", () => {
 	it("turns every kind of newline into a space", () => {
 		expect(singleLinePostText({ text: "a\nb\r\nc\rd" })).toBe("a b c d");
-	});
-
-	it("trims the text it sends", () => {
-		expect(normalizePostText({ text: "  coffee?\n" })).toBe("coffee?");
 	});
 });
 
@@ -168,7 +162,7 @@ describe("postChangesOf", () => {
 				initial: joined,
 				current: {
 					...joined,
-					shareLocation: shareLocationFor({ showOnMap: true }),
+					shareLocation: "DISTANCE_AND_MAP",
 					locationRadius: 100,
 				},
 			}),
@@ -200,10 +194,7 @@ describe("postChangesOf", () => {
 		expect(
 			postChangesOf({
 				initial: onMap,
-				current: {
-					...onMap,
-					shareLocation: shareLocationFor({ showOnMap: false }),
-				},
+				current: { ...onMap, shareLocation: "NONE" },
 			}),
 		).toEqual({ shareLocation: "NONE" });
 	});
@@ -220,10 +211,7 @@ describe("postChangesOf", () => {
 		expect(
 			postChangesOf({
 				initial: distanceOnly,
-				current: {
-					...distanceOnly,
-					shareLocation: shareLocationFor({ showOnMap: false }),
-				},
+				current: { ...distanceOnly, shareLocation: "NONE" },
 			}),
 		).toEqual({ shareLocation: "NONE" });
 	});
