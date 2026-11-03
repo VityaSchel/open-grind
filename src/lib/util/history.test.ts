@@ -105,6 +105,24 @@ describe("returnTo", () => {
 		expect(goto).not.toHaveBeenCalled();
 	});
 
+	it("walks back to a launch entry whose address has no path for the root", () => {
+		const go = vi.fn();
+		vi.stubGlobal("navigation", {
+			canGoBack: true,
+			currentEntry: { index: 1 },
+			entries: () => [
+				{ url: "tauri://localhost" },
+				{ url: "tauri://localhost/profile/7" },
+			],
+		});
+		vi.stubGlobal("history", { go, length: 2 });
+
+		returnTo("/");
+
+		expect(go).toHaveBeenCalledWith(-1);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
 	it("takes this entry's place when the screen is not behind it", () => {
 		const go = stubEntries(["/", "/chat/1:2"], 1);
 

@@ -5,6 +5,10 @@ export function canGoBack(): boolean {
 	return window.navigation?.canGoBack ?? history.length > 1;
 }
 
+function entryPathname(url: string): string {
+	return new URL(url).pathname || "/";
+}
+
 export function earlierPathnames(): (string | null)[] {
 	const index = window.navigation?.currentEntry?.index;
 	const entries = window.navigation?.entries();
@@ -13,7 +17,7 @@ export function earlierPathnames(): (string | null)[] {
 	return entries
 		.slice(0, index)
 		.reverse()
-		.map(({ url }) => (url ? new URL(url).pathname : null));
+		.map(({ url }) => (url ? entryPathname(url) : null));
 }
 
 export function traverseBackTo(pathname: string): boolean {
