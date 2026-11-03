@@ -48,6 +48,10 @@
 		reacted = reactionSent;
 		if (reset) text = "";
 	}
+
+	function keepKeyboardUp(event: Event) {
+		if (softKeyboardVisibility() !== false) event.preventDefault();
+	}
 </script>
 
 <form
@@ -78,9 +82,8 @@
 			]}
 			aria-label={react ? "React to album item with fire" : "Send reply"}
 			disabled={!available || (react ? reacted : text.trim() === "")}
-			onpointerdown={(event) => {
-				if (softKeyboardVisibility() !== false) event.preventDefault();
-			}}
+			onpointerdown={keepKeyboardUp}
+			onmousedown={keepKeyboardUp}
 		>
 			{#snippet icon(props)}
 				{#if react}
