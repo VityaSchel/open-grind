@@ -1,4 +1,4 @@
-import type { ClientInit, HandleClientError } from "@sveltejs/kit";
+import type { ClientInit, HandleClientError } from "@sveltejs/kit/hooks";
 
 import { startLanguage } from "#lib/platform/app-language.ts";
 import { isMacosPlatform } from "#lib/platform/os.ts";
@@ -20,7 +20,7 @@ export const init: ClientInit = async () => {
 	}
 };
 
-export const handleError: HandleClientError = ({ error, event, message }) => {
+export const handleError: HandleClientError = ({ error, event }) => {
 	console.error("Error during request to", event.url.pathname, ":", error);
-	return { message, ...(error instanceof Error && { type: error.name }) };
+	if (error instanceof Error) return { type: error.name };
 };

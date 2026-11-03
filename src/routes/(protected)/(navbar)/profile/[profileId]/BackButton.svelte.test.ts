@@ -132,7 +132,7 @@ describe("BackButton", () => {
 		expect(link.getAttribute("href")).toBe("/");
 		expect(clickFollowsLink(link)).toBe(false);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(back).not.toHaveBeenCalled();
 	});
@@ -142,7 +142,7 @@ describe("BackButton", () => {
 
 		expect(clickFollowsLink(link)).toBe(false);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(back).not.toHaveBeenCalled();
 	});
@@ -162,7 +162,7 @@ describe("BackButton", () => {
 		pressEscape();
 
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(back).not.toHaveBeenCalled();
 	});

@@ -1,5 +1,5 @@
 import { tick } from "svelte";
-import type { OnNavigate } from "@sveltejs/kit";
+import type { OnNavigate } from "$app/navigation";
 
 import { StackSettle } from "#lib/components/navigation/stack/settle.ts";
 import { Generation } from "#lib/util/generation.ts";

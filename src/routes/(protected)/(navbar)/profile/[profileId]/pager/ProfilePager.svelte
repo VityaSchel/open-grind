@@ -56,9 +56,8 @@
 			const pathname = `/profile/${profileId}`;
 			pendingPathname = pathname;
 			void goto(pathname, {
-				replaceState: true,
-				noScroll: true,
-				keepFocus: true,
+				replace: true,
+				reset: false,
 				state: { profileOrigin: "browse" },
 			}).finally(() => {
 				if (pendingPathname === pathname) pendingPathname = null;

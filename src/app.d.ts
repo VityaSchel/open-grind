@@ -6,7 +6,6 @@ declare global {
 
 	namespace App {
 		interface Error {
-			message: string;
 			type?: string;
 		}
 

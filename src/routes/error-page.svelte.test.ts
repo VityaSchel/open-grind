@@ -32,9 +32,24 @@ async function confirmCopy(): Promise<void> {
 	await fireEvent.click(screen.getByRole("button", { name: "Copy" }));
 }
 
+function handleTypeError() {
+	return handleError({
+		kind: "unknown",
+		error: new TypeError("Cannot read properties of undefined"),
+		event: {
+			params: {},
+			route: { id: "/(protected)/(navbar)/interest" },
+			url: page.url,
+		},
+	});
+}
+
 describe("the unexpected error page", () => {
 	beforeEach(() => {
-		page.error = { message: "Failed to load for me@example.com" };
+		page.error = {
+			status: 500,
+			message: "Failed to load for me@example.com",
+		};
 		writeTextMock.mockReset().mockResolvedValue(undefined);
 		toastMock.success.mockReset();
 		toastMock.error.mockReset();
@@ -78,17 +93,8 @@ describe("the unexpected error page", () => {
 
 	it("reports the status and the type of error that broke the page", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
-		page.error =
-			(await handleError({
-				error: new TypeError("Cannot read properties of undefined"),
-				event: {
-					params: {},
-					route: { id: "/(protected)/(navbar)/interest" },
-					url: page.url,
-				},
-				status: 500,
-				message: "Internal Error",
-			})) ?? null;
+		const handled = await handleTypeError();
+		page.error = { status: 500, message: "Internal Error", ...handled };
 
 		await confirmCopy();
 
@@ -100,6 +106,13 @@ describe("the unexpected error page", () => {
 			type: "TypeError",
 			status: 500,
 		});
+	});
+
+	it("keeps kit's message", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const handled = await handleTypeError();
+
+		expect(handled).toStrictEqual({ type: "TypeError" });
 	});
 
 	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {

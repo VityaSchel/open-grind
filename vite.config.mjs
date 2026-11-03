@@ -75,7 +75,7 @@ export default defineConfig(async ({ command, mode }) => ({
 			preprocess: vitePreprocess(),
 			compilerOptions: { experimental: { async: true } },
 			adapter: adapter({ fallback: "index.html" }),
-			version: { name: versionName() },
+			version: { name: versionName(), pollInterval: 0 },
 		}),
 		tailwindcss(),
 		releaseTreeShakesDemo,

@@ -28,7 +28,7 @@
 	async function setLocation(geohash: string) {
 		try {
 			await setPreferences({ geohash });
-			await goto("/", { replaceState: page.url.pathname === "/" });
+			await goto("/", { replace: page.url.pathname === "/" });
 		} catch (error) {
 			console.error(error);
 			showErrorToast({

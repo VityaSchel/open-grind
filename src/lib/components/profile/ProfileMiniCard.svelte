@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { env } from "$env/dynamic/public";
+	import { PUBLIC_ENABLE_BLUR_EFFECTS } from "$app/env/public";
 	import ChatIcon from "phosphor-svelte/lib/ChatIcon";
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 	import type { Snippet } from "svelte";
@@ -50,7 +50,7 @@
 
 	let loadedMediaHash = $state<string | null>(null);
 	const photo = $derived(
-		!env.PUBLIC_ENABLE_BLUR_EFFECTS &&
+		!PUBLIC_ENABLE_BLUR_EFFECTS &&
 			mediaHash !== null &&
 			loadedMediaHash === mediaHash
 			? profileMediaUrl({ mediaHash, size: "thumb" })
