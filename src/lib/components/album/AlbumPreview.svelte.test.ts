@@ -16,14 +16,24 @@ vi.mock("svelte-sonner", () => sonner);
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
 const PREVIEW = '[data-slot="album-preview"]';
 
-function previewWithCover(coverUrl: string | null): Element {
+function previewWithCover(
+	coverUrl: string | null,
+	{ chat = false } = {},
+): Element {
 	const { container } = render(AlbumPreview, {
-		props: { albumId: 900, coverUrl, hasPhoto: true, hasVideo: false },
+		props: {
+			albumId: 900,
+			coverUrl,
+			hasPhoto: true,
+			hasVideo: false,
+			attach: chat ? singleClick : undefined,
+		},
 	});
 	const preview = container.querySelector(PREVIEW);
 	if (preview === null) throw new Error("no album preview");
@@ -189,4 +199,43 @@ describe("album preview cover renewal", () => {
 
 		expect(cover.image().getAttribute("src")).toBe(RENEWED);
 	});
+});
+
+it("cancels a pending album open on a second press and double click", async () => {
+	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+	try {
+		const button = previewWithCover(null, { chat: true });
+		await fireEvent.click(button, { detail: 1 });
+		await vi.advanceTimersByTimeAsync(100);
+		await fireEvent.pointerDown(button);
+		await vi.advanceTimersByTimeAsync(300);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+		await fireEvent.click(button, { detail: 1 });
+		await fireEvent.click(button, { detail: 1 });
+		await fireEvent.doubleClick(button);
+		await vi.advanceTimersByTimeAsync(300);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+it("cancels a pending album open when removed", async () => {
+	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+	try {
+		const button = previewWithCover(null, { chat: true });
+		await fireEvent.click(button, { detail: 1 });
+		cleanup();
+		await vi.advanceTimersByTimeAsync(300);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+it("opens the album editor preview immediately on a pointer click", async () => {
+	lightbox.loadAlbumSlides.mockResolvedValue([]);
+	const button = previewWithCover(null);
+	await fireEvent.click(button, { detail: 1 });
+	expect(lightbox.loadAlbumSlides).toHaveBeenCalledExactlyOnceWith(900);
 });

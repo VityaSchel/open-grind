@@ -4,9 +4,11 @@
 	},
 	"messagePreview": {
 		"album": "Album",
+		"albumReaction": "Reacted to an album",
 		"expiringPhoto": "Expiring photo",
 		"expiringVideo": "Expiring video",
 		"photo": "Photo",
+		"photoReply": "Replied to a photo",
 		"unsent": "Unsent message",
 		"voiceMessage": "Voice message",
 		"video": "Video",
@@ -23,7 +25,7 @@
 		"picture": "Sent you a picture",
 		"expiringImage": "Sent you an expiring image",
 		"album": "Shared their album",
-		"albumReaction": "Liked your album content",
+		"albumReaction": "Reacted to your album",
 		"audio": "Sent you an audio message",
 		"video": "Sent you a video",
 		"gaymoji": "Sent you a Gaymoji",
@@ -87,6 +89,21 @@
 		"reaction": {
 			"a11y": {
 				"fire": "Fire reaction"
+			}
+		},
+		"albumContent": {
+			"a11y": {
+				"openReplied": "Open replied album content",
+				"openReacted": "Open reacted album content",
+				"unavailable": "Album content unavailable"
+			}
+		},
+		"profilePhotoReply": {
+			"a11y": {
+				"open": "Open replied profile photo"
+			},
+			"errors": {
+				"openFailed": "Couldn’t open profile photo"
 			}
 		},
 		"unsent": "Message unsent",

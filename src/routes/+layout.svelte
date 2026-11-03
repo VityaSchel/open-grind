@@ -187,6 +187,7 @@
 			offset={toastOffset}
 			mobileOffset={toastOffset}
 			toastOptions={{ class: "toast" }}
+			closeButton
 			expand
 			containerAriaLabel={t("shell.toaster.a11y.region")}
 			closeButtonAriaLabel={t("shell.toaster.a11y.close")}

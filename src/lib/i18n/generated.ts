@@ -210,6 +210,9 @@ export interface Messages {
 	"chat.keyboardMedia.errors.readFailed": undefined;
 	"chat.layout.selectConversation": undefined;
 	"chat.message.a11y.actions": undefined;
+	"chat.message.albumContent.a11y.openReacted": undefined;
+	"chat.message.albumContent.a11y.openReplied": undefined;
+	"chat.message.albumContent.a11y.unavailable": undefined;
 	"chat.message.contextMenu.a11y.reactWithFire": undefined;
 	"chat.message.contextMenu.copied": undefined;
 	"chat.message.contextMenu.copy": undefined;
@@ -225,6 +228,8 @@ export interface Messages {
 	"chat.message.gif.tapToLoad": undefined;
 	"chat.message.location.openMap": undefined;
 	"chat.message.location.title": undefined;
+	"chat.message.profilePhotoReply.a11y.open": undefined;
+	"chat.message.profilePhotoReply.errors.openFailed": undefined;
 	"chat.message.reaction.a11y.fire": undefined;
 	"chat.message.status.notSent": undefined;
 	"chat.message.status.readAt": { time: string };
@@ -236,6 +241,7 @@ export interface Messages {
 	"chat.message.video.errors.loadFailed": undefined;
 	"chat.message.video.errors.openFailed": undefined;
 	"chat.messagePreview.album": undefined;
+	"chat.messagePreview.albumReaction": undefined;
 	"chat.messagePreview.expiringPhoto": undefined;
 	"chat.messagePreview.expiringVideo": undefined;
 	"chat.messagePreview.gaymoji": undefined;
@@ -243,6 +249,7 @@ export interface Messages {
 	"chat.messagePreview.location": undefined;
 	"chat.messagePreview.message": undefined;
 	"chat.messagePreview.photo": undefined;
+	"chat.messagePreview.photoReply": undefined;
 	"chat.messagePreview.profile": undefined;
 	"chat.messagePreview.rightNow": undefined;
 	"chat.messagePreview.unsent": undefined;
@@ -496,7 +503,7 @@ export interface Messages {
 	"feedback.sessionError.unreachable.description": undefined;
 	"feedback.sessionError.unreachable.title": undefined;
 	"feedback.sessionRecovery.retrying": undefined;
-	"feedback.storageNotice.plainFile": undefined;
+	"feedback.storageNotice.keyringUnusable": undefined;
 	"feedback.storageNotice.unavailable": undefined;
 	"interest.tabs.taps": undefined;
 	"interest.tabs.views": undefined;
@@ -577,6 +584,11 @@ export interface Messages {
 	"media.lightbox.errors.playFailed": undefined;
 	"media.lightbox.next": undefined;
 	"media.lightbox.previous": undefined;
+	"media.lightbox.reply.a11y.albumItem": undefined;
+	"media.lightbox.reply.a11y.profilePhoto": undefined;
+	"media.lightbox.reply.a11y.react": undefined;
+	"media.lightbox.reply.a11y.send": undefined;
+	"media.lightbox.reply.placeholder": undefined;
 	"media.lightbox.zoom": undefined;
 	"media.picker.filters.image": undefined;
 	"media.picker.filters.media": undefined;
@@ -655,6 +667,7 @@ export interface Messages {
 	"profile.hivStatus.positiveUndetectable": undefined;
 	"profile.hivStatus.preferToDiscuss": undefined;
 	"profile.imageCarousel.a11y.photo": { position: string; total: string };
+	"profile.imageCarousel.reply.sent": undefined;
 	"profile.item.a11y.profileLink": { name: string };
 	"profile.lookingFor.chat": undefined;
 	"profile.lookingFor.dates": undefined;

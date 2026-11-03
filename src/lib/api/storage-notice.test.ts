@@ -48,7 +48,7 @@ const notices = [
 		backend: "file",
 		toast: toastWarningMock,
 		english:
-			"No Secret Service keyring found. Your sign-in is kept in a plain file that only your system user account can read.",
+			"Can’t use your system keyring. Your sign-in is kept in a plain file that only your system user account can read.",
 		options: { id: "storage-backend" },
 	},
 	{

@@ -17,6 +17,8 @@ const RUST_TARGETS: Record<string, string> = {
 	x86_64: "x86_64",
 };
 const IMAGE = "registry.gitlab.com/fdroid/fdroidserver:buildserver-trixie";
+const ESBUILD_SRCLIB =
+	"https://gitlab.com/fdroid/fdroiddata/-/raw/master/srclibs/esbuild.yml";
 const root = path.join(import.meta.dir, "../..");
 
 const recipeTemplate = await Bun.file(
@@ -65,6 +67,34 @@ const readProperty = async ({
 	return value;
 };
 
+const readEsbuildVersion = async (commit: string): Promise<string> => {
+	const lock = await $`git -C ${root} show ${`${commit}:bun.lock`}`
+		.quiet()
+		.text();
+	const versions = new Set(
+		[...lock.matchAll(/"(?:[^"]*\/)?esbuild": \["esbuild@([^"]+)"/g)].map(
+			([, version]) => version,
+		),
+	);
+	const [version] = versions;
+	if (versions.size !== 1 || !version)
+		throw new Error(
+			`bun.lock at ${commit} locks esbuild ${[...versions].join(", ") || "nowhere"}, and ESBUILD_BINARY_PATH serves exactly one version`,
+		);
+	return version;
+};
+
+const requireBuildPhases = async (commit: string): Promise<void> => {
+	const script =
+		await $`git -C ${root} show ${`${commit}:ci/fdroid/build-android.sh`}`
+			.quiet()
+			.text();
+	if (!script.includes("prebuild | build)"))
+		throw new Error(
+			`ci/fdroid/build-android.sh at ${commit} has no prebuild phase, so its recipe has to inline the build`,
+		);
+};
+
 type Split = { abi: string; offset: number };
 
 const readSplits = async (commit: string): Promise<Split[]> =>
@@ -97,6 +127,7 @@ const recipe = async ({
 	conf: TauriConf;
 	splits: Split[];
 }): Promise<string> => {
+	await requireBuildPhases(commit);
 	const libclangVersion = await readProperty({
 		commit,
 		file: "ci/fdroid/toolchain.properties",
@@ -136,6 +167,7 @@ const recipe = async ({
 			key: "opengrind.android.ndk",
 		}),
 		libclangMajor,
+		esbuildVersion: await readEsbuildVersion(commit),
 	};
 	const rendered = fill(
 		recipeTemplate.replace(entry, () => builds),
@@ -164,7 +196,9 @@ if (process.argv[2] === "emit") {
 	process.exit(0);
 }
 
-const sha = await resolveCommit(process.env.FORGEJO_SHA ?? "HEAD");
+const sha = await resolveCommit(
+	process.env.FDROID_TAG || process.env.FORGEJO_SHA || "HEAD",
+);
 const conf = await readConf(sha);
 const splits = await readSplits(sha);
 const baseCode = conf.bundle.android.versionCode;
@@ -176,6 +210,13 @@ const fdd = await mkdtemp(path.join(tmpdir(), "fdroid-"));
 await Bun.write(
 	path.join(fdd, "metadata", `${APPID}.yml`),
 	withoutReferenceBinaries(await recipe({ commit: sha, conf, splits })),
+);
+const esbuildSrclib = await fetch(ESBUILD_SRCLIB);
+if (!esbuildSrclib.ok)
+	throw new Error(`${ESBUILD_SRCLIB} answered ${esbuildSrclib.status}`);
+await Bun.write(
+	path.join(fdd, "srclibs", "esbuild.yml"),
+	await esbuildSrclib.text(),
 );
 
 await $`docker pull ${IMAGE}`;
@@ -189,7 +230,11 @@ const buildScript = await Bun.file(path.join(root, "ci/fdroid/build.sh"))
 		s
 			.replaceAll("${APPID}", APPID)
 			.replaceAll("${commit}", sha)
-			.replaceAll("${repoUrl}", repoUrl),
+			.replaceAll("${repoUrl}", repoUrl)
+			.replaceAll(
+				"${versionCodes}",
+				splits.map(({ offset }) => baseCode + offset).join(" "),
+			),
 	);
 await $`docker run --rm -v ${fdd}:/repo ${IMAGE} bash -lc ${buildScript}`;
 

@@ -3,9 +3,9 @@
 	import { toast } from "svelte-sonner";
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
+	import PrimaryComposerButton from "$lib/components/shared/PrimaryComposerButton.svelte";
 	import { t } from "$lib/i18n";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
-	import PrimaryComposerButton from "../PrimaryComposerButton.svelte";
 
 	const { disabled } = $derived(getMessageComposerContext()());
 </script>

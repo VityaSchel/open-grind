@@ -1,8 +1,8 @@
 <script lang="ts">
 	import StickerIcon from "phosphor-svelte/lib/StickerIcon";
 
+	import ComposerButton from "$lib/components/shared/ComposerButton.svelte";
 	import { t } from "$lib/i18n";
-	import ComposerButton from "../ComposerButton.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	let {

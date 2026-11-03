@@ -658,3 +658,51 @@ describe("ConversationsState paging failures", () => {
 		expect(state.paging.armToken).not.toBe(wedged);
 	});
 });
+
+describe("ConversationsState refresh failures", () => {
+	async function inboxFailingNextRefresh() {
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+		});
+		await settled(state);
+		getConversationsMock.mockClear();
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		return state;
+	}
+
+	it("keeps the inbox without a toast when a reconcile fails", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = await inboxFailingNextRefresh();
+
+		await reconcileHandlers[0]?.();
+
+		expect(getConversationsMock).toHaveBeenCalledOnce();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
+			"a:1",
+		]);
+		vi.restoreAllMocks();
+	});
+
+	it("reports a pull-to-refresh failure", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = await inboxFailingNextRefresh();
+
+		await state.refresh();
+
+		expect(showErrorToastMock).toHaveBeenCalledWith({
+			label: "Couldn’t refresh conversations",
+			error: expect.any(Error),
+			onRetry: expect.any(Function),
+		});
+		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
+			"a:1",
+		]);
+		vi.restoreAllMocks();
+	});
+});

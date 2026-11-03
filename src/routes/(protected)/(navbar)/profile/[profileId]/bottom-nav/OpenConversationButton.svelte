@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { conversationIdFor } from "$lib/chat/conversation-id";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { t } from "$lib/i18n";
 
@@ -8,7 +9,7 @@
 	}: { profileId: number; ourProfileId: number } = $props();
 
 	const conversationId = $derived(
-		[profileId, ourProfileId].toSorted((a, b) => a - b).join(":"),
+		conversationIdFor({ profileId, ourProfileId }),
 	);
 </script>
 

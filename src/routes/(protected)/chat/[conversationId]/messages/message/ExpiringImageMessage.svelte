@@ -1,5 +1,4 @@
 <script lang="ts">
-	import "photoswipe/style.css";
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 
 	import { showErrorToast } from "$lib/api/error-toast";

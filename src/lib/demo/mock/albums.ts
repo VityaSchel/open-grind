@@ -49,7 +49,7 @@ const demoAlbumSeeds = [
 	{
 		albumName: "Gym progress",
 		hasVideo: true,
-		sharedWith: [demoSharedWithProfileId],
+		sharedWith: [demoSharedWithProfileId, 100006],
 	},
 	{ albumName: null, isShareable: false, sharedWith: [] as number[] },
 	{

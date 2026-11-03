@@ -9,6 +9,8 @@ export type MessagePreview = {
 	text?: string | null;
 	albumId?: number | null;
 	imageHash?: string | null;
+	albumContentReply?: string | null;
+	photoContentReply?: string | null;
 };
 
 export function previewFromMessage(
@@ -31,10 +33,24 @@ export function previewFromMessage(
 				albumId: null,
 				imageHash: null,
 			};
+		case "AlbumContentReply":
+			return {
+				type: message.type,
+				albumId: message.body.albumId,
+				text: message.body.albumContentReply,
+				imageHash: null,
+			};
 		case "Image":
 			return {
 				type: "Image",
 				text: null,
+				albumId: null,
+				imageHash: message.body.imageHash,
+			};
+		case "ProfilePhotoReply":
+			return {
+				type: message.type,
+				text: message.body.photoContentReply,
 				albumId: null,
 				imageHash: message.body.imageHash,
 			};
@@ -62,9 +78,11 @@ const EXPIRING_VIDEO_TYPES = new Set(["Video", "PrivateVideo"]);
 
 const previewTypeKeys = {
 	album: "chat.messagePreview.album",
+	albumReaction: "chat.messagePreview.albumReaction",
 	expiringPhoto: "chat.messagePreview.expiringPhoto",
 	expiringVideo: "chat.messagePreview.expiringVideo",
 	photo: "chat.messagePreview.photo",
+	photoReply: "chat.messagePreview.photoReply",
 	unsent: "chat.messagePreview.unsent",
 	voiceMessage: "chat.messagePreview.voiceMessage",
 	video: "chat.messagePreview.video",
@@ -87,6 +105,7 @@ const labeledTypes: Partial<Record<string, PreviewType>> = {
 	Gaymoji: "gaymoji",
 	Giphy: "gif",
 	Location: "location",
+	ProfilePhotoReply: "photoReply",
 };
 
 const quoteTypes: Partial<Record<string, PreviewType>> = {
@@ -117,7 +136,14 @@ function previewContent(
 	preview: MessagePreview | null | undefined,
 ): PreviewContent | null {
 	if (preview === null || preview === undefined) return null;
-	const text = preview.text ?? null;
+	if (preview.type === "AlbumContentReaction") {
+		return { kind: "type", type: "albumReaction" };
+	}
+	const text =
+		preview.text ??
+		preview.albumContentReply ??
+		preview.photoContentReply ??
+		null;
 	if (text !== null) return { kind: "text", text };
 	const type = mediaType(preview);
 	return type === null ? null : { kind: "type", type };

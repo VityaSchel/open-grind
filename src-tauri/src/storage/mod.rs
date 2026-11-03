@@ -40,7 +40,7 @@ const HAS_FILE_STORE: bool = cfg!(any(
 
 pub fn init_keyring() -> StorageBackend {
 	static USABLE: Mutex<Option<StorageBackend>> = Mutex::new(None);
-	cached(&USABLE, probe_keyring)
+	cached(&USABLE, || probe_keyring(install_platform_store))
 }
 
 fn cached(
@@ -58,25 +58,30 @@ fn cached(
 	backend
 }
 
-fn probe_keyring() -> StorageBackend {
-	let backend = match install_platform_store() {
-		Ok(()) => StorageBackend::Keyring,
-		Err(e) if HAS_FILE_STORE => {
+fn probe_keyring(
+	install_platform_store: impl FnOnce() -> Result<(), String>,
+) -> StorageBackend {
+	let file_store =
+		keyring_core::get_default_store().filter(|_| HAS_FILE_STORE);
+	match install_platform_store() {
+		Ok(()) if round_trips() => return StorageBackend::Keyring,
+		Ok(()) => {
 			tracing::warn!(
-				"[storage] no platform keyring, keeping file store: {e}"
+				"[storage] the platform keyring failed a round trip"
 			);
-			StorageBackend::File
 		}
-		Err(e) => {
-			tracing::error!("[storage] no platform keyring: {e}");
-			StorageBackend::Unavailable
-		}
+		Err(e) => tracing::warn!("[storage] no platform keyring: {e}"),
+	}
+	let Some(file_store) = file_store else {
+		tracing::error!("[storage] no credential store to fall back to");
+		return StorageBackend::Unavailable;
 	};
-	if backend != StorageBackend::Unavailable && !round_trips() {
-		tracing::error!("[storage] the credential store failed a round trip");
+	keyring_core::set_default_store(file_store);
+	if !round_trips() {
+		tracing::error!("[storage] the file store failed a round trip");
 		return StorageBackend::Unavailable;
 	}
-	backend
+	StorageBackend::File
 }
 
 #[cfg(target_os = "ios")]
@@ -238,14 +243,70 @@ mod tests {
 		}
 	}
 
+	fn install_mock_keyring(refuses_writes: bool) -> Result<(), String> {
+		use keyring_core::api::CredentialStoreApi;
+
+		let store = keyring_core::mock::Store::new().unwrap();
+		if refuses_writes {
+			store
+				.build(keyring::SERVICE, STARTUP_PROBE, None)
+				.unwrap()
+				.as_any()
+				.downcast_ref::<keyring_core::mock::Cred>()
+				.unwrap()
+				.set_error(keyring_core::Error::NoStorageAccess(
+					"the default collection is locked".into(),
+				));
+		}
+		keyring_core::set_default_store(store);
+		Ok(())
+	}
+
+	fn session_file_exists(base: &std::path::Path) -> bool {
+		base.join("credentials").join("session").exists()
+	}
+
 	#[test]
 	fn a_probe_leaves_a_usable_store_behind() {
 		with_file_store(|_| {
-			let backend = probe_keyring();
+			let backend = probe_keyring(install_platform_store);
 
 			assert_ne!(backend, StorageBackend::Unavailable);
 			assert!(keyring_core::get_default_store().is_some());
 			assert!(keyring_core::Entry::new("open-grind", "session").is_ok());
+		});
+	}
+
+	#[test]
+	fn a_keyring_that_refuses_writes_falls_back_to_the_file_store() {
+		with_file_store(|base| {
+			let backend = probe_keyring(|| install_mock_keyring(true));
+			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
+
+			assert_eq!(backend, StorageBackend::File);
+			assert!(session_file_exists(base));
+		});
+	}
+
+	#[test]
+	fn a_working_keyring_takes_over_from_the_file_store() {
+		with_file_store(|base| {
+			let backend = probe_keyring(|| install_mock_keyring(false));
+			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
+
+			assert_eq!(backend, StorageBackend::Keyring);
+			assert!(!session_file_exists(base));
+		});
+	}
+
+	#[test]
+	fn a_missing_keyring_keeps_the_file_store() {
+		with_file_store(|base| {
+			let backend = probe_keyring(|| Err("no secret service".to_owned()));
+			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
+
+			assert_eq!(backend, StorageBackend::File);
+			assert!(session_file_exists(base));
 		});
 	}
 

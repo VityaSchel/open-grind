@@ -80,17 +80,21 @@ export async function revealRefreshButton({
 	page,
 	scroller,
 	towardTop,
+	within,
 }: {
 	page: Page;
 	scroller: string;
 	towardTop: boolean;
+	within?: string;
 }): Promise<Locator> {
 	await page
 		.locator(scroller)
 		.dispatchEvent("wheel", {
 			deltaY: towardTop ? -WHEEL_DELTA : WHEEL_DELTA,
 		});
-	const button = page.getByRole("button", { name: "Refresh" });
+	const button = (
+		within === undefined ? page : page.locator(within)
+	).getByRole("button", { name: "Refresh" });
 	await button.waitFor();
 	return button;
 }

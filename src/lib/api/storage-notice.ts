@@ -13,7 +13,7 @@ export async function noticeStorageBackend(): Promise<void> {
 			message: () => t("feedback.storageNotice.unavailable"),
 		});
 	} else if (backend === "file" && platform() === "linux") {
-		toast.warning(t("feedback.storageNotice.plainFile"), {
+		toast.warning(t("feedback.storageNotice.keyringUnusable"), {
 			id: "storage-backend",
 		});
 	}

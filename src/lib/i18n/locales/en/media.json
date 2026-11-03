@@ -7,6 +7,15 @@
 			"loadFailed": "Couldn’t load media",
 			"playFailed": "This system can’t play this video.",
 			"decoderMissing": "Playing this video needs an H.264 decoder, which isn’t installed on this system. <codecsGuideLink>How to install video codecs</codecsGuideLink>"
+		},
+		"reply": {
+			"placeholder": "Write a reply…",
+			"a11y": {
+				"send": "Send reply",
+				"react": "React to album item with fire",
+				"albumItem": "Reply to album item",
+				"profilePhoto": "Reply to profile photo"
+			}
 		}
 	},
 	"album": {

@@ -229,7 +229,7 @@ describe("ReconcilingListState", () => {
 
 		const refreshGate = deferred<Item[]>();
 		fetchMock.mockReturnValueOnce(refreshGate.promise);
-		const refreshing = reconcileHandlers[0]?.();
+		const refreshing = state.refresh();
 
 		fetchMock.mockResolvedValueOnce([item(3)]);
 		state.retry();
@@ -242,7 +242,7 @@ describe("ReconcilingListState", () => {
 		expect(ids(state)).toEqual([3]);
 	});
 
-	it("reports a refresh failure that was not superseded", async () => {
+	it("keeps the list without a toast when a reconcile fails", async () => {
 		fetchMock
 			.mockResolvedValueOnce([item(1)])
 			.mockRejectedValueOnce(new Error("offline"));
@@ -250,6 +250,21 @@ describe("ReconcilingListState", () => {
 		await waitForLoaded(state);
 
 		await reconcileHandlers[0]?.();
+
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+		expect(state.error).toBeNull();
+		expect(ids(state)).toEqual([1]);
+	});
+
+	it("reports a pull-to-refresh failure that was not superseded", async () => {
+		fetchMock
+			.mockResolvedValueOnce([item(1)])
+			.mockRejectedValueOnce(new Error("offline"));
+		const state = new TestList();
+		await waitForLoaded(state);
+
+		await state.refresh();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith({
 			label: "Failed to refresh",
@@ -268,7 +283,7 @@ describe("ReconcilingListState", () => {
 		await waitForLoaded(state);
 		refreshErrorLabel = "Échec de l'actualisation";
 
-		await reconcileHandlers[0]?.();
+		await state.refresh();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith(
 			expect.objectContaining({ label: "Échec de l'actualisation" }),

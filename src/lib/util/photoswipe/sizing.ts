@@ -1,6 +1,7 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
+import { onSafeAreaChange } from "$lib/util/safe-area";
 
 const LAYOUT_UNIT_PX = 1 / 64;
 
@@ -63,5 +64,22 @@ export function applyPhotoSwipeLoadedSize(lightbox: PhotoSwipeLightbox): void {
 		slide.zoomAndPanToInitial();
 		slide.applyCurrentZoomPan();
 		slide.updateContentSize(true);
+	});
+}
+
+const safeAreaSynced = new WeakSet<PhotoSwipeLightbox>();
+
+export function applyPhotoSwipeSafeAreaSync(
+	lightbox: PhotoSwipeLightbox,
+): void {
+	if (safeAreaSynced.has(lightbox)) return;
+	safeAreaSynced.add(lightbox);
+	let stopFollowing: (() => void) | undefined;
+	lightbox.on("beforeOpen", () => {
+		stopFollowing = onSafeAreaChange(() => lightbox.pswp?.updateSize(true));
+	});
+	lightbox.on("destroy", () => {
+		stopFollowing?.();
+		stopFollowing = undefined;
 	});
 }

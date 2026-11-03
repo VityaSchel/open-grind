@@ -132,7 +132,7 @@
 	}}
 >
 	<div
-		class="absolute"
+		class="pointer-events-none absolute *:pointer-events-auto"
 		style:left="{liftedBox.x}px"
 		style:top="{liftedBox.y}px"
 		style:width="{liftedBox.width}px"

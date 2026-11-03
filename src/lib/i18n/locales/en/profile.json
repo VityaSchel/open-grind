@@ -162,6 +162,9 @@
 	"imageCarousel": {
 		"a11y": {
 			"photo": "Profile photo {{position}} of {{total}}"
+		},
+		"reply": {
+			"sent": "Message sent"
 		}
 	},
 	"backButton": {

@@ -42,7 +42,8 @@ const conversationDataSchema = z.object({
 			lat: unmodeledSchema,
 			lon: unmodeledSchema,
 			duration: unmodeledSchema,
-			photoContentReply: unmodeledSchema,
+			photoContentReply: z.string().nullish(),
+			albumContentReply: z.string().nullish(),
 		})
 		.nullish(),
 	muted: serverDefault({ value: z.boolean(), fallback: false }),

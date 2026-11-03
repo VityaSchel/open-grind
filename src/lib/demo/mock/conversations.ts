@@ -1,5 +1,8 @@
+import { registerAccountCache } from "$lib/api/account-caches";
+import { conversationIdFor } from "$lib/chat/conversation-id";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import {
+	type AlbumReplyTarget,
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
 	outboundMessageSchema,
@@ -7,57 +10,32 @@ import {
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
-import {
-	DAY,
-	demoMeProfileId,
-	MINUTE,
-	NOW,
-	screenshotsEnabled,
-	SECOND,
-} from "../config";
-import { screenshotScene } from "../screenshot-scene";
-import { albumCoverUrl, demoAlbumContent } from "./albums";
+import { DAY, demoMeProfileId, MINUTE, NOW, SECOND } from "../config";
+import { albumCoverUrl, demoAlbumContent, demoAlbumExists } from "./albums";
 import { hashFromSeed, picsum } from "./avatars";
 import { isTierGatedFilter, matchesInboxFilters } from "./conversation-filters";
-import {
-	type DemoConversation,
-	demoConversationSeeds,
-	type DemoMessage,
-} from "./conversation-seeds";
+import type { DemoConversation, DemoMessage } from "./conversation-seeds";
 import { demoDrawerMedia } from "./drawer";
 import { demoFavoriteOf } from "./favorites";
 import { demoGiphyMessageBody } from "./giphy";
 import { neutralText } from "./neutral";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
+import {
+	conversationSeed,
+	conversationSeeds,
+	sceneInbox,
+} from "./scene-conversations";
 
 const MESSAGE_GAP = 7 * MINUTE;
 const MESSAGES_PER_PAGE = 8;
 const DEMO_IMAGE_URL = "https://picsum.photos/seed/opengrind-demo/600/800";
 const EXPIRING_IMAGE_DURATION_MS = 10 * SECOND;
 
-export function conversationIdFor(withId: number): string {
-	return `${Math.min(demoMeProfileId, withId)}:${Math.max(demoMeProfileId, withId)}`;
-}
-
-function sceneInbox() {
-	return screenshotsEnabled ? screenshotScene.inbox : null;
-}
-
-function conversationSeeds(): DemoConversation[] {
-	return sceneInbox()?.conversations ?? demoConversationSeeds();
-}
-
-function conversationSeed(
-	conversationId: string,
-): DemoConversation | undefined {
-	return conversationSeeds().find(
-		(conv) => conversationIdFor(conv.withId) === conversationId,
-	);
-}
-
 const pinnedOverrides = new Map<string, boolean>();
 const mutedOverrides = new Map<string, boolean>();
 const deletedConversationIds = new Set<string>();
+const sentProfilePhotoReplies = new Map<string, ApiResponseMessage[]>();
+registerAccountCache({ reset: () => sentProfilePhotoReplies.clear() });
 
 export function demoSetConversationPinned({
 	conversationId,
@@ -100,7 +78,10 @@ function buildMessage({
 	timestamp: number;
 	quoted?: boolean;
 }): ApiResponseMessage {
-	const conversationId = conversationIdFor(conv.withId);
+	const conversationId = conversationIdFor({
+		profileId: conv.withId,
+		ourProfileId: demoMeProfileId,
+	});
 	const messageId = `${index}:demo-${conv.withId}-${index}${quoted ? "-quoted" : ""}`;
 	const senderId = message.fromMe ? demoMeProfileId : conv.withId;
 	const reactions = Array.from({ length: message.reactions ?? 0 }, () => ({
@@ -116,6 +97,18 @@ function buildMessage({
 		dynamic: false,
 	};
 	switch (message.kind) {
+		case "profilePhotoReply":
+			return {
+				type: "ProfilePhotoReply",
+				body: {
+					imageHash: photosOf(
+						message.fromMe ? conv.withId : demoMeProfileId,
+					)[0]!,
+					photoContentReply: neutralText(message.text),
+				},
+				...base,
+				unsent: false,
+			};
 		case "image":
 			return {
 				type: "Image",
@@ -193,6 +186,24 @@ function buildMessage({
 				...base,
 				unsent: false,
 			};
+		case "albumReply":
+			return {
+				type: "AlbumContentReply",
+				body: {
+					albumContentReply: neutralText(message.text),
+					...albumContentBody({
+						albumId: message.albumId,
+						albumContentId: message.albumContentId,
+						ownerProfileId: message.fromMe
+							? conv.withId
+							: demoMeProfileId,
+						expiresAt: null,
+						isViewable: true,
+					}),
+				},
+				...base,
+				unsent: false,
+			};
 		case "unsent":
 			return { type: "Unsent", body: null, ...base, unsent: true };
 		case "wire":
@@ -246,7 +257,15 @@ function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 			timestamp: lastActivity - (count - 1 - i) * MESSAGE_GAP,
 		}),
 	);
-	return ordered.reverse();
+	return [
+		...(sentProfilePhotoReplies.get(
+			conversationIdFor({
+				profileId: conv.withId,
+				ourProfileId: demoMeProfileId,
+			}),
+		) ?? []),
+		...ordered.reverse(),
+	];
 }
 
 const GATED_FULL_ENTRY_LIMIT = 2;
@@ -285,10 +304,18 @@ export function demoConversations({
 	const entries: Conversation[] = conversationSeeds()
 		.filter(
 			(conv) =>
-				!deletedConversationIds.has(conversationIdFor(conv.withId)),
+				!deletedConversationIds.has(
+					conversationIdFor({
+						profileId: conv.withId,
+						ourProfileId: demoMeProfileId,
+					}),
+				),
 		)
 		.map((conv): Conversation => {
-			const conversationId = conversationIdFor(conv.withId);
+			const conversationId = conversationIdFor({
+				profileId: conv.withId,
+				ourProfileId: demoMeProfileId,
+			});
 			const seed = profileSeed(conv.withId);
 			const photos = photosOf(conv.withId);
 			const latest = threadMessages(conv).at(0);
@@ -420,6 +447,40 @@ export function demoMessagesById({
 
 let demoSentCounter = 0;
 
+function albumContentBody({
+	albumId,
+	albumContentId,
+	ownerProfileId,
+	expiresAt,
+	isViewable,
+}: {
+	albumId: number;
+	albumContentId: number;
+	ownerProfileId: number | null;
+	expiresAt: number | null;
+	isViewable: boolean;
+}): AlbumReplyTarget {
+	const content = demoAlbumContent(albumId).content.find(
+		(item) => item.contentId === albumContentId,
+	);
+	const viewable = Boolean(
+		isViewable &&
+		demoAlbumExists(albumId) &&
+		(expiresAt === null || expiresAt > Date.now()) &&
+		content?.url &&
+		!content.processing,
+	);
+	return {
+		albumId,
+		albumContentId,
+		ownerProfileId,
+		expiresAt,
+		viewable,
+		previewUrl: viewable ? (content?.thumbUrl ?? null) : null,
+		contentType: content?.contentType ?? null,
+	};
+}
+
 export function demoSentMessage(body: unknown): ApiResponseMessage {
 	const sent = body as {
 		type?: string;
@@ -429,7 +490,10 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 	};
 	const targetId = sent.target?.targetId ?? 0;
 	const timestamp = NOW;
-	const conversationId = conversationIdFor(targetId);
+	const conversationId = conversationIdFor({
+		profileId: targetId,
+		ourProfileId: demoMeProfileId,
+	});
 	const overlay = {
 		messageId: `${timestamp}:demo-sent-${targetId}-${demoSentCounter++}`,
 		conversationId,
@@ -446,10 +510,53 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 						messageId: sent.replyToMessageId,
 					}).message,
 	};
+	if (
+		sent.type === "AlbumContentReaction" ||
+		sent.type === "AlbumContentReply"
+	) {
+		const message = outboundMessageSchema.parse(sent);
+		if (
+			message.type !== "AlbumContentReaction" &&
+			message.type !== "AlbumContentReply"
+		)
+			throw new Error("Invalid album message");
+		const conv = conversationSeed(conversationId);
+		const album = (conv ? threadMessages(conv) : [])
+			.filter(
+				(message) =>
+					message.type === "Album" ||
+					message.type === "ExpiringAlbum" ||
+					message.type === "ExpiringAlbumV2",
+			)
+			.find(({ body }) => body.albumId === message.body.albumId)?.body;
+		return apiResponseMessageSchema.parse({
+			...overlay,
+			type: message.type,
+			body: {
+				...message.body,
+				...albumContentBody({
+					...message.body,
+					ownerProfileId: album?.ownerProfileId ?? null,
+					expiresAt: album?.expiresAt ?? null,
+					isViewable: album?.isViewable ?? false,
+				}),
+			},
+		});
+	}
 	const mediaId =
 		sent.body && typeof sent.body === "object"
 			? (sent.body as { mediaId?: number }).mediaId
 			: undefined;
+	if (sent.type === "ProfilePhotoReply") {
+		const reply = apiResponseMessageSchema.parse({
+			...outboundMessageSchema.parse(sent),
+			...overlay,
+		});
+		const replies = sentProfilePhotoReplies.get(conversationId) ?? [];
+		replies.unshift(reply);
+		sentProfilePhotoReplies.set(conversationId, replies);
+		return reply;
+	}
 	if (
 		mediaId !== undefined &&
 		(sent.type === "Image" || sent.type === "ExpiringImage")

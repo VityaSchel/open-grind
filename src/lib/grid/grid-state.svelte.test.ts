@@ -141,6 +141,18 @@ describe("grid reconciliation", () => {
 		expect(gridState.loading).toBe(false);
 	});
 
+	it("keeps the grid without a toast when a reconcile fails", async () => {
+		showErrorToastMock.mockClear();
+		getGridMock.mockRejectedValueOnce(new Error("offline"));
+
+		await reconcileHandlers[0]?.();
+
+		expect(getGridMock).toHaveBeenCalledOnce();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+		expect(gridState.error).toBeNull();
+		expect(gridState.items.map((item) => item.id)).toEqual([1]);
+	});
+
 	it("does nothing until a location has been loaded", async () => {
 		gridState.reset();
 

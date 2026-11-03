@@ -126,8 +126,7 @@
 			"x-wip": true
 		},
 		{
-			"name": "right-now",
-			"x-wip": true
+			"name": "right-now"
 		},
 		{
 			"name": "commerce/storeapirest",
@@ -166,9 +165,7 @@
 			"description": "Blocking a user automatically deletes the conversation for both of you."
 		},
 		{
-			"name": "browse/discover",
-			"x-wip": true,
-			"x-wip-note": "Help needed."
+			"name": "browse/discover"
 		},
 		{
 			"name": "browse/entitlements"
@@ -182,9 +179,7 @@
 			"description": "Unknown how it's different from [blocks](/grindr-api/browse/blocks), WIP. Blocks API is preferred until this is figured out."
 		},
 		{
-			"name": "browse/links",
-			"x-wip": true,
-			"x-wip-note": "Unknown, WIP"
+			"name": "browse/links"
 		},
 		{
 			"name": "browse/location"
@@ -856,24 +851,85 @@
 					"commerce/boosting"
 				],
 				"operationId": "getBoostSessions",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get boost sessions",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"boostSessions": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"boostSessionId": {
+														"type": "string"
+													},
+													"profileId": {
+														"type": "string"
+													},
+													"startTime": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"endTime": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"chatsCount": {
+														"type": "integer"
+													},
+													"tapsCount": {
+														"type": "integer"
+													},
+													"viewsCount": {
+														"type": "integer"
+													},
+													"isPaused": {
+														"type": "boolean"
+													},
+													"boostProductType": {
+														"type": "string",
+														"nullable": true
+													},
+													"minAge": {
+														"type": "integer",
+														"nullable": true
+													},
+													"maxAge": {
+														"type": "integer",
+														"nullable": true
+													},
+													"positionPreferences": {
+														"type": "array",
+														"items": {
+															"type": "integer"
+														},
+														"nullable": true
+													},
+													"geohash": {
+														"type": "string",
+														"nullable": true
+													}
+												}
+											}
 										}
-									],
-									"x-original-type": "BoostSessionResponse"
+									},
+									"x-original-type": "BoostSessionResponse",
+									"required": [
+										"boostSessions"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/consumables/redeem/boost": {
@@ -1024,24 +1080,50 @@
 					"commerce/boosting"
 				],
 				"operationId": "getConsumablesInventory",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get consumable inventory",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"consumables": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"profileId": {
+														"type": "string"
+													},
+													"consumableId": {
+														"type": "integer"
+													},
+													"consumableName": {
+														"type": "string"
+													},
+													"remaining": {
+														"type": "integer"
+													}
+												}
+											}
 										}
-									],
-									"x-original-type": "ConsumableInventoryResponse"
+									},
+									"x-original-type": "ConsumableInventoryResponse",
+									"required": [
+										"consumables"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/gifs/trending": {
@@ -1220,24 +1302,94 @@
 					"system/heatmap"
 				],
 				"operationId": "getAllExploreHeatmaps",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get explore heatmap locations",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"locations": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "integer"
+													},
+													"type": {
+														"type": "string",
+														"description": "string, e.g. `City`, `Neighbourhood`"
+													},
+													"name": {
+														"type": "string"
+													},
+													"nameDecoration": {
+														"type": "string"
+													},
+													"containedInId": {
+														"type": "integer",
+														"description": "integer, identifier of the containing location"
+													},
+													"displayCoordinates": {
+														"type": "object",
+														"properties": {
+															"lat": {
+																"type": "number"
+															},
+															"lng": {
+																"type": "number"
+															}
+														},
+														"required": [
+															"lat",
+															"lng"
+														]
+													},
+													"exploreCascadeCoordinates": {
+														"type": "object",
+														"properties": {
+															"lat": {
+																"type": "number"
+															},
+															"lng": {
+																"type": "number"
+															}
+														},
+														"required": [
+															"lat",
+															"lng"
+														]
+													}
+												},
+												"required": [
+													"id",
+													"type",
+													"name",
+													"nameDecoration",
+													"containedInId",
+													"displayCoordinates",
+													"exploreCascadeCoordinates"
+												]
+											}
 										}
-									],
-									"x-original-type": "ExploreHeatmapsResponse"
+									},
+									"x-original-type": "ExploreHeatmapsResponse",
+									"required": [
+										"locations"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/explore_heatmaps": {
@@ -1287,24 +1439,38 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "getSubscriberSponsoredContentAgreement",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get subscriber sponsored content agreement",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"agreement": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/ConsentAgreement"
+												}
+											],
+											"nullable": true
 										}
-									],
-									"x-original-type": "SponsoredContentConsentAgreementResponse"
+									},
+									"x-original-type": "SponsoredContentConsentAgreementResponse",
+									"required": [
+										"agreement"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			},
 			"post": {
 				"tags": [
@@ -1401,20 +1567,53 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "getAcceptedLegalAgreements",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get accepted legal agreements",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "AcceptedLegalAgreementsResponse"
+									"type": "object",
+									"properties": {
+										"termsOfServiceVersion": {
+											"type": "string"
+										},
+										"privacyPolicyVersion": {
+											"type": "string"
+										},
+										"userConsentList": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											},
+											"description": "array of strings, known values: `HIV_COLLECT`, `VACCINE_COLLECT`, `DOXYPEP_COLLECT`"
+										},
+										"createdAtPrivacyAgreement": {
+											"$ref": "#/components/schemas/TimestampMs"
+										},
+										"createdAtTermsAgreement": {
+											"$ref": "#/components/schemas/TimestampMs"
+										}
+									},
+									"x-original-type": "AcceptedLegalAgreementsResponse",
+									"required": [
+										"termsOfServiceVersion",
+										"privacyPolicyVersion",
+										"userConsentList",
+										"createdAtPrivacyAgreement",
+										"createdAtTermsAgreement"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			},
 			"put": {
 				"tags": [
@@ -1450,20 +1649,38 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "getVipMatchmakerAgreement",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get VIP matchmaker agreement",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "VipMatchmakerConsentAgreementResponse"
+									"type": "object",
+									"properties": {
+										"agreement": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/ConsentAgreement"
+												}
+											],
+											"nullable": true
+										}
+									},
+									"x-original-type": "VipMatchmakerConsentAgreementResponse",
+									"required": [
+										"agreement"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			},
 			"post": {
 				"tags": [
@@ -1526,13 +1743,34 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "getTopPicksAgreementV4",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Top Picks agreement (v4)",
+				"description": "Removed in the official Android client between v25.20.0 and v26.9.2. Superseded by [Get Top Picks agreement (v5)](#get-top-picks-agreement-v5).",
+				"deprecated": true,
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "TopPicksConsentAgreementResponse"
+									"type": "object",
+									"properties": {
+										"agreement": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/ConsentAgreement"
+												}
+											],
+											"nullable": true
+										}
+									},
+									"x-original-type": "TopPicksConsentAgreementResponse",
+									"required": [
+										"agreement"
+									]
 								}
 							}
 						},
@@ -1587,20 +1825,33 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "getTopPicksAgreementV5",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Top Picks agreement (v5)",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "TopPicksConsentAgreementResponse"
+									"type": "object",
+									"properties": {
+										"agreement": {
+											"$ref": "#/components/schemas/ConsentAgreement"
+										}
+									},
+									"x-original-type": "TopPicksConsentAgreementResponse",
+									"required": [
+										"agreement"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			},
 			"delete": {
 				"tags": [
@@ -1641,17 +1892,44 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowConsentAgreementResponse"
+									"type": "object",
+									"required": [
+										"agreement"
+									],
+									"properties": {
+										"agreement": {
+											"type": "object",
+											"nullable": true,
+											"description": "object or `null`",
+											"properties": {
+												"profileId": {
+													"type": "integer",
+													"format": "int64"
+												},
+												"version": {
+													"type": "integer"
+												},
+												"locale": {
+													"type": "string"
+												},
+												"clientVersion": {
+													"type": "string"
+												},
+												"createdAt": {
+													"$ref": "#/components/schemas/TimestampMs"
+												}
+											}
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.13.0. The client no longer fetches a Right Now consent agreement, and creating a Right Now post no longer requires accepting one."
+				"description": "Removed in the official Android client v26.13.0.",
+				"x-wip": true
 			},
 			"post": {
 				"tags": [
@@ -1663,12 +1941,19 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"version",
+									"locale"
 								],
-								"x-original-type": "RightNowAcceptConsentRequest"
+								"properties": {
+									"version": {
+										"type": "integer"
+									},
+									"locale": {
+										"type": "string"
+									}
+								}
 							}
 						}
 					}
@@ -1678,9 +1963,9 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.13.0. The client no longer accepts a Right Now consent agreement, and creating a Right Now post no longer requires one."
+				"description": "Removed in the official Android client v26.13.0.",
+				"x-wip": true
 			}
 		},
 		"/v3/legal-agreements": {
@@ -1689,20 +1974,53 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "getLegalAgreementsInfo",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get legal agreement information",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "LegalAgreementsInfo"
+									"type": "object",
+									"properties": {
+										"legalAgreements": {
+											"type": "object",
+											"properties": {
+												"termsOfServiceUrl": {
+													"type": "string"
+												},
+												"latestTermsOfServiceVersion": {
+													"type": "string"
+												},
+												"privacyPolicyUrl": {
+													"type": "string"
+												},
+												"latestPrivacyPolicyVersion": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"termsOfServiceUrl",
+												"latestTermsOfServiceVersion",
+												"privacyPolicyUrl",
+												"latestPrivacyPolicyVersion"
+											]
+										}
+									},
+									"x-original-type": "LegalAgreementsInfo",
+									"required": [
+										"legalAgreements"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/consent/experience": {
@@ -2081,7 +2399,7 @@
 									},
 									"includeDerivedOptOuts": {
 										"type": "boolean",
-										"description": "boolean, effect unknown, optional"
+										"description": "boolean, `true` fills `derivedOptOuts`, optional"
 									}
 								}
 							}
@@ -2108,8 +2426,25 @@
 												"type": "boolean"
 											},
 											"description": "object keyed by the requested opt-in types; `true` means opted in"
+										},
+										"derivedOptOuts": {
+											"type": "object",
+											"additionalProperties": {
+												"type": "boolean"
+											},
+											"description": "object keyed by derived opt-out type, empty unless `includeDerivedOptOuts` is `true`; known key: `PREMIUM_AI_OPT_OUT`"
+										},
+										"optInResponded": {
+											"type": "object",
+											"additionalProperties": true
 										}
-									}
+									},
+									"required": [
+										"optOuts",
+										"optIns",
+										"derivedOptOuts",
+										"optInResponded"
+									]
 								}
 							}
 						},
@@ -2294,17 +2629,25 @@
 					"commerce/offers"
 				],
 				"operationId": "getOffers",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get current offers",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "Offer"
+									"$ref": "#/components/schemas/Offer"
 								}
 							}
 						},
 						"description": "OK"
+					},
+					"204": {
+						"description": "No current offer."
 					}
 				},
 				"x-wip": true
@@ -2345,20 +2688,40 @@
 					"commerce/offers"
 				],
 				"operationId": "getEligibleOffers",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get eligible offers",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "EligibleOffers"
+									"type": "object",
+									"properties": {
+										"offerTypes": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/Offer"
+											}
+										},
+										"hasExistingOffer": {
+											"type": "boolean"
+										}
+									},
+									"x-original-type": "EligibleOffers",
+									"required": [
+										"offerTypes",
+										"hasExistingOffer"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v4/flags/{profileId}": {
@@ -2696,6 +3059,11 @@
 					"right-now"
 				],
 				"operationId": "getActiveRightNowPost",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"responses": {
 					"200": {
 						"content": {
@@ -2708,7 +3076,7 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
+				"summary": "Get own Right Now post",
 				"description": "Get the current Right Now post, including a hidden post before expiration. Returns {\"post\":null} when there is no current post or it has expired."
 			}
 		},
@@ -2718,6 +3086,11 @@
 					"right-now"
 				],
 				"operationId": "getOtherUserRightNowPost",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"$ref": "#/components/parameters/ProfileIdIntegerPath"
@@ -2735,8 +3108,8 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
-				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post, including for a nonexistent profile ID. Behavior for hidden or expired posts is undocumented."
+				"summary": "Get Right Now post by profile",
+				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post or its post is hidden, expired or discreet, including for a nonexistent profile ID. `locationRadius` is `null` for another profile's post."
 			}
 		},
 		"/{version}/rightnow/posts/{postId}": {
@@ -2745,6 +3118,11 @@
 					"right-now"
 				],
 				"operationId": "updateRightNowPost",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "version",
@@ -2764,7 +3142,8 @@
 						"in": "path",
 						"required": true,
 						"schema": {
-							"type": "string"
+							"type": "integer",
+							"format": "int64"
 						}
 					}
 				],
@@ -2776,15 +3155,16 @@
 								"type": "object",
 								"properties": {
 									"hosting": {
-										"type": "boolean"
+										"type": "boolean",
+										"description": "boolean, optional"
 									},
 									"text": {
 										"type": "string",
-										"description": "Submitted for moderation; read moderatedText before assuming activeText has changed."
+										"description": "string, submitted for moderation, so read `moderatedText` before assuming `activeText` has changed, optional"
 									},
 									"media": {
 										"type": "array",
-										"description": "Replaces the attached media array.",
+										"description": "array of objects that replaces the attached media, optional",
 										"items": {
 											"type": "object",
 											"required": [
@@ -2794,8 +3174,7 @@
 											"properties": {
 												"type": {
 													"type": "string",
-													"description": "Media kind, e.g. `image_v1`.",
-													"example": "image_v1"
+													"description": "`\"image_v1\"`"
 												},
 												"data": {
 													"type": "object",
@@ -2806,7 +3185,7 @@
 														"id": {
 															"type": "integer",
 															"format": "int64",
-															"description": "The integer mediaId returned by POST /v1/media/upload or /v2/media/upload. The request uses data.id; own-post readback uses mediaId."
+															"description": "long integer, the `mediaId` returned by [Upload Right Now media](/grindr-api/right-now#upload-right-now-media) or [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2); one `mediaId` can be attached to more than one post"
 														}
 													}
 												}
@@ -2815,23 +3194,29 @@
 									},
 									"hidden": {
 										"type": "boolean",
-										"description": "Whether the post is hidden."
+										"description": "boolean, whether the post is hidden, optional"
 									},
 									"shareLocation": {
-										"$ref": "#/components/schemas/RightNowShareLocation"
+										"description": "[RightNowShareLocation](/grindr-api/right-now#rightnowsharelocation), optional",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RightNowShareLocation"
+											}
+										]
 									},
 									"locationRadius": {
 										"type": "integer",
 										"minimum": 0,
 										"maximum": 100,
-										"description": "Location precision value. On this edit route, locationRadius = 100 − slider value. This is not a distance in meters."
+										"description": "integer, location precision value. On this edit route, locationRadius = 100 − slider value. This is not a distance in meters, optional"
 									},
 									"isDiscreet": {
-										"description": "Discreet-post setting. The request value type is undocumented.",
-										"x-wip": true
+										"type": "boolean",
+										"description": "boolean, applied on v5 only, optional"
 									},
 									"sharedFields": {
 										"type": "array",
+										"description": "array of strings, `\"AGE\"`, `\"HEIGHT\"`, `\"WEIGHT\"`, `\"POSITION\"`, applied on v5 only, optional",
 										"items": {
 											"type": "string"
 										}
@@ -2847,12 +3232,11 @@
 						"description": "No Content"
 					},
 					"400": {
-						"description": "`urn:gr:err:resource_not_found` when no post has this ID."
+						"description": "`urn:gr:err:resource_not_found` when no post has this ID. `urn:gr:err:internal_error` for a `hosting` that is not a boolean, such as `\"yes\"`, checked before the post ID. `urn:gr:err:client_action` on v5 for `isDiscreet: false` on a discreet post or for a `sharedFields` value outside the list."
 					}
 				},
-				"x-wip": true,
 				"summary": "Update Right Now post",
-				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration."
+				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration. A new `locationRadius` also picks a new offset for the post's `lat` and `lon`. `text` accepts at least 500 characters. The v4 route ignores `isDiscreet` and `sharedFields` and turns a `NOT_SELECTED` `isDiscreet` into `FALSE`; v5 applies them. On v5, `isDiscreet: false` on a `TRUE` post is rejected."
 			}
 		},
 		"/v4/rightnow/posts": {
@@ -2861,35 +3245,43 @@
 					"right-now"
 				],
 				"operationId": "createRightNowPostV4",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "CreatePostRequest"
+								"$ref": "#/components/schemas/RightNowPostRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
+					"201": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowCreatePostResponse"
+									"type": "object",
+									"required": [
+										"post"
+									],
+									"properties": {
+										"post": {
+											"$ref": "#/components/schemas/RightNowPostDetails"
+										}
+									}
 								}
 							}
 						},
-						"description": "OK"
+						"description": "Created"
 					}
 				},
-				"x-wip": true
+				"summary": "Create Right Now post (v4)",
+				"description": "Same as [Create Right Now post](/grindr-api/right-now#create-right-now-post), but the post starts `HIDDEN`; show it with [Update Right Now post settings](/grindr-api/right-now#update-right-now-post-settings) `hidden: false`. It lowers `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements) by one."
 			}
 		},
 		"/v3/rightnow/posts": {
@@ -2898,35 +3290,46 @@
 					"right-now"
 				],
 				"operationId": "createRightNowPostV3",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "CreatePostRequest"
+								"$ref": "#/components/schemas/RightNowPostRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
+					"201": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowCreatePostResponse"
+									"type": "object",
+									"required": [
+										"post"
+									],
+									"properties": {
+										"post": {
+											"$ref": "#/components/schemas/RightNowPostDetails"
+										}
+									}
 								}
 							}
 						},
-						"description": "OK"
+						"description": "Created"
+					},
+					"400": {
+						"description": "`urn:gr:err:client_action` while the account has an active or hidden post."
 					}
 				},
-				"x-wip": true
+				"summary": "Create Right Now post",
+				"description": "Start a Right Now post. It is `ACTIVE` at once and expires 60 minutes after `posted`. Without `lat` and `lon` it takes the location set by [Update location](/grindr-api/browse/location#update-location). The text waits in `moderatedText` with `textStatus` `AWAITING_MODERATION` and moves to `activeText` once approved. Each post lowers `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements) by one. With `count` at 0 the request still succeeds, but the post has `postStatus` `AWAITING_PAYMENT` with `posted` and `expiration` `null`; [Get own Right Now post](/grindr-api/right-now#get-own-right-now-post) then returns `{\"post\":null}`, the post is absent from the feed, and [Get Right Now post by profile](/grindr-api/right-now#get-right-now-post-by-profile) returns `{\"post\":null}` for it."
 			}
 		},
 		"/v1/rightnow/posts/{postId}/settings": {
@@ -2935,13 +3338,19 @@
 					"right-now"
 				],
 				"operationId": "updateRightNowPostSettings",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "postId",
 						"in": "path",
 						"required": true,
 						"schema": {
-							"type": "string"
+							"type": "integer",
+							"format": "int64"
 						}
 					}
 				],
@@ -2953,14 +3362,20 @@
 								"type": "object",
 								"properties": {
 									"shareLocation": {
-										"$ref": "#/components/schemas/RightNowShareLocation"
+										"description": "[RightNowShareLocation](/grindr-api/right-now#rightnowsharelocation), optional",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RightNowShareLocation"
+											}
+										]
 									},
 									"hosting": {
-										"type": "boolean"
+										"type": "boolean",
+										"description": "boolean, optional"
 									},
 									"hidden": {
 										"type": "boolean",
-										"description": "true hides the post; false makes it active again."
+										"description": "boolean, `true` hides the post and `false` makes it active again, optional"
 									}
 								},
 								"x-original-type": "UpdatePostSettingsRequest"
@@ -2973,12 +3388,11 @@
 						"description": "No Content"
 					},
 					"400": {
-						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:resource_not_found` when no post has this ID."
+						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:internal_error` for an unknown `shareLocation` value. `urn:gr:err:resource_not_found` when no post has this ID. `urn:gr:err:client_action` for `hidden: false` on an expired post."
 					}
 				},
-				"x-wip": true,
 				"summary": "Update Right Now post settings",
-				"description": "Update hosting, location sharing, or visibility. Send hidden: true to deactivate the post and hidden: false to reactivate it before expiration; this preserves its identity and expiration."
+				"description": "Update hosting, location sharing, or visibility. Send hidden: true to deactivate the post and hidden: false to reactivate it before expiration; this preserves its identity and expiration. A hidden post has `postStatus` `HIDDEN`, leaves the feed, and [Get Right Now post by profile](/grindr-api/right-now#get-right-now-post-by-profile) returns `{\"post\":null}` for it. Hiding and unhiding do not change `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements)."
 			}
 		},
 		"/v5/rightnow/feed": {
@@ -2993,7 +3407,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v5)",
-				"description": "Get the Right Now feed (v5), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
+				"description": "Get the Right Now feed (v5), with the same items, response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -3004,6 +3418,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"500": {
+						"description": "`urn:gr:err:internal_error` for a `sexualPositions` value that is not a list of integers, such as `abc`."
 					}
 				},
 				"parameters": [
@@ -3058,6 +3475,11 @@
 					"right-now"
 				],
 				"operationId": "uploadRightNowMedia",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "img_1_bottom",
@@ -3096,6 +3518,12 @@
 								"type": "string",
 								"format": "binary"
 							}
+						},
+						"image/jpeg": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
 						}
 					}
 				},
@@ -3111,9 +3539,8 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true,
 				"summary": "Upload Right Now media",
-				"description": "Upload raw image bytes as application/octet-stream. Attach the returned mediaId using an image_v1/data.id post edit."
+				"description": "Upload raw image bytes as image/jpeg or application/octet-stream. Attach the returned mediaId as image_v1 data.id when creating or editing a post."
 			}
 		},
 		"/v1/rightnow/googleplay/sku": {
@@ -3122,20 +3549,41 @@
 					"right-now"
 				],
 				"operationId": "getRightNowGooglePlaySku",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Right Now Google Play SKUs",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowSkuResponse"
+									"type": "object",
+									"properties": {
+										"rightNowSku": {
+											"type": "string"
+										},
+										"rightNowBoostedSku": {
+											"type": "string"
+										},
+										"boostUpsellSku": {
+											"type": "string"
+										}
+									},
+									"x-original-type": "RightNowSkuResponse",
+									"required": [
+										"rightNowSku",
+										"rightNowBoostedSku",
+										"boostUpsellSku"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/rightnow/requests": {
@@ -3144,27 +3592,40 @@
 					"right-now"
 				],
 				"operationId": "createRightNowRequest",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"postId"
 								],
-								"x-original-type": "RightNowCreateRequestData"
+								"properties": {
+									"postId": {
+										"type": "integer",
+										"format": "int64"
+									}
+								}
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"201": {
+						"description": "Created"
+					},
+					"409": {
+						"description": "`urn:gr:err:internal_error` when the caller already sent a request for this post."
 					}
 				},
-				"x-wip": true
+				"summary": "Send Right Now request",
+				"description": "Ask the author of a Right Now post to chat, discreet posts included, whose feed items carry no `profileId`. The author sees the request in [Get received Right Now requests](/grindr-api/right-now#get-received-right-now-requests) while the post is active and answers it with [Update Right Now request](/grindr-api/right-now#update-right-now-request)."
 			}
 		},
 		"/v3/store/googleplay/products/store": {
@@ -3173,15 +3634,20 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getStoreProductsStore",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Google Play store products",
+				"description": "Removed in the official Android client v26.20.0. Superseded by [Get store shop products](/grindr-api/commerce/storeapirest#get-store-shop-products).",
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.20.0. Superseded by [Get store shop products](/grindr-api/commerce/storeapirest#get-store-shop-products-wip).",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "StoreResponse"
+									"$ref": "#/components/schemas/StoreProductCatalog"
 								}
 							}
 						},
@@ -3257,20 +3723,24 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getExploreShopProducts",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Explore shop products",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "StoreInProfileResponse"
+									"$ref": "#/components/schemas/ShopProductCatalog"
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v2/store/googleplay/products/{oneStopShopCategory}": {
@@ -3279,8 +3749,14 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getProductsByOneStopShopCategory",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Google Play products by category",
+				"description": "Removed in the official Android client v26.20.0. Superseded by [Get profile drawer shop products](/grindr-api/commerce/storeapirest#get-profile-drawer-shop-products).",
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.20.0. Superseded by [Get profile drawer shop products](/grindr-api/commerce/storeapirest#get-profile-drawer-shop-products-wip).",
 				"parameters": [
 					{
 						"name": "oneStopShopCategory",
@@ -3296,8 +3772,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "StoreResponse"
+									"$ref": "#/components/schemas/StoreProductCatalog"
 								}
 							}
 						},
@@ -3350,6 +3825,9 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getStoreProductById",
+				"summary": "Get store product by ID",
+				"description": "Removed in the official Android client between v25.20.0 and v26.9.2.",
+				"deprecated": true,
 				"parameters": [
 					{
 						"name": "productId",
@@ -3382,20 +3860,24 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getProfileDrawerShopProducts",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get profile drawer shop products",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "StoreInProfileResponse"
+									"$ref": "#/components/schemas/ShopProductCatalog"
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/shop/googleplay/products/store": {
@@ -3404,24 +3886,24 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getStoreShopProducts",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get store shop products",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
-										}
-									],
-									"x-original-type": "ShopCatalogDto"
+									"$ref": "#/components/schemas/ShopProductCatalog"
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v3.1/store/googleplay/purchases": {
@@ -3599,6 +4081,12 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getSubscriptions",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get account subscriptions",
 				"parameters": [
 					{
 						"name": "status",
@@ -3620,15 +4108,87 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "SubscriptionResponse"
+									"type": "object",
+									"properties": {
+										"subscriptions": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"profileId": {
+														"type": "integer"
+													},
+													"subscriptionId": {
+														"type": "integer"
+													},
+													"createdAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"expiresAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"vendorProductMappingId": {
+														"type": "integer"
+													},
+													"subscriptionStatus": {
+														"type": "string",
+														"description": "string, `PENDING`, `VERIFIED`, `DISABLED` or `EXPIRED`"
+													},
+													"vendorName": {
+														"type": "string"
+													},
+													"vendorProductId": {
+														"type": "string"
+													},
+													"lastTransactionDate": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"lastPurchaseTransactionId": {
+														"type": "string",
+														"nullable": true
+													},
+													"lastOriginalTransactionId": {
+														"nullable": true
+													},
+													"googlePurchaseToken": {
+														"type": "string",
+														"nullable": true
+													},
+													"roles": {
+														"type": "array",
+														"items": {
+															"type": "string"
+														}
+													},
+													"productType": {
+														"type": "string"
+													},
+													"automaticRenewalEnabled": {
+														"type": "boolean"
+													},
+													"isFreeTrial": {
+														"type": "boolean"
+													},
+													"isEnabled": {
+														"type": "boolean"
+													},
+													"isExpired": {
+														"type": "boolean"
+													}
+												}
+											}
+										}
+									},
+									"x-original-type": "SubscriptionResponse",
+									"required": [
+										"subscriptions"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/toppicks/entitlements/messaging/{profileId}": {
@@ -4176,20 +4736,57 @@
 					"browse/age-verification"
 				],
 				"operationId": "getAgeVerificationOptions",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get age verification options",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "AgeVerificationOptionsResponse"
+									"type": "object",
+									"properties": {
+										"methods": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											},
+											"description": "array of strings: `FACE_RECOGNITION`, `DOCUMENT_VERIFICATION`"
+										},
+										"faceTecConfig": {
+											"type": "object",
+											"properties": {
+												"deviceKeyIdentifier": {
+													"type": "string"
+												},
+												"encryptionKey": {
+													"type": "string"
+												},
+												"sdkKey": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"deviceKeyIdentifier",
+												"encryptionKey",
+												"sdkKey"
+											]
+										}
+									},
+									"x-original-type": "AgeVerificationOptionsResponse",
+									"required": [
+										"methods",
+										"faceTecConfig"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v2/age-verification/verify": {
@@ -4259,9 +4856,13 @@
 										"requirementStrength": {
 											"type": "string",
 											"nullable": true,
-											"description": "`\"SOFT\"`, `\"HARD\"` or `null`"
+											"description": "string, `SOFT`, `HARD` or `null`"
 										}
-									}
+									},
+									"required": [
+										"isVerificationRequired",
+										"requirementStrength"
+									]
 								}
 							}
 						},
@@ -4270,8 +4871,7 @@
 					"404": {
 						"description": "Returned to some accounts with an empty body; the condition is unknown."
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/store-age-verification/result": {
@@ -4577,6 +5177,11 @@
 					"browse/discover"
 				],
 				"operationId": "passDiscoverProfile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"$ref": "#/components/parameters/ProfileIdIntegerPath"
@@ -4587,8 +5192,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Post a pass",
-				"x-wip": true
+				"summary": "Post a pass"
 			}
 		},
 		"/v1/rightnow/entitlements/posts": {
@@ -4597,14 +5201,22 @@
 					"browse/entitlements"
 				],
 				"operationId": "getRightNowPostEntitlements",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"summary": "Get Right Now post entitlements",
-				"description": "Post-specific Right Now entitlement.",
+				"description": "Post-specific Right Now entitlement. `count` depends on the caller's location set by [Update location](/grindr-api/browse/location#update-location). Creating a post lowers it by one; editing, hiding, unhiding and expiry do not change it. It refills over time.",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"type"
+									],
 									"properties": {
 										"type": {
 											"type": "string",
@@ -5312,6 +5924,11 @@
 					"browse/links"
 				],
 				"operationId": "resolveLinkKey",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "key",
@@ -5340,8 +5957,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Get link",
-				"x-wip": true
+				"summary": "Get link"
 			}
 		},
 		"/v3/places/search": {
@@ -7842,6 +8458,12 @@
 					"messaging/albums"
 				],
 				"operationId": "getLimitedPicsStatus",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get limited picture allowance",
 				"responses": {
 					"200": {
 						"content": {
@@ -7849,21 +8471,25 @@
 								"schema": {
 									"type": "object",
 									"properties": {
-										"available": {
-											"type": "integer"
-										},
 										"total": {
-											"type": "integer"
+											"type": "integer",
+											"description": "integer, total allowance"
+										},
+										"available": {
+											"type": "integer",
+											"description": "integer, remaining allowance"
 										}
-									}
+									},
+									"required": [
+										"total",
+										"available"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"summary": "Pics, WIP",
-				"x-wip": true
+				}
 			}
 		},
 		"/v4/pics/expiring": {
@@ -7908,20 +8534,38 @@
 					"messaging/albums"
 				],
 				"operationId": "getExpiringPictureStatus",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get expiring picture allowance",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"total": {
+											"type": "integer",
+											"description": "integer, total allowance"
+										},
+										"available": {
+											"type": "integer",
+											"description": "integer, remaining allowance"
+										}
+									},
+									"required": [
+										"total",
+										"available"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"summary": "Pics expiring status",
-				"x-wip": true
+				}
 			}
 		},
 		"/v4/videos/expiring/status": {
@@ -7930,20 +8574,38 @@
 					"messaging/albums"
 				],
 				"operationId": "getExpiringVideoStatus",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get expiring video allowance",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"total": {
+											"type": "integer",
+											"description": "integer, total allowance"
+										},
+										"available": {
+											"type": "integer",
+											"description": "integer, remaining allowance"
+										}
+									},
+									"required": [
+										"total",
+										"available"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"summary": "Videos expiring status",
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/albums/{albumId}/shares": {
@@ -12500,15 +13162,20 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getStoreProductsProfileDrawer",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get profile drawer store products",
+				"description": "Removed in the official Android client v26.20.0. Superseded by [Get profile drawer shop products](/grindr-api/commerce/storeapirest#get-profile-drawer-shop-products).",
 				"deprecated": true,
-				"description": "Removed in the official Android client v26.20.0. Superseded by [Get profile drawer shop products](/grindr-api/commerce/storeapirest#get-profile-drawer-shop-products-wip).",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "StoreResponse"
+									"$ref": "#/components/schemas/StoreProductCatalog"
 								}
 							}
 						},
@@ -12748,6 +13415,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "Returns `urn:gr:err:parameter` with `parameterName` set to `validation` for an unbanned account."
 					}
 				},
 				"x-wip": true
@@ -12856,19 +13526,164 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"sections": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"type": {
+														"type": "string",
+														"description": "string, `section_header`, `active_subscription_row`, `card_carousel`, `callout_row`, `list_row`, `spacer`, `divider` or `micros_section`"
+													},
+													"title": {
+														"type": "string"
+													},
+													"titleId": {
+														"type": "string"
+													},
+													"variant": {
+														"type": "string"
+													},
+													"theme": {
+														"type": "string"
+													},
+													"sku": {
+														"type": "string"
+													},
+													"productType": {
+														"type": "string"
+													},
+													"action": {
+														"type": "object",
+														"properties": {
+															"id": {
+																"type": "string"
+															}
+														}
+													},
+													"cards": {
+														"type": "array",
+														"items": {
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
+																	"description": "string, `upgrade_card`"
+																},
+																"theme": {
+																	"type": "string"
+																},
+																"header": {
+																	"type": "object",
+																	"properties": {
+																		"type": {
+																			"type": "string"
+																		},
+																		"key": {
+																			"type": "string"
+																		}
+																	}
+																},
+																"background": {
+																	"type": "object",
+																	"properties": {
+																		"type": {
+																			"type": "string"
+																		},
+																		"key": {
+																			"type": "string"
+																		}
+																	}
+																},
+																"title": {
+																	"type": "string"
+																},
+																"titleId": {
+																	"type": "string"
+																},
+																"subtitle": {
+																	"type": "string"
+																},
+																"subtitleId": {
+																	"type": "string"
+																},
+																"bullets": {
+																	"type": "array",
+																	"items": {
+																		"type": "string"
+																	}
+																},
+																"bulletIds": {
+																	"type": "array",
+																	"items": {
+																		"type": "string"
+																	}
+																},
+																"ctaText": {
+																	"type": "string"
+																},
+																"ctaTextId": {
+																	"type": "string"
+																},
+																"sku": {
+																	"type": "string"
+																},
+																"productType": {
+																	"type": "string"
+																},
+																"action": {
+																	"type": "object",
+																	"properties": {
+																		"id": {
+																			"type": "string"
+																		}
+																	}
+																}
+															}
+														}
+													},
+													"icon": {
+														"type": "object",
+														"properties": {
+															"type": {
+																"type": "string"
+															},
+															"key": {
+																"type": "string"
+															},
+															"filled": {
+																"type": "boolean"
+															}
+														}
+													},
+													"subtitle": {
+														"type": "string"
+													},
+													"subtitleId": {
+														"type": "string"
+													},
+													"isNew": {
+														"type": "boolean"
+													}
+												},
+												"required": [
+													"type"
+												]
+											}
 										}
-									],
-									"x-original-type": "StoreAndProfileResponseDto"
+									},
+									"x-original-type": "StoreAndProfileResponseDto",
+									"required": [
+										"sections"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/store-and-profile/facepile": {
@@ -13085,8 +13900,13 @@
 					"right-now"
 				],
 				"operationId": "uploadRightNowMediaV2",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"summary": "Upload Right Now media (v2)",
-				"description": "Upload raw, uncropped image bytes as application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId using an image_v1/data.id post edit.",
+				"description": "Upload raw, uncropped image bytes as image/jpeg or application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId as image_v1 data.id when creating or editing a post.",
 				"parameters": [
 					{
 						"name": "crop_top",
@@ -13178,6 +13998,12 @@
 								"type": "string",
 								"format": "binary"
 							}
+						},
+						"image/jpeg": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
 						}
 					}
 				},
@@ -13191,9 +14017,11 @@
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:bad_request` (`Invalid request`, detail `Bytes too few`) for a very small file, such as a 5 KB JPEG."
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v5/media/upload": {
@@ -13757,11 +14585,82 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"requests"
+									],
 									"properties": {
 										"requests": {
 											"type": "array",
-											"items": {},
-											"description": "Item structure is undocumented."
+											"items": {
+												"type": "object",
+												"required": [
+													"id",
+													"profileId",
+													"displayName",
+													"primaryMediaHash",
+													"distance",
+													"status",
+													"postId",
+													"createdAt",
+													"updatedAt",
+													"onlineUntil",
+													"favorite"
+												],
+												"properties": {
+													"id": {
+														"type": "integer",
+														"format": "int64",
+														"description": "long integer, the `requestId` for [Update Right Now request](/grindr-api/right-now#update-right-now-request)"
+													},
+													"profileId": {
+														"type": "integer",
+														"format": "int64",
+														"description": "long integer, profile ID of the sender"
+													},
+													"displayName": {
+														"type": "string",
+														"nullable": true
+													},
+													"primaryMediaHash": {
+														"allOf": [
+															{
+																"$ref": "#/components/schemas/MediaHash"
+															}
+														],
+														"nullable": true
+													},
+													"distance": {
+														"type": "integer",
+														"nullable": true,
+														"description": "integer or `null`, distance in meters"
+													},
+													"status": {
+														"type": "string",
+														"description": "string, `\"PENDING\"`, `\"ACCEPTED\"` or `\"REJECTED\"`"
+													},
+													"postId": {
+														"type": "integer",
+														"format": "int64"
+													},
+													"createdAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"updatedAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"onlineUntil": {
+														"allOf": [
+															{
+																"$ref": "#/components/schemas/TimestampMs"
+															}
+														],
+														"nullable": true
+													},
+													"favorite": {
+														"type": "boolean"
+													}
+												}
+											}
 										}
 									},
 									"x-original-type": "RightNowGetReceivedRequestsResponse"
@@ -13772,7 +14671,7 @@
 					}
 				},
 				"summary": "Get received Right Now requests",
-				"x-wip": true
+				"description": "Requests for the caller's post. A hidden post's requests are left out until it is shown again, and an expired post's requests are gone."
 			}
 		},
 		"/v1/rightnow/requests/outbox": {
@@ -13792,11 +14691,44 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"requests"
+									],
 									"properties": {
 										"requests": {
 											"type": "array",
-											"items": {},
-											"description": "Item structure is undocumented."
+											"items": {
+												"type": "object",
+												"required": [
+													"recipientProfileId",
+													"status",
+													"postId",
+													"createdAt",
+													"updatedAt"
+												],
+												"properties": {
+													"recipientProfileId": {
+														"type": "integer",
+														"format": "int64",
+														"nullable": true,
+														"description": "long integer or `null`, the post author's profile ID once the request is `\"ACCEPTED\"`, otherwise `null`"
+													},
+													"status": {
+														"type": "string",
+														"description": "string, `\"PENDING\"`, `\"ACCEPTED\"` or `\"REJECTED\"`"
+													},
+													"postId": {
+														"type": "integer",
+														"format": "int64"
+													},
+													"createdAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													},
+													"updatedAt": {
+														"$ref": "#/components/schemas/TimestampMs"
+													}
+												}
+											}
 										}
 									},
 									"x-original-type": "RightNowGetSentRequestsResponse"
@@ -13807,7 +14739,7 @@
 					}
 				},
 				"summary": "Get sent Right Now requests",
-				"x-wip": true
+				"description": "Requests the caller sent, including accepted ones for expired posts."
 			}
 		},
 		"/v1/rightnow/requests/{requestId}": {
@@ -13837,23 +14769,27 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"status"
 								],
-								"x-original-type": "UpdateRightNowRequestData"
+								"properties": {
+									"status": {
+										"type": "string",
+										"description": "`\"ACCEPTED\"` or `\"REJECTED\"`"
+									}
+								}
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"204": {
+						"description": "No Content"
 					}
 				},
 				"summary": "Update Right Now request",
-				"x-wip": true
+				"description": "`requestId` is the `id` of a request from [Get received Right Now requests](/grindr-api/right-now#get-received-right-now-requests). Accepting adds a `RightNowRequest` message from the post author to the conversation with the sender and reveals the author in the sender's [Get sent Right Now requests](/grindr-api/right-now#get-sent-right-now-requests). A rejected request can still be accepted later."
 			}
 		},
 		"/v8/users/thirdparty": {
@@ -13933,6 +14869,7 @@
 						"Grindr3Auth": []
 					}
 				],
+				"summary": "Get shop products with details",
 				"parameters": [
 					{
 						"name": "oneStopShopCategory",
@@ -13960,16 +14897,79 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "ProductsWithDetailsResponseDto"
+									"type": "object",
+									"properties": {
+										"productDetails": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"vendorProductId": {
+														"type": "string"
+													},
+													"topBenefits": {
+														"type": "array",
+														"items": {
+															"type": "object",
+															"properties": {
+																"title": {
+																	"type": "object",
+																	"properties": {
+																		"textId": {
+																			"type": "string"
+																		},
+																		"quantity": {
+																			"type": "integer"
+																		}
+																	}
+																},
+																"iconId": {
+																	"type": "string"
+																},
+																"subtitle": {
+																	"type": "object",
+																	"properties": {
+																		"textId": {
+																			"type": "string"
+																		},
+																		"quantity": {
+																			"type": "integer"
+																		}
+																	}
+																}
+															}
+														}
+													},
+													"features": {
+														"type": "array",
+														"items": {
+															"type": "string"
+														}
+													},
+													"includedFeatures": {
+														"type": "array",
+														"items": {
+															"type": "string"
+														}
+													}
+												}
+											}
+										},
+										"products": {
+											"$ref": "#/components/schemas/ShopProductCatalog"
+										}
+									},
+									"x-original-type": "ProductsWithDetailsResponseDto",
+									"required": [
+										"productDetails",
+										"products"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"summary": "Get shop products with details",
-				"x-wip": true
+				}
 			}
 		},
 		"/v3/profile-insights/{profileId}": {
@@ -14229,7 +15229,7 @@
 					}
 				],
 				"summary": "Get Right Now feed",
-				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
+				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets. A post stays listed near where it was posted after its author moves, while `distance`, `lat` and `lon` follow the author's current location. Reading the feed refreshes the caller's `onlineUntil`. v4, v5 and v6 return the same items, discreet posts included.",
 				"parameters": [
 					{
 						"name": "sort",
@@ -14284,6 +15284,12 @@
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:client_action` (`Action not allowed at this time`) until the caller sets a location with [Update location](/grindr-api/browse/location#update-location)."
+					},
+					"500": {
+						"description": "`urn:gr:err:internal_error` for a `sexualPositions` value that is not a list of integers, such as `abc`."
 					}
 				}
 			}
@@ -14300,7 +15306,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v6)",
-				"description": "Get the Right Now feed (v6), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
+				"description": "Get the Right Now feed (v6), with the same items, response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -14311,6 +15317,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"500": {
+						"description": "`urn:gr:err:internal_error` for a `sexualPositions` value that is not a list of integers, such as `abc`."
 					}
 				},
 				"parameters": [
@@ -15406,7 +16415,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, `mediaId` from [POST /v2/media/upload](/grindr-api/right-now#upload-right-now-media-v2-wip)"
+											"description": "long integer, `mediaId` from [POST /v2/media/upload](/grindr-api/right-now#upload-right-now-media-v2)"
 										}
 									}
 								}
@@ -15736,7 +16745,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media-wip) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2-wip)"
+											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2)"
 										}
 									}
 								}
@@ -15780,7 +16789,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media-wip) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2-wip)"
+											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2)"
 										}
 									}
 								}
@@ -15879,7 +16888,7 @@
 					"ACTIVE_WITH_BOOST",
 					"NONE"
 				],
-				"description": "Right Now attribution status. Sent as a plain string under key `rightNowStatus`; unrecognized/absent values are treated as NONE by the official client.",
+				"description": "Right Now attribution status. Sent as a plain string under key `rightNowStatus`.",
 				"x-render-on-tag": "right-now"
 			},
 			"RightNowShareLocation": {
@@ -20460,7 +21469,7 @@
 					"postStatus": {
 						"type": "string",
 						"nullable": true,
-						"description": "string or `null`. Opaque: the chat body carries it as a plain string, and nothing compares it against the Right Now post statuses (`AWAITING_PAYMENT`, `AWAITING_MODERATION`, `ACTIVE`, `EXPIRED`, `HIDDEN`), so reusing those values is a suspicion rather than a fact."
+						"description": "string or `null`, the post's `postStatus`, e.g. `\"ACTIVE\"`"
 					},
 					"postId": {
 						"type": "integer",
@@ -20474,7 +21483,7 @@
 						}
 					}
 				},
-				"description": "Body for `\"RightNowRequest\"` message type. Receive-only — there is no send payload for it.",
+				"description": "Body for `\"RightNowRequest\"` message type. Receive-only — there is no send payload for it. The post author sends it when accepting a request with [Update Right Now request](/grindr-api/right-now#update-right-now-request).",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
 					"requestId",
@@ -24297,6 +25306,10 @@
 			},
 			"RightNowFeedResponse": {
 				"type": "object",
+				"required": [
+					"items",
+					"viewerCount"
+				],
 				"properties": {
 					"items": {
 						"type": "array",
@@ -24313,7 +25326,10 @@
 			},
 			"RightNowFeedResponseItem": {
 				"type": "object",
-				"description": "A feed item, discriminated by `type`. Unrecognized `type` values are tolerated by the client (mapped to an unknown/ignored item), so new post kinds may appear.",
+				"required": [
+					"type"
+				],
+				"description": "A feed item, discriminated by `type`.",
 				"properties": {
 					"type": {
 						"type": "string",
@@ -24324,7 +25340,8 @@
 							"discreet_right_now_post_v1",
 							"discreet_locked_post_v1",
 							"upsell_insert_v1"
-						]
+						],
+						"description": "string, `\"right_now_post_v3\"` ([RightNowPost](/grindr-api/right-now#rightnowpost)), `\"locked_post_v1\"` ([LockedPost](/grindr-api/right-now#lockedpost)), `\"curated_post_v1\"` ([CuratedPost](/grindr-api/right-now#curatedpost)), `\"discreet_right_now_post_v1\"` ([DiscreetPost](/grindr-api/right-now#discreetpost)), `\"discreet_locked_post_v1\"` ([DiscreetLockedPost](/grindr-api/right-now#discreetlockedpost)) or `\"upsell_insert_v1\"` ([UpsellInsert](/grindr-api/right-now#upsellinsert))"
 					},
 					"data": {
 						"type": "object"
@@ -24365,12 +25382,16 @@
 			},
 			"CuratedPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"curated_post_v1"
-						]
+						],
+						"description": "string, `\"curated_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/CuratedPostData"
@@ -24380,12 +25401,16 @@
 			},
 			"RightNowPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"right_now_post_v3"
-						]
+						],
+						"description": "string, `\"right_now_post_v3\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/PostData"
@@ -24395,12 +25420,16 @@
 			},
 			"LockedPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"locked_post_v1"
-						]
+						],
+						"description": "string, `\"locked_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/PostData"
@@ -24410,6 +25439,17 @@
 			},
 			"PostData": {
 				"type": "object",
+				"required": [
+					"@type",
+					"id",
+					"profileId",
+					"media",
+					"hosting",
+					"posted",
+					"expiration",
+					"recentlyChatted",
+					"favorite"
+				],
 				"properties": {
 					"@type": {
 						"type": "string",
@@ -24461,7 +25501,7 @@
 							"xtra_post_v1",
 							"unlimited_post_v1"
 						],
-						"description": "locked-post kind; present only on `locked_post_v1`; may be absent"
+						"description": "string, `\"xtra_post_v1\"` or `\"unlimited_post_v1\"`, locked-post kind; present only on `locked_post_v1`; may be absent"
 					},
 					"hosting": {
 						"type": "boolean"
@@ -24485,16 +25525,16 @@
 					"lat": {
 						"type": "number",
 						"format": "double",
-						"description": "Latitude; may be absent."
+						"description": "number, latitude; may be absent"
 					},
 					"lon": {
 						"type": "number",
 						"format": "double",
-						"description": "Longitude; may be absent."
+						"description": "number, longitude; may be absent"
 					},
 					"isOnPrep": {
 						"type": "boolean",
-						"description": "Whether the profile is on PrEP."
+						"description": "boolean, whether the profile is on PrEP; absent on `locked_post_v1`"
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -24507,7 +25547,8 @@
 						"enum": [
 							"image_v1",
 							"album_v1"
-						]
+						],
+						"description": "string, `\"image_v1\"` or `\"album_v1\"`"
 					},
 					"data": {
 						"type": "object",
@@ -24530,7 +25571,7 @@
 							},
 							"state": {
 								"type": "string",
-								"description": "moderation state, e.g. `APPROVED`"
+								"description": "string, moderation state, known values: `\"PENDING\"`, `\"APPROVED\"`, `\"REJECTED\"`, `\"DELETED\"`"
 							},
 							"reason": {
 								"type": "string",
@@ -24569,7 +25610,8 @@
 							"tutorial_australia_v1",
 							"tutorial_hosting_v1",
 							"tutorial_dense_market_v1"
-						]
+						],
+						"description": "string, `\"tutorial_australia_v1\"`, `\"tutorial_hosting_v1\"` or `\"tutorial_dense_market_v1\"`"
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -24586,7 +25628,8 @@
 						"enum": [
 							"xtra_upsell_v1",
 							"unlimited_upsell_v1"
-						]
+						],
+						"description": "string, `\"xtra_upsell_v1\"` or `\"unlimited_upsell_v1\"`"
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -24596,7 +25639,7 @@
 				"properties": {
 					"@type": {
 						"type": "string",
-						"description": "server post-data label"
+						"description": "server post-data label, e.g. `RightNowFeedItemData$DiscreetRightNowPostV1`"
 					},
 					"id": {
 						"type": "integer",
@@ -24621,6 +25664,24 @@
 						"type": "integer",
 						"description": "distance in meters; may be absent"
 					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"description": "number, latitude; may be absent"
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"description": "number, longitude; may be absent"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"xtra_post_v1",
+							"unlimited_post_v1"
+						],
+						"description": "string, `\"xtra_post_v1\"` or `\"unlimited_post_v1\"`, locked-post kind; may be absent"
+					},
 					"hosting": {
 						"type": "boolean"
 					},
@@ -24636,20 +25697,49 @@
 					},
 					"profileFields": {
 						"type": "object",
-						"description": "discreet profile fields; may be absent"
+						"description": "object, the author's profile values",
+						"properties": {
+							"age": {
+								"type": "integer",
+								"nullable": true
+							},
+							"height": {
+								"type": "number",
+								"nullable": true
+							},
+							"weight": {
+								"type": "number",
+								"nullable": true
+							},
+							"position": {
+								"type": "integer",
+								"nullable": true
+							}
+						}
 					}
 				},
+				"required": [
+					"id",
+					"hosting",
+					"posted",
+					"expiration",
+					"profileFields"
+				],
 				"x-render-on-tag": "right-now",
-				"description": "Discreet posts were not present in available captures; shape derived from the app model (`RightNowDiscreetPostResponse`)."
+				"description": "Has no `profileId`; reach the author with [Send Right Now request](/grindr-api/right-now#send-right-now-request)."
 			},
 			"DiscreetPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"discreet_right_now_post_v1"
-						]
+						],
+						"description": "string, `\"discreet_right_now_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/DiscreetPostData"
@@ -24659,12 +25749,16 @@
 			},
 			"DiscreetLockedPost": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"discreet_locked_post_v1"
-						]
+						],
+						"description": "string, `\"discreet_locked_post_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/DiscreetPostData"
@@ -24674,12 +25768,16 @@
 			},
 			"UpsellInsert": {
 				"type": "object",
+				"required": [
+					"type"
+				],
 				"properties": {
 					"type": {
 						"type": "string",
 						"enum": [
 							"upsell_insert_v1"
-						]
+						],
+						"description": "string, `\"upsell_insert_v1\"`"
 					},
 					"data": {
 						"$ref": "#/components/schemas/UpsellInsertData"
@@ -24707,8 +25805,13 @@
 			},
 			"RightNowMediaUploadResponse": {
 				"type": "object",
-				"description": "Response from either Right Now media upload version. Attach mediaId using the image_v1/data.id edit payload.",
+				"description": "Response from either Right Now media upload version. Attach mediaId as image_v1 data.id when creating or editing a post.",
 				"x-render-on-tag": "right-now",
+				"required": [
+					"mediaId",
+					"url",
+					"thumbnailUrl"
+				],
 				"properties": {
 					"mediaId": {
 						"type": "integer",
@@ -24723,6 +25826,73 @@
 						"format": "uri"
 					}
 				}
+			},
+			"RightNowPostRequest": {
+				"type": "object",
+				"required": [
+					"shareLocation",
+					"media",
+					"hosting"
+				],
+				"properties": {
+					"text": {
+						"type": "string",
+						"description": "string, optional"
+					},
+					"shareLocation": {
+						"$ref": "#/components/schemas/RightNowShareLocation"
+					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"description": "number, optional"
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"description": "number, optional"
+					},
+					"locationRadius": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "integer, location precision from 0 to 100, not a distance in meters, optional"
+					},
+					"media": {
+						"type": "array",
+						"description": "array of objects",
+						"items": {
+							"type": "object",
+							"required": [
+								"type",
+								"data"
+							],
+							"properties": {
+								"type": {
+									"type": "string",
+									"description": "`\"image_v1\"`"
+								},
+								"data": {
+									"type": "object",
+									"required": [
+										"id"
+									],
+									"properties": {
+										"id": {
+											"type": "integer",
+											"format": "int64",
+											"description": "long integer, the `mediaId` returned by [Upload Right Now media](/grindr-api/right-now#upload-right-now-media) or [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2); one `mediaId` can be attached to more than one post"
+										}
+									}
+								}
+							}
+						}
+					},
+					"hosting": {
+						"type": "boolean"
+					}
+				},
+				"x-render-on-tag": "right-now"
 			},
 			"RightNowPostDetails": {
 				"type": "object",
@@ -24752,8 +25922,7 @@
 						"nullable": true
 					},
 					"hosting": {
-						"type": "boolean",
-						"description": "boolean, may be absent"
+						"type": "boolean"
 					},
 					"activeText": {
 						"type": "string",
@@ -24791,6 +25960,7 @@
 							"rejectReasons": {
 								"type": "array",
 								"nullable": true,
+								"description": "array of strings or `null`, known values: `\"BULLYING\"`, `\"SELF_HARM\"`, `\"DRUG_PATTERNS\"`, `\"HATE_SPEECH\"`, `\"SOL_SEX\"`, `\"SPAM_DISRUPT\"`, `\"UNDERAGE\"`, `\"OTHER\"`",
 								"items": {
 									"type": "string"
 								}
@@ -24832,7 +26002,7 @@
 								},
 								"state": {
 									"type": "string",
-									"description": "moderation state, e.g. `APPROVED`"
+									"description": "string, moderation state, known values: `\"PENDING\"`, `\"APPROVED\"`, `\"REJECTED\"`, `\"DELETED\"`"
 								},
 								"reason": {
 									"type": "string",
@@ -24860,16 +26030,18 @@
 					"lat": {
 						"type": "number",
 						"format": "double",
-						"nullable": true
+						"nullable": true,
+						"description": "number or `null`, the author's current location set by [Update location](/grindr-api/browse/location#update-location); about 10 s after creation a fixed displacement (same distance and direction) is added, except in the create response and on an `AWAITING_PAYMENT` post. The post moves with the author, and a new `locationRadius` picks a new displacement"
 					},
 					"lon": {
 						"type": "number",
 						"format": "double",
-						"nullable": true
+						"nullable": true,
+						"description": "number or `null`, same as `lat`"
 					},
 					"postStatus": {
 						"type": "string",
-						"description": "Post visibility status, including ACTIVE and HIDDEN. Hiding a post retains its data."
+						"description": "string, known values: `\"AWAITING_PAYMENT\"`, `\"AWAITING_MODERATION\"`, `\"ACTIVE\"`, `\"EXPIRED\"`, `\"HIDDEN\"`; a hidden post keeps its data"
 					},
 					"shareLocation": {
 						"allOf": [
@@ -24889,11 +26061,12 @@
 					"isDiscreet": {
 						"type": "string",
 						"nullable": true,
-						"description": "string, `\"TRUE\"`, `\"FALSE\"` or `null`"
+						"description": "string or `null`: `\"NOT_SELECTED\"` on a new post, `\"FALSE\"` after a v4 edit of a `NOT_SELECTED` post, `\"TRUE\"` once the post is discreet"
 					},
 					"sharedFields": {
 						"type": "array",
 						"nullable": true,
+						"description": "array of strings or `null`, `\"AGE\"`, `\"HEIGHT\"`, `\"WEIGHT\"`, `\"POSITION\"`",
 						"items": {
 							"type": "string"
 						}
@@ -24908,10 +26081,24 @@
 					}
 				},
 				"x-render-on-tag": "right-now",
-				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state.",
+				"description": "Right Now post returned by the own-post, profile-post and create endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state.",
 				"required": [
 					"id",
-					"profileId"
+					"profileId",
+					"posted",
+					"expiration",
+					"hosting",
+					"activeText",
+					"moderatedText",
+					"media",
+					"lat",
+					"lon",
+					"postStatus",
+					"shareLocation",
+					"locationRadius",
+					"isDiscreet",
+					"sharedFields",
+					"boostUpsellOfferAvailableUntil"
 				]
 			},
 			"RightNowPostResponse": {
@@ -24930,6 +26117,255 @@
 					}
 				},
 				"x-render-on-tag": "right-now"
+			},
+			"Offer": {
+				"type": "object",
+				"required": [
+					"offerType",
+					"offerProductSku",
+					"baseProductSku",
+					"offerDurationMs",
+					"roleName",
+					"subscriptionDuration"
+				],
+				"properties": {
+					"offerType": {
+						"type": "string",
+						"description": "string, `WINBACK`, `INTRODUCTORY`, `UPGRADE`, `LOYALTY_UNLIMITED` or `LOYALTY_UPGRADE`"
+					},
+					"offerProductSku": {
+						"type": "string"
+					},
+					"baseProductSku": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"offerDurationMs": {
+						"type": "integer",
+						"description": "integer, offer duration in milliseconds"
+					},
+					"roleName": {
+						"type": "string"
+					},
+					"subscriptionDuration": {
+						"type": "integer"
+					},
+					"expirationEpochMs": {
+						"$ref": "#/components/schemas/TimestampMs"
+					},
+					"offerUuid": {
+						"type": "string"
+					}
+				}
+			},
+			"CatalogProduct": {
+				"type": "object",
+				"properties": {
+					"vendorProductId": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string",
+						"description": "string, `SUBSCRIPTION_PLAN` or `ONE_TIME_PURCHASE`"
+					},
+					"duration": {
+						"type": "integer",
+						"description": "integer, duration in the unit given by `interval`"
+					},
+					"interval": {
+						"type": "string",
+						"description": "string, `MINUTE`, `HOUR`, `DAY`, `WEEK`, `MONTH` or `YEAR`"
+					},
+					"trial": {
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "string"
+							},
+							"duration": {
+								"type": "integer"
+							}
+						},
+						"nullable": true,
+						"required": [
+							"interval",
+							"duration"
+						]
+					},
+					"consumable": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"type": {
+								"type": "string",
+								"description": "string, `IMMEDIATE_USE` or `INVENTORY`"
+							},
+							"amount": {
+								"type": "integer",
+								"description": "integer, number of consumable units"
+							}
+						},
+						"nullable": true,
+						"required": [
+							"name",
+							"type",
+							"amount"
+						]
+					},
+					"roles": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"isPeakTime": {
+						"type": "boolean"
+					},
+					"strikeThroughPriceSku": {
+						"type": "string",
+						"nullable": true
+					},
+					"offerExpiresAt": {
+						"type": "integer",
+						"nullable": true,
+						"description": "integer, offer expiration time; sent by `/v3/store/googleplay/products/store` and shop routes; may be absent"
+					}
+				},
+				"x-render-on-tag": "commerce/storeapirest",
+				"required": [
+					"vendorProductId",
+					"type",
+					"duration",
+					"interval",
+					"trial",
+					"consumable",
+					"roles",
+					"isPeakTime",
+					"strikeThroughPriceSku"
+				]
+			},
+			"StoreProductCatalog": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"products": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/CatalogProduct"
+						}
+					},
+					"rewards": {
+						"type": "array",
+						"items": {},
+						"description": "array, only sent by `/v3/store/googleplay/products/store`; may be absent. Item structure is undocumented."
+					},
+					"defaultSelectionDuration": {
+						"type": "string",
+						"nullable": true,
+						"description": "string, only sent by `/v3/store/googleplay/products/store`; may be absent"
+					}
+				},
+				"x-render-on-tag": "commerce/storeapirest",
+				"required": [
+					"name",
+					"products"
+				]
+			},
+			"ShopProductCatalog": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"products": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"product": {
+									"$ref": "#/components/schemas/CatalogProduct"
+								},
+								"purchaseAllowed": {
+									"type": "boolean"
+								}
+							},
+							"required": [
+								"product",
+								"purchaseAllowed"
+							]
+						}
+					},
+					"xtraUpsellProfileImageUrls": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"xtraUpsellProfileCount": {
+						"type": "integer"
+					},
+					"rewards": {
+						"type": "array",
+						"items": {},
+						"description": "Item structure is undocumented."
+					},
+					"defaultSelectionDuration": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"x-render-on-tag": "commerce/storeapirest",
+				"required": [
+					"name",
+					"products",
+					"xtraUpsellProfileImageUrls",
+					"xtraUpsellProfileCount",
+					"rewards",
+					"defaultSelectionDuration"
+				]
+			},
+			"ConsentAgreement": {
+				"type": "object",
+				"properties": {
+					"profileId": {
+						"type": "integer"
+					},
+					"agreementType": {
+						"type": "string",
+						"description": "string, e.g. `TOP_PICKS`"
+					},
+					"locale": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"clientVersion": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"version": {
+						"type": "integer"
+					},
+					"createdAt": {
+						"$ref": "#/components/schemas/TimestampMs"
+					},
+					"status": {
+						"type": "string",
+						"description": "string, `ACCEPTED`, `REJECTED` or `REVOKED`"
+					}
+				},
+				"required": [
+					"profileId",
+					"agreementType",
+					"locale",
+					"clientVersion",
+					"version",
+					"createdAt",
+					"status"
+				]
 			}
 		}
 	},

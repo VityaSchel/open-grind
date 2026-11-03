@@ -274,3 +274,113 @@ test("the context menu lifts a reply we sent with its quote intact", async ({
 
 	await closeContextMenu(page);
 });
+
+test("an incoming album reaction keeps its badge and keyboard actions beside the fire", async ({
+	page,
+}) => {
+	await openConversation(page);
+	await receiveMessage(page, {
+		...theirMessage(Date.now() + 60_000),
+		type: "AlbumContentReaction",
+		body: {
+			albumId: 5001,
+			albumContentId: 50011,
+			ownerProfileId: THEM,
+			previewUrl: "https://picsum.photos/seed/album-5001-cover/300/400",
+			viewable: true,
+			expiresAt: null,
+			contentType: "image/jpeg",
+		},
+		reactions: [{ profileId: ME, reactionType: 1 }],
+	});
+	const reaction = page
+		.getByRole("article")
+		.filter({
+			has: page.getByRole("button", {
+				name: "Open reacted album content",
+			}),
+		});
+	const fire = reaction.getByRole("img", { name: "Fire reaction" }).first();
+	const fireBox = (await fire.boundingBox())!;
+	const badge = (await reaction
+		.locator('[data-slot="badge"]')
+		.boundingBox())!;
+	expect(Math.abs(badge.x - (fireBox.x + fireBox.width))).toBeLessThan(24);
+	await page.keyboard.press("Tab");
+	const actions = reaction.getByRole("button", { name: "Message actions" });
+	await actions.focus();
+	await expect(actions).toBeVisible();
+	const actionsBox = (await actions.boundingBox())!;
+	expect(actionsBox.x).toBeGreaterThan(fireBox.x + fireBox.width);
+	expect(actionsBox.x - (fireBox.x + fireBox.width)).toBeLessThan(32);
+	await actions.press("Enter");
+	await expect(page.locator("dialog[open]")).toBeVisible();
+	const liftedFire = page
+		.locator("dialog[open]")
+		.getByRole("img", { name: "Fire reaction" })
+		.first();
+	expect((await liftedFire.boundingBox())!.x).toBeCloseTo(fireBox.x, 0);
+});
+
+for (const type of ["ProfilePhotoReply", "AlbumContentReply"] as const) {
+	for (const isOut of [false, true]) {
+		test(`${type} menu ignores media actions and dismisses beside the quote, outgoing=${isOut}`, async ({
+			page,
+		}) => {
+			await openConversation(page);
+			const text =
+				"A long reply that makes the message wider than its quoted media preview.";
+			await receiveMessage(page, {
+				...(isOut
+					? ourMessage(Date.now() + 60_000)
+					: theirMessage(Date.now() + 60_000)),
+				type,
+				body:
+					type === "ProfilePhotoReply"
+						? { imageHash: "a".repeat(40), photoContentReply: text }
+						: {
+								albumId: 5001,
+								albumContentId: 50011,
+								ownerProfileId: THEM,
+								previewUrl:
+									"https://picsum.photos/seed/album-5001-cover/300/400",
+								viewable: true,
+								expiresAt: null,
+								contentType: "image/jpeg",
+								albumContentReply: text,
+							},
+			});
+			await page
+				.getByRole("article")
+				.filter({ hasText: text })
+				.click({ button: "right" });
+			const menu = page.locator("dialog[open]");
+			await expect(menu).toBeVisible();
+			const quote = menu.locator(QUOTE);
+			const media = quote.locator("button");
+			expect(
+				await media.evaluate(
+					(button) => button.closest("[inert]") !== null,
+				),
+			).toBe(true);
+			const mediaBox = (await media.boundingBox())!;
+			await page.mouse.click(
+				mediaBox.x + mediaBox.width / 2,
+				mediaBox.y + mediaBox.height / 2,
+			);
+			await expect(menu).toBeVisible();
+			await expect(page.locator(".pswp")).toHaveCount(0);
+			await menu.getByText(text, { exact: true }).click();
+			await expect(menu).toBeVisible();
+			const quoteBox = (await quote.boundingBox())!;
+			const bubbleBox = (await menu
+				.getByText(text, { exact: true })
+				.boundingBox())!;
+			const x = isOut ? quoteBox.x - 8 : quoteBox.x + quoteBox.width + 8;
+			expect(x).toBeGreaterThan(bubbleBox.x);
+			expect(x).toBeLessThan(bubbleBox.x + bubbleBox.width);
+			await page.mouse.click(x, quoteBox.y + quoteBox.height / 2);
+			await expect(menu).toHaveCount(0);
+		});
+	}
+}

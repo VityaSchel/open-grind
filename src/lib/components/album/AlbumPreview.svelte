@@ -1,5 +1,4 @@
 <script lang="ts">
-	import "photoswipe/style.css";
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
 	import type { Snippet } from "svelte";
@@ -19,6 +18,7 @@
 
 	let {
 		albumId,
+		albumContentId,
 		coverUrl,
 		hasPhoto,
 		hasVideo,
@@ -27,9 +27,12 @@
 		contentClass,
 		attach = () => {},
 		onexpired,
+		onreply,
+		onreact,
 		children,
 	}: {
 		albumId: number;
+		albumContentId?: number;
 		coverUrl: string | null;
 		hasPhoto: boolean;
 		hasVideo: boolean;
@@ -38,6 +41,8 @@
 		contentClass?: ClassValue;
 		attach?: Attachment<HTMLElement>;
 		onexpired?: () => Promise<void>;
+		onreact?: (slide: AlbumSlide) => void;
+		onreply?: (reply: { slide: AlbumSlide; text: string }) => void;
 		children?: Snippet;
 	} = $props();
 
@@ -86,7 +91,10 @@
 		const controller = new AbortController();
 		openAlbumLightbox({
 			albumId,
+			albumContentId,
 			slides,
+			onreply,
+			onreact,
 			signal: controller.signal,
 			onClosed: () => (preview = { status: "idle" }),
 		}).catch((error: unknown) => {

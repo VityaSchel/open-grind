@@ -13,6 +13,7 @@ vi.mock("$lib/demo/config", async (importOriginal) => {
 	};
 });
 
+import { conversationIdFor } from "$lib/chat/conversation-id";
 import { conversationEntrySchema } from "$lib/model/messaging/conversations";
 import {
 	previewFromMessage,
@@ -20,8 +21,8 @@ import {
 	quoteLabel,
 } from "$lib/model/messaging/message-preview";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { demoMeProfileId } from "./config";
 import type { DemoInbox } from "./mock/conversation-seeds";
-import { conversationIdFor } from "./mock/conversations";
 import { demoRoute } from "./route";
 import { screenshotScene } from "./screenshot-scene";
 
@@ -107,7 +108,7 @@ function inboxPage(page: number) {
 function messagesOf(withId: number) {
 	return messagesResponseSchema.parse(
 		route({
-			path: `/v5/chat/conversation/${conversationIdFor(withId)}/message?profile=true`,
+			path: `/v5/chat/conversation/${conversationIdFor({ profileId: withId, ourProfileId: demoMeProfileId })}/message?profile=true`,
 		}),
 	);
 }
@@ -163,7 +164,10 @@ describe("a scene's inbox", () => {
 
 	it("answers single messages from the scene's threads", () => {
 		screenshotScene.inbox = inbox;
-		const conversationId = conversationIdFor(QUOTING_ID);
+		const conversationId = conversationIdFor({
+			profileId: QUOTING_ID,
+			ourProfileId: demoMeProfileId,
+		});
 		const [, location] = messagesOf(QUOTING_ID).messages;
 		const { message } = z
 			.object({ message: apiResponseMessageSchema })
