@@ -14,6 +14,7 @@
 			case "android":
 				return `geo:${message.lat},${message.lon}?q=${message.lat},${message.lon}`;
 			case "ios":
+				return `https://maps.apple.com/?ll=${message.lat},${message.lon}&q=${message.lat},${message.lon}`;
 			case "linux":
 			case "macos":
 			case "windows":

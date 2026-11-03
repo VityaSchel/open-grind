@@ -9,6 +9,8 @@ import { runningOn } from "#lib/test/platform.ts";
 import Message from "./Message.svelte";
 
 const GEO_URL = "geo:51.507456,-0.127812?q=51.507456,-0.127812";
+const APPLE_MAPS_URL =
+	"https://maps.apple.com/?ll=51.507456,-0.127812&q=51.507456,-0.127812";
 const WEB_URL =
 	"https://www.openstreetmap.org/?mlat=51.507456&mlon=-0.127812#map=16/51.507456/-0.127812";
 const LOCATION_NAME = "Location 51.50746, -0.12781 Open map";
@@ -90,7 +92,21 @@ describe("location messages", () => {
 		},
 	);
 
-	it.each(["ios", "linux", "macos", "windows"] as const)(
+	it("opens Apple Maps at the exact coordinates on ios", async () => {
+		runningOn("ios");
+		renderLocation();
+		const link = screen.getByRole("link", { name: LOCATION_NAME });
+		expect(link.getAttribute("href")).toBe(APPLE_MAPS_URL);
+
+		await pointerClick(link, "mouse");
+		await vi.advanceTimersByTimeAsync(300);
+
+		expect(openExternalLink).toHaveBeenCalledExactlyOnceWith(
+			APPLE_MAPS_URL,
+		);
+	});
+
+	it.each(["linux", "macos", "windows"] as const)(
 		"opens OpenStreetMap at the exact coordinates on %s",
 		async (platform) => {
 			runningOn(platform);
