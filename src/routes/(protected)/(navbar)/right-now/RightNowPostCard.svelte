@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ChatIcon from "phosphor-svelte/lib/ChatIcon";
+	import HourglassMediumIcon from "phosphor-svelte/lib/HourglassMediumIcon";
+	import PencilIcon from "phosphor-svelte/lib/PencilIcon";
 
 	import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
@@ -10,8 +12,17 @@
 	import RightNowPostMeta from "./RightNowPostMeta.svelte";
 	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
-	let { post, ourProfileId }: { post: PostData; ourProfileId: number } =
-		$props();
+	let {
+		post,
+		ourProfileId,
+		underReview = false,
+		onedit,
+	}: {
+		post: PostData;
+		ourProfileId: number;
+		underReview?: boolean;
+		onedit: (() => void) | null;
+	} = $props();
 
 	const headlineId = $props.id();
 
@@ -67,6 +78,15 @@
 		>
 			{post.text || joinedHeadline}
 		</h2>
+		{#if ownPost && underReview}
+			<p
+				data-slot="right-now-post-review"
+				class="flex items-center gap-1 text-sm text-muted-foreground"
+			>
+				<HourglassMediumIcon class="size-4" />
+				Under review
+			</p>
+		{/if}
 		{#if photo}
 			<RightNowPostPhoto media={photo} />
 		{/if}
@@ -76,7 +96,19 @@
 				distance={post.distance}
 				hosting={post.hosting}
 			/>
-			{#if !ownPost}
+			{#if ownPost}
+				{#if onedit !== null}
+					<Button
+						variant="ghost"
+						size="sm"
+						aria-label="Edit your post"
+						onclick={onedit}
+					>
+						<PencilIcon class="size-4" />
+						Edit
+					</Button>
+				{/if}
+			{:else}
 				<Button
 					variant="ghost"
 					size="icon"

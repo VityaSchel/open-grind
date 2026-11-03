@@ -5,7 +5,9 @@
 	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
+	import RightNowPostControls from "./post/RightNowPostControls.svelte";
 	import { getRightNowFeedState } from "./right-now-feed-state.svelte";
+	import { getRightNowPostState } from "./right-now-post-state.svelte";
 	import RightNowFeedList from "./RightNowFeedList.svelte";
 	import QuickFilters from "./top-bar/QuickFilters.svelte";
 
@@ -13,8 +15,10 @@
 		$props();
 
 	const feed = untrack(() => getRightNowFeedState(ourProfileId));
+	const ownPost = untrack(() => getRightNowPostState(ourProfileId));
 
 	let container: HTMLDivElement | null = $state(null);
+	let sheetOpen = $state(false);
 
 	$effect(() => feed.attachView());
 
@@ -51,8 +55,18 @@
 			data-refresh-content
 			class="mx-auto min-h-overscrollable flex w-full max-w-160 flex-col px-4 pt-header-clear-17 pb-nav-clear"
 		>
-			<RightNowFeedList {feed} {ourProfileId} />
+			<RightNowFeedList
+				{feed}
+				{ourProfileId}
+				ownPostUnderReview={ownPost.pendingModeration}
+				onedit={ownPost.post === null ? null : () => (sheetOpen = true)}
+			/>
+			<div
+				data-slot="right-now-join-clearance"
+				class="h-12 shrink-0"
+			></div>
 		</div>
 	</div>
 	<ScrollToTopButton {container} class="bottom-nav-clear" />
+	<RightNowPostControls post={ownPost} bind:sheetOpen />
 </main>

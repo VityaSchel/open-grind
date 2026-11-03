@@ -27,6 +27,8 @@ const mainNavigation = (page: Page) =>
 const subpage = (page: Page) => page.locator('[data-slot="subpage-scroller"]');
 const rightNowPost = (page: Page) =>
 	page.locator('[data-slot="right-now-post"]');
+const rightNowJoin = (page: Page) =>
+	page.getByRole("button", { name: "Join · 3 free" });
 const suggestAnEdit = (page: Page) =>
 	page.getByRole("link", { name: "Suggest an edit" });
 
@@ -69,6 +71,7 @@ export const SURFACES: Surface[] = [
 				.getByRole("link", { name: "Right Now" })
 				.click();
 			await shows(rightNowPost)(page);
+			await shows(rightNowJoin)(page);
 		},
 	},
 	{

@@ -105,5 +105,20 @@ test.describe("every control has an accessible name", () => {
 			await page.keyboard.press("Escape");
 			await expect(sheet).toBeHidden();
 		}
+
+		await page
+			.getByRole("button", { name: "Join · 3 free" })
+			.click({ timeout: 60_000 });
+		const joinNow = page
+			.getByRole("alertdialog", { name: "Join Right Now?" })
+			.getByRole("button", { name: "Join now" });
+		await joinNow.waitFor();
+		await expectEveryControlNamed(page, "Join Right Now confirmation");
+		await joinNow.click();
+		await page
+			.getByRole("dialog", { name: "Right Now" })
+			.getByRole("switch", { name: "Show my post" })
+			.waitFor();
+		await expectEveryControlNamed(page, "Right Now post sheet");
 	});
 });

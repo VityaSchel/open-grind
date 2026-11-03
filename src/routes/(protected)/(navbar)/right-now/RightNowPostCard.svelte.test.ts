@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { conversationIdFor } from "#lib/chat/conversation-id.ts";
@@ -14,7 +14,14 @@ const AUTHOR_ID = 200;
 function renderCard({
 	overrides = {},
 	ourProfileId = OUR_PROFILE_ID,
-}: { overrides?: Partial<PostData>; ourProfileId?: number } = {}) {
+	underReview = false,
+	onedit = vi.fn(),
+}: {
+	overrides?: Partial<PostData>;
+	ourProfileId?: number;
+	underReview?: boolean;
+	onedit?: (() => void) | null;
+} = {}) {
 	return render(RightNowPostCard, {
 		props: {
 			post: postData({
@@ -23,6 +30,8 @@ function renderCard({
 				...overrides,
 			}),
 			ourProfileId,
+			underReview,
+			onedit,
 		},
 	});
 }
@@ -143,6 +152,54 @@ describe("a Right Now post card", () => {
 		).toBeTruthy();
 		expect(screen.queryByRole("link", { name: /^Message/ })).toBeNull();
 		expect(screen.getAllByRole("link")).toHaveLength(1);
+	});
+
+	it("offers Edit instead of Message on our own post", async () => {
+		const onedit = vi.fn();
+		renderCard({ ourProfileId: AUTHOR_ID, onedit });
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Edit your post" }),
+		);
+
+		expect(onedit).toHaveBeenCalledOnce();
+		expect(screen.queryByRole("link", { name: /^Message/ })).toBeNull();
+	});
+
+	it("offers neither Edit nor Message on our own post until our post is loaded", () => {
+		renderCard({ ourProfileId: AUTHOR_ID, onedit: null });
+
+		expect(
+			screen.queryByRole("button", { name: "Edit your post" }),
+		).toBeNull();
+		expect(screen.queryByRole("link", { name: /^Message/ })).toBeNull();
+	});
+
+	it("offers no Edit button on someone else's post", () => {
+		renderCard();
+
+		expect(
+			screen.queryByRole("button", { name: "Edit your post" }),
+		).toBeNull();
+	});
+
+	it("shows Under review on our own post only while moderation is pending", () => {
+		const { container } = renderCard({
+			ourProfileId: AUTHOR_ID,
+			underReview: true,
+		});
+		expect(
+			container.querySelector('[data-slot="right-now-post-review"]')
+				?.textContent,
+		).toContain("Under review");
+		cleanup();
+
+		renderCard({ ourProfileId: AUTHOR_ID });
+		expect(screen.queryByText("Under review")).toBeNull();
+		cleanup();
+
+		renderCard({ underReview: true });
+		expect(screen.queryByText("Under review")).toBeNull();
 	});
 
 	it("marks hosting posts only", () => {

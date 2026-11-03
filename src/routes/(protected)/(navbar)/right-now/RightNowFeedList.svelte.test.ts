@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { discreetPostData, postData } from "./feed-post-test-helpers";
 import type {
@@ -34,6 +40,8 @@ describe("the Right Now feed list", () => {
 		render(RightNowFeedList, {
 			props: {
 				ourProfileId: OUR_PROFILE_ID,
+				ownPostUnderReview: false,
+				onedit: vi.fn(),
 				feed: stubFeed([
 					{
 						type: "right_now_post_v3",
@@ -89,5 +97,43 @@ describe("the Right Now feed list", () => {
 			);
 			expect(within(card).queryAllByRole("link")).toHaveLength(0);
 		}
+	});
+
+	it("marks our own post as under review and opens the editor from it", async () => {
+		const onedit = vi.fn();
+		render(RightNowFeedList, {
+			props: {
+				ourProfileId: OUR_PROFILE_ID,
+				ownPostUnderReview: true,
+				onedit,
+				feed: stubFeed([
+					{
+						type: "right_now_post_v3",
+						data: {
+							...postData({ id: 1, text: "Our post" }),
+							profileId: OUR_PROFILE_ID,
+						},
+					},
+					{
+						type: "right_now_post_v3",
+						data: postData({ id: 2, text: "Their post" }),
+					},
+				]),
+			},
+		});
+
+		const ours = screen.getByRole("article", { name: "Our post" });
+		const theirs = screen.getByRole("article", { name: "Their post" });
+		expect(within(ours).getByText("Under review")).toBeTruthy();
+		expect(within(theirs).queryByText("Under review")).toBeNull();
+		expect(
+			within(theirs).queryByRole("button", { name: "Edit your post" }),
+		).toBeNull();
+
+		await fireEvent.click(
+			within(ours).getByRole("button", { name: "Edit your post" }),
+		);
+
+		expect(onedit).toHaveBeenCalledOnce();
 	});
 });
