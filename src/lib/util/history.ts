@@ -1,23 +1,51 @@
 import { goto } from "$app/navigation";
 import { navigating, page } from "$app/state";
 
-export function canGoBack(): boolean {
-	return window.navigation?.canGoBack ?? history.length > 1;
+import { liveHistoryIndex } from "#lib/util/history-index.ts";
+import { historyLog } from "#lib/util/history-log.svelte.ts";
+
+function trustedNavigation():
+	| { navigation: Navigation; index: number }
+	| undefined {
+	const navigation = window.navigation;
+	const index = navigation?.currentEntry?.index;
+	if (!navigation || index === undefined || index < 0) return undefined;
+
+	const current = liveHistoryIndex();
+	if (
+		current !== undefined &&
+		navigation.entries().length < historyLog.span(current)
+	)
+		return undefined;
+	return { navigation, index };
 }
 
 function entryPathname(url: string): string {
 	return new URL(url).pathname || "/";
 }
 
-export function earlierPathnames(): (string | null)[] {
-	const index = window.navigation?.currentEntry?.index;
-	const entries = window.navigation?.entries();
-	if (!entries || index === undefined || index < 1) return [];
+export function canGoBack(): boolean {
+	const trusted = trustedNavigation();
+	if (trusted) return trusted.navigation.canGoBack;
 
-	return entries
-		.slice(0, index)
-		.reverse()
-		.map(({ url }) => (url ? entryPathname(url) : null));
+	const current = liveHistoryIndex();
+	return current !== undefined && historyLog.hasEntryBefore(current);
+}
+
+export function earlierPathnames(): (string | null)[] {
+	const trusted = trustedNavigation();
+	if (trusted) {
+		const { navigation, index } = trusted;
+		return navigation
+			.entries()
+			.slice(0, index)
+			.reverse()
+			.map(({ url }) => (url ? entryPathname(url) : null));
+	}
+
+	const current = liveHistoryIndex();
+	if (current === undefined) return [];
+	return historyLog.earlier({ index: current, limit: history.length - 1 });
 }
 
 export function traverseBackTo(pathname: string): boolean {

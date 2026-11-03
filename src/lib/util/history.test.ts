@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "$app/navigation";
 
+import { HISTORY_METADATA_KEY } from "#lib/util/history-index.ts";
 import {
 	canGoBack,
 	earlierPathnames,
@@ -169,11 +170,111 @@ describe("canGoBack", () => {
 		expect(canGoBack()).toBe(false);
 	});
 
-	it("falls back to the history depth", () => {
+	it("never counts the history depth as a screen behind this one", () => {
 		vi.stubGlobal("navigation", undefined);
 		vi.stubGlobal("history", { length: 2 });
 
-		expect(canGoBack()).toBe(true);
+		expect(canGoBack()).toBe(false);
+	});
+});
+
+describe("the history log", () => {
+	const LAUNCH = 1_762_200_000_000;
+
+	async function loadWithLog(paths: string[]) {
+		sessionStorage.clear();
+		vi.resetModules();
+		const { historyLog } = await import("#lib/util/history-log.svelte.ts");
+		for (const [step, pathname] of paths.entries())
+			historyLog.record({
+				index: LAUNCH + step,
+				pathname,
+				type: step === 0 ? "enter" : "link",
+				length: step + 1,
+			});
+		return await import("#lib/util/history.ts");
+	}
+
+	function standAt({ step, length }: { step: number; length: number }) {
+		const go = vi.fn();
+		vi.stubGlobal("history", {
+			state: { [HISTORY_METADATA_KEY]: { historyIndex: LAUNCH + step } },
+			length,
+			go,
+		});
+		return go;
+	}
+
+	function navigationWith({
+		paths,
+		index,
+	}: {
+		paths: string[];
+		index: number;
+	}) {
+		vi.stubGlobal("navigation", {
+			canGoBack: index > 0,
+			currentEntry: { index },
+			entries: () =>
+				paths.map((path) => ({ url: `https://app.test${path}` })),
+		});
+	}
+
+	it("walks back through the log without the Navigation API", async () => {
+		vi.stubGlobal("navigation", undefined);
+		const history = await loadWithLog([
+			"/",
+			"/settings",
+			"/settings/account",
+			"/settings/account/blocked",
+		]);
+		const go = standAt({ step: 3, length: 4 });
+
+		expect(history.canGoBack()).toBe(true);
+		expect(history.earlierPathnames()).toEqual([
+			"/settings/account",
+			"/settings",
+			"/",
+		]);
+
+		history.returnTo("/settings");
+
+		expect(go).toHaveBeenCalledExactlyOnceWith(-2);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it("has nothing behind the first entry, however deep history is", async () => {
+		vi.stubGlobal("navigation", undefined);
+		const history = await loadWithLog(["/settings"]);
+		standAt({ step: 0, length: 5 });
+
+		expect(history.canGoBack()).toBe(false);
+		expect(history.earlierPathnames()).toEqual([]);
+	});
+
+	it("takes over from a Navigation API that lost its entries when the page was relaunched", async () => {
+		const history = await loadWithLog(["/", "/chat", "/chat/1:2"]);
+		navigationWith({ paths: ["/chat/1:2"], index: 0 });
+		const go = standAt({ step: 2, length: 3 });
+
+		expect(history.canGoBack()).toBe(true);
+		expect(history.earlierPathnames()).toEqual(["/chat", "/"]);
+		history.returnTo("/chat");
+		expect(go).toHaveBeenCalledExactlyOnceWith(-1);
+
+		navigationWith({ paths: ["/chat/1:2"], index: -1 });
+		standAt({ step: 1, length: 3 });
+
+		expect(history.canGoBack()).toBe(true);
+		expect(history.earlierPathnames()).toEqual(["/"]);
+	});
+
+	it("trusts a Navigation API that holds at least the entries the log knows", async () => {
+		const history = await loadWithLog(["/", "/settings", "/settings/app"]);
+		navigationWith({ paths: ["/", "/chat", "/chat/1:2"], index: 2 });
+		standAt({ step: 2, length: 3 });
+
+		expect(history.earlierPathnames()).toEqual(["/chat", "/"]);
 	});
 });
 

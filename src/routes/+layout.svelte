@@ -34,6 +34,7 @@
 	import { startAddonUpdateWatch } from "#lib/updates/addon.svelte.ts";
 	import { updatesSelfManaged } from "#lib/updates/capability.svelte.ts";
 	import { startUpdateWatch } from "#lib/updates/updates-manager.ts";
+	import { recordHistory } from "#lib/util/history-log.svelte.ts";
 	import {
 		bottomBlurBarClearance,
 		bottomChromeClearance,
@@ -95,6 +96,8 @@
 	const onboarded = $derived(
 		preferencesLoaded() && preferencesSnapshot().onboardingComplete,
 	);
+
+	recordHistory();
 
 	beforeNavigate(() => abortBackdropBlurTrialGesture());
 

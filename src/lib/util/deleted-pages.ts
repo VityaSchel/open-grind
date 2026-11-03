@@ -39,8 +39,6 @@ function skipBackPast({
 	delta: number;
 	parent: string;
 }): () => void {
-	if (!window.navigation) return () => history.go(delta - 1);
-
 	const steps = earlierPathnames().findIndex(
 		(pathname) => !isDeleted(pathname),
 	);

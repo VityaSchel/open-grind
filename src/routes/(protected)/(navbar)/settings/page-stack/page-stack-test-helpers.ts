@@ -19,7 +19,13 @@ export function makeStack({
 	canGoBack?: boolean;
 	pushedFrom?: { path: string }[];
 } = {}) {
-	vi.stubGlobal("navigation", { canGoBack });
+	const index = canGoBack ? 1 : 0;
+	vi.stubGlobal("navigation", {
+		canGoBack,
+		currentEntry: { index },
+		entries: () =>
+			Array.from({ length: index + 1 }, () => ({ url: location.href })),
+	});
 
 	const pane = document.createElement("div");
 	pane.innerHTML = "<p>live</p>";

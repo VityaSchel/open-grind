@@ -4,6 +4,8 @@ import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { HISTORY_METADATA_KEY } from "#lib/util/history-index.ts";
+import { historyLog } from "#lib/util/history-log.svelte.ts";
 import BackButton from "./BackButton.svelte";
 
 const { afterNavigateCallbacks, gotoMock } = vi.hoisted(() => ({
@@ -17,12 +19,16 @@ vi.mock("$app/navigation", () => ({
 	goto: gotoMock,
 }));
 
+const LAUNCH = 1_762_200_000_000;
+
 function renderBackLink({
 	canGoBack,
 	historyLength = 1,
+	historyIndex,
 }: {
 	canGoBack?: boolean;
 	historyLength?: number;
+	historyIndex?: number;
 }) {
 	const back = vi.fn();
 	const index = canGoBack ? 1 : 0;
@@ -39,7 +45,14 @@ function renderBackLink({
 						})),
 				},
 	);
-	vi.stubGlobal("history", { length: historyLength, back });
+	vi.stubGlobal("history", {
+		length: historyLength,
+		back,
+		state:
+			historyIndex === undefined
+				? null
+				: { [HISTORY_METADATA_KEY]: { historyIndex } },
+	});
 	return {
 		back,
 		link: render(BackButton).getByRole("link", { name: "Back" }),
@@ -147,11 +160,37 @@ describe("BackButton", () => {
 		expect(back).not.toHaveBeenCalled();
 	});
 
-	it("goes back on a longer history where the Navigation API is missing", () => {
+	it("replaces the profile with Browse where the Navigation API is missing, however deep history is", () => {
 		const { back, link } = renderBackLink({ historyLength: 2 });
 
 		expect(clickFollowsLink(link)).toBe(false);
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replace: true,
+		});
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("goes back where the Navigation API is missing and the history log has a screen behind", () => {
+		historyLog.record({
+			index: LAUNCH,
+			pathname: "/",
+			type: "enter",
+			length: 1,
+		});
+		historyLog.record({
+			index: LAUNCH + 1,
+			pathname: "/profile/7",
+			type: "link",
+			length: 2,
+		});
+		const { back, link } = renderBackLink({
+			historyLength: 2,
+			historyIndex: LAUNCH + 1,
+		});
+
+		expect(clickFollowsLink(link)).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
 	});
 
 	it("pops once for a double tap before the navigation lands", () => {

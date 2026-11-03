@@ -41,8 +41,7 @@ function at(pathname: string) {
 	history.replaceState(null, "", pathname);
 }
 
-function withNavigationApi({ earlier }: { earlier: (string | null)[] }) {
-	vi.stubGlobal("navigation", {});
+function withEarlierEntries({ earlier }: { earlier: (string | null)[] }) {
 	earlierPathnames.mockReturnValue(earlier);
 }
 
@@ -86,7 +85,6 @@ afterEach(() => {
 	revert();
 	clearAccountCaches();
 	go.mockRestore();
-	vi.unstubAllGlobals();
 	afterNavigate.mockReset();
 	beforeNavigate.mockReset();
 	earlierPathnames.mockReset();
@@ -148,7 +146,7 @@ describe("guardDeletedPages going Forward", () => {
 	});
 
 	it("stays where it is once a cancelled Forward is reverted", () => {
-		withNavigationApi({ earlier: ["/chat"] });
+		withEarlierEntries({ earlier: ["/chat"] });
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: 1 });
@@ -165,7 +163,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("skips past a deleted page to the entry before it once the cancel is reverted", () => {
-		withNavigationApi({ earlier: ["/chat", "/"] });
+		withEarlierEntries({ earlier: ["/chat", "/"] });
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		expect(cancels({ to: "/chat/1:2", delta: -1 })).toBe(true);
@@ -176,7 +174,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("skips every consecutive deleted page in one traversal", () => {
-		withNavigationApi({ earlier: ["/chat/5:6", "/chat/7%3A8", "/chat"] });
+		withEarlierEntries({ earlier: ["/chat/5:6", "/chat/7%3A8", "/chat"] });
 		leaveDeletedPages({
 			pathnames: ["/chat/1:2", "/chat/5:6", "/chat/7:8"],
 			parent: "/chat",
@@ -189,7 +187,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("skips a deleted page that a jump back lands on", () => {
-		withNavigationApi({ earlier: ["/chat"] });
+		withEarlierEntries({ earlier: ["/chat"] });
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: -3 });
@@ -199,7 +197,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("stops at an entry whose address is unknown", () => {
-		withNavigationApi({ earlier: [null, "/chat"] });
+		withEarlierEntries({ earlier: [null, "/chat"] });
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: -1 });
@@ -209,7 +207,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("returns to the parent when every earlier entry was deleted", () => {
-		withNavigationApi({ earlier: ["/chat/5:6"] });
+		withEarlierEntries({ earlier: ["/chat/5:6"] });
 		leaveDeletedPages({
 			pathnames: ["/chat/1:2", "/chat/5:6"],
 			parent: "/chat",
@@ -223,7 +221,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("returns to the deleted page's own parent from the first entry", () => {
-		withNavigationApi({ earlier: [] });
+		withEarlierEntries({ earlier: [] });
 		leaveDeletedPages({
 			pathnames: ["/settings/albums/9"],
 			parent: "/settings/albums",
@@ -235,27 +233,8 @@ describe("guardDeletedPages going Back", () => {
 		expect(returnTo).toHaveBeenCalledExactlyOnceWith("/settings/albums");
 	});
 
-	it("steps one entry further back per deleted page without the Navigation API", () => {
-		vi.stubGlobal("navigation", undefined);
-		leaveDeletedPages({
-			pathnames: ["/chat/1:2", "/chat/5:6"],
-			parent: "/chat",
-		});
-
-		cancels({ to: "/chat/1:2", delta: -1 });
-		revert();
-		expect(go).toHaveBeenLastCalledWith(-2);
-		cancels({ to: "/chat/5:6", delta: -2 });
-		revert();
-
-		expect(go).toHaveBeenLastCalledWith(-3);
-		expect(go).toHaveBeenCalledTimes(2);
-		expect(earlierPathnames).not.toHaveBeenCalled();
-		expect(returnTo).not.toHaveBeenCalled();
-	});
-
 	it("drops the skip when the revert does not land back on this page", () => {
-		withNavigationApi({ earlier: ["/chat"] });
+		withEarlierEntries({ earlier: ["/chat"] });
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: -1 });
@@ -268,7 +247,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("lets Back into a page that was not deleted through", () => {
-		withNavigationApi({ earlier: ["/chat"] });
+		withEarlierEntries({ earlier: ["/chat"] });
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		expect(cancels({ to: "/chat/5:6", delta: -1 })).toBe(false);
