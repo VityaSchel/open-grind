@@ -8,7 +8,6 @@
 	import { buttonVariants } from "#lib/components/ui/button/index.ts";
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
-	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 	import { sentFilterKeysWithoutQuickFilter } from "./quick-filters";
 
 	let {
@@ -18,7 +17,7 @@
 
 	const TOGGLE_FILTER_KEYS = ["isOnline", "isRightNow", "isFresh"] as const;
 
-	const filters = $derived(gridState.filters.value ?? defaultFilters);
+	const filters = $derived(gridState.filters.current);
 	const { ageEnabled, positionEnabled } = $derived(filters);
 	const sheetOnlyFiltersSent = $derived(
 		sentFilterKeysWithoutQuickFilter({

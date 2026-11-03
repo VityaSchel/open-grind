@@ -4,7 +4,6 @@
 	import AgeQuickFilter from "#lib/components/filters/age/AgeQuickFilter.svelte";
 	import PositionQuickFilter from "#lib/components/filters/position/PositionQuickFilter.svelte";
 	import QuickFilterButton from "#lib/components/filters/QuickFilterButton.svelte";
-	import { defaultRightNowFeedFilters } from "#lib/model/right-now/filters.ts";
 	import type { RightNowFeedFiltersState } from "../right-now-feed-filters-state.svelte";
 	import HostingQuickFilter from "./HostingQuickFilter.svelte";
 
@@ -15,7 +14,7 @@
 	let openFilters = $state({ age: false, position: false, hosting: false });
 
 	const { sort, ageEnabled, positionEnabled, hostingEnabled } = $derived(
-		filters.value ?? defaultRightNowFeedFilters,
+		filters.current,
 	);
 	const sortLabel = $derived(sortLabels[sort]);
 </script>

@@ -16,7 +16,7 @@ type Filters<Key extends FiltersKey> = NonNullable<Preferences[Key]>;
 
 export class PersistedFiltersState<Key extends FiltersKey> {
 	value: Filters<Key> | null = $state(null);
-	ready: Promise<void>;
+	readonly ready: Promise<void>;
 
 	readonly #key: Key;
 	readonly #defaults: Filters<Key>;
@@ -42,8 +42,12 @@ export class PersistedFiltersState<Key extends FiltersKey> {
 		this.ready = this.#load();
 	}
 
+	get current(): Filters<Key> {
+		return this.value ?? this.#defaults;
+	}
+
 	snapshot(): Filters<Key> {
-		return { ...(this.value ?? this.#defaults) };
+		return { ...this.current };
 	}
 
 	set(filters: Partial<Filters<Key>>) {
