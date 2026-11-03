@@ -11,7 +11,6 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	error: Error | null = $state(null);
 	visibleCount = $state(0);
 	scrollY = 0;
-	viewActive = false;
 
 	readonly #pageSize: number;
 	readonly #refreshErrorLabel: string;
@@ -66,7 +65,6 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 
 	attachView(): () => void {
 		this.#attachedViews += 1;
-		this.viewActive = true;
 		untrack(() => {
 			if (!this.#loaded) this.load();
 			else if (this.#stale) void this.refresh({ automatic: true });
@@ -76,7 +74,6 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			if (!attached) return;
 			attached = false;
 			this.#attachedViews -= 1;
-			this.viewActive = this.#attachedViews > 0;
 		};
 	}
 
@@ -88,6 +85,10 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 
 	get hasMore(): boolean {
 		return this.visibleCount < this.length;
+	}
+
+	get viewActive(): boolean {
+		return this.#attachedViews > 0;
 	}
 
 	loadMore(): void {

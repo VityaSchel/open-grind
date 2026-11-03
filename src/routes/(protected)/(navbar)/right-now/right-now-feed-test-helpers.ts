@@ -80,7 +80,7 @@ export function feed(items: RightNowFeedResponseItem[]): RightNowFeedResponse {
 }
 
 export function shown(state: RightNowFeedState) {
-	return state.entries.map(({ item }) =>
+	return state.entries.map((item) =>
 		"profileId" in item.data ? item.data.profileId : item.type,
 	);
 }

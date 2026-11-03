@@ -34,7 +34,7 @@ vi.mock("#lib/app-data/preferences.svelte.ts", async (importOriginal) => ({
 	...(await importOriginal<
 		typeof import("#lib/app-data/preferences.svelte.ts")
 	>()),
-	getPreferences: () => Promise.resolve({}),
+	getPreferences: () => Promise.resolve({ geohash: null }),
 	preferencesLoaded: () => true,
 	preferencesSnapshot: () => preferences,
 	setPreferences: () => Promise.resolve(),

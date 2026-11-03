@@ -94,7 +94,7 @@ import {
 } from "./right-now-feed-test-helpers";
 
 function favorites(state: RightNowFeedState) {
-	return state.entries.map(({ item }) =>
+	return state.entries.map((item) =>
 		"favorite" in item.data ? item.data.favorite : null,
 	);
 }
@@ -109,7 +109,7 @@ beforeEach(() => {
 	atHomeLocationMock.mockReset();
 	atHomeLocationMock.mockImplementation((request) => request());
 	getPreferencesMock.mockReset();
-	getPreferencesMock.mockResolvedValue({});
+	getPreferencesMock.mockResolvedValue({ geohash: null });
 	getRightNowFeedMock.mockReset();
 	getRightNowFeedMock.mockResolvedValue(feed([post(1)]));
 	markBlockedProfilesUnviewableMock.mockClear();
@@ -177,6 +177,7 @@ describe("RightNowFeedState", () => {
 	it("requests the account's feed version with the saved filters", async () => {
 		rightNowFeedVersionMock.mockResolvedValue("v6");
 		getPreferencesMock.mockResolvedValue({
+			geohash: null,
 			rightNowFeedFilters: {
 				...defaultRightNowFeedFilters,
 				sort: "DISTANCE",

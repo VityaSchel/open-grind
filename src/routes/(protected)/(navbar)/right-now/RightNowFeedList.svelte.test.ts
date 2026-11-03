@@ -3,13 +3,9 @@
 import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import type { DiscreetPostData, PostData } from "#lib/model/right-now/feed.ts";
 import type {
-	DiscreetPostData,
-	PostData,
-	RightNowFeedResponseItem,
-} from "#lib/model/right-now/feed.ts";
-import type {
-	RightNowFeedEntry,
+	RightNowFeedPost,
 	RightNowFeedState,
 } from "./right-now-feed-state.svelte";
 import RightNowFeedList from "./RightNowFeedList.svelte";
@@ -59,15 +55,11 @@ function discreetData({
 	};
 }
 
-function stubFeed(items: RightNowFeedResponseItem[]): RightNowFeedState {
-	const entries: RightNowFeedEntry[] = items.map((item, index) => ({
-		key: `entry-${index}`,
-		item,
-	}));
+function stubFeed(items: RightNowFeedPost[]): RightNowFeedState {
 	const feed: FeedListState = {
 		loading: false,
 		error: null,
-		entries,
+		entries: items,
 		hasMore: false,
 	};
 	return feed as unknown as RightNowFeedState;

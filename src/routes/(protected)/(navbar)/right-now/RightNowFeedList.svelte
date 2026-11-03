@@ -36,11 +36,11 @@
 	<EmptyRightNowFeed filters={feed.filters} />
 {:else}
 	<ul class="flex flex-col">
-		{#each feed.entries as { key, item } (key)}
+		{#each feed.entries as item (item.data.id)}
 			<li>
 				{#if item.type === "right_now_post_v3" || item.type === "locked_post_v1"}
 					<RightNowPostCard post={item.data} {ourProfileId} />
-				{:else if item.type === "discreet_right_now_post_v1" || item.type === "discreet_locked_post_v1"}
+				{:else}
 					<DiscreetPostCard post={item.data} />
 				{/if}
 			</li>

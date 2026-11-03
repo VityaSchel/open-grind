@@ -6,8 +6,7 @@ import {
 	isAccountEpochCurrent,
 } from "#lib/api/account-caches.ts";
 import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
-import { markBlockedProfilesUnviewable } from "#lib/api/browse/blocks.ts";
-import { markHiddenProfilesUnviewable } from "#lib/api/browse/hides.ts";
+import { markBlockedAndHiddenProfilesUnviewable } from "#lib/api/browse/unviewable-profiles.ts";
 import {
 	getRightNowFeed,
 	rightNowFeedVersion,
@@ -33,7 +32,10 @@ const PAGE_SIZE = 20;
 const POLL_INTERVAL_MS = 2 * 60_000;
 const POLL_TICK_MS = 15_000;
 
-export type RightNowFeedEntry = { key: string; item: RightNowFeedResponseItem };
+export type RightNowFeedPost = Exclude<
+	RightNowFeedResponseItem,
+	{ type: "curated_post_v1" | "upsell_insert_v1" }
+>;
 
 type AuthoredItem = Extract<
 	RightNowFeedResponseItem,
@@ -48,32 +50,21 @@ function authorOf(item: RightNowFeedResponseItem): number | null {
 	return isAuthored(item) ? item.data.profileId : null;
 }
 
-function entriesOf(items: RightNowFeedResponseItem[]): RightNowFeedEntry[] {
-	return items.map((item, index) => ({
-		key:
-			"id" in item.data
-				? `post-${item.data.id}`
-				: `${item.type}-${index}`,
-		item,
-	}));
-}
-
-function keysOf(entries: RightNowFeedEntry[]): Set<string> {
-	return new Set(entries.map(({ key }) => key));
+function keysOf(posts: RightNowFeedPost[]): Set<number> {
+	return new Set(posts.map((post) => post.data.id));
 }
 
 class SignedOutBeforeFeedRequest extends Error {}
 
 export class RightNowFeedState extends ReconcilingListState<
-	RightNowFeedEntry,
-	RightNowFeedResponse,
-	string
+	RightNowFeedPost,
+	RightNowFeedResponse
 > {
 	readonly filters = new RightNowFeedFiltersState({
 		onQueryChange: () => this.#startOver(),
 	});
 
-	#entries: RightNowFeedEntry[] = $state.raw([]);
+	#entries: RightNowFeedPost[] = $state.raw([]);
 	#fetchStartedAt = 0;
 	#poll: ReturnType<typeof setInterval> | null = null;
 	#startOverListeners: (() => void)[] = [];
@@ -89,7 +80,7 @@ export class RightNowFeedState extends ReconcilingListState<
 				return;
 			}
 			this.#entries = this.#entries.filter(
-				({ item }) => authorOf(item) !== profileId,
+				(post) => authorOf(post) !== profileId,
 			);
 		},
 	);
@@ -103,7 +94,7 @@ export class RightNowFeedState extends ReconcilingListState<
 		this.start();
 	}
 
-	get entries(): RightNowFeedEntry[] {
+	get entries(): RightNowFeedPost[] {
 		return this.#entries.slice(0, this.visibleCount);
 	}
 
@@ -147,19 +138,14 @@ export class RightNowFeedState extends ReconcilingListState<
 	protected async fetch(): Promise<RightNowFeedResponse> {
 		const epoch = accountEpoch();
 		this.#fetchStartedAt = now();
-		void markBlockedProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
-		void markHiddenProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
+		markBlockedAndHiddenProfilesUnviewable();
 		await this.filters.ready;
 		const version = await rightNowFeedVersion();
 		const query = rightNowFeedQuery(this.filters.snapshot());
 		return atHomeLocation(async () => {
 			if (!isAccountEpochCurrent(epoch))
 				throw new SignedOutBeforeFeedRequest();
-			const { geohash = null } = await getPreferences();
+			const { geohash } = await getPreferences();
 			this.#fetchedGeohash = geohash;
 			if (geohash !== null) await storeLocation({ geohash });
 			return getRightNowFeed({ version, query });
@@ -168,22 +154,24 @@ export class RightNowFeedState extends ReconcilingListState<
 
 	protected applySnapshotReturningCoveredKeys(
 		snapshot: RightNowFeedResponse,
-	): Set<string> {
-		this.#entries = entriesOf(
-			snapshot.items.filter((item) => {
-				if (item.type === "curated_post_v1") return false;
-				if (item.type === "upsell_insert_v1") return false;
-				const author = authorOf(item);
+	): Set<number> {
+		this.#entries = snapshot.items
+			.filter(
+				(item) =>
+					item.type !== "curated_post_v1" &&
+					item.type !== "upsell_insert_v1",
+			)
+			.filter((post) => {
+				const author = authorOf(post);
 				return author === null || isProfileViewable(author);
-			}),
-		);
+			});
 		return keysOf(this.#entries);
 	}
 
 	protected applyUpsert(): void {}
 
-	protected keyOf(entry: RightNowFeedEntry): string {
-		return entry.key;
+	protected keyOf(post: RightNowFeedPost): number {
+		return post.data.id;
 	}
 
 	protected subscribeEvents(): Promise<() => void> {
@@ -201,7 +189,9 @@ export class RightNowFeedState extends ReconcilingListState<
 		this.#entries = [];
 		this.visibleCount = PAGE_SIZE;
 		this.scrollY = 0;
-		for (const listener of this.#startOverListeners) listener();
+		untrack(() => {
+			for (const listener of this.#startOverListeners) listener();
+		});
 		this.retry();
 	}
 
@@ -217,14 +207,10 @@ export class RightNowFeedState extends ReconcilingListState<
 		profileId: number;
 		favorite: boolean;
 	}): void {
-		this.#entries = this.#entries.map((entry) => {
-			const { item } = entry;
-			if (!isAuthored(item) || item.data.profileId !== profileId)
-				return entry;
-			return {
-				...entry,
-				item: { ...item, data: { ...item.data, favorite } },
-			};
+		this.#entries = this.#entries.map((post) => {
+			if (!isAuthored(post) || post.data.profileId !== profileId)
+				return post;
+			return { ...post, data: { ...post.data, favorite } };
 		});
 	}
 }

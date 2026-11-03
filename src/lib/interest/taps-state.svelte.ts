@@ -1,6 +1,5 @@
 import { accountScoped } from "#lib/api/account-caches.ts";
-import { markBlockedProfilesUnviewable } from "#lib/api/browse/blocks.ts";
-import { markHiddenProfilesUnviewable } from "#lib/api/browse/hides.ts";
+import { markBlockedAndHiddenProfilesUnviewable } from "#lib/api/browse/unviewable-profiles.ts";
 import { getReceivedTaps } from "#lib/api/interest/taps.ts";
 import {
 	isProfileViewable,
@@ -89,12 +88,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	}
 
 	protected fetch(): Promise<TapsSnapshot> {
-		void markBlockedProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
-		void markHiddenProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
+		markBlockedAndHiddenProfilesUnviewable();
 		return getReceivedTaps();
 	}
 
