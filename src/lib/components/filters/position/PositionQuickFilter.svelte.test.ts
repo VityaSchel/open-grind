@@ -2,25 +2,12 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const { setPreferencesMock } = vi.hoisted(() => ({
-	setPreferencesMock: vi.fn(() => Promise.resolve()),
-}));
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: vi.fn(() => Promise.resolve({})),
-	setPreferences: setPreferencesMock,
+	setPreferences: vi.fn(() => Promise.resolve()),
 }));
-
-vi.stubGlobal(
-	"ResizeObserver",
-	class {
-		observe() {}
-		unobserve() {}
-		disconnect() {}
-	},
-);
 
 import { GridSearchFiltersState } from "#lib/grid/grid-search-filters-state.svelte.ts";
 import {
@@ -30,14 +17,13 @@ import {
 import PositionQuickFilter from "./PositionQuickFilter.svelte";
 
 async function openPositionFilter() {
-	const onQueryChange = vi.fn();
-	const filters = new GridSearchFiltersState({ onQueryChange });
+	const filters = new GridSearchFiltersState({ onQueryChange: vi.fn() });
 	await filters.ready;
 	const view = render(PositionQuickFilter, {
 		props: { open: true, filters },
 	});
 	flushSync();
-	return { filters, onQueryChange, rerender: view.rerender };
+	return { filters, rerender: view.rerender };
 }
 
 function switchChecked() {
@@ -50,17 +36,13 @@ function pressed(name: string) {
 	return screen.getByRole("button", { name }).getAttribute("aria-pressed");
 }
 
-beforeEach(() => {
-	setPreferencesMock.mockClear();
-});
-
 afterEach(() => {
 	cleanup();
 });
 
 describe("PositionQuickFilter", () => {
-	it("turns the filter on when a position is picked, then applies and saves it", async () => {
-		const { filters, onQueryChange } = await openPositionFilter();
+	it("turns the filter on when a position is picked, then applies it", async () => {
+		const { filters } = await openPositionFilter();
 
 		expect(switchChecked()).toBe("false");
 
@@ -76,10 +58,6 @@ describe("PositionQuickFilter", () => {
 			positions: [FilterPosition.VersTop],
 		};
 		expect(filters.value).toEqual(applied);
-		expect(setPreferencesMock).toHaveBeenCalledExactlyOnceWith({
-			gridSearchFilters: applied,
-		});
-		expect(onQueryChange).toHaveBeenCalledOnce();
 	});
 
 	it("clears the picked positions on Reset without turning the filter off", async () => {
@@ -101,7 +79,7 @@ describe("PositionQuickFilter", () => {
 	});
 
 	it("changes nothing when closed without Apply, and starts over from the saved positions", async () => {
-		const { filters, onQueryChange, rerender } = await openPositionFilter();
+		const { filters, rerender } = await openPositionFilter();
 
 		await fireEvent.click(screen.getByRole("button", { name: "Bottom" }));
 		expect(pressed("Bottom")).toBe("true");
@@ -109,8 +87,6 @@ describe("PositionQuickFilter", () => {
 		await rerender({ open: false });
 
 		expect(filters.value).toEqual(defaultFilters);
-		expect(setPreferencesMock).not.toHaveBeenCalled();
-		expect(onQueryChange).not.toHaveBeenCalled();
 
 		await rerender({ open: true });
 

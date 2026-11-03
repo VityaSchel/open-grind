@@ -3,7 +3,7 @@
 import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { DiscreetPostData, PostData } from "#lib/model/right-now/feed.ts";
+import { discreetPostData, postData } from "./feed-post-test-helpers";
 import type {
 	RightNowFeedPost,
 	RightNowFeedState,
@@ -16,44 +16,6 @@ type FeedListState = Pick<
 >;
 
 const OUR_PROFILE_ID = 100;
-const POSTED = Date.now() - 5 * 60_000;
-
-function postData({ id, text }: { id: number; text: string }): PostData {
-	return {
-		id,
-		profileId: 200 + id,
-		displayName: `Author ${id}`,
-		text,
-		media: [],
-		hosting: false,
-		posted: POSTED,
-		expiration: POSTED + 60 * 60_000,
-		recentlyChatted: false,
-		favorite: false,
-	};
-}
-
-function discreetData({
-	id,
-	text,
-}: {
-	id: number;
-	text: string;
-}): DiscreetPostData {
-	return {
-		id,
-		text,
-		hosting: false,
-		posted: POSTED,
-		expiration: POSTED + 60 * 60_000,
-		profileFields: {
-			age: null,
-			height: null,
-			weight: null,
-			position: null,
-		},
-	};
-}
 
 function stubFeed(items: RightNowFeedPost[]): RightNowFeedState {
 	const feed: FeedListState = {
@@ -75,22 +37,32 @@ describe("the Right Now feed list", () => {
 				feed: stubFeed([
 					{
 						type: "right_now_post_v3",
-						data: postData({ id: 1, text: "Standard post" }),
+						data: postData({
+							id: 1,
+							profileId: 201,
+							displayName: "Author 1",
+							text: "Standard post",
+						}),
 					},
 					{
 						type: "locked_post_v1",
-						data: postData({ id: 2, text: "Locked post" }),
+						data: postData({
+							id: 2,
+							profileId: 202,
+							displayName: "Author 2",
+							text: "Locked post",
+						}),
 					},
 					{
 						type: "discreet_right_now_post_v1",
-						data: discreetData({
+						data: discreetPostData({
 							id: 3,
 							text: "Discreet post text",
 						}),
 					},
 					{
 						type: "discreet_locked_post_v1",
-						data: discreetData({
+						data: discreetPostData({
 							id: 4,
 							text: "Discreet locked post",
 						}),

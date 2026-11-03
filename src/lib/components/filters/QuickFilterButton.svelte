@@ -17,6 +17,7 @@
 <Button
 	variant="secondary"
 	aria-label={label}
+	data-active={active || undefined}
 	{onclick}
 	class={{ "bg-white text-popover hover:bg-neutral-200": active }}
 >

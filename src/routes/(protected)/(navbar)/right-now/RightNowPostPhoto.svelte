@@ -19,7 +19,6 @@
 		class="size-full"
 		imgClass={{ "scale-110 blur-xl": blurred }}
 		aspectRatio="1 / 1"
-		fallbackAspectRatio="1 / 1"
 		tone="photo"
 		size="md"
 		loading="lazy"

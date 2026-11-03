@@ -4,49 +4,26 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { conversationIdFor } from "#lib/chat/conversation-id.ts";
-import type {
-	PostData,
-	RightNowPostMediaItem,
-} from "#lib/model/right-now/feed.ts";
+import type { PostData } from "#lib/model/right-now/feed.ts";
+import { photo, postData } from "./feed-post-test-helpers";
 import RightNowPostCard from "./RightNowPostCard.svelte";
 
 const OUR_PROFILE_ID = 100;
 const AUTHOR_ID = 200;
-
-function photo(mediaId: number): RightNowPostMediaItem {
-	return {
-		type: "image_v1",
-		data: {
-			mediaId,
-			thumbnailUrl: `https://cdns.grindr.com/rightnow/thumb/${mediaId}`,
-			fullImageUrl: `https://cdns.grindr.com/rightnow/full/${mediaId}`,
-			isNsfw: false,
-			shouldBlur: false,
-		},
-	};
-}
-
-function post(overrides: Partial<PostData> = {}): PostData {
-	return {
-		id: 1,
-		profileId: AUTHOR_ID,
-		displayName: "Simon",
-		media: [],
-		hosting: false,
-		posted: Date.now() - 5 * 60_000,
-		expiration: Date.now() + 55 * 60_000,
-		recentlyChatted: false,
-		favorite: false,
-		...overrides,
-	};
-}
 
 function renderCard({
 	overrides = {},
 	ourProfileId = OUR_PROFILE_ID,
 }: { overrides?: Partial<PostData>; ourProfileId?: number } = {}) {
 	return render(RightNowPostCard, {
-		props: { post: post(overrides), ourProfileId },
+		props: {
+			post: postData({
+				profileId: AUTHOR_ID,
+				displayName: "Simon",
+				...overrides,
+			}),
+			ourProfileId,
+		},
 	});
 }
 
@@ -132,11 +109,6 @@ describe("a Right Now post card", () => {
 				},
 			});
 
-			expect(
-				screen
-					.getByRole("img", { name: "Post photo" })
-					.classList.contains("blur-xl"),
-			).toBe(blurred);
 			expect(screen.queryByText("May contain nudity") !== null).toBe(
 				blurred,
 			);

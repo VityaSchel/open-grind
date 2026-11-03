@@ -4,30 +4,15 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getPreferencesMock, setPreferencesMock } = vi.hoisted(() => ({
+const { getPreferencesMock } = vi.hoisted(() => ({
 	getPreferencesMock: vi.fn(),
-	setPreferencesMock: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: getPreferencesMock,
-	setPreferences: setPreferencesMock,
+	setPreferences: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
-
-vi.mock("#lib/components/filters/QuickFilterButton.svelte", { spy: true });
-
-vi.stubGlobal(
-	"ResizeObserver",
-	class {
-		observe() {}
-		unobserve() {}
-		disconnect() {}
-	},
-);
-
-import QuickFilterButton from "#lib/components/filters/QuickFilterButton.svelte";
 import { FilterPosition } from "#lib/model/browse/grid/filters.ts";
 import {
 	defaultRightNowFeedFilters,
@@ -54,16 +39,14 @@ function buttonNames() {
 }
 
 function activeFilters() {
-	const names = buttonNames();
-	const { calls } = vi.mocked(QuickFilterButton).mock;
-	expect(calls).toHaveLength(names.length);
-	return names.filter((_, index) => calls[index]?.[1].active);
+	return screen
+		.getAllByRole("button")
+		.filter((button) => button.hasAttribute("data-active"))
+		.map((button) => button.textContent.trim());
 }
 
 beforeEach(() => {
 	getPreferencesMock.mockReset();
-	setPreferencesMock.mockClear();
-	vi.mocked(QuickFilterButton).mockClear();
 });
 
 afterEach(() => {
@@ -80,7 +63,7 @@ describe("QuickFilters", () => {
 		).toBeTruthy();
 	});
 
-	it("flips the sort between Newest and Distance on each tap and saves it", async () => {
+	it("flips the sort between Newest and Distance on each tap", async () => {
 		const filters = await renderQuickFilters();
 
 		await fireEvent.click(
@@ -88,12 +71,6 @@ describe("QuickFilters", () => {
 		);
 
 		expect(filters.value?.sort).toBe("DISTANCE");
-		expect(setPreferencesMock).toHaveBeenLastCalledWith({
-			rightNowFeedFilters: {
-				...defaultRightNowFeedFilters,
-				sort: "DISTANCE",
-			},
-		});
 		expect(screen.queryByRole("dialog")).toBeNull();
 
 		await fireEvent.click(

@@ -6,28 +6,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { SexualPosition } from "#lib/model/users/profiles.ts";
 import type { DiscreetPostData } from "#lib/model/right-now/feed.ts";
 import DiscreetPostCard from "./DiscreetPostCard.svelte";
-
-function discreetPost(
-	overrides: Partial<DiscreetPostData> = {},
-): DiscreetPostData {
-	return {
-		id: 1,
-		hosting: false,
-		posted: Date.now() - 5 * 60_000,
-		expiration: Date.now() + 55 * 60_000,
-		profileFields: {
-			age: null,
-			height: null,
-			weight: null,
-			position: null,
-		},
-		...overrides,
-	};
-}
+import { discreetPostData, photo } from "./feed-post-test-helpers";
 
 function renderCard(overrides: Partial<DiscreetPostData> = {}) {
 	return render(DiscreetPostCard, {
-		props: { post: discreetPost(overrides) },
+		props: { post: discreetPostData(overrides) },
 	});
 }
 
@@ -40,19 +23,7 @@ describe("a discreet Right Now post card", () => {
 			hosting: true,
 			distance: 300,
 			onlineUntil: Date.now() + 60_000,
-			media: [
-				{
-					type: "image_v1",
-					data: {
-						mediaId: 1,
-						thumbnailUrl:
-							"https://cdns.grindr.com/rightnow/thumb/1",
-						fullImageUrl: "https://cdns.grindr.com/rightnow/full/1",
-						isNsfw: false,
-						shouldBlur: false,
-					},
-				},
-			],
+			media: [photo(1)],
 		});
 
 		const card = screen.getByRole("article", { name: "Hosting tonight" });

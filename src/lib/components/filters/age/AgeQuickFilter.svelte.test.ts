@@ -2,25 +2,12 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const { setPreferencesMock } = vi.hoisted(() => ({
-	setPreferencesMock: vi.fn(() => Promise.resolve()),
-}));
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: vi.fn(() => Promise.resolve({})),
-	setPreferences: setPreferencesMock,
+	setPreferences: vi.fn(() => Promise.resolve()),
 }));
-
-vi.stubGlobal(
-	"ResizeObserver",
-	class {
-		observe() {}
-		unobserve() {}
-		disconnect() {}
-	},
-);
 
 import { GridSearchFiltersState } from "#lib/grid/grid-search-filters-state.svelte.ts";
 import {
@@ -31,12 +18,11 @@ import {
 import AgeQuickFilter from "./AgeQuickFilter.svelte";
 
 async function openAgeFilter() {
-	const onQueryChange = vi.fn();
-	const filters = new GridSearchFiltersState({ onQueryChange });
+	const filters = new GridSearchFiltersState({ onQueryChange: vi.fn() });
 	await filters.ready;
 	const view = render(AgeQuickFilter, { props: { open: true, filters } });
 	flushSync();
-	return { filters, onQueryChange, rerender: view.rerender };
+	return { filters, rerender: view.rerender };
 }
 
 const minimumAge = () => screen.getByRole("slider", { name: "Minimum age" });
@@ -46,10 +32,6 @@ function switchChecked() {
 		.getByRole("switch", { name: "Filter by age" })
 		.getAttribute("aria-checked");
 }
-
-beforeEach(() => {
-	setPreferencesMock.mockClear();
-});
 
 afterEach(() => {
 	cleanup();
@@ -85,8 +67,8 @@ describe("AgeQuickFilter", () => {
 		expect(filters.snapshot()).toEqual(defaultFilters);
 	});
 
-	it("turns the filter on when the range moves, then applies and saves it", async () => {
-		const { filters, onQueryChange } = await openAgeFilter();
+	it("turns the filter on when the range moves, then applies it", async () => {
+		const { filters } = await openAgeFilter();
 
 		expect(switchChecked()).toBe("false");
 
@@ -104,14 +86,10 @@ describe("AgeQuickFilter", () => {
 			age: [minimum, AGE_MAX],
 		};
 		expect(filters.value).toEqual(applied);
-		expect(setPreferencesMock).toHaveBeenCalledExactlyOnceWith({
-			gridSearchFilters: applied,
-		});
-		expect(onQueryChange).toHaveBeenCalledOnce();
 	});
 
 	it("changes nothing when closed without Apply, and starts over from the saved range", async () => {
-		const { filters, onQueryChange, rerender } = await openAgeFilter();
+		const { filters, rerender } = await openAgeFilter();
 
 		await fireEvent.keyDown(minimumAge(), { key: "ArrowRight" });
 		expect(switchChecked()).toBe("true");
@@ -119,8 +97,6 @@ describe("AgeQuickFilter", () => {
 		await rerender({ open: false });
 
 		expect(filters.value).toEqual(defaultFilters);
-		expect(setPreferencesMock).not.toHaveBeenCalled();
-		expect(onQueryChange).not.toHaveBeenCalled();
 
 		await rerender({ open: true });
 

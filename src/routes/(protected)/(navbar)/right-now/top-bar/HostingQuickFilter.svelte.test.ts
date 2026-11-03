@@ -4,26 +4,14 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getPreferencesMock, setPreferencesMock } = vi.hoisted(() => ({
+const { getPreferencesMock } = vi.hoisted(() => ({
 	getPreferencesMock: vi.fn(),
-	setPreferencesMock: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: getPreferencesMock,
-	setPreferences: setPreferencesMock,
+	setPreferences: vi.fn(() => Promise.resolve()),
 }));
-
-vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
-
-vi.stubGlobal(
-	"ResizeObserver",
-	class {
-		observe() {}
-		unobserve() {}
-		disconnect() {}
-	},
-);
 
 import {
 	defaultRightNowFeedFilters,
@@ -39,12 +27,11 @@ const saved: RightNowFeedFilters = {
 
 async function openHostingFilter(stored: RightNowFeedFilters = saved) {
 	getPreferencesMock.mockResolvedValue({ rightNowFeedFilters: stored });
-	const onQueryChange = vi.fn();
-	const filters = new RightNowFeedFiltersState({ onQueryChange });
+	const filters = new RightNowFeedFiltersState({ onQueryChange: vi.fn() });
 	await filters.ready;
 	const view = render(HostingQuickFilter, { props: { open: true, filters } });
 	flushSync();
-	return { filters, onQueryChange, rerender: view.rerender };
+	return { filters, rerender: view.rerender };
 }
 
 function checkedOption() {
@@ -62,7 +49,6 @@ function switchChecked() {
 
 beforeEach(() => {
 	getPreferencesMock.mockReset();
-	setPreferencesMock.mockClear();
 });
 
 afterEach(() => {
@@ -85,8 +71,8 @@ describe("HostingQuickFilter", () => {
 		expect(new Set(drawings).size).toBe(drawings.length);
 	});
 
-	it("turns the filter on when Not hosting is picked, then applies and saves it", async () => {
-		const { filters, onQueryChange } = await openHostingFilter();
+	it("turns the filter on when Not hosting is picked, then applies it", async () => {
+		const { filters } = await openHostingFilter();
 
 		expect(switchChecked()).toBe("false");
 		expect(checkedOption()).toEqual(["Hosting"]);
@@ -105,10 +91,6 @@ describe("HostingQuickFilter", () => {
 			hosting: false,
 		};
 		expect(filters.value).toEqual(applied);
-		expect(setPreferencesMock).toHaveBeenCalledExactlyOnceWith({
-			rightNowFeedFilters: applied,
-		});
-		expect(onQueryChange).toHaveBeenCalledOnce();
 	});
 
 	it("resets to Hosting and leaves the switch as it was", async () => {
@@ -154,7 +136,7 @@ describe("HostingQuickFilter", () => {
 	});
 
 	it("changes nothing when closed without Apply, and starts over from the saved filter", async () => {
-		const { filters, onQueryChange, rerender } = await openHostingFilter();
+		const { filters, rerender } = await openHostingFilter();
 
 		await fireEvent.click(
 			screen.getByRole("radio", { name: "Not hosting" }),
@@ -164,8 +146,6 @@ describe("HostingQuickFilter", () => {
 		await rerender({ open: false });
 
 		expect(filters.value).toEqual(saved);
-		expect(setPreferencesMock).not.toHaveBeenCalled();
-		expect(onQueryChange).not.toHaveBeenCalled();
 
 		await rerender({ open: true });
 

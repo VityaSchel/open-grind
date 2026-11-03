@@ -5,11 +5,11 @@ import type {
 	RightNowFeedResponse,
 	RightNowFeedResponseItem,
 } from "#lib/model/right-now/feed.ts";
+import { discreetPostData, postData } from "./feed-post-test-helpers";
 import { RightNowFeedState } from "./right-now-feed-state.svelte";
 
 export const SECOND = 1_000;
 export const MINUTE = 60 * SECOND;
-const POSTED = 1_710_000_000_000;
 
 const createdStates: RightNowFeedState[] = [];
 
@@ -23,49 +23,27 @@ export function destroyCreatedStates(): void {
 	for (const state of createdStates.splice(0)) state.destroy();
 }
 
-function postData(
-	profileId: number,
-	overrides: Partial<PostData> = {},
-): PostData {
-	return {
-		id: profileId,
-		profileId,
-		media: [],
-		hosting: false,
-		posted: POSTED,
-		expiration: POSTED + 60 * MINUTE,
-		recentlyChatted: false,
-		favorite: false,
-		...overrides,
-	};
-}
-
 export function post(
 	profileId: number,
 	overrides: Partial<PostData> = {},
 ): RightNowFeedResponseItem {
-	return { type: "right_now_post_v3", data: postData(profileId, overrides) };
+	return {
+		type: "right_now_post_v3",
+		data: postData({ id: profileId, profileId, ...overrides }),
+	};
 }
 
 export function lockedPost(profileId: number): RightNowFeedResponseItem {
-	return { type: "locked_post_v1", data: postData(profileId) };
+	return {
+		type: "locked_post_v1",
+		data: postData({ id: profileId, profileId }),
+	};
 }
 
 export function discreetPost(id: number): RightNowFeedResponseItem {
 	return {
 		type: "discreet_right_now_post_v1",
-		data: {
-			id,
-			hosting: true,
-			posted: POSTED,
-			expiration: POSTED + 60 * MINUTE,
-			profileFields: {
-				age: null,
-				height: null,
-				weight: null,
-				position: null,
-			},
-		},
+		data: discreetPostData({ id, hosting: true }),
 	};
 }
 
