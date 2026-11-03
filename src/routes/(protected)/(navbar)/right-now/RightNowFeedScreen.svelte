@@ -24,6 +24,8 @@
 
 	$effect(() => feed.followLocation(geohash));
 
+	$effect(() => ownPost.followLocation(geohash));
+
 	restoreScrollOnce({ container: () => container, state: feed });
 
 	$effect(() =>

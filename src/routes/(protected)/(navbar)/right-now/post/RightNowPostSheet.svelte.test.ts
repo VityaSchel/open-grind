@@ -142,9 +142,9 @@ describe("the Right Now post sheet rejections", () => {
 		[{ text: true, photo: false }, "Your text was rejected"],
 		[{ text: false, photo: true }, "Your photo was rejected"],
 		[{ text: true, photo: true }, "Your text and photo were rejected"],
-	])("for %o says %s and lists each reason once", async (which, title) => {
+	])("for %o says %s and lists the reasons", async (which, title) => {
 		const fake = runningPost();
-		fake.rejected = { ...which, reasons: ["Spam", "Nudity", "Spam"] };
+		fake.rejected = { ...which, reasons: ["Spam", "Nudity"] };
 		await renderSheet(fake);
 
 		const alert = screen.getByRole("alert");

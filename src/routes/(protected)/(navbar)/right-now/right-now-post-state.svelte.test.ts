@@ -12,7 +12,6 @@ const {
 	RightNowSessionEndedError,
 	setRightNowPostHiddenMock,
 	showErrorToastMock,
-	startOverListeners,
 	storeLocationMock,
 	toastMock,
 	updateRightNowPostMock,
@@ -29,7 +28,6 @@ const {
 	RightNowSessionEndedError: class extends Error {},
 	setRightNowPostHiddenMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
-	startOverListeners: [] as (() => void)[],
 	storeLocationMock: vi.fn(() => Promise.resolve()),
 	toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
 	updateRightNowPostMock: vi.fn(),
@@ -60,22 +58,23 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: storeLocationMock }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("./right-now-feed-state.svelte", () => ({
-	getRightNowFeedState: () => ({
-		refreshOrDefer: refreshFeedMock,
-		onStartOver: (listener: () => void) => {
-			startOverListeners.push(listener);
-			return () => {};
-		},
-	}),
+	getRightNowFeedState: () => ({ refreshOrDefer: refreshFeedMock }),
 }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	getRightNowPostState,
 	RightNowPostState,
 } from "./right-now-post-state.svelte";
-import { ownPost, POST_ID, postPhoto } from "./right-now-post-test-helpers";
+import {
+	MINUTE,
+	moderatedText,
+	ownPost,
+	POST_ID,
+	postPhoto,
+} from "./right-now-post-test-helpers";
 
 const BERLIN = "u33dc0cpgp00";
+const MUNICH = "u281z7j5c0e0";
 const PROFILE_ID = 858;
 const JOIN_BODY = { shareLocation: "NONE", media: [], hosting: false };
 
@@ -124,7 +123,6 @@ beforeEach(() => {
 	showErrorToastMock.mockReset();
 	toastMock.mockReset();
 	toastMock.error.mockReset();
-	startOverListeners.length = 0;
 });
 
 afterEach(() => {
@@ -187,16 +185,19 @@ describe("RightNowPostState load", () => {
 		expect(state.status).toBe("off");
 	});
 
-	it("keeps the error and loads again on the next attach", async () => {
-		const failure = new Error("offline");
-		getActiveRightNowPostMock.mockRejectedValueOnce(failure);
+	it("loads again on the next attach after a failed read", async () => {
+		getActiveRightNowPostMock
+			.mockRejectedValueOnce(new Error("offline"))
+			.mockResolvedValueOnce(
+				ownPost({ expiration: Date.now() + 60 * MINUTE }),
+			);
 		const state = await loadedState();
 
-		expect(state.error).toBe(failure);
 		expect(state.loading).toBe(false);
+		expect(state.post).toBeNull();
 
 		const detach = state.attachView();
-		await vi.waitFor(() => expect(state.error).toBeNull());
+		await vi.waitFor(() => expect(state.post?.id).toBe(POST_ID));
 
 		expect(getActiveRightNowPostMock).toHaveBeenCalledTimes(2);
 		detach();
@@ -226,16 +227,46 @@ describe("RightNowPostState load", () => {
 		detach();
 	});
 
-	it("rereads the allowance when the feed starts over without a post", async () => {
+	it("rereads the allowance when the location changes without a post", async () => {
 		const state = await loadedState();
+		state.followLocation(BERLIN);
 		getRightNowPostEntitlementsMock.mockResolvedValue({
 			type: "GRANTED",
 			count: 0,
 		});
 
-		for (const listener of startOverListeners) listener();
+		state.followLocation(BERLIN);
+		state.followLocation(MUNICH);
 
 		await vi.waitFor(() => expect(state.freePostsLeft).toBe(0));
+		expect(getRightNowPostEntitlementsMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("lists each rejection reason once", async () => {
+		getActiveRightNowPostMock.mockResolvedValue(
+			ownPost({
+				moderatedText: moderatedText({
+					textStatus: "MODERATION_FAILED",
+					rejectReasons: ["OTHER", "SOME_NEW_CODE"],
+				}),
+				media: [
+					postPhoto({
+						mediaId: 1,
+						state: "REJECTED",
+						reason: "Nudity",
+					}),
+					postPhoto({
+						mediaId: 2,
+						state: "REJECTED",
+						reason: "Nudity",
+					}),
+				],
+			}),
+		);
+
+		const state = await loadedState();
+
+		expect(state.rejected.reasons).toEqual(["Other", "Nudity"]);
 	});
 });
 
@@ -501,7 +532,6 @@ describe("RightNowPostState setHidden", () => {
 		await expect(state.setHidden({ hidden: false })).resolves.toBe(false);
 
 		expect(state.status).toBe("none");
-		expect(state.lastPost?.id).toBe(POST_ID);
 		expect(toastMock).toHaveBeenCalledWith(
 			"Your Right Now session ended",
 			expect.anything(),
@@ -522,7 +552,6 @@ describe("RightNowPostState sign-out", () => {
 		await loaded;
 
 		expect(state.post).toBeNull();
-		expect(state.error).toBeNull();
 	});
 
 	it("never creates a post once signed out while the location hold waits", async () => {

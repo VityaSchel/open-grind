@@ -23,10 +23,7 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: vi.fn() }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("./right-now-feed-state.svelte", () => ({
-	getRightNowFeedState: () => ({
-		refreshOrDefer: () => Promise.resolve(),
-		onStartOver: () => () => {},
-	}),
+	getRightNowFeedState: () => ({ refreshOrDefer: () => Promise.resolve() }),
 }));
 import { ApiError } from "#lib/api/api-error.ts";
 import { RightNowPostState } from "./right-now-post-state.svelte";

@@ -1,3 +1,4 @@
+import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -39,10 +40,7 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: vi.fn() }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("./right-now-feed-state.svelte", () => ({
-	getRightNowFeedState: () => ({
-		refreshOrDefer: refreshFeedMock,
-		onStartOver: () => () => {},
-	}),
+	getRightNowFeedState: () => ({ refreshOrDefer: refreshFeedMock }),
 }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { RightNowPostState } from "./right-now-post-state.svelte";
@@ -246,20 +244,27 @@ describe("RightNowPostState moderation poll", () => {
 });
 
 describe("RightNowPostState time left", () => {
-	it("ticks every second while a view is attached", async () => {
+	it("ticks every second while something reads it", async () => {
 		vi.setSystemTime(EXPIRATION - 5 * MINUTE);
 		getActiveRightNowPostMock.mockResolvedValue(ownPost());
 		const state = await loadedState();
+		const seen: number[] = [];
+		const stopReading = $effect.root(() => {
+			$effect(() => {
+				seen.push(state.timeLeftMs);
+			});
+		});
+		flushSync();
 
-		expect(state.timeLeftMs).toBe(5 * MINUTE);
-
-		const detach = state.attachView();
 		await vi.advanceTimersByTimeAsync(SECOND);
-		expect(state.timeLeftMs).toBe(5 * MINUTE - SECOND);
+		flushSync();
 
-		detach();
+		expect(seen).toEqual([5 * MINUTE, 5 * MINUTE - SECOND]);
+
+		stopReading();
 		await vi.advanceTimersByTimeAsync(3 * SECOND);
-		expect(state.timeLeftMs).toBe(5 * MINUTE - SECOND);
+
+		expect(seen).toEqual([5 * MINUTE, 5 * MINUTE - SECOND]);
 	});
 });
 
@@ -271,6 +276,21 @@ describe("RightNowPostState expiry", () => {
 		locationRadius: 80,
 		media: [postPhoto()],
 	});
+	const repost = {
+		text: "Hosting now",
+		shareLocation: "DISTANCE_AND_MAP",
+		locationRadius: 80,
+		media: [{ type: "image_v1", data: { id: 316 } }],
+		hosting: true,
+	};
+
+	function nextPost() {
+		return ownPost({
+			id: POST_ID + 1,
+			posted: Date.now(),
+			expiration: Date.now() + 60 * MINUTE,
+		});
+	}
 
 	async function endedState() {
 		vi.setSystemTime(EXPIRATION - MINUTE);
@@ -298,7 +318,6 @@ describe("RightNowPostState expiry", () => {
 
 		await vi.advanceTimersByTimeAsync(1);
 		expect(state.status).toBe("none");
-		expect(state.lastPost?.id).toBe(POST_ID);
 		expect(toastMock).toHaveBeenCalledWith(
 			"Your Right Now session ended",
 			expect.anything(),
@@ -311,32 +330,19 @@ describe("RightNowPostState expiry", () => {
 
 	it("goes again with the last post's text, photo, hosting and location", async () => {
 		const { state, sheetRequested, detach } = await endedState();
-		createRightNowPostMock.mockResolvedValue(
-			ownPost({
-				id: POST_ID + 1,
-				posted: Date.now(),
-				expiration: Date.now() + 60 * MINUTE,
-			}),
-		);
+		createRightNowPostMock.mockResolvedValue(nextPost());
 
 		lastToastAction(toastMock).onClick();
 		await vi.waitFor(() => expect(sheetRequested).toHaveBeenCalledOnce());
 
 		expect(createRightNowPostMock).toHaveBeenCalledExactlyOnceWith({
-			post: {
-				text: "Hosting now",
-				shareLocation: "DISTANCE_AND_MAP",
-				locationRadius: 80,
-				media: [{ type: "image_v1", data: { id: 316 } }],
-				hosting: true,
-			},
+			post: repost,
 		});
 		expect(state.post?.id).toBe(POST_ID + 1);
-		expect(state.lastPost).toBeNull();
 		detach();
 	});
 
-	it("keeps the sheet closed when no free posts are left to go again", async () => {
+	it("keeps the sheet closed and the last post when no free posts are left to go again", async () => {
 		const { state, sheetRequested, detach } = await endedState();
 		createRightNowPostMock.mockRejectedValue(
 			new NoFreeRightNowPostsError(),
@@ -352,7 +358,15 @@ describe("RightNowPostState expiry", () => {
 
 		expect(sheetRequested).not.toHaveBeenCalled();
 		expect(state.freePostsLeft).toBe(0);
-		expect(state.lastPost?.id).toBe(POST_ID);
+
+		createRightNowPostMock.mockResolvedValue(nextPost());
+		lastToastAction(toastMock).onClick();
+		await vi.waitFor(() => expect(sheetRequested).toHaveBeenCalledOnce());
+
+		expect(createRightNowPostMock.mock.calls).toEqual([
+			[{ post: repost }],
+			[{ post: repost }],
+		]);
 		detach();
 	});
 

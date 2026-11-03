@@ -1,5 +1,6 @@
 import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
+import { createSubscriber } from "svelte/reactivity";
 
 import {
 	accountEpoch,
@@ -18,9 +19,6 @@ import {
 	setRightNowPostHidden,
 	updateRightNowPost,
 } from "#lib/api/right-now/post.ts";
-import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
-import { atHomeLocation } from "#lib/entitlements/honduras-hold.ts";
-import { storeLocation } from "#lib/grid/grid.ts";
 import {
 	freeRightNowPostsLeft,
 	type RightNowPostChanges,
@@ -38,9 +36,9 @@ import {
 	repostRequest,
 	textRejectReasonLabel,
 } from "./right-now-post-fields";
+import { atStoredLocation } from "./stored-location";
 
 const SECOND = 1_000;
-const TICK_MS = SECOND;
 const FAST_POLL_MS = 10 * SECOND;
 const FAST_POLL_WINDOW_MS = 60 * SECOND;
 const SLOW_POLL_MS = 60 * SECOND;
@@ -56,23 +54,24 @@ export type RightNowPostRejection = {
 	reasons: string[];
 };
 
-class SignedOutBeforePostRequest extends Error {}
-
 export class RightNowPostState {
 	post: RightNowPostDetails | null = $state.raw(null);
 	freePostsLeft: number | "unlimited" | null = $state(null);
 	loading = $state(true);
-	error: unknown = $state(null);
 	joining = $state(false);
 	saving = $state(false);
-	lastPost: RightNowPostDetails | null = $state.raw(null);
 
-	#clock = $state(now());
-
-	timeLeftMs: number = $derived.by(() => {
-		const expiration = this.post?.expiration ?? null;
-		return expiration === null ? 0 : Math.max(0, expiration - this.#clock);
+	readonly #secondTick = createSubscriber((update) => {
+		const interval = setInterval(update, SECOND);
+		return () => clearInterval(interval);
 	});
+
+	get timeLeftMs(): number {
+		const expiration = this.post?.expiration ?? null;
+		if (expiration === null) return 0;
+		this.#secondTick();
+		return Math.max(0, expiration - now());
+	}
 
 	status: "off" | "active" | "none" = $derived.by(() => {
 		if (this.post === null) return "none";
@@ -85,24 +84,26 @@ export class RightNowPostState {
 
 	rejected: RightNowPostRejection = $derived.by(() => {
 		const { text, photos } = rejectedParts(this.post);
+		const reasons = [
+			...(text?.rejectReasons ?? []).map((reason) =>
+				textRejectReasonLabel({ reason }),
+			),
+			...photos.flatMap(({ reason }) =>
+				reason === null ? [] : [reason],
+			),
+		];
 		return {
 			text: text !== null,
 			photo: photos.length > 0,
-			reasons: [
-				...(text?.rejectReasons ?? []).map((reason) =>
-					textRejectReasonLabel({ reason }),
-				),
-				...photos.flatMap(({ reason }) =>
-					reason === null ? [] : [reason],
-				),
-			],
+			reasons: reasons.filter(
+				(reason, index) => reasons.indexOf(reason) === index,
+			),
 		};
 	});
 
 	readonly #profileId: number;
 	readonly #postReads = new Generation();
 	readonly #allowanceReads = new Generation();
-	readonly #unsubscribeStartOver: () => void;
 	#views = 0;
 	#viewLeft = false;
 	#loaded = false;
@@ -111,7 +112,8 @@ export class RightNowPostState {
 	#pendingSince: number | null = null;
 	#notifiedRejections: string[] = [];
 	#sheetListeners: (() => void)[] = [];
-	#ticker: ReturnType<typeof setInterval> | null = null;
+	#lastPost: RightNowPostDetails | null = null;
+	#followedGeohash: string | null = null;
 	#pollTimer: ReturnType<typeof setTimeout> | null = null;
 	#expiryTimer: ReturnType<typeof setTimeout> | null = null;
 	#expiryFor: number | null = null;
@@ -119,11 +121,6 @@ export class RightNowPostState {
 
 	constructor({ profileId }: { profileId: number }) {
 		this.#profileId = profileId;
-		this.#unsubscribeStartOver = getRightNowFeedState(
-			profileId,
-		).onStartOver(() => {
-			if (untrack(() => this.post) === null) this.#refreshAllowance();
-		});
 	}
 
 	load(): Promise<void> {
@@ -142,102 +139,41 @@ export class RightNowPostState {
 		});
 	}
 
-	goAgain(): Promise<boolean> {
-		const lastPost = this.lastPost;
-		if (lastPost === null) return Promise.resolve(false);
-		return this.#create({
-			request: repostRequest(lastPost),
-			failureLabel: "Failed to start a new Right Now session",
-			onRetry: () => void this.goAgain(),
+	save({ changes }: { changes: RightNowPostChanges }): Promise<boolean> {
+		return this.#editPost({
+			unchanged: () => Object.keys(changes).length === 0,
+			send: async (postId) => {
+				await updateRightNowPost({ postId, changes });
+				if (changes.text !== undefined || changes.media !== undefined) {
+					this.#pendingSince = null;
+					this.#clearPoll();
+				}
+			},
+			merge: (current) => ({
+				...current,
+				hosting: changes.hosting ?? current.hosting,
+				shareLocation: changes.shareLocation ?? current.shareLocation,
+				locationRadius:
+					changes.locationRadius ?? current.locationRadius,
+			}),
+			failureLabel: "Failed to save your post",
+			onRetry: () => void this.save({ changes }),
 		});
 	}
 
-	async save({
-		changes,
-	}: {
-		changes: RightNowPostChanges;
-	}): Promise<boolean> {
-		const post = this.post;
-		if (this.#destroyed || post === null || this.saving) return false;
-		if (Object.keys(changes).length === 0) return true;
-		const epoch = accountEpoch();
-		this.saving = true;
-		try {
-			await updateRightNowPost({ postId: post.id, changes });
-			if (this.#isGone(epoch)) return false;
-			if (changes.text !== undefined || changes.media !== undefined) {
-				this.#pendingSince = null;
-				this.#clearPoll();
-			}
-			this.#mergeIntoPost({
-				postId: post.id,
-				merge: (current) => ({
-					...current,
-					hosting: changes.hosting ?? current.hosting,
-					shareLocation:
-						changes.shareLocation ?? current.shareLocation,
-					locationRadius:
-						changes.locationRadius ?? current.locationRadius,
-				}),
-			});
-			this.#refreshFeed();
-			await this.#refetch({ epoch });
-			return true;
-		} catch (error) {
-			if (this.#isGone(epoch)) return false;
-			if (error instanceof RightNowSessionEndedError) {
-				await this.#refetch({ epoch });
-				return false;
-			}
-			console.error(error);
-			showErrorToast({
-				label: "Failed to save your post",
-				error,
-				onRetry: () => void this.save({ changes }),
-			});
-			return false;
-		} finally {
-			this.saving = false;
-		}
-	}
-
-	async setHidden({ hidden }: { hidden: boolean }): Promise<boolean> {
-		const post = this.post;
-		if (this.#destroyed || post === null || this.saving) return false;
-		if ((post.postStatus === "HIDDEN") === hidden) return true;
-		const epoch = accountEpoch();
-		this.saving = true;
-		try {
-			await setRightNowPostHidden({ postId: post.id, hidden });
-			if (this.#isGone(epoch)) return false;
-			this.#mergeIntoPost({
-				postId: post.id,
-				merge: (current) => ({
-					...current,
-					postStatus: hidden ? "HIDDEN" : "ACTIVE",
-				}),
-			});
-			this.#refreshFeed();
-			await this.#refetch({ epoch });
-			return true;
-		} catch (error) {
-			if (this.#isGone(epoch)) return false;
-			if (error instanceof RightNowSessionEndedError) {
-				await this.#refetch({ epoch });
-				return false;
-			}
-			console.error(error);
-			showErrorToast({
-				label: hidden
-					? "Failed to turn off Right Now"
-					: "Failed to turn on Right Now",
-				error,
-				onRetry: () => void this.setHidden({ hidden }),
-			});
-			return false;
-		} finally {
-			this.saving = false;
-		}
+	setHidden({ hidden }: { hidden: boolean }): Promise<boolean> {
+		return this.#editPost({
+			unchanged: (post) => (post.postStatus === "HIDDEN") === hidden,
+			send: (postId) => setRightNowPostHidden({ postId, hidden }),
+			merge: (current) => ({
+				...current,
+				postStatus: hidden ? "HIDDEN" : "ACTIVE",
+			}),
+			failureLabel: hidden
+				? "Failed to turn off Right Now"
+				: "Failed to turn on Right Now",
+			onRetry: () => void this.setHidden({ hidden }),
+		});
 	}
 
 	onSheetRequest(listener: () => void): () => void {
@@ -268,12 +204,20 @@ export class RightNowPostState {
 		};
 	}
 
+	followLocation(geohash: string): void {
+		const previous = this.#followedGeohash;
+		this.#followedGeohash = geohash;
+		if (previous === null || previous === geohash) return;
+		untrack(() => {
+			if (this.post === null) this.#refreshAllowance();
+		});
+	}
+
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
 		this.#postReads.next();
 		this.#allowanceReads.next();
-		this.#unsubscribeStartOver();
 		this.#sheetListeners = [];
 		this.#syncTimers();
 	}
@@ -288,11 +232,9 @@ export class RightNowPostState {
 			]);
 			if (this.#isGone(epoch)) return;
 			this.#loaded = true;
-			this.error = null;
 		} catch (error) {
 			if (this.#isGone(epoch)) return;
 			console.error(error);
-			this.error = error;
 		} finally {
 			if (!this.#isGone(epoch)) this.loading = false;
 		}
@@ -311,13 +253,12 @@ export class RightNowPostState {
 		const epoch = accountEpoch();
 		this.joining = true;
 		try {
-			const created = await this.#atHome({
+			const created = await atStoredLocation({
 				epoch,
 				request: () => createRightNowPost({ post: request }),
 			});
 			if (this.#isGone(epoch)) return false;
 			this.#postReads.next();
-			this.lastPost = null;
 			if (typeof this.freePostsLeft === "number")
 				this.freePostsLeft = Math.max(0, this.freePostsLeft - 1);
 			this.#applyPost(created);
@@ -347,20 +288,43 @@ export class RightNowPostState {
 		}
 	}
 
-	#atHome<T>({
-		epoch,
-		request,
+	async #editPost({
+		unchanged,
+		send,
+		merge,
+		failureLabel,
+		onRetry,
 	}: {
-		epoch: number;
-		request: () => Promise<T>;
-	}): Promise<T> {
-		return atHomeLocation(async () => {
-			if (!isAccountEpochCurrent(epoch))
-				throw new SignedOutBeforePostRequest();
-			const { geohash = null } = await getPreferences();
-			if (geohash !== null) await storeLocation({ geohash });
-			return request();
-		});
+		unchanged: (post: RightNowPostDetails) => boolean;
+		send: (postId: number) => Promise<void>;
+		merge: (post: RightNowPostDetails) => RightNowPostDetails;
+		failureLabel: string;
+		onRetry: () => void;
+	}): Promise<boolean> {
+		const post = this.post;
+		if (this.#destroyed || post === null || this.saving) return false;
+		if (unchanged(post)) return true;
+		const epoch = accountEpoch();
+		this.saving = true;
+		try {
+			await send(post.id);
+			if (this.#isGone(epoch)) return false;
+			this.#mergeIntoPost({ postId: post.id, merge });
+			this.#refreshFeed();
+			await this.#refetch({ epoch });
+			return true;
+		} catch (error) {
+			if (this.#isGone(epoch)) return false;
+			if (error instanceof RightNowSessionEndedError) {
+				await this.#refetch({ epoch });
+				return false;
+			}
+			console.error(error);
+			showErrorToast({ label: failureLabel, error, onRetry });
+			return false;
+		} finally {
+			this.saving = false;
+		}
 	}
 
 	async #readPost({ epoch }: { epoch: number }): Promise<void> {
@@ -372,7 +336,7 @@ export class RightNowPostState {
 
 	async #readAllowance({ epoch }: { epoch: number }): Promise<void> {
 		const read = this.#allowanceReads.next();
-		const entitlements = await this.#atHome({
+		const entitlements = await atStoredLocation({
 			epoch,
 			request: getRightNowPostEntitlements,
 		});
@@ -417,7 +381,6 @@ export class RightNowPostState {
 		const previous = this.post;
 		const post = next !== null && isLivePost(next) ? next : null;
 		this.post = post;
-		this.#clock = now();
 		if (previous !== null && post === null) this.#ended(previous);
 		this.#trackModeration();
 		this.#syncTimers();
@@ -441,7 +404,7 @@ export class RightNowPostState {
 	}
 
 	#ended(previous: RightNowPostDetails): void {
-		this.lastPost = previous;
+		this.#lastPost = previous;
 		toast("Your Right Now session ended", {
 			id: ENDED_TOAST_ID,
 			action: {
@@ -453,8 +416,18 @@ export class RightNowPostState {
 		this.#refreshAllowance();
 	}
 
+	#goAgain(): Promise<boolean> {
+		const lastPost = this.#lastPost;
+		if (lastPost === null) return Promise.resolve(false);
+		return this.#create({
+			request: repostRequest(lastPost),
+			failureLabel: "Failed to start a new Right Now session",
+			onRetry: () => void this.#goAgain(),
+		});
+	}
+
 	async #goAgainAndOpenSheet(): Promise<void> {
-		if (await this.goAgain()) this.#requestSheet();
+		if (await this.#goAgain()) this.#requestSheet();
 	}
 
 	#requestSheet(): void {
@@ -467,24 +440,10 @@ export class RightNowPostState {
 
 	#syncTimers(): void {
 		const attached = this.#views > 0 && !this.#destroyed;
-		this.#syncTicker({ running: attached });
 		this.#syncExpiry({
 			expiration: attached ? (this.post?.expiration ?? null) : null,
 		});
 		this.#syncPoll({ running: attached && this.pendingModeration });
-	}
-
-	#syncTicker({ running }: { running: boolean }): void {
-		if (!running) {
-			if (this.#ticker !== null) clearInterval(this.#ticker);
-			this.#ticker = null;
-			return;
-		}
-		if (this.#ticker !== null) return;
-		this.#clock = now();
-		this.#ticker = setInterval(() => {
-			this.#clock = now();
-		}, TICK_MS);
 	}
 
 	#syncExpiry({ expiration }: { expiration: number | null }): void {

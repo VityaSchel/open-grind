@@ -76,11 +76,6 @@
 		if (photoRejected) return "Your photo was rejected";
 		return "Your text was rejected";
 	});
-	const rejectReasons = $derived(
-		post.rejected.reasons.filter(
-			(reason, index, reasons) => reasons.indexOf(reason) === index,
-		),
-	);
 
 	function reset(form: PostForm) {
 		baseline = form;
@@ -190,9 +185,9 @@
 						<WarningCircleIcon weight="fill" />
 						<Alert.Title>{rejectionTitle}</Alert.Title>
 						<Alert.Description>
-							{#if rejectReasons.length > 0}
+							{#if post.rejected.reasons.length > 0}
 								<ul class="list-disc ps-4">
-									{#each rejectReasons as reason (reason)}
+									{#each post.rejected.reasons as reason (reason)}
 										<li>{reason}</li>
 									{/each}
 								</ul>
