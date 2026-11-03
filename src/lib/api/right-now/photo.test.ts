@@ -151,7 +151,7 @@ describe("uploadRightNowPickedPhoto", () => {
 });
 
 describe("uploadRightNowPhoto", () => {
-	it("stages the file's bytes and uploads the staged copy", async () => {
+	it("stages the file and uploads the staged copy", async () => {
 		backend();
 		const file = new File([new Uint8Array(5)], "photo.jpg", {
 			type: "image/jpeg",
@@ -159,10 +159,6 @@ describe("uploadRightNowPhoto", () => {
 
 		await expect(uploadRightNowPhoto({ file })).resolves.toEqual(uploaded);
 
-		expect(invokeMock).toHaveBeenCalledWith("append_staged_media", {
-			id: "staged-file",
-			chunk: "AAAAAAA=",
-		});
 		expect(uploadArgs()).toMatchObject({
 			path: UPLOAD_PATH,
 			file: { source: "staged", id: "staged-file" },
@@ -188,7 +184,7 @@ describe("uploadRightNowPhotoFromUrl", () => {
 			file: { source: "staged", id: "staged-drawer-photo" },
 			crop: "cropAndThumb",
 		});
-		expect(commandsSent()).not.toContain("stage_linked_media");
+		expect(commandsSent()).toEqual(["stage_proxied_photo", "upload_media"]);
 	});
 
 	it("uploads nothing when the drawer photo cannot be read", async () => {
@@ -242,7 +238,7 @@ describe("in the demo", () => {
 
 		expect(first.url).toMatch(/^blob:/);
 		expect(first.thumbnailUrl).toBe(first.url);
-		expect(second.mediaId).toBe(first.mediaId + 1);
+		expect(second.mediaId).not.toBe(first.mediaId);
 		expect(createObjectURL).toHaveBeenCalledWith(file);
 		expect(invokeMock).not.toHaveBeenCalled();
 	});

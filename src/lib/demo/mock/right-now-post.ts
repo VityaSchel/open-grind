@@ -1,59 +1,31 @@
 import {
 	type RightNowMediaUploadResponse,
+	type RightNowOwnPostMedia,
 	type RightNowPostChanges,
+	rightNowPostChangesSchema,
+	type RightNowPostDetails,
 	type RightNowPostRequest,
 	rightNowPostRequestSchema,
 } from "#lib/model/right-now/post.ts";
 import { now } from "#lib/util/clock.ts";
 import { demoMeProfileId, HOUR, SECOND } from "../config";
+import type { DemoResponse } from "../route";
 import { picsum } from "./avatars";
 
-type DemoResponse = { status: number; body: unknown };
-
-export type DemoRightNowPostMedia = {
-	mediaId: number;
-	thumbnailUrl: string;
-	fullImageUrl: string;
+export type DemoRightNowPostMedia = RightNowOwnPostMedia & {
 	contentType: "image/jpeg";
-	state: "APPROVED";
-	reason: null;
 	isRejectAutomated: true;
-	shouldBlur: false;
-	isNsfw: false;
 	source: "RIGHT_NOW";
 };
 
-type DemoModeratedText = {
-	id: number;
-	postId: number;
-	text: string;
-	textStatus: "AWAITING_MODERATION";
-	rejectReasons: string[];
-	createdAt: number;
-	updatedAt: number;
-	deleted: false;
-};
-
-export type DemoRightNowPost = {
-	id: number;
-	profileId: number;
-	posted: number | null;
-	expiration: number | null;
-	hosting: boolean;
-	activeText: string | null;
-	moderatedText: DemoModeratedText | null;
+type DemoRightNowPost = Omit<RightNowPostDetails, "media"> & {
 	media: DemoRightNowPostMedia[];
-	lat: null;
-	lon: null;
-	postStatus: "ACTIVE" | "HIDDEN" | "AWAITING_PAYMENT";
-	shareLocation: RightNowPostRequest["shareLocation"];
-	locationRadius: number;
 	isDiscreet: "NOT_SELECTED" | "FALSE";
 	sharedFields: string[];
 	boostUpsellOfferAvailableUntil: null;
 };
 
-const POST_LIFETIME = HOUR;
+export const POST_LIFETIME = HOUR;
 const TEXT_MODERATION_DELAY = 10 * SECOND;
 
 const clientAction: DemoResponse = {
@@ -89,26 +61,39 @@ export function demoUploadRightNowPhoto({
 	return { mediaId, url, thumbnailUrl: url };
 }
 
+export function demoRightNowPhoto({
+	mediaId,
+	seed,
+	url,
+}: {
+	mediaId: number;
+	seed: string;
+	url?: string;
+}): DemoRightNowPostMedia {
+	return {
+		mediaId,
+		thumbnailUrl: url ?? picsum({ seed, width: 480, height: 480 }),
+		fullImageUrl: url ?? picsum({ seed, width: 1024, height: 1024 }),
+		contentType: "image/jpeg",
+		state: "APPROVED",
+		reason: null,
+		isRejectAutomated: true,
+		shouldBlur: false,
+		isNsfw: false,
+		source: "RIGHT_NOW",
+	};
+}
+
 function postMedia(
 	media: RightNowPostRequest["media"],
 ): DemoRightNowPostMedia[] {
-	return media.map(({ data: { id } }): DemoRightNowPostMedia => {
-		const seed = `right-now-own-${id}`;
-		const uploaded = uploadedPhotoUrls.get(id);
-		return {
+	return media.map(({ data: { id } }) =>
+		demoRightNowPhoto({
 			mediaId: id,
-			thumbnailUrl: uploaded ?? picsum({ seed, width: 480, height: 480 }),
-			fullImageUrl:
-				uploaded ?? picsum({ seed, width: 1024, height: 1024 }),
-			contentType: "image/jpeg",
-			state: "APPROVED",
-			reason: null,
-			isRejectAutomated: true,
-			shouldBlur: false,
-			isNsfw: false,
-			source: "RIGHT_NOW",
-		};
-	});
+			seed: `right-now-own-${id}`,
+			url: uploadedPhotoUrls.get(id),
+		}),
+	);
 }
 
 function moderatedText({
@@ -117,7 +102,7 @@ function moderatedText({
 }: {
 	postId: number;
 	text: string | undefined;
-}): DemoModeratedText | null {
+}): DemoRightNowPost["moderatedText"] {
 	if (!text) return null;
 	const createdAt = now();
 	return {
@@ -144,20 +129,13 @@ function settleModeration(post: DemoRightNowPost): void {
 	post.moderatedText = null;
 }
 
-export function demoRightNowPostEntitlements(): {
-	type: "GRANTED";
-	count: number;
-} {
-	return { type: "GRANTED", count: freePostsLeft };
-}
-
 export function demoActiveRightNowPost(): DemoRightNowPost | null {
 	if (ownPost === null || hasExpired(ownPost)) return null;
 	settleModeration(ownPost);
 	return structuredClone(ownPost);
 }
 
-export function demoCreateRightNowPost({
+function demoCreateRightNowPost({
 	post,
 }: {
 	post: RightNowPostRequest;
@@ -199,7 +177,7 @@ function editablePost(
 	return { post: ownPost };
 }
 
-export function demoUpdateRightNowPost({
+function demoUpdateRightNowPost({
 	postId,
 	changes,
 }: {
@@ -224,7 +202,7 @@ export function demoUpdateRightNowPost({
 	return noContent;
 }
 
-export function demoSetRightNowPostHidden({
+function demoSetRightNowPostHidden({
 	postId,
 	hidden,
 }: {
@@ -248,7 +226,7 @@ export function demoRightNowPostRoute({
 	body: unknown;
 }): DemoResponse | null {
 	if (method === "GET" && rawPath === "/v1/rightnow/entitlements/posts")
-		return { status: 200, body: demoRightNowPostEntitlements() };
+		return { status: 200, body: { type: "GRANTED", count: freePostsLeft } };
 	if (method === "GET" && rawPath === "/v3/rightnow/active-post")
 		return { status: 200, body: { post: demoActiveRightNowPost() } };
 	if (method === "POST" && rawPath === "/v3/rightnow/posts")
@@ -262,7 +240,7 @@ export function demoRightNowPostRoute({
 	if (version === "v4" && segments.length === 4)
 		return demoUpdateRightNowPost({
 			postId: Number(id),
-			changes: body as RightNowPostChanges,
+			changes: rightNowPostChangesSchema.parse(body),
 		});
 	if (version === "v1" && segments.length === 5 && settings === "settings") {
 		const { hidden } = (body ?? {}) as { hidden?: boolean };

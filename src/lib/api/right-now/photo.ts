@@ -8,7 +8,7 @@ import {
 	rightNowMediaUploadResponseSchema,
 } from "#lib/model/right-now/post.ts";
 import {
-	localFileOf,
+	demoPickedFile,
 	type MediaFileDescriptor,
 	mediaFileDescriptor,
 } from "#lib/platform/media-file.ts";
@@ -40,21 +40,15 @@ async function uploadPhoto({
 	return response.jsonParsed(rightNowMediaUploadResponseSchema);
 }
 
-function demoUploadFile({ file }: { file: File }): RightNowMediaUploadResponse {
-	return demoUploadRightNowPhoto({ url: URL.createObjectURL(file) });
-}
-
 export async function uploadRightNowPickedPhoto({
 	media,
 }: {
 	media: PickedMedia;
 }): Promise<RightNowMediaUploadResponse> {
 	if (__DEMO__) {
-		const file = localFileOf(media);
-		if (file === null) {
-			throw new Error("The demo only reads files picked in the browser");
-		}
-		return demoUploadFile({ file });
+		return demoUploadRightNowPhoto({
+			url: URL.createObjectURL(demoPickedFile(media)),
+		});
 	}
 	return uploadPhoto({ file: mediaFileDescriptor(media) });
 }
@@ -64,7 +58,6 @@ export async function uploadRightNowPhoto({
 }: {
 	file: File;
 }): Promise<RightNowMediaUploadResponse> {
-	if (__DEMO__) return demoUploadFile({ file });
 	return uploadRightNowPickedPhoto({ media: await stageFile(file) });
 }
 

@@ -80,7 +80,7 @@ import {
 	demoSetAccountPreferences,
 } from "./mock/settings";
 
-type DemoResponse = { status: number; body: unknown };
+export type DemoResponse = { status: number; body: unknown };
 
 function ok(body: unknown): DemoResponse {
 	return { status: 200, body };

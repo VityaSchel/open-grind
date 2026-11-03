@@ -91,10 +91,6 @@ function ownFeedPosts() {
 	);
 }
 
-function advance(ms: number) {
-	vi.setSystemTime(Date.now() + ms);
-}
-
 beforeEach(async () => {
 	vi.useFakeTimers({ toFake: ["Date"] });
 	vi.setSystemTime(START);
@@ -131,7 +127,7 @@ describe("demo right now own post", () => {
 	it("answers a create at zero free posts with an unpayable post it does not keep", () => {
 		for (let round = 0; round < 3; round++) {
 			createdPost();
-			advance(HOUR);
+			vi.advanceTimersByTime(HOUR);
 		}
 		expect(freePostsLeft()).toBe(0);
 
@@ -173,7 +169,7 @@ describe("demo right now own post", () => {
 		});
 		expect(ownFeedPosts()).toEqual([]);
 
-		advance(10 * MINUTE);
+		vi.advanceTimersByTime(10 * MINUTE);
 		expect(setHidden({ postId: id, hidden: false }).status).toBe(204);
 		expect(activePost()).toMatchObject({
 			postStatus: "ACTIVE",
@@ -184,7 +180,7 @@ describe("demo right now own post", () => {
 
 	it("moderates joined text for ten seconds and puts edited text live at once", () => {
 		const { id } = createdPost({
-			post: { ...joinBody, text: "Here for coffee", hosting: true },
+			post: { ...joinBody, text: "Here for coffee" },
 		});
 		expect(activePost()).toMatchObject({
 			activeText: null,
@@ -195,25 +191,35 @@ describe("demo right now own post", () => {
 		});
 		expect(ownFeedPosts()[0]?.text).toBeUndefined();
 
-		advance(10 * SECOND);
+		vi.advanceTimersByTime(10 * SECOND);
 		expect(activePost()).toMatchObject({
 			activeText: "Here for coffee",
 			moderatedText: null,
 		});
 
+		expect(
+			edit({ postId: id, changes: { text: "Door's open" } }).status,
+		).toBe(204);
+		expect(activePost()).toMatchObject({
+			activeText: "Door's open",
+			moderatedText: null,
+		});
+		expect(ownFeedPosts()[0]?.text).toBe("Door's open");
+	});
+
+	it("resolves an uploaded photo, edits location sharing and removes the photo, keeping the own feed card in step", () => {
+		const { id } = createdPost({ post: { ...joinBody, hosting: true } });
 		const photo = demo.demoUploadRightNowPhoto({
 			url: "https://picsum.photos/seed/own-post/600/800",
 		});
 		const changes: RightNowPostChanges = {
-			text: "Door's open",
 			media: [{ type: "image_v1", data: { id: photo.mediaId } }],
 			shareLocation: "DISTANCE_AND_MAP",
 			locationRadius: 40,
 		};
+
 		expect(edit({ postId: id, changes }).status).toBe(204);
 		expect(activePost()).toMatchObject({
-			activeText: "Door's open",
-			moderatedText: null,
 			hosting: true,
 			media: [
 				{
@@ -225,27 +231,27 @@ describe("demo right now own post", () => {
 			shareLocation: "DISTANCE_AND_MAP",
 			locationRadius: 40,
 		});
+		expect(ownFeedPosts()[0]).toMatchObject({
+			media: [
+				{
+					type: "image_v1",
+					data: { mediaId: photo.mediaId, fullImageUrl: photo.url },
+				},
+			],
+		});
 
 		expect(edit({ postId: id, changes: { media: [] } }).status).toBe(204);
-		expect(activePost()).toMatchObject({
-			activeText: "Door's open",
-			media: [],
-			locationRadius: 40,
-		});
-		expect(ownFeedPosts()[0]).toMatchObject({
-			text: "Door's open",
-			hosting: true,
-			media: [],
-		});
+		expect(activePost()).toMatchObject({ media: [], locationRadius: 40 });
+		expect(ownFeedPosts()[0]).toMatchObject({ hosting: true, media: [] });
 	});
 
 	it("ends the post an hour after it was posted", () => {
 		const { id } = createdPost();
 
-		advance(HOUR - 1);
+		vi.advanceTimersByTime(HOUR - 1);
 		expect(activePost()?.id).toBe(id);
 
-		advance(1);
+		vi.advanceTimersByTime(1);
 		expect(activePost()).toBeNull();
 		expect(ownFeedPosts()).toEqual([]);
 
