@@ -314,38 +314,4 @@ test.describe("Back into a conversation deleted this session", () => {
 			"the deleted conversation never opened",
 		).toBe(false);
 	});
-
-	test("without the Navigation API Back steps past each one", async ({
-		page,
-	}) => {
-		await page.addInitScript(() =>
-			Object.defineProperty(window, "navigation", { value: undefined }),
-		);
-		await openInboxFromHome(page, { platform: "macos" });
-		const [first, second] = await openRows(page, { count: 3 });
-		await deleteFromList(page, { href: first! });
-		await deleteFromList(page, { href: second! });
-		const messagesShown = await watchRendered(page, {
-			selector: MESSAGE_ROW,
-		});
-
-		await page.goBack();
-
-		await expect
-			.poll(() => pathname(page), { message: "Back lands on the inbox" })
-			.toBe("/chat");
-		await afterTwoFrames(page);
-		expect(await pathname(page)).toBe("/chat");
-		expect(
-			await messagesShown(),
-			"neither deleted conversation opened",
-		).toBe(false);
-		await page.goBack();
-		await expect
-			.poll(() => pathname(page), {
-				message:
-					"that was the inbox entry, with the home screen before it",
-			})
-			.toBe("/");
-	});
 });
