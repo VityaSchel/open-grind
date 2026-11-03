@@ -31,7 +31,7 @@ import {
 	QUOTES_ID,
 } from "./chat-fixtures";
 import { changeScene } from "./drive";
-import { failChunks, failing } from "./faults";
+import { failChunks, failing, LIGHTBOX_CHUNK_TEXT } from "./faults";
 import { addingToast, holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -40,7 +40,6 @@ const OLDER_MESSAGES = { pattern: "^/v5/chat/conversation/.*[?&]pageKey=" };
 const SINGLE_MESSAGE = { pattern: "^/v4/chat/conversation/[^/]+/message/" };
 const SEND = "/v4/chat/message/send";
 const REACT_WITH_FIRE = "React with fire";
-const LIGHTBOX_CHUNK_TEXT = "pswpModule is not valid";
 
 async function showWholeThread({
 	page,

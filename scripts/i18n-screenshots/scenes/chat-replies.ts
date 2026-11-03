@@ -10,12 +10,11 @@ import {
 	scrollToTop,
 } from "./chat-drive";
 import { MEDIA_REPLIES_ID, MEDIA_REPLIES_INBOX } from "./chat-fixtures";
-import { failChunks } from "./faults";
+import { failChunks, LIGHTBOX_CHUNK_TEXT } from "./faults";
 import { openProfile } from "./profile-drive";
 import { addingToast } from "./toast";
 
 const THREAD = "chat/conversation/media-replies";
-const LIGHTBOX_BANNER = "PhotoSwipe Lightbox";
 const REPLY_TEXT = "Lorem ipsum dolor.";
 
 function sendReplyButton(page: Page): Locator {
@@ -80,7 +79,7 @@ export const photoReplyOpenFailure: Scene = {
 			screen: THREAD,
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await failChunks({ page, containing: LIGHTBOX_BANNER });
+				await failChunks({ page, containing: LIGHTBOX_CHUNK_TEXT });
 				await openConversation({ page, withId: MEDIA_REPLIES_ID });
 				await addingToast({
 					page,
