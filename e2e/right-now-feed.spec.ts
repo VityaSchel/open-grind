@@ -1,31 +1,30 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
+import { METRES_PER_KILOMETRE } from "../src/lib/util/units";
 import {
 	afterTwoFrames,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	openGrid,
 } from "./support/app";
-import { routeDemoThroughFaultHook } from "./support/demo-faults";
+import { failDemoRequests } from "./support/demo-faults";
 
 const POST = '[data-slot="right-now-post"]';
 const DISCREET_POST = '[data-slot="right-now-discreet-post"]';
 const POST_DISTANCE = '[data-slot="right-now-post-distance"]';
-const FEED_CONTENT = '[data-slot="right-now-content"]';
+const FEED_SCROLLER = '[data-slot="right-now-scroller"]';
 const DEMO_DISCREET_POSTS = 2;
 const ORDERED_DISTANCES_CHECKED = 10;
 const FEED_TIMEOUT = 60_000;
 const SCROLLED_TOP = 1200;
 const METRES_PER_UNIT: Record<string, number> = {
 	m: 1,
-	km: 1000,
-	ft: 0.3048,
-	mi: 1609.344,
+	km: METRES_PER_KILOMETRE,
 };
 
 const articles = (page: Page) => page.getByRole("article");
-const feedScroller = (page: Page) => page.locator(FEED_CONTENT).locator("..");
+const feedScroller = (page: Page) => page.locator(FEED_SCROLLER);
 
 async function goToRightNow(page: Page): Promise<void> {
 	await openGrid(page);
@@ -77,21 +76,6 @@ async function openFilter(page: Page, name: string) {
 async function sortByDistance(page: Page): Promise<void> {
 	await page.getByRole("button", { name: "Sort: Newest" }).click();
 	await page.getByRole("button", { name: "Sort: Distance" }).waitFor();
-}
-
-async function failFirstFeedRequest(page: Page): Promise<void> {
-	await page.addInitScript(() => {
-		let failed = false;
-		Object.assign(window, {
-			__demoFault: ({ path }: { path: string }) => {
-				if (failed || !/^\/v[456]\/rightnow\/feed\b/.test(path))
-					return undefined;
-				failed = true;
-				return { status: 503, body: { message: "Request failed" } };
-			},
-		});
-	});
-	await routeDemoThroughFaultHook(page);
 }
 
 test.describe("the demo feed", () => {
@@ -238,7 +222,11 @@ test.describe("a feed whose first load fails", () => {
 	test("shows the error, and Retry loads the posts", async ({ page }) => {
 		test.setTimeout(240_000);
 		await installTauriShim(page);
-		await failFirstFeedRequest(page);
+		await failDemoRequests(page, {
+			pathPrefix: "/v4/rightnow/feed",
+			times: 1,
+			status: 503,
+		});
 		await goToRightNow(page);
 
 		const retry = page.getByRole("button", { name: "Retry" });

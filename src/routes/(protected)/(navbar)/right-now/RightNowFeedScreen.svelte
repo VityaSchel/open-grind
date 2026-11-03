@@ -42,12 +42,12 @@
 		/>
 	{/if}
 	<div
-		class="pull-scroller"
 		bind:this={container}
+		data-slot="right-now-scroller"
+		class="pull-scroller"
 		onscroll={() => (feed.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div
-			data-slot="right-now-content"
 			data-refresh-content
 			class="mx-auto min-h-overscrollable flex w-full max-w-160 flex-col px-4 pt-header-clear-17 pb-nav-clear"
 		>
