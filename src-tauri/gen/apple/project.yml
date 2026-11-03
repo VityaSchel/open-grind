@@ -37,7 +37,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.1.0
-        CFBundleVersion: "11000"
+        CFBundleVersion: "12000"
     entitlements:
       path: open-grind_iOS/open-grind_iOS.entitlements
     scheme:
