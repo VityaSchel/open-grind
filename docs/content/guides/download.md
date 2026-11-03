@@ -164,7 +164,7 @@ brew trust open-grind/tap
 brew install --cask open-grind
 ```
 
-Always tap with the URL: without it, Homebrew looks for the tap on GitHub, where `open-grind` is not the project's account. To uninstall, run `brew uninstall --cask open-grind` (add `--zap` to also delete your data, except the keychain items), then `brew untap open-grind/tap`.
+Always tap with the URL above. To uninstall, run `brew uninstall --cask open-grind` (add `--zap` to also delete your data, except the keychain items), then `brew untap open-grind/tap`.
 
 ## iOS
 
