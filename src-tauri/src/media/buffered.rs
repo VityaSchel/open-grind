@@ -140,18 +140,30 @@ pub async fn settle(
 	range: Option<&str>,
 	is_head: bool,
 ) -> Response<Vec<u8>> {
-	if deliverable_status(fetched.status) == Some(StatusCode::OK) {
-		let media = CachedMedia {
-			content_type: fetched.content_type,
-			body: fetched.body,
-		};
-		proxy.cache.lock().await.put(key, media.clone());
-		proxy.failures.lock().await.forget(key);
-		return deliver_ranged(&media, range, is_head, Freshness::of(url));
+	match remember(proxy, key, url, fetched).await {
+		Ok(media) => deliver_ranged(&media, range, is_head, Freshness::of(url)),
+		Err(fetched) => deliver_upstream(fetched, is_head),
 	}
-	let failure = MediaFailure::of_status(fetched.status, url);
-	proxy.failures.lock().await.record(key, failure);
-	deliver_upstream(fetched, is_head)
+}
+
+async fn remember(
+	proxy: &MediaProxy,
+	key: &str,
+	url: &str,
+	fetched: MediaResponse,
+) -> Result<CachedMedia, MediaResponse> {
+	if deliverable_status(fetched.status) != Some(StatusCode::OK) {
+		let failure = MediaFailure::of_status(fetched.status, url);
+		proxy.failures.lock().await.record(key, failure);
+		return Err(fetched);
+	}
+	let media = CachedMedia {
+		content_type: fetched.content_type,
+		body: fetched.body,
+	};
+	proxy.cache.lock().await.put(key, media.clone());
+	proxy.failures.lock().await.forget(key);
+	Ok(media)
 }
 
 pub async fn read_photo<R: Runtime>(
@@ -173,10 +185,10 @@ pub async fn read_photo<R: Runtime>(
 	let fetched = fetch(app, url, MediaFetcher::ImageLoader, None)
 		.await
 		.ok()?;
-	let whole = deliverable_status(fetched.status) == Some(StatusCode::OK);
-	let body = fetched.body.clone();
-	settle(&proxy, key, url, fetched, None, true).await;
-	whole.then_some(body)
+	remember(&proxy, key, url, fetched)
+		.await
+		.ok()
+		.map(|media| media.body)
 }
 
 #[cfg(test)]
