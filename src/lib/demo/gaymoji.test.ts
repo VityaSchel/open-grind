@@ -5,8 +5,7 @@ import {
 	FEATURED_CATEGORY,
 	KNOWN_GAYMOJI_CATEGORIES,
 } from "$lib/chat/gaymoji-sections";
-import { demoGaymojiImageUrl } from "$lib/demo/mock/gaymoji";
-import { demoRoute } from "$lib/demo/route";
+import { demoGaymojiImageUrl, demoRoute } from "$lib/demo";
 import { gaymojiManifestSchema } from "$lib/model/messaging/gaymoji";
 
 function manifest() {

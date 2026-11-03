@@ -1,19 +1,10 @@
-import {
-	afterEach,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	BlockedProfileError,
 	clearProfileCaches,
 	getProfile,
 } from "$lib/api/users/profiles";
-import { loadDemo } from "$lib/demo";
 import { profileSchema } from "$lib/model/users/profiles";
 import { demoRoute } from "./route";
 import { type ScreenshotScene, screenshotScene } from "./screenshot-scene";
@@ -66,8 +57,6 @@ async function blockedByUs(profileId: number): Promise<boolean> {
 	}
 	return error.blockedByUs;
 }
-
-beforeAll(loadDemo);
 
 beforeEach(() => {
 	vi.stubGlobal("__DEMO__", true);

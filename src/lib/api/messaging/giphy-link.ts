@@ -1,5 +1,5 @@
 import { fetchExternal } from "$lib/api/transport";
-import { demo } from "$lib/demo";
+import { demoLinkedGifSize } from "$lib/demo";
 import { GIPHY_MEDIA_HOST, giphyBody } from "$lib/model/messaging/gifs";
 import type { MediaDimensions } from "$lib/util/media-dimensions";
 import { giphyMediaSrc, type GiphyTile } from "./gifs";
@@ -94,7 +94,7 @@ async function fetchRenditionSize({
 	urlPath: string;
 	stillPath: string;
 }): Promise<MediaDimensions | null> {
-	if (__DEMO__) return demo().demoLinkedGifSize(id);
+	if (__DEMO__) return demoLinkedGifSize(id);
 	const [size, stillSize] = await Promise.all([
 		fetchHeaderSize(urlPath),
 		fetchHeaderSize(stillPath),

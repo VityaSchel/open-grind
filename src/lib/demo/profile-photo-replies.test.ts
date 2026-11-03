@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import z from "zod";
 
 import { clearAccountCaches } from "$lib/api/account-caches";
+import { demoRoute } from "$lib/demo";
 import { demoMeProfileId } from "$lib/demo/config";
 import { photosOf } from "$lib/demo/mock/profiles";
-import { demoRoute } from "$lib/demo/route";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 
 describe("demo profile photo replies", () => {

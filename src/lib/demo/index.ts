@@ -1,12 +1,8 @@
-import type * as DemoRuntime from "./runtime";
-
-let runtime: typeof DemoRuntime | undefined;
-
-export async function loadDemo(): Promise<void> {
-	runtime ??= await import("./runtime");
-}
-
-export function demo(): typeof DemoRuntime {
-	if (runtime === undefined) throw new Error("The demo is not loaded yet");
-	return runtime;
-}
+export { demoMeProfileId } from "./config";
+export { demoBaseAvatarUrl, demoMediaUrl } from "./mock/avatars";
+export { demoUploadAlbumContent } from "./mock/albums";
+export { demoSentMessage } from "./mock/conversations";
+export { demoUploadChatMedia } from "./mock/drawer";
+export { demoGaymojiImageUrl } from "./mock/gaymoji";
+export { demoGiphyMediaUrl, demoLinkedGifSize } from "./mock/giphy";
+export { demoCallMethod, demoRoute } from "./route";

@@ -2,7 +2,7 @@ import z from "zod";
 
 import { errorUrnFromBody } from "$lib/api/error-urn";
 import { fetchRest } from "$lib/api/transport";
-import { demo } from "$lib/demo";
+import { demoSentMessage } from "$lib/demo";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
@@ -110,7 +110,7 @@ export async function sendMessage({
 	// The HTTP endpoint 400s when `replyToMessageId` is set — it's only
 	// accepted by the websocket command variant of this same request.
 	if (replyToMessageId !== undefined) {
-		if (__DEMO__) return demo().demoSentMessage(body);
+		if (__DEMO__) return demoSentMessage(body);
 		return await ws.sendCommand({
 			type: "chat.v1.message.send",
 			payload: body,

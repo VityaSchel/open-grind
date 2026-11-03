@@ -1,6 +1,6 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core";
 
-import { demo } from "$lib/demo";
+import { demoMediaUrl } from "$lib/demo";
 import { toBase64Url } from "$lib/util/base64";
 
 const MEDIA_SCHEME = "ogmedia";
@@ -44,7 +44,7 @@ export function profileMediaUrl({
 	mediaHash: string;
 	size: keyof typeof CDN_VARIANTS;
 }): string {
-	if (__DEMO__) return demo().demoMediaUrl(mediaHash);
+	if (__DEMO__) return demoMediaUrl(mediaHash);
 	return proxyMediaUrl(
 		`https://cdns.grindr.com/images/${CDN_VARIANTS[size]}/${mediaHash}`,
 	);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { demoRoute } from "$lib/demo/route";
+import { demoRoute } from "$lib/demo";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 
 function send(message: { type: string; body: unknown }) {

@@ -58,6 +58,16 @@ function versionName() {
 	return SCREENSHOT_VERSION_NAME;
 }
 
+const releaseTreeShakesDemo = {
+	name: "open-grind:release-tree-shakes-demo",
+	apply: (_config, { command }) =>
+		command === "build" && process.env.OPEN_GRIND_DEMO !== "1",
+	transform: {
+		filter: { id: /\/src\/lib\/demo\// },
+		handler: () => ({ moduleSideEffects: false }),
+	},
+};
+
 // https://vite.dev/config/
 export default defineConfig(async ({ command, mode }) => ({
 	plugins: [
@@ -68,6 +78,7 @@ export default defineConfig(async ({ command, mode }) => ({
 			version: { name: versionName() },
 		}),
 		tailwindcss(),
+		releaseTreeShakesDemo,
 	],
 	resolve: {
 		alias: { $layout: path.join(root, "src/layout.css") },

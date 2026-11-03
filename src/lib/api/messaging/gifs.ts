@@ -1,5 +1,5 @@
 import { fetchExternal } from "$lib/api/transport";
-import { demo } from "$lib/demo";
+import { demoGiphyMediaUrl } from "$lib/demo";
 import {
 	GIPHY_MEDIA_HOST,
 	type GiphyBody,
@@ -70,7 +70,7 @@ function nextGiphyOffset({
 }
 
 export function giphyMediaSrc(url: string): string {
-	return __DEMO__ ? demo().demoGiphyMediaUrl(url) : proxyMediaUrl(url);
+	return __DEMO__ ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
 }
 
 function isGiphyMediaUrl(url: string): boolean {

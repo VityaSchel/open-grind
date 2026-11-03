@@ -14,7 +14,8 @@ import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
-import { demo } from "$lib/demo";
+import { demoCallMethod } from "$lib/demo";
+import { neverSettles, sceneMethodOutcome } from "$lib/demo/screenshot-scene";
 import {
 	type MessageKey,
 	type PlainMessageKey,
@@ -223,7 +224,6 @@ export const methods = {
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
 function demoMethodAnswer(method: string): unknown {
-	const { demoCallMethod, neverSettles, sceneMethodOutcome } = demo();
 	const scripted = __SCREENSHOTS__ ? sceneMethodOutcome(method) : undefined;
 	if (scripted === undefined) return demoCallMethod(method);
 	// eslint-disable-next-line @typescript-eslint/only-throw-error -- Tauri commands reject with the bare AppError object

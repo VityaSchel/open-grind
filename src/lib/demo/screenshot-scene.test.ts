@@ -1,18 +1,9 @@
-import {
-	afterEach,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "$lib/api/api-error";
 import { callMethod } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { fetchRest } from "$lib/api/transport";
-import { loadDemo } from "$lib/demo";
 import { isPlayBuild } from "$lib/platform/store";
 import { updatesAvailableHere } from "$lib/updates";
 import { load } from "../../routes/+layout";
@@ -31,8 +22,6 @@ const initialScene = structuredClone(screenshotScene);
 function setScene(scene: Partial<ScreenshotScene>): void {
 	Object.assign(screenshotScene, scene);
 }
-
-beforeAll(loadDemo);
 
 beforeEach(() => {
 	vi.stubGlobal("__DEMO__", true);

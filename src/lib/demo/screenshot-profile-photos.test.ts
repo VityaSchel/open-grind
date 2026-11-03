@@ -1,16 +1,7 @@
-import {
-	afterEach,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, httpStatusOf } from "$lib/api/api-error";
 import { uploadProfilePhoto } from "$lib/api/users/profiles";
-import { loadDemo } from "$lib/demo";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import { settlesSoon } from "./demo-test-helpers";
 import {
@@ -49,8 +40,6 @@ function answered(state: string): UploadAnswer {
 		body: { imageSizes: [{ mediaHash: UPLOADED_HASH, state }] },
 	};
 }
-
-beforeAll(loadDemo);
 
 beforeEach(() => {
 	vi.stubGlobal("__DEMO__", true);

@@ -13,7 +13,8 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { parseJson } from "$lib/api/redact/value";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
-import { demo } from "$lib/demo";
+import { demoRoute } from "$lib/demo";
+import { neverSettles, sceneRestFault } from "$lib/demo/screenshot-scene";
 import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
@@ -144,7 +145,7 @@ async function respondFromDemoOrSend({
 	const faulted = await sceneFault({ requestInfo, ErrorClass, invokeError });
 	if (faulted !== undefined) return faulted;
 	const { path, method } = requestInfo;
-	const { status, body } = demo().demoRoute({
+	const { status, body } = demoRoute({
 		path,
 		method,
 		body: requestInfo.body,
@@ -272,10 +273,10 @@ async function sceneFault({
 }) {
 	const { path, method } = requestInfo;
 	const fault = __SCREENSHOTS__
-		? demo().sceneRestFault({ path, method })
+		? sceneRestFault({ path, method })
 		: undefined;
 	if (fault === undefined) return undefined;
-	if ("pending" in fault) return demo().neverSettles();
+	if ("pending" in fault) return neverSettles();
 	if ("error" in fault) {
 		throw invokeError({ error: fault.error, requestInfo });
 	}

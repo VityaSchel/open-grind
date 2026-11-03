@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import z from "zod";
 
+import { demoRoute } from "$lib/demo";
 import { DAY, demoMeProfileId, NOW } from "$lib/demo/config";
-import { demoRoute } from "$lib/demo/route";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 
 const route = (options: Parameters<typeof demoRoute>[0]) =>
