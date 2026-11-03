@@ -24,7 +24,7 @@ export async function noticeStorageBackend(): Promise<void> {
 		);
 	} else if (backend === "file" && fileStoreIsAFallback()) {
 		toast.warning(
-			"No secret service found. Your sign-in is kept in a plain file only your user can read.",
+			"Couldn't use your system keyring. Your sign-in is kept in a plain file only your user can read.",
 			{ id: "storage-backend" },
 		);
 	}

@@ -1,4 +1,11 @@
+import { toast } from "svelte-sonner";
+
+import {
+	accountEpoch,
+	isAccountEpochCurrent,
+} from "#lib/api/account-caches.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
+import { sendMessage } from "#lib/api/messaging/messages.ts";
 import {
 	getFavoriteNote,
 	invalidateFavoriteNote,
@@ -13,6 +20,8 @@ import {
 	ProfileUnavailableError,
 	refreshProfile,
 } from "#lib/api/users/profiles.ts";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
 import type { TapType } from "#lib/model/interest/taps.ts";
 import type { FavoriteNote } from "#lib/model/users/favorites.ts";
@@ -58,6 +67,7 @@ export class ProfileState {
 	readonly profileId: number;
 	readonly ourProfileId: number;
 
+	#epoch = accountEpoch();
 	#generation = new Generation();
 	#viewabilityChanges = new Generation();
 	#destroyed = false;
@@ -86,6 +96,51 @@ export class ProfileState {
 			return;
 		}
 		void this.#load({ refresh: false });
+	}
+
+	async replyToPhoto({
+		imageHash,
+		text,
+	}: {
+		imageHash: string;
+		text: string;
+	}): Promise<void> {
+		if (this.#destroyed || !this.#current) return;
+		const conversationId = conversationIdFor({
+			profileId: this.profileId,
+			ourProfileId: this.ourProfileId,
+		});
+		const send = async () => {
+			if (!this.#current) return;
+			try {
+				await sendMessage({
+					toUserId: this.profileId,
+					message: {
+						type: "ProfilePhotoReply",
+						body: { imageHash, photoContentReply: text },
+					},
+				});
+				if (!this.#current) return;
+				const conversations = getOrCreateConversationsState(
+					this.ourProfileId,
+				);
+				conversations.invalidateConversation(conversationId);
+				void conversations.ensureLoaded(conversationId);
+				toast.success("Message sent");
+			} catch (error) {
+				if (this.#current)
+					showErrorToast({
+						label: "Failed to send message",
+						error,
+						onRetry: () => void send(),
+					});
+			}
+		};
+		await send();
+	}
+
+	get #current(): boolean {
+		return isAccountEpochCurrent(this.#epoch);
 	}
 
 	get isOurProfile(): boolean {

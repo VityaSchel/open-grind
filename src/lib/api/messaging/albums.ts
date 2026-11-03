@@ -2,7 +2,7 @@ import z from "zod";
 
 import { cachedFetch } from "#lib/api/cache.ts";
 import { fetchRest, uploadFileRest } from "#lib/api/transport.ts";
-import { demoEnabled, demoUploadAlbumContent } from "#lib/demo/index.ts";
+import { demoUploadAlbumContent } from "#lib/demo/index.ts";
 import {
 	type AlbumContentOrderRequest,
 	albumContentProcessingResponseSchema,
@@ -201,7 +201,7 @@ export async function uploadAlbumContent({
 	profileId: number;
 	onHashed?: (sha256: string) => void;
 }): Promise<{ contentId: number; sha256: string | null }> {
-	if (demoEnabled) {
+	if (__DEMO__) {
 		const uploaded = demoUploadAlbumContent({
 			albumId,
 			kind: inspection.kind,

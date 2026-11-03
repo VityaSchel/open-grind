@@ -1,7 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 
 import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
-import { demoEnabled } from "#lib/demo/index.ts";
 import { hydrateDesktopEntryState } from "#lib/platform/desktop-entry.svelte.ts";
 import { hydrateUpdateCapability } from "#lib/updates/capability.svelte.ts";
 import type { LayoutLoad } from "./$types";
@@ -10,7 +9,7 @@ export const ssr = false;
 export const csr = true;
 
 function onboardingAvailableHere(): boolean {
-	return !demoEnabled;
+	return !__DEMO__;
 }
 
 export const load: LayoutLoad = async ({ url }) => {

@@ -8,6 +8,8 @@ import {
 	applyPhotoSwipeViewportSync,
 } from "./sizing";
 import { applyPhotoSwipeVideo, type VideoSlide } from "./video";
+import "photoswipe/style.css";
+
 import "./photoswipe.css";
 
 export { applyPhotoSwipeComponent } from "./component";
@@ -36,16 +38,20 @@ export function applyPhotoSwipeBackGesture(lightbox: PhotoSwipeLightbox): void {
 	});
 }
 
+export const CLOSE_SVG = `<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 256 256" width="32" height="32"><path d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"/></svg>`;
+
 export type LightboxItem = { src: string } & Partial<MediaDimensions>;
 
 export async function openLightbox({
 	items,
+	index = 0,
 	videoAt,
 	configure,
 	signal,
 	onClosed,
 }: {
 	items: LightboxItem[];
+	index?: number;
 	videoAt?: (index: number) => VideoSlide | null;
 	configure?: (lightbox: PhotoSwipeLightbox) => void;
 	signal: AbortSignal;
@@ -57,6 +63,7 @@ export async function openLightbox({
 		showHideAnimationType: "fade",
 		pswpModule: () => import("photoswipe"),
 		mainClass: "pswp--buttons-visible",
+		closeSVG: CLOSE_SVG,
 	});
 	applyPhotoSwipeErrorUi(lightbox);
 	applyPhotoSwipeViewportSync(lightbox);
@@ -78,5 +85,5 @@ export async function openLightbox({
 	lightbox.on("closingAnimationEnd", onClosed);
 	signal.addEventListener("abort", () => lightbox.destroy(), { once: true });
 	lightbox.init();
-	lightbox.loadAndOpen(0);
+	lightbox.loadAndOpen(index);
 }

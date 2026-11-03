@@ -2,6 +2,8 @@ import type { KeyboardMotion } from "#lib/platform/keyboard-follow.ts";
 import type { NativeInsets } from "#lib/platform/native-insets.ts";
 
 declare global {
+	const __DEMO__: boolean;
+
 	namespace App {
 		interface PageState {
 			profileOrigin?: "browse";

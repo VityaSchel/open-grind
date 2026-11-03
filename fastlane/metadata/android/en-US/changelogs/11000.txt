@@ -1,0 +1,13 @@
+- Location messages added
+- Profile photo replies added
+- Album replies and reactions added
+- GIFs & Gaymoji added
+- Paste, drag & drop media to chats, albums and profile photos
+- "I'm Into" and "Vaccinated for" added
+- "Tribes They're Into" grid filter added
+- Keyboard stickers and clipboard sending added
+- Fixed password manager autofill
+- Fixed Facebook sign-in crash
+- Fixed selection toolbar in menus
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-rc.1

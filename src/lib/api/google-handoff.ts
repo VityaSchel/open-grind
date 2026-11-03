@@ -103,7 +103,7 @@ export function consumeGoogleHandoff(): Promise<void> {
 }
 
 export async function startGoogleHandoffWatch(): Promise<() => void> {
-	if (googleSignInMode() !== "companion") return () => {};
+	if (__DEMO__ || googleSignInMode() !== "companion") return () => {};
 
 	const unlisten = await listen(HANDOFF_EVENT, () => {
 		void consumeGoogleHandoff();

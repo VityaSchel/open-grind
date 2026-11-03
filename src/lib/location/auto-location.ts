@@ -41,10 +41,15 @@ class AutoLocation {
 		const maxAgeMs = background
 			? BACKGROUND_FIX_MAX_AGE_MS
 			: INTERACTIVE_FIX_MAX_AGE_MS;
-		if (!this.#canSample() || !this.#fixStale(maxAgeMs)) return current;
+		if (!this.#canSample()) return current;
 		const prompt = this.#promptAllowed && !this.#suspended;
-		const outcome = await this.#timeboxedFix(prompt);
-		if (prompt) this.#promptAllowed = false;
+		const cachedFix = this.#fixStale(maxAgeMs)
+			? null
+			: locationRequest.lastFix;
+		const outcome = cachedFix
+			? { status: "ok" as const, coords: cachedFix }
+			: await this.#timeboxedFix(prompt);
+		if (prompt && !cachedFix) this.#promptAllowed = false;
 		if (outcome === "timeout") return current;
 		if (this.#suspended) return current;
 		if (outcome.status === "ok") {

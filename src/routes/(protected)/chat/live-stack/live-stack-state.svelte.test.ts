@@ -1,6 +1,6 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { NavigationTarget } from "@sveltejs/kit";
+import type { NavigationTarget } from "$app/navigation";
 
 import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
 import {

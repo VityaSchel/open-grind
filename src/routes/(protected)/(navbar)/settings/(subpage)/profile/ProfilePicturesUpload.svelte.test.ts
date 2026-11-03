@@ -17,12 +17,10 @@ const profiles = vi.hoisted(() => ({
 }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
-const demo = vi.hoisted(() => ({ demoEnabled: false }));
 
 vi.mock("#lib/api/users/profiles.ts", () => profiles);
 vi.mock("#lib/platform/media-picker.ts", () => picker);
 vi.mock("svelte-sonner", () => sonner);
-vi.mock("#lib/demo/index.ts", () => demo);
 
 import { ApiError } from "#lib/api/api-error.ts";
 import { runningOn } from "#lib/test/platform.ts";
@@ -73,7 +71,7 @@ beforeEach(() => previousUploads());
 afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
-	demo.demoEnabled = false;
+	vi.unstubAllGlobals();
 });
 
 describe("profile pictures upload", () => {
@@ -221,7 +219,7 @@ describe("profile pictures upload", () => {
 	});
 
 	it("offers no uploads in the demo", () => {
-		demo.demoEnabled = true;
+		vi.stubGlobal("__DEMO__", true);
 		const { queryByRole } = render(ProfilePicturesUpload, {
 			props: { ourProfileId: 1, medias: [] },
 		});

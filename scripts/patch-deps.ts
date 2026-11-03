@@ -107,6 +107,9 @@ const BUILD_OUTPUT = [
 	")",
 ];
 
+const DOWNLOAD_ATTEMPTS = 3;
+const DOWNLOAD_TIMEOUT_MS = 60_000;
+
 const repoRoot = `${import.meta.dir}/..`;
 const patchesDir = `${repoRoot}/src-tauri/patches`;
 const OUT_REL = "src-tauri/.patched";
@@ -124,11 +127,31 @@ async function stampOf(crate: Crate) {
 		.digest("hex");
 }
 
+async function fetchCrate(url: string) {
+	for (let attempt = 1; ; attempt++) {
+		try {
+			const response = await fetch(url, {
+				signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+			});
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			return new Uint8Array(await response.arrayBuffer());
+		} catch (error) {
+			if (attempt === DOWNLOAD_ATTEMPTS)
+				throw new Error(
+					`${url}: ${attempt} attempts failed, last with ${error}`,
+				);
+			console.warn(
+				`${url}: attempt ${attempt} failed with ${error}, retrying`,
+			);
+			await Bun.sleep(attempt * 5_000);
+		}
+	}
+}
+
 async function download({ name, version, sha256 }: Crate, into: string) {
-	const url = `https://static.crates.io/crates/${name}/${name}-${version}.crate`;
-	const response = await fetch(url);
-	if (!response.ok) throw new Error(`${url}: ${response.status}`);
-	const crate = new Uint8Array(await response.arrayBuffer());
+	const crate = await fetchCrate(
+		`https://static.crates.io/crates/${name}/${name}-${version}.crate`,
+	);
 
 	const digest = new Bun.CryptoHasher("sha256").update(crate).digest("hex");
 	if (digest !== sha256)

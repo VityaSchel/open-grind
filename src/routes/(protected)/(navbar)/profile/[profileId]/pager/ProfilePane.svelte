@@ -118,7 +118,15 @@
 				class="relative mx-auto min-h-overscrollable w-full max-w-200"
 			>
 				{#if profile || medias.length > 0}
-					<ImageCarousel {medias} />
+					<ImageCarousel
+						{medias}
+						onreply={profile && !ourProfile && active
+							? (reply) => {
+									if (active && !leaving)
+										void profileState.replyToPhoto(reply);
+								}
+							: undefined}
+					/>
 				{:else}
 					<Skeleton
 						class="aspect-3/4 h-auto max-h-photo w-full rounded-none"

@@ -58,7 +58,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			staysOnline() ||
 			(attended && (await showsOnReturn({ viewActive: this.viewActive })))
 		)
-			return this.refresh();
+			return this.refresh({ automatic: true });
 		this.#stale = true;
 	}
 
@@ -66,7 +66,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 		this.viewActive = true;
 		untrack(() => {
 			if (!this.#loaded) this.load();
-			else if (this.#stale) void this.refresh();
+			else if (this.#stale) void this.refresh({ automatic: true });
 		});
 		return () => {
 			this.viewActive = false;
@@ -101,7 +101,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 		void this.#hardLoad();
 	}
 
-	async refresh(): Promise<void> {
+	async refresh({ automatic = false } = {}): Promise<void> {
 		if (this.#destroyed) return;
 		if (!this.#attempted) return this.#hardLoad();
 		if (this.refreshing || this.loading) {
@@ -113,6 +113,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			await this.#replaceFromServer();
 		} catch (error) {
 			console.error(error);
+			if (automatic) return;
 			showErrorToast({
 				label: this.#refreshErrorLabel,
 				error,
@@ -157,7 +158,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	#runRequestedRefresh(): void {
 		if (!this.#refreshRequestedSinceFetchStart) return;
 		this.#refreshRequestedSinceFetchStart = false;
-		void this.refresh();
+		void this.refresh({ automatic: true });
 	}
 
 	async #replaceFromServer(): Promise<void> {

@@ -45,7 +45,7 @@
 	onMount(() => {
 		installScrollGestureBridge();
 		installNativeInsets({
-			fallback: env.PUBLIC_TEST_INSETS ? TEST_INSETS : undefined,
+			fallback: PUBLIC_TEST_INSETS ? TEST_INSETS : undefined,
 		});
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
@@ -66,7 +66,7 @@
 		};
 	});
 
-	import { env } from "$env/dynamic/public";
+	import { PUBLIC_TEST_INSETS } from "$app/env/public";
 
 	import faviconPng from "#lib/assets/favicon.png";
 	import AccountStatusAlert from "#lib/components/feedback/AccountStatusAlert.svelte";
@@ -160,8 +160,8 @@
 	class={[
 		"fixed inset-x-0 top-0 z-safe-area",
 		{
-			"bg-background/50": !env.PUBLIC_TEST_INSETS,
-			"bg-red-900": env.PUBLIC_TEST_INSETS,
+			"bg-background/50": !PUBLIC_TEST_INSETS,
+			"bg-red-900": PUBLIC_TEST_INSETS,
 		},
 	]}
 	style:height="var(--safe-area-top)"
@@ -171,8 +171,8 @@
 	class={[
 		"fixed inset-x-0 bottom-0 z-safe-area",
 		{
-			"bg-background/50": !env.PUBLIC_TEST_INSETS,
-			"bg-red-900": env.PUBLIC_TEST_INSETS,
+			"bg-background/50": !PUBLIC_TEST_INSETS,
+			"bg-red-900": PUBLIC_TEST_INSETS,
 		},
 	]}
 	style:height="var(--safe-area-bottom)"
@@ -185,6 +185,7 @@
 			offset={toastOffset}
 			mobileOffset={toastOffset}
 			toastOptions={{ class: "toast" }}
+			closeButton
 			expand
 		/>
 	</div>

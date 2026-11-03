@@ -1,6 +1,6 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { NavigationType } from "@sveltejs/kit";
+import type { NavigationType } from "$app/navigation";
 
 import { runningOn } from "#lib/test/platform.ts";
 import { fakePagerLayout, WIDTH } from "#lib/util/snap-pager-test-helpers.ts";
@@ -91,9 +91,8 @@ vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 }));
 
 const COMMIT = {
-	replaceState: true,
-	noScroll: true,
-	keepFocus: true,
+	replace: true,
+	reset: false,
 	state: { profileOrigin: "browse" },
 };
 

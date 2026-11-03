@@ -79,7 +79,7 @@ describe("creating an album from its first upload", () => {
 			"My Albums drops its list rather than show one without the new album",
 		).toHaveBeenCalledOnce();
 		expect(navigation.goto).toHaveBeenCalledWith("/settings/albums/904", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(media.enqueueAlbumMedia).toHaveBeenCalledWith({
 			uploads,

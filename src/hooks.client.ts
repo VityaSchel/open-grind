@@ -1,4 +1,4 @@
-import type { ClientInit, HandleClientError } from "@sveltejs/kit";
+import type { ClientInit, HandleClientError } from "@sveltejs/kit/hooks";
 
 import { ws } from "#lib/ws.svelte.ts";
 

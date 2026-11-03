@@ -7,6 +7,34 @@ import {
 } from "#lib/model/messaging/message-preview.ts";
 
 describe("previewFromMessage", () => {
+	it("uses profile photo reply text in previews and quotes, including fetched inbox previews", () => {
+		const preview = previewFromMessage({
+			type: "ProfilePhotoReply",
+			body: { imageHash: "photo", photoContentReply: "Nice photo!" },
+			messageId: "reply-1",
+			conversationId: "1:2",
+			senderId: 2,
+			timestamp: 1_710_000_000_000,
+			unsent: false,
+			reactions: [],
+			dynamic: false,
+		});
+		expect(preview).toEqual({
+			type: "ProfilePhotoReply",
+			text: "Nice photo!",
+			imageHash: "photo",
+			albumId: null,
+		});
+		expect(previewLabel(preview)).toBe("Nice photo!");
+		expect(quoteLabel(preview)).toBe("Nice photo!");
+		expect(
+			previewLabel({
+				type: "ProfilePhotoReply",
+				text: null,
+				photoContentReply: "Nice photo!",
+			}),
+		).toBe("Nice photo!");
+	});
 	it("extracts preview text from text messages", () => {
 		expect(
 			previewFromMessage({
@@ -158,7 +186,6 @@ describe("quoteLabel", () => {
 	it.each([
 		["Unsent", "Unsent message"],
 		["Audio", "Voice message"],
-		["Location", "Location"],
 		["NonExpiringVideo", "Video"],
 		["Unknown", "Message"],
 	])("names a %s quote rather than rendering nothing", (type, expected) => {
@@ -168,6 +195,7 @@ describe("quoteLabel", () => {
 
 	it.each([
 		["ExpiringImage", "Expiring image"],
+		["Location", "Location"],
 		["Giphy", "GIF"],
 		["Gaymoji", "Gaymoji"],
 	])(
@@ -181,4 +209,20 @@ describe("quoteLabel", () => {
 	it("does not render an empty pill for a blank text message", () => {
 		expect(quoteLabel(preview("Text", "   "))).toBe("Message");
 	});
+});
+
+it.each([null, ""])("labels a fetched album reaction with text=%j", (text) => {
+	expect(
+		previewLabel({ type: "AlbumContentReaction", albumId: 7, text }),
+	).toBe("Reacted to an album");
+});
+
+it("keeps album reply text in server inbox previews", () => {
+	expect(
+		previewLabel({
+			type: "AlbumContentReply",
+			albumId: 7,
+			albumContentReply: "Nice photo",
+		}),
+	).toBe("Nice photo");
 });

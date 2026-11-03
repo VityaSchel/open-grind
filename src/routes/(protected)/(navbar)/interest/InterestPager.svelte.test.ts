@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { page } from "$app/state";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { NavigationType } from "@sveltejs/kit";
+import type { NavigationType } from "$app/navigation";
 import type { ResolvedPathname } from "$app/types";
 
 import { runningOn } from "#lib/test/platform.ts";
@@ -11,7 +11,7 @@ import InterestPager from "./InterestPager.svelte";
 
 const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
-const REPLACE = { replaceState: true, noScroll: true };
+const REPLACE = { replace: true, reset: false };
 
 const { goto, afterNavigate, navigating } = vi.hoisted(() => ({
 	goto: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("./views/ViewsGrid.svelte", () => ({ default: () => {} }));
 vi.mock("./taps/TapsReceivedList.svelte", () => ({ default: () => {} }));
 
 function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
-	page.url.pathname = TAPS;
+	(page.url as URL).pathname = TAPS;
 	window.history.replaceState(null, "", TAPS);
 	navigating.type = null;
 	navigating.to = null;
@@ -73,13 +73,13 @@ function navigated() {
 }
 
 function route(pathname: ResolvedPathname) {
-	page.url.pathname = pathname;
+	(page.url as URL).pathname = pathname;
 	flushSync();
 }
 
 function loading(pathname: string) {
 	navigating.type = "goto";
-	navigating.to = { url: new URL(pathname, page.url) };
+	navigating.to = { url: new URL(pathname, page.url.href) };
 }
 
 function clickSwallowed(pane: Element) {
@@ -130,7 +130,9 @@ function restOnViews({
 	const pager = mountPager();
 	window.history.replaceState(null, "", located);
 	navigating.type = pending?.type ?? null;
-	navigating.to = pending ? { url: new URL(pending.to, page.url) } : null;
+	navigating.to = pending
+		? { url: new URL(pending.to, page.url.href) }
+		: null;
 	pager.scroll(0);
 }
 

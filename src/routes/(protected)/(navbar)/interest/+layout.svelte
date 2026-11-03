@@ -55,7 +55,7 @@
 		onclick={(event: MouseEvent) => {
 			if (!isPlainClick(event)) return;
 			event.preventDefault();
-			void goto(href, { replaceState: true, noScroll: true });
+			void goto(href, { replace: true, reset: false });
 		}}
 		class={cn(
 			toggleVariants({ variant: "default" }),

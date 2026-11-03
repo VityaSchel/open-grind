@@ -1,14 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, listenMock, demo } = vi.hoisted(() => ({
+const { invokeMock, listenMock } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
 	listenMock: vi.fn(),
-	demo: { demoEnabled: false },
 }));
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
-vi.mock("#lib/demo/index.ts", () => demo);
 
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
@@ -54,11 +52,13 @@ const release = {
 beforeEach(() => {
 	invokeMock.mockReset();
 	listenMock.mockReset();
-	demo.demoEnabled = false;
 	runningOn("android");
 });
 
-afterEach(resetPlatform);
+afterEach(() => {
+	resetPlatform();
+	vi.unstubAllGlobals();
+});
 
 describe("where updates exist", () => {
 	it.each(["android", "linux", "macos", "windows"] as const)(
@@ -73,7 +73,7 @@ describe("where updates exist", () => {
 		"leaves %s alone in the demo",
 		(platform) => {
 			runningOn(platform);
-			demo.demoEnabled = true;
+			vi.stubGlobal("__DEMO__", true);
 			expect(updatesAvailableHere()).toBe(false);
 		},
 	);
@@ -145,7 +145,7 @@ describe("update checks", () => {
 
 describe("capability and readiness", () => {
 	it("never reaches the backend in the demo", async () => {
-		demo.demoEnabled = true;
+		vi.stubGlobal("__DEMO__", true);
 
 		expect(await getUpdateCapability()).toEqual({
 			state: "unsupported",
@@ -224,7 +224,7 @@ describe("capability and readiness", () => {
 
 describe("local install state", () => {
 	it("never reaches the backend in the demo", async () => {
-		demo.demoEnabled = true;
+		vi.stubGlobal("__DEMO__", true);
 
 		expect(await installPending()).toBe(false);
 		expect(await getInstalledVersion("google-oauth")).toBeNull();

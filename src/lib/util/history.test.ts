@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { NavigationType } from "@sveltejs/kit";
+import type { NavigationType } from "$app/navigation";
 
 import {
 	canGoBack,
@@ -110,7 +110,7 @@ describe("returnTo", () => {
 
 		returnTo("/chat");
 
-		expect(goto).toHaveBeenCalledWith("/chat", { replaceState: true });
+		expect(goto).toHaveBeenCalledWith("/chat", { replace: true });
 		expect(go).not.toHaveBeenCalled();
 	});
 });

@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 
 const lightbox = vi.hoisted(() => ({
 	loadAlbumSlides: vi.fn(),
@@ -10,19 +12,34 @@ const lightbox = vi.hoisted(() => ({
 const sonner = vi.hoisted(() => ({
 	toast: { info: vi.fn(), error: vi.fn(), message: vi.fn() },
 }));
+const warning = vi.hoisted(() => ({
+	albumWarningDue: vi.fn(() => false),
+	markAlbumWarningSeen: vi.fn(),
+}));
 
 vi.mock("./album-lightbox", () => lightbox);
+vi.mock("./album-warning", () => warning);
 vi.mock("svelte-sonner", () => sonner);
 
 import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
+import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
 
-function previewWithCover(coverUrl: string | null): Element {
+function previewWithCover(
+	coverUrl: string | null,
+	{ chat = false } = {},
+): Element {
 	const { container } = render(AlbumPreview, {
-		props: { albumId: 900, coverUrl, hasPhoto: true, hasVideo: false },
+		props: {
+			albumId: 900,
+			coverUrl,
+			hasPhoto: true,
+			hasVideo: false,
+			attach: chat ? singleClick : undefined,
+		},
 	});
 	const preview = container.querySelector('[data-slot="album-preview"]');
 	if (preview === null) throw new Error("no album preview");
@@ -88,6 +105,76 @@ describe("album preview", () => {
 	});
 });
 
+describe("album warning", () => {
+	const WARNING = "Albums may contain nudity or NSFW content";
+
+	afterEach(() => {
+		warning.albumWarningDue.mockReturnValue(false);
+	});
+
+	function renderAlbum({ ourAlbum = false } = {}) {
+		warning.albumWarningDue.mockReturnValue(true);
+		lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
+		render(AlbumPreview, {
+			props: {
+				albumId: 900,
+				coverUrl: null,
+				hasPhoto: true,
+				hasVideo: false,
+				ourAlbum,
+			},
+		});
+		return screen.getByRole("button", { name: "Open album" });
+	}
+
+	it("asks before loading someone else's album and opens it after View", async () => {
+		await fireEvent.click(renderAlbum());
+
+		await vi.waitFor(() => screen.getByText(WARNING));
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+
+		await fireEvent.click(screen.getByRole("button", { name: "View" }));
+
+		expect(warning.markAlbumWarningSeen).toHaveBeenCalledOnce();
+		await vi.waitFor(() =>
+			expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900),
+		);
+	});
+
+	it("leaves the album closed and the warning unseen after Cancel", async () => {
+		const button = renderAlbum();
+		await fireEvent.click(button);
+		await vi.waitFor(() => screen.getByText(WARNING));
+
+		await fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+		await vi.waitFor(() => expect(screen.queryByText(WARNING)).toBeNull());
+		expect(button.disabled).toBe(false);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+		expect(warning.markAlbumWarningSeen).not.toHaveBeenCalled();
+	});
+
+	it("closes the warning on the back gesture without opening the album", async () => {
+		await fireEvent.click(renderAlbum());
+		await vi.waitFor(() => screen.getByText(WARNING));
+
+		for (const handler of backGestureEventHandlers.keys()) handler();
+
+		await vi.waitFor(() => expect(screen.queryByText(WARNING)).toBeNull());
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+		expect(warning.markAlbumWarningSeen).not.toHaveBeenCalled();
+	});
+
+	it("opens our own album without the warning", async () => {
+		await fireEvent.click(renderAlbum({ ourAlbum: true }));
+
+		await vi.waitFor(() =>
+			expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900),
+		);
+		expect(screen.queryByText(WARNING)).toBeNull();
+	});
+});
+
 describe("album preview cover renewal", () => {
 	const OLD =
 		"https://d3.cloudfront.net/albums/c.jpg?Expires=1700000900&Signature=OLD&Key-Pair-Id=K";
@@ -126,4 +213,43 @@ describe("album preview cover renewal", () => {
 
 		expect(cover.image().getAttribute("src")).toBe(proxyMediaUrl(RENEWED));
 	});
+});
+
+it("cancels a pending album open on a second press and double click", async () => {
+	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+	try {
+		const button = previewWithCover(null, { chat: true });
+		await fireEvent.click(button, { detail: 1 });
+		await vi.advanceTimersByTimeAsync(100);
+		await fireEvent.pointerDown(button);
+		await vi.advanceTimersByTimeAsync(300);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+		await fireEvent.click(button, { detail: 1 });
+		await fireEvent.click(button, { detail: 1 });
+		await fireEvent.doubleClick(button);
+		await vi.advanceTimersByTimeAsync(300);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+it("cancels a pending album open when removed", async () => {
+	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+	try {
+		const button = previewWithCover(null, { chat: true });
+		await fireEvent.click(button, { detail: 1 });
+		cleanup();
+		await vi.advanceTimersByTimeAsync(300);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+it("opens the album editor preview immediately on a pointer click", async () => {
+	lightbox.loadAlbumSlides.mockResolvedValue([]);
+	const button = previewWithCover(null);
+	await fireEvent.click(button, { detail: 1 });
+	expect(lightbox.loadAlbumSlides).toHaveBeenCalledExactlyOnceWith(900);
 });

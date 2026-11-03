@@ -4,7 +4,6 @@ import { toast } from "svelte-sonner";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 import z from "zod";
 
-import { demoEnabled } from "#lib/demo/index.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 
 type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
@@ -76,7 +75,7 @@ async function pick({
 }): Promise<PickedMedia[]> {
 	const filter = filtersByKind[kind];
 
-	if (demoEnabled) {
+	if (__DEMO__) {
 		const files = await pickDemoFiles({ filter, multiple });
 		return files.map(
 			(file): PickedMedia => ({

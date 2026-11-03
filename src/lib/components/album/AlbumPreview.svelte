@@ -1,5 +1,4 @@
 <script lang="ts">
-	import "photoswipe/style.css";
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
 	import type { Snippet } from "svelte";
@@ -15,33 +14,44 @@
 		loadAlbumSlides,
 		openAlbumLightbox,
 	} from "./album-lightbox";
+	import { albumWarningDue, markAlbumWarningSeen } from "./album-warning";
+	import AlbumWarningDialog from "./AlbumWarningDialog.svelte";
 
 	let {
 		albumId,
+		albumContentId,
 		coverUrl,
 		hasPhoto,
 		hasVideo,
+		ourAlbum = false,
 		label = "Open album",
 		class: className,
 		contentClass,
 		attach = () => {},
 		onexpired,
+		onreply,
+		onreact,
 		children,
 	}: {
 		albumId: number;
+		albumContentId?: number;
 		coverUrl: string | null;
 		hasPhoto: boolean;
 		hasVideo: boolean;
+		ourAlbum?: boolean;
 		label?: string;
 		class?: ClassValue;
 		contentClass?: ClassValue;
 		attach?: Attachment<HTMLElement>;
 		onexpired?: () => Promise<void>;
+		onreact?: (slide: AlbumSlide) => void;
+		onreply?: (reply: { slide: AlbumSlide; text: string }) => void;
 		children?: Snippet;
 	} = $props();
 
 	type PreviewState =
 		| { status: "idle" }
+		| { status: "warning" }
 		| { status: "loading" }
 		| { status: "open"; slides: AlbumSlide[] };
 
@@ -53,7 +63,15 @@
 	);
 
 	function open() {
+		preview =
+			!ourAlbum && albumWarningDue()
+				? { status: "warning" }
+				: { status: "loading" };
+	}
+
+	function view() {
 		preview = { status: "loading" };
+		markAlbumWarningSeen();
 	}
 
 	$effect(() => {
@@ -85,7 +103,10 @@
 		const controller = new AbortController();
 		openAlbumLightbox({
 			albumId,
+			albumContentId,
 			slides,
+			onreply,
+			onreact,
 			signal: controller.signal,
 			onClosed: () => (preview = { status: "idle" }),
 		}).catch((error: unknown) => {
@@ -149,6 +170,15 @@
 	</div>
 	{@render children?.()}
 </button>
+<AlbumWarningDialog
+	bind:open={
+		() => preview.status === "warning",
+		(next) => {
+			if (!next) preview = { status: "idle" };
+		}
+	}
+	onview={view}
+/>
 
 <style>
 	:global(.pswp__img) {

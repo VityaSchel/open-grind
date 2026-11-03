@@ -44,7 +44,7 @@ export async function clearAccountState(): Promise<void> {
 		marker.clearStored();
 	clearAccountCaches();
 
-	if (pushAvailableHere()) {
+	if (!__DEMO__ && pushAvailableHere()) {
 		await setNotificationsEnabled(false).catch((error: unknown) => {
 			console.error(
 				"Failed to stop notifications for this account",

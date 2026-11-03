@@ -2,7 +2,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
-import { demoEnabled } from "#lib/demo/index.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
@@ -26,7 +25,7 @@ export * from "./types";
 function notPackaged(): Unsupported {
 	return {
 		reason: "noReleaseArtifacts",
-		detail: { target: demoEnabled ? "demo" : currentPlatform() },
+		detail: { target: __DEMO__ ? "demo" : currentPlatform() },
 	};
 }
 
@@ -68,7 +67,7 @@ export function updatesAvailableHere(): boolean {
 		case "linux":
 		case "macos":
 		case "windows":
-			return !demoEnabled;
+			return !__DEMO__;
 		case "ios":
 			return false;
 	}

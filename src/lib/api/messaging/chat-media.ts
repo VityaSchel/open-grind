@@ -3,7 +3,7 @@ import z from "zod";
 import { signedInProfileId } from "#lib/api/current-session.ts";
 import { uploadRefusalMessage } from "#lib/api/methods.ts";
 import { invokeRest, uploadFileRest } from "#lib/api/transport.ts";
-import { demoEnabled, demoUploadChatMedia } from "#lib/demo/index.ts";
+import { demoUploadChatMedia } from "#lib/demo/index.ts";
 import { mediaUrlSchema } from "#lib/model/media.ts";
 import {
 	CHAT_MEDIA_MAX_BYTES,
@@ -72,7 +72,7 @@ async function uploadChatMedia({
 	contentType: string;
 	takenOnGrindr: boolean;
 }): Promise<MediaUploadResponse> {
-	if (demoEnabled) {
+	if (__DEMO__) {
 		if (media.source !== "demo") {
 			throw new Error("The demo only uploads files it holds in the page");
 		}

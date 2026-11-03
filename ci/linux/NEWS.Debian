@@ -1,3 +1,22 @@
+open-grind (0.1.0-rc.1) beta; urgency=medium
+
+  First release candidate for v0.1.0.
+
+  - Location messages added to chats
+  - Profile photo replies added
+  - Album replies and reactions added
+  - GIFs and Gaymoji added to chats
+  - Paste, drag and drop photos and videos into chats, albums and profile
+    photos, including images dragged out of a browser
+  - "I'm Into" and "Vaccinated for" added to profiles
+  - "Tribes They're Into" grid filter added
+  - Notifications are now supported
+
+  Full changelog:
+  https://s.opengrind.org/changelogs/v0.1.0-rc.1
+
+ -- Open Grind Governance <https://opengrind.org/governance>  Sat, 31 Oct 2026 10:00:00 +0100
+
 open-grind (0.1.0-beta.5.1) beta; urgency=medium
 
   Follow-up update to v0.1.0-beta.5 with bug fixes and cosmetic improvements.

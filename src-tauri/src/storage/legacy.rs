@@ -17,6 +17,9 @@ trait Keychain {
 
 #[cfg(all(target_os = "macos", feature = "keychain"))]
 pub fn adopt_legacy_items() {
+	if cfg!(demo) {
+		return;
+	}
 	adopt(&system::Legacy);
 }
 

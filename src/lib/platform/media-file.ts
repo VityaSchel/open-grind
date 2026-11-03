@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { demoEnabled } from "#lib/demo/index.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const mediaFileKindSchema = z.enum(["photo", "video", "unsupported"]);
@@ -54,7 +53,7 @@ export async function inspectMediaFile(
 			...(kind === "photo" ? await photoSizeOf(media.file) : {}),
 		};
 	}
-	if (demoEnabled) {
+	if (__DEMO__) {
 		return { kind: mediaFileKindOf(media.mimeType), size: 0 };
 	}
 	return mediaFileInspectionSchema.parse(
@@ -101,7 +100,7 @@ export async function previewMedia(
 	media: PickedMedia,
 ): Promise<MediaPreview | null> {
 	if (media.source === "demo") return previewDemoFile(media.file);
-	if (demoEnabled) return null;
+	if (__DEMO__) return null;
 	return mediaPreviewSchema
 		.nullable()
 		.parse(

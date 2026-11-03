@@ -77,7 +77,8 @@
 							"color",
 							"color-mix(in srgb, red, blue)",
 						) &&
-						CSS.supports("container-type", "inline-size")
+						CSS.supports("container-type", "inline-size") &&
+						new RegExp("(?<=a)b").test("ab")
 					)
 						return;
 				} catch (e) {}
@@ -124,7 +125,7 @@
 					distribution.
 				</p>
 				<p class="wv-plat" data-platform="macos">
-					Install the latest updates from Software Update (Safari 16.2
+					Install the latest updates from Software Update (Safari 16.4
 					or newer).
 				</p>
 				<p class="wv-plat" data-platform="windows">

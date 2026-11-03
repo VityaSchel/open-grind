@@ -1,5 +1,5 @@
 import { fetchExternal } from "#lib/api/transport.ts";
-import { demoEnabled, demoGiphyMediaUrl } from "#lib/demo/index.ts";
+import { demoGiphyMediaUrl } from "#lib/demo/index.ts";
 import {
 	GIPHY_MEDIA_HOST,
 	type GiphyBody,
@@ -65,7 +65,7 @@ function nextGiphyOffset({
 }
 
 export function giphyMediaSrc(url: string): string {
-	return demoEnabled ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
+	return __DEMO__ ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
 }
 
 function isGiphyMediaUrl(url: string): boolean {

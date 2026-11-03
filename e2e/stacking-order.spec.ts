@@ -1,9 +1,12 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { SHARED_ALBUM_ID } from "./support/albums";
 import { animationsFinished, installTauriShim } from "./support/app";
 import { DRAWER } from "./support/drawer";
 import { showRestingToast } from "./support/toast";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const DEMO_PROFILE = "/profile/100001";
 const SHARED_ALBUM = `/settings/albums/${SHARED_ALBUM_ID}`;

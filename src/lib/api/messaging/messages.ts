@@ -2,7 +2,6 @@ import z from "zod";
 
 import { errorUrnFromBody } from "#lib/api/error-urn.ts";
 import { fetchRest } from "#lib/api/transport.ts";
-import { demoEnabled, demoSentMessage } from "#lib/demo/index.ts";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
@@ -110,7 +109,6 @@ export async function sendMessage({
 	// The HTTP endpoint 400s when `replyToMessageId` is set — it's only
 	// accepted by the websocket command variant of this same request.
 	if (replyToMessageId !== undefined) {
-		if (demoEnabled) return demoSentMessage(body);
 		return await ws.sendCommand({
 			type: "chat.v1.message.send",
 			payload: body,

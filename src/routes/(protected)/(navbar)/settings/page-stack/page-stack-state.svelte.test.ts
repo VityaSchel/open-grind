@@ -1,3 +1,4 @@
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -378,7 +379,7 @@ describe("PageStackState swipe back", () => {
 			navigationEvent({ from: "/settings/app", to: "/settings" }),
 		);
 		start?.();
-		await flushMicrotasks();
+		await tick();
 
 		expect(animations).toHaveLength(pending);
 		expect(applied).toContain(0);

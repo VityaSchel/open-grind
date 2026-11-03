@@ -455,6 +455,21 @@ textarea,
 	border: 1px solid var(--color-border) !important;
 }
 
+.toast[data-styled="true"] [data-close-button] {
+	background-color: var(--color-accent) !important;
+	color: var(--popover) !important;
+	border-color: var(--color-border) !important;
+}
+
+.toast[data-styled="true"] [data-close-button]:hover {
+	background-color: var(--popover) !important;
+	color: var(--color-accent) !important;
+}
+
+:root:not([data-hover-pointer]) .toast [data-close-button] {
+	display: none;
+}
+
 .incoming-message-toast[data-sonner-toast] {
 	opacity: 1 !important;
 	--fly-out: translateY(calc(-100% - var(--offset-top, 24px) - 12px));
@@ -574,6 +589,14 @@ textarea,
 
 @utility media-pill {
 	@apply bg-popover/20 scrim;
+}
+
+@utility media-disc {
+	@apply size-11 rounded-full bg-black/55 scrim text-white backdrop-filter-(--bd-veil) transition-colors;
+
+	@variant hover {
+		@apply bg-black/75;
+	}
 }
 
 /* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
