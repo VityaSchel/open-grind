@@ -75,11 +75,13 @@ Steps (labels match label, identifier or placeholder; points are normalized 0..1
 	{"springboard": label} taps a SpringBoard element, such as a system alert button ("Allow While Using App")
 	{"tapAt": [x, y]} | {"drag": [x1, y1, x2, y2]}
 	{"dragHold": {"path": [x1, y1, x2, y2], "hold": 2, "velocity": 1000, "screenshot": path, "tree": path}}
+	{"touchPath": [[x, y, seconds], ...]}
 	{"type": text} | {"swipe": "up" | "down" | "left" | "right", "on": label}
 	{"wait": seconds} | {"expect": label} | {"expectGone": label} | {"keyboard": true | false}
 	{"screenshot": "<host path>"} | {"tree": "<host path>"}
 
-dragHold presses, drags at velocity points/s and holds without lifting; it captures once, about hold/2 into the hold, timed from the call because the gesture runs as one synthesized event. The gesture starts about 0.5 s after the call, so keep hold at 2 s or more.
+dragHold presses, drags at velocity points/s and holds without lifting; it captures once, about hold/2 into the hold, timed from the call because the gesture runs as one synthesized event. The gesture starts about 0.5 s after the call, so keep hold at 2 s or more. Its drag eases out before the hold, and UIKit keeps the last drag velocity through a hold, so it can't set a release velocity.
+touchPath lands one finger on the first point, moves to each next point by its time offset from touch-down and lifts at the last point. Each segment eases in and out, so a release at speed needs segments of about 1/30 s; shorter ones run slow. It drives XCTest's private event synthesizer and assumes portrait.
 Screenshots keep the portrait pixel buffer, so landscape content comes out rotated; tree frames follow the app's orientation.
 Runs that need the software keyboard need: defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
 Runs that paste secrets need: defaults write com.apple.iphonesimulator PasteboardAutomaticSync -bool false (or a running Simulator app copies them to the Mac clipboard)`;

@@ -4,7 +4,7 @@ import XCTest
 final class Driver: XCTestCase {
 	private static let stepKeys: Set<String> = [
 		"launch", "activate", "home", "rotate", "pasteboardImage", "pasteboardText", "tap", "tapSecure", "tapIfPresent",
-		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "type", "swipe", "on", "wait",
+		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "touchPath", "type", "swipe", "on", "wait",
 		"expect", "expectGone", "keyboard", "screenshot", "tree",
 	]
 	private static let dragHoldKeys: Set<String> = ["path", "hold", "velocity", "screenshot", "tree"]
@@ -114,6 +114,9 @@ final class Driver: XCTestCase {
 		if let options: [String: Any] = try value("dragHold", in: step) {
 			try dragHold(options, in: app)
 		}
+		if let points: [[Double]] = try value("touchPath", in: step) {
+			try touchPath(points, in: app)
+		}
 		if let text: String = try value("type", in: step) {
 			app.typeText(text)
 		}
@@ -160,6 +163,24 @@ final class Driver: XCTestCase {
 		let captured = captureLater(options, of: app, after: press + travel + hold / 2)
 		start.press(forDuration: press, thenDragTo: end, withVelocity: XCUIGestureVelocity(velocity), thenHoldForDuration: hold)
 		try captured()
+	}
+
+	private func touchPath(_ points: [[Double]], in app: XCUIApplication) throws {
+		guard points.count >= 2, points.allSatisfy({ $0.count == 3 }) else {
+			throw failure("touchPath needs at least two points of [x, y, seconds]")
+		}
+		let screen = points.map { NSValue(cgPoint: coordinate($0[0], $0[1], in: app).screenPoint) }
+		let offsets = points.map { NSNumber(value: $0[2]) }
+		let done = XCTestExpectation(description: "touchPath synthesized")
+		var outcome: Error?
+		try OGTouchPath.synthesizePoints(screen, offsets: offsets) { failure in
+			outcome = failure
+			done.fulfill()
+		}
+		guard XCTWaiter().wait(for: [done], timeout: timeout + points[points.count - 1][2]) == .completed else {
+			throw failure("touchPath timed out")
+		}
+		if let outcome { throw outcome }
 	}
 
 	private func captureLater(_ options: [String: Any], of app: XCUIApplication, after delay: TimeInterval) -> () throws -> Void {

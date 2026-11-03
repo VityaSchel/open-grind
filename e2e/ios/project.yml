@@ -12,6 +12,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.opengrind.uitests
         GENERATE_INFOPLIST_FILE: true
         SWIFT_VERSION: "5.0"
+        SWIFT_OBJC_BRIDGING_HEADER: Driver/Driver-Bridging-Header.h
         CODE_SIGN_IDENTITY: "-"
         CODE_SIGN_STYLE: Manual
         DEVELOPMENT_TEAM: ""
