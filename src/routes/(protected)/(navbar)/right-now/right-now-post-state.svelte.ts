@@ -31,7 +31,6 @@ import { now } from "#lib/util/clock.ts";
 import { Generation } from "#lib/util/generation.ts";
 import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
-	changedPostFields,
 	isAwaitingModeration,
 	isLivePost,
 	rejectedParts,
@@ -160,14 +159,13 @@ export class RightNowPostState {
 	}): Promise<boolean> {
 		const post = this.post;
 		if (this.#destroyed || post === null || this.saving) return false;
-		const changed = changedPostFields({ post, changes });
-		if (Object.keys(changed).length === 0) return true;
+		if (Object.keys(changes).length === 0) return true;
 		const epoch = accountEpoch();
 		this.saving = true;
 		try {
-			await updateRightNowPost({ postId: post.id, changes: changed });
+			await updateRightNowPost({ postId: post.id, changes });
 			if (this.#isGone(epoch)) return false;
-			if (changed.text !== undefined || changed.media !== undefined) {
+			if (changes.text !== undefined || changes.media !== undefined) {
 				this.#pendingSince = null;
 				this.#clearPoll();
 			}
@@ -175,11 +173,11 @@ export class RightNowPostState {
 				postId: post.id,
 				merge: (current) => ({
 					...current,
-					hosting: changed.hosting ?? current.hosting,
+					hosting: changes.hosting ?? current.hosting,
 					shareLocation:
-						changed.shareLocation ?? current.shareLocation,
+						changes.shareLocation ?? current.shareLocation,
 					locationRadius:
-						changed.locationRadius ?? current.locationRadius,
+						changes.locationRadius ?? current.locationRadius,
 				}),
 			});
 			this.#refreshFeed();

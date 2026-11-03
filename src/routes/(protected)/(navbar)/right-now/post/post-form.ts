@@ -53,15 +53,28 @@ export function approximateRadiusMeters({
 	return NEAREST_RADIUS_METERS + METERS_PER_RADIUS_STEP * locationRadius;
 }
 
+type ModeratedText = NonNullable<RightNowPostDetails["moderatedText"]>;
+
+export function liveModeratedText({
+	post,
+	status,
+}: {
+	post: RightNowPostDetails;
+	status?: ModeratedText["textStatus"];
+}): ModeratedText | null {
+	const { moderatedText } = post;
+	if (moderatedText === null || moderatedText.deleted) return null;
+	if (status !== undefined && moderatedText.textStatus !== status)
+		return null;
+	return moderatedText;
+}
+
 export function submittedPostText({
 	post,
 }: {
 	post: RightNowPostDetails;
 }): string {
-	const { moderatedText } = post;
-	if (moderatedText !== null && !moderatedText.deleted)
-		return moderatedText.text;
-	return post.activeText ?? "";
+	return liveModeratedText({ post })?.text ?? post.activeText ?? "";
 }
 
 export function postFormOf({ post }: { post: RightNowPostDetails }): PostForm {

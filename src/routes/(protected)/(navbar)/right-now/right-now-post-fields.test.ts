@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	changedPostFields,
 	isAwaitingModeration,
 	isLivePost,
 	rejectionKeys,
@@ -13,77 +12,6 @@ import {
 	ownPost,
 	postPhoto,
 } from "./right-now-post-test-helpers";
-
-describe("changedPostFields", () => {
-	it("keeps only the keys that differ from the post", () => {
-		const post = ownPost({
-			activeText: "Here for coffee",
-			hosting: true,
-			media: [postPhoto({ mediaId: 1 })],
-			shareLocation: "DISTANCE_AND_MAP",
-			locationRadius: 40,
-		});
-
-		expect(
-			changedPostFields({
-				post,
-				changes: {
-					text: "Here for coffee",
-					hosting: true,
-					media: [{ type: "image_v1", data: { id: 1 } }],
-					shareLocation: "DISTANCE_AND_MAP",
-					locationRadius: 60,
-				},
-			}),
-		).toEqual({ locationRadius: 60 });
-	});
-
-	it("sends text with newlines as spaces and without outer spaces", () => {
-		expect(
-			changedPostFields({
-				post: ownPost(),
-				changes: { text: "  Hosting\ntonight\r\n " },
-			}),
-		).toEqual({ text: "Hosting tonight" });
-	});
-
-	it("sends cleared text as empty", () => {
-		expect(
-			changedPostFields({
-				post: ownPost({ activeText: "Hosting tonight" }),
-				changes: { text: " " },
-			}),
-		).toEqual({ text: "" });
-	});
-
-	it("compares text with what was last sent for moderation", () => {
-		const post = ownPost({
-			activeText: "Old text",
-			moderatedText: moderatedText({ text: "New text" }),
-		});
-
-		expect(
-			changedPostFields({ post, changes: { text: "New text" } }),
-		).toEqual({});
-		expect(
-			changedPostFields({ post, changes: { text: "Old text" } }),
-		).toEqual({ text: "Old text" });
-	});
-
-	it("ignores a deleted photo when comparing photos", () => {
-		const post = ownPost({
-			media: [postPhoto({ mediaId: 1, state: "DELETED" })],
-		});
-
-		expect(changedPostFields({ post, changes: { media: [] } })).toEqual({});
-		expect(
-			changedPostFields({
-				post,
-				changes: { media: [{ type: "image_v1", data: { id: 1 } }] },
-			}),
-		).toEqual({ media: [{ type: "image_v1", data: { id: 1 } }] });
-	});
-});
 
 describe("repostRequest", () => {
 	it("repeats the text, photo, hosting and location", () => {

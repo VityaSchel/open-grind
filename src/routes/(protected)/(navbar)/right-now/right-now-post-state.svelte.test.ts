@@ -73,12 +73,7 @@ import {
 	getRightNowPostState,
 	RightNowPostState,
 } from "./right-now-post-state.svelte";
-import {
-	moderatedText,
-	ownPost,
-	POST_ID,
-	postPhoto,
-} from "./right-now-post-test-helpers";
+import { ownPost, POST_ID, postPhoto } from "./right-now-post-test-helpers";
 
 const BERLIN = "u33dc0cpgp00";
 const PROFILE_ID = 858;
@@ -351,7 +346,7 @@ describe("RightNowPostState join", () => {
 });
 
 describe("RightNowPostState save", () => {
-	it("sends only the keys that changed since the join", async () => {
+	it("sends the changes after the join and reads the post back", async () => {
 		const state = await loadedState();
 		await state.join();
 		getActiveRightNowPostMock.mockResolvedValue(
@@ -365,9 +360,7 @@ describe("RightNowPostState save", () => {
 		await expect(
 			state.save({
 				changes: {
-					text: " Here\nfor coffee ",
-					hosting: false,
-					media: [],
+					text: "Here for coffee",
 					shareLocation: "DISTANCE_AND_MAP",
 					locationRadius: 100,
 				},
@@ -393,9 +386,6 @@ describe("RightNowPostState save", () => {
 		);
 		const state = await loadedState();
 
-		await state.save({
-			changes: { media: [{ type: "image_v1", data: { id: 1 } }] },
-		});
 		await state.save({
 			changes: { media: [{ type: "image_v1", data: { id: 2 } }] },
 		});
@@ -435,18 +425,10 @@ describe("RightNowPostState save", () => {
 	});
 
 	it("skips the request when nothing changed", async () => {
-		getActiveRightNowPostMock.mockResolvedValue(
-			ownPost({
-				moderatedText: moderatedText({ text: "Hosting tonight" }),
-			}),
-		);
+		getActiveRightNowPostMock.mockResolvedValue(ownPost());
 		const state = await loadedState();
 
-		await expect(
-			state.save({
-				changes: { text: "Hosting tonight", hosting: false },
-			}),
-		).resolves.toBe(true);
+		await expect(state.save({ changes: {} })).resolves.toBe(true);
 
 		expect(updateRightNowPostMock).not.toHaveBeenCalled();
 	});

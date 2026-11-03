@@ -1,9 +1,8 @@
 import type {
-	RightNowPostChanges,
 	RightNowPostDetails,
 	RightNowPostRequest,
 } from "#lib/model/right-now/post.ts";
-import { normalizePostText, submittedPostText } from "./post/post-form";
+import { liveModeratedText } from "./post/post-form";
 
 type PostMedia = RightNowPostDetails["media"][number];
 
@@ -29,12 +28,9 @@ export function isLivePost(post: RightNowPostDetails): boolean {
 }
 
 export function isAwaitingModeration(post: RightNowPostDetails): boolean {
-	const { moderatedText, media } = post;
 	return (
-		(moderatedText !== null &&
-			!moderatedText.deleted &&
-			moderatedText.textStatus === "AWAITING_MODERATION") ||
-		media.some(({ state }) => state === "PENDING")
+		liveModeratedText({ post, status: "AWAITING_MODERATION" }) !== null ||
+		post.media.some(({ state }) => state === "PENDING")
 	);
 }
 
@@ -42,14 +38,11 @@ export function rejectedParts(post: RightNowPostDetails | null): {
 	text: RightNowPostDetails["moderatedText"];
 	photos: PostMedia[];
 } {
-	const moderatedText = post?.moderatedText ?? null;
 	return {
 		text:
-			moderatedText !== null &&
-			!moderatedText.deleted &&
-			moderatedText.textStatus === "MODERATION_FAILED"
-				? moderatedText
-				: null,
+			post === null
+				? null
+				: liveModeratedText({ post, status: "MODERATION_FAILED" }),
 		photos: post?.media.filter(({ state }) => state === "REJECTED") ?? [],
 	};
 }
@@ -62,55 +55,12 @@ export function rejectionKeys(post: RightNowPostDetails | null): string[] {
 	];
 }
 
-function sameMedia({
-	post,
-	media,
-}: {
-	post: RightNowPostDetails;
-	media: NonNullable<RightNowPostChanges["media"]>;
-}): boolean {
-	const attached = post.media.filter(({ state }) => state !== "DELETED");
-	return (
-		attached.length === media.length &&
-		attached.every(
-			({ mediaId }, index) => mediaId === media[index]?.data.id,
-		)
-	);
-}
-
-export function changedPostFields({
-	post,
-	changes,
-}: {
-	post: RightNowPostDetails;
-	changes: RightNowPostChanges;
-}): RightNowPostChanges {
-	const { hosting, media, shareLocation, locationRadius } = changes;
-	const text =
-		changes.text === undefined
-			? undefined
-			: normalizePostText({ text: changes.text });
-	return {
-		...(text !== undefined &&
-			text !== submittedPostText({ post }) && { text }),
-		...(hosting !== undefined && hosting !== post.hosting && { hosting }),
-		...(media !== undefined && !sameMedia({ post, media }) && { media }),
-		...(shareLocation !== undefined &&
-			shareLocation !== post.shareLocation && { shareLocation }),
-		...(locationRadius !== undefined &&
-			locationRadius !== post.locationRadius && { locationRadius }),
-	};
-}
-
 function repostText(post: RightNowPostDetails): string {
-	const { moderatedText } = post;
-	if (
-		moderatedText !== null &&
-		!moderatedText.deleted &&
-		moderatedText.textStatus === "AWAITING_MODERATION"
-	)
-		return moderatedText.text;
-	return post.activeText ?? "";
+	return (
+		liveModeratedText({ post, status: "AWAITING_MODERATION" })?.text ??
+		post.activeText ??
+		""
+	);
 }
 
 export function repostRequest(post: RightNowPostDetails): RightNowPostRequest {
