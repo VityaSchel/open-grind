@@ -43,7 +43,11 @@ vi.mock("./right-now-feed-state.svelte", () => ({
 	getRightNowFeedState: () => ({ refreshOrDefer: refreshFeedMock }),
 }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
-import { RightNowPostState } from "./right-now-post-state.svelte";
+import type { RightNowPostChanges } from "#lib/model/right-now/post.ts";
+import {
+	getRightNowPostState,
+	RightNowPostState,
+} from "./right-now-post-state.svelte";
 import {
 	EXPIRATION,
 	MINUTE,
@@ -122,6 +126,28 @@ describe("RightNowPostState moderation poll", () => {
 		expect(toastMock.error).not.toHaveBeenCalled();
 		detach();
 	});
+
+	it.each<[string, RightNowPostChanges]>([
+		["text", { text: "Coffee at mine?" }],
+		["photo", { media: [{ type: "image_v1", data: { id: 2 } }] }],
+	])(
+		"goes back to polling every 10 s once a new %s is saved",
+		async (_, changes) => {
+			getActiveRightNowPostMock.mockResolvedValue(
+				ownPost({ moderatedText: moderatedText() }),
+			);
+			const state = await loadedState();
+			const detach = state.attachView();
+			await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+			await expect(state.save({ changes })).resolves.toBe(true);
+			getActiveRightNowPostMock.mockClear();
+			await vi.advanceTimersByTimeAsync(10 * SECOND);
+
+			expect(getActiveRightNowPostMock).toHaveBeenCalledOnce();
+			detach();
+		},
+	);
 
 	it("polls while a photo waits for moderation", async () => {
 		getActiveRightNowPostMock.mockResolvedValue(
@@ -447,11 +473,11 @@ describe("RightNowPostState expiry", () => {
 		getActiveRightNowPostMock
 			.mockResolvedValueOnce(ownPost())
 			.mockResolvedValue(null);
-		const state = await loadedState();
+		const state = getRightNowPostState(858);
+		await state.load();
 		state.attachView();
 
 		clearAccountCaches();
-		state.destroy();
 		await vi.advanceTimersByTimeAsync(5 * MINUTE);
 
 		expect(getActiveRightNowPostMock).toHaveBeenCalledOnce();

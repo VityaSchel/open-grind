@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ZodType } from "zod";
 
 const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
 
@@ -16,28 +15,14 @@ import {
 	setRightNowPostHidden,
 	updateRightNowPost,
 } from "#lib/api/right-now/post.ts";
+import {
+	joinedPost,
+	unpaidPost,
+} from "#lib/model/right-now/post-test-helpers.ts";
+import { requestsOf, restResponse } from "#lib/test/rest-response.ts";
 import type { RightNowPostRequest } from "#lib/model/right-now/post.ts";
 
 const POST_ID = 254;
-
-const joinedPost = {
-	activeText: null,
-	boostUpsellOfferAvailableUntil: null,
-	expiration: 1_793_701_817_246,
-	hosting: false,
-	id: POST_ID,
-	isDiscreet: "NOT_SELECTED",
-	lat: null,
-	locationRadius: 0,
-	lon: null,
-	media: [],
-	moderatedText: null,
-	postStatus: "ACTIVE",
-	posted: 1_793_698_217_246,
-	profileId: 858,
-	shareLocation: "NONE",
-	sharedFields: [],
-};
 
 const joinBody: RightNowPostRequest = {
 	shareLocation: "NONE",
@@ -45,46 +30,14 @@ const joinBody: RightNowPostRequest = {
 	hosting: false,
 };
 
-function response({
-	status = 200,
-	body = null,
-}: { status?: number; body?: unknown } = {}) {
-	const text = () => JSON.stringify(body);
-	const assertOk = () => {
-		if (status < 200 || status >= 300)
-			throw new ApiError({
-				message: `API request failed with status ${status}`,
-				request: { method: "GET", path: "/" },
-				response: { status, body: text() },
-			});
-	};
-	return {
-		status,
-		text,
-		assertOk,
-		jsonParsed: (schema: ZodType) => {
-			assertOk();
-			return schema.parse(body);
-		},
-	};
-}
-
 function respondInTurn(...replies: { status?: number; body?: unknown }[]) {
 	for (const reply of replies) {
-		fetchRestMock.mockResolvedValueOnce(response(reply));
+		fetchRestMock.mockResolvedValueOnce(restResponse(reply));
 	}
 }
 
 function errorBody(type: string) {
 	return { status: 400, title: "Action not allowed at this time", type };
-}
-
-function requests() {
-	return fetchRestMock.mock.calls.map(([path, options]) => ({
-		path,
-		method: options?.method ?? "GET",
-		body: options?.body,
-	}));
 }
 
 beforeEach(() => {
@@ -99,7 +52,7 @@ describe("getRightNowPostEntitlements", () => {
 			type: "GRANTED",
 			count: 2,
 		});
-		expect(requests()).toEqual([
+		expect(requestsOf(fetchRestMock)).toEqual([
 			{
 				path: "/v1/rightnow/entitlements/posts",
 				method: "GET",
@@ -116,7 +69,9 @@ describe("getActiveRightNowPost", () => {
 		const post = await getActiveRightNowPost();
 
 		expect(post?.id).toBe(POST_ID);
-		expect(requests()[0]?.path).toBe("/v3/rightnow/active-post");
+		expect(requestsOf(fetchRestMock)[0]?.path).toBe(
+			"/v3/rightnow/active-post",
+		);
 	});
 
 	it("reads no post as null", async () => {
@@ -136,7 +91,7 @@ describe("createRightNowPost", () => {
 		const post = await createRightNowPost({ post: joinBody });
 
 		expect(post.id).toBe(POST_ID);
-		expect(requests()).toEqual([
+		expect(requestsOf(fetchRestMock)).toEqual([
 			{
 				path: "/v1/rightnow/entitlements/posts",
 				method: "GET",
@@ -154,7 +109,7 @@ describe("createRightNowPost", () => {
 
 		await createRightNowPost({ post: joinBody });
 
-		expect(requests().map(({ path }) => path)).toContain(
+		expect(requestsOf(fetchRestMock).map(({ path }) => path)).toContain(
 			"/v3/rightnow/posts",
 		);
 	});
@@ -169,7 +124,7 @@ describe("createRightNowPost", () => {
 		await createRightNowPost({ post: joinBody });
 		warn.mockRestore();
 
-		expect(requests().map(({ path }) => path)).toContain(
+		expect(requestsOf(fetchRestMock).map(({ path }) => path)).toContain(
 			"/v3/rightnow/posts",
 		);
 	});
@@ -191,7 +146,7 @@ describe("createRightNowPost", () => {
 
 		await createRightNowPost({ post });
 
-		expect(requests()[1]?.body).toEqual({
+		expect(requestsOf(fetchRestMock)[1]?.body).toEqual({
 			text: "Here for coffee",
 			shareLocation: "DISTANCE_AND_MAP",
 			locationRadius: 100,
@@ -209,29 +164,19 @@ describe("createRightNowPost", () => {
 		await expect(createRightNowPost({ post: joinBody })).rejects.toThrow(
 			NoFreeRightNowPostsError,
 		);
-		expect(requests()).toHaveLength(1);
+		expect(requestsOf(fetchRestMock)).toHaveLength(1);
 	});
 
 	it("reads an unpaid post as no free posts left", async () => {
 		respondInTurn(
 			{ body: { type: "GRANTED", count: 1 } },
-			{
-				status: 201,
-				body: {
-					post: {
-						...joinedPost,
-						posted: null,
-						expiration: null,
-						postStatus: "AWAITING_PAYMENT",
-					},
-				},
-			},
+			{ status: 201, body: { post: unpaidPost } },
 		);
 
 		await expect(createRightNowPost({ post: joinBody })).rejects.toThrow(
 			NoFreeRightNowPostsError,
 		);
-		expect(requests()).toHaveLength(2);
+		expect(requestsOf(fetchRestMock)).toHaveLength(2);
 	});
 
 	it("reads a refused second post as one already running", async () => {
@@ -266,7 +211,7 @@ describe("updateRightNowPost", () => {
 			changes: { text: "Here for coffee", hosting: true },
 		});
 
-		expect(requests()).toEqual([
+		expect(requestsOf(fetchRestMock)).toEqual([
 			{
 				path: `/v4/rightnow/posts/${POST_ID}`,
 				method: "PATCH",
@@ -280,7 +225,7 @@ describe("updateRightNowPost", () => {
 
 		await updateRightNowPost({ postId: POST_ID, changes: { media: [] } });
 
-		expect(requests()[0]?.body).toEqual({ media: [] });
+		expect(requestsOf(fetchRestMock)[0]?.body).toEqual({ media: [] });
 	});
 
 	it.each(["urn:gr:err:client_action", "urn:gr:err:resource_not_found"])(
@@ -315,7 +260,7 @@ describe("setRightNowPostHidden", () => {
 
 		await setRightNowPostHidden({ postId: POST_ID, hidden: true });
 
-		expect(requests()).toEqual([
+		expect(requestsOf(fetchRestMock)).toEqual([
 			{
 				path: `/v1/rightnow/posts/${POST_ID}/settings`,
 				method: "PATCH",

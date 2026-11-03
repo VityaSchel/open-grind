@@ -7,6 +7,7 @@ import {
 	rightNowPostRequestSchema,
 	rightNowPostResponseSchema,
 } from "./post";
+import { joinedPost } from "./post-test-helpers";
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -50,25 +51,6 @@ const createdPost = {
 	posted: 1_793_277_174_553,
 	profileId: 858,
 	shareLocation: "DISTANCE_AND_MAP",
-	sharedFields: [],
-};
-
-const joinedPost = {
-	activeText: null,
-	boostUpsellOfferAvailableUntil: null,
-	expiration: 1_793_701_817_246,
-	hosting: false,
-	id: 254,
-	isDiscreet: "NOT_SELECTED",
-	lat: null,
-	locationRadius: 0,
-	lon: null,
-	media: [],
-	moderatedText: null,
-	postStatus: "ACTIVE",
-	posted: 1_793_698_217_246,
-	profileId: 858,
-	shareLocation: "NONE",
 	sharedFields: [],
 };
 

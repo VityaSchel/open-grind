@@ -94,10 +94,6 @@ async function loadedState() {
 	return state;
 }
 
-function firstCallOrder(mock: { mock: { invocationCallOrder: number[] } }) {
-	return mock.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY;
-}
-
 beforeEach(() => {
 	clearAccountCaches();
 	vi.spyOn(console, "error").mockImplementation(() => {});
@@ -145,8 +141,8 @@ describe("RightNowPostState load", () => {
 		expect(state.freePostsLeft).toBe(2);
 		expect(state.loading).toBe(false);
 		expect(storeLocationMock).toHaveBeenCalledWith({ geohash: BERLIN });
-		expect(firstCallOrder(storeLocationMock)).toBeLessThan(
-			firstCallOrder(getRightNowPostEntitlementsMock),
+		expect(storeLocationMock).toHaveBeenCalledBefore(
+			getRightNowPostEntitlementsMock,
 		);
 	});
 
@@ -281,8 +277,8 @@ describe("RightNowPostState join", () => {
 			post: JOIN_BODY,
 		});
 		expect(storeLocationMock).toHaveBeenCalledWith({ geohash: BERLIN });
-		expect(firstCallOrder(storeLocationMock)).toBeLessThan(
-			firstCallOrder(createRightNowPostMock),
+		expect(storeLocationMock).toHaveBeenCalledBefore(
+			createRightNowPostMock,
 		);
 		expect(state.post?.id).toBe(POST_ID);
 		expect(state.status).toBe("active");
@@ -307,6 +303,20 @@ describe("RightNowPostState join", () => {
 		created.resolve(ownPost());
 		await expect(joined).resolves.toBe(true);
 		expect(createRightNowPostMock).toHaveBeenCalledOnce();
+	});
+
+	it("keeps the new post when an earlier post read finishes empty after the join", async () => {
+		const read = Promise.withResolvers<OwnPost | null>();
+		getActiveRightNowPostMock.mockReturnValueOnce(read.promise);
+		const state = createState();
+
+		const loaded = state.load();
+		await expect(state.join()).resolves.toBe(true);
+		read.resolve(null);
+		await loaded;
+
+		expect(state.post?.id).toBe(POST_ID);
+		expect(toastMock).not.toHaveBeenCalled();
 	});
 
 	it("never creates a second post while one is running", async () => {
@@ -409,28 +419,6 @@ describe("RightNowPostState save", () => {
 		expect(state.post?.activeText).toBe("Here for coffee");
 		expect(state.saving).toBe(false);
 		expect(refreshFeedMock).toHaveBeenCalledTimes(2);
-	});
-
-	it("sends a new photo and its removal", async () => {
-		getActiveRightNowPostMock.mockResolvedValue(
-			ownPost({ media: [postPhoto({ mediaId: 1 })] }),
-		);
-		const state = await loadedState();
-
-		await state.save({
-			changes: { media: [{ type: "image_v1", data: { id: 2 } }] },
-		});
-		await state.save({ changes: { media: [] } });
-
-		expect(updateRightNowPostMock.mock.calls).toEqual([
-			[
-				{
-					postId: POST_ID,
-					changes: { media: [{ type: "image_v1", data: { id: 2 } }] },
-				},
-			],
-			[{ postId: POST_ID, changes: { media: [] } }],
-		]);
 	});
 
 	it("ends the session instead of offering a retry when the post is already over", async () => {

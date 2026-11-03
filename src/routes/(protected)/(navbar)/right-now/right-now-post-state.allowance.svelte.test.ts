@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ZodType } from "zod";
 
 const { fetchRestMock, showErrorToastMock, toastMock } = vi.hoisted(() => ({
 	fetchRestMock: vi.fn(),
@@ -25,66 +24,16 @@ vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("./right-now-feed-state.svelte", () => ({
 	getRightNowFeedState: () => ({ refreshOrDefer: () => Promise.resolve() }),
 }));
-import { ApiError } from "#lib/api/api-error.ts";
+import {
+	joinedPost,
+	unpaidPost,
+} from "#lib/model/right-now/post-test-helpers.ts";
+import { requestsOf, restResponse } from "#lib/test/rest-response.ts";
 import { RightNowPostState } from "./right-now-post-state.svelte";
-import { EXPIRATION, POST_ID, POSTED } from "./right-now-post-test-helpers";
-
-const createdPost = {
-	activeText: null,
-	boostUpsellOfferAvailableUntil: null,
-	expiration: EXPIRATION,
-	hosting: false,
-	id: POST_ID,
-	isDiscreet: "NOT_SELECTED",
-	lat: null,
-	locationRadius: 0,
-	lon: null,
-	media: [],
-	moderatedText: null,
-	postStatus: "ACTIVE",
-	posted: POSTED,
-	profileId: 858,
-	shareLocation: "NONE",
-	sharedFields: [],
-};
-
-const unpaidPost = {
-	...createdPost,
-	posted: null,
-	expiration: null,
-	postStatus: "AWAITING_PAYMENT",
-};
-
-function response({
-	status = 200,
-	body = null,
-}: {
-	status?: number;
-	body?: unknown;
-}) {
-	const text = () => JSON.stringify(body);
-	const assertOk = () => {
-		if (status < 200 || status >= 300)
-			throw new ApiError({
-				message: `API request failed with status ${status}`,
-				request: { method: "GET", path: "/" },
-				response: { status, body: text() },
-			});
-	};
-	return {
-		status,
-		text,
-		assertOk,
-		jsonParsed: (schema: ZodType) => {
-			assertOk();
-			return schema.parse(body);
-		},
-	};
-}
 
 function serve({
 	entitlements,
-	created = createdPost,
+	created = joinedPost,
 }: {
 	entitlements: unknown[];
 	created?: unknown;
@@ -94,28 +43,20 @@ function serve({
 		if (path === "/v1/rightnow/entitlements/posts") {
 			const body =
 				allowances.length > 1 ? allowances.shift() : allowances[0];
-			return Promise.resolve(response({ body }));
+			return Promise.resolve(restResponse({ body }));
 		}
 		if (path === "/v3/rightnow/active-post")
-			return Promise.resolve(response({ body: { post: null } }));
+			return Promise.resolve(restResponse({ body: { post: null } }));
 		if (path === "/v3/rightnow/posts")
 			return Promise.resolve(
-				response({ status: 201, body: { post: created } }),
+				restResponse({ status: 201, body: { post: created } }),
 			);
 		return Promise.reject(new Error(`Unexpected request to ${path}`));
 	});
 }
 
-function requests() {
-	return fetchRestMock.mock.calls.map(([path, options]) => ({
-		path,
-		method: options?.method ?? "GET",
-		body: options?.body,
-	}));
-}
-
 function creates() {
-	return requests().filter(({ method }) => method === "POST");
+	return requestsOf(fetchRestMock).filter(({ method }) => method === "POST");
 }
 
 const createdStates: RightNowPostState[] = [];
@@ -148,7 +89,7 @@ describe("RightNowPostState free posts", () => {
 
 		await expect(state.join()).resolves.toBe(true);
 
-		expect(requests()).toEqual([
+		expect(requestsOf(fetchRestMock)).toEqual([
 			{
 				path: "/v1/rightnow/entitlements/posts",
 				method: "GET",
