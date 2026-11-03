@@ -23,6 +23,10 @@ import {
 	photosOf,
 	profileSeed,
 } from "./profiles";
+import {
+	demoActiveRightNowPost,
+	type DemoRightNowPostMedia,
+} from "./right-now-post";
 
 type DemoPostMedia = {
 	type: "image_v1";
@@ -196,6 +200,57 @@ function feedPost({
 	};
 }
 
+function ownFeedMedia(media: DemoRightNowPostMedia): DemoPostMedia {
+	const { mediaId, thumbnailUrl, fullImageUrl } = media;
+	return {
+		type: "image_v1",
+		data: {
+			mediaId,
+			thumbnailUrl,
+			fullImageUrl,
+			contentType: "image/jpeg",
+			state: "APPROVED",
+			shouldBlur: false,
+			isNsfw: false,
+			source: "RIGHT_NOW",
+		},
+	};
+}
+
+function ownFeedPosts(): DemoFeedPost[] {
+	const post = demoActiveRightNowPost();
+	if (
+		post?.postStatus !== "ACTIVE" ||
+		post.posted === null ||
+		post.expiration === null
+	)
+		return [];
+	const seed = profileSeed(post.profileId);
+	return [
+		{
+			seed,
+			item: {
+				type: "right_now_post_v3",
+				data: {
+					id: post.id,
+					profileId: post.profileId,
+					mediaHash: photosOf(post.profileId)[0],
+					displayName: seed.name ?? undefined,
+					media: post.media.map(ownFeedMedia),
+					text: post.activeText ?? undefined,
+					hosting: post.hosting,
+					posted: post.posted,
+					expiration: post.expiration,
+					recentlyChatted: false,
+					favorite: false,
+					onlineUntil: onlineUntilOf(seed) ?? undefined,
+					isOnPrep: seed.hiv === HivStatus.NegativeOnPrep,
+				},
+			},
+		},
+	];
+}
+
 function matchesFeedQuery(
 	params: URLSearchParams,
 ): (post: DemoFeedPost) => boolean {
@@ -232,8 +287,12 @@ function feedOrder(
 }
 
 export function demoRightNowFeed(params: URLSearchParams) {
-	const posts: DemoFeedItem[] = feedAuthorIds
-		.map((profileId, index) => feedPost({ index, profileId }))
+	const posts: DemoFeedItem[] = [
+		...ownFeedPosts(),
+		...feedAuthorIds.map((profileId, index) =>
+			feedPost({ index, profileId }),
+		),
+	]
 		.filter(matchesFeedQuery(params))
 		.sort(feedOrder(params.get("sort")))
 		.map(({ item }) => item);

@@ -74,6 +74,7 @@ import {
 	demoRightNowPostReport,
 } from "./mock/reports";
 import { demoRightNowFeed } from "./mock/right-now";
+import { demoRightNowPostRoute } from "./mock/right-now-post";
 import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
@@ -177,6 +178,8 @@ export function demoRoute({
 	) {
 		return ok(demoRightNowFeed(params));
 	}
+	const rightNowPost = demoRightNowPostRoute({ method, rawPath, body });
+	if (rightNowPost !== null) return rightNowPost;
 	if (method === "GET" && rawPath === "/v7/search") {
 		return ok({ profiles: demoSearchProfiles(params) });
 	}
