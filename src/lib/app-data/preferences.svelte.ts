@@ -38,7 +38,7 @@ const preferencesSchema = z.object({
 	units: unitSystemSchema.default("metric"),
 });
 
-type Preferences = z.infer<typeof preferencesSchema>;
+export type Preferences = z.infer<typeof preferencesSchema>;
 
 export type BooleanPreference = {
 	[Key in keyof Preferences]-?: Preferences[Key] extends boolean

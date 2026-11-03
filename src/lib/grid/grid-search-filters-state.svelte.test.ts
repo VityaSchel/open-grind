@@ -15,6 +15,7 @@ vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	setPreferences: setPreferencesMock,
 }));
 
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { GridSearchFiltersState } from "#lib/grid/grid-search-filters-state.svelte.ts";
 import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 
@@ -61,6 +62,50 @@ describe("snapshot", () => {
 		state.set({ genders: [3] });
 
 		expect(snapshot.genders).toEqual([1, 2]);
+	});
+});
+
+describe("loading", () => {
+	it("keeps a change made before the saved filters finish loading, on top of the defaults", async () => {
+		const { promise, resolve } = Promise.withResolvers<unknown>();
+		getPreferencesMock.mockReturnValueOnce(promise);
+		const state = new GridSearchFiltersState({ onQueryChange: vi.fn() });
+
+		state.set({ isFavorite: !defaultFilters.isFavorite });
+		resolve({ gridSearchFilters: { ...defaultFilters, genders: [1, 2] } });
+		await state.ready;
+
+		expect(state.value).toEqual({
+			...defaultFilters,
+			isFavorite: !defaultFilters.isFavorite,
+		});
+	});
+});
+
+describe("reset", () => {
+	it("restores the defaults without saving them", async () => {
+		const { state, onQueryChange } = await loadedState();
+
+		state.reset();
+
+		expect(state.value).toEqual(defaultFilters);
+		expect(setPreferencesMock).not.toHaveBeenCalled();
+		expect(onQueryChange).not.toHaveBeenCalled();
+	});
+
+	it("saves for the next account only once the account change resets it", async () => {
+		const { state } = await loadedState();
+
+		clearAccountCaches();
+		state.set({ genders: [3] });
+		expect(setPreferencesMock).not.toHaveBeenCalled();
+
+		state.reset();
+		state.set({ genders: [4] });
+
+		expect(setPreferencesMock).toHaveBeenCalledExactlyOnceWith({
+			gridSearchFilters: { ...defaultFilters, genders: [4] },
+		});
 	});
 });
 
