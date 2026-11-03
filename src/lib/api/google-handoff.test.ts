@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
 	reportSignInFailure: vi.fn(),
 	goto: vi.fn(),
 	toastError: vi.fn(),
+	googleSignInMode: vi.fn(),
 	handoff: { phase: "idle" },
 	events: [] as string[],
 }));
@@ -20,7 +21,7 @@ vi.mock("svelte-sonner", () => ({ toast: { error: mocks.toastError } }));
 vi.mock("#lib/api/google-handoff-state.svelte.ts", () => ({
 	confirmAccountSwitch: mocks.confirmAccountSwitch,
 	googleHandoffState: mocks.handoff,
-	googleSignInMode: () => "companion",
+	googleSignInMode: mocks.googleSignInMode,
 }));
 vi.mock("#lib/api/current-session.ts", () => ({
 	signedInProfileId: mocks.signedInProfileId,
@@ -184,6 +185,7 @@ describe("signing in through a Google handoff with no account", () => {
 describe("watching for a Google handoff", () => {
 	beforeEach(() => {
 		vi.mocked(listen).mockClear();
+		mocks.googleSignInMode.mockReturnValue("companion");
 		backend({ exchange: () => NEW_ACCOUNT, pending: () => false });
 	});
 
@@ -191,7 +193,7 @@ describe("watching for a Google handoff", () => {
 		vi.unstubAllGlobals();
 	});
 
-	it("listens for handoffs on Android", async () => {
+	it("listens for handoffs when the companion app signs in", async () => {
 		await startGoogleHandoffWatch();
 
 		expect(listen).toHaveBeenCalledWith(
@@ -201,6 +203,15 @@ describe("watching for a Google handoff", () => {
 		await vi.waitFor(() =>
 			expect(mocks.events).toContain("google_handoff_pending"),
 		);
+	});
+
+	it("never picks up a handoff when the sign-in is pasted", async () => {
+		mocks.googleSignInMode.mockReturnValue("paste");
+
+		await startGoogleHandoffWatch();
+
+		expect(listen).not.toHaveBeenCalled();
+		expect(mocks.invoke).not.toHaveBeenCalled();
 	});
 
 	it("never picks up a handoff in the demo", async () => {
