@@ -20,7 +20,7 @@ const EXPIRED = "That Google sign-in expired. Try again.";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
 
-const available = () => isTauri() && isAndroidPlatform();
+const available = () => !__DEMO__ && isTauri() && isAndroidPlatform();
 
 async function pending(): Promise<boolean> {
 	try {

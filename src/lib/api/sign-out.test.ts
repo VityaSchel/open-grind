@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const order: string[] = [];
 
@@ -51,6 +51,10 @@ beforeEach(() => {
 		return Promise.resolve();
 	});
 	vi.spyOn(console, "error").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 describe("signing out", () => {
@@ -152,6 +156,18 @@ describe("signing out", () => {
 		expect(push.fcmServiceInstalled).not.toHaveBeenCalled();
 		expect(push.deletePushToken).not.toHaveBeenCalled();
 		expect(console.error).not.toHaveBeenCalled();
+		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
+	});
+
+	it("leaves this device's push alone when signing out of the demo", async () => {
+		vi.stubGlobal("__DEMO__", true);
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
+		expect(push.deletePushToken).not.toHaveBeenCalled();
 		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
 	});
 });
