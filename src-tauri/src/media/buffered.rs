@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::time::Duration;
 
-use grindr::{MediaFetcher, MediaResponse};
+use grindr::{Bytes, MediaFetcher, MediaResponse};
 use tauri::http::{Response, StatusCode};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::time::{timeout_at, Instant};
@@ -154,6 +154,31 @@ pub async fn settle(
 	deliver_upstream(fetched, is_head)
 }
 
+pub async fn read_photo<R: Runtime>(
+	app: &AppHandle<R>,
+	url: &str,
+) -> Option<Bytes> {
+	if !url.starts_with("https://") {
+		return None;
+	}
+	let proxy = app.state::<MediaProxy>();
+	let key = cache_key(url);
+	if let Some(hit) = proxy.cached(key).await {
+		return Some(hit.body);
+	}
+	let _flight = proxy.flights.acquire(key).await;
+	if let Some(hit) = proxy.cached(key).await {
+		return Some(hit.body);
+	}
+	let fetched = fetch(app, url, MediaFetcher::ImageLoader, None)
+		.await
+		.ok()?;
+	let whole = deliverable_status(fetched.status) == Some(StatusCode::OK);
+	let body = fetched.body.clone();
+	settle(&proxy, key, url, fetched, None, true).await;
+	whole.then_some(body)
+}
+
 #[cfg(test)]
 mod tests {
 	use std::sync::Arc;
@@ -167,9 +192,9 @@ mod tests {
 
 	use super::super::cache::cache_key;
 	use super::super::failures::FailureKind;
-	use super::super::tests::app_without_a_client;
+	use super::super::tests::{app_without_a_client, cache};
 	use super::super::{MediaProxy, OFFICIAL_APP_REQUESTS_PER_HOST};
-	use super::{serve_buffered_within, streamed_instead};
+	use super::{read_photo, serve_buffered_within, streamed_instead};
 
 	const PHOTO: &str = "https://cdns.grindr.com/images/thumb/320x320/ff";
 	const DEADLINE: Duration = Duration::from_secs(25);
@@ -294,5 +319,32 @@ mod tests {
 		drop(other);
 
 		assert_eq!(waiting.await.unwrap(), StatusCode::SERVICE_UNAVAILABLE);
+	}
+
+	#[tokio::test]
+	async fn a_photo_already_shown_is_read_from_the_cache() {
+		let app = app_without_a_client();
+		cache(&app, PHOTO, b"jpegbytes").await;
+
+		let read = read_photo(app.handle(), PHOTO).await;
+
+		assert_eq!(read.as_deref(), Some(&b"jpegbytes"[..]));
+	}
+
+	#[tokio::test]
+	async fn a_photo_that_cannot_be_fetched_reads_as_nothing() {
+		let app = app_without_a_client();
+
+		assert_eq!(read_photo(app.handle(), PHOTO).await, None);
+	}
+
+	#[tokio::test]
+	async fn a_photo_that_is_not_https_reads_as_nothing() {
+		let app = app_without_a_client();
+		let plain = "http://cdns.grindr.com/images/thumb/320x320/ff";
+		cache(&app, plain, b"jpegbytes").await;
+
+		assert_eq!(read_photo(app.handle(), plain).await, None);
+		assert_eq!(read_photo(app.handle(), "file:///etc/passwd").await, None);
 	}
 }

@@ -392,7 +392,7 @@ async function deliver<T>({
 	await discardStagedMedia(staged);
 }
 
-async function stageFile(file: File): Promise<PickedMedia> {
+export async function stageFile(file: File): Promise<PickedMedia> {
 	const key = crypto.randomUUID();
 	const mimeType = file.type === "" ? null : file.type;
 	if (__DEMO__) return { source: "web", key, mimeType, file };
