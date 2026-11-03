@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { conversationIdFor } from "$lib/chat/conversation-id";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { t } from "$lib/i18n";
+	import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		profileId,

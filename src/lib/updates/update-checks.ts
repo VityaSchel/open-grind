@@ -1,4 +1,4 @@
-import { t } from "$lib/i18n";
+import { t } from "#lib/i18n/index.ts";
 import { addonFlow } from "./addon.svelte";
 import { ADDON_KEYS, type AddonKey } from "./components";
 import { problemBody, unsupportedText, updateErrorText } from "./error-copy";

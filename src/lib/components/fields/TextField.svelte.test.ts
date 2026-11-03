@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	bracketCounts,
 	restoreCountFormatter,
-} from "$lib/i18n/fixtures/count-formatter";
+} from "#lib/i18n/fixtures/count-formatter.ts";
 import TextField from "./TextField.svelte";
 
 const field = { label: "Display name", value: "Otter", maxLength: 15 };

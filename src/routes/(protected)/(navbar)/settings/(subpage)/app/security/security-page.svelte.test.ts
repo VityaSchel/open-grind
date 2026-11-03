@@ -7,7 +7,7 @@ const { toast } = vi.hoisted(() => ({ toast: vi.fn() }));
 
 vi.mock("svelte-sonner", () => ({ toast }));
 
-import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
+import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
 import SecurityPage from "./+page.svelte";
 
 afterEach(() => {

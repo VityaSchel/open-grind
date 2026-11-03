@@ -1,8 +1,8 @@
 import z from "zod";
 
-import { t } from "$lib/i18n";
-import { formatRange } from "$lib/i18n/format";
-import { type Gender, primaryGenderRank } from "$lib/model/users/genders";
+import { formatRange } from "#lib/i18n/format.ts";
+import { t } from "#lib/i18n/index.ts";
+import { type Gender, primaryGenderRank } from "#lib/model/users/genders.ts";
 import {
 	AcceptNSFWPics,
 	BodyType,
@@ -12,13 +12,13 @@ import {
 	RelationshipStatus,
 	SexualPosition,
 	Tribe,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import {
 	type ProfileTagsResponse,
 	tagsOf,
 	tagTextByKey,
-} from "$lib/model/users/tags";
-import type { UnitSystem } from "$lib/util/units";
+} from "#lib/model/users/tags.ts";
+import type { UnitSystem } from "#lib/util/units.ts";
 
 export const filterIsFavoriteSchema = z.boolean();
 export const filterIsOnlineSchema = z.boolean();

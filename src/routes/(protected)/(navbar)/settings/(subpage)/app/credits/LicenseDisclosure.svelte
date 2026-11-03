@@ -1,9 +1,9 @@
 <script lang="ts">
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
-	import { t } from "$lib/i18n";
-	import { formatList } from "$lib/i18n/format";
-	import type { LoadedEntry } from "$lib/credits";
+	import { formatList } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import type { LoadedEntry } from "#lib/credits/index.ts";
 
 	let { entry }: { entry: LoadedEntry } = $props();
 

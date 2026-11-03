@@ -2,34 +2,34 @@
 
 import { createContext } from "svelte";
 
-import { showErrorToast } from "$lib/api/error-toast";
-import { errorUrn } from "$lib/api/error-urn";
-import { markConversationAsRead } from "$lib/api/messaging/conversations";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { errorUrn } from "#lib/api/error-urn.ts";
+import { markConversationAsRead } from "#lib/api/messaging/conversations.ts";
 import {
 	ConversationUnavailableError,
 	reactToMessage,
 	sendMessage,
-} from "$lib/api/messaging/messages";
-import { getPreferences } from "$lib/app-data/preferences.svelte";
+} from "#lib/api/messaging/messages.ts";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
 import {
 	offerEntitlementBypass,
 	reportRefusedDespiteBypass,
-} from "$lib/entitlements/bypass.svelte";
-import { t } from "$lib/i18n";
-import { previewFromMessage } from "$lib/model/messaging/message-preview";
-import { reconciler } from "$lib/util/reconcile";
+} from "#lib/entitlements/bypass.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
+import { previewFromMessage } from "#lib/model/messaging/message-preview.ts";
+import { reconciler } from "#lib/util/reconcile.ts";
 import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1ConversationReadEventSchema,
 	chatV1MessageSentEventSchema,
 	stopListening,
 	ws,
-} from "$lib/ws.svelte";
-import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
+} from "#lib/ws.svelte.ts";
+import type { ConversationsState } from "#lib/chat/conversations-state.svelte.ts";
 import type {
 	ApiResponseMessage,
 	MessageDraft,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 import { DynamicMessagesRefresh } from "./dynamic-refresh";
 import {
 	matchPendingEcho,

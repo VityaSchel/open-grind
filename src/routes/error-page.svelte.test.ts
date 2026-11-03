@@ -3,8 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { copyErrorConfirmState } from "$lib/api/copy-error-confirm-state.svelte";
-import CopyErrorConfirmAlert from "$lib/components/feedback/CopyErrorConfirmAlert.svelte";
+import { copyErrorConfirmState } from "#lib/api/copy-error-confirm-state.svelte.ts";
+import CopyErrorConfirmAlert from "#lib/components/feedback/CopyErrorConfirmAlert.svelte";
 import { handleError } from "../hooks.client";
 import ErrorPage from "./+error.svelte";
 

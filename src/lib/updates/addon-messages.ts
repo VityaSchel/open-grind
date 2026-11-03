@@ -1,4 +1,4 @@
-import type { MessageKeyWith, PlainMessageKey } from "$lib/i18n";
+import type { MessageKeyWith, PlainMessageKey } from "#lib/i18n/index.ts";
 import {
 	type AddonKey,
 	FCM_COMPONENT,

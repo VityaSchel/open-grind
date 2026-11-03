@@ -12,14 +12,14 @@ const api = vi.hoisted(() => ({
 }));
 const toastError = vi.hoisted(() => vi.fn());
 
-vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 vi.mock("../../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ profile: { profileId: PEER } }),
 }));
 
-import { albumShares } from "$lib/chat/album-shares.svelte";
-import { demoMyAlbums } from "$lib/demo/mock/albums";
+import { albumShares } from "#lib/chat/album-shares.svelte.ts";
+import { demoMyAlbums } from "#lib/demo/mock/albums.ts";
 import type { TabSelection } from "../tabs";
 import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
 

@@ -1,4 +1,4 @@
-import type { PlainMessageKey } from "$lib/i18n";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 
 export const APP_COMPONENT = "app";
 export const GOOGLE_OAUTH_COMPONENT = "google-oauth";

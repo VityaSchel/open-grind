@@ -5,11 +5,11 @@
 	import type { Attachment } from "svelte/attachments";
 	import type { ClassValue } from "svelte/elements";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { t } from "$lib/i18n";
-	import { proxyMediaUrl } from "$lib/util/media";
-	import { stableSignedUrl } from "$lib/util/signed-url";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { stableSignedUrl } from "#lib/util/signed-url.ts";
 	import {
 		type AlbumSlide,
 		loadAlbumSlides,

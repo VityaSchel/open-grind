@@ -5,16 +5,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const pending = vi.hoisted(() => () => new Promise<never>(() => {}));
 
-vi.mock("$lib/api/messaging/albums", () => ({
+vi.mock("#lib/api/messaging/albums.ts", () => ({
 	getAlbumContent: pending,
 	getAlbumStorageLimits: pending,
 	getMyAlbums: pending,
 }));
 vi.mock("$app/state", () => ({ page: { params: { albumId: "900" } } }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import EditAlbumPage from "./[albumId]/+page.svelte";
 import MyAlbumsPage from "./+page.svelte";
 import NewAlbumPage from "./new/+page.svelte";

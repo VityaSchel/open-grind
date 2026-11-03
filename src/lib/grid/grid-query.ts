@@ -12,10 +12,10 @@ import {
 	WEIGHT_GRAMS_MIN,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
-import { isTribeOffered } from "$lib/model/users/profiles";
-import { isTagKeyOffered } from "$lib/model/users/tags";
-import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
+} from "#lib/model/browse/grid/filters.ts";
+import { isTribeOffered } from "#lib/model/users/profiles.ts";
+import { isTagKeyOffered } from "#lib/model/users/tags.ts";
+import type { cascadeV4QuerySchema } from "#lib/model/browse/grid/cascade/query/v4.ts";
 
 const sendable = <T>({ enabled, values }: { enabled: boolean; values: T[] }) =>
 	enabled && values.length > 0 ? values : undefined;

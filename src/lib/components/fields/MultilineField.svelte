@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Label } from "$lib/components/ui/label";
-	import { Textarea } from "$lib/components/ui/textarea";
-	import { formatInteger } from "$lib/i18n/format";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import { Textarea } from "#lib/components/ui/textarea/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
 
 	let {
 		label,

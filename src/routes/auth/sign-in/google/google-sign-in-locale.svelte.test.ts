@@ -10,16 +10,16 @@ import {
 	vi,
 } from "vitest";
 
-import { SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	installedBy,
 	offer,
 	settled,
 	toastsFake,
 	updateApiFake,
-} from "$lib/updates/updates-test-helpers";
-import type { Capability } from "$lib/updates/types";
+} from "#lib/updates/updates-test-helpers.ts";
+import type { Capability } from "#lib/updates/types.ts";
 
 const ASCII_LETTER = /[A-Za-z]/;
 
@@ -44,21 +44,21 @@ const {
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("$app/state", () => ({ page: pageMock }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("$lib/updates/index", async () => ({
-	...(await import("$lib/updates/types")),
-	...(await import("$lib/updates/components")),
+vi.mock("#lib/updates/index.ts", async () => ({
+	...(await import("#lib/updates/types.ts")),
+	...(await import("#lib/updates/components.ts")),
 	...fake.api,
 	getUpdateCapability,
 }));
-vi.mock("$lib/updates/toasts", () => toasts);
-vi.mock("$lib/platform/os", () => platform);
-vi.mock("$lib/platform/store", () => store);
-vi.mock("$lib/platform/link-opener", () => ({ openExternalLink: vi.fn() }));
+vi.mock("#lib/updates/toasts.ts", () => toasts);
+vi.mock("#lib/platform/os.ts", () => platform);
+vi.mock("#lib/platform/store.ts", () => store);
+vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink: vi.fn() }));
 
 let testing: typeof import("@testing-library/svelte");
 
@@ -70,7 +70,7 @@ const releaseSigned: Capability = {
 async function opened() {
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
-		await import("$lib/updates/capability.svelte");
+		await import("#lib/updates/capability.svelte.ts");
 	await hydrateUpdateCapability();
 	const { default: GoogleSignInForm } =
 		await import("./GoogleSignInForm.svelte");
@@ -94,7 +94,7 @@ function companionLink() {
 }
 
 async function switchLocale(locale: string) {
-	const { setLocale } = await import("$lib/i18n");
+	const { setLocale } = await import("#lib/i18n/index.ts");
 	await setLocale({ locale });
 }
 
@@ -216,7 +216,7 @@ describe("GoogleSignInForm in the active locale", () => {
 
 	it("translates the signing-in card", async () => {
 		const { googleHandoffState } =
-			await import("$lib/api/google-handoff-state.svelte");
+			await import("#lib/api/google-handoff-state.svelte.ts");
 		googleHandoffState.phase = "signingIn";
 		try {
 			const { container } = await opened();

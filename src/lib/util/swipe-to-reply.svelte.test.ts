@@ -2,7 +2,10 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { SwipeToReply, wheelInputMode } from "$lib/util/swipe-to-reply.svelte";
+import {
+	SwipeToReply,
+	wheelInputMode,
+} from "#lib/util/swipe-to-reply.svelte.ts";
 import {
 	drag,
 	pointer,

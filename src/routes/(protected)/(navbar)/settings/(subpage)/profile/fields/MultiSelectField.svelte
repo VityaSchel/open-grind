@@ -1,12 +1,15 @@
 <script lang="ts" generics="T extends number">
 	import CaretUpDownIcon from "phosphor-svelte/lib/CaretUpDownIcon";
 
-	import Field from "$lib/components/fields/Field.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { t } from "$lib/i18n";
-	import { formatList } from "$lib/i18n/format";
-	import { type Option, selectionKeepingUnlisted } from "$lib/util/options";
+	import Field from "#lib/components/fields/Field.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { formatList } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import {
+		type Option,
+		selectionKeepingUnlisted,
+	} from "#lib/util/options.ts";
 
 	let {
 		label,

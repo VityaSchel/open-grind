@@ -1,9 +1,9 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 
-import { asAppError } from "$lib/api/methods";
-import { isAndroidPlatform, isDesktopPlatform } from "$lib/platform/os";
-import { getInstalledVersion } from "$lib/updates";
-import { FCM_COMPONENT } from "$lib/updates/components";
+import { asAppError } from "#lib/api/methods.ts";
+import { isAndroidPlatform, isDesktopPlatform } from "#lib/platform/os.ts";
+import { FCM_COMPONENT } from "#lib/updates/components.ts";
+import { getInstalledVersion } from "#lib/updates/index.ts";
 import {
 	type Announcement,
 	type NotificationMode,

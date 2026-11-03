@@ -2,7 +2,7 @@ import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1MessageSentEventSchema,
 	ws,
-} from "$lib/ws.svelte";
+} from "#lib/ws.svelte.ts";
 import {
 	dismissPushConversation,
 	pushAvailableHere,

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	FilterPosition,
 	type FilterPositionId,
-} from "$lib/model/browse/grid/filters";
+} from "#lib/model/browse/grid/filters.ts";
 import PositionQuickFilter from "./PositionQuickFilter.svelte";
 
 function filterSwitch(): HTMLElement {

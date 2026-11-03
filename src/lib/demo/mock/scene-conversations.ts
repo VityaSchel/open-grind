@@ -1,4 +1,4 @@
-import { conversationIdFor } from "$lib/chat/conversation-id";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 import { demoMeProfileId } from "../config";
 import { screenshotScene } from "../screenshot-scene";
 import {

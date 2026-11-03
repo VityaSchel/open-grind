@@ -4,26 +4,26 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { encodeGeohash } from "$lib/model/geohash";
+import { encodeGeohash } from "#lib/model/geohash.ts";
 
 const { preferencesSnapshotMock, setPreferencesMock } = vi.hoisted(() => ({
 	preferencesSnapshotMock: vi.fn(),
 	setPreferencesMock: vi.fn(),
 }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: preferencesSnapshotMock,
 	preferencesLoaded: () => true,
 	setPreferences: setPreferencesMock,
 }));
-vi.mock("$lib/location/auto-location", () => ({
+vi.mock("#lib/location/auto-location.ts", () => ({
 	autoLocation: {
 		suspend: vi.fn(),
 		resume: vi.fn(),
 		refreshStaleFix: vi.fn(),
 	},
 }));
-vi.mock("$lib/location/location-request.svelte", () => ({
+vi.mock("#lib/location/location-request.svelte.ts", () => ({
 	locationRequest: {
 		run: vi.fn(),
 		abort: vi.fn(),
@@ -31,8 +31,8 @@ vi.mock("$lib/location/location-request.svelte", () => ({
 		lastFix: null,
 	},
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: () => true }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({
+vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => true }));
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	above: () => ({ current: true }),
 }));
 

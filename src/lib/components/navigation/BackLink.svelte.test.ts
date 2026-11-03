@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("$app/navigation", () => ({ afterNavigate: vi.fn() }));
 
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import BackLink from "./BackLink.svelte";
 
 afterEach(async () => {

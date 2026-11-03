@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { setPreferences } from "$lib/app-data/preferences.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Checkbox } from "$lib/components/ui/checkbox";
-	import { Label } from "$lib/components/ui/label";
-	import { t } from "$lib/i18n";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.ts";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		desktopEntryAvailable,
 		desktopEntryInstalled,
 		setDesktopEntryInstalled,
-	} from "$lib/platform/desktop-entry.svelte";
-	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
-	import { saveAutomaticChecks } from "$lib/updates/update-settings.svelte";
-	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
+	} from "#lib/platform/desktop-entry.svelte.ts";
+	import { updatesSelfManaged } from "#lib/updates/capability.svelte.ts";
+	import { saveAutomaticChecks } from "#lib/updates/update-settings.svelte.ts";
+	import { bottomChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import icon from "../../../contrib/logo/open-grind.svg";
 
 	let checkAutomatically = $state(true);

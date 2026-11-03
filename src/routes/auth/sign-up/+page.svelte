@@ -1,5 +1,5 @@
 <script>
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 	import RegisterForm from "./RegisterForm.svelte";
 </script>
 

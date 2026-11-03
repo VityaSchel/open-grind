@@ -1,5 +1,5 @@
-import { sourceText } from "$lib/i18n";
-import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
+import { sourceText } from "#lib/i18n/index.ts";
+import { ADDON_NAME, FCM_COMPONENT } from "#lib/updates/components.ts";
 import { pushErrorReason } from "./index";
 import type { PushErrorReason } from "./types";
 

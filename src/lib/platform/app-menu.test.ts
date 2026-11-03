@@ -15,8 +15,8 @@ import {
 	setRegionalSettings,
 	SOURCE_LOCALE,
 	t,
-} from "$lib/i18n";
-import { webRegionalSettings } from "$lib/i18n/regional";
+} from "#lib/i18n/index.ts";
+import { webRegionalSettings } from "#lib/i18n/regional.ts";
 import { startAppMenu } from "./app-menu";
 
 type MenuBarKey = Extract<MessageKey, `shell.menuBar.${string}`>;
@@ -80,9 +80,9 @@ vi.mock("@tauri-apps/api/menu", () => ({
 	Submenu: fakeClass("Submenu"),
 }));
 
-vi.mock("$lib/i18n/catalog-files", async (importOriginal) => {
+vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => {
 	const original =
-		await importOriginal<typeof import("$lib/i18n/catalog-files")>();
+		await importOriginal<typeof import("#lib/i18n/catalog-files.ts")>();
 	return {
 		...original,
 		translationFiles: {

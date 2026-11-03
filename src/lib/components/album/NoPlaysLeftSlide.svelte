@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LockIcon from "phosphor-svelte/lib/LockIcon";
 
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 
 	let { still }: { still: string | null } = $props();
 

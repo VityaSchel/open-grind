@@ -4,8 +4,8 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "$lib/api/api-error";
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
+import { ApiError } from "#lib/api/api-error.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import ApiErrorDisplay from "./ApiErrorDisplay.svelte";
 
 const request = { method: "GET", path: "/v4/cascade", body: undefined };

@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { untranslatableTexts } from "$lib/test/untranslatable";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import ProfileHeading from "./ProfileHeading.svelte";
 
 function renderHeading(props: {

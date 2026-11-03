@@ -1,6 +1,6 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { followLocale } from "$lib/i18n";
+import { followLocale } from "#lib/i18n/index.ts";
 
 export function followLocaleWhileOpen({
 	lightbox,

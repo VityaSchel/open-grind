@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { arrayOfParsableEntries } from "$lib/model/tolerance";
+import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
 
 export const tagSchema = z.object({
 	tagId: z.int().nonnegative(),

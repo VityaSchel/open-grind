@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Card from "$lib/components/ui/card";
+	import * as Card from "#lib/components/ui/card/index.ts";
 
 	let { children }: { children?: import("svelte").Snippet } = $props();
 </script>

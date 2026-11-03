@@ -31,7 +31,7 @@
         "@fontsource-variable/ibm-plex-sans": "^5.2.8",
         "@icons-pack/svelte-simple-icons": "^7.2.0",
         "@internationalized/date": "^3.12.1",
-        "@opengrind/config": "^1.3.2",
+        "@opengrind/config": "^1.4.0",
         "@playwright/test": "^1.61.1",
         "@sveltejs/adapter-static": "^3.0.10",
         "@sveltejs/kit": "^2.70.3",
@@ -51,7 +51,7 @@
         "lefthook": "^2.1.10",
         "phosphor-svelte": "^3.1.0",
         "prettier": "^3.8.3",
-        "shadcn-svelte": "^1.2.7",
+        "shadcn-svelte": "^1.7.0",
         "sharp": "^0.35.5",
         "svelte": "^5.57.2",
         "svelte-check": "^4.7.7",
@@ -261,7 +261,7 @@
 
     "@msgpack/msgpack": ["@msgpack/msgpack@3.1.3", "", {}, "sha512-47XIizs9XZXvuJgoaJUIE2lFoID8ugvc0jzSHP+Ptfk8nTbnR8g788wv48N03Kx0UkAv559HWRQ3yzOgzlRNUA=="],
 
-    "@opengrind/config": ["@opengrind/config@1.3.2", "https://git.opengrind.org/api/packages/open-grind/npm/%40opengrind%2Fconfig/-/1.3.2/config-1.3.2.tgz", { "dependencies": { "@eslint/js": "10.0.1", "eslint-config-prettier": "10.1.8", "eslint-plugin-better-tailwindcss": "4.6.0", "eslint-plugin-perfectionist": "5.9.0", "eslint-plugin-svelte": "3.17.1", "globals": "17.6.0", "prettier-plugin-svelte": "3.5.1", "prettier-plugin-tailwindcss": "0.8.0", "typescript-eslint": "8.59.2" }, "peerDependencies": { "eslint": ">=9", "prettier": ">=3.5" }, "bin": { "opengrind-config": "bin/opengrind-config.js" } }, "sha512-wOUf6WRk/8VNP2vPqgQmIgMOERqsKYwZkoO/ZQtQTv25ty16A2EJC6w9kuGJOBgyot5w6r/9bhBenvdsDlj+hw=="],
+    "@opengrind/config": ["@opengrind/config@1.4.0", "https://git.opengrind.org/api/packages/open-grind/npm/%40opengrind%2Fconfig/-/1.4.0/config-1.4.0.tgz", { "dependencies": { "@eslint/js": "10.0.1", "eslint-config-prettier": "10.1.8", "eslint-plugin-better-tailwindcss": "4.6.0", "eslint-plugin-perfectionist": "5.9.0", "eslint-plugin-svelte": "3.17.1", "globals": "17.6.0", "prettier-plugin-svelte": "3.5.1", "prettier-plugin-tailwindcss": "0.8.0", "typescript-eslint": "8.59.2" }, "peerDependencies": { "eslint": ">=9", "prettier": ">=3.5" }, "bin": { "opengrind-config": "bin/opengrind-config.js" } }, "sha512-XtXZxNQMnlkquIiV6fUcTQIR6KHKLagkGpz7DZ+FWTHDqHeDiG1aOYD/T2OH6/0k83odAf1cP1NN1bqJQH02nA=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.154.0", "", {}, "sha512-KYOUGQFlLWR+s4QMV2Q9ko38TZm7EdO87Qm7rvZLqk/webse/cDjtyxKhg/47l0byCbs/k46LT8qc4PKjAikzA=="],
 
@@ -498,6 +498,8 @@
     "chokidar": ["chokidar@4.0.3", "", { "dependencies": { "readdirp": "^4.0.1" } }, "sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA=="],
 
     "clsx": ["clsx@2.1.1", "", {}, "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="],
+
+    "cn": ["cn@0.3.3", "", { "bin": { "cn": "bin/cn.mjs" } }, "sha512-OEiyJkSpYm2kOuNOKQ+c2wmzZRG8orrb9fnObtHTbCGNx/E9KLnGcmcocItOzREKk5KzQN5I2e3BUCj563KEpw=="],
 
     "color-convert": ["color-convert@2.0.1", "", { "dependencies": { "color-name": "~1.1.4" } }, "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ=="],
 
@@ -841,7 +843,7 @@
 
     "set-cookie-parser": ["set-cookie-parser@3.1.0", "", {}, "sha512-kjnC1DXBHcxaOaOXBHBeRtltsDG2nUiUni+jP92M9gYdW12rsmx92UsfpH7o5tDRs7I1ZZPSQJQGv3UaRfCiuw=="],
 
-    "shadcn-svelte": ["shadcn-svelte@1.2.7", "", { "dependencies": { "commander": "^14.0.0", "node-fetch-native": "^1.6.4", "postcss": "^8.5.5", "tailwind-merge": "^3.0.0" }, "peerDependencies": { "svelte": "^5.0.0" }, "bin": { "shadcn-svelte": "dist/index.mjs" } }, "sha512-mWuQk4H4gtV+J2wJQ7nEPKNnB/v86AALFryZU0SSM7ChHmJJMZ1kH+qIuxYKrXm9vOOOcSWHRsWzPDB71DnjYA=="],
+    "shadcn-svelte": ["shadcn-svelte@1.7.0", "", { "dependencies": { "cn": "^0.3.0", "commander": "^14.0.0", "node-fetch-native": "^1.6.4", "postcss": "^8.5.10" }, "peerDependencies": { "svelte": "^5.0.0" }, "bin": { "shadcn-svelte": "dist/index.mjs" } }, "sha512-AK3ZsYOL8PN/RxcEBCHGvQj2TrLfaaBsbw0QohyEb3nn/yPNDRC/+9iSjnTp/uKEe+tAi0tBxB/Yhzno0N7EEg=="],
 
     "sharp": ["sharp@0.35.5", "", { "dependencies": { "@img/colour": "^1.1.0", "detect-libc": "^2.1.2", "semver": "^7.8.5" }, "optionalDependencies": { "@img/sharp-darwin-arm64": "0.35.5", "@img/sharp-darwin-x64": "0.35.5", "@img/sharp-freebsd-wasm32": "0.35.5", "@img/sharp-libvips-darwin-arm64": "1.3.4", "@img/sharp-libvips-darwin-x64": "1.3.4", "@img/sharp-libvips-linux-arm": "1.3.4", "@img/sharp-libvips-linux-arm64": "1.3.4", "@img/sharp-libvips-linux-ppc64": "1.3.4", "@img/sharp-libvips-linux-riscv64": "1.3.4", "@img/sharp-libvips-linux-s390x": "1.3.4", "@img/sharp-libvips-linux-x64": "1.3.4", "@img/sharp-libvips-linuxmusl-arm64": "1.3.4", "@img/sharp-libvips-linuxmusl-x64": "1.3.4", "@img/sharp-linux-arm": "0.35.5", "@img/sharp-linux-arm64": "0.35.5", "@img/sharp-linux-ppc64": "0.35.5", "@img/sharp-linux-riscv64": "0.35.5", "@img/sharp-linux-s390x": "0.35.5", "@img/sharp-linux-x64": "0.35.5", "@img/sharp-linuxmusl-arm64": "0.35.5", "@img/sharp-linuxmusl-x64": "0.35.5", "@img/sharp-webcontainers-wasm32": "0.35.5", "@img/sharp-win32-arm64": "0.35.5", "@img/sharp-win32-ia32": "0.35.5", "@img/sharp-win32-x64": "0.35.5" }, "peerDependencies": { "@types/node": "*" }, "optionalPeers": ["@types/node"] }, "sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g=="],
 

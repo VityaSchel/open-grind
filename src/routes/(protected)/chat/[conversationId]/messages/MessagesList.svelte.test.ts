@@ -43,13 +43,15 @@ vi.mock("./message/Message.svelte", () => ({
 vi.mock("./message/media-renewal", () => ({
 	setMediaRenewal: setMediaRenewalMock,
 }));
-vi.mock("$lib/api/messaging/messages", () => ({
+vi.mock("#lib/api/messaging/messages.ts", () => ({
 	deleteMessageForMe: deleteMessageForMeMock,
 	unsendMessage: unsendMessageMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/error-copy", () => ({ promptCopyError: vi.fn() }));
-vi.mock("$lib/entitlements/bypass.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/api/error-copy.ts", () => ({ promptCopyError: vi.fn() }));
+vi.mock("#lib/entitlements/bypass.svelte.ts", () => ({
 	offerEntitlementBypass: offerBypassMock,
 	reportRefusedDespiteBypass: reportRefusedMock,
 }));
@@ -61,7 +63,7 @@ vi.mock("../conversation-state.svelte", () => ({
 	getConversationState: () => () => conversationState.current,
 }));
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	mergeServerMessages,
 	type OptimisticMessage,

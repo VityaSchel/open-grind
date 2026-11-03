@@ -1,4 +1,4 @@
-import { formatNumber } from "$lib/i18n/format";
+import { formatNumber } from "#lib/i18n/format.ts";
 
 const CHAT_MEDIA_MAX_MEGABYTES = 120;
 export const CHAT_MEDIA_MAX_BYTES = CHAT_MEDIA_MAX_MEGABYTES * 1024 * 1024;

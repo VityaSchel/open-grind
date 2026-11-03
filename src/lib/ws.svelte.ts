@@ -2,13 +2,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
-import { ApiError } from "$lib/api/api-error";
-import { asAppError, diagnosticMessage } from "$lib/api/methods";
-import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
-import { mediaHashPublicSchema } from "$lib/model/media";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { knownValueOrNull } from "$lib/model/tolerance";
-import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
+import { ApiError } from "#lib/api/api-error.ts";
+import { asAppError, diagnosticMessage } from "#lib/api/methods.ts";
+import { tapTypeOrNoneSchema } from "#lib/model/interest/taps.ts";
+import { mediaHashPublicSchema } from "#lib/model/media.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { knownValueOrNull } from "#lib/model/tolerance.ts";
+import { unixTimestampMsSchema, unmodeledSchema } from "#lib/model/types.ts";
 
 export const notificationEventSchema = z.object({
 	type: z.string(),

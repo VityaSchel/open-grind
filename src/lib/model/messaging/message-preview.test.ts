@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	previewFromMessage,
 	previewIsUserText,
 	previewLabel,
 	quoteIsUserText,
 	quoteLabel,
-} from "$lib/model/messaging/message-preview";
+} from "#lib/model/messaging/message-preview.ts";
 
 describe("previewFromMessage", () => {
 	it("uses profile photo reply text in previews and quotes, including fetched inbox previews", () => {

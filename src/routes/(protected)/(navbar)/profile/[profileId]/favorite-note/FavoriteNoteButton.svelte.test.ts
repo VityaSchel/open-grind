@@ -3,10 +3,10 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { untranslatableTexts } from "$lib/test/untranslatable";
-import type { FavoriteNote } from "$lib/model/users/favorites";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
+import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 import FavoriteNoteButton from "./FavoriteNoteButton.svelte";
 
 const SAVED_NOTE = "met at the gym";

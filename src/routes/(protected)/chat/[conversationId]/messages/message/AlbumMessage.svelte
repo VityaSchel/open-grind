@@ -1,6 +1,6 @@
 <script lang="ts">
-	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
-	import type { AlbumMessage } from "$lib/model/messaging/messages";
+	import AlbumPreview from "#lib/components/album/AlbumPreview.svelte";
+	import type { AlbumMessage } from "#lib/model/messaging/messages.ts";
 	import { AlbumMessageState } from "./album-message.svelte";
 	import LockedMedia from "./LockedMedia.svelte";
 	import { mediaRenewal } from "./media-renewal";

@@ -7,12 +7,12 @@
 	import { fade } from "svelte/transition";
 	import type { SvelteMediaTimeRange } from "svelte/elements";
 
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
-	import { describeMediaError } from "$lib/platform/media-failure";
-	import { now } from "$lib/util/clock";
-	import { formatMediaDuration } from "$lib/util/format-time";
-	import { firstFrameSrc, releaseVideoOnDestroy } from "$lib/util/media";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { describeMediaError } from "#lib/platform/media-failure.ts";
+	import { now } from "#lib/util/clock.ts";
+	import { formatMediaDuration } from "#lib/util/format-time.ts";
+	import { firstFrameSrc, releaseVideoOnDestroy } from "#lib/util/media.ts";
 	import VideoScrubber from "./VideoScrubber.svelte";
 
 	let {

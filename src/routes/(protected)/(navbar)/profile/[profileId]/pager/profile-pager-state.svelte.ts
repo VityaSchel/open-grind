@@ -3,10 +3,10 @@ import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import {
 	isProfileViewable,
 	onProfileViewabilityChange,
-} from "$lib/api/users/profile-viewability";
-import type { RenderedGridProfile } from "$lib/grid/grid";
-import type { gridState } from "$lib/grid/grid-state.svelte";
-import type { VisiblePositions } from "$lib/util/snap-pager";
+} from "#lib/api/users/profile-viewability.ts";
+import type { gridState } from "#lib/grid/grid-state.svelte.ts";
+import type { RenderedGridProfile } from "#lib/grid/grid.ts";
+import type { VisiblePositions } from "#lib/util/snap-pager.ts";
 import { type FetchedProfile, ProfileState } from "../profile-state.svelte";
 import { forgetProfileVisits, recordProfileVisit } from "../record-visit";
 import { browseOrder } from "./browse-order";

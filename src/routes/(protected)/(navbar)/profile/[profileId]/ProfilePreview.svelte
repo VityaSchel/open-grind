@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RenderedGridProfile } from "$lib/grid/grid";
+	import type { RenderedGridProfile } from "#lib/grid/grid.ts";
 	import Distance from "./Distance.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import ProfileHeading from "./ProfileHeading.svelte";

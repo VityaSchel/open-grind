@@ -7,7 +7,7 @@ import {
 	navigationPending,
 	returnTo,
 	traverseBackTo,
-} from "$lib/util/history";
+} from "#lib/util/history.ts";
 
 const { goto, navigating, page } = vi.hoisted(() => ({
 	goto: vi.fn(),

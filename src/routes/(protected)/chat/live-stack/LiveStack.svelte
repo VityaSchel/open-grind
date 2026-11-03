@@ -9,15 +9,15 @@
 	import {
 		STACK_Z,
 		stackMotion,
-	} from "$lib/components/navigation/stack/motion";
-	import { paneSurface } from "$lib/components/navigation/stack/surface";
+	} from "#lib/components/navigation/stack/motion.ts";
+	import { paneSurface } from "#lib/components/navigation/stack/surface.ts";
 	import {
 		softKeyboardHidden,
 		softKeyboardVisibility,
-	} from "$lib/platform/android-native-bridge";
-	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
-	import { earlierPathnames } from "$lib/util/history";
-	import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+	} from "#lib/platform/android-native-bridge.ts";
+	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.ts";
+	import { earlierPathnames } from "#lib/util/history.ts";
+	import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { LiveStackState } from "./live-stack-state.svelte";
 
 	let {

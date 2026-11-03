@@ -1,15 +1,15 @@
-import { albumShares } from "$lib/chat/album-shares.svelte";
+import { albumShares } from "#lib/chat/album-shares.svelte.ts";
 import {
 	albumReplyTarget,
 	type AlbumSlide,
-} from "$lib/components/album/album-lightbox";
+} from "#lib/components/album/album-lightbox.ts";
 import {
 	type AlbumContentReactionMessage,
 	type AlbumContentReplyMessage,
 	type AlbumMessage,
 	draftFromAlbumContent,
 	draftFromAlbumReaction,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 import { getConversationState } from "../../conversation-state.svelte";
 
 type AlbumBody =

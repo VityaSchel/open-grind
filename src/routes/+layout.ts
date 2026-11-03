@@ -1,10 +1,10 @@
 import { redirect } from "@sveltejs/kit";
 
-import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { screenshotScene } from "$lib/demo/screenshot-scene";
-import { hydrateDesktopEntryState } from "$lib/platform/desktop-entry.svelte";
-import { updatesAvailableHere } from "$lib/updates";
-import { hydrateUpdateCapability } from "$lib/updates/capability.svelte";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { screenshotScene } from "#lib/demo/screenshot-scene.ts";
+import { hydrateDesktopEntryState } from "#lib/platform/desktop-entry.svelte.ts";
+import { hydrateUpdateCapability } from "#lib/updates/capability.svelte.ts";
+import { updatesAvailableHere } from "#lib/updates/index.ts";
 import type { LayoutLoad } from "./$types";
 
 export const ssr = false;

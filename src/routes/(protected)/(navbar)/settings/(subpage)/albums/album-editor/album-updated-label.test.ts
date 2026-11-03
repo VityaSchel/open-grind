@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import { albumUpdatedLabel } from "./album-updated-label";
 
 afterEach(() => resetNowForTesting());

@@ -1,8 +1,8 @@
 import {
 	preferencesLoaded,
 	preferencesSnapshot,
-} from "$lib/app-data/preferences.svelte";
-import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+} from "#lib/app-data/preferences.svelte.ts";
+import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 import {
 	backdropBlurTrialArm,
 	calibratesFromLow,

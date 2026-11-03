@@ -5,22 +5,25 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { uploadRefusalMessage } from "$lib/api/methods";
-import { type PlainMessageKey, t } from "$lib/i18n";
+import { uploadRefusalMessage } from "#lib/api/methods.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import {
 	CHAT_MEDIA_MAX_BYTES,
 	chatMediaMaxLabel,
-} from "$lib/model/messaging/chat-media-limits";
+} from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	discardStagedMedia,
 	inspectMediaFile,
 	type MediaFileInspection,
 	type MediaFileKind,
 	mediaFileKindOf,
-} from "$lib/platform/media-file";
-import { mimeTypeFromPath, type PickedMedia } from "$lib/platform/media-picker";
-import { isAndroidPlatform, isLinuxPlatform } from "$lib/platform/os";
-import { toBase64 } from "$lib/util/base64";
+} from "#lib/platform/media-file.ts";
+import {
+	mimeTypeFromPath,
+	type PickedMedia,
+} from "#lib/platform/media-picker.ts";
+import { isAndroidPlatform, isLinuxPlatform } from "#lib/platform/os.ts";
+import { toBase64 } from "#lib/util/base64.ts";
 
 const STAGE_CHUNK_BYTES = 4 * 1024 * 1024;
 

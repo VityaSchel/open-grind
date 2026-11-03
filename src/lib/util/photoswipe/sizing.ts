@@ -1,7 +1,7 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
-import { onSafeAreaChange } from "$lib/util/safe-area";
+import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
+import { onSafeAreaChange } from "#lib/util/safe-area.ts";
 
 const LAYOUT_UNIT_PX = 1 / 64;
 

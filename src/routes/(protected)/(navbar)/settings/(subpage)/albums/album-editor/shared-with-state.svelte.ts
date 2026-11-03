@@ -4,9 +4,9 @@ import {
 	getAlbumShares,
 	shareAlbum,
 	unshareAlbum,
-} from "$lib/api/messaging/albums";
-import { albumShares } from "$lib/chat/album-shares.svelte";
-import { Generation } from "$lib/util/generation";
+} from "#lib/api/messaging/albums.ts";
+import { albumShares } from "#lib/chat/album-shares.svelte.ts";
+import { Generation } from "#lib/util/generation.ts";
 
 export class AlbumSharedWith {
 	#albumId: number;

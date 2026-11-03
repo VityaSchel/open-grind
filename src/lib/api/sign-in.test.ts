@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { accountStatusState } from "$lib/api/account-status-state.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { accountStatusState } from "#lib/api/account-status-state.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 
 const { toastErrorMock } = vi.hoisted(() => ({ toastErrorMock: vi.fn() }));
 

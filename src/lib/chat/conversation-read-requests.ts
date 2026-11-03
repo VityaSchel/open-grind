@@ -1,7 +1,7 @@
-import { showErrorToast } from "$lib/api/error-toast";
-import { markConversationAsRead } from "$lib/api/messaging/conversations";
-import { t } from "$lib/i18n";
-import type { Conversation } from "$lib/model/messaging/conversations";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { markConversationAsRead } from "#lib/api/messaging/conversations.ts";
+import { t } from "#lib/i18n/index.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 type Restore = () => void;
 

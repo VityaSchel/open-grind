@@ -1,4 +1,4 @@
-import type { PlainMessageKey } from "$lib/i18n";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 
 type PushFailure = "enable" | "disable" | "enableFastMode" | "switchToSlowMode";
 

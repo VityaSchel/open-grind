@@ -4,9 +4,9 @@
 	import { prefersReducedMotion, Tween } from "svelte/motion";
 	import type { TransitionConfig } from "svelte/transition";
 
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
-	import { scale } from "$lib/util/reduced-motion";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { scale } from "#lib/util/reduced-motion.ts";
 	import { attachPullInputs } from "./refresh/attach-inputs";
 	import { contentSlide, PacingTween } from "./refresh/content-slide";
 	import {

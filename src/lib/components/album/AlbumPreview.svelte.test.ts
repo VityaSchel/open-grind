@@ -14,8 +14,8 @@ const sonner = vi.hoisted(() => ({
 vi.mock("./album-lightbox", () => lightbox);
 vi.mock("svelte-sonner", () => sonner);
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";
 

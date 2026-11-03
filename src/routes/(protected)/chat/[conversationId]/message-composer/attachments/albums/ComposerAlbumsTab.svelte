@@ -2,14 +2,14 @@
 	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import { toast } from "svelte-sonner";
 
-	import { getMyAlbums } from "$lib/api/messaging/albums";
-	import { albumShares } from "$lib/chat/album-shares.svelte";
-	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
-	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
-	import { SelectionSet } from "$lib/util/selection.svelte";
-	import type { MyAlbum } from "$lib/model/messaging/albums";
+	import { getMyAlbums } from "#lib/api/messaging/albums.ts";
+	import { albumShares } from "#lib/chat/album-shares.svelte.ts";
+	import AlbumTile from "#lib/components/album/AlbumTile.svelte";
+	import MediaGrid from "#lib/components/shared/MediaGrid.svelte";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { SelectionSet } from "#lib/util/selection.svelte.ts";
+	import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 	import { getConversationState } from "../../../conversation-state.svelte";
 	import type { TabSelection } from "../tabs";
 	import { AlbumShareActions } from "./album-share-actions.svelte";

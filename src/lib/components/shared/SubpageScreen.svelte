@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { PlainMessageKey } from "$lib/i18n";
+	import type { PlainMessageKey } from "#lib/i18n/index.ts";
 
 	export type SubpageRoute = {
 		title: PlainMessageKey;
@@ -14,10 +14,10 @@
 	import ArrowLeftIcon from "phosphor-svelte/lib/ArrowLeftIcon";
 	import type { Snippet } from "svelte";
 
-	import BackLink from "$lib/components/navigation/BackLink.svelte";
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { t } from "$lib/i18n";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
+	import BackLink from "#lib/components/navigation/BackLink.svelte";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { provideSubpageActions } from "./subpage-actions-context.svelte";
 
 	let {

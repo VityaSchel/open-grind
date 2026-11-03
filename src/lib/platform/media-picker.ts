@@ -6,8 +6,8 @@ import {
 	type AndroidOpenFilePickerOptions,
 } from "tauri-plugin-android-fs-api";
 
-import { type PlainMessageKey, t } from "$lib/i18n";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+import { isAndroidPlatform } from "#lib/platform/os.ts";
 
 export type MediaKind = "image" | "video" | "media";
 

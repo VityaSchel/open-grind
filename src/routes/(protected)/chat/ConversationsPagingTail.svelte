@@ -1,9 +1,9 @@
 <script lang="ts">
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import PagingSentinel from "$lib/components/shared/PagingSentinel.svelte";
-	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-	import { t } from "$lib/i18n";
-	import type { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import PagingSentinel from "#lib/components/shared/PagingSentinel.svelte";
+	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import type { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 	import EmptyConversationsList from "./EmptyConversationsList.svelte";
 
 	let {

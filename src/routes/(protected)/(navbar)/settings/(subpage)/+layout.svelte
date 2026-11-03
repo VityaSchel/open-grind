@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SubpageScreen, {
 		type SubpageRoute,
-	} from "$lib/components/shared/SubpageScreen.svelte";
+	} from "#lib/components/shared/SubpageScreen.svelte";
 
 	const base = "/(protected)/(navbar)/settings/(subpage)";
 	const routes = {

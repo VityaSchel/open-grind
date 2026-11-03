@@ -4,7 +4,7 @@ import {
 	flushMicrotasks,
 	navigationEvent,
 	settleLast,
-} from "$lib/components/navigation/stack/stack-test-helpers";
+} from "#lib/components/navigation/stack/stack-test-helpers.ts";
 import { makeStack, motion, push } from "./page-stack-test-helpers";
 
 afterEach(() => {

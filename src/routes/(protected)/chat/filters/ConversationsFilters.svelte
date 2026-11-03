@@ -1,14 +1,14 @@
 <script lang="ts">
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
-	import QuickFilterButton from "$lib/components/filters/QuickFilterButton.svelte";
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { buttonVariants } from "$lib/components/ui/button";
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { type MessageKey, t } from "$lib/i18n";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
-	import type { ConversationFilters } from "$lib/chat/conversation-filters.svelte";
-	import type { ConversationFilterValues } from "$lib/model/messaging/conversation-filters";
+	import QuickFilterButton from "#lib/components/filters/QuickFilterButton.svelte";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { buttonVariants } from "#lib/components/ui/button/index.ts";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { type MessageKey, t } from "#lib/i18n/index.ts";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
+	import type { ConversationFilters } from "#lib/chat/conversation-filters.svelte.ts";
+	import type { ConversationFilterValues } from "#lib/model/messaging/conversation-filters.ts";
 	import DistanceQuickFilter from "./DistanceQuickFilter.svelte";
 	import PositionQuickFilter from "./PositionQuickFilter.svelte";
 

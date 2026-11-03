@@ -3,8 +3,8 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import SaveChangesBar from "./SaveChangesBar.svelte";
 
 afterEach(async () => {

@@ -1,12 +1,15 @@
 import { toast } from "svelte-sonner";
 
-import { accountEpoch, isAccountEpochCurrent } from "$lib/api/account-caches";
-import { showErrorToast } from "$lib/api/error-toast";
-import { sendMessage } from "$lib/api/messaging/messages";
+import {
+	accountEpoch,
+	isAccountEpochCurrent,
+} from "#lib/api/account-caches.ts";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { sendMessage } from "#lib/api/messaging/messages.ts";
 import {
 	getFavoriteNote,
 	invalidateFavoriteNote,
-} from "$lib/api/users/favorites";
+} from "#lib/api/users/favorites.ts";
 import {
 	BlockedProfileError,
 	getProfile,
@@ -16,14 +19,14 @@ import {
 	mergeProfileEditIntoCaches,
 	ProfileUnavailableError,
 	refreshProfile,
-} from "$lib/api/users/profiles";
-import { conversationIdFor } from "$lib/chat/conversation-id";
-import { getOrCreateConversationsState } from "$lib/chat/conversations-context.svelte";
-import { t } from "$lib/i18n";
-import { Generation } from "$lib/util/generation";
-import type { TapType } from "$lib/model/interest/taps";
-import type { FavoriteNote } from "$lib/model/users/favorites";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profiles.ts";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
+import { Generation } from "#lib/util/generation.ts";
+import type { TapType } from "#lib/model/interest/taps.ts";
+import type { FavoriteNote } from "#lib/model/users/favorites.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 export type FetchedProfile = { profile: Profile; note: FavoriteNote | null };
 

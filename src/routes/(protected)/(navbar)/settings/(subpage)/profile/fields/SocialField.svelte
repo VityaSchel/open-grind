@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Component } from "svelte";
 
-	import Field from "$lib/components/fields/Field.svelte";
-	import { Input } from "$lib/components/ui/input";
-	import { t } from "$lib/i18n";
+	import Field from "#lib/components/fields/Field.svelte";
+	import { Input } from "#lib/components/ui/input/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		label,

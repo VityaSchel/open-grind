@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import Link from "#lib/components/ui/link/Link.svelte";
 
 	let { issue }: { issue: number } = $props();
 </script>

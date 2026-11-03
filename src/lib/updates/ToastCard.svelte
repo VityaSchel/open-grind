@@ -2,7 +2,7 @@
 	import XIcon from "phosphor-svelte/lib/XIcon";
 	import type { Component, Snippet } from "svelte";
 
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		icon: Icon,

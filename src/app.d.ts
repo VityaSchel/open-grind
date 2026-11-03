@@ -1,4 +1,4 @@
-import type { NativeInsets } from "$lib/platform/android-native-bridge";
+import type { NativeInsets } from "#lib/platform/android-native-bridge.ts";
 
 declare global {
 	const __DEMO__: boolean;

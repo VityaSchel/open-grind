@@ -23,21 +23,23 @@ const { readMock, writeMock, showErrorToastMock, catalogs, navigated } =
 		navigated: [] as ((navigation: { type: string }) => void)[],
 	}));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 vi.mock("$app/navigation", () => ({
 	afterNavigate: (callback: (typeof navigated)[number]) => {
 		navigated.push(callback);
 	},
 }));
-vi.mock("$lib/i18n/catalog-files", async (importOriginal) => {
+vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => {
 	const actual =
-		await importOriginal<typeof import("$lib/i18n/catalog-files")>();
+		await importOriginal<typeof import("#lib/i18n/catalog-files.ts")>();
 	const directories = ["de", "es", "es-419", "fr"];
 	return {
 		...actual,
@@ -60,9 +62,9 @@ vi.mock("$lib/i18n/catalog-files", async (importOriginal) => {
 import {
 	getPreferences,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+} from "#lib/app-data/preferences.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import LanguagePage from "./+page.svelte";
 
 const OFFERED = [

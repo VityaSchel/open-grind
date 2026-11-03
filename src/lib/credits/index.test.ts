@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { type CreditSection, loadCredits } from "$lib/credits";
-import generated from "$lib/credits/generated.json";
-import { creditPlatforms } from "$lib/credits/types";
+import generated from "#lib/credits/generated.json";
+import { type CreditSection, loadCredits } from "#lib/credits/index.ts";
+import { creditPlatforms } from "#lib/credits/types.ts";
 
 const identity = ({
 	ecosystem,

@@ -4,7 +4,7 @@ import {
 	type ReleaseVelocity,
 	type ScrollGesturePhase,
 	ScrollGestureState,
-} from "$lib/platform/scroll-gesture";
+} from "#lib/platform/scroll-gesture.ts";
 
 describe("ScrollGestureState.onPhaseChange", () => {
 	it("reports each transition of a flick once, the release included", () => {

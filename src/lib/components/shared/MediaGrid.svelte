@@ -1,10 +1,10 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from "svelte";
 
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { t } from "$lib/i18n";
-	import type { SelectionSet } from "$lib/util/selection.svelte";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 
 	let {
 		items,

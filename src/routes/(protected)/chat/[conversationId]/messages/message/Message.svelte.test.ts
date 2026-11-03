@@ -9,7 +9,7 @@ const { playHapticMock, toastMock, writeTextMock } = vi.hoisted(() => ({
 	toastMock: { success: vi.fn(), error: vi.fn() },
 	writeTextMock: vi.fn(),
 }));
-vi.mock("$lib/haptics", () => ({
+vi.mock("#lib/haptics.ts", () => ({
 	hapticsAvailable: () => true,
 	playHaptic: playHapticMock,
 }));
@@ -18,9 +18,9 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { contextMenuEvent } from "$lib/test/context-menu";
-import { untranslatableTexts } from "$lib/test/untranslatable";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';

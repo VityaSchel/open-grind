@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 
 	let { count }: { count: number } = $props();
 

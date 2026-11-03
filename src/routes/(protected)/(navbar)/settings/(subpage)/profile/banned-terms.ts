@@ -1,9 +1,9 @@
-import { type PlainMessageKey, t } from "$lib/i18n";
-import { formatList } from "$lib/i18n/format";
+import { formatList } from "#lib/i18n/format.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import type {
 	ModeratedField,
 	ModeratedFieldKey,
-} from "$lib/api/users/profile-moderation";
+} from "#lib/api/users/profile-moderation.ts";
 
 const fieldNameKeys = {
 	display_name: "settings.profile.fields.displayName",

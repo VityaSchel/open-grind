@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "$lib/api/api-error";
-import { callMethod } from "$lib/api/methods";
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-import { fetchRest } from "$lib/api/transport";
-import { isPlayBuild } from "$lib/platform/store";
-import { updatesAvailableHere } from "$lib/updates";
+import { ApiError } from "#lib/api/api-error.ts";
+import { callMethod } from "#lib/api/methods.ts";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
+import { fetchRest } from "#lib/api/transport.ts";
+import { isPlayBuild } from "#lib/platform/store.ts";
+import { updatesAvailableHere } from "#lib/updates/index.ts";
 import { load } from "../../routes/+layout";
 import { demoMeProfileId } from "./config";
 import { settlesSoon } from "./demo-test-helpers";

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import * as Command from "$lib/components/ui/command";
-	import { t } from "$lib/i18n";
-	import { geohashPrefixSchema } from "$lib/model/geohash";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import * as Command from "#lib/components/ui/command/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { geohashPrefixSchema } from "#lib/model/geohash.ts";
 	import { commandCenterState } from "../command-center-state.svelte";
 	import SetLocationByGeohashCommandItem from "./SetLocationByGeohashCommandItem.svelte";
 

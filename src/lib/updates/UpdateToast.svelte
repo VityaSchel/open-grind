@@ -2,7 +2,7 @@
 	import ArrowsClockwiseIcon from "phosphor-svelte/lib/ArrowsClockwiseIcon";
 	import DownloadSimpleIcon from "phosphor-svelte/lib/DownloadSimpleIcon";
 
-	import { Progress } from "$lib/components/ui/progress";
+	import { Progress } from "#lib/components/ui/progress/index.ts";
 	import { APP_COMPONENT, type ComponentKey } from "./components";
 	import {
 		type InstallKind,

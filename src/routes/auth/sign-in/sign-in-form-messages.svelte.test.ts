@@ -3,9 +3,9 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { signInFlowEnded, signInInProgress } from "$lib/api/sign-in";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { signInFlowEnded, signInInProgress } from "#lib/api/sign-in.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import SignInForm from "./SignInForm.svelte";
 
 const { callMethodMock, gotoMock, toastMock } = vi.hoisted(() => ({
@@ -15,8 +15,8 @@ const { callMethodMock, gotoMock, toastMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));

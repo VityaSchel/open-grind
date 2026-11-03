@@ -2,8 +2,8 @@
 	import { Tooltip as TooltipPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
-	import { cn } from "$lib/util/utils.js";
-	import type { WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { cn } from "#lib/util/utils.ts";
+	import type { WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import TooltipPortal from "./tooltip-portal.svelte";
 
 	let {

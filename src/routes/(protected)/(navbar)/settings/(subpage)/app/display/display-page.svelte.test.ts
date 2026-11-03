@@ -12,18 +12,18 @@ const { platform, desktopEntry } = vi.hoisted(() => ({
 	desktopEntry: { available: false },
 }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: () => Promise.resolve(encode({})),
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: () => Promise.resolve(),
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	...platform,
 }));
-vi.mock("$lib/platform/desktop-entry.svelte", () => ({
+vi.mock("#lib/platform/desktop-entry.svelte.ts", () => ({
 	desktopEntryAvailable: () => desktopEntry.available,
 	desktopEntryInstalled: () => false,
 	setDesktopEntryInstalled: vi.fn(),

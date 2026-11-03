@@ -4,6 +4,9 @@
 	"license": "MIT",
 	"author": "Open Grind Governance (https://opengrind.org/governance)",
 	"type": "module",
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
 	"scripts": {
 		"postinstall": "bun run patch-deps",
 		"build": "bun run patch-deps && bun run check:i18n-release && vite build && bun run check:release-bundle",
@@ -91,7 +94,7 @@
 		"@fontsource-variable/ibm-plex-sans": "^5.2.8",
 		"@icons-pack/svelte-simple-icons": "^7.2.0",
 		"@internationalized/date": "^3.12.1",
-		"@opengrind/config": "^1.3.2",
+		"@opengrind/config": "^1.4.0",
 		"@playwright/test": "^1.61.1",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.70.3",
@@ -111,7 +114,7 @@
 		"lefthook": "^2.1.10",
 		"phosphor-svelte": "^3.1.0",
 		"prettier": "^3.8.3",
-		"shadcn-svelte": "^1.2.7",
+		"shadcn-svelte": "^1.7.0",
 		"sharp": "^0.35.5",
 		"svelte": "^5.57.2",
 		"svelte-check": "^4.7.7",

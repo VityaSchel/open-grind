@@ -5,20 +5,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const pending = vi.hoisted(() => () => new Promise<never>(() => {}));
 
-vi.mock("$lib/api/browse/blocks", () => ({
+vi.mock("#lib/api/browse/blocks.ts", () => ({
 	blockUser: pending,
 	getBlockedUsers: pending,
 	unblockUser: pending,
 }));
-vi.mock("$lib/api/browse/hides", () => ({
+vi.mock("#lib/api/browse/hides.ts", () => ({
 	getHiddenUserIdsNewestFirst: pending,
 	hideUser: pending,
 	unhideUser: pending,
 }));
 vi.mock("$app/navigation", () => ({ beforeNavigate: vi.fn() }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import AccountPage from "./+page.svelte";
 import BlockedPage from "./blocked/+page.svelte";
 import HiddenPage from "./hidden/+page.svelte";

@@ -1,5 +1,5 @@
-import { returnFocus } from "$lib/util/return-focus";
-import { readGridMetrics } from "$lib/util/virtual-grid.svelte";
+import { returnFocus } from "#lib/util/return-focus.ts";
+import { readGridMetrics } from "#lib/util/virtual-grid.svelte.ts";
 
 export class TileMenuState<Item> {
 	current = $state<{

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { featureFlagsState } from "$lib/api/feature-flags-state.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { Tribe } from "$lib/model/users/profiles";
+import { featureFlagsState } from "#lib/api/feature-flags-state.svelte.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { Tribe } from "#lib/model/users/profiles.ts";
 import { optionFilters } from "./option-filters";
 
 afterEach(async () => {

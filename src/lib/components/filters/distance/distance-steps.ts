@@ -1,10 +1,10 @@
-import { t } from "$lib/i18n";
-import { formatNumber } from "$lib/i18n/format";
+import { formatNumber } from "#lib/i18n/format.ts";
+import { t } from "#lib/i18n/index.ts";
 import {
 	METRES_PER_KILOMETRE,
 	METRES_PER_MILE,
 	type UnitSystem,
-} from "$lib/util/units";
+} from "#lib/util/units.ts";
 
 export const MAX_DISTANCE_STEPS = [0.5, 1, 2, 3, 5, 10, 20, 30, 50];
 export const DEFAULT_MAX_DISTANCE_STEP = 10;

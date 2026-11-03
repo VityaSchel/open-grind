@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 
 const errorBodySchema = z.object({ type: z.string() });
 

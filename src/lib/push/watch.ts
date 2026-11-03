@@ -1,9 +1,9 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { goto } from "$app/navigation";
 
-import { registerPushToken } from "$lib/api/settings/account";
-import { onSignOut } from "$lib/api/sign-out";
-import { isDesktopPlatform } from "$lib/platform/os";
+import { registerPushToken } from "#lib/api/settings/account.ts";
+import { onSignOut } from "#lib/api/sign-out.ts";
+import { isDesktopPlatform } from "#lib/platform/os.ts";
 import { loadNotificationCategories } from "./categories.svelte";
 import { watchChatWithdrawals } from "./chat-withdrawals";
 import { routeForDeeplink } from "./deeplink";

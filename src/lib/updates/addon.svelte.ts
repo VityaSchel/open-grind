@@ -1,4 +1,4 @@
-import { isAndroidPlatform } from "$lib/platform/os";
+import { isAndroidPlatform } from "#lib/platform/os.ts";
 import { buildSignedByOpenGrind } from "./capability.svelte";
 import {
 	ADDON_KEYS,

@@ -8,7 +8,7 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/context-menu";
+import { rightClick } from "#lib/test/context-menu.ts";
 
 const profiles = vi.hoisted(() => ({
 	uploadProfilePhoto: vi.fn(),
@@ -18,17 +18,17 @@ const profiles = vi.hoisted(() => ({
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 
-vi.mock("$lib/api/users/profiles", () => profiles);
-vi.mock("$lib/platform/media-picker", () => picker);
+vi.mock("#lib/api/users/profiles.ts", () => profiles);
+vi.mock("#lib/platform/media-picker.ts", () => picker);
 vi.mock("svelte-sonner", () => sonner);
 
-import { ApiError } from "$lib/api/api-error";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	bracketCounts,
 	restoreCountFormatter,
-} from "$lib/i18n/fixtures/count-formatter";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+} from "#lib/i18n/fixtures/count-formatter.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
 
 function picks(count: number) {

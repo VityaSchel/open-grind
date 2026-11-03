@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { demoRoute } from "$lib/demo";
+import { demoRoute } from "#lib/demo/index.ts";
 import {
 	albumContentProcessingResponseSchema,
 	albumNameResponseSchema,
 	albumSharesResponseSchema,
 	albumStorageLimitsSchema,
 	myAlbumsResponseSchema,
-} from "$lib/model/messaging/albums";
+} from "#lib/model/messaging/albums.ts";
 
 const route = ({
 	path,

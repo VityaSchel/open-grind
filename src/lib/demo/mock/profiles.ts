@@ -16,7 +16,7 @@ import {
 	type TribeId,
 	Vaccine,
 	type VaccineId,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import {
 	chance,
 	hashString,
@@ -24,7 +24,7 @@ import {
 	pick,
 	type Rng,
 	subset,
-} from "$lib/util/random";
+} from "#lib/util/random.ts";
 import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { registerPhoto } from "./avatars";
 import { neutralText } from "./neutral";

@@ -5,30 +5,30 @@
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		isTagKeyOfferedNow,
 		isTribeOfferedNow,
-	} from "$lib/api/feature-flags-state.svelte";
-	import { ProfileModerationError } from "$lib/api/users/profile-moderation";
+	} from "#lib/api/feature-flags-state.svelte.ts";
+	import { ProfileModerationError } from "#lib/api/users/profile-moderation.ts";
 	import {
 		type ProfileUpdate,
 		updateOwnProfile,
-	} from "$lib/api/users/profiles";
-	import Field from "$lib/components/fields/Field.svelte";
-	import MultilineField from "$lib/components/fields/MultilineField.svelte";
-	import TextField from "$lib/components/fields/TextField.svelte";
-	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
-	import { WheelPicker } from "$lib/components/ui/carousel";
-	import { t } from "$lib/i18n";
+	} from "#lib/api/users/profiles.ts";
+	import Field from "#lib/components/fields/Field.svelte";
+	import MultilineField from "#lib/components/fields/MultilineField.svelte";
+	import TextField from "#lib/components/fields/TextField.svelte";
+	import SaveChangesBar from "#lib/components/shared/SaveChangesBar.svelte";
+	import { WheelPicker } from "#lib/components/ui/carousel/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		type Profile,
 		PROFILE_PHOTO_AWAITING_REVIEW,
-	} from "$lib/model/users/profiles";
-	import { deepEqual } from "$lib/util/deep-equal";
-	import type { Gender } from "$lib/model/users/genders";
-	import type { Pronoun } from "$lib/model/users/pronouns";
-	import type { ProfileTagsResponse } from "$lib/model/users/tags";
+	} from "#lib/model/users/profiles.ts";
+	import { deepEqual } from "#lib/util/deep-equal.ts";
+	import type { Gender } from "#lib/model/users/genders.ts";
+	import type { Pronoun } from "#lib/model/users/pronouns.ts";
+	import type { ProfileTagsResponse } from "#lib/model/users/tags.ts";
 	import { bannedTermsDetail } from "./banned-terms";
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";

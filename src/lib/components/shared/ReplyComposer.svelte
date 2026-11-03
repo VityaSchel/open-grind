@@ -1,9 +1,9 @@
 <script lang="ts">
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
-	import fireEmoji from "$lib/assets/emojis/fire/32px.png";
-	import { type PlainMessageKey, t } from "$lib/i18n";
-	import { softKeyboardVisibility } from "$lib/platform/android-native-bridge";
+	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+	import { softKeyboardVisibility } from "#lib/platform/android-native-bridge.ts";
 	import MessageTextInput from "./MessageTextInput.svelte";
 	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
 

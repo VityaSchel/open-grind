@@ -2,7 +2,7 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
-import { screenshotScene } from "$lib/demo/screenshot-scene";
+import { screenshotScene } from "#lib/demo/screenshot-scene.ts";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
 	type Capability,

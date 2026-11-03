@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { t } from "$lib/i18n";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { turnOnGiphy } from "../../../giphy/giphy-consent";
 	import GiphyConsentText from "../../../giphy/GiphyConsentText.svelte";
 

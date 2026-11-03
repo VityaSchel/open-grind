@@ -1,15 +1,15 @@
 <script lang="ts">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import {
 		dismissEntitlementBypass,
 		entitlementBypassState,
 		runEntitlementBypass,
-	} from "$lib/entitlements/bypass.svelte";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	} from "#lib/entitlements/bypass.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	const escapeKeydownBehavior = $derived(
 		entitlementBypassState.busy ? "ignore" : "close",

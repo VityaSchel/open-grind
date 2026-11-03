@@ -1,5 +1,5 @@
-import { Generation } from "$lib/util/generation";
-import type { PlainMessageKey } from "$lib/i18n";
+import { Generation } from "#lib/util/generation.ts";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 import {
 	APP_COMPONENT,
 	COMPONENT_PACKAGE,

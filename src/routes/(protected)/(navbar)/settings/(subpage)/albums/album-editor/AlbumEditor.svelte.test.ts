@@ -18,23 +18,23 @@ const { api, errorToast, sonner } = vi.hoisted(() => ({
 	sonner: { toast: { success: vi.fn(), error: vi.fn() } },
 }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
-vi.mock("$lib/api/error-toast", () => errorToast);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
 vi.mock("svelte-sonner", () => sonner);
 vi.mock("$app/navigation", () => ({ beforeNavigate: vi.fn(), goto: vi.fn() }));
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	forgetAlbumSlides: vi.fn(),
 	loadAlbumSlides: vi.fn(),
 	openAlbumLightbox: vi.fn(),
 }));
-vi.mock("$lib/components/shared/subpage-actions-context.svelte", () => ({
+vi.mock("#lib/components/shared/subpage-actions-context.svelte.ts", () => ({
 	setSubpageActions: vi.fn(),
 }));
 
-import { ApiError } from "$lib/api/api-error";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import { ApiError } from "#lib/api/api-error.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import AlbumEditor from "./AlbumEditor.svelte";
 
 function item({

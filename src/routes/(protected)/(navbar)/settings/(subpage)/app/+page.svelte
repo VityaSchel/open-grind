@@ -3,9 +3,9 @@
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import type { IconComponentProps } from "phosphor-svelte";
 
-	import * as Item from "$lib/components/ui/item";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { t } from "$lib/i18n";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import LanguageSetting from "./LanguageSetting.svelte";
 	import { updateSettingsOffered } from "./updates/update-settings-offered";
 </script>

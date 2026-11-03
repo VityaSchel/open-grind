@@ -1,8 +1,8 @@
 import { toast } from "svelte-sonner";
 
-import { ApiError } from "$lib/api/api-error";
-import { promptCopyError } from "$lib/api/error-copy";
-import { t } from "$lib/i18n";
+import { ApiError } from "#lib/api/api-error.ts";
+import { promptCopyError } from "#lib/api/error-copy.ts";
+import { t } from "#lib/i18n/index.ts";
 
 function isSessionGone({ kind }: ApiError): boolean {
 	return kind === "SessionCleared" || kind === "NotSignedIn";

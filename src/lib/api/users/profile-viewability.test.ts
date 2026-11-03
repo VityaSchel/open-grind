@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	isProfileViewable,
 	markProfileUnviewable,
 	markProfileViewable,
 	onProfileViewabilityChange,
-} from "$lib/api/users/profile-viewability";
+} from "#lib/api/users/profile-viewability.ts";
 
 const PROFILE_ID = 42;
 

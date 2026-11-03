@@ -6,18 +6,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { writeMock } = vi.hoisted(() => ({ writeMock: vi.fn() }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: () => Promise.resolve(encode({})),
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
 import {
 	type BooleanPreference,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
+} from "#lib/app-data/preferences.svelte.ts";
 import PrivacyPage from "./+page.svelte";
 
 const SWITCHES = [

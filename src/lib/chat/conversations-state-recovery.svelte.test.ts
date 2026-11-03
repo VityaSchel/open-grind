@@ -21,16 +21,20 @@ const {
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: vi.fn(() => Promise.resolve()),
 	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: vi.fn(() => Promise.resolve()),
 	setConversationMuted: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({ below: () => singleColumn }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
+	below: () => singleColumn,
+}));
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
 			reconcileHandlers.push(handler);
@@ -38,8 +42,8 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(
 			eventType: string,

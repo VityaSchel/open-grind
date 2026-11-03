@@ -3,8 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 
 const { writeTextMock, toastMock } = vi.hoisted(() => ({
 	writeTextMock: vi.fn(),
@@ -17,8 +17,8 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 const { copyErrorConfirmState } =
-	await import("$lib/api/copy-error-confirm-state.svelte");
-const { promptCopyError } = await import("$lib/api/error-copy");
+	await import("#lib/api/copy-error-confirm-state.svelte.ts");
+const { promptCopyError } = await import("#lib/api/error-copy.ts");
 const CopyErrorConfirmAlert = (await import("./CopyErrorConfirmAlert.svelte"))
 	.default;
 

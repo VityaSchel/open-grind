@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 
-import { conversationIdFor } from "$lib/chat/conversation-id";
-import { conversationEntrySchema } from "$lib/model/messaging/conversations";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { conversationEntrySchema } from "#lib/model/messaging/conversations.ts";
 import {
 	previewFromMessage,
 	previewLabel,
 	quoteLabel,
-} from "$lib/model/messaging/message-preview";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/message-preview.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { demoMeProfileId } from "./config";
 import type { DemoInbox } from "./mock/conversation-seeds";
 import { demoRoute } from "./route";

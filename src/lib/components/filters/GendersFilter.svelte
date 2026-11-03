@@ -2,13 +2,13 @@
 	import { expoOut } from "svelte/easing";
 	import { type TransitionConfig } from "svelte/transition";
 
-	import { getGenders } from "$lib/api/users/genders";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { t } from "$lib/i18n";
-	import { compareFilterGenders } from "$lib/model/browse/grid/filters";
-	import { instantWhenReducedMotion } from "$lib/util/reduced-motion";
+	import { getGenders } from "#lib/api/users/genders.ts";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { compareFilterGenders } from "#lib/model/browse/grid/filters.ts";
+	import { instantWhenReducedMotion } from "#lib/util/reduced-motion.ts";
 	import FilterBoolean from "./FilterBoolean.svelte";
 	import { isGenderChipShown, selectGenders } from "./gender-chips";
 

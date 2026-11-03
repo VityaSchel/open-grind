@@ -1,10 +1,10 @@
 <script lang="ts">
 	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
 
-	import { unhideUser } from "$lib/api/browse/hides";
-	import { Button } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
+	import { unhideUser } from "#lib/api/browse/hides.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		applyViewabilityChange,
 		type PendingViewabilityChange,

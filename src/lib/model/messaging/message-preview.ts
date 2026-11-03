@@ -1,8 +1,8 @@
-import { type MessageKey, t } from "$lib/i18n";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 import type {
 	ApiResponseMessage,
 	QuotedMessage,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 
 export type MessagePreview = {
 	type: string;

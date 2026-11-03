@@ -1,6 +1,6 @@
-import { type PlainMessageKey, t } from "$lib/i18n";
-import { isDesktopPlatform } from "$lib/platform/os";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+import { isDesktopPlatform } from "#lib/platform/os.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import { conversationDeeplink, TAPS_DEEPLINK } from "./deeplink";
 import { notify } from "./index";
 import { type Announcement, TAP_TAG_PREFIX } from "./types";

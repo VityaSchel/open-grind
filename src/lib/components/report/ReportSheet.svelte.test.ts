@@ -24,25 +24,27 @@ const {
 	openExternalLinkMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
-vi.mock("$lib/api/safety/reports", () => ({
+vi.mock("#lib/api/browse/blocks.ts", () => ({ blockUser: blockUserMock }));
+vi.mock("#lib/api/safety/reports.ts", () => ({
 	reportProfile: reportProfileMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 vi.mock("./block-failure", () => ({ showBlockFailure: showBlockFailureMock }));
-vi.mock("$lib/platform/link-opener", () => ({
+vi.mock("#lib/platform/link-opener.ts", () => ({
 	openExternalLink: openExternalLinkMock,
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	type ReportLocation,
 	reportLocationSchema,
 	type ReportReason,
 	reportReasonSchema,
-} from "$lib/model/safety/reports";
+} from "#lib/model/safety/reports.ts";
 import ReportSheet from "./ReportSheet.svelte";
 
 type SheetProps = Pick<

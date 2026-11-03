@@ -2,12 +2,12 @@
 	import { goto } from "$app/navigation";
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { Badge } from "$lib/components/ui/badge";
-	import * as Command from "$lib/components/ui/command";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import * as Command from "#lib/components/ui/command/index.ts";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import {
 		commandCenterClose,
 		commandCenterState,

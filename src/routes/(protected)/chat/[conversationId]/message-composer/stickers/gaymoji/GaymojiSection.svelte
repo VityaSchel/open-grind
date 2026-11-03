@@ -1,7 +1,7 @@
 <script lang="ts">
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import type { GaymojiItem } from "$lib/api/messaging/gaymoji";
-	import type { GaymojiSection } from "$lib/chat/gaymoji-sections";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import type { GaymojiItem } from "#lib/api/messaging/gaymoji.ts";
+	import type { GaymojiSection } from "#lib/chat/gaymoji-sections.ts";
 	import StickerTile from "../StickerTile.svelte";
 	import type { ElementRegistry } from "./element-registry";
 	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";

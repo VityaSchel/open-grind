@@ -1,8 +1,8 @@
-import { type MessageKey, t } from "$lib/i18n";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 import {
 	type BanSubReason,
 	banSubReasonSchema,
-} from "$lib/model/authentication";
+} from "#lib/model/authentication.ts";
 
 const labelKeys = {
 	UNDERAGE_ACCESS: "feedback.accountStatus.banReason.underageAccess",

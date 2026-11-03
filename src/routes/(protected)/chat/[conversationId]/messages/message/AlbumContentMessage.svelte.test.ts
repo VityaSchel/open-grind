@@ -8,7 +8,7 @@ import {
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { AlbumSlide } from "$lib/components/album/album-lightbox";
+import type { AlbumSlide } from "#lib/components/album/album-lightbox.ts";
 
 const NOW = 1_700_000_000_000;
 const lightbox = vi.hoisted(() => ({
@@ -23,9 +23,9 @@ const lightbox = vi.hoisted(() => ({
 	state: { profile: { profileId: 2 }, clearReplyTo: vi.fn(), send: vi.fn() },
 }));
 
-vi.mock("$lib/components/album/album-lightbox", async (importOriginal) => ({
+vi.mock("#lib/components/album/album-lightbox.ts", async (importOriginal) => ({
 	...(await importOriginal<
-		typeof import("$lib/components/album/album-lightbox")
+		typeof import("#lib/components/album/album-lightbox.ts")
 	>()),
 	...lightbox,
 }));
@@ -33,12 +33,12 @@ vi.mock("../../conversation-state.svelte", () => ({
 	getConversationState: () => () => lightbox.state,
 }));
 
-import { albumShares } from "$lib/chat/album-shares.svelte";
+import { albumShares } from "#lib/chat/album-shares.svelte.ts";
 import {
 	type AlbumContentReactionMessage,
 	type AlbumContentReplyMessage,
 	apiResponseMessageSchema,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 import Message from "./Message.svelte";
 
 function renderReply({

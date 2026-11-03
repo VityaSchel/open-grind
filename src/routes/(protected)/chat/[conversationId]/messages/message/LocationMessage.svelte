@@ -1,10 +1,10 @@
 <script lang="ts">
 	import MapPinIcon from "phosphor-svelte/lib/MapPinIcon";
 
-	import { t } from "$lib/i18n";
-	import { openExternalLink } from "$lib/platform/link-opener";
-	import { currentPlatform } from "$lib/platform/os";
-	import type { LocationMessage } from "$lib/model/messaging/messages";
+	import { t } from "#lib/i18n/index.ts";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
+	import { currentPlatform } from "#lib/platform/os.ts";
+	import type { LocationMessage } from "#lib/model/messaging/messages.ts";
 	import MessageBubble from "./MessageBubble.svelte";
 	import { singleClick } from "./single-click";
 

@@ -2,17 +2,17 @@ import { decode, encode } from "@msgpack/msgpack";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { backdropBlurCalibrationSchema } from "$lib/blur/calibration/decide";
-import { backdropBlurQualitySchema } from "$lib/blur/quality";
-import { getRegionalSettings, t } from "$lib/i18n";
-import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
-import { geohashSchema } from "$lib/model/geohash";
+import { backdropBlurCalibrationSchema } from "#lib/blur/calibration/decide.ts";
+import { backdropBlurQualitySchema } from "#lib/blur/quality.ts";
+import { getRegionalSettings, t } from "#lib/i18n/index.ts";
+import { gridSearchFiltersSchema } from "#lib/model/browse/grid/filters.ts";
+import { geohashSchema } from "#lib/model/geohash.ts";
 import {
 	languageSyncSchema,
 	languageTagSchema,
-} from "$lib/platform/language-sync";
-import { regionalSettingsReady } from "$lib/platform/regional-settings";
-import { unitSystemFor, unitSystemSchema } from "$lib/util/units";
+} from "#lib/platform/language-sync.ts";
+import { regionalSettingsReady } from "#lib/platform/regional-settings.ts";
+import { unitSystemFor, unitSystemSchema } from "#lib/util/units.ts";
 import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
 const preferencesSchema = z.object({

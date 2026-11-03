@@ -17,33 +17,37 @@ const mocks = vi.hoisted(() => ({
 vi.mock("svelte-sonner", () => ({ toast: { success: mocks.success } }));
 
 vi.mock("$app/navigation", () => ({ goto: mocks.goto }));
-vi.mock("$lib/util/history", () => ({ traverseBackTo: mocks.traverseBackTo }));
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/util/history.ts", () => ({
+	traverseBackTo: mocks.traverseBackTo,
+}));
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: mocks.getProfile,
 }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: vi.fn(),
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
+vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/messaging/messages.ts")
+	>()),
 	sendMessage: mocks.sendMessage,
 }));
-vi.mock("$lib/api/error-toast", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: mocks.showErrorToast,
 }));
-vi.mock("$lib/chat/conversations-context.svelte", () => ({
+vi.mock("#lib/chat/conversations-context.svelte.ts", () => ({
 	getOrCreateConversationsState: mocks.getConversations,
 }));
-vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
+vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: vi.fn(),
 }));
 vi.mock("../ImageCarousel.svelte", () => ({ default: mocks.carousel }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { conversationIdFor } from "$lib/chat/conversation-id";
-import { Drafts } from "$lib/chat/drafts.svelte";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { Drafts } from "#lib/chat/drafts.svelte.ts";
 import type { ProfileState } from "../profile-state.svelte";
 import { fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import { gridRow, PROFILE_ID, renderPane } from "./profile-pane-test-helpers";

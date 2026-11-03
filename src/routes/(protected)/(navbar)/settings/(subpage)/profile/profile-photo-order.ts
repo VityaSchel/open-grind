@@ -1,5 +1,5 @@
-import { saveProfilePhotos } from "$lib/api/users/profiles";
-import { deepEqual } from "$lib/util/deep-equal";
+import { saveProfilePhotos } from "#lib/api/users/profiles.ts";
+import { deepEqual } from "#lib/util/deep-equal.ts";
 
 export async function saveProfilePhotoOrder({
 	cacheProfileId,

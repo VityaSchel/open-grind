@@ -10,10 +10,10 @@ import {
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { isPhotoSwipeBusy } from "$lib/util/photoswipe";
-import * as safeArea from "$lib/util/safe-area";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { isPhotoSwipeBusy } from "#lib/util/photoswipe/index.ts";
+import * as safeArea from "#lib/util/safe-area.ts";
 import ImageCarousel from "./ImageCarousel.svelte";
 
 const PHOTO_HEIGHT = 540;

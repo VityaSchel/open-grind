@@ -12,22 +12,22 @@ const { showErrorToast, setPreferences, setDesktopEntryInstalled } = vi.hoisted(
 );
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({ setPreferences }));
-vi.mock("$lib/updates/capability.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast }));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({ setPreferences }));
+vi.mock("#lib/updates/capability.svelte.ts", () => ({
 	updatesSelfManaged: () => true,
 }));
-vi.mock("$lib/updates/update-settings.svelte", () => ({
+vi.mock("#lib/updates/update-settings.svelte.ts", () => ({
 	saveAutomaticChecks: () => Promise.resolve(),
 }));
-vi.mock("$lib/platform/desktop-entry.svelte", () => ({
+vi.mock("#lib/platform/desktop-entry.svelte.ts", () => ({
 	desktopEntryAvailable: () => true,
 	desktopEntryInstalled: () => false,
 	setDesktopEntryInstalled,
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import OnboardingPage from "./+page.svelte";
 
 beforeEach(() => {

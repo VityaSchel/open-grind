@@ -1,11 +1,11 @@
 import { decode, encode } from "@msgpack/msgpack";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { defaultFilters } from "$lib/model/browse/grid/filters";
+import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 import {
 	NATIVE_READ_LIMIT_MS,
 	NATIVE_READ_TIMEOUT_MS,
-} from "$lib/platform/regional-settings";
+} from "#lib/platform/regional-settings.ts";
 
 const { files, invokeMock, listenMock, storage, tauri, toastError } =
 	vi.hoisted(() => ({
@@ -17,7 +17,7 @@ const { files, invokeMock, listenMock, storage, tauri, toastError } =
 		toastError: vi.fn(),
 	}));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: (path: string) => Promise.resolve(files.has(path)),
 	readAppDataFile: (path: string) => {
 		const content = files.get(path);
@@ -54,9 +54,9 @@ async function launch({ system }: { system: () => Promise<unknown> }) {
 	vi.resetModules();
 	invokeMock.mockImplementation(system);
 	const { startRegionalSettings } =
-		await import("$lib/platform/regional-settings");
+		await import("#lib/platform/regional-settings.ts");
 	const started = startRegionalSettings();
-	const preferences = await import("$lib/app-data/preferences.svelte");
+	const preferences = await import("#lib/app-data/preferences.svelte.ts");
 	return { started, preferences };
 }
 

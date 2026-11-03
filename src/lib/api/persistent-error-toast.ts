@@ -1,6 +1,6 @@
 import { toast } from "svelte-sonner";
 
-import { followLocale } from "$lib/i18n";
+import { followLocale } from "#lib/i18n/index.ts";
 
 const followers = new Map<string, () => void>();
 

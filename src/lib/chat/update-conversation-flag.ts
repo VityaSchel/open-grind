@@ -1,7 +1,7 @@
-import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
-import type { ConversationFlagField } from "$lib/chat/merge-conversation";
-import type { MessageKeyWith } from "$lib/i18n";
-import type { Conversation } from "$lib/model/messaging/conversations";
+import { applyOptimisticBatch } from "#lib/chat/optimistic-batch.ts";
+import type { ConversationFlagField } from "#lib/chat/merge-conversation.ts";
+import type { MessageKeyWith } from "#lib/i18n/index.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import type { PendingFlags } from "./pending-flags";
 
 export type ConversationFlagUpdate = {

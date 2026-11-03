@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, httpStatusOf } from "$lib/api/api-error";
-import { uploadProfilePhoto } from "$lib/api/users/profiles";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { ApiError, httpStatusOf } from "#lib/api/api-error.ts";
+import { uploadProfilePhoto } from "#lib/api/users/profiles.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { settlesSoon } from "./demo-test-helpers";
 import {
 	type NativeError,

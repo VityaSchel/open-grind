@@ -1,10 +1,10 @@
-import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 import {
 	type OptionFilterDefinition,
 	optionFilters,
-} from "$lib/components/filters/option-filters";
-import { type PlainMessageKey, t } from "$lib/i18n";
-import { formatListParts, formatRange } from "$lib/i18n/format";
+} from "#lib/components/filters/option-filters.ts";
+import { formatListParts, formatRange } from "#lib/i18n/format.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -27,9 +27,9 @@ import {
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
 	weightGramsToKg,
-} from "$lib/model/browse/grid/filters";
-import { sexualPositions } from "$lib/model/users/profiles";
-import { formatHeight, formatWeightKg } from "$lib/util/units";
+} from "#lib/model/browse/grid/filters.ts";
+import { sexualPositions } from "#lib/model/users/profiles.ts";
+import { formatHeight, formatWeightKg } from "#lib/util/units.ts";
 import {
 	booleanApply,
 	boundApply,

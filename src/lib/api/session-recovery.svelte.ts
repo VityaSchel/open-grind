@@ -1,19 +1,19 @@
 import { toast } from "svelte-sonner";
 
-import { registerAccountCache } from "$lib/api/account-caches";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
 import {
 	blockedKindOf,
 	callMethod,
 	markRequestBlocked,
-} from "$lib/api/methods";
-import { showPersistentErrorToast } from "$lib/api/persistent-error-toast";
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
+} from "#lib/api/methods.ts";
+import { showPersistentErrorToast } from "#lib/api/persistent-error-toast.ts";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import {
 	clearSessionError,
 	type SessionErrorKind,
 	sessionErrorState,
-} from "$lib/api/session-error-state.svelte";
-import { t } from "$lib/i18n";
+} from "#lib/api/session-error-state.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 
 const STALE_REPORT_MS = 60_000;
 

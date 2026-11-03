@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ClockIcon from "phosphor-svelte/lib/ClockIcon";
 
-	import { t } from "$lib/i18n";
-	import { formatDate } from "$lib/i18n/format";
+	import { formatDate } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

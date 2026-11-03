@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { collapsed } = vi.hoisted(() => ({ collapsed: { current: false } }));
 
-vi.mock("$lib/util/breakpoints.svelte", () => ({ below: () => collapsed }));
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({ below: () => collapsed }));
 
 import ConversationsSelectionBar from "./ConversationsSelectionBar.svelte";
 

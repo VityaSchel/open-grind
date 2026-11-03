@@ -1,6 +1,6 @@
 <script lang="ts">
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 
 	let {
 		src,

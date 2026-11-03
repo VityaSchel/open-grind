@@ -13,10 +13,10 @@ import {
 	answerAccountSwitch,
 	confirmAccountSwitch,
 	googleHandoffState,
-} from "$lib/api/google-handoff-state.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+} from "#lib/api/google-handoff-state.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import GoogleHandoffConfirmAlert from "./GoogleHandoffConfirmAlert.svelte";
 
 const TITLE = "Switch Google account?";

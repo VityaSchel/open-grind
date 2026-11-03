@@ -19,9 +19,9 @@ vi.mock("tauri-plugin-android-fs-api", () => ({ AndroidFs: androidFsMock }));
 
 import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { pickMedia, pickMultipleMedia } from "$lib/platform/media-picker";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { pickMedia, pickMultipleMedia } from "#lib/platform/media-picker.ts";
 
 const photoUri = {
 	uri: "content://photo/1",

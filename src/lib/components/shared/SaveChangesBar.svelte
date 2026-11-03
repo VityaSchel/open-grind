@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { expoOut } from "svelte/easing";
 
-	import { Button } from "$lib/components/ui/button";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { t } from "$lib/i18n";
-	import { fly } from "$lib/util/reduced-motion";
-	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { fly } from "#lib/util/reduced-motion.ts";
+	import { bottomChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 	let {
 		saving,

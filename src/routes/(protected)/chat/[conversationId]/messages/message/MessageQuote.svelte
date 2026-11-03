@@ -5,8 +5,8 @@
 		previewFromMessage,
 		quoteIsUserText,
 		quoteLabel,
-	} from "$lib/model/messaging/message-preview";
-	import type { QuotedMessage } from "$lib/model/messaging/messages";
+	} from "#lib/model/messaging/message-preview.ts";
+	import type { QuotedMessage } from "#lib/model/messaging/messages.ts";
 	import { getMessageContext, getMessageMetaContext } from "./context";
 
 	let { quoted, children }: { quoted?: QuotedMessage; children?: Snippet } =

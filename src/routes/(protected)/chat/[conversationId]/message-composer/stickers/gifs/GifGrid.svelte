@@ -2,11 +2,11 @@
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import PagingSentinel from "$lib/components/shared/PagingSentinel.svelte";
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
-	import type { GiphyTile } from "$lib/api/messaging/gifs";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import PagingSentinel from "#lib/components/shared/PagingSentinel.svelte";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import type { GiphyTile } from "#lib/api/messaging/gifs.ts";
 	import GifBadge from "../../../giphy/GifBadge.svelte";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import StickerTile from "../StickerTile.svelte";

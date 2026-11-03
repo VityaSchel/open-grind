@@ -4,13 +4,13 @@
 	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { setPreferences } from "$lib/app-data/preferences.svelte";
-	import * as Command from "$lib/components/ui/command";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
-	import Rich from "$lib/i18n/Rich.svelte";
-	import { GEOHASH_PRECISION } from "$lib/model/geohash";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+	import * as Command from "#lib/components/ui/command/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
+	import { GEOHASH_PRECISION } from "#lib/model/geohash.ts";
 	import { commandCenterClose } from "../command-center-state.svelte";
 
 	let {

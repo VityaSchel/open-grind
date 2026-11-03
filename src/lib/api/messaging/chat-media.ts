@@ -1,21 +1,21 @@
 import z from "zod";
 
-import { signedInProfileId } from "$lib/api/current-session";
-import { uploadRefusalMessage } from "$lib/api/methods";
-import { invokeRest, uploadFileRest } from "$lib/api/transport";
-import { demoUploadChatMedia } from "$lib/demo";
-import { t } from "$lib/i18n";
-import { mediaUrlSchema } from "$lib/model/media";
+import { signedInProfileId } from "#lib/api/current-session.ts";
+import { uploadRefusalMessage } from "#lib/api/methods.ts";
+import { invokeRest, uploadFileRest } from "#lib/api/transport.ts";
+import { demoUploadChatMedia } from "#lib/demo/index.ts";
+import { t } from "#lib/i18n/index.ts";
+import { mediaUrlSchema } from "#lib/model/media.ts";
 import {
 	CHAT_MEDIA_MAX_BYTES,
 	chatMediaMaxLabel,
-} from "$lib/model/messaging/chat-media-limits";
+} from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	inspectMediaFile,
 	mediaFileDescriptor,
 	type MediaFileInspection,
-} from "$lib/platform/media-file";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/media-file.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { type DrawerMedia, saveMediaToDrawer } from "./drawer";
 
 const VIDEO_CONTENT_TYPE = "video/mp4";

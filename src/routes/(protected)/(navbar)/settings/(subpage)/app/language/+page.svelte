@@ -2,16 +2,16 @@
 	import { afterNavigate } from "$app/navigation";
 	import { ToggleGroup } from "bits-ui";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import * as Item from "$lib/components/ui/item";
-	import { t } from "$lib/i18n";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		getListedLanguage,
 		listedLanguages,
-	} from "$lib/i18n/listed-languages";
-	import { pickerTag } from "$lib/i18n/matcher";
-	import { chooseLanguage } from "$lib/platform/app-language";
-	import { cn } from "$lib/util/utils";
+	} from "#lib/i18n/listed-languages.ts";
+	import { pickerTag } from "#lib/i18n/matcher.ts";
+	import { chooseLanguage } from "#lib/platform/app-language.ts";
+	import { cn } from "#lib/util/utils.ts";
 
 	let pending = $state<string | null>(null);
 	let latestChoice = 0;

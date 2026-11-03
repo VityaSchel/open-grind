@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { sendTap } from "$lib/api/interest/taps";
-	import TapIcon from "$lib/components/profile/TapIcon.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { playHaptic } from "$lib/haptics";
-	import { type MessageKey, t } from "$lib/i18n";
-	import { TapType } from "$lib/model/interest/taps";
-	import { firedByTouch } from "$lib/platform/touch-origin";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { sendTap } from "#lib/api/interest/taps.ts";
+	import TapIcon from "#lib/components/profile/TapIcon.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { playHaptic } from "#lib/haptics.ts";
+	import { type MessageKey, t } from "#lib/i18n/index.ts";
+	import { TapType } from "#lib/model/interest/taps.ts";
+	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 
 	let {
 		profileId,

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import cookieEmoji from "$lib/assets/emojis/cookie/72px.png";
-	import demonEmoji from "$lib/assets/emojis/demon/72px.png";
-	import fireEmoji from "$lib/assets/emojis/fire/72px.png";
-	import { type MessageKey, t } from "$lib/i18n";
-	import { TapType } from "$lib/model/interest/taps";
+	import cookieEmoji from "#lib/assets/emojis/cookie/72px.png";
+	import demonEmoji from "#lib/assets/emojis/demon/72px.png";
+	import fireEmoji from "#lib/assets/emojis/fire/72px.png";
+	import { type MessageKey, t } from "#lib/i18n/index.ts";
+	import { TapType } from "#lib/model/interest/taps.ts";
 
 	let { tapType }: { tapType: TapType } = $props();
 

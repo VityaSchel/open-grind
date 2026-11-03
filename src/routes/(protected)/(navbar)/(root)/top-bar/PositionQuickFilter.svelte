@@ -2,12 +2,12 @@
 	import { untrack } from "svelte";
 	import type z from "zod";
 
-	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
-	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { t } from "$lib/i18n";
-	import { defaultFilters } from "$lib/model/browse/grid/filters";
-	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
+	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
+	import PositionFilterToggle from "#lib/components/filters/position/PositionFilterToggle.svelte";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
+	import type { filterPositionSchema } from "#lib/model/browse/grid/filters.ts";
 
 	let { open = $bindable() }: { open: boolean } = $props();
 

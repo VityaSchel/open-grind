@@ -21,8 +21,8 @@ vi.mock("@tauri-apps/api/event", () => ({
 	},
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { ws } from "$lib/ws.svelte";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { ws } from "#lib/ws.svelte.ts";
 
 const RESPONSE_EVENT = "grindr:chat_v1_message_send_response";
 const responseSchema = z.object({ messageId: z.string() });

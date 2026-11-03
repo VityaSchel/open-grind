@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import type { Announcement } from "./types";
 
 const push = vi.hoisted(() => ({
@@ -11,7 +11,7 @@ const push = vi.hoisted(() => ({
 const os = vi.hoisted(() => ({ desktop: true }));
 
 vi.mock("./index", () => push);
-vi.mock("$lib/platform/os", () => ({ isDesktopPlatform: () => os.desktop }));
+vi.mock("#lib/platform/os.ts", () => ({ isDesktopPlatform: () => os.desktop }));
 
 const { announceMessage, announceTap } = await import("./announce");
 

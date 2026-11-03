@@ -1,10 +1,10 @@
 import { toast } from "svelte-sonner";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { sessionRecovery } from "$lib/api/session-recovery.svelte";
-import { t } from "$lib/i18n";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { sessionRecovery } from "#lib/api/session-recovery.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { showIncomingMessageToast } from "./incoming-message-toast-manager";
 
 const CONVERSATION_IDS = ["100001:100002", "100001:100003"];

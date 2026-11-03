@@ -1,10 +1,10 @@
-import { showErrorToast } from "$lib/api/error-toast";
-import { registerPushToken } from "$lib/api/settings/account";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { registerPushToken } from "#lib/api/settings/account.ts";
 import {
 	getPreferences,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { t } from "$lib/i18n";
+} from "#lib/app-data/preferences.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 import { addonGone } from "./delivery-dead";
 import { fallBackToSlow, freshPushToken } from "./delivery.svelte";
 import { pushFailures } from "./error-copy";

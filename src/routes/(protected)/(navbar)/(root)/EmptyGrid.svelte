@@ -3,13 +3,13 @@
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
-	import { genderFilterFlag } from "$lib/api/feature-flags-state.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import { sentFilterKeys } from "$lib/grid/grid-query";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { t } from "$lib/i18n";
-	import { defaultFilters } from "$lib/model/browse/grid/filters";
+	import { genderFilterFlag } from "#lib/api/feature-flags-state.svelte.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { sentFilterKeys } from "#lib/grid/grid-query.ts";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 
 	const sentFilters = $derived(
 		sentFilterKeys({

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
 
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 </script>
 
 <Empty.Root>

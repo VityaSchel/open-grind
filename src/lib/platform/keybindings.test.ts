@@ -4,7 +4,7 @@ async function commandCenterShortcutOn(platform: string) {
 	vi.resetModules();
 	vi.stubGlobal("navigator", { platform });
 	const { commandCenterKeybinding, parseShortcut } =
-		await import("$lib/platform/keybindings");
+		await import("#lib/platform/keybindings.ts");
 	return parseShortcut(commandCenterKeybinding);
 }
 

@@ -3,22 +3,22 @@
 import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { Shortcut } from "$lib/platform/keybindings";
+import type { Shortcut } from "#lib/platform/keybindings.ts";
 
 const { isMobilePlatform, parseShortcut } = vi.hoisted(() => ({
 	isMobilePlatform: vi.fn(() => false),
 	parseShortcut: vi.fn<(keybinding: string) => Shortcut>(),
 }));
 
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform }));
-vi.mock("$lib/platform/keybindings", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/keybindings")>()),
+vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform }));
+vi.mock("#lib/platform/keybindings.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/keybindings.ts")>()),
 	parseShortcut,
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { commandCenterKeybinding } from "$lib/platform/keybindings";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { commandCenterKeybinding } from "#lib/platform/keybindings.ts";
 import CommandCenterTrigger from "./CommandCenterTrigger.svelte";
 
 function renderTriggerWith(modifier: Shortcut["modifier"]) {

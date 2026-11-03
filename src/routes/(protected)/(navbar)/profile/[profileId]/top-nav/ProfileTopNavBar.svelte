@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { t } from "$lib/i18n";
-	import type { Profile } from "$lib/model/users/profiles";
+	import { t } from "#lib/i18n/index.ts";
+	import type { Profile } from "#lib/model/users/profiles.ts";
 	import type { PendingViewabilityChange } from "../profile-state.svelte";
 	import EditProfileButton from "./EditProfileButton.svelte";
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";

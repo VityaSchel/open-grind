@@ -8,15 +8,15 @@ const { getPreferencesMock, setPreferencesMock, getTagsMock } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/api/users/tags", () => ({ getTags: getTagsMock }));
+vi.mock("#lib/api/users/tags.ts", () => ({ getTags: getTagsMock }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: getPreferencesMock,
 	setPreferences: setPreferencesMock,
 }));
 
-import { GridSearchFiltersState } from "$lib/grid/grid-search-filters-state.svelte";
-import { defaultFilters } from "$lib/model/browse/grid/filters";
+import { GridSearchFiltersState } from "#lib/grid/grid-search-filters-state.svelte.ts";
+import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 
 const languages = [
 	{

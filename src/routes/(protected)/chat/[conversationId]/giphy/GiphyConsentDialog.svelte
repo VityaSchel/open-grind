@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { t } from "$lib/i18n";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { turnOnGiphy } from "./giphy-consent";
 	import GiphyConsentText from "./GiphyConsentText.svelte";
 

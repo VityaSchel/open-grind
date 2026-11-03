@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { onDestroy, tick } from "svelte";
 
-	import { getConversations } from "$lib/chat/conversations-context.svelte";
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
-	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
-	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { below } from "$lib/util/breakpoints.svelte";
-	import { leaveDeletedPages } from "$lib/util/deleted-pages";
-	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
-	import { SelectionSet } from "$lib/util/selection.svelte";
-	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
+	import { getConversations } from "#lib/chat/conversations-context.svelte.ts";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
+	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { below } from "#lib/util/breakpoints.svelte.ts";
+	import { leaveDeletedPages } from "#lib/util/deleted-pages.ts";
+	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
+	import { SelectionSet } from "#lib/util/selection.svelte.ts";
+	import type { ConversationsState } from "#lib/chat/conversations-state.svelte.ts";
 	import ConversationsPagingTail from "./ConversationsPagingTail.svelte";
 	import ConversationsSelectionBar from "./ConversationsSelectionBar.svelte";
 	import DeleteConversationsDialog from "./DeleteConversationsDialog.svelte";

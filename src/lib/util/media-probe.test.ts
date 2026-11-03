@@ -9,7 +9,7 @@ const { slots } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("$lib/util/media-load-slots", () => ({
+vi.mock("#lib/util/media-load-slots.ts", () => ({
 	acquireMediaLoadSlot(grant: () => void) {
 		if (slots.grantNow) grant();
 		else slots.pending.push(grant);

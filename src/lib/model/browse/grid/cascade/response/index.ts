@@ -1,8 +1,8 @@
 import z from "zod";
 
-import { mediaUrlSchema } from "$lib/model/media";
-import { arrayOfKnownVariants } from "$lib/model/tolerance";
-import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
+import { mediaUrlSchema } from "#lib/model/media.ts";
+import { arrayOfKnownVariants } from "#lib/model/tolerance.ts";
+import { unixTimestampMsSchema, unmodeledSchema } from "#lib/model/types.ts";
 
 export const cascadeResponseProfileSchema = z.object({
 	profileId: z.int().nonnegative(),

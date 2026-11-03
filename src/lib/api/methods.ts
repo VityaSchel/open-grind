@@ -7,29 +7,32 @@ import {
 	apiErrorKinds,
 	apiErrorMessageKeys,
 	httpStatusOf,
-} from "$lib/api/api-error";
-import { capText } from "$lib/api/redact/text";
-import { summariseNonJson } from "$lib/api/redact/value";
+} from "#lib/api/api-error.ts";
+import { capText } from "#lib/api/redact/text.ts";
+import { summariseNonJson } from "#lib/api/redact/value.ts";
 import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
-} from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod } from "$lib/demo";
-import { neverSettles, sceneMethodOutcome } from "$lib/demo/screenshot-scene";
+} from "#lib/api/request-blocked-state.svelte.ts";
+import { demoCallMethod } from "#lib/demo/index.ts";
+import {
+	neverSettles,
+	sceneMethodOutcome,
+} from "#lib/demo/screenshot-scene.ts";
+import { formatInteger } from "#lib/i18n/format.ts";
 import {
 	type MessageKey,
 	type PlainMessageKey,
 	sourceText,
 	t,
 	type Translate,
-} from "$lib/i18n";
-import { formatInteger } from "$lib/i18n/format";
+} from "#lib/i18n/index.ts";
 import {
 	type AccountStatusError,
 	accountStatusErrorSchema,
-} from "$lib/model/authentication";
-import { geohashSchema } from "$lib/model/geohash";
-import { BYTES_PER_MEGABYTE } from "$lib/util/bytes";
+} from "#lib/model/authentication.ts";
+import { geohashSchema } from "#lib/model/geohash.ts";
+import { BYTES_PER_MEGABYTE } from "#lib/util/bytes.ts";
 
 const maxPrettyMessageChars = 200;
 

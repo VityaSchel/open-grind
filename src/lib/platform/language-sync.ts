@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { normalizeTag } from "$lib/i18n/matcher";
+import { normalizeTag } from "#lib/i18n/matcher.ts";
 
 export const LANGUAGE_SYNC_TIERS = ["two-way", "read-only", "none"] as const;
 

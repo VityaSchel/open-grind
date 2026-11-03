@@ -5,15 +5,15 @@ import z from "zod";
 import {
 	getPreferences,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
+} from "#lib/app-data/preferences.svelte.ts";
 import {
 	getLocale,
 	offersLanguage,
 	resolveLanguage,
 	setLocale,
-} from "$lib/i18n";
-import { normalizeTag } from "$lib/i18n/matcher";
-import { everyLanguageOffered } from "$lib/i18n/offered";
+} from "#lib/i18n/index.ts";
+import { normalizeTag } from "#lib/i18n/matcher.ts";
+import { everyLanguageOffered } from "#lib/i18n/offered.ts";
 import {
 	LANGUAGE_SYNC_TIERS,
 	type LanguagePlan,

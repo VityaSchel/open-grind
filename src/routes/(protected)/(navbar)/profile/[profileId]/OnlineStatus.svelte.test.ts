@@ -3,9 +3,9 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { formatRelativeTime } from "$lib/i18n/format";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { formatRelativeTime } from "#lib/i18n/format.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import OnlineStatus from "./OnlineStatus.svelte";
 
 const NOW = new Date(2026, 9, 9, 12).getTime();

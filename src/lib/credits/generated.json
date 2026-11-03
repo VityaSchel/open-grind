@@ -1330,7 +1330,7 @@
 			"name": "shadcn-svelte",
 			"ecosystem": "npm",
 			"versions": [
-				"1.2.7"
+				"1.7.0"
 			],
 			"spdx": "MIT",
 			"url": "https://shadcn-svelte.com",

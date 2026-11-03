@@ -3,17 +3,21 @@
 		deleteDrawerMedia,
 		type DrawerMedia,
 		getAllDrawerMedia,
-	} from "$lib/api/messaging/drawer";
-	import { albumRoom, isVideoContent } from "$lib/components/album/album";
-	import PreviousUploadsSheet from "$lib/components/media-sheet/PreviousUploadsSheet.svelte";
-	import AddTile from "$lib/components/shared/AddTile.svelte";
-	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
-	import { type MessageKeyWith, type PlainMessageKey, t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
-	import { receiveMedia } from "$lib/platform/media-intake.svelte";
-	import { proxyMediaUrl } from "$lib/util/media";
-	import type { AlbumContent } from "$lib/model/messaging/albums";
-	import type { PickedMedia } from "$lib/platform/media-picker";
+	} from "#lib/api/messaging/drawer.ts";
+	import { albumRoom, isVideoContent } from "#lib/components/album/album.ts";
+	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
+	import AddTile from "#lib/components/shared/AddTile.svelte";
+	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import {
+		type MessageKeyWith,
+		type PlainMessageKey,
+		t,
+	} from "#lib/i18n/index.ts";
+	import { receiveMedia } from "#lib/platform/media-intake.svelte.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import type { AlbumContent } from "#lib/model/messaging/albums.ts";
+	import type { PickedMedia } from "#lib/platform/media-picker.ts";
 	import {
 		addAlbumMedia,
 		addPreviousUploads,

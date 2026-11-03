@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { hapticsAvailable } from "$lib/haptics";
-	import { t } from "$lib/i18n";
-	import { desktopEntryAvailable } from "$lib/platform/desktop-entry.svelte";
+	import { hapticsAvailable } from "#lib/haptics.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { desktopEntryAvailable } from "#lib/platform/desktop-entry.svelte.ts";
 	import PreferenceSwitchSetting from "../PreferenceSwitchSetting.svelte";
 	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";

@@ -2,7 +2,7 @@
 	import { Command as CommandPrimitive } from "bits-ui";
 	import CheckIcon from "phosphor-svelte/lib/CheckIcon";
 
-	import { cn } from "$lib/util/utils.js";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

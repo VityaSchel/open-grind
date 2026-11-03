@@ -4,13 +4,13 @@
 	import QuestionMarkIcon from "phosphor-svelte/lib/QuestionMarkIcon";
 	import { Tween } from "svelte/motion";
 
-	import clippy from "$lib/assets/clippy.avif";
-	import { Button, buttonVariants } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import * as Tooltip from "$lib/components/ui/tooltip";
-	import { t } from "$lib/i18n";
-	import { cn } from "$lib/util/utils";
+	import clippy from "#lib/assets/clippy.avif";
+	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import * as Tooltip from "#lib/components/ui/tooltip/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 
 	let flip = $state(false);
 	const flipProgress = new Tween(0, { duration: 500 });

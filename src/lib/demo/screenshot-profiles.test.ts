@@ -4,8 +4,8 @@ import {
 	BlockedProfileError,
 	clearProfileCaches,
 	getProfile,
-} from "$lib/api/users/profiles";
-import { profileSchema } from "$lib/model/users/profiles";
+} from "#lib/api/users/profiles.ts";
+import { profileSchema } from "#lib/model/users/profiles.ts";
 import { demoRoute } from "./route";
 import { type ScreenshotScene, screenshotScene } from "./screenshot-scene";
 

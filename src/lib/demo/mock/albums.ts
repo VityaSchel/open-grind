@@ -1,5 +1,5 @@
-import type { AlbumStorageLimits } from "$lib/model/messaging/albums";
-import type { MediaFileKind } from "$lib/platform/media-file";
+import type { AlbumStorageLimits } from "#lib/model/messaging/albums.ts";
+import type { MediaFileKind } from "#lib/platform/media-file.ts";
 import { DAY, demoMeProfileId, NOW } from "../config";
 import { picsum, unsplash } from "./avatars";
 

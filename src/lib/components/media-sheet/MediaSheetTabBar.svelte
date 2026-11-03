@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import * as Tabs from "$lib/components/ui/tabs";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import * as Tabs from "#lib/components/ui/tabs/index.ts";
 
 	let { children, trailing }: { children: Snippet; trailing?: Snippet } =
 		$props();

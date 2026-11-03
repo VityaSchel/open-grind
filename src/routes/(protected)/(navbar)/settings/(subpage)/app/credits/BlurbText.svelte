@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import Rich from "$lib/i18n/Rich.svelte";
-	import type { HighlightBlurbKey } from "$lib/credits/types";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import Rich from "#lib/i18n/Rich.svelte";
+	import type { HighlightBlurbKey } from "#lib/credits/types.ts";
 
 	let {
 		name,

@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let {
 		open = $bindable(false),

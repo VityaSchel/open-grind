@@ -2,8 +2,8 @@ import CheckCircleIcon from "phosphor-svelte/lib/CheckCircleIcon";
 import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 
 type ShownToast = { componentProps: Record<string, unknown> };
 
@@ -14,7 +14,7 @@ const { custom, getVersion } = vi.hoisted(() => ({
 
 vi.mock("svelte-sonner", () => ({ toast: { custom, dismiss: vi.fn() } }));
 vi.mock("@tauri-apps/api/app", () => ({ getVersion }));
-vi.mock("$lib/platform/link-opener", () => ({ openExternalLink: vi.fn() }));
+vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink: vi.fn() }));
 
 import { showAddonInstalled, showInstalled, showManualInstall } from "./toasts";
 

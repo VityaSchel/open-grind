@@ -1,9 +1,9 @@
 <script lang="ts">
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
-	import * as Item from "$lib/components/ui/item";
-	import { t } from "$lib/i18n";
-	import { getListedLanguage } from "$lib/i18n/listed-languages";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { getListedLanguage } from "#lib/i18n/listed-languages.ts";
 
 	const current = $derived(getListedLanguage());
 </script>

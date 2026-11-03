@@ -1,5 +1,5 @@
-import { t } from "$lib/i18n";
-import { formatInteger } from "$lib/i18n/format";
+import { formatInteger } from "#lib/i18n/format.ts";
+import { t } from "#lib/i18n/index.ts";
 import { booleanTokens } from "./apply";
 import type { FilterError } from "./types";
 

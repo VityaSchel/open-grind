@@ -29,8 +29,8 @@ vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 import {
 	listenForKeyboardMedia,
 	receiveKeyboardMedia,
-} from "$lib/platform/keyboard-media.svelte";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/keyboard-media.svelte.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const tauri = globalThis as { isTauri?: boolean };
 

@@ -3,10 +3,10 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { t } from "$lib/i18n";
-import { discardStagedMedia } from "$lib/platform/media-file";
-import { isAndroidPlatform } from "$lib/platform/os";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { t } from "#lib/i18n/index.ts";
+import { discardStagedMedia } from "#lib/platform/media-file.ts";
+import { isAndroidPlatform } from "#lib/platform/os.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const KEYBOARD_MEDIA_EVENT = "keyboard-media";
 

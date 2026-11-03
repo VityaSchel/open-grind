@@ -1,5 +1,5 @@
-import { t } from "$lib/i18n";
-import { formatDate } from "$lib/i18n/format";
+import { formatDate } from "#lib/i18n/format.ts";
+import { t } from "#lib/i18n/index.ts";
 
 export function formatMediaDuration(seconds: number) {
 	const total =

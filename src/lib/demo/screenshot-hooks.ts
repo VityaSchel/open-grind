@@ -1,6 +1,6 @@
-import { showErrorToast } from "$lib/api/error-toast";
-import { setLocale, t } from "$lib/i18n";
-import { toastPresenter } from "$lib/updates/toast-presenter";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { setLocale, t } from "#lib/i18n/index.ts";
+import { toastPresenter } from "#lib/updates/toast-presenter.ts";
 import { matchSourceLayout, recordSourceLayout } from "./screenshot-layout";
 import { scanView } from "./screenshot-scan";
 import { type ScreenshotHooks, screenshotScene } from "./screenshot-scene";

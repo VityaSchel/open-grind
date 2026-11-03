@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { announceSafeAreaChange } from "$lib/util/safe-area";
+import { announceSafeAreaChange } from "#lib/util/safe-area.ts";
 import { type AlbumSlide, openAlbumLightbox } from "./album-lightbox";
 
 const controllers: AbortController[] = [];

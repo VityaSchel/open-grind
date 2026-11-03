@@ -10,18 +10,20 @@ const { readMock, writeMock, showErrorToastMock } = vi.hoisted(() => ({
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
-import { setPreferences } from "$lib/app-data/preferences.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import type { BackdropBlurQuality } from "$lib/blur/quality";
+import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import type { BackdropBlurQuality } from "#lib/blur/quality.ts";
 import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
 
 function slider() {

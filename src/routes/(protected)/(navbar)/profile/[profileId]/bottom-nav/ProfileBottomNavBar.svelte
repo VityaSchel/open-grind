@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t } from "$lib/i18n";
-	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
-	import type { TapType } from "$lib/model/interest/taps";
+	import { t } from "#lib/i18n/index.ts";
+	import { bottomChrome } from "#lib/util/screen-chrome.svelte.ts";
+	import type { TapType } from "#lib/model/interest/taps.ts";
 	import OpenConversationButton from "./OpenConversationButton.svelte";
 	import TapProfileButton from "./TapProfileButton.svelte";
 

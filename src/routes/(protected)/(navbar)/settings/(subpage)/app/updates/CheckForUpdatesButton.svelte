@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as Item from "$lib/components/ui/item";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { t } from "$lib/i18n";
-	import { checkForUpdatesNow } from "$lib/updates/update-checks";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { checkForUpdatesNow } from "#lib/updates/update-checks.ts";
 
 	let {
 		selfManaged,

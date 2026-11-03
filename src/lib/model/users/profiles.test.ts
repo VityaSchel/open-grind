@@ -19,7 +19,7 @@ import {
 	tribes,
 	UnsettableHealthPractice,
 	vaccines,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 
 const unknownToUs = 9_999;
 

@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { t } from "$lib/i18n";
-	import { mediaHashPublicSchema } from "$lib/model/media";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { mediaHashPublicSchema } from "#lib/model/media.ts";
 	import {
 		draftFromMessage,
 		type ProfilePhotoReplyMessage,
-	} from "$lib/model/messaging/messages";
-	import { profileMediaUrl } from "$lib/util/media";
-	import { openLightbox } from "$lib/util/photoswipe";
-	import { applyProfilePhotoReply } from "$lib/util/photoswipe/profile-photo-reply";
+	} from "#lib/model/messaging/messages.ts";
+	import { profileMediaUrl } from "#lib/util/media.ts";
+	import { openLightbox } from "#lib/util/photoswipe/index.ts";
+	import { applyProfilePhotoReply } from "#lib/util/photoswipe/profile-photo-reply.ts";
 	import { getConversationState } from "../../conversation-state.svelte";
 	import MessageBubble from "./MessageBubble.svelte";
 	import MessageQuote from "./MessageQuote.svelte";

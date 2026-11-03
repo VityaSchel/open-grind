@@ -3,19 +3,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { openExternalLink, currentPlatform } = vi.hoisted(() => ({
 	openExternalLink: vi.fn(),
-	currentPlatform: vi.fn<typeof import("$lib/platform/os").currentPlatform>(
-		() => "android",
-	),
+	currentPlatform: vi.fn<
+		typeof import("#lib/platform/os.ts").currentPlatform
+	>(() => "android"),
 }));
-vi.mock("$lib/platform/link-opener", () => ({ openExternalLink }));
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink }));
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	currentPlatform,
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import Message from "./Message.svelte";
 
 const GEO_URL = "geo:51.507456,-0.127812?q=51.507456,-0.127812";

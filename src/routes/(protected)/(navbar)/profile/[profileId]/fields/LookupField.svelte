@@ -2,7 +2,7 @@
 	import type { IconWeight } from "phosphor-svelte";
 	import type { Component } from "svelte";
 
-	import { formatList } from "$lib/i18n/format";
+	import { formatList } from "#lib/i18n/format.ts";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

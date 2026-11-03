@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, httpStatusOf } from "$lib/api/api-error";
-import { uploadAlbumContent } from "$lib/api/messaging/albums";
-import type { MediaFileInspection } from "$lib/platform/media-file";
+import { ApiError, httpStatusOf } from "#lib/api/api-error.ts";
+import { uploadAlbumContent } from "#lib/api/messaging/albums.ts";
+import type { MediaFileInspection } from "#lib/platform/media-file.ts";
 import { settlesSoon } from "./demo-test-helpers";
 import {
 	type NativeError,

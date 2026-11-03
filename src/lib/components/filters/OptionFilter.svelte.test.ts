@@ -3,9 +3,9 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { featureFlagsState } from "$lib/api/feature-flags-state.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { featureFlagsState } from "#lib/api/feature-flags-state.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { type OptionFilterDefinition, optionFilters } from "./option-filters";
 import OptionFilter from "./OptionFilter.svelte";
 

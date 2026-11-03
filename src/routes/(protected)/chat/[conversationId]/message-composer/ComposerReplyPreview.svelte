@@ -3,15 +3,15 @@
 	import XIcon from "phosphor-svelte/lib/XIcon";
 	import { expoOut } from "svelte/easing";
 
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		previewFromMessage,
 		quoteIsUserText,
 		quoteLabel,
-	} from "$lib/model/messaging/message-preview";
-	import { slide } from "$lib/util/reduced-motion";
-	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+	} from "#lib/model/messaging/message-preview.ts";
+	import { slide } from "#lib/util/reduced-motion.ts";
+	import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 
 	let {
 		message,

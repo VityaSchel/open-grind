@@ -4,12 +4,12 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import SignOutButton from "./SignOutButton.svelte";
 
 const { signOutMock } = vi.hoisted(() => ({ signOutMock: vi.fn() }));
 
-vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
+vi.mock("#lib/api/sign-out.ts", () => ({ signOut: signOutMock }));
 
 const continueButton = () => screen.getByRole("button", { name: "Continue" });
 const cancelButton = () => screen.getByRole("button", { name: "Cancel" });

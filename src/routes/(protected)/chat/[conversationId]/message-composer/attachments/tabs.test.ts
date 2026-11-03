@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { t } from "$lib/i18n";
+import { t } from "#lib/i18n/index.ts";
 import { selectionActionKeys, tabLabelKeys } from "./tabs";
 
 describe("selectionActionKeys", () => {

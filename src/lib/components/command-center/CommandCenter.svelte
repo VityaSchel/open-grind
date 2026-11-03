@@ -6,11 +6,11 @@
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 
-	import OpenProfileByIdCommand from "$lib/components/command-center/open-profile-by-id/OpenProfileByIdCommand.svelte";
-	import SetLocationByGeohashCommand from "$lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommand.svelte";
-	import * as Command from "$lib/components/ui/command";
-	import { t } from "$lib/i18n";
-	import { commandCenterKeybinding } from "$lib/platform/keybindings";
+	import OpenProfileByIdCommand from "#lib/components/command-center/open-profile-by-id/OpenProfileByIdCommand.svelte";
+	import SetLocationByGeohashCommand from "#lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommand.svelte";
+	import * as Command from "#lib/components/ui/command/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { commandCenterKeybinding } from "#lib/platform/keybindings.ts";
 	import {
 		commandCenterClose,
 		commandCenterState,

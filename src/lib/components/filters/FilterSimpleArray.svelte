@@ -1,6 +1,6 @@
 <script lang="ts" generics="T extends unknown">
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { t } from "$lib/i18n";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {

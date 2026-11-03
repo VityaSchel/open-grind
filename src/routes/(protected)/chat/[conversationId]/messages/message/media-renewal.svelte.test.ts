@@ -11,8 +11,10 @@ vi.mock("./media-renewal", () => ({ mediaRenewal: () => renewMock }));
 vi.mock("../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ profile: null }),
 }));
-vi.mock("$lib/platform/media-failure", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/media-failure")>()),
+vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/platform/media-failure.ts")
+	>()),
 	explainsMediaFailures: () => true,
 	mediaFailure: () =>
 		Promise.resolve({
@@ -24,7 +26,7 @@ vi.mock("$lib/platform/media-failure", async (importOriginal) => ({
 		}),
 }));
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import Message from "./Message.svelte";
 
 const URL =

@@ -1,5 +1,5 @@
-import { showErrorToast } from "$lib/api/error-toast";
-import { type MessageKeyWith, t } from "$lib/i18n";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { type MessageKeyWith, t } from "#lib/i18n/index.ts";
 
 export async function applyOptimisticBatch<T>({
 	items,

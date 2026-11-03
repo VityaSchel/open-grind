@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { t } from "$lib/i18n";
-	import { optionsFromMap } from "$lib/util/options";
+	import { t } from "#lib/i18n/index.ts";
+	import { optionsFromMap } from "#lib/util/options.ts";
 	import FilterSimpleArray from "./FilterSimpleArray.svelte";
 	import type { OptionFilterDefinition } from "./option-filters";
 

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const preferences = vi.hoisted(() => ({ units: "metric" }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
 }));
 

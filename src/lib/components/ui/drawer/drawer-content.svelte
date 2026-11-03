@@ -2,10 +2,10 @@
 	import { Drawer as DrawerPrimitive } from "vaul-svelte";
 	import type { ComponentProps } from "svelte";
 
-	import { stopOtherPointerOutWhilePressed } from "$lib/util/pressed-pointer";
-	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
-	import { cn } from "$lib/util/utils.js";
-	import type { WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { stopOtherPointerOutWhilePressed } from "#lib/util/pressed-pointer.ts";
+	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
+	import { cn } from "#lib/util/utils.ts";
+	import type { WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import DrawerOverlay from "./drawer-overlay.svelte";
 	import DrawerPortal from "./drawer-portal.svelte";
 

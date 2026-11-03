@@ -6,14 +6,14 @@
 		albumItemCountLabel,
 		albumMediaCounts,
 		readyAlbumMedia,
-	} from "$lib/components/album/album";
-	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
-	import type { AlbumContent } from "$lib/model/messaging/albums";
+	} from "#lib/components/album/album.ts";
+	import AlbumPreview from "#lib/components/album/AlbumPreview.svelte";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 	import type {
 		PendingUpload,
 		UploadLimits,

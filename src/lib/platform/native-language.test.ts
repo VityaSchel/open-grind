@@ -25,7 +25,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 	listen: () => Promise.resolve(() => {}),
 }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ ...preferences.stored }),
 	setPreferences: (values: Partial<LanguageSettings>) => {
 		if (!preferences.writable) {
@@ -36,8 +36,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	},
 }));
 
-vi.mock("$lib/i18n/catalog-files", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/i18n/catalog-files")>()),
+vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/i18n/catalog-files.ts")>()),
 	translationFiles: Object.fromEntries(
 		["de", "es-419", "fr", "zh-Hans"].map((locale) => [
 			`./locales/${locale}/common.json`,
@@ -83,7 +83,7 @@ function settle(): Promise<void> {
 
 async function load() {
 	vi.resetModules();
-	const { setLocale } = await import("$lib/i18n");
+	const { setLocale } = await import("#lib/i18n/index.ts");
 	const native = await import("./native-language");
 	const app = await import("./app-language");
 	return { setLocale, ...native, ...app };

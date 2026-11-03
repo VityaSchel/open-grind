@@ -4,7 +4,7 @@
 	import GlobeIcon from "phosphor-svelte/lib/GlobeIcon";
 	import MegaphoneIcon from "phosphor-svelte/lib/MegaphoneIcon";
 
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 	import Link from "./LinkItem.svelte";
 </script>
 

@@ -1,6 +1,6 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { type MessageKey, t } from "$lib/i18n";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 import { followLocaleWhileOpen } from "./follow-locale";
 
 const buttonTitleKeys = {

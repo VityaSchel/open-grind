@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { t } from "$lib/i18n";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		desktopEntryInstalled,
 		setDesktopEntryInstalled,
-	} from "$lib/platform/desktop-entry.svelte";
+	} from "#lib/platform/desktop-entry.svelte.ts";
 
 	let pending = $state<boolean | null>(null);
 	const value = $derived(pending ?? desktopEntryInstalled());

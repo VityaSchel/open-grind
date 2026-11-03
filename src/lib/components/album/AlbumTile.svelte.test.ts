@@ -6,15 +6,15 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
-} from "$lib/demo/mock/albums";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+} from "#lib/demo/mock/albums.ts";
 import {
 	bracketCounts,
 	restoreCountFormatter,
-} from "$lib/i18n/fixtures/count-formatter";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { untranslatableTexts } from "$lib/test/untranslatable";
-import type { MyAlbum } from "$lib/model/messaging/albums";
+} from "#lib/i18n/fixtures/count-formatter.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
+import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 import AlbumTile from "./AlbumTile.svelte";
 
 function demoAlbum(): MyAlbum {

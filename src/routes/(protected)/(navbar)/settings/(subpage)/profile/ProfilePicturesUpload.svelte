@@ -1,29 +1,29 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
 
-	import { httpStatusOf } from "$lib/api/api-error";
+	import { httpStatusOf } from "#lib/api/api-error.ts";
 	import {
 		deleteProfilePhotos,
 		getProfileUploadedPhotos,
 		uploadProfilePhoto,
-	} from "$lib/api/users/profiles";
-	import PreviousUploadsSheet from "$lib/components/media-sheet/PreviousUploadsSheet.svelte";
-	import AddTile from "$lib/components/shared/AddTile.svelte";
-	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
-	import { PROFILE_PHOTO_AWAITING_REVIEW } from "$lib/model/users/profiles";
-	import { discardStagedMedia } from "$lib/platform/media-file";
+	} from "#lib/api/users/profiles.ts";
+	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
+	import AddTile from "#lib/components/shared/AddTile.svelte";
+	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { PROFILE_PHOTO_AWAITING_REVIEW } from "#lib/model/users/profiles.ts";
+	import { discardStagedMedia } from "#lib/platform/media-file.ts";
 	import {
 		receiveMedia,
 		screenMedia,
-	} from "$lib/platform/media-intake.svelte";
+	} from "#lib/platform/media-intake.svelte.ts";
 	import {
 		type PickedMedia,
 		pickMultipleMedia,
-	} from "$lib/platform/media-picker";
-	import { profileMediaUrl } from "$lib/util/media";
-	import { moveItem } from "$lib/util/reorder";
+	} from "#lib/platform/media-picker.ts";
+	import { profileMediaUrl } from "#lib/util/media.ts";
+	import { moveItem } from "#lib/util/reorder.ts";
 	import { maxProfilePhotos } from "./options";
 
 	type PreviousUpload = { mediaHash: string; state: number };

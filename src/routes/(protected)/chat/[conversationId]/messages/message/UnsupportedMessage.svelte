@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Rich from "$lib/i18n/Rich.svelte";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import { messageRef } from "./context";
 
 	let { type }: { type: string } = $props();

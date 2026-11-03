@@ -4,9 +4,9 @@
 	import SmileyWinkIcon from "phosphor-svelte/lib/SmileyWinkIcon";
 	import type z from "zod";
 
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { t } from "$lib/i18n";
-	import type { filterPhotosSchema } from "$lib/model/browse/grid/filters";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import type { filterPhotosSchema } from "#lib/model/browse/grid/filters.ts";
 	import FilterBoolean from "./FilterBoolean.svelte";
 
 	let {

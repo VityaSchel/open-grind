@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { t } from "$lib/i18n";
-	import { receiveMedia } from "$lib/platform/media-intake.svelte";
-	import type { PickedMedia } from "$lib/platform/media-picker";
+	import { getMyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { receiveMedia } from "#lib/platform/media-intake.svelte.ts";
+	import type { PickedMedia } from "#lib/platform/media-picker.ts";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 	import AlbumMediaEmpty from "../album-editor/AlbumMediaEmpty.svelte";
 	import AlbumNameField from "../album-editor/AlbumNameField.svelte";

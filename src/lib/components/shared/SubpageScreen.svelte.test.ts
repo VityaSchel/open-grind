@@ -13,8 +13,8 @@ vi.mock("$app/navigation", () => ({
 	beforeNavigate: vi.fn(),
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import SubpageScreen from "./SubpageScreen.svelte";
 
 const routes = {

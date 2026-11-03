@@ -2,9 +2,9 @@
 	import MicrophoneIcon from "phosphor-svelte/lib/MicrophoneIcon";
 	import { toast } from "svelte-sonner";
 
-	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
-	import PrimaryComposerButton from "$lib/components/shared/PrimaryComposerButton.svelte";
-	import { t } from "$lib/i18n";
+	import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
+	import PrimaryComposerButton from "#lib/components/shared/PrimaryComposerButton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	const { disabled } = $derived(getMessageComposerContext()());

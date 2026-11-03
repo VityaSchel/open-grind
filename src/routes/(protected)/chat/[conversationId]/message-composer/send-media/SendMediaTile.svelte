@@ -18,11 +18,11 @@
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import VideoCameraIcon from "phosphor-svelte/lib/VideoCameraIcon";
 
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { t } from "$lib/i18n";
-	import { localFileOf } from "$lib/platform/media-file";
-	import { formatMediaDuration } from "$lib/util/format-time";
-	import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { localFileOf } from "#lib/platform/media-file.ts";
+	import { formatMediaDuration } from "#lib/util/format-time.ts";
+	import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
 	import type { OfferedMedia } from "./send-media-offer.svelte";
 
 	let { item, single }: { item: OfferedMedia; single: boolean } = $props();
