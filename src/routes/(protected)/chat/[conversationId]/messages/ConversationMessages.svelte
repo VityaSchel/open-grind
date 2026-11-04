@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { tick, untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
+	import type { Attachment } from "svelte/attachments";
 
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import { edgeGap } from "#lib/components/feedback/refresh/scroll-geometry.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { keyboardDragDismiss } from "#lib/platform/keyboard-drag-dismiss.ts";
+	import { answerStatusBarTaps } from "#lib/platform/status-bar-tap.ts";
 	import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
+	import {
+		followInsertionsAbove,
+		jumpThenGlideToTop,
+	} from "#lib/util/scroll.ts";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ConversationError from "./ConversationError.svelte";
 	import ConversationPaginationSentinel from "./ConversationPaginationSentinel.svelte";
@@ -83,6 +89,25 @@
 			scrollingToRestTimer = null;
 		}
 	}
+
+	function scrollToOldestLoaded(scroller: HTMLElement): void {
+		endScrollingToRest();
+		const oldest = scroller.querySelector<HTMLElement>(
+			'[data-slot="message"]',
+		);
+		jumpThenGlideToTop({
+			element: scroller,
+			landing: oldest
+				? followInsertionsAbove({ scroller, anchor: oldest })
+				: undefined,
+		});
+	}
+
+	const scrollsToOldestOnStatusBarTap: Attachment<HTMLElement> = (scroller) =>
+		answerStatusBarTaps({
+			scroller,
+			scrollToTop: () => scrollToOldestLoaded(scroller),
+		});
 
 	function onContainerScroll() {
 		if (!readerScrolled()) return;
@@ -264,6 +289,7 @@
 		onscroll={onContainerScroll}
 		onscrollend={onContainerScrollEnd}
 		{@attach keyboardDragDismiss}
+		{@attach scrollsToOldestOnStatusBarTap}
 	>
 		{#if conversationState.loading}
 			{#key conversationState.conversationId}

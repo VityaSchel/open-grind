@@ -13,7 +13,12 @@ vi.mock("svelte/motion", () => ({
 }));
 
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
-import { glidingToTop, jumpThenGlideToTop, stopGlidingToTop } from "./scroll";
+import {
+	followInsertionsAbove,
+	glidingToTop,
+	jumpThenGlideToTop,
+	stopGlidingToTop,
+} from "./scroll";
 
 const SCREEN_HEIGHT = 800;
 const GLIDE_MS = 400;
@@ -42,6 +47,36 @@ afterEach(() => {
 	resetPlatform();
 	document.body.replaceChildren();
 	motion.reduced = false;
+	vi.restoreAllMocks();
+});
+
+describe("followInsertionsAbove", () => {
+	it("reads how far content inserted above the anchor pushed it down", () => {
+		const scroller = scrolledList(0);
+		const anchor = document.createElement("p");
+		scroller.append(anchor);
+		let anchorTop = 140;
+		vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue(
+			new DOMRect(0, 62, 402, 778),
+		);
+		vi.spyOn(anchor, "getBoundingClientRect").mockImplementation(
+			() => new DOMRect(0, anchorTop, 402, 40),
+		);
+
+		const landing = followInsertionsAbove({ scroller, anchor });
+		expect(landing()).toBe(0);
+
+		anchorTop += 300;
+		expect(landing()).toBe(300);
+		scroller.scrollTop = 300;
+		anchorTop -= 300;
+		expect(landing(), "holding the anchor in view changes nothing").toBe(
+			300,
+		);
+
+		anchor.remove();
+		expect(landing(), "a removed anchor keeps the last landing").toBe(300);
+	});
 });
 
 describe("jumpThenGlideToTop", () => {

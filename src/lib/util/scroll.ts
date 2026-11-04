@@ -43,6 +43,26 @@ function glideScrollTop({
 	return () => cancelAnimationFrame(frame);
 }
 
+export function followInsertionsAbove({
+	scroller,
+	anchor,
+}: {
+	scroller: HTMLElement;
+	anchor: HTMLElement;
+}): () => number {
+	const contentOffset = () =>
+		anchor.getBoundingClientRect().top -
+		scroller.getBoundingClientRect().top +
+		scroller.scrollTop;
+	const startOffset = contentOffset();
+	let inserted = 0;
+	return () => {
+		if (anchor.isConnected)
+			inserted = Math.max(0, contentOffset() - startOffset);
+		return inserted;
+	};
+}
+
 export function glidingToTop(element: HTMLElement): boolean {
 	return glidesToTop.has(element);
 }
