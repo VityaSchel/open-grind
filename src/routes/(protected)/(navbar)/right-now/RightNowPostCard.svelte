@@ -104,7 +104,7 @@
 						aria-label="Edit your post"
 						onclick={onedit}
 					>
-						<PencilIcon class="size-4" />
+						<PencilIcon weight="fill" class="size-4" />
 						Edit
 					</Button>
 				{/if}
@@ -115,8 +115,8 @@
 					href="/chat/{conversationId}"
 					aria-label={messageLabel}
 				>
-					<ChatIcon class="size-4" />
-					Message...
+					<ChatIcon weight="fill" class="size-4" />
+					Message
 				</Button>
 			{/if}
 		</div>

@@ -139,7 +139,7 @@ describe("a Right Now post card", () => {
 		});
 		const message = screen.getByRole("link", { name: "Message Simon" });
 		expect(message.getAttribute("href")).toBe(`/chat/${conversationId}`);
-		expect(message.textContent.trim()).toBe("Message...");
+		expect(message.textContent.trim()).toBe("Message");
 	});
 
 	it("offers Edit instead of Message on our own post", async () => {
