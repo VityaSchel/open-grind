@@ -9,6 +9,7 @@ import type { Scene } from ".";
 import { openAttachments } from "./chat-composer";
 import { ALERT, changeScene, chooseGeneratedMedia } from "./drive";
 import { CONNECT_FAILED } from "./faults";
+import { openContextMenu, press } from "./press";
 import { addingToast } from "./toast";
 
 const UPLOAD_LABEL = "Upload photos or videos";
@@ -24,18 +25,20 @@ function photoTile(page: Page): Locator {
 }
 
 async function openTileMenu(tile: Locator): Promise<void> {
-	await tile.click({ button: "right" });
+	await openContextMenu({
+		target: tile,
+		ready: tile.page().getByRole("menu"),
+	});
 	await tile.page().locator(LIFTED_MEDIA_TILE).waitFor();
-	await tile.page().getByRole("menu").waitFor();
 }
 
 async function deletePermanently(page: Page): Promise<void> {
-	await page.getByRole("menuitem", { name: "Delete permanently" }).click();
+	await press(page.getByRole("menuitem", { name: "Delete permanently" }));
 	await page.locator(ALERT).waitFor();
 }
 
 async function cancelDelete(page: Page): Promise<void> {
-	await page.locator(ALERT).getByRole("button", { name: "Cancel" }).click();
+	await press(page.locator(ALERT).getByRole("button", { name: "Cancel" }));
 	await page.locator(ALERT).waitFor({ state: "detached" });
 }
 
@@ -43,7 +46,7 @@ function confirmDelete(page: Page): Promise<void> {
 	return addingToast({
 		page,
 		action: () =>
-			page.locator(ALERT).getByRole("button", { name: "Delete" }).click(),
+			press(page.locator(ALERT).getByRole("button", { name: "Delete" })),
 	});
 }
 
@@ -60,10 +63,11 @@ export const drawerTileMenus: Scene = {
 					photos: 0,
 					videos: 1,
 					open: () =>
-						page
-							.getByRole("button", { name: UPLOAD_LABEL })
-							.first()
-							.click(),
+						press(
+							page
+								.getByRole("button", { name: UPLOAD_LABEL })
+								.first(),
+						),
 				});
 				await videoTile(page).waitFor();
 			},

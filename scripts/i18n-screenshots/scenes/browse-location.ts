@@ -9,6 +9,7 @@ import type { Scene } from ".";
 import { LOCATION_TITLE } from "./browse";
 import { GRID_READY, showGrid } from "./browse-states";
 import { STORAGE_FULL } from "./faults";
+import { press } from "./press";
 import { addingToast, holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -21,7 +22,7 @@ function useCurrentLocation(page: Page) {
 }
 
 async function locateFailing(page: Page): Promise<void> {
-	await addingToast({ page, action: () => useCurrentLocation(page).click() });
+	await addingToast({ page, action: () => press(useCurrentLocation(page)) });
 	await useCurrentLocation(page).and(page.locator(":enabled")).waitFor();
 }
 
@@ -83,7 +84,7 @@ export const autoLocationFailure: Scene = {
 					ready: page.locator(LOCATION_TITLE),
 				});
 				await setGeolocation(page, { fail: false });
-				await useCurrentLocation(page).click();
+				await press(useCurrentLocation(page));
 				await page.locator(GRID_READY).waitFor();
 				await setGeolocation(page, { fail: true });
 				await advanceClock({ page, ms: INTERACTIVE_FIX_EXPIRED_MS });
@@ -106,7 +107,7 @@ export const locationChange: Scene = {
 			screen: "browse/grid",
 			drive: async (page) => {
 				await showGrid(page);
-				await page.locator(CHANGE_LOCATION).click();
+				await press(page.locator(CHANGE_LOCATION));
 				await page.locator(SELECTED_LOCATION).waitFor();
 			},
 		},

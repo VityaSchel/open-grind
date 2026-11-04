@@ -12,6 +12,7 @@ import type { Scene } from ".";
 import { revealRefreshButton } from "./chat-drive";
 import { changeScene } from "./drive";
 import { CONNECT_FAILED } from "./faults";
+import { press } from "./press";
 import { addingToast, toastsShown } from "./toast";
 import { visit } from "./visit";
 
@@ -40,14 +41,14 @@ async function refreshPaneThatFails({
 	pane: string;
 	scroller: string;
 }): Promise<void> {
-	await page.getByRole("link", { name: tab }).click();
+	await press(page.getByRole("link", { name: tab }));
 	const refresh = await revealRefreshButton({
 		page,
 		scroller,
 		towardTop: true,
 		within: pane,
 	});
-	await addingToast({ page, action: () => refresh.click() });
+	await addingToast({ page, action: () => press(refresh) });
 }
 
 function preview({
@@ -178,7 +179,7 @@ export const untrackedViews: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page.getByRole("button", { name: "Turn on" }).click(),
+						press(page.getByRole("button", { name: "Turn on" })),
 				});
 			},
 		},
@@ -198,7 +199,7 @@ export const interestRefreshFailures: Scene = {
 					path: "/interest/taps",
 					ready: page.locator(TAPS_PANE).locator(PROFILE_LINK),
 				});
-				await page.getByRole("link", { name: "Views" }).click();
+				await press(page.getByRole("link", { name: "Views" }));
 				await page
 					.locator(VIEWS_PANE)
 					.locator(PROFILE_LINK)

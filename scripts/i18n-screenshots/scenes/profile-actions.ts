@@ -11,6 +11,7 @@ import {
 import { PREVIEWS_INBOX, QUOTES_ID } from "./chat-fixtures";
 import { changeScene } from "./drive";
 import { failClipboard, failing } from "./faults";
+import { press } from "./press";
 import {
 	chooseProfileAction,
 	FAVORITE_ID,
@@ -30,7 +31,7 @@ const NOTE = `/v1/favorites/notes/${FAVORITE_ID}`;
 
 async function openNote(page: Page): Promise<void> {
 	await openProfile({ page, profileId: FAVORITE_ID });
-	await page.getByRole("button", { name: "Add note" }).click();
+	await press(page.getByRole("button", { name: "Add note" }));
 	await page.locator(DIALOG).waitFor();
 }
 
@@ -42,7 +43,7 @@ function saveNote(page: Page): Promise<void> {
 	return addingToast({
 		page,
 		action: () =>
-			page.locator(DIALOG).getByRole("button", { name: "Save" }).click(),
+			press(page.locator(DIALOG).getByRole("button", { name: "Save" })),
 	});
 }
 
@@ -59,10 +60,9 @@ async function openReport(page: Page): Promise<void> {
 }
 
 function submitReport(page: Page): Promise<void> {
-	return page
-		.locator(DIALOG)
-		.getByRole("button", { name: "Submit report" })
-		.click();
+	return press(
+		page.locator(DIALOG).getByRole("button", { name: "Submit report" }),
+	);
 }
 
 function favoriteToggleFailure({
@@ -83,11 +83,7 @@ function favoriteToggleFailure({
 			await addingToast({
 				page,
 				action: () =>
-					inActivePane({
-						page,
-						name: toggle,
-						role: "switch",
-					}).click(),
+					press(inActivePane({ page, name: toggle, role: "switch" })),
 			});
 		},
 	};
@@ -136,7 +132,7 @@ export const favoriteNote: Scene = {
 			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await page.getByRole("button", { name: NOTE_TEXT }).click();
+				await press(page.getByRole("button", { name: NOTE_TEXT }));
 				await noteField(page).fill("");
 				await savedNote(page);
 			},
@@ -171,12 +167,12 @@ export const reportFlow: Scene = {
 			drive: async (page) => {
 				await openReport(page);
 				const dialog = page.locator(DIALOG);
-				await dialog
-					.getByRole("radio", { name: "Impersonation" })
-					.click();
-				await dialog
-					.getByRole("button", { name: "Profile Photo" })
-					.click();
+				await press(
+					dialog.getByRole("radio", { name: "Impersonation" }),
+				);
+				await press(
+					dialog.getByRole("button", { name: "Profile Photo" }),
+				);
 				await dialog
 					.getByRole("textbox", { name: "Details (optional)" })
 					.waitFor();
@@ -202,10 +198,13 @@ export const reportInPersonIncident: Scene = {
 			scroller: `${DIALOG} [data-slot="drawer-body"]`,
 			drive: async (page) => {
 				await openReport(page);
-				await page
-					.locator(DIALOG)
-					.getByRole("radio", { name: "Serious In-Person Incident" })
-					.click();
+				await press(
+					page
+						.locator(DIALOG)
+						.getByRole("radio", {
+							name: "Serious In-Person Incident",
+						}),
+				);
 				await page
 					.locator('[data-slot="report-incident-note"]')
 					.waitFor();
@@ -224,10 +223,9 @@ export const reportFailure: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openReport(page);
-				await page
-					.locator(DIALOG)
-					.getByRole("radio", { name: "Spam" })
-					.click();
+				await press(
+					page.locator(DIALOG).getByRole("radio", { name: "Spam" }),
+				);
 				await addingToast({ page, action: () => submitReport(page) });
 			},
 		},
@@ -302,7 +300,7 @@ export const profileRefreshFailure: Scene = {
 					scroller: PROFILE_SCROLLER,
 					towardTop: true,
 				});
-				await addingToast({ page, action: () => refresh.click() });
+				await addingToast({ page, action: () => press(refresh) });
 			},
 		},
 	],

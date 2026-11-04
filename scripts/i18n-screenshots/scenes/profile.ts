@@ -1,5 +1,6 @@
 import { ACTIVE_PANE } from "../../../e2e/support/profile-pager";
 import type { Scene } from ".";
+import { press } from "./press";
 import { visit } from "./visit";
 
 const FEATURED_PROFILE = "/profile/100001";
@@ -23,10 +24,11 @@ export const profile: Scene = {
 			id: "profile/menu",
 			screen: "profile",
 			drive: async (page) => {
-				await page
-					.locator(ACTIVE_PANE)
-					.getByRole("button", { name: "Profile menu" })
-					.click();
+				await press(
+					page
+						.locator(ACTIVE_PANE)
+						.getByRole("button", { name: "Profile menu" }),
+				);
 				await page.getByRole("menu").waitFor();
 			},
 		},
@@ -34,9 +36,9 @@ export const profile: Scene = {
 			id: "profile/report",
 			screen: "profile",
 			drive: async (page) => {
-				await page
-					.getByRole("menuitem", { name: "Report user" })
-					.click();
+				await press(
+					page.getByRole("menuitem", { name: "Report user" }),
+				);
 				await page.getByRole("dialog").waitFor();
 			},
 		},

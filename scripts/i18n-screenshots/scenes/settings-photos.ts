@@ -7,6 +7,7 @@ import { sheet, sheetTiles } from "./album-drive";
 import { failRandomUuids } from "./chat-drive";
 import { changeScene, chooseGeneratedMedia } from "./drive";
 import { failing } from "./faults";
+import { press } from "./press";
 import { openProfileEdit } from "./settings-profile";
 import { SHOWN_TOAST, toastsShown } from "./toast";
 
@@ -32,7 +33,7 @@ const DAILY_LIMIT = 403;
 const PAST_ROOM = 5;
 
 async function openPhotoSheet(page: Page): Promise<void> {
-	await page.getByRole("button", { name: "Add photos" }).click();
+	await press(page.getByRole("button", { name: "Add photos" }));
 	await sheet(page).getByText("Previous Uploads").first().waitFor();
 }
 
@@ -48,9 +49,9 @@ function uploadPhotos({
 		photos,
 		open: async () => {
 			await openPhotoSheet(page);
-			await sheet(page)
-				.getByRole("button", { name: "Upload photos" })
-				.click();
+			await press(
+				sheet(page).getByRole("button", { name: "Upload photos" }),
+			);
 		},
 	});
 }
@@ -94,7 +95,7 @@ export const previousProfilePhotos: Scene = {
 			drive: async (page) => {
 				await openProfileEdit(page);
 				await openPhotoSheet(page);
-				await sheetTiles(page).first().click();
+				await press(sheetTiles(page).first());
 				await page
 					.getByRole("button", { name: "Add to profile" })
 					.waitFor();
@@ -112,11 +113,11 @@ export const profilePhotoSlots: Scene = {
 			drive: async (page) => {
 				showsLoading(page);
 				await openProfileEdit(page);
-				await page
-					.getByRole("button", {
+				await press(
+					page.getByRole("button", {
 						name: "Remove profile photo in slot 1",
-					})
-					.click();
+					}),
+				);
 				await uploadPhotos({ page, photos: 1 });
 				await page
 					.getByRole("img", { name: /awaiting review/ })

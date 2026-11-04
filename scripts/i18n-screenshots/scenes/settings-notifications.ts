@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import type { NativeOverrides } from "../stubs";
 import type { Scene } from ".";
 import { ALERT } from "./drive";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -40,7 +41,7 @@ async function enableNotifications({
 		path: NOTIFICATIONS_PATH,
 		ready: page.getByRole("switch", { name: unlocks }),
 	});
-	await notificationsSwitch(page).click();
+	await press(notificationsSwitch(page));
 	await page
 		.getByRole("switch", { name: unlocks, disabled: false })
 		.waitFor();
@@ -67,7 +68,7 @@ export const androidNotifications: Scene = {
 			id: "settings/notifications/addon",
 			screen: "settings/notifications",
 			drive: async (page) => {
-				await page.getByRole("radio", { name: "Fast Mode" }).click();
+				await press(page.getByRole("radio", { name: "Fast Mode" }));
 				await page.locator(ALERT).waitFor();
 			},
 		},
@@ -92,9 +93,9 @@ export const notificationCategoryFailure: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.getByRole("switch", { name: "New messages" })
-							.click(),
+						press(
+							page.getByRole("switch", { name: "New messages" }),
+						),
 				});
 			},
 		},

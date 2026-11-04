@@ -5,6 +5,7 @@ import type { Scene, SceneView } from ".";
 import { LOCATION_TITLE } from "./browse";
 import { showGrid } from "./browse-states";
 import { failClipboard } from "./faults";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -74,7 +75,7 @@ async function offerCopy(page: Page): Promise<void> {
 function copyOffered(page: Page): Promise<void> {
 	return addingToast({
 		page,
-		action: () => page.locator(COPY_OPTION).click(),
+		action: () => press(page.locator(COPY_OPTION)),
 	});
 }
 

@@ -32,6 +32,7 @@ import {
 } from "./chat-fixtures";
 import { changeScene } from "./drive";
 import { failChunks, failing, LIGHTBOX_CHUNK_TEXT } from "./faults";
+import { press } from "./press";
 import { addingToast, holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -54,7 +55,7 @@ async function showWholeThread({
 
 async function sendText(page: Page): Promise<void> {
 	await composerInput(page).fill("Lorem ipsum dolor");
-	await page.getByRole("button", { name: "Send message" }).click();
+	await press(page.getByRole("button", { name: "Send message" }));
 }
 
 export const conversationThreads: Scene = {
@@ -222,7 +223,7 @@ export const expiringMediaFailures: Scene = {
 				for (const media of [EXPIRING_IMAGE, EXPIRING_VIDEO]) {
 					await addingToast({
 						page,
-						action: () => page.locator(media).first().click(),
+						action: () => press(page.locator(media).first()),
 					});
 				}
 			},
@@ -244,7 +245,7 @@ export const expiringMediaOpenFailures: Scene = {
 				for (const media of [EXPIRING_IMAGE, EXPIRING_VIDEO]) {
 					await addingToast({
 						page,
-						action: () => page.locator(media).first().click(),
+						action: () => press(page.locator(media).first()),
 					});
 				}
 			},
@@ -312,7 +313,7 @@ export const conversationRefreshFailures: Scene = {
 							scroller: MESSAGES_SCROLLER,
 							towardTop: false,
 						});
-						await refresh.click();
+						await press(refresh);
 					},
 				});
 			},
@@ -373,7 +374,7 @@ export const markReadFailure: Scene = {
 				await addingToast({
 					page,
 					action: async () => {
-						await inboxRow({ page, withId: PHOTO_ID }).click();
+						await press(inboxRow({ page, withId: PHOTO_ID }));
 						await page.locator(MESSAGE_ROW).first().waitFor();
 					},
 				});

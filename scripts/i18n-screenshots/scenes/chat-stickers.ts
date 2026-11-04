@@ -28,6 +28,7 @@ import { openConversation } from "./chat-drive";
 import { GIF_ID, GIF_INBOX } from "./chat-fixtures";
 import { ALERT } from "./drive";
 import { CONNECT_FAILED, STORAGE_FULL } from "./faults";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -51,15 +52,16 @@ async function openStickers(page: Page): Promise<void> {
 		path: TEXT_CONVERSATION,
 		ready: page.locator(MESSAGE_ROW),
 	});
-	await page.getByRole("button", { name: STICKERS_TRIGGER }).click();
+	await press(page.getByRole("button", { name: STICKERS_TRIGGER }));
 	await page.locator(DRAWER).waitFor();
 }
 
 async function enableGiphy(page: Page): Promise<void> {
-	await page
-		.locator(GIPHY_CONSENT_NOTE)
-		.getByRole("button", { name: "Continue" })
-		.click();
+	await press(
+		page
+			.locator(GIPHY_CONSENT_NOTE)
+			.getByRole("button", { name: "Continue" }),
+	);
 }
 
 async function showTrending(page: Page): Promise<void> {
@@ -111,7 +113,7 @@ export const stickers: Scene = {
 			id: "chat/stickers/gif-picked",
 			screen: CONVERSATION_SCREEN,
 			drive: async (page) => {
-				await gifTiles(page).first().click();
+				await press(gifTiles(page).first());
 				await page.locator(DRAWER).locator(SEND_STICKER).waitFor();
 			},
 		},
@@ -137,7 +139,7 @@ export const stickers: Scene = {
 			id: "chat/stickers/gaymoji",
 			screen: CONVERSATION_SCREEN,
 			drive: async (page) => {
-				await stickersTab(page, { name: "Gaymoji" }).click();
+				await press(stickersTab(page, { name: "Gaymoji" }));
 				await gaymojiSectionStrip(page).waitFor();
 				await gaymojiTiles(page).first().waitFor();
 			},
@@ -146,7 +148,7 @@ export const stickers: Scene = {
 			id: "chat/stickers/gaymoji-picked",
 			screen: CONVERSATION_SCREEN,
 			drive: async (page) => {
-				await gaymojiTiles(page).first().click();
+				await press(gaymojiTiles(page).first());
 				await page.locator(DRAWER).locator(SEND_STICKER).waitFor();
 			},
 		},
@@ -179,7 +181,7 @@ export const stickerLoadFailures: Scene = {
 			id: "chat/stickers/gaymoji-failed",
 			screen: CONVERSATION_SCREEN,
 			drive: async (page) => {
-				await stickersTab(page, { name: "Gaymoji" }).click();
+				await press(stickersTab(page, { name: "Gaymoji" }));
 				await page
 					.locator(DRAWER)
 					.getByText("Couldn’t load Gaymoji")
@@ -245,7 +247,7 @@ export const giphyConsentInChat: Scene = {
 			id: "chat/conversation/gif-consent",
 			screen: GIF_THREAD_SCREEN,
 			drive: async (page) => {
-				await receivedGif(page).getByRole("button").click();
+				await press(receivedGif(page).getByRole("button"));
 				await page.locator(ALERT).waitFor();
 			},
 		},
@@ -261,10 +263,11 @@ export const giphyConsentInChat: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.locator(ALERT)
-							.getByRole("button", { name: "Continue" })
-							.click(),
+						press(
+							page
+								.locator(ALERT)
+								.getByRole("button", { name: "Continue" }),
+						),
 				});
 			},
 		},

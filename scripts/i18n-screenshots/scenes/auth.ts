@@ -6,6 +6,7 @@ import type {
 } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene, SceneView } from ".";
 import { changeScene } from "./drive";
+import { press } from "./press";
 import { fillSignIn } from "./session";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
@@ -275,9 +276,9 @@ export const linuxOnboarding: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.getByRole("button", { name: "Get started" })
-							.click(),
+						press(
+							page.getByRole("button", { name: "Get started" }),
+						),
 				});
 				await page.getByText("Couldn’t finish setup").waitFor();
 			},

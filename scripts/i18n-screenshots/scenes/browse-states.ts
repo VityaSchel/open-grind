@@ -10,6 +10,7 @@ import { chooseNeutralLocation, GRID_SCROLLER } from "./browse";
 import { revealRefreshButton, scrollToBottom } from "./chat-drive";
 import { changeScene } from "./drive";
 import { CONNECT_FAILED, STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
+import { press } from "./press";
 import { fillSignIn } from "./session";
 import { addingToast, toastsShown } from "./toast";
 import { visit } from "./visit";
@@ -142,10 +143,11 @@ export const gridRefreshFailures: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.locator("main")
-							.getByRole("button", { name: "Online" })
-							.click(),
+						press(
+							page
+								.locator("main")
+								.getByRole("button", { name: "Online" }),
+						),
 				});
 				await profileTile(page).first().waitFor();
 				const cascadeFails: RestFault = {
@@ -165,7 +167,7 @@ export const gridRefreshFailures: Scene = {
 							scroller: GRID_SCROLLER,
 							towardTop: true,
 						});
-						await refresh.click();
+						await press(refresh);
 					},
 				});
 			},
@@ -207,7 +209,7 @@ export const gridPreferencesUnreadable: Scene = {
 			drive: async (page) => {
 				await fillSignIn(page);
 				await changeScene({ page, scene: { signedOut: false } });
-				await page.locator("form button[type=submit]").click();
+				await press(page.locator("form button[type=submit]"));
 				await page.getByRole("button", { name: "Try again" }).waitFor();
 				await toastsShown({ page, count: 2 });
 			},

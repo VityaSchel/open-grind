@@ -1,5 +1,6 @@
 import { ALBUM_TILE } from "../../../e2e/support/drawer";
 import type { Scene } from ".";
+import { press } from "./press";
 import { visit } from "./visit";
 
 const PHOTO_ONLY_ALBUM = `a${ALBUM_TILE}[href="/settings/albums/900"]`;
@@ -21,7 +22,7 @@ export const albums: Scene = {
 		{
 			id: "settings/albums/album",
 			drive: async (page) => {
-				await page.locator(PHOTO_ONLY_ALBUM).click();
+				await press(page.locator(PHOTO_ONLY_ALBUM));
 				await page.locator(MEDIA_SLOT).first().waitFor();
 				await page.locator(STACK_DIM).waitFor({ state: "detached" });
 			},

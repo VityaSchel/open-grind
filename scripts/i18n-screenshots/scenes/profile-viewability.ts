@@ -4,6 +4,7 @@ import type { RestFault } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene } from ".";
 import { changeScene } from "./drive";
 import { failing } from "./faults";
+import { press } from "./press";
 import {
 	BLOCKED_BY_US_ID,
 	chooseProfileAction,
@@ -27,7 +28,7 @@ function retryFailing({
 		page,
 		action: async () => {
 			await changeScene({ page, scene: { restFaults: [fault] } });
-			await page.getByRole("button", { name: button }).click();
+			await press(page.getByRole("button", { name: button }));
 		},
 	});
 }

@@ -21,6 +21,7 @@ import {
 } from "./chat-fixtures";
 import { ALERT, changeScene } from "./drive";
 import { CONNECT_FAILED } from "./faults";
+import { openContextMenu, press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -42,8 +43,10 @@ async function openRowMenu({
 	page: Page;
 	withId: number;
 }): Promise<void> {
-	await inboxRow({ page, withId }).click({ button: "right" });
-	await page.getByRole("menu").waitFor();
+	await openContextMenu({
+		target: inboxRow({ page, withId }),
+		ready: page.getByRole("menu"),
+	});
 }
 
 async function chooseFromRowMenu({
@@ -56,7 +59,7 @@ async function chooseFromRowMenu({
 	action: string;
 }): Promise<void> {
 	await openRowMenu({ page, withId });
-	await page.getByRole("menuitem", { name: action }).click();
+	await press(page.getByRole("menuitem", { name: action }));
 	await page.getByRole("menu").waitFor({ state: "hidden" });
 }
 
@@ -67,8 +70,10 @@ async function selectRow({
 	page: Page;
 	withId: number;
 }): Promise<void> {
-	await inboxRow({ page, withId }).click({ button: "right" });
-	await page.getByRole("navigation", { name: "Selection" }).waitFor();
+	await openContextMenu({
+		target: inboxRow({ page, withId }),
+		ready: page.getByRole("navigation", { name: "Selection" }),
+	});
 }
 
 export const inboxPreviews: Scene = {
@@ -100,7 +105,7 @@ export const inboxDraft: Scene = {
 		{
 			id: "chat/inbox/draft",
 			drive: async (page) => {
-				await page.getByRole("link", { name: "Back to Inbox" }).click();
+				await press(page.getByRole("link", { name: "Back to Inbox" }));
 				await page.getByText("Draft:").waitFor();
 			},
 		},
@@ -123,10 +128,11 @@ export const emptyInbox: Scene = {
 		{
 			id: "chat/inbox/filtered-empty",
 			drive: async (page) => {
-				await page
-					.locator("[data-fixed-header]")
-					.getByRole("button", { name: "Unread" })
-					.click();
+				await press(
+					page
+						.locator("[data-fixed-header]")
+						.getByRole("button", { name: "Unread" }),
+				);
 				await page
 					.getByText("No conversations match these filters.")
 					.waitFor();
@@ -179,13 +185,16 @@ export const inboxSelection: Scene = {
 			id: "chat/inbox/delete-many",
 			screen: "chat/inbox/selection/pinned",
 			drive: async (page) => {
-				await page
-					.getByRole("button", { name: "Benjamin", pressed: false })
-					.click();
+				await press(
+					page.getByRole("button", {
+						name: "Benjamin",
+						pressed: false,
+					}),
+				);
 				await page.getByText("2 selected").waitFor();
-				await page
-					.getByRole("button", { name: "Delete selected" })
-					.click();
+				await press(
+					page.getByRole("button", { name: "Delete selected" }),
+				);
 				await page.locator(ALERT).waitFor();
 			},
 		},
@@ -279,10 +288,11 @@ export const inboxRefreshFailures: Scene = {
 							withId: KINDS_ID,
 							action: "Delete",
 						});
-						await page
-							.locator(ALERT)
-							.getByRole("button", { name: "Delete" })
-							.click();
+						await press(
+							page
+								.locator(ALERT)
+								.getByRole("button", { name: "Delete" }),
+						);
 					},
 				});
 				await addingToast({
@@ -293,7 +303,7 @@ export const inboxRefreshFailures: Scene = {
 							scroller: CONVERSATIONS_SCROLLER,
 							towardTop: true,
 						});
-						await refresh.click();
+						await press(refresh);
 					},
 				});
 			},

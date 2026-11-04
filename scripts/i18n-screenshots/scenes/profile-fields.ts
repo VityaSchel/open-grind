@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import type { Scene, SceneView } from ".";
+import { press } from "./press";
 import { visit } from "./visit";
 
 const MENU = '[data-slot="dropdown-menu-content"]';
@@ -43,7 +44,7 @@ async function openFieldMenu({
 	await trigger.evaluate((element) => {
 		element.scrollIntoView({ block: "center", behavior: "instant" });
 	});
-	await trigger.click();
+	await press(trigger);
 	await page.locator(MENU).waitFor();
 }
 

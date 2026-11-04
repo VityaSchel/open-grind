@@ -13,6 +13,7 @@ import {
 import { serveLocalMedia } from "./images";
 import type { Platform } from "./manifest";
 import { guardNetwork, type NetworkGuard, openEscapeSink } from "./network";
+import { touchscreens } from "./scenes/press";
 
 const SCENE_TIMEOUT_MS = 30_000;
 const RASTER_EVERY_TILE_BEFORE_DRAW = "--run-all-compositor-stages-before-draw";
@@ -24,11 +25,13 @@ export const displays = {
 		viewport: { width: 420, height: 800 },
 		deviceScaleFactor: 2,
 		shimPlatform: "android",
+		touchscreen: true,
 	},
 	desktop: {
 		viewport: { width: 1280, height: 800 },
 		deviceScaleFactor: 1.5,
 		shimPlatform: "macos",
+		touchscreen: false,
 	},
 } as const satisfies Record<Platform, unknown>;
 
@@ -68,7 +71,7 @@ export async function openPlatformContext({
 	platform: Platform;
 	origin: string;
 }): Promise<PlatformContext> {
-	const { viewport, deviceScaleFactor } = displays[platform];
+	const { viewport, deviceScaleFactor, touchscreen } = displays[platform];
 	const escapes = openEscapeSink();
 	const context = await browser.newContext({
 		...devices["Desktop Chrome"],
@@ -84,6 +87,7 @@ export async function openPlatformContext({
 		proxy: escapes.proxy,
 	});
 	context.setDefaultTimeout(SCENE_TIMEOUT_MS);
+	if (touchscreen) touchscreens.add(context);
 	const guard = await guardNetwork({ context, origin, escapes });
 	await serveLocalMedia({ context, guard });
 	return { context, guard, origin, platform };

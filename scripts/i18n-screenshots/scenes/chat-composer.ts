@@ -23,6 +23,7 @@ import {
 import { PREVIEWS_INBOX, QUOTES_ID } from "./chat-fixtures";
 import { ALERT, chooseGeneratedMedia } from "./drive";
 import { CONNECT_FAILED } from "./faults";
+import { press } from "./press";
 import { addingToast, holdToast, toastsShown } from "./toast";
 import { visit } from "./visit";
 
@@ -83,15 +84,15 @@ export async function openAttachments(page: Page): Promise<void> {
 }
 
 async function openAttachmentSheet(page: Page): Promise<void> {
-	await page.getByRole("button", { name: "Add attachment" }).click();
+	await press(page.getByRole("button", { name: "Add attachment" }));
 	await page.locator(DRAWER).waitFor();
 }
 
 async function openAttachmentsAtNeutralLocation(page: Page): Promise<void> {
 	await chooseNeutralLocation(page);
 	await profileTile(page).first().waitFor();
-	await page.locator('nav a[href="/chat"]').first().click();
-	await page.locator(`main a[href="${DEMO_CONVERSATION}"]`).first().click();
+	await press(page.locator('nav a[href="/chat"]').first());
+	await press(page.locator(`main a[href="${DEMO_CONVERSATION}"]`).first());
 	await page.locator(MESSAGE_ROW).first().waitFor();
 	await openAttachmentSheet(page);
 }
@@ -111,7 +112,7 @@ async function openTab({
 	page: Page;
 	tab: "Media" | "Albums" | "Location";
 }): Promise<void> {
-	await page.getByRole("tab", { name: tab }).click();
+	await press(page.getByRole("tab", { name: tab }));
 }
 
 function uploadPhotos({
@@ -125,7 +126,7 @@ function uploadPhotos({
 		page,
 		photos: count,
 		open: () =>
-			page.getByRole("button", { name: UPLOAD_LABEL }).first().click(),
+			press(page.getByRole("button", { name: UPLOAD_LABEL }).first()),
 	});
 }
 
@@ -159,9 +160,9 @@ export const voiceMessage: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
-				await page
-					.getByRole("button", { name: "Record voice message" })
-					.click();
+				await press(
+					page.getByRole("button", { name: "Record voice message" }),
+				);
 				await holdToast(page);
 			},
 		},
@@ -176,7 +177,7 @@ export const attachmentTabs: Scene = {
 			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAttachments(page);
-				await page.locator(SELECTABLE_MEDIA_TILE).first().click();
+				await press(page.locator(SELECTABLE_MEDIA_TILE).first());
 				await sheetAction(page).waitFor();
 			},
 		},
@@ -185,7 +186,7 @@ export const attachmentTabs: Scene = {
 			screen: "chat/conversation",
 			drive: async (page) => {
 				await openTab({ page, tab: "Albums" });
-				await page.locator(UNSHARED_ALBUM_TILE).first().click();
+				await press(page.locator(UNSHARED_ALBUM_TILE).first());
 				await sharingAction(page).waitFor();
 			},
 		},
@@ -193,8 +194,8 @@ export const attachmentTabs: Scene = {
 			id: "chat/attachments/albums-unshare",
 			screen: "chat/conversation",
 			drive: async (page) => {
-				await page.locator(UNSHARED_ALBUM_TILE).first().click();
-				await page.locator(SHARED_ALBUM_TILE).first().click();
+				await press(page.locator(UNSHARED_ALBUM_TILE).first());
+				await press(page.locator(SHARED_ALBUM_TILE).first());
 				await sheetAction(page).getByText("Unshare").waitFor();
 			},
 		},
@@ -225,7 +226,7 @@ export const locationSharing: Scene = {
 		{
 			id: "chat/conversation/location",
 			drive: async (page) => {
-				await sheetAction(page).click();
+				await press(sheetAction(page));
 				await page.locator(DRAWER).waitFor({ state: "hidden" });
 				await page
 					.getByRole("link", { name: /Open map/ })
@@ -283,14 +284,14 @@ export const albumShareFailures: Scene = {
 			drive: async (page) => {
 				await openAttachments(page);
 				await openTab({ page, tab: "Albums" });
-				await page.locator(SHARED_ALBUM_TILE).first().click();
+				await press(page.locator(SHARED_ALBUM_TILE).first());
 				await sheetAction(page).getByText("Unshare").waitFor();
 				await addingToast({
 					page,
-					action: () => sheetAction(page).click(),
+					action: () => press(sheetAction(page)),
 				});
-				await page.locator(SHARED_ALBUM_TILE).first().click();
-				await page.locator(UNSHARED_ALBUM_TILE).first().click();
+				await press(page.locator(SHARED_ALBUM_TILE).first());
+				await press(page.locator(UNSHARED_ALBUM_TILE).first());
 				await sharingAction(page).waitFor();
 				await addingToast({
 					page,
@@ -319,11 +320,11 @@ export const expiringPhotoLimit: Scene = {
 			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAttachments(page);
-				await page.locator(SELECTABLE_MEDIA_TILE).first().click();
-				await page
-					.getByRole("button", { name: "Set photo as expiring" })
-					.click();
-				await sheetAction(page).click();
+				await press(page.locator(SELECTABLE_MEDIA_TILE).first());
+				await press(
+					page.getByRole("button", { name: "Set photo as expiring" }),
+				);
+				await press(sheetAction(page));
 				await page.locator(ALERT).waitFor();
 			},
 		},

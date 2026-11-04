@@ -1,10 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { runPaletteCommand } from "../../../e2e/support/app";
-import { openAllFilters } from "../../../e2e/support/grid-filters";
 import type { Scene } from ".";
+import { openAllFilters } from "./browse";
 import { showGrid } from "./browse-states";
 import { CONNECT_FAILED } from "./faults";
+import { press } from "./press";
 
 const FILTERS = '[role="dialog"]';
 const TAGS_FILTER = `${FILTERS} div:has(> [data-slot="filter-field"] [id^="filters-tags-"])`;
@@ -96,7 +97,7 @@ function tagChip({ page, name }: { page: Page; name: string }): Locator {
 async function openTags(page: Page): Promise<void> {
 	await showGrid(page);
 	await openAllFilters(page);
-	await filtersCheckbox({ page, name: "Tags" }).click();
+	await press(filtersCheckbox({ page, name: "Tags" }));
 	await page.locator(TAGS_SEARCH).waitFor();
 }
 
@@ -125,7 +126,7 @@ export const bodyFilters: Scene = {
 				await showGrid(page);
 				await openAllFilters(page);
 				for (const name of ["Height", "Weight"]) {
-					await filtersCheckbox({ page, name }).click();
+					await press(filtersCheckbox({ page, name }));
 				}
 				const weightMaximum = page
 					.locator(FILTERS)
@@ -146,12 +147,13 @@ export const tagFilters: Scene = {
 			drive: async (page) => {
 				await openTags(page);
 				for (const name of PICKED_TAGS) {
-					await tagChip({ page, name }).click();
+					await press(tagChip({ page, name }));
 				}
-				await page
-					.locator(TAGS_FILTER)
-					.getByRole("button", { name: "More" })
-					.click();
+				await press(
+					page
+						.locator(TAGS_FILTER)
+						.getByRole("button", { name: "More" }),
+				);
 				const less = page
 					.locator(TAGS_FILTER)
 					.getByRole("button", { name: "Less" });
@@ -237,7 +239,7 @@ async function openQuickFilter({
 	pill: string;
 	switchLabel: string;
 }): Promise<void> {
-	await page.locator("main").getByRole("button", { name: pill }).click();
+	await press(page.locator("main").getByRole("button", { name: pill }));
 	await page
 		.getByRole("dialog", { name: pill })
 		.getByRole("switch", { name: switchLabel })
@@ -264,7 +266,7 @@ export const quickFilters: Scene = {
 			screen: "browse/grid",
 			drive: async (page) => {
 				const ageDrawer = page.getByRole("dialog", { name: "Age" });
-				await ageDrawer.getByRole("button", { name: "Apply" }).click();
+				await press(ageDrawer.getByRole("button", { name: "Apply" }));
 				await ageDrawer.waitFor({ state: "hidden" });
 				await openQuickFilter({
 					page,

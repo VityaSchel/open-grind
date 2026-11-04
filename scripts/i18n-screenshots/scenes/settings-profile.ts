@@ -5,6 +5,7 @@ import type { RestFault } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene } from ".";
 import { scrollToCenter } from "./drive";
 import { failing } from "./faults";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -56,7 +57,7 @@ function saveProfile(page: Page): Promise<void> {
 		page,
 		action: async () => {
 			await displayNameField(page).fill("Alpha");
-			await page.getByRole("button", { name: "Save changes" }).click();
+			await press(page.getByRole("button", { name: "Save changes" }));
 		},
 	});
 }
@@ -135,7 +136,7 @@ export const profileCombos: Scene = {
 			id: "settings/profile/combo-no-matches",
 			screen: "settings/profile/combo-at-max",
 			drive: async (page) => {
-				await pronounsField(page).click();
+				await press(pronounsField(page));
 				await pronounsField(page).fill(UNMATCHED_SEARCH);
 				await page.getByText("No matches").waitFor();
 			},
