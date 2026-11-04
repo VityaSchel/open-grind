@@ -4,6 +4,18 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const { invoke } = vi.hoisted(() => ({
+	invoke: vi.fn<(command: string, args?: unknown) => Promise<void>>(() =>
+		Promise.resolve(),
+	),
+}));
+
+vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
+	invoke,
+}));
+
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import ScrollToTopButton from "./ScrollToTopButton.svelte";
 
 const SCREEN_HEIGHT = 800;
@@ -16,6 +28,7 @@ async function settle() {
 
 async function mountWithScroller({ scrollTop = 0 } = {}) {
 	const scroller = document.createElement("div");
+	scroller.style.overflowY = "auto";
 	Object.defineProperty(scroller, "clientHeight", {
 		value: SCREEN_HEIGHT,
 		configurable: true,
@@ -24,8 +37,12 @@ async function mountWithScroller({ scrollTop = 0 } = {}) {
 		value: 20_000,
 		configurable: true,
 	});
+	vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue(
+		new DOMRect(0, 0, 402, SCREEN_HEIGHT),
+	);
 	scroller.scrollTop = scrollTop;
 	document.body.append(scroller);
+	document.elementFromPoint = () => scroller;
 
 	const view = render(ScrollToTopButton, { props: { container: scroller } });
 	await settle();
@@ -66,12 +83,15 @@ describe("the scroll-to-top button", () => {
 				"performance",
 			],
 		});
+		runningOn("macos");
 	});
 
 	afterEach(() => {
 		cleanup();
 		document.body.replaceChildren();
 		vi.useRealTimers();
+		resetPlatform();
+		invoke.mockClear();
 	});
 
 	it("appears once the scroller leaves the top and hides on the way back", async () => {
@@ -181,6 +201,40 @@ describe("the scroll-to-top button", () => {
 
 		expect(view.button()).toBeNull();
 		await view.glideFor(GLIDE_MS / 2);
+		expect(view.scroller.scrollTop).toBe(0);
+	});
+
+	it("never asks a desktop or Android list to stop coasting", async () => {
+		const view = await mountWithScroller();
+		await view.scrollTo(5000);
+		await view.click();
+
+		expect(invoke).not.toHaveBeenCalled();
+	});
+
+	it("on iOS stops the coasting list under its center before the jump", async () => {
+		runningOn("ios");
+		let stopped = () => {};
+		invoke.mockImplementationOnce(
+			() =>
+				new Promise<void>((resolve) => {
+					stopped = resolve;
+				}),
+		);
+		const view = await mountWithScroller();
+		await view.scrollTo(5000);
+
+		await view.click();
+		expect(invoke).toHaveBeenCalledWith("stop_scroll_momentum", {
+			at: { x: 201, y: SCREEN_HEIGHT / 2 },
+		});
+		expect(view.button()).toBeNull();
+		expect(view.scroller.scrollTop).toBe(5000);
+
+		stopped();
+		await settle();
+		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
+		await view.glideFor(GLIDE_MS);
 		expect(view.scroller.scrollTop).toBe(0);
 	});
 });

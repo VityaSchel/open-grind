@@ -320,6 +320,8 @@ pub fn run() {
             soft_keyboard::ios::set_keyboard_drag_dismiss,
             #[cfg(target_os = "ios")]
             system_gestures::back_swipe::set_back_swipe_armed,
+            #[cfg(target_os = "ios")]
+            system_gestures::scroll_to_top::stop_scroll_momentum,
             appearance::backdrop_filter_renders,
             appearance::webview_engine,
             app_data::read_app_data,
@@ -575,6 +577,8 @@ mod frontend_method_pins {
 		include_str!("../../src/lib/platform/keyboard-drag-dismiss.ts");
 	const IOS_BRIDGE: &str =
 		include_str!("../../src/lib/platform/ios-native-bridge.ts");
+	const SCROLL_MOMENTUM: &str =
+		include_str!("../../src/lib/platform/scroll-momentum.ts");
 
 	fn between<'a>(haystack: &'a str, open: &str, close: &str) -> &'a str {
 		let start = haystack.find(open).expect(open) + open.len();
@@ -642,6 +646,24 @@ mod frontend_method_pins {
 			assert!(
 				registered.contains(&command),
 				"{command} is invoked by the iOS bridge but not registered"
+			);
+		}
+	}
+
+	#[test]
+	fn every_command_the_scroll_code_invokes_is_registered() {
+		let registered = registered_commands();
+		let invoked: Vec<&str> = SCROLL_MOMENTUM
+			.split("invoke(\"")
+			.skip(1)
+			.filter_map(|rest| rest.split_once('"'))
+			.map(|(command, _)| command)
+			.collect();
+		assert_eq!(invoked, ["stop_scroll_momentum"]);
+		for command in invoked {
+			assert!(
+				registered.contains(&command),
+				"{command} is invoked by the scroll code but not registered"
 			);
 		}
 	}
