@@ -38,6 +38,10 @@
 			"a11y": {
 				"open": "Open album"
 			}
+		},
+		"warning": {
+			"title": "Albums may contain nudity or NSFW content",
+			"view": "View"
 		}
 	},
 	"sheet": {

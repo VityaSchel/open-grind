@@ -43,76 +43,72 @@
 		}
 	}
 	bind:value={commandCenterState.value}
-	class="max-xs:max-w-full"
+	shouldFilter={commandCenterState.query.length > 0}
+	class="max-xs:max-w-full p-3.5"
 >
-	<Command.Root
-		class="w-full p-3.5"
-		shouldFilter={commandCenterState.query.length > 0}
+	<Command.Input
+		placeholder={t("commands.commandCenter.placeholder")}
+		aria-controls={suggestionsId}
+		bind:value={commandCenterState.query}
+	/>
+	<Command.List
+		id={suggestionsId}
+		aria-label={t("commands.commandCenter.a11y.list")}
+		class="mt-2"
 	>
-		<Command.Input
-			placeholder={t("commands.commandCenter.placeholder")}
-			aria-controls={suggestionsId}
-			bind:value={commandCenterState.query}
-		/>
-		<Command.List
-			id={suggestionsId}
-			aria-label={t("commands.commandCenter.a11y.list")}
-			class="mt-2"
-		>
-			<Command.Empty class="text-muted-foreground">
-				{t("commands.commandCenter.empty")}
-			</Command.Empty>
-			{#if commandCenterState.query.length === 0}
-				<Command.Group
-					heading={t("commands.commandCenter.suggestions.heading")}
-					value="suggestions"
+		<Command.Empty class="text-muted-foreground">
+			{t("commands.commandCenter.empty")}
+		</Command.Empty>
+		{#if commandCenterState.query.length === 0}
+			<Command.Group
+				heading={t("commands.commandCenter.suggestions.heading")}
+				value="suggestions"
+			>
+				<CommandSuggestion
+					prefix="#"
+					message="commands.commandCenter.suggestions.openProfileById"
 				>
-					<CommandSuggestion
-						prefix="#"
-						message="commands.commandCenter.suggestions.openProfileById"
-					>
-						{#snippet icon()}
-							<UserIcon />
-						{/snippet}
-					</CommandSuggestion>
-					<CommandSuggestion
-						prefix="?"
-						message="commands.commandCenter.suggestions.filterGrid"
-					>
-						{#snippet icon()}
-							<FunnelIcon />
-						{/snippet}
-					</CommandSuggestion>
-					<CommandSuggestion
-						prefix="/"
-						message="commands.commandCenter.suggestions.quickGoTo"
-					>
-						{#snippet icon()}
-							<MagnifyingGlassIcon />
-						{/snippet}
-					</CommandSuggestion>
-					<CommandSuggestion
-						prefix="@"
-						message="commands.commandCenter.suggestions.setLocationByGeohash"
-					>
-						{#snippet icon()}
-							<MapPinIcon />
-						{/snippet}
-					</CommandSuggestion>
-				</Command.Group>
-			{/if}
-			{#if commandCenterState.query.startsWith("#")}
-				<OpenProfileByIdCommand />
-			{/if}
-			{#if commandCenterState.query.startsWith("?")}
-				<FilterGridCommand />
-			{/if}
-			{#if commandCenterState.query.startsWith("/")}
-				<QuickGoToCommandGroup />
-			{/if}
-			{#if commandCenterState.query.startsWith("@")}
-				<SetLocationByGeohashCommand />
-			{/if}
-		</Command.List>
-	</Command.Root>
+					{#snippet icon()}
+						<UserIcon />
+					{/snippet}
+				</CommandSuggestion>
+				<CommandSuggestion
+					prefix="?"
+					message="commands.commandCenter.suggestions.filterGrid"
+				>
+					{#snippet icon()}
+						<FunnelIcon />
+					{/snippet}
+				</CommandSuggestion>
+				<CommandSuggestion
+					prefix="/"
+					message="commands.commandCenter.suggestions.quickGoTo"
+				>
+					{#snippet icon()}
+						<MagnifyingGlassIcon />
+					{/snippet}
+				</CommandSuggestion>
+				<CommandSuggestion
+					prefix="@"
+					message="commands.commandCenter.suggestions.setLocationByGeohash"
+				>
+					{#snippet icon()}
+						<MapPinIcon />
+					{/snippet}
+				</CommandSuggestion>
+			</Command.Group>
+		{/if}
+		{#if commandCenterState.query.startsWith("#")}
+			<OpenProfileByIdCommand />
+		{/if}
+		{#if commandCenterState.query.startsWith("?")}
+			<FilterGridCommand />
+		{/if}
+		{#if commandCenterState.query.startsWith("/")}
+			<QuickGoToCommandGroup />
+		{/if}
+		{#if commandCenterState.query.startsWith("@")}
+			<SetLocationByGeohashCommand />
+		{/if}
+	</Command.List>
 </Command.Dialog>

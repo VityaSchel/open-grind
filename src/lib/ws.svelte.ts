@@ -4,6 +4,7 @@ import z from "zod";
 
 import { ApiError } from "#lib/api/api-error.ts";
 import { asAppError, diagnosticMessage } from "#lib/api/methods.ts";
+import { demoSendCommand } from "#lib/demo/index.ts";
 import { tapTypeOrNoneSchema } from "#lib/model/interest/taps.ts";
 import { mediaHashPublicSchema } from "#lib/model/media.ts";
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
@@ -127,12 +128,14 @@ class WsState {
 	}
 
 	connect(): void {
+		if (__DEMO__) return;
 		invoke("ws_connect").catch((e: unknown) => {
 			console.error("[ws] connect failed", e);
 		});
 	}
 
 	async reconnect(): Promise<void> {
+		if (__DEMO__) return;
 		await invoke("ws_reconnect").catch((e: unknown) => {
 			console.error("[ws] reconnect failed", e);
 		});
@@ -149,6 +152,7 @@ class WsState {
 	}
 
 	send(type: string, payload: unknown): void {
+		if (__DEMO__) return;
 		invoke("ws_send", {
 			command: { type, ref_id: crypto.randomUUID(), payload },
 		}).catch((e: unknown) => {
@@ -156,7 +160,7 @@ class WsState {
 		});
 	}
 
-	sendCommand<T>({
+	async sendCommand<T>({
 		type,
 		payload,
 		responseSchema,
@@ -167,6 +171,9 @@ class WsState {
 		responseSchema: z.ZodType<T>;
 		timeoutMs?: number;
 	}): Promise<T> {
+		if (__DEMO__) {
+			return responseSchema.parse(demoSendCommand({ type, payload }));
+		}
 		const ref_id = crypto.randomUUID();
 
 		return new Promise<T>((resolve, reject) => {

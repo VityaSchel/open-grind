@@ -36,8 +36,9 @@ function badges(): { name: string; value: string }[] {
 	return [
 		...document.querySelectorAll<HTMLElement>('[data-slot="badge"]'),
 	].map((badge) => {
-		const name = badge.firstElementChild;
-		const value = [...badge.childNodes].filter((node) => node !== name);
+		const content = badge.firstElementChild ?? badge;
+		const name = content.firstElementChild;
+		const value = [...content.childNodes].filter((node) => node !== name);
 		return {
 			name: name ? textOf(name) : "",
 			value: value.map(textOf).join(""),

@@ -1,27 +1,53 @@
 # Privacy Policy
 
-Effective date: 2026-10-27
+Effective date: 2026-11-03
 
-This policy covers the Open Grind app, made by Open Grind Governance. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
+Open Grind Governance, an unregistered project represented by Viktor Shchelochkov, makes the Open Grind app and runs the servers below. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
-## Where your data goes
+## Open Grind app
 
-The app contacts each service below only for the features you use, over encrypted connections. Each service receives your IP address.
+For the features you use, the app sends data straight to these services over encrypted connections, along with your IP address:
 
-- **Grindr**: your sign-in details, profile, photos, messages, location, reports and everything else you do on Grindr through the app, plus random device identifiers the app creates and, if you choose Fast Mode for notifications, the push token and installation ID Google issues for this device. See [Grindr's Privacy Policy](https://www.grindr.com/privacy-policy).
-- **Google**, if you sign in with Google: what you enter on Google's sign-in page. See [Google's Privacy Policy](https://policies.google.com/privacy).
-- **Google**, if you choose Fast Mode for notifications: the FCM service add-on registers this device with Firebase Cloud Messaging through Google Play services or microG, and Grindr sends your notifications through it, including sender names and message text. See [Google's Privacy Policy](https://policies.google.com/privacy).
-- **Meta**, if you sign in with Facebook: what you enter on Facebook's sign-in page. See [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
-- **GIPHY**, if you turn it on in the GIF tab, in Settings, or from a GIF in a chat: your search terms and language (GIF search only), which GIFs the app loads, and that the requests come from a Grindr app, because they use Grindr's GIPHY key and the app's Grindr user agent. See [GIPHY's Privacy Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy).
-- **OpenStreetMap**, when you pick your browse location or open the Location tab in a chat: requests for the map tiles of the area shown. Opening a shared location on openstreetmap.org also sends its coordinates to that website. See the [OpenStreetMap Foundation's Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy).
-- **git.opengrind.org**, if you check for updates, allow automatic update checks, or install or update an add-on: requests for release lists and files, with no account details or device identifiers. The file names can show your operating system and processor type.
+**Required:**
 
-## On your device
+- **Grindr**: everything you do on Grindr, including sign-in details, profile, photos, messages and location. [Policy](https://www.grindr.com/privacy-policy)
+- **OpenStreetMap**: map tiles for the area shown. [Policy](https://osmfoundation.org/wiki/Privacy_Policy)
 
-The app keeps your session, device identifiers, settings and saved location on your device. It keeps the session and device identifiers in your system's credential storage where one is available. Signing out deletes your session and saved location and replaces the device identifiers with new ones. Uninstalling the app on Android deletes all of it.
+**Optional:**
 
-## Our servers
+- Only when using **Sign in with Google**:
+  - **Google**: what you enter in Google's sign-in window. [Policy](https://policies.google.com/privacy)
+- Only when using **Sign in with Facebook**:
+  - **Meta**: what you enter in Facebook's sign-in window. [Policy](https://www.facebook.com/privacy/policy/)
+- Only if you have **enabled GIPHY**:
+  - **GIPHY**: your GIF searches and language, the GIFs you load, and that you use Grindr. [Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy)
+- Only when using the **reCAPTCHA helper add-on**:
+  - **Google**: device information, whenever Grindr asks for a captcha. [Policy](https://policies.google.com/privacy)
+- Only in **Fast Mode** for notifications (the **FCM service add-on**):
+  - **Google**: this device's Firebase installation ID and push token, and every notification Grindr sends through Firebase, including sender names and message text. [Policy](https://policies.google.com/privacy)
+  - **Grindr**: that push token, so it can send your notifications.
 
-Open Grind Governance runs opengrind.org and git.opengrind.org on servers in Germany. They receive your IP address and the page or file you request, and use them only to send it to you. The legal basis is our legitimate interest in delivering what you request (GDPR Art. 6(1)(f)). The servers keep no access logs and store no IP addresses.
+To stop sending data, turn the feature off or sign out. To delete data a service holds, ask that service; for Grindr, delete your Grindr account.
 
-You have the right to access, correct or delete your personal data and to restrict its processing. You have the right to object to this processing at any time. You can also complain to a data protection authority.
+## Open Grind servers and websites
+
+Your IP address is only used to answer your requests, and it's not stored.
+
+- **opengrind.org**: this website.
+- **git.opengrind.org**: the app's update checks and add-on downloads.
+  - _Only sign-up and sign-in pages_: uses **hCaptcha by Intuition Machines (US, certified under the EU-US Data Privacy Framework)**, which gets your IP address and browser data to check that you're human. [Policy](https://www.hcaptcha.com/privacy)
+  - _Only if you create an account_: stores your username, email address and what you post until you delete the account; issues and comments you posted stay under a deleted-user placeholder unless you ask us to remove them.
+- **i18n.opengrind.org**:
+  - _Only if you sign in with your git.opengrind.org account_: stores your username and email address until you delete the account, keeps account events for 30 days, and keeps your translations in the project history.
+- **matrix.opengrind.org**:
+  - _Only if you join a Matrix chat room_: keeps a copy of the messages and member names of Open Grind's Matrix rooms for as long as the rooms exist, as every server in a room does.
+- **admin@opengrind.org**:
+  - _Only if you send an email_: keeps your emails until your request is handled.
+- **apns.opengrind.org**:
+  - _Only if you enable notifications on iOS_: through your fcm-relay, receives your iPhone's push token and encrypted notifications, which it can't read, passes them to **Apple Inc. (US)** with the explicit consent you give when you set it up (GDPR Art. 49(1)(a)), and forgets them within 24 hours. Apple isn't certified under the EU-US Data Privacy Framework, so EU data protection law may not protect this data in the US. You withdraw this consent by turning notifications off.
+
+Legal basis: our legitimate interest in running these services (GDPR Art. 6(1)(f)).
+
+You can ask us for access to, correction, deletion or restriction of your data, and complain to a data protection authority.
+
+You can object to this processing at any time.

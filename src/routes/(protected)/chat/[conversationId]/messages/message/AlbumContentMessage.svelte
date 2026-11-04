@@ -37,6 +37,7 @@
 			coverUrl={message.previewUrl}
 			hasPhoto={false}
 			hasVideo={false}
+			ourAlbum={album.isOurAlbum}
 			label={isReply
 				? t("chat.message.albumContent.a11y.openReplied")
 				: t("chat.message.albumContent.a11y.openReacted")}

@@ -35,8 +35,17 @@ vi.mock("#lib/api/sign-in.ts", () => ({
 	reportSignInFailure: mocks.reportSignInFailure,
 }));
 vi.mock("#lib/api/sign-out.ts", () => ({ signOut: mocks.signOut }));
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
+	isAndroidPlatform: () => true,
+}));
 
-import { consumeGoogleHandoff } from "#lib/api/google-handoff.ts";
+import { listen } from "@tauri-apps/api/event";
+
+import {
+	consumeGoogleHandoff,
+	startGoogleHandoffWatch,
+} from "#lib/api/google-handoff.ts";
 
 const SIGNED_IN_AS = 42;
 const NEW_ACCOUNT = { profileId: 7, restriction: null };
@@ -234,5 +243,37 @@ describe("Google handoff failures in the active locale", () => {
 			error: REFUSAL,
 			label: expect.stringMatching(PSEUDO_MESSAGE),
 		});
+	});
+});
+
+describe("watching for a Google handoff", () => {
+	beforeEach(() => {
+		vi.mocked(listen).mockClear();
+		backend({ exchange: () => NEW_ACCOUNT, pending: () => false });
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it("listens for handoffs on Android", async () => {
+		await startGoogleHandoffWatch();
+
+		expect(listen).toHaveBeenCalledWith(
+			"google-oauth:handoff",
+			expect.any(Function),
+		);
+		await vi.waitFor(() =>
+			expect(mocks.events).toContain("google_handoff_pending"),
+		);
+	});
+
+	it("never picks up a handoff in the demo", async () => {
+		vi.stubGlobal("__DEMO__", true);
+
+		await startGoogleHandoffWatch();
+
+		expect(listen).not.toHaveBeenCalled();
+		expect(mocks.invoke).not.toHaveBeenCalled();
 	});
 });

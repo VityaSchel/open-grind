@@ -529,6 +529,8 @@ export interface Messages {
 	"media.album.tile.a11y.containsVideo": undefined;
 	"media.album.tile.shared": undefined;
 	"media.album.untitled": undefined;
+	"media.album.warning.title": undefined;
+	"media.album.warning.view": undefined;
 	"media.albums.add": undefined;
 	"media.albums.editor.a11y.markedForRemoval": { count: number };
 	"media.albums.editor.content.a11y.keepPhotoSlot": { slot: string };

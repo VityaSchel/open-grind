@@ -1,6 +1,8 @@
 # shellcheck shell=bash
 # shellcheck disable=SC1091,SC2154  # F-Droid's buildserver provides bsenv.sh and these variables
 set -euo pipefail
+apt-get update
+apt-get dist-upgrade
 source /etc/profile.d/bsenv.sh
 fdroidserver="${fdroidserver:-/opt/fdroidserver}"
 command -v fdroid >/dev/null || [ -x "$fdroidserver/fdroid" ] \

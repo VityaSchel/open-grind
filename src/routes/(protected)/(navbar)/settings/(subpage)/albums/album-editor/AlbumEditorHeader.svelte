@@ -72,6 +72,7 @@
 				coverUrl={cover.thumbUrl}
 				hasPhoto={readyMedia.hasPhoto}
 				hasVideo={readyMedia.hasVideo}
+				ourAlbum
 				label={t("media.albums.editor.header.a11y.preview")}
 				class="aspect-3/4 w-full"
 				contentClass="rounded-xl"

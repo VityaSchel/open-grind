@@ -22,6 +22,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 }));
 
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { ws } from "#lib/ws.svelte.ts";
 
 const RESPONSE_EVENT = "grindr:chat_v1_message_send_response";
@@ -178,5 +179,65 @@ describe("ws.sendCommand", () => {
 		const assertion = expect(pending).rejects.toThrow("timed out");
 		await vi.advanceTimersByTimeAsync(50);
 		await assertion;
+	});
+});
+
+describe("ws in the demo", () => {
+	beforeEach(() => {
+		invokeMock.mockReset();
+		invokeMock.mockResolvedValue(undefined);
+		listeners.clear();
+		vi.stubGlobal("__DEMO__", true);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it("opens no native socket at startup", () => {
+		ws.connect();
+
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("reconnects without touching the native socket", async () => {
+		await ws.reconnect();
+
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("sends nothing over the native socket", () => {
+		ws.send("chat.v1.typing_status", { conversationId: "1:2" });
+
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("answers a reply from the demo instead of the native socket", async () => {
+		const reply = await ws.sendCommand({
+			type: "chat.v1.message.send",
+			payload: {
+				type: "Text",
+				target: { type: "Direct", targetId: 100001 },
+				body: { text: "hi" },
+				replyToMessageId: "1:missing",
+			},
+			responseSchema: apiResponseMessageSchema,
+		});
+
+		expect(reply).toMatchObject({ type: "Text", body: { text: "hi" } });
+		expect(invokeMock).not.toHaveBeenCalled();
+		expect(listeners.get(RESPONSE_EVENT) ?? []).toHaveLength(0);
+	});
+
+	it("rejects a command the demo cannot answer without sending it", async () => {
+		await expect(
+			ws.sendCommand({
+				type: "fixture.probe",
+				payload: {},
+				responseSchema,
+			}),
+		).rejects.toThrow();
+
+		expect(invokeMock).not.toHaveBeenCalled();
 	});
 });

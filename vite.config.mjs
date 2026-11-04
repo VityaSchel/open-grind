@@ -6,7 +6,7 @@ import { execSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadEnv, searchForWorkspaceRoot } from "vite";
+import { searchForWorkspaceRoot } from "vite";
 import { defineConfig } from "vitest/config";
 
 // @ts-expect-error process is a nodejs global
@@ -69,7 +69,7 @@ const releaseTreeShakesDemo = {
 };
 
 // https://vite.dev/config/
-export default defineConfig(async ({ command, mode }) => ({
+export default defineConfig(async ({ command }) => ({
 	plugins: [
 		sveltekit({
 			preprocess: vitePreprocess(),
@@ -91,8 +91,7 @@ export default defineConfig(async ({ command, mode }) => ({
 
 	define: {
 		__DEMO__: JSON.stringify(
-			!process.env.VITEST &&
-				loadEnv(mode, root, "OPEN_GRIND_").OPEN_GRIND_DEMO === "1",
+			!process.env.VITEST && process.env.OPEN_GRIND_DEMO === "1",
 		),
 		__SCREENSHOTS__: JSON.stringify(
 			!process.env.VITEST &&

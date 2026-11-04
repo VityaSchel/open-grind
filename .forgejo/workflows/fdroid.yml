@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: release tag to rebuild (empty builds the dispatched commit)
+        description: release tag or commit to rebuild (empty builds the dispatched commit)
         type: string
         default: ""
 
@@ -25,7 +25,8 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          [ -z "$FDROID_TAG" ] || git fetch -q --depth 1 origin tag "$FDROID_TAG"
+          [ -z "$FDROID_TAG" ] || git fetch -q --depth 1 origin tag "$FDROID_TAG" 2>/dev/null \
+            || git fetch -q --depth 1 origin "$FDROID_TAG"
       - name: Set up the build environment
         run: sh ci/fdroid/setup.sh
       - name: Build the F-Droid way, print hash

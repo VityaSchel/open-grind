@@ -78,18 +78,22 @@
 				<div class="flex flex-wrap gap-1">
 					{#each result.parsed as filter, index (index)}
 						{#if filter.error === undefined}
-							<Badge variant="secondary">
-								<span class="opacity-60">
-									{@render filterName(filter)}
+							<Badge variant="secondary" class="max-w-full">
+								<span class="truncate">
+									<span class="opacity-60">
+										{@render filterName(filter)}
+									</span>
+									{@render filterValue(filter)}
 								</span>
-								{@render filterValue(filter)}
 							</Badge>
 						{:else}
-							<Badge variant="destructive">
-								<span class="opacity-80">
-									{@render filterName(filter)}
+							<Badge variant="destructive" class="max-w-full">
+								<span class="truncate">
+									<span class="opacity-80">
+										{@render filterName(filter)}
+									</span>
+									{filterErrorText(filter.error)}
 								</span>
-								{filterErrorText(filter.error)}
 							</Badge>
 						{/if}
 					{/each}

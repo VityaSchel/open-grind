@@ -20,6 +20,9 @@ pub use legacy::adopt_legacy_items;
 	all(target_os = "macos", not(feature = "keychain"))
 ))]
 pub fn init_file_store(base: std::path::PathBuf) {
+	if cfg!(demo) {
+		return;
+	}
 	file_store::init(base);
 }
 
@@ -40,7 +43,18 @@ const HAS_FILE_STORE: bool = cfg!(any(
 
 pub fn init_keyring() -> StorageBackend {
 	static USABLE: Mutex<Option<StorageBackend>> = Mutex::new(None);
-	cached(&USABLE, || probe_keyring(install_platform_store))
+	let install: fn() -> Result<(), String> = if cfg!(demo) {
+		install_memory_store
+	} else {
+		install_platform_store
+	};
+	cached(&USABLE, || probe_keyring(install))
+}
+
+fn install_memory_store() -> Result<(), String> {
+	let store = keyring_core::mock::Store::new().map_err(|e| e.to_string())?;
+	keyring_core::set_default_store(store);
+	Ok(())
 }
 
 fn cached(

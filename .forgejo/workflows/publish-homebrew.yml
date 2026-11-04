@@ -1,0 +1,118 @@
+name: publish-homebrew
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish
+        type: string
+        required: true
+
+concurrency:
+  group: open-grind-publish-homebrew
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ["debian", "2c4g", "hetzner"]
+    timeout-minutes: 20
+    env:
+      TAG: ${{ forgejo.event.inputs.tag || forgejo.event.release.tag_name }}
+      API: ${{ forgejo.server_url }}/api/v1/repos/${{ forgejo.repository }}
+      TAP_CASK: ${{ forgejo.server_url }}/api/v1/repos/open-grind/homebrew-tap/contents/Casks/open-grind.rb
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+    steps:
+      - name: Install the verification tools
+        run: |
+          if command -v jq >/dev/null && command -v minisign >/dev/null; then
+            exit 0
+          fi
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get -qq update </dev/null >/tmp/apt.log 2>&1 || true
+          apt-get -qq install -y --no-install-recommends jq minisign \
+            </dev/null >>/tmp/apt.log 2>&1 || true
+          if ! command -v jq >/dev/null || ! command -v minisign >/dev/null; then
+            cat /tmp/apt.log >&2
+            exit 1
+          fi
+      - name: Check the token
+        run: |
+          echo "==> check-token"
+          test -n "$HOMEBREW_TAP_TOKEN" || {
+            echo "HOMEBREW_TAP_TOKEN is unset; create a token with write:repository scope for open-grind/homebrew-tap only" >&2
+            exit 1
+          }
+      - name: Download and verify
+        run: |
+          echo "==> download-verify"
+          zip="open-grind-$TAG-macos.zip"
+          curl -fsSL "$API/releases/tags/$TAG" -o release.json
+          url=$(jq -r --arg name "$zip" '.assets[] | select(.name == $name) | .browser_download_url' release.json)
+          test -n "$url" || { echo "release $TAG publishes no $zip" >&2; exit 1; }
+          curl -fsSL "$API/raw/KEYS.md" -o KEYS.md
+          key=$(awk '{ sub(/\r$/, "") } /^RW/ && length($0) == 56 { print; exit }' KEYS.md)
+          test -n "$key" || { echo "KEYS.md publishes no minisign key" >&2; exit 1; }
+          curl -fsSL "$url" -o "$zip"
+          curl -fsSL "$url.minisig" -o "$zip.minisig"
+          minisign -Vm "$zip" -P "$key"
+          sha256sum "$zip" | cut -d ' ' -f 1 > sha256
+      - name: Render the cask
+        run: |
+          echo "==> render"
+          version=${TAG#v}
+          sha256=$(cat sha256)
+          curl -fsSL "$API/raw/ci/homebrew/open-grind.rb?ref=$FORGEJO_SHA" -o template.rb
+          sed -e "s/@VERSION@/$version/" -e "s/@SHA256@/$sha256/" template.rb > open-grind.rb
+          if ! grep -qxF "  version \"$version\"" open-grind.rb || ! grep -qxF "  sha256 \"$sha256\"" open-grind.rb; then
+            echo "ci/homebrew/open-grind.rb lost its @VERSION@ or @SHA256@ placeholder" >&2
+            exit 1
+          fi
+      - name: Update the tap
+        run: |
+          echo "==> update-tap"
+          is_prerelease() { case "$1" in *-*) return 0 ;; esac; return 1; }
+          dpkg_order() { echo "$1" | sed 's/-/~/'; }
+          version=${TAG#v}
+          code=$(curl -sS -o current.json -w '%{http_code}' -H "Authorization: token $HOMEBREW_TAP_TOKEN" "$TAP_CASK")
+          case "$code" in
+            200)
+              jq -r .content current.json | base64 -d > current.rb
+              if cmp -s current.rb open-grind.rb; then
+                echo "the tap already publishes this cask for $version"
+                exit 0
+              fi
+              published=$(sed -n 's/^  version "\(.*\)"$/\1/p' current.rb)
+              test -n "$published" || { echo "the tap's cask has no version line" >&2; exit 1; }
+              if is_prerelease "$version" && ! is_prerelease "$published"; then
+                echo "the tap tracks stable releases since $published, so it skips $version"
+                exit 0
+              fi
+              if dpkg --compare-versions "$(dpkg_order "$version")" lt "$(dpkg_order "$published")"; then
+                echo "the tap already publishes the newer $published, so it skips $version"
+                exit 0
+              fi
+              method=PUT
+              sha=$(jq -r .sha current.json)
+              ;;
+            404)
+              method=POST
+              sha=
+              ;;
+            *)
+              echo "fetching the tap's cask failed with HTTP $code" >&2
+              exit 1
+              ;;
+          esac
+          jq -n \
+            --arg message "open-grind $version" \
+            --arg content "$(base64 -w 0 open-grind.rb)" \
+            --arg sha "$sha" \
+            '{ $message, $content } + if $sha == "" then {} else { $sha } end' > body.json
+          curl -sS --fail-with-body -o response.json -X "$method" \
+            -H "Authorization: token $HOMEBREW_TAP_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @body.json \
+            "$TAP_CASK" || { cat response.json >&2; exit 1; }
+          echo "published open-grind $version to the tap"

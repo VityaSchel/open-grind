@@ -154,6 +154,18 @@ Requires macOS 11.6 or later. Extract Open&nbsp;Grind.app from the zip archive a
 - **To verify the download**, follow [Reproducibility → macOS](https://git.opengrind.org/open-grind/open-grind/src/branch/main/REPRODUCIBILITY.md#macos).
 - **To uninstall**, move the app from Applications to Trash. To also remove your data, delete the `org.opengrind.app` folders in `~/Library/Application Support`, `~/Library/Caches` and `~/Library/WebKit`, and the `org.opengrind.app` items in Keychain Access.
 
+### Homebrew
+
+Homebrew can install Open Grind from the project's own tap:
+
+```sh
+brew tap open-grind/tap https://git.opengrind.org/open-grind/homebrew-tap
+brew trust open-grind/tap
+brew install --cask open-grind
+```
+
+Always tap with the URL above. To uninstall, run `brew uninstall --cask open-grind` (add `--zap` to also delete your data, except the keychain items), then `brew untap open-grind/tap`.
+
 ## iOS
 
 **iOS is currently not supported.** Open Grind iOS builds are likely to be released in Fall 2026 with the upcoming publishing in the third party app stores.
