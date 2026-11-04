@@ -4,10 +4,12 @@ import XCTest
 final class Driver: XCTestCase {
 	private static let stepKeys: Set<String> = [
 		"launch", "activate", "home", "rotate", "pasteboardImage", "pasteboardText", "tap", "tapSecure", "tapIfPresent",
-		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "touchPath", "type", "swipe", "on", "wait",
-		"expect", "expectGone", "keyboard", "screenshot", "tree",
+		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "touchPath", "edgeSwipe", "type", "swipe",
+		"on", "wait", "expect", "expectGone", "keyboard", "screenshot", "tree",
 	]
 	private static let dragHoldKeys: Set<String> = ["path", "hold", "velocity", "screenshot", "tree"]
+	private static let edgeSwipeKeys: Set<String> = ["from", "y", "to", "seconds", "press", "hold"]
+	private static let edgeSwipeStepsPerSecond = 30.0
 	private let timeout: TimeInterval = 15
 	private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
@@ -40,6 +42,9 @@ final class Driver: XCTestCase {
 			try rejectUnknownKeys(in: step, known: Self.stepKeys, of: "step \(index + 1)")
 			if let options: [String: Any] = try value("dragHold", in: step) {
 				try rejectUnknownKeys(in: options, known: Self.dragHoldKeys, of: "step \(index + 1) dragHold")
+			}
+			if let options: [String: Any] = try value("edgeSwipe", in: step) {
+				try rejectUnknownKeys(in: options, known: Self.edgeSwipeKeys, of: "step \(index + 1) edgeSwipe")
 			}
 		}
 		if steps.contains(where: { $0["pasteboardText"] != nil }) {
@@ -117,6 +122,9 @@ final class Driver: XCTestCase {
 		if let points: [[Double]] = try value("touchPath", in: step) {
 			try touchPath(points, in: app)
 		}
+		if let options: [String: Any] = try value("edgeSwipe", in: step) {
+			try edgeSwipe(options, in: app)
+		}
 		if let text: String = try value("type", in: step) {
 			app.typeText(text)
 		}
@@ -181,6 +189,26 @@ final class Driver: XCTestCase {
 			throw failure("touchPath timed out")
 		}
 		if let outcome { throw outcome }
+	}
+
+	private func edgeSwipe(_ options: [String: Any], in app: XCUIApplication) throws {
+		guard let y: Double = try value("y", in: options), let to: Double = try value("to", in: options),
+			let seconds: Double = try value("seconds", in: options), seconds > 0
+		else {
+			throw failure("edgeSwipe needs y, to and seconds above 0")
+		}
+		let from = (try value("from", in: options) ?? 2.0) / Double(app.frame.width)
+		let press: Double = try value("press", in: options) ?? 0
+		let hold: Double = try value("hold", in: options) ?? 0
+		let steps = max(1, Int((seconds * Self.edgeSwipeStepsPerSecond).rounded(.up)))
+		var points: [[Double]] = [[from, y, 0]]
+		if press > 0 { points.append([from, y, press]) }
+		for step in 1...steps {
+			let share = Double(step) / Double(steps)
+			points.append([from + (to - from) * share, y, press + seconds * share])
+		}
+		if hold > 0 { points.append([to, y, press + seconds + hold]) }
+		try touchPath(points, in: app)
 	}
 
 	private func captureLater(_ options: [String: Any], of app: XCUIApplication, after delay: TimeInterval) -> () throws -> Void {
