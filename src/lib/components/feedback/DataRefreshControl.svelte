@@ -266,6 +266,9 @@
 	$effect(() => {
 		if (shouldRevealRestingButton()) restingButton.shown = true;
 	});
+	$effect(() => {
+		if (!restingButton.offered) restingButton.shown = false;
+	});
 
 	$effect(() => () => restingButton.destroy());
 

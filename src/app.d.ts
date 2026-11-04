@@ -32,6 +32,7 @@ declare global {
 			prepare(): void;
 		};
 		__iosStatusBarTap?: () => void;
+		__iosVoiceOver?: (running: boolean) => void;
 		pswp?: unknown;
 	}
 }

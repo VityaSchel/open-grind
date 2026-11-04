@@ -41,6 +41,8 @@ mod system_gestures;
 mod transfer;
 mod upload;
 mod video;
+#[cfg(any(target_os = "ios", test))]
+mod voice_over;
 
 use std::sync::OnceLock;
 
@@ -322,6 +324,8 @@ pub fn run() {
             system_gestures::back_swipe::set_back_swipe_armed,
             #[cfg(target_os = "ios")]
             system_gestures::scroll_to_top::stop_scroll_momentum,
+            #[cfg(target_os = "ios")]
+            voice_over::ios::voice_over_running,
             appearance::backdrop_filter_renders,
             appearance::webview_engine,
             app_data::read_app_data,
@@ -374,6 +378,8 @@ pub fn run() {
                 system_gestures::back_swipe::install(&window);
                 #[cfg(target_os = "ios")]
                 system_gestures::scroll_to_top::install(&window);
+                #[cfg(target_os = "ios")]
+                voice_over::ios::install(&window);
                 #[cfg(target_os = "linux")]
                 media::serve_element_opens(&window);
                 #[cfg(target_os = "linux")]
@@ -581,6 +587,8 @@ mod frontend_method_pins {
 		include_str!("../../src/lib/platform/ios-native-bridge.ts");
 	const SCROLL_MOMENTUM: &str =
 		include_str!("../../src/lib/platform/scroll-momentum.ts");
+	const VOICE_OVER: &str =
+		include_str!("../../src/lib/platform/voice-over.svelte.ts");
 
 	fn between<'a>(haystack: &'a str, open: &str, close: &str) -> &'a str {
 		let start = haystack.find(open).expect(open) + open.len();
@@ -650,6 +658,19 @@ mod frontend_method_pins {
 				"{command} is invoked by the iOS bridge but not registered"
 			);
 		}
+	}
+
+	#[test]
+	fn every_command_the_voice_over_watch_invokes_is_registered() {
+		let registered = registered_commands();
+		let invoked: Vec<&str> = VOICE_OVER
+			.split("invoke<boolean>(\"")
+			.skip(1)
+			.filter_map(|rest| rest.split_once('"'))
+			.map(|(command, _)| command)
+			.collect();
+		assert_eq!(invoked, ["voice_over_running"]);
+		assert!(registered.contains(&"voice_over_running"));
 	}
 
 	#[test]

@@ -113,4 +113,21 @@ describe("RestingButtonModel", () => {
 
 		expect(button.offered).toBe(false);
 	});
+
+	it("stays offered while assistive tech asks for it, whatever the pointer did", () => {
+		let assisted = true;
+		const button = new RestingButtonModel({
+			probeMs: PROBE_MS,
+			alwaysOffered: () => assisted,
+		});
+
+		expect(button.offered).toBe(true);
+		button.leaveBoundary();
+		expect(button.offered).toBe(true);
+		button.withdraw();
+		expect(button.offered).toBe(true);
+
+		assisted = false;
+		expect(button.offered).toBe(false);
+	});
 });

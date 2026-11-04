@@ -2,27 +2,43 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { installVoiceOverWatch } from "#lib/platform/voice-over.svelte.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	mountAtRest,
+	TWEEN_MS,
 	useRefreshControlHarness,
 } from "./refresh-control-test-harness";
 
 const IOS_ARM_PX = 58;
 
 const reducedMotion = vi.hoisted(() => ({ current: false }));
+const { invoke } = vi.hoisted(() => ({
+	invoke: vi.fn<(command: string) => Promise<unknown>>(),
+}));
+
+vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
+	invoke,
+}));
 
 vi.mock("svelte/motion", async (importOriginal) => ({
 	...(await importOriginal<typeof import("svelte/motion")>()),
 	prefersReducedMotion: reducedMotion,
 }));
 
+const voiceOver = (running: boolean) => window.__iosVoiceOver?.(running);
+
 beforeEach(() => {
 	runningOn("ios");
+	invoke.mockResolvedValue(false);
+	installVoiceOverWatch();
+	voiceOver(false);
 });
 
 afterEach(() => {
 	resetPlatform();
+	delete window.__iosVoiceOver;
 });
 
 describe("the refresh control on iOS", () => {
@@ -98,5 +114,41 @@ describe("the refresh control on iOS", () => {
 
 		expect(view.disc()).toBeNull();
 		expect(view.ticks()!.hasAttribute("data-spinning")).toBe(true);
+	});
+
+	it("keeps the Refresh button hidden at rest without VoiceOver", async () => {
+		const view = await mountAtRest("top");
+
+		expect(view.button()).toBeNull();
+	});
+
+	it("offers the Refresh button at the top of the list while VoiceOver runs", async () => {
+		voiceOver(true);
+		const view = await mountAtRest("top");
+
+		expect(view.button()).not.toBeNull();
+		view.button()!.click();
+
+		expect(view.onrefresh).toHaveBeenCalledOnce();
+	});
+
+	it("brings the Refresh button in when VoiceOver starts over a list at rest", async () => {
+		const view = await mountAtRest("top");
+
+		voiceOver(true);
+		await view.wait(0);
+
+		expect(view.button()).not.toBeNull();
+	});
+
+	it("takes the Refresh button away when VoiceOver stops", async () => {
+		voiceOver(true);
+		const view = await mountAtRest("top");
+
+		voiceOver(false);
+		await view.wait(0);
+		await view.wait(TWEEN_MS);
+
+		expect(view.button()).toBeNull();
 	});
 });
