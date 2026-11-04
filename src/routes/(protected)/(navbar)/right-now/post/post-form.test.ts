@@ -7,7 +7,6 @@ import {
 	postPhoto,
 } from "../right-now-post-test-helpers";
 import {
-	accuracyMapSpanMeters,
 	approximateRadiusMeters,
 	postChangesOf,
 	type PostForm,
@@ -43,30 +42,6 @@ describe("approximateRadiusMeters", () => {
 		[100, 2000],
 	])("puts radius %i at about %i meters", (locationRadius, meters) => {
 		expect(approximateRadiusMeters({ locationRadius })).toBe(meters);
-	});
-});
-
-describe("accuracyMapSpanMeters", () => {
-	it.each([
-		[0, 500],
-		[100, 5000],
-	])("shows %i across %i meters of map", (locationRadius, meters) => {
-		expect(accuracyMapSpanMeters({ locationRadius })).toBeCloseTo(meters);
-	});
-
-	it("zooms out as accuracy drops while the circle takes more of the map", () => {
-		const shareOf = (locationRadius: number) =>
-			(2 * approximateRadiusMeters({ locationRadius })) /
-			accuracyMapSpanMeters({ locationRadius });
-
-		for (let locationRadius = 1; locationRadius <= 100; locationRadius++) {
-			expect(accuracyMapSpanMeters({ locationRadius })).toBeGreaterThan(
-				accuracyMapSpanMeters({ locationRadius: locationRadius - 1 }),
-			);
-			expect(shareOf(locationRadius)).toBeGreaterThan(
-				shareOf(locationRadius - 1),
-			);
-		}
 	});
 });
 

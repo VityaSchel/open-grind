@@ -10,8 +10,6 @@ export const LEAST_PRECISE_RADIUS: number = rightNowLocationRadiusRange.max;
 
 const NEAREST_RADIUS_METERS = 100;
 const METERS_PER_RADIUS_STEP = 19;
-const MOST_PRECISE_CIRCLE_SHARE = 0.4;
-const LEAST_PRECISE_CIRCLE_SHARE = 0.8;
 
 export type PostPhoto = { mediaId: number; thumbnailUrl: string };
 
@@ -43,18 +41,6 @@ export function approximateRadiusMeters({
 	locationRadius: number;
 }): number {
 	return NEAREST_RADIUS_METERS + METERS_PER_RADIUS_STEP * locationRadius;
-}
-
-export function accuracyMapSpanMeters({
-	locationRadius,
-}: {
-	locationRadius: number;
-}): number {
-	const progress = locationRadius / LEAST_PRECISE_RADIUS;
-	const circleShare =
-		MOST_PRECISE_CIRCLE_SHARE +
-		(LEAST_PRECISE_CIRCLE_SHARE - MOST_PRECISE_CIRCLE_SHARE) * progress;
-	return (2 * approximateRadiusMeters({ locationRadius })) / circleShare;
 }
 
 export function liveModeratedText({
