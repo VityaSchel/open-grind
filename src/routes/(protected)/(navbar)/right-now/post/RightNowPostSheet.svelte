@@ -201,11 +201,13 @@
 					bind:checked={form.hosting}
 					disabled={busy}
 				/>
-				<PostLocationField
-					bind:shareLocation={form.shareLocation}
-					bind:locationRadius={form.locationRadius}
-					disabled={busy}
-				/>
+				{#if post.mapAvailable}
+					<PostLocationField
+						bind:shareLocation={form.shareLocation}
+						bind:locationRadius={form.locationRadius}
+						disabled={busy}
+					/>
+				{/if}
 			</Drawer.Body>
 			<Drawer.Footer>
 				<Button

@@ -6,6 +6,7 @@ const {
 	getActiveRightNowPostMock,
 	getPreferencesMock,
 	getRightNowPostEntitlementsMock,
+	isAssignmentOnMock,
 	NoFreeRightNowPostsError,
 	refreshFeedMock,
 	RightNowPostAlreadyRunningError,
@@ -22,6 +23,7 @@ const {
 	getActiveRightNowPostMock: vi.fn(),
 	getPreferencesMock: vi.fn(),
 	getRightNowPostEntitlementsMock: vi.fn(),
+	isAssignmentOnMock: vi.fn<(flag: { key: string }) => Promise<boolean>>(),
 	NoFreeRightNowPostsError: class extends Error {},
 	refreshFeedMock: vi.fn(() => Promise.resolve()),
 	RightNowPostAlreadyRunningError: class extends Error {},
@@ -45,6 +47,9 @@ vi.mock("#lib/api/right-now/post.ts", () => ({
 }));
 vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/api/analytics/assignments.ts", () => ({
+	isAssignmentOn: isAssignmentOnMock,
 }));
 vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({
 	appLifecycle: { active: true },
@@ -101,6 +106,8 @@ beforeEach(() => {
 	atHomeLocationMock.mockImplementation((request) => request());
 	getPreferencesMock.mockReset();
 	getPreferencesMock.mockResolvedValue({ geohash: BERLIN });
+	isAssignmentOnMock.mockReset();
+	isAssignmentOnMock.mockResolvedValue(true);
 	storeLocationMock.mockClear();
 	getActiveRightNowPostMock.mockReset();
 	getActiveRightNowPostMock.mockResolvedValue(null);
@@ -236,6 +243,27 @@ describe("RightNowPostState load", () => {
 
 		await vi.waitFor(() => expect(state.freePostsLeft).toBe(0));
 		expect(getRightNowPostEntitlementsMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("tells whether the Right Now map exists at the stored location", async () => {
+		const state = await loadedState();
+
+		await vi.waitFor(() => expect(state.mapAvailable).toBe(true));
+		expect(isAssignmentOnMock).toHaveBeenCalledWith({
+			key: "right-now-map",
+		});
+	});
+
+	it("checks for the map again when the location changes, with or without a post", async () => {
+		getActiveRightNowPostMock.mockResolvedValue(ownPost());
+		const state = await loadedState();
+		state.followLocation(BERLIN);
+		await vi.waitFor(() => expect(state.mapAvailable).toBe(true));
+		isAssignmentOnMock.mockResolvedValue(false);
+
+		state.followLocation(MUNICH);
+
+		await vi.waitFor(() => expect(state.mapAvailable).toBe(false));
 	});
 
 	it("lists each rejection reason once", async () => {

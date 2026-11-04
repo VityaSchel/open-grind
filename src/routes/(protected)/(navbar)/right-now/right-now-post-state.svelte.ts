@@ -7,6 +7,7 @@ import {
 	accountScoped,
 	isAccountEpochCurrent,
 } from "#lib/api/account-caches.ts";
+import { isAssignmentOn } from "#lib/api/analytics/assignments.ts";
 import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
@@ -58,6 +59,7 @@ export type RightNowPostRejection = {
 export class RightNowPostState {
 	post: RightNowPostDetails | null = $state.raw(null);
 	freePostsLeft: FreeRightNowPosts = $state(null);
+	mapAvailable = $state(false);
 	loading = $state(true);
 	joining = $state(false);
 	saving = $state(false);
@@ -105,6 +107,7 @@ export class RightNowPostState {
 	readonly #profileId: number;
 	readonly #postReads = new Generation();
 	readonly #allowanceReads = new Generation();
+	readonly #mapReads = new Generation();
 	#views = 0;
 	#viewLeft = false;
 	#loaded = false;
@@ -210,6 +213,7 @@ export class RightNowPostState {
 		this.#followedGeohash = geohash;
 		if (previous === null || previous === geohash) return;
 		untrack(() => {
+			this.#refreshMapAvailability();
 			if (this.post === null) this.#refreshAllowance();
 		});
 	}
@@ -219,6 +223,7 @@ export class RightNowPostState {
 		this.#destroyed = true;
 		this.#postReads.next();
 		this.#allowanceReads.next();
+		this.#mapReads.next();
 		this.#sheetListeners = [];
 		this.#syncTimers();
 	}
@@ -226,6 +231,7 @@ export class RightNowPostState {
 	async #load(): Promise<void> {
 		const epoch = accountEpoch();
 		if (!this.#loaded) this.loading = true;
+		this.#refreshMapAvailability();
 		try {
 			await Promise.all([
 				this.#readPost({ epoch }),
@@ -357,6 +363,15 @@ export class RightNowPostState {
 		const epoch = accountEpoch();
 		void this.#readAllowance({ epoch }).catch((error: unknown) => {
 			if (!this.#isGone(epoch)) console.error(error);
+		});
+	}
+
+	#refreshMapAvailability(): void {
+		const epoch = accountEpoch();
+		const read = this.#mapReads.next();
+		void isAssignmentOn({ key: "right-now-map" }).then((available) => {
+			if (this.#isGone(epoch) || this.#mapReads.isStale(read)) return;
+			this.mapAvailable = available;
 		});
 	}
 

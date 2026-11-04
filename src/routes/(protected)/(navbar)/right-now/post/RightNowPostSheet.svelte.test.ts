@@ -165,6 +165,18 @@ describe("the Right Now post sheet rejections", () => {
 });
 
 describe("the Right Now post sheet form", () => {
+	it("offers no map controls where the Right Now map doesn't exist", async () => {
+		const fake = runningPost();
+		fake.mapAvailable = false;
+
+		await renderSheet(fake);
+
+		expect(screen.getByRole("switch", { name: "Hosting" })).toBeTruthy();
+		expect(
+			screen.queryByRole("switch", { name: "Show me on map" }),
+		).toBeNull();
+	});
+
 	it("starts from the post's text, hosting and location", async () => {
 		await renderSheet(
 			runningPost({

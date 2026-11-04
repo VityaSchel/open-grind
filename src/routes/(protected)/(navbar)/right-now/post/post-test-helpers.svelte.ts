@@ -11,6 +11,7 @@ export class FakeRightNowPostState implements Pick<
 	RightNowPostState,
 	| "post"
 	| "freePostsLeft"
+	| "mapAvailable"
 	| "loading"
 	| "joining"
 	| "saving"
@@ -25,6 +26,7 @@ export class FakeRightNowPostState implements Pick<
 > {
 	post = $state.raw<RightNowPostState["post"]>(null);
 	freePostsLeft = $state<RightNowPostState["freePostsLeft"]>(3);
+	mapAvailable = $state(true);
 	loading = $state(false);
 	joining = $state(false);
 	saving = $state(false);

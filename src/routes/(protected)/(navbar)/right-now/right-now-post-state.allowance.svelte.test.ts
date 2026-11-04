@@ -20,6 +20,9 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	atHomeLocation: (request: () => Promise<unknown>) => request(),
 }));
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: vi.fn() }));
+vi.mock("#lib/api/analytics/assignments.ts", () => ({
+	isAssignmentOn: () => Promise.resolve(false),
+}));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("./right-now-feed-state.svelte", () => ({
 	getRightNowFeedState: () => ({ refreshOrDefer: () => Promise.resolve() }),

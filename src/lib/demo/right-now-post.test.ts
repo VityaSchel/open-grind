@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { demoMeProfileId, HOUR, MINUTE, SECOND } from "#lib/demo/config.ts";
+import { assignmentsResponseSchema } from "#lib/model/analytics/assignments.ts";
 import { rightNowFeedResponseSchema } from "#lib/model/right-now/feed.ts";
 import {
 	freeRightNowPostsLeft,
@@ -103,6 +104,16 @@ afterEach(() => {
 });
 
 describe("demo right now own post", () => {
+	it("offers the Right Now map, so the editor shows its map controls", () => {
+		const { assignments } = assignmentsResponseSchema.parse(
+			route({ path: "/v3/assignment?geohash=u33dc0cppjs7" }).body,
+		);
+
+		expect(assignments).toContainEqual(
+			expect.objectContaining({ key: "right-now-map", value: "on" }),
+		);
+	});
+
 	it("starts with three free posts and no post, and each join spends one", () => {
 		expect(freePostsLeft()).toBe(3);
 		expect(activePost()).toBeNull();

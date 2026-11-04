@@ -558,6 +558,12 @@ export function demoRoute({
 					payload: {},
 					type: "FEATURE_FLAG",
 				},
+				{
+					key: "right-now-map",
+					value: "on",
+					payload: {},
+					type: "FEATURE_FLAG",
+				},
 			],
 		});
 	}
