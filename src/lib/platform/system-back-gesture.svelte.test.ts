@@ -24,12 +24,14 @@ import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	attachSystemBackGesture,
 	installSystemBack,
+	stackInMotion,
 	type SwipeBackStack,
 	type SwipeRelease,
 } from "./system-back-gesture.svelte";
 
 function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 	let tracking = $state(false);
+	let moving = $state(false);
 	let canBeginSwipeBack = $state(canBegin);
 	const calls = { begin: 0, commit: 0, cancel: 0, prepare: 0, undo: 0 };
 	const tracked: number[] = [];
@@ -38,6 +40,9 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 	const stack: SwipeBackStack = {
 		get tracking() {
 			return tracking;
+		},
+		get moving() {
+			return moving;
 		},
 		get canBeginSwipeBack() {
 			return tracking || canBeginSwipeBack;
@@ -73,7 +78,11 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 		flushSync();
 	};
 
-	return { stack, calls, tracked, releases, allowBegin };
+	const slide = (sliding: boolean) => {
+		moving = sliding;
+	};
+
+	return { stack, calls, tracked, releases, allowBegin, slide };
 }
 
 function armedPushes() {
@@ -123,6 +132,22 @@ describe("attachSystemBackGesture", () => {
 		);
 
 		detach();
+	});
+
+	it("reports an attached stack in motion while it tracks or slides", () => {
+		const { stack, slide } = makeStack();
+		slide(true);
+		expect(stackInMotion(), "a detached stack never counts").toBe(false);
+
+		const detach = attachSystemBackGesture(stack);
+		expect(stackInMotion()).toBe(true);
+		slide(false);
+		expect(stackInMotion()).toBe(false);
+		window.__AndroidOnBackGestureStart?.();
+		expect(stackInMotion()).toBe(true);
+
+		detach();
+		expect(stackInMotion()).toBe(false);
 	});
 
 	it("starts again once the overlay is gone", () => {

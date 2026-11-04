@@ -37,6 +37,10 @@ export function topBackGestureHandler(
 	return backGestureHandlersTopFirst(skip)[0];
 }
 
+export function overlayOpen(): boolean {
+	return [...backGestureEventHandlers.values()].includes("overlay");
+}
+
 export function runBackGestureHandlers(): boolean {
 	for (const handler of backGestureHandlersTopFirst()) {
 		if (handler() !== true) return true;

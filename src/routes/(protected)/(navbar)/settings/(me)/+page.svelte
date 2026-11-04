@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { version } from "$app/env";
 
+	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import AccountSettingsLink from "./AccountSettingsLink.svelte";
 	import AlbumsLink from "./AlbumsLink.svelte";
 	import AppSettingsLink from "./AppSettingsLink.svelte";
@@ -15,6 +16,7 @@
 	<div
 		data-slot="me-scroller"
 		class="h-full w-full overflow-y-auto overscroll-none"
+		{@attach scrollsToTopOnStatusBarTap}
 	>
 		<div class="flex w-full p-4 pb-nav-clear">
 			<div class="m-auto flex w-full max-w-120 flex-col gap-3">

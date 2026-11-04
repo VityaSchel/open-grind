@@ -39,6 +39,29 @@ describe("PageStackState releasing a swipe", () => {
 	});
 });
 
+describe("PageStackState in motion", () => {
+	it("counts as moving while a push slides in and while a swipe tracks or settles", async () => {
+		const harness = makeStack();
+		const { stack, animations } = harness;
+		expect(stack.moving).toBe(false);
+
+		const start = await stack.navigate(
+			navigationEvent({ from: "/settings", to: "/settings/app" }),
+		);
+		start?.();
+		expect(stack.moving).toBe(true);
+		await settleLast(animations);
+		expect(stack.moving).toBe(false);
+
+		stack.beginSwipeBack();
+		expect(stack.moving).toBe(true);
+		stack.cancelSwipeBack();
+		expect(stack.moving).toBe(true);
+		await settleLast(animations);
+		expect(stack.moving).toBe(false);
+	});
+});
+
 describe("PageStackState committing a swipe", () => {
 	it("makes the page inert from the commit until the page it revealed takes its place", async () => {
 		const harness = makeStack();

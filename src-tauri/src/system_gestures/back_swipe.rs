@@ -1,6 +1,6 @@
 use std::cell::{Cell, RefCell};
 
-use block2::{DynBlock, RcBlock};
+use block2::RcBlock;
 use objc2::rc::{Retained, Weak};
 use objc2::runtime::{AnyObject, NSObject, NSObjectProtocol, ProtocolObject};
 use objc2::{
@@ -16,6 +16,7 @@ use objc2_ui_kit::{
 use tauri::WebviewWindow;
 
 use super::edge_pan::{self, EdgePoint, Release};
+use super::page_script::evaluate;
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
 
@@ -241,19 +242,6 @@ impl BackSwipe {
 			recognizer.setEnabled(false);
 		}
 	}
-}
-
-fn evaluate(webview: &UIView, script: &str) {
-	let script = NSString::from_str(script);
-	let completion: Option<&DynBlock<dyn Fn(*mut AnyObject, *mut NSError)>> =
-		None;
-	let _: () = unsafe {
-		msg_send![
-			webview,
-			evaluateJavaScript: &*script,
-			completionHandler: completion
-		]
-	};
 }
 
 fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	backGestureEventHandlers,
 	type BackGestureLayer,
+	overlayOpen,
 	runBackGestureHandlers,
 	topBackGestureHandler,
 } from "./back-gesture-event.svelte";
@@ -118,5 +119,17 @@ describe("back gesture layers", () => {
 
 		expect(tops).toEqual([undefined, stack, overlay]);
 		stop();
+	});
+
+	it("reports an overlay open only while an overlay-layer handler is registered", () => {
+		register({ layer: "stack" });
+		register({ layer: "screen" });
+		expect(overlayOpen()).toBe(false);
+
+		const overlay = register({ layer: "overlay" });
+		expect(overlayOpen()).toBe(true);
+
+		backGestureEventHandlers.delete(overlay);
+		expect(overlayOpen()).toBe(false);
 	});
 });

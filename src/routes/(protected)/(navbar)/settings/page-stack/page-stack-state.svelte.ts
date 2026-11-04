@@ -57,6 +57,10 @@ export class PageStackState {
 		this.#pushedFrom = pushedFrom;
 	}
 
+	get moving(): boolean {
+		return this.ghost !== null;
+	}
+
 	get canBeginSwipeBack(): boolean {
 		return this.#ancestors.length > 0 && this.#livePane() !== null;
 	}

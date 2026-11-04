@@ -1,3 +1,5 @@
+import { SvelteSet } from "svelte/reactivity";
+
 import { androidSystemBack } from "#lib/platform/android-native-bridge.ts";
 import {
 	backGestureEventHandlers,
@@ -11,6 +13,7 @@ export type SwipeRelease = { velocity: number };
 
 export type SwipeBackStack = {
 	readonly tracking: boolean;
+	readonly moving: boolean;
 	readonly canBeginSwipeBack: boolean;
 	beginSwipeBack(): boolean;
 	trackSwipeBack(progress: number): void;
@@ -35,6 +38,12 @@ export type SystemBackAdapter = {
 	expose: (gesture: SystemBackGesture) => () => void;
 	arm: (arming: { gesture: SystemBackGesture; armed: boolean }) => void;
 };
+
+const attachedStacks = new SvelteSet<SwipeBackStack>();
+
+export function stackInMotion(): boolean {
+	return [...attachedStacks].some((stack) => stack.tracking || stack.moving);
+}
 
 const noSystemBack: SystemBackAdapter = {
 	passesOver: [],
@@ -110,6 +119,7 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 		prepare: () => stack.prepareSwipeBack?.(),
 	};
 	const unexpose = systemBack.expose(gesture);
+	attachedStacks.add(stack);
 	backGestureEventHandlers.set(commitInFlight, "stack");
 	const stopArming = $effect.root(() => {
 		$effect(() => {
@@ -123,6 +133,7 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 	return () => {
 		stopReading();
 		stopArming();
+		attachedStacks.delete(stack);
 		backGestureEventHandlers.delete(commitInFlight);
 		unexpose();
 	};

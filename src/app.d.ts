@@ -31,6 +31,7 @@ declare global {
 			finish(release: { commit: boolean; velocity: number }): void;
 			prepare(): void;
 		};
+		__iosStatusBarTap?: () => void;
 		pswp?: unknown;
 	}
 }

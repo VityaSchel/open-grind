@@ -237,4 +237,27 @@ describe("the scroll-to-top button", () => {
 		await view.glideFor(GLIDE_MS);
 		expect(view.scroller.scrollTop).toBe(0);
 	});
+
+	it("on iOS answers a status-bar tap with its own scroll to the top", async () => {
+		runningOn("ios");
+		const view = await mountWithScroller();
+		await view.scrollTo(5000);
+
+		window.__iosStatusBarTap?.();
+		await settle();
+
+		expect(view.button()).toBeNull();
+		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
+		await view.glideFor(GLIDE_MS);
+		expect(view.scroller.scrollTop).toBe(0);
+
+		cleanup();
+		await view.scrollTo(5000);
+		window.__iosStatusBarTap?.();
+		await settle();
+		expect(
+			view.scroller.scrollTop,
+			"an unmounted button stops answering",
+		).toBe(5000);
+	});
 });

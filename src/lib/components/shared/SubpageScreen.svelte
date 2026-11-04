@@ -6,6 +6,7 @@
 
 	import BackLink from "#lib/components/navigation/BackLink.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { provideSubpageActions } from "./subpage-actions-context.svelte";
 
@@ -69,6 +70,7 @@
 		bind:this={scroller}
 		class="h-full w-full overflow-y-auto overscroll-none"
 		data-slot="subpage-scroller"
+		{@attach scrollsToTopOnStatusBarTap}
 	>
 		<div
 			class="flex min-h-full w-full px-4 pt-header-clear-19 pb-nav-clear"

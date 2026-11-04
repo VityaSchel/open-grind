@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
 
+	import { answerStatusBarTaps } from "#lib/platform/status-bar-tap.ts";
 	import {
 		glidingToTop,
 		jumpThenGlideToTop,
@@ -36,9 +37,14 @@
 		settle();
 		el.addEventListener("scroll", onScroll, { passive: true });
 		el.addEventListener("scrollend", onScroll, { passive: true });
+		const stopAnswering = answerStatusBarTaps({
+			scroller: el,
+			scrollToTop,
+		});
 		return () => {
 			el.removeEventListener("scroll", onScroll);
 			el.removeEventListener("scrollend", onScroll);
+			stopAnswering?.();
 			stopGlidingToTop(el);
 		};
 	});

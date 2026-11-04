@@ -372,6 +372,8 @@ pub fn run() {
                 soft_keyboard::install(&window);
                 #[cfg(target_os = "ios")]
                 system_gestures::back_swipe::install(&window);
+                #[cfg(target_os = "ios")]
+                system_gestures::scroll_to_top::install(&window);
                 #[cfg(target_os = "linux")]
                 media::serve_element_opens(&window);
                 #[cfg(target_os = "linux")]

@@ -12,6 +12,7 @@
 	import NotFound from "#lib/components/feedback/NotFound.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import type { RenderedGridProfile } from "#lib/grid/grid.ts";
 	import BlockedProfile from "../BlockedProfile.svelte";
 	import ProfileBottomNavBar from "../bottom-nav/ProfileBottomNavBar.svelte";
@@ -111,6 +112,7 @@
 			bind:this={scroller}
 			{...scrollerHooks}
 			class="h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto"
+			{@attach active && scrollsToTopOnStatusBarTap}
 		>
 			<main
 				inert={!active}
