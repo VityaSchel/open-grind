@@ -54,7 +54,7 @@ describe("the Right Now post controls", () => {
 		renderControls(fake);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Join · 3 free" }),
+			screen.getByRole("button", { name: "Join · 3 left" }),
 		);
 		await fireEvent.click(
 			await screen.findByRole("button", { name: "Join now" }),

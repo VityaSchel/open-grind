@@ -29,8 +29,8 @@ afterEach(cleanup);
 
 describe("the Right Now join pill", () => {
 	it.each<[FakeRightNowPostState["freePostsLeft"], string]>([
-		[3, "Join · 3 free"],
-		[1, "Join · 1 free"],
+		[3, "Join · 3 left"],
+		[1, "Join · 1 left"],
 		["unlimited", "Join · Free"],
 		[null, "Join"],
 	])("with %s free posts reads %s and asks to join", async (free, label) => {
@@ -51,10 +51,10 @@ describe("the Right Now join pill", () => {
 		renderButton(fake);
 
 		const button = screen.getByRole("button", {
-			name: "Join · 0 free. No free posts left in this area",
+			name: "Join · 0 left. No free posts left in this area",
 		});
 
-		expect(button.textContent.trim()).toBe("Join · 0 free");
+		expect(button.textContent.trim()).toBe("Join · 0 left");
 		expect(button.matches(":disabled")).toBe(true);
 	});
 
@@ -65,7 +65,7 @@ describe("the Right Now join pill", () => {
 
 		expect(
 			screen
-				.getByRole("button", { name: "Join · 3 free" })
+				.getByRole("button", { name: "Join · 3 left" })
 				.matches(":disabled"),
 		).toBe(true);
 	});
@@ -144,7 +144,7 @@ describe("the Right Now join pill", () => {
 		flushSync();
 
 		expect(
-			screen.getByRole("button", { name: "Join · 2 free" }),
+			screen.getByRole("button", { name: "Join · 2 left" }),
 		).toBeTruthy();
 	});
 });

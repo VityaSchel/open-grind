@@ -34,7 +34,7 @@
 	const joinLabel = $derived.by(() => {
 		if (post.freePostsLeft === "unlimited") return "Join · Free";
 		if (post.freePostsLeft === null) return "Join";
-		return `Join · ${post.freePostsLeft} free`;
+		return `Join · ${post.freePostsLeft} left`;
 	});
 	const runningLabel = $derived(
 		off

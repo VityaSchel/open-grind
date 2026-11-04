@@ -5,7 +5,7 @@ import { openGrid } from "./app";
 export const RIGHT_NOW_FEED_TIMEOUT = 60_000;
 
 export const rightNowJoinPill = (page: Page) =>
-	page.getByRole("button", { name: "Join · 3 free" });
+	page.getByRole("button", { name: "Join · 3 left" });
 
 export async function goToRightNow(page: Page): Promise<void> {
 	await openGrid(page);

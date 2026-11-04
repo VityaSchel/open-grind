@@ -135,9 +135,9 @@ test.describe("an area with no free posts left", () => {
 		await goToRightNow(page);
 
 		const join = page.getByRole("button", {
-			name: "Join · 0 free. No free posts left in this area",
+			name: "Join · 0 left. No free posts left in this area",
 		});
 		await expect(join).toBeDisabled({ timeout: RIGHT_NOW_FEED_TIMEOUT });
-		await expect(join).toHaveText("Join · 0 free");
+		await expect(join).toHaveText("Join · 0 left");
 	});
 });
