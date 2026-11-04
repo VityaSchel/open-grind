@@ -99,7 +99,7 @@
 			{#if ownPost}
 				{#if onedit !== null}
 					<Button
-						variant="ghost"
+						variant="secondary"
 						size="sm"
 						aria-label="Edit your post"
 						onclick={onedit}
@@ -110,12 +110,13 @@
 				{/if}
 			{:else}
 				<Button
-					variant="ghost"
-					size="icon"
+					variant="secondary"
+					size="sm"
 					href="/chat/{conversationId}"
 					aria-label={messageLabel}
 				>
-					<ChatIcon class="size-5" />
+					<ChatIcon class="size-4" />
+					Message...
 				</Button>
 			{/if}
 		</div>

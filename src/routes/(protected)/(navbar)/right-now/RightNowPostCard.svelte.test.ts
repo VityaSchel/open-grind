@@ -130,18 +130,16 @@ describe("a Right Now post card", () => {
 		expect(screen.queryByRole("img", { name: "Post photo" })).toBeNull();
 	});
 
-	it("links the chat button to the conversation with the author", () => {
+	it("links the labeled chat button to the conversation with the author", () => {
 		renderCard();
 
 		const conversationId = conversationIdFor({
 			profileId: AUTHOR_ID,
 			ourProfileId: OUR_PROFILE_ID,
 		});
-		expect(
-			screen
-				.getByRole("link", { name: "Message Simon" })
-				.getAttribute("href"),
-		).toBe(`/chat/${conversationId}`);
+		const message = screen.getByRole("link", { name: "Message Simon" });
+		expect(message.getAttribute("href")).toBe(`/chat/${conversationId}`);
+		expect(message.textContent.trim()).toBe("Message...");
 	});
 
 	it("offers Edit instead of Message on our own post", async () => {
