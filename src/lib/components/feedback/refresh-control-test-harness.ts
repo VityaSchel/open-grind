@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import DataRefreshControl from "./DataRefreshControl.svelte";
 import { contentSlideRecorder } from "./refresh/content-slide-test-helpers";
+import { touchEvent } from "./refresh/pull-test-helpers";
 
 export const FRAME_MS = 16;
 export const TWEEN_FRAMES = 20;
@@ -149,6 +150,7 @@ export async function mountAtRest(
 		scrollWrites: () => scrollWrites,
 		unmount: view.unmount,
 		disc: () => discWindow().querySelector("[data-refresh-disc]"),
+		ticks: () => anchor().querySelector("[data-refresh-ticks]"),
 		button: () => band().querySelector("button"),
 		discClipBoxes: () =>
 			[discWindow(), anchor()].map((box) => ({
@@ -177,6 +179,14 @@ export async function mountAtRest(
 		},
 		async touchList() {
 			scroller.dispatchEvent(new Event("touchmove"));
+			await settle();
+		},
+		async fingerDown() {
+			content.dispatchEvent(touchEvent("touchstart"));
+			await settle();
+		},
+		async liftFinger() {
+			content.dispatchEvent(touchEvent("touchend"));
 			await settle();
 		},
 		async pressInsideList(key: string) {

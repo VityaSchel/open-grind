@@ -9,12 +9,22 @@
 	import { attachPullInputs } from "./refresh/attach-inputs";
 	import { contentSlide, PacingTween } from "./refresh/content-slide";
 	import {
-		MAX_SLINGSHOT_TENSION,
-		slingshotTension,
+		DISC_REST,
+		DISC_START,
+		DISC_WINDOW,
+		discDragTop,
 	} from "./refresh/disc-math";
 	import { fixedHeaderOffset } from "./refresh/fixed-header-offset.svelte";
 	import { PullModel } from "./refresh/pull-model.svelte";
+	import {
+		gestureFace,
+		type IndicatorFace,
+		pullStyleHere,
+	} from "./refresh/pull-style";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
+	import RefreshTicks, {
+		TICKS_PLATE_PX,
+	} from "./refresh/RefreshTicks.svelte";
 	import { RestingButtonModel } from "./refresh/resting-button.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
 	import { scrollGeometry } from "./refresh/scroll-geometry";
@@ -40,7 +50,8 @@
 	const BUTTON_HEIGHT_PX = 32;
 	const REST_GAP_PX = 12;
 	const REST_HEIGHT_PX = BUTTON_HEIGHT_PX + REST_GAP_PX * 2;
-	const ARM_PX = 18;
+	const PULL_STYLE = pullStyleHere();
+	const ARM_PX = PULL_STYLE.armPx;
 	const BOUNDARY_SETTLE_MS = 50;
 	const MOUSE_PROBE_MS = BOUNDARY_SETTLE_MS + 70;
 	const REVEAL_MS = 250;
@@ -75,36 +86,20 @@
 	model.onTrigger = () => onrefresh?.();
 	model.getBaseline = () => (restingButton.shown ? REST_HEIGHT_PX : 0);
 
-	type IndicatorType = "disc" | "hint" | "button";
-	const activeFace = $derived.by((): IndicatorType | null => {
-		if (busy) return "disc";
-		if (model.gestureActive)
-			return model.source === "touch" ? "disc" : "hint";
+	const activeFace = $derived.by((): IndicatorFace | null => {
+		if (busy) return PULL_STYLE.face;
+		if (model.gestureActive) return gestureFace(model.source);
 		if (restingButton.shown) return "button";
 		return null;
 	});
-	let lingerFace: IndicatorType | null = $state(null);
+	let lingerFace: IndicatorFace | null = $state(null);
 	$effect(() => {
 		if (activeFace) lingerFace = activeFace;
 	});
 
-	const DISC_SIZE = 40;
-	const DISC_SHADOW = 8;
-	const DISC_START = -(DISC_SIZE + DISC_SHADOW);
-	const DISC_REST = 10;
-	const DISC_TRAVEL = DISC_REST - DISC_START;
-	const DISC_WINDOW = DISC_REST + DISC_TRAVEL + DISC_SIZE + DISC_SHADOW;
 	const discTop = new Tween(DISC_START, { duration: 250, easing: cubicOut });
 	const settleMotion = () =>
 		prefersReducedMotion.current ? { duration: 0 } : undefined;
-
-	function discDragTop(displayPx: number): number {
-		const drag = Math.min(1, displayPx / ARM_PX);
-		const tension = slingshotTension(displayPx / ARM_PX);
-		return (
-			DISC_START + DISC_TRAVEL * (drag + tension / MAX_SLINGSHOT_TENSION)
-		);
-	}
 
 	const discShown = $derived.by(() => {
 		if (activeFace) return activeFace === "disc";
@@ -133,6 +128,7 @@
 	const discSpinning = $derived(
 		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
 	);
+	const TICKS_INSET_PX = (ARM_PX - TICKS_PLATE_PX) / 2;
 	let lastDragProgress = $state(0);
 	$effect(() => {
 		if (model.gestureActive && model.source === "touch")
@@ -149,7 +145,9 @@
 
 	$effect(() => {
 		if (model.gestureActive && model.source === "touch") {
-			void discTop.set(discDragTop(model.displayPx), { duration: 0 });
+			void discTop.set(discDragTop(model.displayPx / ARM_PX), {
+				duration: 0,
+			});
 		} else if (busy) {
 			void discTop.set(DISC_REST, settleMotion());
 		} else if (discShown) {
@@ -158,17 +156,15 @@
 	});
 
 	const bandOpacity = $derived.by(() => {
-		if (hintShown) {
+		if (hintShown)
 			return Math.min(
 				1,
 				Math.max(0, (reveal.current / ARM_PX) * 1.2 - 0.2),
 			);
-		} else {
-			return Math.min(
-				1,
-				Math.max(0, (buttonSpace.current / REST_HEIGHT_PX) * 1.6 - 0.2),
-			);
-		}
+		return Math.min(
+			1,
+			Math.max(0, (buttonSpace.current / REST_HEIGHT_PX) * 1.6 - 0.2),
+		);
 	});
 	const anchorEdge = $derived({
 		"top-0": position === "top",
@@ -357,6 +353,23 @@
 				</div>
 			{/if}
 		</div>
+		{#if activeFace === "ticks"}
+			<div
+				data-slot="refresh-ticks"
+				class={["absolute left-1/2", anchorEdge]}
+				style:translate="-50% {position === 'top'
+					? TICKS_INSET_PX
+					: -TICKS_INSET_PX}px"
+				out:scale={{ duration: 150, easing: cubicOut }}
+			>
+				<RefreshTicks
+					progress={model.source === "band"
+						? model.displayPx / ARM_PX
+						: 1}
+					spinning={discSpinning}
+				/>
+			</div>
+		{/if}
 		<div
 			data-slot="refresh-disc-window"
 			class={["absolute inset-x-0 overflow-clip", anchorEdge]}

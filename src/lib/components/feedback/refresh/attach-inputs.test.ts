@@ -3,9 +3,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { attachPullInputs } from "./attach-inputs";
 import { PullModel } from "./pull-model.svelte";
-import { makeScrollable } from "./pull-test-helpers";
+import { makeScrollable, touchEvent } from "./pull-test-helpers";
 import { RestingButtonModel } from "./resting-button.svelte";
 import type { PullPosition } from "./scroll-chain";
 
@@ -18,18 +19,24 @@ const TRACKPAD_TAIL_MS = 100;
 function harness({
 	position = "bottom",
 	fingerPhase = null,
-}: { position?: PullPosition; fingerPhase?: ScrollGestureState | null } = {}) {
+	pullFromNativeBand = false,
+}: {
+	position?: PullPosition;
+	fingerPhase?: ScrollGestureState | null;
+	pullFromNativeBand?: boolean;
+} = {}) {
 	const target = document.createElement("div");
 	const row = document.createElement("a");
 	const field = document.createElement("input");
 	target.append(row, field);
 	document.body.append(target);
 	const restingButton = new RestingButtonModel({ probeMs: PROBE_MS });
+	const model = new PullModel();
 	const towardBoundary = position === "top" ? -1 : 1;
 	let distance = 0;
 	let bandPx = 0;
 	const detachInputs = attachPullInputs(target, {
-		model: new PullModel(),
+		model,
 		restingButton,
 		position,
 		boundaryDistance: () => distance,
@@ -42,10 +49,12 @@ function harness({
 		shouldConceal: () => false,
 		fingerPhase,
 		nativeBand: true,
+		pullFromNativeBand,
 	});
 	const wheel = (deltaX: number, deltaY: number) =>
 		target.dispatchEvent(new WheelEvent("wheel", { deltaX, deltaY }));
 	return {
+		model,
 		restingButton,
 		row,
 		field,
@@ -90,6 +99,19 @@ function harness({
 			if (pulledByWheel) wheel(0, 4 * towardBoundary);
 			bandPx = BAND_PX;
 			target.dispatchEvent(new Event("scroll"));
+		},
+		endBand() {
+			target.dispatchEvent(new Event("scrollend"));
+		},
+		dragFinger(dy: number) {
+			row.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+			row.dispatchEvent(touchEvent("touchmove", { y: 100 + dy }));
+		},
+		touchRow() {
+			row.dispatchEvent(touchEvent("touchstart"));
+		},
+		liftFinger() {
+			row.dispatchEvent(touchEvent("touchend"));
 		},
 	};
 }
@@ -462,6 +484,61 @@ describe("a rubber band at the boundary on macOS", () => {
 		h.band({ pulledByWheel: false });
 
 		expect(h.restingButton.offered).toBe(true);
+		h.detach();
+	});
+});
+
+describe("the pull inputs on iOS", () => {
+	beforeEach(() => {
+		runningOn("ios");
+	});
+
+	afterEach(() => {
+		resetPlatform();
+	});
+
+	it("reads a pull from the rubber band under a finger and refreshes on lift", () => {
+		const h = harness({ position: "top", pullFromNativeBand: true });
+		const refreshed = vi.fn();
+		h.model.space = BAND_PX;
+		h.model.onTrigger = refreshed;
+
+		h.touchRow();
+		h.band({ pulledByWheel: false });
+		expect(h.model.source).toBe("band");
+		expect(h.model.phase).toBe("armed");
+		h.liftFinger();
+
+		expect(refreshed).toHaveBeenCalledOnce();
+		h.detach();
+	});
+
+	it("leaves a band without a finger alone, even when it ends with scrollend", () => {
+		const h = harness({ position: "top", pullFromNativeBand: true });
+
+		h.band({ pulledByWheel: false });
+		h.endBand();
+
+		expect(h.model.phase).toBe("idle");
+		expect(h.model.settledFrom).toBeNull();
+		h.detach();
+	});
+
+	it("never starts a pull from the finger's own travel at the boundary", () => {
+		const h = harness({ position: "top", pullFromNativeBand: true });
+
+		h.dragFinger(120);
+
+		expect(h.model.phase).toBe("idle");
+		h.detach();
+	});
+
+	it("elsewhere still starts a touch pull from the finger's travel at the boundary", () => {
+		const h = harness({ position: "top" });
+
+		h.dragFinger(120);
+
+		expect(h.model.source).toBe("touch");
 		h.detach();
 	});
 });

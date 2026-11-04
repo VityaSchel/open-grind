@@ -34,8 +34,8 @@ export function touchEvent(
 	const touch = { identifier: id, clientX: x, clientY: y };
 	const active = type === "touchstart" || type === "touchmove" ? [touch] : [];
 	Object.defineProperties(event, {
-		touches: { value: active },
-		changedTouches: { value: [touch] },
+		touches: { value: active, configurable: true },
+		changedTouches: { value: [touch], configurable: true },
 	});
 	return event as unknown as TouchEvent;
 }
