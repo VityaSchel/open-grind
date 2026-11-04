@@ -190,7 +190,7 @@ describe("the Right Now post sheet form", () => {
 			screen
 				.getByRole("slider", { name: "Location accuracy" })
 				.getAttribute("aria-valuenow"),
-		).toBe("70");
+		).toBe("30");
 	});
 
 	it("follows the post while nothing is edited", async () => {

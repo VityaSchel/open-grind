@@ -65,25 +65,40 @@ describe("the post location field", () => {
 			shareLocation: "DISTANCE_AND_MAP",
 			locationRadius: 100,
 		});
-		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("0");
+		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("100");
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
 			"Within about 2.0 km",
 		);
 		expect(screen.getByText("Within about 2.0 km")).toBeTruthy();
 	});
 
-	it("narrows the radius as the slider moves toward More", async () => {
+	it("grows the radius as the slider moves toward Less", async () => {
 		const stored = renderField({
 			shareLocation: "DISTANCE_AND_MAP",
-			locationRadius: 100,
+			locationRadius: 0,
 		});
 
-		await fireEvent.keyDown(accuracy() as HTMLElement, { key: "End" });
-
-		expect(stored.locationRadius).toBe(0);
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
 			"Within about 100 m",
 		);
+
+		await fireEvent.keyDown(accuracy() as HTMLElement, { key: "End" });
+
+		expect(stored.locationRadius).toBe(100);
+		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("100");
+		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
+			"Within about 2.0 km",
+		);
+	});
+
+	it("keeps the map switch and the accuracy in one group", () => {
+		const { container } = render(PostLocationField, {
+			props: { shareLocation: "DISTANCE_AND_MAP", locationRadius: 50 },
+		});
+
+		const group = container.querySelector('[data-slot="post-location"]');
+		expect(group?.contains(mapSwitch())).toBe(true);
+		expect(group?.contains(accuracy())).toBe(true);
 	});
 
 	it("labels the radius in the user's units", () => {
@@ -102,6 +117,6 @@ describe("the post location field", () => {
 		await fireEvent.click(mapSwitch());
 
 		expect(stored.shareLocation).toBe("NONE");
-		expect(accuracy()).toBeNull();
+		await vi.waitFor(() => expect(accuracy()).toBeNull());
 	});
 });
