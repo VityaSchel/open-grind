@@ -118,7 +118,7 @@ describe("album warning", () => {
 				ourAlbum,
 			},
 		});
-		return screen.getByRole("button", {
+		return screen.getByRole<HTMLButtonElement>("button", {
 			name: "Open album",
 		});
 	}
