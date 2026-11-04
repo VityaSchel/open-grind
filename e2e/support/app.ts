@@ -413,6 +413,10 @@ export class TrustedTouch {
 		return this.send("touchEnd", []);
 	}
 
+	cancel() {
+		return this.send("touchCancel", []);
+	}
+
 	async drag(
 		page: Page,
 		from: { x: number; y: number },

@@ -11,6 +11,7 @@ import {
 } from "./album-drive";
 import { changeScene } from "./drive";
 import { failing } from "./faults";
+import { press } from "./press";
 import { addingToast, toastsShown } from "./toast";
 
 const PHOTO_ALBUM_ID = 900;
@@ -144,12 +145,14 @@ export const albumAddResults: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				const submit = () =>
-					sheet(page)
-						.getByRole("button", { name: "Add to album" })
-						.click();
+					press(
+						sheet(page).getByRole("button", {
+							name: "Add to album",
+						}),
+					);
 				await openAlbum({ page, albumId: PHOTO_ALBUM_ID });
 				await openPreviousUploads(page);
-				await sheetTiles(page).first().click();
+				await press(sheetTiles(page).first());
 				await addingToast({ page, action: submit });
 				await changeScene({
 					page,

@@ -12,6 +12,7 @@ import {
 import { showsLoading } from "../settle";
 import type { Scene, SceneView } from ".";
 import { ALERT, changeScene, emitEvent } from "./drive";
+import { press } from "./press";
 import { holdToast, waitForNewToast } from "./toast";
 import { visit } from "./visit";
 
@@ -91,10 +92,9 @@ async function tryAgainFailing({
 	await waitForNewToast({
 		page,
 		action: () =>
-			page
-				.locator(ALERT)
-				.getByRole("button", { name: "Try again" })
-				.click(),
+			press(
+				page.locator(ALERT).getByRole("button", { name: "Try again" }),
+			),
 	});
 }
 
@@ -111,7 +111,7 @@ export async function fillSignIn(page: Page): Promise<void> {
 function submitSignIn(page: Page): Promise<void> {
 	return waitForNewToast({
 		page,
-		action: () => page.locator("form button[type=submit]").click(),
+		action: () => press(page.locator("form button[type=submit]")),
 	});
 }
 
@@ -311,7 +311,7 @@ async function failSignInWith({
 		page,
 		scene: { methodFaults: [{ command: "sign_in_with_email", error }] },
 	});
-	await page.locator("form button[type=submit]").click();
+	await press(page.locator("form button[type=submit]"));
 	await page.locator(ALERT).waitFor();
 }
 
@@ -425,10 +425,9 @@ export const signInAccountStatus: Scene = {
 			id: "feedback/account/update-required",
 			screen: "auth/sign-in",
 			drive: async (page) => {
-				await page
-					.locator(ALERT)
-					.getByRole("button", { name: "OK" })
-					.click();
+				await press(
+					page.locator(ALERT).getByRole("button", { name: "OK" }),
+				);
 				await page.locator(ALERT).waitFor({ state: "detached" });
 				await failSignInWith({
 					page,

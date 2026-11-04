@@ -9,6 +9,7 @@ import { TEXT_CONVERSATION } from "./chat";
 import { chooseFromMessageMenu, lastOutgoing } from "./chat-drive";
 import { ALERT, changeScene } from "./drive";
 import { failClipboard } from "./faults";
+import { press } from "./press";
 import { holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -43,16 +44,17 @@ async function showFailureToast(page: Page): Promise<void> {
 }
 
 async function confirmCopyError(page: Page): Promise<void> {
-	await page
-		.locator("[data-sonner-toast]")
-		.getByRole("button", { name: "Copy error details" })
-		.last()
-		.click();
+	await press(
+		page
+			.locator("[data-sonner-toast]")
+			.getByRole("button", { name: "Copy error details" })
+			.last(),
+	);
 	await page.locator(ALERT).waitFor();
 }
 
 async function copyConfirmed(page: Page): Promise<void> {
-	await page.locator(ALERT).getByRole("button", { name: "Copy" }).click();
+	await press(page.locator(ALERT).getByRole("button", { name: "Copy" }));
 	await page.locator(ALERT).waitFor({ state: "hidden" });
 	await holdToast(page);
 }
@@ -90,10 +92,11 @@ function blockedGrid({
 				screen,
 				survivesLocaleSwitch: answer === "Close",
 				drive: async (page) => {
-					await page
-						.locator(ALERT)
-						.getByRole("button", { name: answer })
-						.click();
+					await press(
+						page
+							.locator(ALERT)
+							.getByRole("button", { name: answer }),
+					);
 					await page.locator(ALERT).waitFor({ state: "hidden" });
 					await copyErrorButton(page).waitFor();
 					if (answer !== "Close") await holdToast(page);
@@ -171,7 +174,7 @@ async function retryWith({
 	shows: string;
 }): Promise<void> {
 	await changeScene({ page, scene: { restFaults: [fault] } });
-	await page.getByRole("button", { name: "Try again" }).click();
+	await press(page.getByRole("button", { name: "Try again" }));
 	await page.getByText(shows).waitFor();
 }
 
@@ -268,7 +271,7 @@ export const bypassWithoutLocation: Scene = {
 			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await page.getByRole("button", { name: "Bypass" }).click();
+				await press(page.getByRole("button", { name: "Bypass" }));
 				await holdToast(page);
 			},
 		},
@@ -286,11 +289,10 @@ export const bypassFailure: Scene = {
 			drive: async (page) => {
 				await chooseNeutralLocation(page);
 				await profileTile(page).first().waitFor();
-				await page.locator('nav a[href="/chat"]').first().click();
-				await page
-					.locator(`main a[href="${TEXT_CONVERSATION}"]`)
-					.first()
-					.click();
+				await press(page.locator('nav a[href="/chat"]').first());
+				await press(
+					page.locator(`main a[href="${TEXT_CONVERSATION}"]`).first(),
+				);
 				await askToUnsendLastMessage(page);
 				await changeScene({
 					page,
@@ -305,7 +307,7 @@ export const bypassFailure: Scene = {
 						],
 					},
 				});
-				await page.getByRole("button", { name: "Bypass" }).click();
+				await press(page.getByRole("button", { name: "Bypass" }));
 				await page
 					.getByText("Couldn’t bypass this paid feature")
 					.waitFor();
@@ -327,9 +329,9 @@ export const autoLocation: Scene = {
 					path: "/",
 					ready: page.locator(LOCATION_TITLE),
 				});
-				await page
-					.getByRole("button", { name: "Use current location" })
-					.click();
+				await press(
+					page.getByRole("button", { name: "Use current location" }),
+				);
 				await holdToast(page);
 			},
 		},

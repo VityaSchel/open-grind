@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 
 import { DRAWER, MEDIA_TILE } from "../../../e2e/support/drawer";
 import { chooseGeneratedMedia } from "./drive";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -33,10 +34,9 @@ export function sheet(page: Page): Locator {
 }
 
 export async function openPreviousUploads(page: Page): Promise<void> {
-	await page
-		.getByRole("button", { name: "Add photos or videos" })
-		.first()
-		.click();
+	await press(
+		page.getByRole("button", { name: "Add photos or videos" }).first(),
+	);
 	await sheet(page).getByText("Previous Uploads").first().waitFor();
 }
 
@@ -64,7 +64,7 @@ export function uploadToAlbum({
 		videos,
 		open: async () => {
 			await openPreviousUploads(page);
-			await sheet(page).locator(ADD_TILE).click();
+			await press(sheet(page).locator(ADD_TILE));
 		},
 	});
 }
@@ -82,8 +82,7 @@ export function slotButton({
 export function saveChanges(page: Page): Promise<void> {
 	return addingToast({
 		page,
-		action: () =>
-			page.getByRole("button", { name: "Save changes" }).click(),
+		action: () => press(page.getByRole("button", { name: "Save changes" })),
 	});
 }
 

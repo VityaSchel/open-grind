@@ -5,6 +5,7 @@ import { showsLoading } from "../settle";
 import { overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { ALERT, changeScene, emitEvent } from "./drive";
+import { press } from "./press";
 import { addingToast, holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -109,8 +110,7 @@ export const googleContinue: Scene = {
 				});
 				await addingToast({
 					page,
-					action: () =>
-						cardButton({ page, name: "Continue" }).click(),
+					action: () => press(cardButton({ page, name: "Continue" })),
 				});
 				await cardButton({ page, name: "Install" }).waitFor();
 			},
@@ -183,7 +183,7 @@ async function finishOnboarding({
 		ready: page.getByRole("button", { name: "Get started" }),
 	});
 	await changeScene({ page, scene: { onboarding: false } });
-	await page.getByRole("button", { name: "Get started" }).click();
+	await press(page.getByRole("button", { name: "Get started" }));
 	await lands.first().waitFor();
 }
 
@@ -230,10 +230,11 @@ export const googleHandoff: Scene = {
 			screen: "browse/location",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await page
-					.locator(ALERT)
-					.getByRole("button", { name: "Continue" })
-					.click();
+				await press(
+					page
+						.locator(ALERT)
+						.getByRole("button", { name: "Continue" }),
+				);
 				await page.getByText("That Google sign-in expired").waitFor();
 				await holdToast(page);
 			},
@@ -293,9 +294,9 @@ export const googleInstallStages: Scene = {
 						],
 					},
 				});
-				await page
-					.getByRole("button", { name: "Sign in with Google" })
-					.click();
+				await press(
+					page.getByRole("button", { name: "Sign in with Google" }),
+				);
 				await cardButton({ page, name: "Install" }).waitFor();
 				await showCompanionProgress({
 					page,
@@ -343,7 +344,7 @@ export const googleInstallStages: Scene = {
 					received: COMPANION_DOWNLOAD_BYTES,
 					shows: cardButton({ page, name: "Install" }),
 				});
-				await cardButton({ page, name: "Install" }).click();
+				await press(cardButton({ page, name: "Install" }));
 				await cardButton({ page, name: "Installing" }).waitFor();
 			},
 		},

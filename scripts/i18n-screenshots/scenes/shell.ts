@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
 
 import { GRID_READY_SELECTOR } from "../../../e2e/support/app";
-import { openAllFilters } from "../../../e2e/support/grid-filters";
 import { profileTile } from "../../../e2e/support/gps";
 import { ACTIVE_PANE } from "../../../e2e/support/profile-pager";
 import {
@@ -10,8 +9,9 @@ import {
 } from "../../../e2e/support/pull";
 import { showsLoading } from "../settle";
 import type { Scene } from ".";
-import { chooseNeutralLocation, GRID_SCROLLER } from "./browse";
+import { chooseNeutralLocation, GRID_SCROLLER, openAllFilters } from "./browse";
 import { INBOX_ROW, openInbox } from "./chat-drive";
+import { openContextMenu, press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -205,7 +205,7 @@ export const signOutConfirm: Scene = {
 					path: "/settings",
 					ready: page.getByRole("button", { name: "Sign out" }),
 				});
-				await page.getByRole("button", { name: "Sign out" }).click();
+				await press(page.getByRole("button", { name: "Sign out" }));
 				await page.getByRole("alertdialog").waitFor();
 			},
 		},
@@ -220,18 +220,17 @@ export const deleteConversations: Scene = {
 			screen: "chat/inbox",
 			drive: async (page) => {
 				await openInbox(page);
-				await page
-					.locator(INBOX_ROW)
-					.first()
-					.click({ button: "right" });
-				await page.getByRole("menu").waitFor();
+				await openContextMenu({
+					target: page.locator(INBOX_ROW).first(),
+					ready: page.getByRole("menu"),
+				});
 			},
 		},
 		{
 			id: "chat/inbox/delete",
 			screen: "chat/inbox",
 			drive: async (page) => {
-				await page.getByRole("menuitem", { name: "Delete" }).click();
+				await press(page.getByRole("menuitem", { name: "Delete" }));
 				await page.getByRole("alertdialog").waitFor();
 			},
 		},
@@ -251,13 +250,13 @@ export const blockIgnored: Scene = {
 					.locator(ACTIVE_PANE)
 					.getByRole("button", { name: "Profile menu" });
 				await visit({ page, path: "/profile/100001", ready: menu });
-				await menu.click();
+				await press(menu);
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.getByRole("menuitem", { name: "Block user" })
-							.click(),
+						press(
+							page.getByRole("menuitem", { name: "Block user" }),
+						),
 				});
 			},
 		},

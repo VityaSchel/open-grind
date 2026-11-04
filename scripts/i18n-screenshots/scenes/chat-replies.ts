@@ -11,6 +11,7 @@ import {
 } from "./chat-drive";
 import { MEDIA_REPLIES_ID, MEDIA_REPLIES_INBOX } from "./chat-fixtures";
 import { failChunks, LIGHTBOX_CHUNK_TEXT } from "./faults";
+import { press } from "./press";
 import { openProfile } from "./profile-drive";
 import { addingToast } from "./toast";
 
@@ -84,12 +85,13 @@ export const photoReplyOpenFailure: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.getByRole("button", {
-								name: "Open replied profile photo",
-							})
-							.first()
-							.click(),
+						press(
+							page
+								.getByRole("button", {
+									name: "Open replied profile photo",
+								})
+								.first(),
+						),
 				});
 			},
 		},
@@ -104,10 +106,7 @@ export const profilePhotoReply: Scene = {
 			screen: "profile",
 			drive: async (page) => {
 				await openProfile({ page, profileId: MEDIA_REPLIES_ID });
-				await page
-					.locator(`${ACTIVE_PANE} .item[href]`)
-					.first()
-					.click();
+				await press(page.locator(`${ACTIVE_PANE} .item[href]`).first());
 				await page.locator(LIGHTBOX).waitFor();
 				await typeReply({ page, textbox: "Reply to profile photo" });
 			},
@@ -119,7 +118,7 @@ export const profilePhotoReply: Scene = {
 			drive: async (page) => {
 				await addingToast({
 					page,
-					action: () => sendReplyButton(page).click(),
+					action: () => press(sendReplyButton(page)),
 				});
 				await page.locator(LIGHTBOX).waitFor({ state: "detached" });
 			},

@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 
 import { INCOMING_ROW, MESSAGE_ROW } from "../../../e2e/support/app";
 import { conversationPath } from "./chat-fixtures";
+import { openContextMenu, press } from "./press";
 import { visit } from "./visit";
 
 export const INBOX_ROW = 'main a[href^="/chat/"]';
@@ -52,11 +53,10 @@ export function lastOutgoing(page: Page): Locator {
 }
 
 export async function openMessageMenu(row: Locator): Promise<void> {
-	await row
-		.locator('[data-slot="message-bubble"]')
-		.first()
-		.click({ button: "right" });
-	await row.page().locator(MESSAGE_MENU).waitFor();
+	await openContextMenu({
+		target: row.locator('[data-slot="message-bubble"]').first(),
+		ready: row.page().locator(MESSAGE_MENU),
+	});
 }
 
 export async function chooseFromMessageMenu({
@@ -68,7 +68,7 @@ export async function chooseFromMessageMenu({
 }): Promise<void> {
 	await openMessageMenu(row);
 	const menu = row.page().locator(MESSAGE_MENU);
-	await menu.getByRole("button", { name: action }).click();
+	await press(menu.getByRole("button", { name: action }));
 	await messageMenuClosed(row.page());
 }
 

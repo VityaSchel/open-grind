@@ -8,6 +8,7 @@ import {
 import { DRAWER } from "../../../e2e/support/drawer";
 import type { Scene } from ".";
 import { MESSAGE_MENU, openInbox } from "./chat-drive";
+import { openContextMenu, press } from "./press";
 import { holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -25,7 +26,7 @@ export const inbox: Scene = {
 			id: "chat/inbox/filter",
 			screen: "chat/inbox",
 			drive: async (page) => {
-				await page.locator(FILTER_PILL).first().click();
+				await press(page.locator(FILTER_PILL).first());
 				await page.getByRole("dialog").waitFor();
 			},
 		},
@@ -52,13 +53,10 @@ export const inboxPinFailure: Scene = {
 					path: "/chat",
 					ready: page.locator(DEMO_CONVERSATION_ROW),
 				});
-				await page
-					.locator(DEMO_CONVERSATION_ROW)
-					.first()
-					.click({ button: "right" });
-				await page
-					.getByRole("button", { name: "Pin selected" })
-					.waitFor();
+				await openContextMenu({
+					target: page.locator(DEMO_CONVERSATION_ROW).first(),
+					ready: page.getByRole("button", { name: "Pin selected" }),
+				});
 			},
 		},
 		{
@@ -66,9 +64,7 @@ export const inboxPinFailure: Scene = {
 			screen: "chat/inbox/previews",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await page
-					.getByRole("button", { name: "Pin selected" })
-					.click();
+				await press(page.getByRole("button", { name: "Pin selected" }));
 				await holdToast(page);
 			},
 		},
@@ -91,11 +87,10 @@ export const conversation: Scene = {
 			id: "chat/conversation/menu",
 			screen: "chat/conversation",
 			drive: async (page) => {
-				await page
-					.locator(MESSAGE_BUBBLE)
-					.last()
-					.click({ button: "right" });
-				await page.locator(MESSAGE_MENU).waitFor();
+				await openContextMenu({
+					target: page.locator(MESSAGE_BUBBLE).last(),
+					ready: page.locator(MESSAGE_MENU),
+				});
 			},
 		},
 	],
@@ -109,9 +104,9 @@ export const attachments: Scene = {
 			screen: "chat/conversation",
 			drive: async (page) => {
 				await openConversation(page);
-				await page
-					.getByRole("button", { name: "Add attachment" })
-					.click();
+				await press(
+					page.getByRole("button", { name: "Add attachment" }),
+				);
 				await page.locator(DRAWER).waitFor();
 			},
 		},

@@ -12,6 +12,7 @@ import {
 import { openConversation } from "./chat-drive";
 import { ALERT, changeScene } from "./drive";
 import { CONNECT_FAILED, failChunks } from "./faults";
+import { press } from "./press";
 import { openProfile } from "./profile-drive";
 import { addingToast } from "./toast";
 
@@ -121,10 +122,7 @@ export const profileLightbox: Scene = {
 					(route) => route.fulfill({ status: 404 }),
 				);
 				await openProfile({ page, profileId: MANY_PHOTOS_ID });
-				await page
-					.locator(`${ACTIVE_PANE} .item[href]`)
-					.first()
-					.click();
+				await press(page.locator(`${ACTIVE_PANE} .item[href]`).first());
 				await page.locator(LIGHTBOX).waitFor();
 				await page.keyboard.press("ArrowLeft");
 				await page
@@ -203,13 +201,13 @@ export const albumPreviewFailures: Scene = {
 				await openAlbumConversation(page);
 				await addingToast({
 					page,
-					action: () => albumPreview({ page }).click(),
+					action: () => press(albumPreview({ page })),
 				});
 				await changeScene({ page, scene: { restFaults: [] } });
 				await failChunks({ page });
 				await addingToast({
 					page,
-					action: () => albumPreview({ page }).click(),
+					action: () => press(albumPreview({ page })),
 				});
 			},
 		},

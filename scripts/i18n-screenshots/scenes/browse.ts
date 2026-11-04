@@ -4,16 +4,17 @@ import {
 	GRID_READY_SELECTOR,
 	runPaletteCommand,
 } from "../../../e2e/support/app";
-import { openAllFilters } from "../../../e2e/support/grid-filters";
 import { profileTile } from "../../../e2e/support/gps";
 import { NEUTRAL_GEOHASH } from "../stubs";
 import type { Scene } from ".";
+import { press } from "./press";
 import { visit } from "./visit";
 
 export const LOCATION_TITLE = '[data-slot="empty-title"]';
 export const GRID_SCROLLER = '.pull-scroller:has([data-slot="grid-content"])';
 export const MAP_SEARCH = '[data-slot="map-controls"] input';
-const FILTERS_SCROLLER = '[role="dialog"] [data-slot="grid-filters-scroller"]';
+const FILTERS = '[role="dialog"]';
+const FILTERS_SCROLLER = `${FILTERS} [data-slot="grid-filters-scroller"]`;
 
 export const chooseLocation: Scene = {
 	platform: "phone",
@@ -28,9 +29,9 @@ export const chooseLocation: Scene = {
 			screen: "browse/location",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await page
-					.getByRole("button", { name: "Choose on map" })
-					.click();
+				await press(
+					page.getByRole("button", { name: "Choose on map" }),
+				);
 				await page.locator(MAP_SEARCH).waitFor();
 			},
 		},
@@ -45,6 +46,11 @@ export async function chooseNeutralLocation(page: Page): Promise<void> {
 		}),
 		runPaletteCommand(page, `@${NEUTRAL_GEOHASH}`),
 	]);
+}
+
+export async function openAllFilters(page: Page): Promise<void> {
+	await press(page.getByRole("button", { name: "All filters" }));
+	await page.locator(`${FILTERS}:focus-within`).waitFor();
 }
 
 export const grid: Scene = {

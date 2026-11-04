@@ -4,6 +4,7 @@ import type { RestFault } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene, SceneView } from ".";
 import { chooseNeutralLocation } from "./browse";
 import { failing } from "./faults";
+import { openContextMenu, press } from "./press";
 import {
 	FAVORITE_ID,
 	inActivePane,
@@ -88,24 +89,25 @@ export const imperialVisit: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openDisplaySettings(page);
-				await page.getByText("Imperial").click();
-				await page.locator('a[href="/settings/app"]').click();
-				await page.locator('a[href="/settings/app/privacy"]').click();
-				await page
-					.getByRole("switch", { name: "Reveal profile views" })
-					.click();
+				await press(page.getByText("Imperial"));
+				await press(page.locator('a[href="/settings/app"]'));
+				await press(page.locator('a[href="/settings/app/privacy"]'));
+				await press(
+					page.getByRole("switch", { name: "Reveal profile views" }),
+				);
 				await addingToast({
 					page,
 					action: async () => {
-						await page
-							.getByRole("link", { name: "Interest" })
-							.click();
-						await page
-							.locator(
-								`main a[href="${profilePath(FAVORITE_ID)}"]`,
-							)
-							.first()
-							.click();
+						await press(
+							page.getByRole("link", { name: "Interest" }),
+						);
+						await press(
+							page
+								.locator(
+									`main a[href="${profilePath(FAVORITE_ID)}"]`,
+								)
+								.first(),
+						);
 					},
 				});
 				await page
@@ -189,10 +191,10 @@ export const tapStates: Scene = {
 			screen: "profile",
 			drive: async (page) => {
 				await openProfile({ page, profileId: OTHER_ID });
-				await inActivePane({ page, name: SEND_FIRE_TAP }).click({
-					button: "right",
+				await openContextMenu({
+					target: inActivePane({ page, name: SEND_FIRE_TAP }),
+					ready: page.locator(TAP_OPTIONS),
 				});
-				await page.locator(TAP_OPTIONS).waitFor();
 			},
 		},
 		tapSent({ profileId: COOKIE_TAPPED_ID, tap: "Cookie" }),
@@ -214,7 +216,7 @@ export const tapFailure: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						inActivePane({ page, name: SEND_FIRE_TAP }).click(),
+						press(inActivePane({ page, name: SEND_FIRE_TAP })),
 				});
 			},
 		},

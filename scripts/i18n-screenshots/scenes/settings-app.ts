@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
+import { press } from "./press";
 import {
 	openAppSettings,
 	openDisplaySettings,
@@ -117,7 +118,7 @@ export const appsMenuEntry: Scene = {
 				await openDisplaySettings(page);
 				await addingToast({
 					page,
-					action: () => appsMenuSwitch(page).click(),
+					action: () => press(appsMenuSwitch(page)),
 				});
 				await overrideNative({
 					page,
@@ -131,14 +132,14 @@ export const appsMenuEntry: Scene = {
 						},
 					},
 				});
-				await appsMenuSwitch(page).click();
+				await press(appsMenuSwitch(page));
 				await page
 					.getByRole("switch", {
 						name: "Show in apps menu",
 						checked: true,
 					})
 					.waitFor();
-				await appsMenuSwitch(page).click();
+				await press(appsMenuSwitch(page));
 				await toastsShown({ page, count: 2 });
 			},
 		},
@@ -157,7 +158,7 @@ export const appUnimplemented: Scene = {
 				for (const name of UNIMPLEMENTED_LINKS) {
 					await addingToast({
 						page,
-						action: () => page.getByRole("link", { name }).click(),
+						action: () => press(page.getByRole("link", { name })),
 					});
 				}
 				await toastsShown({ page, count: 2 });
@@ -179,9 +180,9 @@ export const settingSaveFailed: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page
-							.getByRole("switch", { name: "Stay online" })
-							.click(),
+						press(
+							page.getByRole("switch", { name: "Stay online" }),
+						),
 				});
 			},
 		},

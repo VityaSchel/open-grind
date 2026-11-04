@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { type NativeOverrides, overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { ALERT, emitEvent } from "./drive";
+import { press } from "./press";
 import { holdToast, SHOWN_TOAST, waitForNewToast } from "./toast";
 import { visit } from "./visit";
 
@@ -63,7 +64,7 @@ function checkForUpdatesButton(page: Page) {
 function checkForUpdates(page: Page): Promise<void> {
 	return waitForNewToast({
 		page,
-		action: () => checkForUpdatesButton(page).click(),
+		action: () => press(checkForUpdatesButton(page)),
 	});
 }
 
@@ -84,7 +85,7 @@ function openNotifications(page: Page): Promise<void> {
 }
 
 async function enableNotifications(page: Page): Promise<void> {
-	await notificationsSwitch(page).click();
+	await press(notificationsSwitch(page));
 	await page
 		.getByRole("switch", { name: "Enable notifications", checked: true })
 		.waitFor();
@@ -101,7 +102,7 @@ function toggleNotificationsFailing({
 		page,
 		action: async () => {
 			await overrideNative({ page, overrides });
-			await notificationsSwitch(page).click();
+			await press(notificationsSwitch(page));
 		},
 	});
 }
@@ -153,7 +154,7 @@ export const appAndAddonUpdateSettings: Scene = {
 				});
 				await waitForNewToast({
 					page,
-					action: () => automaticChecksSwitch(page).click(),
+					action: () => press(automaticChecksSwitch(page)),
 				});
 				await checkForUpdates(page);
 				await holdToast(page);
@@ -191,7 +192,7 @@ export const fdroidAddonAlert: Scene = {
 			drive: async (page) => {
 				await openNotifications(page);
 				await enableNotifications(page);
-				await page.getByRole("radio", { name: "Fast Mode" }).click();
+				await press(page.getByRole("radio", { name: "Fast Mode" }));
 				await page.locator(ALERT).waitFor();
 			},
 		},
@@ -287,7 +288,7 @@ export const fastModeFailure: Scene = {
 				await waitForNewToast({
 					page,
 					action: () =>
-						page.getByRole("radio", { name: "Fast Mode" }).click(),
+						press(page.getByRole("radio", { name: "Fast Mode" })),
 				});
 				await holdToast(page);
 			},
@@ -324,8 +325,8 @@ export const manualInstall: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdateSettings(page);
-				await checkForUpdatesButton(page).click();
-				await page.locator(TAPPABLE_TOAST).click();
+				await press(checkForUpdatesButton(page));
+				await press(page.locator(TAPPABLE_TOAST));
 				await page.locator(`${LIVE_TOAST} [role="status"]`).waitFor();
 				await emitEvent({
 					page,
@@ -336,7 +337,7 @@ export const manualInstall: Scene = {
 						received: DOWNLOAD_BYTES,
 					},
 				});
-				await page.locator(TAPPABLE_TOAST).click();
+				await press(page.locator(TAPPABLE_TOAST));
 				await page
 					.locator(STAGE_PROGRESS)
 					.waitFor({ state: "detached" });

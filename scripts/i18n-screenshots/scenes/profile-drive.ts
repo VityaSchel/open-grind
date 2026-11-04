@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { ACTIVE_PANE } from "../../../e2e/support/profile-pager";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -42,8 +43,8 @@ export async function chooseProfileAction({
 	page: Page;
 	action: string;
 }): Promise<void> {
-	await inActivePane({ page, name: "Profile menu" }).click();
-	await page.getByRole("menuitem", { name: action }).click();
+	await press(inActivePane({ page, name: "Profile menu" }));
+	await press(page.getByRole("menuitem", { name: action }));
 }
 
 export function profileActionToast({

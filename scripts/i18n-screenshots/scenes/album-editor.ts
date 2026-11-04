@@ -16,6 +16,7 @@ import {
 import { albumAnswer, albumContentId, type AlbumSlot } from "./album-fixtures";
 import { ALERT, changeScene, chooseGeneratedMedia } from "./drive";
 import { failing } from "./faults";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -70,7 +71,7 @@ async function openSharedWith({
 	albumId: number;
 }): Promise<void> {
 	await openAlbum({ page, albumId });
-	await page.getByRole("button", { name: "Shared with" }).click();
+	await press(page.getByRole("button", { name: "Shared with" }));
 	await page.locator('[data-slot="shared-with-list"]').waitFor();
 }
 
@@ -96,7 +97,7 @@ export const newAlbum: Scene = {
 					name: "Add photos or videos",
 				});
 				const choose = () =>
-					chooseGeneratedMedia({ page, open: () => add.click() });
+					chooseGeneratedMedia({ page, open: () => press(add) });
 				await addingToast({ page, action: choose });
 				await changeScene({
 					page,
@@ -151,14 +152,12 @@ export const albumSlots: Scene = {
 		{
 			id: "settings/albums/album/slots-removed",
 			drive: async (page) => {
-				await slotButton({
-					page,
-					name: "Remove album photo in slot 1",
-				}).click();
-				await slotButton({
-					page,
-					name: "Remove album video in slot 2",
-				}).click();
+				await press(
+					slotButton({ page, name: "Remove album photo in slot 1" }),
+				);
+				await press(
+					slotButton({ page, name: "Remove album video in slot 2" }),
+				);
 				await page
 					.getByRole("button", { name: "Save changes" })
 					.waitFor();
@@ -169,7 +168,7 @@ export const albumSlots: Scene = {
 			screen: "settings/albums/album/slots-removed",
 			drive: async (page) => {
 				await openPreviousUploads(page);
-				await sheetTiles(page).first().click();
+				await press(sheetTiles(page).first());
 				await sheet(page)
 					.getByRole("button", { name: "Add to album" })
 					.waitFor();
@@ -185,12 +184,11 @@ export const albumSlots: Scene = {
 					page,
 					scene: { restFaults: [slotsAlbum, processingVideoRefused] },
 				});
-				await slotButton({
-					page,
-					name: "Remove album video in slot 4",
-				}).click();
+				await press(
+					slotButton({ page, name: "Remove album video in slot 4" }),
+				);
 				await saveChanges(page);
-				await slotButton({ page, name: "Keep album video" }).click();
+				await press(slotButton({ page, name: "Keep album video" }));
 				await renameAndSave({ page, name: RENAMED[0] });
 				await changeScene({
 					page,
@@ -210,7 +208,7 @@ export const albumDeletion: Scene = {
 			screen: "settings/albums/album",
 			drive: async (page) => {
 				await openAlbum({ page, albumId: MY_ALBUM_ID });
-				await albumMenu(page).click();
+				await press(albumMenu(page));
 				await page
 					.getByRole("menuitem", { name: "Delete album" })
 					.waitFor();
@@ -220,9 +218,9 @@ export const albumDeletion: Scene = {
 			id: "settings/albums/album/delete-confirm",
 			screen: "settings/albums/album",
 			drive: async (page) => {
-				await page
-					.getByRole("menuitem", { name: "Delete album" })
-					.click();
+				await press(
+					page.getByRole("menuitem", { name: "Delete album" }),
+				);
 				await page.locator(ALERT).waitFor();
 			},
 		},
@@ -232,10 +230,11 @@ export const albumDeletion: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				const confirm = () =>
-					page
-						.locator(ALERT)
-						.getByRole("button", { name: "Delete" })
-						.click();
+					press(
+						page
+							.locator(ALERT)
+							.getByRole("button", { name: "Delete" }),
+					);
 				await changeScene({
 					page,
 					scene: {
@@ -249,10 +248,10 @@ export const albumDeletion: Scene = {
 				});
 				await addingToast({ page, action: confirm });
 				await changeScene({ page, scene: { restFaults: [] } });
-				await albumMenu(page).click();
-				await page
-					.getByRole("menuitem", { name: "Delete album" })
-					.click();
+				await press(albumMenu(page));
+				await press(
+					page.getByRole("menuitem", { name: "Delete album" }),
+				);
 				await addingToast({ page, action: confirm });
 				await page.waitForURL("**/settings/albums");
 			},

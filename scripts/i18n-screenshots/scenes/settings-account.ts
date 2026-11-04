@@ -5,6 +5,7 @@ import type { ScreenshotScene } from "../../../src/lib/demo/screenshot-scene";
 import { showsLoading } from "../settle";
 import type { Scene } from ".";
 import { failing } from "./faults";
+import { press } from "./press";
 import { addingToast } from "./toast";
 import { visit } from "./visit";
 
@@ -85,10 +86,11 @@ function toggleFailure({
 					await addingToast({
 						page,
 						action: () =>
-							page
-								.getByRole("switch", { name: list.toggle })
-								.first()
-								.click(),
+							press(
+								page
+									.getByRole("switch", { name: list.toggle })
+									.first(),
+							),
 					});
 				},
 			},
@@ -196,7 +198,7 @@ export const accountUnimplemented: Scene = {
 				await addingToast({
 					page,
 					action: () =>
-						page.getByRole("link", { name: "Email" }).click(),
+						press(page.getByRole("link", { name: "Email" })),
 				});
 			},
 		},
@@ -240,7 +242,7 @@ export const privacySaveFailed: Scene = {
 					.waitFor();
 				await addingToast({
 					page,
-					action: () => distanceSwitch(page).click(),
+					action: () => press(distanceSwitch(page)),
 				});
 			},
 		},
@@ -258,7 +260,7 @@ export const telegramWarning: Scene = {
 					name: "Open Grind announcements",
 				});
 				await visit({ page, path: "/settings", ready: announcements });
-				await announcements.click();
+				await press(announcements);
 				await page.getByRole("dialog").waitFor();
 			},
 		},
