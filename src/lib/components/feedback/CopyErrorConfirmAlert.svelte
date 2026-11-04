@@ -8,8 +8,18 @@
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import Label from "#lib/components/ui/label/label.svelte";
 	import Switch from "#lib/components/ui/switch/switch.svelte";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let redact = $state(true);
+
+	dismissOnBackGesture({
+		active: () => copyErrorConfirmState.open,
+		dismiss: () => {
+			settleCopyErrorConfirm({ abort: true });
+			redact = true;
+		},
+	});
+
 	const preview = $derived(
 		getErrorText(copyErrorConfirmState.error, { redact }),
 	);

@@ -9,6 +9,7 @@
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { leaveDeletedPages } from "#lib/util/deleted-pages.ts";
 
 	let {
@@ -19,6 +20,11 @@
 
 	let confirming = $state(false);
 	let deleting = $state(false);
+
+	dismissOnBackGesture({
+		active: () => confirming,
+		dismiss: () => (confirming = false),
+	});
 
 	async function remove() {
 		deleting = true;

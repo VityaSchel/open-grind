@@ -18,6 +18,8 @@
 <script lang="ts">
 	import { Combobox as ComboboxPrimitive } from "bits-ui";
 
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+
 	let {
 		value = $bindable(),
 		open = $bindable(false),
@@ -26,6 +28,13 @@
 	}: ComboboxPrimitive.RootProps = $props();
 
 	let keyboardNav = $state(false);
+
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
+			open = false;
+		},
+	});
 
 	setComboboxCtx({
 		get keyboardNav() {
