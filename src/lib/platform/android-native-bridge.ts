@@ -1,7 +1,7 @@
 import { addPluginListener } from "@tauri-apps/api/core";
 
 import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
-import type { SystemBackAdapter } from "#lib/platform/system-back-gesture.ts";
+import type { SystemBackAdapter } from "#lib/platform/system-back-gesture.svelte.ts";
 
 export function applyBackGestureHandler() {
 	window.__AndroidOnBackGesture = () => !runBackGestureHandlers();
@@ -20,6 +20,7 @@ async function registerAndroidBackButtonListener() {
 }
 
 export const androidSystemBack: SystemBackAdapter = {
+	passesOver: [],
 	install: () => {
 		applyBackGestureHandler();
 		void registerAndroidBackButtonListener().catch((error) => {
@@ -37,4 +38,5 @@ export const androidSystemBack: SystemBackAdapter = {
 				delete window.__AndroidOnBackGestureCancel;
 		};
 	},
+	arm: () => {},
 };

@@ -40,8 +40,9 @@
 	const reorderable = $derived(!disabled && slots.length > 1);
 
 	$effect(() => {
-		if (disabled) reorder.cancel();
+		if (!reorderable) reorder.cancel();
 	});
+	$effect(() => () => reorder.cancel());
 </script>
 
 <div

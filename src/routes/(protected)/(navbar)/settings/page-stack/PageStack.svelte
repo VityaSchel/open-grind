@@ -9,7 +9,7 @@
 		stackMotion,
 	} from "#lib/components/navigation/stack/motion.ts";
 	import { paneSurface } from "#lib/components/navigation/stack/surface.ts";
-	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.ts";
+	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.svelte.ts";
 	import { earlierPathnames } from "#lib/util/history.ts";
 	import { pushedFromChain } from "./hierarchy";
 	import { PageStackState } from "./page-stack-state.svelte";

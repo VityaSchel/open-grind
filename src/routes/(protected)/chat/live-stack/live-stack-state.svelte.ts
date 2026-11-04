@@ -1,7 +1,7 @@
 import { tick } from "svelte";
 import type { NavigationTarget, OnNavigate } from "$app/navigation";
 
-import { StackSettle } from "#lib/components/navigation/stack/settle.ts";
+import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
@@ -26,6 +26,7 @@ export class LiveStackState {
 	#generation = new Generation();
 	#committedSlide: Promise<boolean> | null = null;
 	#watchdog: ReturnType<typeof setTimeout> | undefined;
+	#prepared = $state(0);
 
 	constructor({
 		surface,
@@ -69,6 +70,14 @@ export class LiveStackState {
 
 	get sheetKey(): string | null {
 		return this.leaving ?? this.#top();
+	}
+
+	get basePrepared(): boolean {
+		return this.#prepared > 0;
+	}
+
+	get canBeginSwipeBack(): boolean {
+		return this.tracking || this.#swipeBackFits();
 	}
 
 	applyFrame(): void {
@@ -135,14 +144,18 @@ export class LiveStackState {
 		};
 	}
 
+	prepareSwipeBack(): () => void {
+		this.#prepared += 1;
+		let undone = false;
+		return () => {
+			if (undone) return;
+			undone = true;
+			this.#prepared -= 1;
+		};
+	}
+
 	beginSwipeBack(): boolean {
-		if (
-			this.#top() === null ||
-			this.leaving !== null ||
-			(this.moving && !this.#settle.settlingIn) ||
-			!this.#backLandsOnBase()
-		)
-			return false;
+		if (!this.#swipeBackFits()) return false;
 
 		this.#settle.pickUp();
 		this.moving = false;
@@ -184,6 +197,15 @@ export class LiveStackState {
 		this.#clearWatchdog();
 		this.#committedSlide = null;
 		this.tracking = false;
+	}
+
+	#swipeBackFits(): boolean {
+		return (
+			this.#top() !== null &&
+			this.leaving === null &&
+			(!this.moving || this.#settle.settlingIn) &&
+			this.#backLandsOnBase()
+		);
 	}
 
 	#abandonBack(): void {

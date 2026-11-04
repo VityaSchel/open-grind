@@ -11,7 +11,9 @@ export class StackSettle {
 	readonly #motion: StackMotion;
 	readonly #reducedMotion: () => boolean;
 
-	#running: { animation: FrameAnimation; target: number } | null = null;
+	#running = $state.raw<{ animation: FrameAnimation; target: number } | null>(
+		null,
+	);
 	#floor: () => number = fullyIn;
 
 	constructor({

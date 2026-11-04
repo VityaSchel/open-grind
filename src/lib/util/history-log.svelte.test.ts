@@ -1,3 +1,4 @@
+import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AfterNavigate } from "$app/navigation";
 
@@ -205,6 +206,30 @@ describe("HistoryLog", () => {
 
 		expect(broken.span(LAUNCH)).toBe(1);
 		expect(mistyped.hasEntryBefore(LAUNCH)).toBe(false);
+	});
+
+	it("lets a reader in an effect run again after every recorded navigation", () => {
+		const log = new HistoryLog({ storage: memoryStorage });
+		const seen: number[] = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				seen.push(log.recorded);
+			});
+		});
+		flushSync();
+
+		log.record({ index: LAUNCH, pathname: "/", type: "enter", length: 1 });
+		flushSync();
+		log.record({
+			index: LAUNCH,
+			pathname: "/chat",
+			type: "link",
+			length: 1,
+		});
+		flushSync();
+
+		expect(seen).toEqual([0, 1, 2]);
+		stop();
 	});
 
 	it("keeps logging in memory when storage is unavailable", () => {

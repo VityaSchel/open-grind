@@ -2,6 +2,7 @@ import { SvelteMap } from "svelte/reactivity";
 import type { Attachment } from "svelte/attachments";
 
 import { playHaptic } from "#lib/haptics.ts";
+import { holdTouch } from "#lib/platform/held-touch.ts";
 import { nearestSlot, previewSlot } from "#lib/util/reorder.ts";
 
 const TOUCH_LIFT_DELAY_MS = 300;
@@ -28,6 +29,7 @@ export class GridReorderState {
 	#pointer: Point = { x: 0, y: 0 };
 	#scrollWatch: AbortController | null = null;
 	#timer: ReturnType<typeof setTimeout> | null = null;
+	#releaseTouch: (() => void) | null = null;
 	#pressed: {
 		index: number;
 		pointerId: number;
@@ -68,6 +70,7 @@ export class GridReorderState {
 			return () => {
 				node.removeEventListener("touchmove", blockScroll);
 				if (this.#nodes.get(index) === node) this.#nodes.delete(index);
+				if (this.#pressed?.node === node) this.cancel();
 			};
 		};
 	}
@@ -118,6 +121,8 @@ export class GridReorderState {
 		this.#scrollWatch?.abort();
 		this.#scrollWatch = null;
 		this.#pressed = null;
+		this.#releaseTouch?.();
+		this.#releaseTouch = null;
 		this.from = -1;
 		this.to = -1;
 	}
@@ -150,6 +155,7 @@ export class GridReorderState {
 		this.#offset = { x: 0, y: 0 };
 		this.from = pressed.index;
 		this.to = pressed.index;
+		this.#releaseTouch ??= holdTouch();
 		pressed.node.setPointerCapture(pressed.pointerId);
 		this.#watchScroll();
 	}

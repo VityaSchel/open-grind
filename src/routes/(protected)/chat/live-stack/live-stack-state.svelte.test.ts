@@ -24,6 +24,7 @@ function makeStack({
 	startAt = LIST,
 } = {}) {
 	let top = $state<string | null>(keyOf(startAt));
+	let landsOnBase = $state(backLandsOnBase);
 	const { surface, applied, animations } = fakeSurface();
 	let hideKeyboard!: () => void;
 
@@ -34,7 +35,7 @@ function makeStack({
 		keyOf: (target: NavigationTarget) => keyOf(target.url.pathname),
 		scope: LIST,
 		reducedMotion: () => reducedMotion,
-		backLandsOnBase: () => backLandsOnBase,
+		backLandsOnBase: () => landsOnBase,
 		keyboardVisible: () => keyboardVisible,
 		keyboardHidden: () =>
 			new Promise<void>((resolve) => {
@@ -53,6 +54,9 @@ function makeStack({
 		animations,
 		arrive,
 		hideKeyboard: () => hideKeyboard(),
+		landOnBase: (lands: boolean) => {
+			landsOnBase = lands;
+		},
 	};
 }
 
@@ -455,6 +459,78 @@ describe("LiveStackState back gesture", () => {
 		stack.commitSwipeBack();
 
 		expect(animations.at(-1)).toMatchObject({ duration: 0 });
+	});
+});
+
+describe("LiveStackState offering a back swipe", () => {
+	it("offers one exactly where a swipe would start", async () => {
+		expect(makeStack().stack.canBeginSwipeBack).toBe(false);
+		expect(
+			makeStack({ startAt: FIRST, backLandsOnBase: false }).stack
+				.canBeginSwipeBack,
+		).toBe(false);
+		expect(makeStack({ startAt: FIRST }).stack.canBeginSwipeBack).toBe(
+			true,
+		);
+
+		const harness = makeStack();
+		await navigate(harness, { from: LIST, to: FIRST });
+		expect(harness.stack.moving).toBe(true);
+		expect(harness.stack.canBeginSwipeBack, "while it slides in").toBe(
+			true,
+		);
+	});
+
+	it("keeps offering it while it tracks, whatever history says meanwhile", () => {
+		const { stack, landOnBase } = makeStack({ startAt: FIRST });
+		stack.beginSwipeBack();
+
+		landOnBase(false);
+
+		expect(stack.canBeginSwipeBack).toBe(true);
+		stack.cancelSwipeBack();
+		expect(stack.canBeginSwipeBack).toBe(false);
+	});
+
+	it("stops offering it while a committed swipe slides out", () => {
+		const { stack } = releasedSwipe({ progress: 0.6 });
+
+		expect(stack.moving).toBe(true);
+		expect(stack.canBeginSwipeBack).toBe(false);
+	});
+
+	it("reports the offer reactively", () => {
+		const { stack, landOnBase } = makeStack({
+			startAt: FIRST,
+			backLandsOnBase: false,
+		});
+		const offers: boolean[] = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				offers.push(stack.canBeginSwipeBack);
+			});
+		});
+		flushSync();
+
+		landOnBase(true);
+		flushSync();
+
+		expect(offers).toEqual([false, true]);
+		stop();
+	});
+
+	it("uncovers the base for a swipe about to start until the preparation is undone", () => {
+		const { stack } = makeStack({ startAt: FIRST });
+		expect(stack.basePrepared).toBe(false);
+
+		const undo = stack.prepareSwipeBack();
+		const undoAnother = stack.prepareSwipeBack();
+		expect(stack.basePrepared).toBe(true);
+		undo();
+		undo();
+		expect(stack.basePrepared).toBe(true);
+		undoAnother();
+		expect(stack.basePrepared).toBe(false);
 	});
 });
 

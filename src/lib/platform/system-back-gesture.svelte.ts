@@ -1,30 +1,45 @@
 import { androidSystemBack } from "#lib/platform/android-native-bridge.ts";
 import {
 	backGestureEventHandlers,
+	type BackGestureLayer,
 	topBackGestureHandler,
 } from "#lib/platform/back-gesture-event.svelte.ts";
+import { iosSystemBack } from "#lib/platform/ios-native-bridge.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 
 export type SwipeBackStack = {
 	readonly tracking: boolean;
+	readonly canBeginSwipeBack: boolean;
 	beginSwipeBack(): boolean;
 	trackSwipeBack(progress: number): void;
 	commitSwipeBack(): void;
 	cancelSwipeBack(): void;
+	prepareSwipeBack?(): () => void;
 };
 
-export type SystemBackGesture = { start: () => boolean; cancel: () => void };
+export type SwipeBackRelease = { commit: boolean; velocity: number };
+
+export type SystemBackGesture = {
+	start: () => boolean;
+	cancel: () => void;
+	finish: (release: SwipeBackRelease) => void;
+	prepare: () => (() => void) | undefined;
+};
 
 export type SystemBackAdapter = {
+	readonly passesOver: readonly BackGestureLayer[];
 	install: () => void;
 	readProgress: () => number | undefined;
 	expose: (gesture: SystemBackGesture) => () => void;
+	arm: (arming: { gesture: SystemBackGesture; armed: boolean }) => void;
 };
 
 const noSystemBack: SystemBackAdapter = {
+	passesOver: [],
 	install: () => {},
 	readProgress: () => undefined,
 	expose: () => () => {},
+	arm: () => {},
 };
 
 function platformSystemBack(): SystemBackAdapter {
@@ -32,6 +47,7 @@ function platformSystemBack(): SystemBackAdapter {
 		case "android":
 			return androidSystemBack;
 		case "ios":
+			return iosSystemBack;
 		case "linux":
 		case "macos":
 		case "windows":
@@ -69,22 +85,42 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 		return false;
 	};
 
-	const ownsTheGesture = () => topBackGestureHandler() === commitInFlight;
+	const ownsTheGesture = () =>
+		topBackGestureHandler({ skipping: systemBack.passesOver }) ===
+		commitInFlight;
 
-	const start = () => {
-		if (!ownsTheGesture() || !stack.beginSwipeBack()) return false;
-		frame = requestAnimationFrame(followProgress);
-		return true;
+	const gesture: SystemBackGesture = {
+		start: () => {
+			if (!ownsTheGesture() || !stack.beginSwipeBack()) return false;
+			frame = requestAnimationFrame(followProgress);
+			return true;
+		},
+		cancel: () => {
+			stopReading();
+			stack.cancelSwipeBack();
+		},
+		finish: ({ commit }) => {
+			if (!stack.tracking) return;
+			stopReading();
+			if (commit) stack.commitSwipeBack();
+			else stack.cancelSwipeBack();
+		},
+		prepare: () => stack.prepareSwipeBack?.(),
 	};
-	const cancel = () => {
-		stopReading();
-		stack.cancelSwipeBack();
-	};
-	const unexpose = systemBack.expose({ start, cancel });
+	const unexpose = systemBack.expose(gesture);
 	backGestureEventHandlers.set(commitInFlight, "stack");
+	const stopArming = $effect.root(() => {
+		$effect(() => {
+			systemBack.arm({
+				gesture,
+				armed: ownsTheGesture() && stack.canBeginSwipeBack,
+			});
+		});
+	});
 
 	return () => {
 		stopReading();
+		stopArming();
 		backGestureEventHandlers.delete(commitInFlight);
 		unexpose();
 	};

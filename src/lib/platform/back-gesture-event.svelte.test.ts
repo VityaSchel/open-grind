@@ -93,6 +93,16 @@ describe("back gesture layers", () => {
 		expect(topBackGestureHandler()).toBeUndefined();
 	});
 
+	it("skips the layers a caller passes over", () => {
+		const stack = register({ layer: "stack" });
+		register({ layer: "screen" });
+
+		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(stack);
+
+		const overlay = register({ layer: "overlay" });
+		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(overlay);
+	});
+
 	it("tracks the top handler reactively", () => {
 		const tops: unknown[] = [];
 		const stop = $effect.root(() => {

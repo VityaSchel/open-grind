@@ -28,7 +28,7 @@
 	} from "#lib/platform/native-insets.ts";
 	import { installScrollGestureBridge } from "#lib/platform/scroll-gesture.ts";
 	import { applySoftKeyboardLayout } from "#lib/platform/soft-keyboard.svelte.ts";
-	import { installSystemBack } from "#lib/platform/system-back-gesture.ts";
+	import { installSystemBack } from "#lib/platform/system-back-gesture.svelte.ts";
 	import { reconcileNotifications } from "#lib/push/notifications.svelte.ts";
 	import { startPushWatch } from "#lib/push/watch.ts";
 	import { startAddonUpdateWatch } from "#lib/updates/addon.svelte.ts";

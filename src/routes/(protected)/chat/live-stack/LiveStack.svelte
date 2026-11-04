@@ -19,7 +19,7 @@
 		softKeyboardHidden,
 		softKeyboardVisibility,
 	} from "#lib/platform/native-insets.ts";
-	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.ts";
+	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.svelte.ts";
 	import { earlierPathnames } from "#lib/util/history.ts";
 	import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { LiveStackState } from "./live-stack-state.svelte";
@@ -104,7 +104,7 @@
 	data-slot="live-stack-base"
 	class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) px-safe pb-(--safe-area-bottom)"
 	style:z-index={STACK_Z.back}
-	data-covered={stack.covered || undefined}
+	data-covered={(stack.covered && !stack.basePrepared) || undefined}
 	inert={stack.sheetOpen}
 >
 	{#if baseMounted}

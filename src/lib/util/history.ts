@@ -27,6 +27,7 @@ function entryPathname(url: string): string {
 }
 
 export function canGoBack(): boolean {
+	void historyLog.recorded;
 	const trusted = trustedNavigation();
 	if (trusted) return trusted.navigation.canGoBack;
 
@@ -35,6 +36,7 @@ export function canGoBack(): boolean {
 }
 
 export function earlierPathnames(): (string | null)[] {
+	void historyLog.recorded;
 	const trusted = trustedNavigation();
 	if (trusted) {
 		const { navigation, index } = trusted;

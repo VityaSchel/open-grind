@@ -1,7 +1,7 @@
 import { tick } from "svelte";
 import type { OnNavigate } from "$app/navigation";
 
-import { StackSettle } from "#lib/components/navigation/stack/settle.ts";
+import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
 import { canGoBack } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
@@ -26,7 +26,7 @@ export class PageStackState {
 	readonly #reducedMotion: () => boolean;
 	readonly #scope: string;
 
-	#ancestors: PaneSnapshot[] = [];
+	#ancestors = $state.raw<PaneSnapshot[]>([]);
 	#pushedFrom: { path: string }[];
 	#generation = new Generation();
 	#backOwed = false;
@@ -54,8 +54,8 @@ export class PageStackState {
 		this.#pushedFrom = pushedFrom;
 	}
 
-	get canSwipeBack(): boolean {
-		return this.#ancestors.length > 0;
+	get canBeginSwipeBack(): boolean {
+		return this.#ancestors.length > 0 && this.#livePane() !== null;
 	}
 
 	async navigate(navigation: OnNavigate): Promise<(() => void) | void> {
@@ -102,7 +102,7 @@ export class PageStackState {
 
 		const snapshot = snapshotPane(pane, from);
 		if (relation === "push") {
-			this.#ancestors.push(snapshot);
+			this.#ancestors = [...this.#ancestors, snapshot];
 			this.#pushedFrom.push(snapshot);
 		}
 		this.#keepAncestorsOf(to);
@@ -140,7 +140,7 @@ export class PageStackState {
 		}
 
 		const previous = this.#ancestors.at(-1);
-		if (!this.canSwipeBack || !previous || !this.#livePane()) return false;
+		if (!previous || !this.#livePane()) return false;
 
 		this.ghost = previous;
 		this.liveRole = "front";

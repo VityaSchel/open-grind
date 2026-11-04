@@ -6,6 +6,8 @@ mod app_settings;
 mod appearance;
 #[cfg(target_os = "linux")]
 mod appimage;
+#[cfg(target_os = "ios")]
+mod child_scroller;
 mod context_menu;
 #[cfg(target_os = "linux")]
 mod desktop_entry;
@@ -34,6 +36,8 @@ mod scroll_phase;
 mod soft_keyboard;
 mod state;
 mod storage;
+#[cfg(any(target_os = "ios", test))]
+mod system_gestures;
 mod transfer;
 mod upload;
 mod video;
@@ -134,6 +138,20 @@ fn quit_when_closed(window: &tauri::WebviewWindow) {
 			app.exit(0);
 		}
 	});
+}
+
+#[cfg(target_os = "ios")]
+fn reseed_ios_page(
+	window: tauri::WebviewWindow,
+	payload: tauri::webview::PageLoadPayload<'_>,
+) {
+	match payload.event() {
+		tauri::webview::PageLoadEvent::Started => {
+			system_gestures::back_swipe::disarm(&window);
+		}
+		tauri::webview::PageLoadEvent::Finished => {}
+	}
+	soft_keyboard::reseed(window, payload);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -300,6 +318,8 @@ pub fn run() {
             soft_keyboard::ios::set_keyboard_follow,
             #[cfg(target_os = "ios")]
             soft_keyboard::ios::set_keyboard_drag_dismiss,
+            #[cfg(target_os = "ios")]
+            system_gestures::back_swipe::set_back_swipe_armed,
             appearance::backdrop_filter_renders,
             appearance::webview_engine,
             app_data::read_app_data,
@@ -340,7 +360,7 @@ pub fn run() {
                 #[cfg(target_os = "ios")]
                 let builder = builder
                     .with_input_accessory_view_builder(|_| None)
-                    .on_page_load(soft_keyboard::reseed);
+                    .on_page_load(reseed_ios_page);
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
@@ -348,6 +368,8 @@ pub fn run() {
                 let window = builder.build()?;
                 #[cfg(target_os = "ios")]
                 soft_keyboard::install(&window);
+                #[cfg(target_os = "ios")]
+                system_gestures::back_swipe::install(&window);
                 #[cfg(target_os = "linux")]
                 media::serve_element_opens(&window);
                 #[cfg(target_os = "linux")]
@@ -551,6 +573,8 @@ mod frontend_method_pins {
 		include_str!("../../src/lib/platform/keyboard-follow.ts");
 	const KEYBOARD_DRAG_DISMISS: &str =
 		include_str!("../../src/lib/platform/keyboard-drag-dismiss.ts");
+	const IOS_BRIDGE: &str =
+		include_str!("../../src/lib/platform/ios-native-bridge.ts");
 
 	fn between<'a>(haystack: &'a str, open: &str, close: &str) -> &'a str {
 		let start = haystack.find(open).expect(open) + open.len();
@@ -600,6 +624,24 @@ mod frontend_method_pins {
 			assert!(
 				registered.contains(&command),
 				"{command} is invoked by the keyboard code but not registered"
+			);
+		}
+	}
+
+	#[test]
+	fn every_command_the_ios_bridge_invokes_is_registered() {
+		let registered = registered_commands();
+		let invoked: Vec<&str> = IOS_BRIDGE
+			.split("invoke(\"")
+			.skip(1)
+			.filter_map(|rest| rest.split_once('"'))
+			.map(|(command, _)| command)
+			.collect();
+		assert_eq!(invoked, ["set_back_swipe_armed"]);
+		for command in invoked {
+			assert!(
+				registered.contains(&command),
+				"{command} is invoked by the iOS bridge but not registered"
 			);
 		}
 	}

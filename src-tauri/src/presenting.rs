@@ -6,7 +6,7 @@ use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2_ui_kit::{
 	UIViewController, UIViewControllerTransitionCoordinator,
-	UIViewControllerTransitionCoordinatorContext,
+	UIViewControllerTransitionCoordinatorContext, UIWindow,
 };
 
 const REFUSED: &str = "UIKit refused the presentation";
@@ -29,6 +29,13 @@ impl<F: FnOnce(Result<(), &'static str>)> Drop for Unanswered<F> {
 			shown(Err(REFUSED));
 		}
 	}
+}
+
+pub fn presenting(window: &UIWindow) -> bool {
+	window
+		.rootViewController()
+		.and_then(|root| root.presentedViewController())
+		.is_some_and(|presented| !presented.isBeingDismissed())
 }
 
 pub fn present_on_top(

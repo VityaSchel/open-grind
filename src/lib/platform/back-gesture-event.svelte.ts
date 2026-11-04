@@ -16,17 +16,25 @@ export const backGestureEventHandlers = new SvelteMap<
 	BackGestureLayer
 >();
 
-function backGestureHandlersTopFirst(): BackGestureHandler[] {
+type LayerSkip = { skipping?: readonly BackGestureLayer[] };
+
+function backGestureHandlersTopFirst({
+	skipping = [],
+}: LayerSkip = {}): BackGestureHandler[] {
 	const newestFirst = [...backGestureEventHandlers].reverse();
-	return LAYERS_TOP_FIRST.flatMap((layer) =>
+	return LAYERS_TOP_FIRST.filter(
+		(layer) => !skipping.includes(layer),
+	).flatMap((layer) =>
 		newestFirst
 			.filter(([, handlerLayer]) => handlerLayer === layer)
 			.map(([handler]) => handler),
 	);
 }
 
-export function topBackGestureHandler(): BackGestureHandler | undefined {
-	return backGestureHandlersTopFirst()[0];
+export function topBackGestureHandler(
+	skip: LayerSkip = {},
+): BackGestureHandler | undefined {
+	return backGestureHandlersTopFirst(skip)[0];
 }
 
 export function runBackGestureHandlers(): boolean {

@@ -25,6 +25,12 @@ declare global {
 		__AndroidOnBackGestureStart?: () => boolean;
 		__AndroidOnBackGestureCancel?: () => void;
 		__AndroidBack?: { moveTaskToBack(): void; gestureProgress(): number };
+		__iosBack?: {
+			start(point: { x: number; y: number }): boolean;
+			progress(progress: number): void;
+			finish(release: { commit: boolean; velocity: number }): void;
+			prepare(): void;
+		};
 		pswp?: unknown;
 	}
 }

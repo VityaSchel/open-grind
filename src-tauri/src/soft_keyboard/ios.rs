@@ -23,7 +23,7 @@ use objc2_ui_kit::{
 	UIKeyboardFrameEndUserInfoKey, UIKeyboardIsLocalUserInfoKey,
 	UIKeyboardWillChangeFrameNotification, UIKeyboardWillHideNotification,
 	UIKeyboardWillShowNotification, UIResponder, UIScrollView,
-	UIScrollViewKeyboardDismissMode, UIView, UIViewAutoresizing, UIWindow,
+	UIScrollViewKeyboardDismissMode, UIView, UIViewAutoresizing,
 };
 use tauri::webview::{PageLoadEvent, PageLoadPayload};
 use tauri::WebviewWindow;
@@ -31,6 +31,8 @@ use tauri::WebviewWindow;
 use super::geometry::{
 	self, Edges, KeyboardMotion, NativeInsets, PagePoint, Rect,
 };
+use crate::child_scroller::child_scroller_at;
+use crate::presenting::presenting;
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
@@ -336,34 +338,6 @@ fn rect(rect: CGRect) -> Rect {
 		width: rect.size.width,
 		height: rect.size.height,
 	}
-}
-
-fn presenting(window: &UIWindow) -> bool {
-	window
-		.rootViewController()
-		.and_then(|root| root.presentedViewController())
-		.is_some_and(|presented| !presented.isBeingDismissed())
-}
-
-fn child_scroller_at(
-	webview: &UIView,
-	target: CGPoint,
-) -> Option<Retained<UIScrollView>> {
-	let page: Option<Retained<UIScrollView>> =
-		unsafe { msg_send![webview, scrollView] };
-	let mut view = webview.hitTest_withEvent(target, None);
-	while let Some(current) = view {
-		match current.downcast::<UIScrollView>() {
-			Ok(scroller) => {
-				let is_page = page
-					.as_deref()
-					.is_some_and(|page| std::ptr::eq(page, &*scroller));
-				return (!is_page).then_some(scroller);
-			}
-			Err(current) => view = current.superview(),
-		}
-	}
-	None
 }
 
 fn evaluate(webview: &UIView, script: &str) {

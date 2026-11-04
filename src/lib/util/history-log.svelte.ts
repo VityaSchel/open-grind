@@ -16,6 +16,7 @@ type SavedLog = z.infer<typeof savedLogSchema>;
 export class HistoryLog {
 	readonly #entries = new SvelteMap<number, string>();
 	#current: number | undefined;
+	#recorded = $state(0);
 	readonly #storage: () => Storage;
 
 	constructor({ storage }: { storage: () => Storage }) {
@@ -53,7 +54,12 @@ export class HistoryLog {
 		for (const key of evicted) entries.delete(key);
 
 		this.#current = index;
+		this.#recorded += 1;
 		this.#save();
+	}
+
+	get recorded(): number {
+		return this.#recorded;
 	}
 
 	earlier({

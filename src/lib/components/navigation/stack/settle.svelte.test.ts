@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { stackMotion } from "./motion";
-import { StackSettle } from "./settle";
+import { StackSettle } from "./settle.svelte";
 import { fakeSurface, settleLast } from "./stack-test-helpers";
 
 const slide = stackMotion({ platform: "android" });
