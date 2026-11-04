@@ -3,12 +3,11 @@ import type { NavigationTarget, OnNavigate } from "$app/navigation";
 
 import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
+import { BACK_WATCHDOG_MS } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
 import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
-
-const BACK_WATCHDOG_MS = 1000;
 
 export class LiveStackState {
 	leaving = $state<string | null>(null);

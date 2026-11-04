@@ -76,6 +76,7 @@
 			{ "shadow-(--stack-edge)": motion.edge },
 		]}
 		style:z-index={liveZ}
+		inert={stack.committing}
 	>
 		{@render children?.()}
 	</div>

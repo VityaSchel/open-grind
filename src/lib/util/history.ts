@@ -4,7 +4,7 @@ import { navigating, page } from "$app/state";
 import { liveHistoryIndex } from "#lib/util/history-index.ts";
 import { historyLog } from "#lib/util/history-log.svelte.ts";
 
-const BACK_WATCHDOG_MS = 1000;
+export const BACK_WATCHDOG_MS = 1000;
 
 function trustedNavigation():
 	| { navigation: Navigation; index: number }
