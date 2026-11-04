@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { isMacosPlatformMock } = vi.hoisted(() => ({
 	isMacosPlatformMock: vi.fn(() => false),
 }));
-vi.mock("$lib/platform/os", () => ({ isMacosPlatform: isMacosPlatformMock }));
+vi.mock("#lib/platform/os.ts", () => ({
+	isMacosPlatform: isMacosPlatformMock,
+}));
 
-import { keepLinksInApp, staysInApp } from "$lib/platform/in-app-links";
-import { isPlainClick } from "$lib/util/plain-click";
+import { keepLinksInApp, staysInApp } from "#lib/platform/in-app-links.ts";
+import { isPlainClick } from "#lib/util/plain-click.ts";
 
 const MODIFIERS = ["shiftKey", "ctrlKey", "altKey", "metaKey"] as const;
 const CLICK_TYPES = ["click", "auxclick"] as const;

@@ -1,14 +1,14 @@
 import type z from "zod";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import { getCascadeV4 } from "$lib/api/browse/grid";
-import { updateLocation } from "$lib/api/browse/location";
-import { TtlCache } from "$lib/api/cache";
-import { clearProfileCaches, getProfiles } from "$lib/api/users/profiles";
-import { atHomeLocation } from "$lib/entitlements/honduras-hold";
-import { coarsenGeohash } from "$lib/model/geohash";
-import { now } from "$lib/util/clock";
-import type { cascadeV4ResponseFullProfileV1Schema } from "$lib/model/browse/grid/cascade/response/v4";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { getCascadeV4 } from "#lib/api/browse/grid.ts";
+import { updateLocation } from "#lib/api/browse/location.ts";
+import { TtlCache } from "#lib/api/cache.ts";
+import { clearProfileCaches, getProfiles } from "#lib/api/users/profiles.ts";
+import { atHomeLocation } from "#lib/entitlements/honduras-hold.ts";
+import { coarsenGeohash } from "#lib/model/geohash.ts";
+import { now } from "#lib/util/clock.ts";
+import type { cascadeV4ResponseFullProfileV1Schema } from "#lib/model/browse/grid/cascade/response/v4.ts";
 
 type CascadeProfileData = z.infer<
 	typeof cascadeV4ResponseFullProfileV1Schema

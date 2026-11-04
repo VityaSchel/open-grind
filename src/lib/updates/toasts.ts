@@ -5,8 +5,8 @@ import InfoIcon from "phosphor-svelte/lib/InfoIcon";
 import SealWarningIcon from "phosphor-svelte/lib/SealWarningIcon";
 import { toast } from "svelte-sonner";
 
-import { t } from "$lib/i18n";
-import { openExternalLink } from "$lib/platform/link-opener";
+import { t } from "#lib/i18n/index.ts";
+import { openExternalLink } from "#lib/platform/link-opener.ts";
 import { ADDON_MESSAGES } from "./addon-messages";
 import {
 	type AddonKey,

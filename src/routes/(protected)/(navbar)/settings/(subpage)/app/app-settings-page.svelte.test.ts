@@ -10,9 +10,12 @@ import {
 	vi,
 } from "vitest";
 
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { installedBy, updateApiFake } from "$lib/updates/updates-test-helpers";
-import type { Capability } from "$lib/updates/types";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import {
+	installedBy,
+	updateApiFake,
+} from "#lib/updates/updates-test-helpers.ts";
+import type { Capability } from "#lib/updates/types.ts";
 
 const PRIVACY_POLICY = "https://opengrind.org/privacy";
 const FOREIGN_SIGNER = {
@@ -55,17 +58,17 @@ const { capabilityApi, platform, linkOpener } = vi.hoisted(() => ({
 	linkOpener: { openExternalLink: vi.fn() },
 }));
 
-vi.mock("$lib/updates/index", async () => ({
-	...(await import("$lib/updates/types")),
-	...(await import("$lib/updates/components")),
+vi.mock("#lib/updates/index.ts", async () => ({
+	...(await import("#lib/updates/types.ts")),
+	...(await import("#lib/updates/components.ts")),
 	...fake.api,
 	...capabilityApi,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	...platform,
 }));
-vi.mock("$lib/platform/link-opener", () => linkOpener);
+vi.mock("#lib/platform/link-opener.ts", () => linkOpener);
 
 let testing: typeof import("@testing-library/svelte");
 
@@ -80,7 +83,7 @@ async function opened({
 	platform.isAndroidPlatform.mockReturnValue(android);
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
-		await import("$lib/updates/capability.svelte");
+		await import("#lib/updates/capability.svelte.ts");
 	await hydrateUpdateCapability();
 	const { default: AppSettingsPage } = await import("./+page.svelte");
 	testing.render(AppSettingsPage);
@@ -192,7 +195,7 @@ describe("the app settings menu", () => {
 	it("keeps the Language row in a release build that offers only English", async () => {
 		vi.stubEnv("DEV", false);
 		const screen = await opened({ capability: FOREIGN_SIGNER });
-		const { locales } = await import("$lib/i18n");
+		const { locales } = await import("#lib/i18n/index.ts");
 
 		expect(locales).toEqual(["en"]);
 		expect(
@@ -220,7 +223,7 @@ describe("the app settings menu", () => {
 						'[data-slot="item-title"]',
 					) ?? link,
 			);
-		const { setLocale } = await import("$lib/i18n");
+		const { setLocale } = await import("#lib/i18n/index.ts");
 
 		await setLocale({ locale: "en-XA" });
 

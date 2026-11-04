@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import {
 	account,
 	addon,
@@ -21,10 +21,10 @@ import {
 } from "./push-test-helpers";
 
 vi.mock("./index", () => push);
-vi.mock("$lib/updates/addon.svelte", () => addon);
-vi.mock("$lib/api/settings/account", () => account);
-vi.mock("$lib/api/error-toast", () => toasts);
-vi.mock("$lib/app-data/preferences.svelte", () => preferences);
+vi.mock("#lib/updates/addon.svelte.ts", () => addon);
+vi.mock("#lib/api/settings/account.ts", () => account);
+vi.mock("#lib/api/error-toast.ts", () => toasts);
+vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
 
 beforeEach(resetPushMocks);
 
@@ -297,14 +297,14 @@ describe("falling back to Slow mode", () => {
 
 describe("a failure toast in another language", () => {
 	afterEach(async () => {
-		const { setLocale, SOURCE_LOCALE } = await import("$lib/i18n");
+		const { setLocale, SOURCE_LOCALE } = await import("#lib/i18n/index.ts");
 		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("words the label in the language active when it shows", async () => {
 		account.registerPushToken.mockRejectedValue(new Error("500"));
 		const module = await freshModule();
-		const { setLocale, t } = await import("$lib/i18n");
+		const { setLocale, t } = await import("#lib/i18n/index.ts");
 		await setLocale({ locale: "en-XA" });
 
 		await module.selectNotificationMode("fast");

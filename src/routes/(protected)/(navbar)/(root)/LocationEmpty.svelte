@@ -4,17 +4,17 @@
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
 	import { toast } from "svelte-sonner";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { setPreferences } from "$lib/app-data/preferences.svelte";
-	import AutoLocationToast from "$lib/components/feedback/AutoLocationToast.svelte";
-	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
-	import { reportLocationFailure } from "$lib/location/location-feedback";
-	import { locationRequest } from "$lib/location/location-request.svelte";
-	import { encodeGeohash } from "$lib/model/geohash";
-	import { isMobilePlatform } from "$lib/platform/os";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+	import AutoLocationToast from "#lib/components/feedback/AutoLocationToast.svelte";
+	import LocationChooser from "#lib/components/location-chooser/LocationChooser.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { reportLocationFailure } from "#lib/location/location-feedback.ts";
+	import { locationRequest } from "#lib/location/location-request.svelte.ts";
+	import { encodeGeohash } from "#lib/model/geohash.ts";
+	import { isMobilePlatform } from "#lib/platform/os.ts";
 
 	let geoMapPickerOpen = $state(false);
 

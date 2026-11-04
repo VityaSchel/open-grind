@@ -1,6 +1,6 @@
 import { expect, vi } from "vitest";
 
-import type { Conversation } from "$lib/model/messaging/conversations";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import type { ConversationsState } from "./conversations-state.svelte";
 
 export const OUR_ID = 1;

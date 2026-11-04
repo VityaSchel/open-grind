@@ -3,9 +3,9 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { untranslatableTexts } from "$lib/test/untranslatable";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import DisplayName from "./DisplayName.svelte";
 
 afterEach(async () => {

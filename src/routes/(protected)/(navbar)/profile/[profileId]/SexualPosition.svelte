@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { sexualPositionIcons } from "$lib/components/profile/sexual-position-icons";
+	import { sexualPositionIcons } from "#lib/components/profile/sexual-position-icons.ts";
 	import {
 		sexualPositions,
 		sexualPositionSchema,
-	} from "$lib/model/users/profiles";
+	} from "#lib/model/users/profiles.ts";
 
 	let { sexualPosition }: { sexualPosition: number } = $props();
 

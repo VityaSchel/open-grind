@@ -55,10 +55,6 @@
 		"reason": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
 		"explanation": "Part of the hidden Clippy joke on the “Page not found” page, shown by pressing and holding the “?”, where each list item finishes “Don’t worry, Clippy would never”; screenshots leave it out because the Clippy image has no license."
 	},
-	"shell.toaster.a11y.close": {
-		"reason": "Only the toaster's close button carries this label, and no toast in the app shows a close button.",
-		"explanation": "Screen reader label of the close button on a toast notification; no toast in the app has that button, so the label is never read out."
-	},
 	"shell.webViewWarning.*": {
 		"reason": "Only in the native dialog that the Android app shows over the page when the system WebView is older than the app supports, so no page screenshot shows it.",
 		"explanation": "Part of the warning dialog that the Android app shows as it opens when the phone’s Android System WebView is older than the app supports; Android draws the dialog, so no screenshot shows it."

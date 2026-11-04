@@ -6,7 +6,7 @@
 		type RichKey,
 		richParts,
 		type RichProps,
-	} from "$lib/i18n";
+	} from "#lib/i18n/index.ts";
 
 	type Render = Snippet<[text?: string]>;
 

@@ -14,7 +14,7 @@ import {
 	sourceText,
 	t,
 	type Translate,
-} from "$lib/i18n";
+} from "#lib/i18n/index.ts";
 
 type TextSnippet = Snippet<[text: string]>;
 type Untyped = ReturnType<typeof eval>;

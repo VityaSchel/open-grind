@@ -1,4 +1,4 @@
-import { isAndroidPlatform } from "$lib/platform/os";
+import { isAndroidPlatform } from "#lib/platform/os.ts";
 
 const MIN_ANDROID_INTERCEPT_WORKERS = 3;
 const CORES_WITHOUT_ANDROID_INTERCEPT_WORKER = 2;

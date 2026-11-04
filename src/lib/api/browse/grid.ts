@@ -1,15 +1,15 @@
 import type z from "zod";
 
-import { fetchRest } from "$lib/api/transport";
-import { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
-import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
+import { fetchRest } from "#lib/api/transport.ts";
+import { cascadeV4QuerySchema } from "#lib/model/browse/grid/cascade/query/v4.ts";
+import { cascadeV4ResponseSchema } from "#lib/model/browse/grid/cascade/response/v4.ts";
 import {
 	searchProfilesResponseSchema,
 	searchQuerySchema,
-} from "$lib/model/browse/grid/search";
-import { coarsenGeohash } from "$lib/model/geohash";
-import { markOnlineRefreshed } from "$lib/presence/online-clock";
-import { urlSearchParamsCodec } from "$lib/util/url-search-params";
+} from "#lib/model/browse/grid/search.ts";
+import { coarsenGeohash } from "#lib/model/geohash.ts";
+import { markOnlineRefreshed } from "#lib/presence/online-clock.ts";
+import { urlSearchParamsCodec } from "#lib/util/url-search-params.ts";
 
 export async function searchProfiles(query: z.infer<typeof searchQuerySchema>) {
 	return await fetchRest(

@@ -1,12 +1,12 @@
 import z from "zod";
 
-import { cachedFetch } from "$lib/api/cache";
+import { cachedFetch } from "#lib/api/cache.ts";
 import {
 	fetchRest,
 	sceneFaultResponse,
 	uploadFileRest,
-} from "$lib/api/transport";
-import { demo, demoEnabled } from "$lib/demo";
+} from "#lib/api/transport.ts";
+import { demoUploadAlbumContent } from "#lib/demo/index.ts";
 import {
 	type AlbumContentOrderRequest,
 	albumContentProcessingResponseSchema,
@@ -23,12 +23,12 @@ import {
 	albumStorageLimitsSchema,
 	type AlbumUnshareRequest,
 	myAlbumsResponseSchema,
-} from "$lib/model/messaging/albums";
+} from "#lib/model/messaging/albums.ts";
 import {
 	mediaFileDescriptor,
 	type MediaFileInspection,
-} from "$lib/platform/media-file";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/platform/media-file.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const albumResponseSchema = z.object({
 	...albumMinSchema.shape,
@@ -206,9 +206,9 @@ export async function uploadAlbumContent({
 	onHashed?: (sha256: string) => void;
 }): Promise<{ contentId: number; sha256: string | null }> {
 	const path = `/v1/albums/${albumId}/content?${albumContentQuery(inspection)}isFresh=false`;
-	if (demoEnabled) {
+	if (__DEMO__) {
 		(await sceneFaultResponse({ method: "POST", path }))?.assertOk();
-		const uploaded = demo().demoUploadAlbumContent({
+		const uploaded = demoUploadAlbumContent({
 			albumId,
 			kind: inspection.kind,
 		});

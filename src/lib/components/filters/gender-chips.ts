@@ -1,8 +1,8 @@
 import {
 	isFilterableGender,
 	isFilterableGenderId,
-} from "$lib/model/browse/grid/filters";
-import type { Gender } from "$lib/model/users/genders";
+} from "#lib/model/browse/grid/filters.ts";
+import type { Gender } from "#lib/model/users/genders.ts";
 
 type GenderChip = Pick<
 	Gender,

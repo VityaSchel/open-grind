@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SparkleIcon from "phosphor-svelte/lib/SparkleIcon";
 
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 
 	let { isNew }: { isNew: boolean } = $props();
 </script>

@@ -1,4 +1,4 @@
-import { hasScrollableOverflowY } from "$lib/util/scroll";
+import { hasScrollableOverflowY } from "#lib/util/scroll.ts";
 
 export type PullPosition = "top" | "bottom";
 

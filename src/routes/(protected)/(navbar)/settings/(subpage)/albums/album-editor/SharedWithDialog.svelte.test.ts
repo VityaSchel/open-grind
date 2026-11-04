@@ -3,14 +3,14 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/api/messaging/albums", () => ({
+vi.mock("#lib/api/messaging/albums.ts", () => ({
 	getAlbumShares: () => Promise.resolve({ profileIds: [] }),
 }));
 vi.mock("$app/navigation", () => ({ beforeNavigate: vi.fn() }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { AlbumSharedWith } from "./shared-with-state.svelte";
 import SharedWithDialog from "./SharedWithDialog.svelte";
 

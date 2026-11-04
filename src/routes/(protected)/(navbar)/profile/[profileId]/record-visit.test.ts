@@ -7,15 +7,17 @@ const { recordProfileViewMock, getPreferencesMock, showErrorToastMock } =
 		showErrorToastMock: vi.fn(),
 	}));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/interest/views", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/api/interest/views.ts", () => ({
 	recordProfileView: recordProfileViewMock,
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: getPreferencesMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { forgetProfileVisits, recordProfileVisit } from "./record-visit";
 
 const PROFILE_ID = 100001;

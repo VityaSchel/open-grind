@@ -2,26 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	getHiddenUserIdsNewestFirst,
 	getHiddenUsers,
 	hideUser,
 	markHiddenProfilesUnviewable,
 	unhideUser,
-} from "$lib/api/browse/hides";
+} from "#lib/api/browse/hides.ts";
 import {
 	isProfileViewable,
 	onProfileViewabilityChange,
 	type ProfileViewabilityChange,
-} from "$lib/api/users/profile-viewability";
-import { pendingRequest } from "$lib/test/pending-request";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+} from "#lib/api/users/profile-viewability.ts";
+import { pendingRequest } from "#lib/test/pending-request.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 
 const hides = [{ profileId: 1 }, { profileId: 2 }];
 

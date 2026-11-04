@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const order: string[] = [];
 
@@ -21,14 +21,16 @@ const { goto, callMethod, caches, preferences, markers, push } = vi.hoisted(
 );
 
 vi.mock("$app/navigation", () => ({ goto }));
-vi.mock("$lib/api/methods", () => ({ callMethod }));
-vi.mock("$lib/api/account-caches", () => caches);
-vi.mock("$lib/app-data/preferences.svelte", () => preferences);
-vi.mock("$lib/chat/inbox-last-viewed.svelte", () => ({
+vi.mock("#lib/api/methods.ts", () => ({ callMethod }));
+vi.mock("#lib/api/account-caches.ts", () => caches);
+vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
+vi.mock("#lib/chat/inbox-last-viewed.svelte.ts", () => ({
 	inboxLastViewed: markers,
 }));
-vi.mock("$lib/interest/taps-last-viewed", () => ({ tapsLastViewed: markers }));
-vi.mock("$lib/push", () => push);
+vi.mock("#lib/interest/taps-last-viewed.ts", () => ({
+	tapsLastViewed: markers,
+}));
+vi.mock("#lib/push/index.ts", () => push);
 
 async function freshModule() {
 	vi.resetModules();
@@ -49,6 +51,10 @@ beforeEach(() => {
 		return Promise.resolve();
 	});
 	vi.spyOn(console, "error").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 describe("signing out", () => {
@@ -150,6 +156,18 @@ describe("signing out", () => {
 		expect(push.fcmServiceInstalled).not.toHaveBeenCalled();
 		expect(push.deletePushToken).not.toHaveBeenCalled();
 		expect(console.error).not.toHaveBeenCalled();
+		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
+	});
+
+	it("leaves this device's push alone when signing out of the demo", async () => {
+		vi.stubGlobal("__DEMO__", true);
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
+		expect(push.deletePushToken).not.toHaveBeenCalled();
 		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
 	});
 });

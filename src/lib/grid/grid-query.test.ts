@@ -7,8 +7,8 @@ import {
 	GENDER_ASK_ME,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
-import { Tribe } from "$lib/model/users/profiles";
+} from "#lib/model/browse/grid/filters.ts";
+import { Tribe } from "#lib/model/users/profiles.ts";
 import { buildCascadeQuery, sentFilterKeys } from "./grid-query";
 
 const geohash = "u33dc0";

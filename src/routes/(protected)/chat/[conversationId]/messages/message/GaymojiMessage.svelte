@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { gaymojiFromImageHash } from "$lib/api/messaging/gaymoji";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import type { GaymojiMessage } from "$lib/model/messaging/messages";
+	import { gaymojiFromImageHash } from "#lib/api/messaging/gaymoji.ts";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import type { GaymojiMessage } from "#lib/model/messaging/messages.ts";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: GaymojiMessage["body"] } = $props();

@@ -9,13 +9,15 @@ const { refreshMessagesByIdMock, reconcileMock, handlers, appLifecycle } =
 		appLifecycle: { active: true },
 	}));
 
-vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
+vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/messaging/messages.ts")
+	>()),
 	refreshMessagesById: refreshMessagesByIdMock,
 }));
-vi.mock("$lib/api/app-lifecycle.svelte", () => ({ appLifecycle }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({ appLifecycle }));
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(type: string, schema: z.ZodType, handler: (event: unknown) => void) {
 			handlers.set(type, (event) => {
@@ -27,7 +29,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import { DynamicMessagesRefresh } from "./dynamic-refresh";
 import type { OptimisticMessage } from "./merge-messages";
 

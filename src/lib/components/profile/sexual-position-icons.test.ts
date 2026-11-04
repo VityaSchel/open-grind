@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SexualPosition } from "$lib/model/users/profiles";
+import { SexualPosition } from "#lib/model/users/profiles.ts";
 import {
 	sexualPositionIcons,
 	sexualPositionOrder,

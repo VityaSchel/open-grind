@@ -21,13 +21,15 @@ const {
 	writeTextMock: vi.fn(),
 }));
 
-vi.mock("$lib/components/report/ReportSheet.svelte", () => ({
+vi.mock("#lib/components/report/ReportSheet.svelte", () => ({
 	default: reportSheetMock,
 }));
-vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
-vi.mock("$lib/api/browse/hides", () => ({ hideUser: hideUserMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/components/report/block-failure", () => ({
+vi.mock("#lib/api/browse/blocks.ts", () => ({ blockUser: blockUserMock }));
+vi.mock("#lib/api/browse/hides.ts", () => ({ hideUser: hideUserMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/components/report/block-failure.ts", () => ({
 	showBlockFailure: showBlockFailureMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: { success: toastSuccessMock } }));
@@ -35,9 +37,9 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100010;

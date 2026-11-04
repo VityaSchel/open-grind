@@ -3,12 +3,12 @@
 	import type { EmblaCarouselType, EmblaOptionsType } from "embla-carousel";
 	import type { HTMLAttributes } from "svelte/elements";
 
-	import { formatInteger } from "$lib/i18n/format";
+	import { formatInteger } from "#lib/i18n/format.ts";
 	import {
 		cn,
 		type WithElementRef,
 		type WithoutChildren,
-	} from "$lib/util/utils.js";
+	} from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

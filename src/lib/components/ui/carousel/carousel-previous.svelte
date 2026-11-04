@@ -2,9 +2,9 @@
 	import CaretLeftIcon from "phosphor-svelte/lib/CaretLeftIcon";
 	import type { WithoutChildren } from "bits-ui";
 
-	import { Button, type Props } from "$lib/components/ui/button/index.js";
-	import { t } from "$lib/i18n";
-	import { cn } from "$lib/util/utils.js";
+	import { Button, type Props } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import { getEmblaContext } from "./context.js";
 
 	let {

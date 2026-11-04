@@ -14,12 +14,12 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 
-import { getRegionalSettings, setRegionalSettings } from "$lib/i18n";
-import { webRegionalSettings } from "$lib/i18n/regional";
+import { getRegionalSettings, setRegionalSettings } from "#lib/i18n/index.ts";
+import { webRegionalSettings } from "#lib/i18n/regional.ts";
 import {
 	NATIVE_READ_TIMEOUT_MS,
 	startRegionalSettings,
-} from "$lib/platform/regional-settings";
+} from "#lib/platform/regional-settings.ts";
 
 type ChangeHandler = (event: { payload: unknown }) => void;
 

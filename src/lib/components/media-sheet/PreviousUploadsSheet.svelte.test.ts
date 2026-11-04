@@ -4,13 +4,13 @@ import { cleanup, fireEvent, render, within } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { rightClick } from "$lib/test/context-menu";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { rightClick } from "#lib/test/context-menu.ts";
 
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
-vi.mock("$lib/api/error-toast", () => errorToast);
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
 
 import PreviousUploadsSheet from "./PreviousUploadsSheet.svelte";
 

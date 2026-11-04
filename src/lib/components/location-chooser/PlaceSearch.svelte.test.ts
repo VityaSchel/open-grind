@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/api/browse/location", () => ({
+vi.mock("#lib/api/browse/location.ts", () => ({
 	getPlaces: () =>
 		Promise.resolve({
 			places: [
@@ -18,7 +18,7 @@ vi.mock("$lib/api/browse/location", () => ({
 		}),
 }));
 
-import { untranslatableTexts } from "$lib/test/untranslatable";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import PlaceSearch from "./PlaceSearch.svelte";
 
 afterEach(cleanup);

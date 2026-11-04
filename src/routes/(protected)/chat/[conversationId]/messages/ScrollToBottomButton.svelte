@@ -1,10 +1,10 @@
 <script lang="ts">
 	import CaretDownIcon from "phosphor-svelte/lib/CaretDownIcon";
 
-	import ScrollJumpButton from "$lib/components/shared/ScrollJumpButton.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
+	import ScrollJumpButton from "#lib/components/shared/ScrollJumpButton.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { getConversationState } from "../conversation-state.svelte";
 
 	let {

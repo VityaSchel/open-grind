@@ -1,12 +1,12 @@
 import { addPluginListener } from "@tauri-apps/api/core";
 
-import { runBackGestureHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import {
 	announceSafeAreaChange,
 	SAFE_AREA_SIDES,
 	type SafeAreaSide,
-} from "$lib/util/safe-area";
-import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+} from "#lib/util/safe-area.ts";
+import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 const IME_RESIZE_FALLBACK_MS = 150;
 

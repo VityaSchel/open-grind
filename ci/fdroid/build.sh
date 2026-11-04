@@ -1,6 +1,8 @@
 # shellcheck shell=bash
 # shellcheck disable=SC1091,SC2154  # F-Droid's buildserver provides bsenv.sh and these variables
 set -euo pipefail
+apt-get update
+apt-get dist-upgrade
 source /etc/profile.d/bsenv.sh
 fdroidserver="${fdroidserver:-/opt/fdroidserver}"
 command -v fdroid >/dev/null || [ -x "$fdroidserver/fdroid" ] \
@@ -15,7 +17,15 @@ for d in logs tmp unsigned "$home_vagrant/.android" "$home_vagrant/.gradle"; do
 	mkdir -p "$d"; chown -R vagrant "$d"
 done
 export GRADLE_USER_HOME="$home_vagrant/.gradle"
-sudo --preserve-env --user vagrant \
-	env PATH="$fdroidserver:$PATH" PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
-	PYTHONUNBUFFERED=true HOME="$home_vagrant" GRADLE_USER_HOME="$GRADLE_USER_HOME" \
-	fdroid build --verbose --test --refresh-scanner --scan-binary --on-server --no-tarball "${APPID}"
+as_vagrant() {
+	sudo --preserve-env --user vagrant \
+		env PATH="$fdroidserver:$PATH" PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
+		PYTHONUNBUFFERED=true HOME="$home_vagrant" GRADLE_USER_HOME="$GRADLE_USER_HOME" \
+		"$@"
+}
+for versionCode in ${versionCodes}; do
+	apt-get install -qqy sudo openjdk-21-jdk-headless >/dev/null
+	update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+	as_vagrant fdroid fetchsrclibs --verbose "${APPID}:${versionCode}"
+	as_vagrant fdroid build --verbose --test --refresh-scanner --scan-binary --on-server --no-tarball "${APPID}:${versionCode}"
+done

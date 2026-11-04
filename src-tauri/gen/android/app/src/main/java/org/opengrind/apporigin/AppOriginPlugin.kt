@@ -26,11 +26,10 @@ class AppOriginPlugin(private val activity: Activity) : Plugin(activity) {
 	@Command
 	fun exemptFromSafeBrowsing(invoke: Invoke) {
 		val host = invoke.parseArgs(HostArgs::class.java).host
-		if (!WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ALLOWLIST)) {
-			invoke.resolve()
-			return
+		if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ALLOWLIST)) {
+			WebViewCompat.setSafeBrowsingAllowlist(setOf(".$host"), null)
 		}
-		WebViewCompat.setSafeBrowsingAllowlist(setOf(".$host")) { invoke.resolve() }
+		invoke.resolve()
 	}
 
 	@Command

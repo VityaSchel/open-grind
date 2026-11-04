@@ -5,20 +5,21 @@
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";
 
-	import { Button } from "$lib/components/ui/button";
-	import { playHaptic } from "$lib/haptics";
-	import { t } from "$lib/i18n";
-	import { formatClockTime } from "$lib/i18n/format";
-	import { firedByTouch } from "$lib/platform/touch-origin";
-	import { observeIntersection } from "$lib/util/observe-intersection";
-	import { scale } from "$lib/util/reduced-motion";
-	import { returnFocus } from "$lib/util/return-focus";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { playHaptic } from "#lib/haptics.ts";
+	import { formatClockTime } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { firedByTouch } from "#lib/platform/touch-origin.ts";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import { scale } from "#lib/util/reduced-motion.ts";
+	import { returnFocus } from "#lib/util/return-focus.ts";
 	import {
 		MAX_DRAG_PX,
 		SwipeToReply,
 		wheelInputMode,
-	} from "$lib/util/swipe-to-reply.svelte";
-	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+	} from "#lib/util/swipe-to-reply.svelte.ts";
+	import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
+	import AlbumContentMessage from "./AlbumContentMessage.svelte";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { type MessageRefs, setMessageContext } from "./context";
 	import ExpiringImageMessage from "./ExpiringImageMessage.svelte";
@@ -29,6 +30,7 @@
 	import MessageContextMenu from "./MessageContextMenu.svelte";
 	import MessageDateGroup from "./MessageDateGroup.svelte";
 	import MessageWrapper from "./MessageWrapper.svelte";
+	import ProfilePhotoReplyMessage from "./ProfilePhotoReplyMessage.svelte";
 	import Reaction from "./Reaction.svelte";
 	import TextMessage from "./TextMessage.svelte";
 	import UnsentMessage from "./UnsentMessage.svelte";
@@ -76,9 +78,18 @@
 			: null,
 	);
 
-	const textContent = $derived(
-		message.type === "Text" ? message.body.text : undefined,
-	);
+	const textContent = $derived.by(() => {
+		switch (message.type) {
+			case "Text":
+				return message.body.text;
+			case "AlbumContentReply":
+				return message.body.albumContentReply;
+			case "ProfilePhotoReply":
+				return message.body.photoContentReply;
+			default:
+				return undefined;
+		}
+	});
 	const hasMenuActions = $derived(
 		textContent !== undefined ||
 			[onReply, onDelete, onUnsend, onCopyError, onReport].some(
@@ -277,6 +288,10 @@
 			/>
 		{:else if message.type === "Album" || message.type === "ExpiringAlbum" || message.type === "ExpiringAlbumV2"}
 			<AlbumMessage message={message.body} />
+		{:else if message.type === "AlbumContentReply" || message.type === "AlbumContentReaction"}
+			<AlbumContentMessage message={message.body} />
+		{:else if message.type === "ProfilePhotoReply"}
+			<ProfilePhotoReplyMessage message={message.body} {isOut} />
 		{:else if message.type === "Video" || message.type === "PrivateVideo"}
 			<VideoMessage
 				message={message.body}

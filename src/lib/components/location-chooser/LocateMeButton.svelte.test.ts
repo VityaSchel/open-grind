@@ -2,14 +2,14 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ run: vi.fn(), abortStale: vi.fn() }));
-vi.mock("$lib/location/location-request.svelte", () => ({
+vi.mock("#lib/location/location-request.svelte.ts", () => ({
 	locationRequest: {
 		run: mocks.run,
 		abortStale: mocks.abortStale,
 		generation: 1,
 	},
 }));
-vi.mock("$lib/location/location-feedback", () => ({
+vi.mock("#lib/location/location-feedback.ts", () => ({
 	reportLocationFailure: vi.fn(),
 }));
 

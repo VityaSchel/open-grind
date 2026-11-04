@@ -9,13 +9,15 @@ const { gotoMock, showErrorToastMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/grid/grid-state.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 	gridState: { filters: { set: vi.fn() } },
 }));
 
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import {
 	expectCommandGroup,
 	openWith,
@@ -34,8 +36,9 @@ function badges(): { name: string; value: string }[] {
 	return [
 		...document.querySelectorAll<HTMLElement>('[data-slot="badge"]'),
 	].map((badge) => {
-		const name = badge.firstElementChild;
-		const value = [...badge.childNodes].filter((node) => node !== name);
+		const content = badge.firstElementChild ?? badge;
+		const name = content.firstElementChild;
+		const value = [...content.childNodes].filter((node) => node !== name);
 		return {
 			name: name ? textOf(name) : "",
 			value: value.map(textOf).join(""),

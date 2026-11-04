@@ -1,29 +1,29 @@
 import { untrack } from "svelte";
 import type z from "zod";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import { showErrorToast } from "$lib/api/error-toast";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	genderFilterFlag,
 	refreshFeatureFlags,
-} from "$lib/api/feature-flags-state.svelte";
-import { onProfileViewabilityChange } from "$lib/api/users/profile-viewability";
-import { onProfileEdit } from "$lib/api/users/profiles";
+} from "#lib/api/feature-flags-state.svelte.ts";
+import { onProfileViewabilityChange } from "#lib/api/users/profile-viewability.ts";
+import { onProfileEdit } from "#lib/api/users/profiles.ts";
 import {
 	preferencesSnapshot,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { t } from "$lib/i18n";
-import { autoLocation } from "$lib/location/auto-location";
-import { showsOnReturn, staysOnline } from "$lib/presence/presence-gate";
+} from "#lib/app-data/preferences.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
+import { autoLocation } from "#lib/location/auto-location.ts";
+import { showsOnReturn, staysOnline } from "#lib/presence/presence-gate.ts";
 import {
 	pushDeeplinkAhead,
 	untilPushDeeplinkOpened,
-} from "$lib/push/opening-deeplink";
-import { Generation } from "$lib/util/generation";
-import { reconciler } from "$lib/util/reconcile";
-import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
-import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
+} from "#lib/push/opening-deeplink.ts";
+import { Generation } from "#lib/util/generation.ts";
+import { reconciler } from "#lib/util/reconcile.ts";
+import { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
+import type { cascadeV4QuerySchema } from "#lib/model/browse/grid/cascade/query/v4.ts";
 import {
 	getCachedProfile,
 	getGrid,
@@ -152,7 +152,7 @@ class GridState {
 			staysOnline() ||
 			(attended && (await showsOnReturn({ viewActive: this.viewActive })))
 		)
-			return this.refresh();
+			return this.refresh({ automatic: true });
 		this.#stale = true;
 	}
 
@@ -165,7 +165,8 @@ class GridState {
 	attachView(): () => void {
 		this.viewActive = true;
 		untrack(() => {
-			if (this.#stale && !this.loading) void this.refresh();
+			if (this.#stale && !this.loading)
+				void this.refresh({ automatic: true });
 		});
 		return () => {
 			this.viewActive = false;
@@ -174,7 +175,12 @@ class GridState {
 
 	async refresh({
 		background = false,
+		automatic = background,
 		keepLoadedPages = true,
+	}: {
+		background?: boolean;
+		automatic?: boolean;
+		keepLoadedPages?: boolean;
 	} = {}): Promise<void> {
 		const geohash = this.#geohash ?? preferencesSnapshot().geohash;
 		if (!geohash || this.refreshing) return;
@@ -184,6 +190,7 @@ class GridState {
 			await this.#fetchProfiles(geohash, {
 				silent: true,
 				background,
+				automatic,
 				sampleLocation: !background || this.viewActive,
 				keepLoadedPages,
 			});
@@ -296,6 +303,7 @@ class GridState {
 		opts?: {
 			silent?: boolean;
 			background?: boolean;
+			automatic?: boolean;
 			sampleLocation?: boolean;
 			keepLoadedPages?: boolean;
 		},
@@ -346,7 +354,7 @@ class GridState {
 			if (this.#generation.isStale(generation)) return;
 			console.error(err);
 			this.loading = false;
-			if (opts?.background) return;
+			if (opts?.automatic) return;
 			if (opts?.silent) {
 				showErrorToast({
 					label: t("browse.grid.errors.refreshFailed"),

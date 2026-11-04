@@ -1,4 +1,3 @@
-import { everyLanguageOffered } from "./offered";
 import { shippedFiles } from "./shipped-files";
 
 export type CatalogJson = string | { readonly [key: string]: CatalogJson };
@@ -12,9 +11,10 @@ export const sourceFiles = import.meta.glob<CatalogJson>(
 	{ eager: true, import: "default" },
 );
 
-export const translationFiles: CatalogLoaders = everyLanguageOffered
-	? import.meta.glob<CatalogJson>(
-			["./locales/*/*.json", "!./locales/en/*.json"],
-			{ import: "default" },
-		)
-	: shippedFiles;
+export const translationFiles: CatalogLoaders =
+	import.meta.env.DEV || __SCREENSHOTS__
+		? import.meta.glob<CatalogJson>(
+				["./locales/*/*.json", "!./locales/en/*.json"],
+				{ import: "default" },
+			)
+		: shippedFiles;

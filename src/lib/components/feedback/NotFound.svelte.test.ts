@@ -7,8 +7,8 @@ vi.mock("$app/state", () => ({
 	page: { url: new URL("http://localhost/missing") },
 }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import NotFound from "./NotFound.svelte";
 
 afterEach(async () => {

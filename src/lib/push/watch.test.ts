@@ -49,8 +49,8 @@ const push = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/navigation", () => ({ goto }));
-vi.mock("$lib/api/sign-out", () => signOut);
-vi.mock("$lib/api/settings/account", () => account);
+vi.mock("#lib/api/sign-out.ts", () => signOut);
+vi.mock("#lib/api/settings/account.ts", () => account);
 vi.mock("./teardown", () => teardown);
 vi.mock("./notifications.svelte", () => notifications);
 vi.mock("./delivery.svelte", () => delivery);
@@ -58,7 +58,7 @@ vi.mock("./categories.svelte", () => categories);
 vi.mock("./chat-withdrawals", () => chatWithdrawals);
 vi.mock("./read-sync", () => readSync);
 vi.mock("./index", () => push);
-vi.mock("$lib/platform/os", () => ({ isDesktopPlatform: () => os.desktop }));
+vi.mock("#lib/platform/os.ts", () => ({ isDesktopPlatform: () => os.desktop }));
 vi.mock("@tauri-apps/api/window", () => ({
 	getCurrentWindow: () => ({
 		onFocusChanged: (listener: (event: { payload: boolean }) => void) => {

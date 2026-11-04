@@ -15,15 +15,17 @@ const {
 	toastSuccessMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	putFavoriteNote: putFavoriteNoteMock,
 	deleteFavoriteNote: deleteFavoriteNoteMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 vi.mock("svelte-sonner", () => ({ toast: { success: toastSuccessMock } }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import FavoriteNoteEditor from "./FavoriteNoteEditor.svelte";
 
 const PROFILE_ID = 7;

@@ -1,4 +1,4 @@
-import { type MessageKey, t } from "$lib/i18n";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 
 export const apiErrorKinds = [
 	"Http",

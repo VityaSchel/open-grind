@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 	import type {
 		OfferedMedia,
 		SendMediaOffer,
@@ -34,8 +34,8 @@
 </script>
 
 <script lang="ts">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import SendMediaTile from "./SendMediaTile.svelte";
 
 	let { offer }: { offer: SendMediaOffer } = $props();

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { t } from "$lib/i18n";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		open = $bindable(false),

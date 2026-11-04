@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	bracketCounts,
 	restoreCountFormatter,
-} from "$lib/i18n/fixtures/count-formatter";
+} from "#lib/i18n/fixtures/count-formatter.ts";
 import MultilineField from "./MultilineField.svelte";
 
 const field = { label: "About me", value: "Otter", maxLength: 15 };

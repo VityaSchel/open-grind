@@ -4,9 +4,9 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Drafts } from "$lib/chat/drafts.svelte";
-import { setCountFormatter } from "$lib/i18n";
-import { restoreCountFormatter } from "$lib/i18n/fixtures/count-formatter";
+import { Drafts } from "#lib/chat/drafts.svelte.ts";
+import { restoreCountFormatter } from "#lib/i18n/fixtures/count-formatter.ts";
+import { setCountFormatter } from "#lib/i18n/index.ts";
 
 const { conversations, currentPage, playHapticMock } = vi.hoisted(() => ({
 	conversations: { drafts: null as Drafts | null },
@@ -15,15 +15,15 @@ const { conversations, currentPage, playHapticMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
-vi.mock("$lib/chat/conversations-context.svelte", () => ({
+vi.mock("#lib/chat/conversations-context.svelte.ts", () => ({
 	getConversations: () => conversations,
 }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
-import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
-import { contextMenuEvent } from "$lib/test/context-menu";
-import { untranslatableTexts } from "$lib/test/untranslatable";
-import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
+import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
+import type { Conversation as ConversationType } from "#lib/model/messaging/conversations.ts";
 import Conversation from "./Conversation.svelte";
 
 const DESCRIPTION = '[data-slot="item-description"]';

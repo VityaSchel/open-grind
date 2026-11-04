@@ -9,17 +9,17 @@ const { preferences, patchOwnProfile, showErrorToast } = vi.hoisted(() => ({
 	showErrorToast: vi.fn<(options: { label?: string }) => void>(),
 }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
 }));
-vi.mock("$lib/api/users/profiles", () => ({
+vi.mock("#lib/api/users/profiles.ts", () => ({
 	getProfile: () => Promise.resolve({ showDistance: true }),
 	patchOwnProfile,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import ShowDistanceSetting from "./ShowDistanceSetting.svelte";
 
 afterEach(async () => {

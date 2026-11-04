@@ -4,17 +4,19 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 const { sendTapMock, showErrorToastMock } = vi.hoisted(() => ({
 	sendTapMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 }));
-vi.mock("$lib/api/interest/taps", () => ({ sendTap: sendTapMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/interest/taps.ts", () => ({ sendTap: sendTapMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
-import { TapType } from "$lib/model/interest/taps";
-import { contextMenuEvent } from "$lib/test/context-menu";
+import { TapType } from "#lib/model/interest/taps.ts";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import TapProfileButton from "./TapProfileButton.svelte";
 
 function renderButton() {

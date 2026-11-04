@@ -19,7 +19,9 @@ vi.mock("@tauri-apps/plugin-geolocation", () => ({
 	getCurrentPosition: getCurrentPositionMock,
 	requestPermissions: requestPermissionsMock,
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
+vi.mock("#lib/platform/os.ts", () => ({
+	isMobilePlatform: isMobilePlatformMock,
+}));
 
 const { locationRequest } = await import("./location-request.svelte");
 

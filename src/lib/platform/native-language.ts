@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import { getCatalogLocale } from "$lib/i18n";
-import { pickerTag } from "$lib/i18n/matcher";
+import { getCatalogLocale } from "#lib/i18n/index.ts";
+import { pickerTag } from "#lib/i18n/matcher.ts";
 import type { LanguageSyncTier } from "./language-sync";
 import { isAndroidPlatform } from "./os";
 

@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ScrollGestureState } from "$lib/platform/scroll-gesture";
+import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
 import { PullModel } from "./pull-model.svelte";
 import { attachTouchpadPull } from "./touchpad-adapter";
 

@@ -7,10 +7,10 @@ const { api } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { demoMyAlbums } from "$lib/demo/mock/albums";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { demoMyAlbums } from "#lib/demo/mock/albums.ts";
 import { getMyAlbumsState } from "./my-albums-state.svelte";
 
 const albums = demoMyAlbums().albums;

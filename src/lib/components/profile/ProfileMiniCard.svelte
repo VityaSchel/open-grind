@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { env } from "$env/dynamic/public";
+	import { PUBLIC_ENABLE_BLUR_EFFECTS } from "$app/env/public";
 	import ChatIcon from "phosphor-svelte/lib/ChatIcon";
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 	import type { Snippet } from "svelte";
 
-	import DisplayName from "$lib/components/profile/DisplayName.svelte";
-	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
-	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
-	import Frost from "$lib/components/shared/Frost.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
-	import { profileMediaUrl } from "$lib/util/media";
+	import DisplayName from "#lib/components/profile/DisplayName.svelte";
+	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import Frost from "#lib/components/shared/Frost.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
+	import { profileMediaUrl } from "#lib/util/media.ts";
 
 	const UNREAD_COUNT_CAP = 99;
 
@@ -50,7 +50,7 @@
 
 	let loadedMediaHash = $state<string | null>(null);
 	const photo = $derived(
-		!env.PUBLIC_ENABLE_BLUR_EFFECTS &&
+		!PUBLIC_ENABLE_BLUR_EFFECTS &&
 			mediaHash !== null &&
 			loadedMediaHash === mediaHash
 			? profileMediaUrl({ mediaHash, size: "thumb" })

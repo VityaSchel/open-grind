@@ -1,5 +1,5 @@
-import type { PlainMessageKey } from "$lib/i18n";
-import type { GridSearchFilters } from "$lib/model/browse/grid/filters";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
+import type { GridSearchFilters } from "#lib/model/browse/grid/filters.ts";
 
 export type FilterError =
 	| { kind: "unknownFilter" }

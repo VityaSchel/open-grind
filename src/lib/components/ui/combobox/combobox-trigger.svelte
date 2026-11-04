@@ -2,7 +2,7 @@
 	import { Combobox as ComboboxPrimitive } from "bits-ui";
 	import CaretUpDownIcon from "phosphor-svelte/lib/CaretUpDownIcon";
 
-	import { cn } from "$lib/util/utils.js";
+	import { cn } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

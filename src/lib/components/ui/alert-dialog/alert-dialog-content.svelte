@@ -3,13 +3,13 @@
 	import type { ComponentProps } from "svelte";
 	import type { ClassValue } from "svelte/elements";
 
-	import ScreenChromeCover from "$lib/components/shared/ScreenChromeCover.svelte";
-	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
+	import ScreenChromeCover from "#lib/components/shared/ScreenChromeCover.svelte";
+	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
 	import {
 		cn,
 		type WithoutChild,
 		type WithoutChildrenOrChild,
-	} from "$lib/util/utils.js";
+	} from "#lib/util/utils.ts";
 	import AlertDialogOverlay from "./alert-dialog-overlay.svelte";
 	import AlertDialogPortal from "./alert-dialog-portal.svelte";
 

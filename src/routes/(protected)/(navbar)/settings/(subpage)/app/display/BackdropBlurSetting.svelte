@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		preferencesLoaded,
 		preferencesSnapshot,
 		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
-	import {
-		BACKDROP_BLUR_QUALITY_ORDER,
-		type BackdropBlurQuality,
-		UNCALIBRATED_BACKDROP_BLUR_QUALITY,
-	} from "$lib/blur/quality";
+	} from "#lib/app-data/preferences.svelte.ts";
 	import {
 		backdropBlurRenderable,
 		backdropBlurTrialPending,
 		settledBackdropBlurQuality,
-	} from "$lib/blur/quality.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import { Slider } from "$lib/components/ui/slider";
-	import { type PlainMessageKey, t } from "$lib/i18n";
+	} from "#lib/blur/quality.svelte.ts";
+	import {
+		BACKDROP_BLUR_QUALITY_ORDER,
+		type BackdropBlurQuality,
+		UNCALIBRATED_BACKDROP_BLUR_QUALITY,
+	} from "#lib/blur/quality.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { Slider } from "#lib/components/ui/slider/index.ts";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 
 	const qualityKeys = {
 		off: "settings.app.backdropBlur.quality.off",

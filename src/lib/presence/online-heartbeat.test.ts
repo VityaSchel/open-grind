@@ -10,14 +10,14 @@ const { appLifecycle, gridState, preferences, refreshMock } = vi.hoisted(() => {
 	};
 });
 
-vi.mock("$lib/api/app-lifecycle.svelte", () => ({ appLifecycle }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({ appLifecycle }));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => ({ stayOnline: preferences.stayOnline }),
 	preferencesLoaded: () => preferences.loaded,
 }));
-vi.mock("$lib/grid/grid-state.svelte", () => ({ gridState }));
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({ gridState }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { markOnlineRefreshed } from "./online-clock";
 import {
 	ONLINE_REFRESH_AFTER_MS,

@@ -12,13 +12,13 @@ const {
 	getFavoriteNoteMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: getFavoriteNoteMock,
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 	refreshProfile: refreshProfileMock,
 	isProfileCached: isProfileCachedMock,
@@ -28,12 +28,12 @@ vi.mock("../record-visit", () => ({
 	forgetProfileVisits: vi.fn(),
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profile-viewability.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 import { ProfileState } from "../profile-state.svelte";
 import {
 	destroyOpenedPagers,

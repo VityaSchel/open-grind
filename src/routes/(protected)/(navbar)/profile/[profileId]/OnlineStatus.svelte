@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t } from "$lib/i18n";
-	import { formatRelativeTime } from "$lib/i18n/format";
-	import { getNow } from "$lib/util/now";
+	import { formatRelativeTime } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { getNow } from "#lib/util/now.ts";
 
 	let {
 		onlineUntil,

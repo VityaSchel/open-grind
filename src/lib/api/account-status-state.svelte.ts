@@ -1,12 +1,12 @@
 import { SvelteSet } from "svelte/reactivity";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import type { BanInfo, Restriction } from "$lib/api/methods";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import type { BanInfo, Restriction } from "#lib/api/methods.ts";
 import type {
 	AccountStatusError,
 	DeprecatedClientVersionError,
 	VerificationRequiredError,
-} from "$lib/model/authentication";
+} from "#lib/model/authentication.ts";
 
 export type AccountStatus =
 	| { kind: "banned"; info: BanInfo }

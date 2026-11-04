@@ -4,8 +4,10 @@ const { markConversationAsRead } = vi.hoisted(() => ({
 	markConversationAsRead: vi.fn<() => Promise<void>>(),
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/messaging/conversations", () => ({ markConversationAsRead }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
+	markConversationAsRead,
+}));
 
 import { ConversationReadRequests } from "./conversation-read-requests";
 import { conversation, deferred } from "./conversations-test-helpers";

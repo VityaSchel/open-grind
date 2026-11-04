@@ -8,12 +8,14 @@ const { unhideUserMock, showErrorToastMock } = vi.hoisted(() => ({
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/browse/hides", () => ({ unhideUser: unhideUserMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/browse/hides.ts", () => ({ unhideUser: unhideUserMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import HiddenProfile from "./HiddenProfile.svelte";
 
 const PROFILE_ID = 7;

@@ -12,14 +12,14 @@ const ENGINE = "2.52.6";
 
 const { linuxMock } = vi.hoisted(() => ({ linuxMock: vi.fn(() => false) }));
 
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	isLinuxPlatform: linuxMock,
 }));
 
 vi.mock("../compositing.svelte", () => ({ webviewEngine: () => ENGINE }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
@@ -30,7 +30,7 @@ import {
 	hydratePreferences,
 	preferencesSnapshot,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
+} from "#lib/app-data/preferences.svelte.ts";
 import {
 	ARM_TRAVEL_PX,
 	DEMOTE_MIN_PAIRS,

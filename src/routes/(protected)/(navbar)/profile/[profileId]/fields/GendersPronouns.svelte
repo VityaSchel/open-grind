@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { getGenders } from "$lib/api/users/genders";
-	import { getPronouns } from "$lib/api/users/pronouns";
-	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { t } from "$lib/i18n";
-	import { formatList } from "$lib/i18n/format";
+	import { getGenders } from "#lib/api/users/genders.ts";
+	import { getPronouns } from "#lib/api/users/pronouns.ts";
+	import Separator from "#lib/components/ui/separator/separator.svelte";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { formatList } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import ProfileField from "./ProfileField.svelte";
 
 	const allGenders = $derived(getGenders());

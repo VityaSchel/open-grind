@@ -8,8 +8,8 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
-import { getGifById, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
-import { toBase64 } from "$lib/util/base64";
+import { getGifById, giphyIdFromLink } from "#lib/api/messaging/giphy-link.ts";
+import { toBase64 } from "#lib/util/base64.ts";
 
 const ID = "xT0xeChUR33EsYNNRK";
 

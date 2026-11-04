@@ -9,9 +9,9 @@
 		blockUser,
 		getBlockedUsers,
 		unblockUser,
-	} from "$lib/api/browse/blocks";
-	import ProfileList from "$lib/components/profile-list/ProfileList.svelte";
-	import { t } from "$lib/i18n";
+	} from "#lib/api/browse/blocks.ts";
+	import ProfileList from "#lib/components/profile-list/ProfileList.svelte";
+	import { t } from "#lib/i18n/index.ts";
 </script>
 
 <svelte:head>

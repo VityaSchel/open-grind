@@ -6,13 +6,13 @@ import {
 	type GridMetrics,
 	gridWindow,
 	type GridWindow,
-} from "$lib/util/grid-window";
-import { nearestScrollableAncestor } from "$lib/util/scroll";
+} from "#lib/util/grid-window.ts";
+import { nearestScrollableAncestor } from "#lib/util/scroll.ts";
 import {
 	NO_METRICS,
 	OVERSCAN_PX,
 	perFieldWindow,
-} from "$lib/util/virtual-window.svelte";
+} from "#lib/util/virtual-window.svelte.ts";
 
 const NO_ROWS: GridWindow = Object.freeze({
 	startIndex: 0,

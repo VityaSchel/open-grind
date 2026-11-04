@@ -4,14 +4,14 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: vi.fn(() => Promise.resolve({})),
 	setPreferences: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("$lib/grid/grid-state.svelte", async () => {
+vi.mock("#lib/grid/grid-state.svelte.ts", async () => {
 	const { GridSearchFiltersState } =
-		await import("$lib/grid/grid-search-filters-state.svelte");
+		await import("#lib/grid/grid-search-filters-state.svelte.ts");
 	return {
 		gridState: {
 			filters: new GridSearchFiltersState({ onQueryChange: vi.fn() }),
@@ -28,11 +28,11 @@ vi.stubGlobal(
 	},
 );
 
-import { gridState } from "$lib/grid/grid-state.svelte";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { defaultFilters } from "$lib/model/browse/grid/filters";
+import { gridState } from "#lib/grid/grid-state.svelte.ts";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 import AgeQuickFilter from "./AgeQuickFilter.svelte";
 
 afterEach(async () => {

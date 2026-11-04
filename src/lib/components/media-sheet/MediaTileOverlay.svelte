@@ -2,7 +2,7 @@
 	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
 	import type { Snippet } from "svelte";
 
-	import SelectionOverlay from "$lib/components/shared/SelectionOverlay.svelte";
+	import SelectionOverlay from "#lib/components/shared/SelectionOverlay.svelte";
 
 	let {
 		video,

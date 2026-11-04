@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { FEATURED_ORIGINAL_IDS } from "$lib/chat/gaymoji-ids";
+import { FEATURED_ORIGINAL_IDS } from "#lib/chat/gaymoji-ids.ts";
 import {
 	FEATURED_CATEGORY,
 	KNOWN_GAYMOJI_CATEGORIES,
-} from "$lib/chat/gaymoji-sections";
-import { demoGaymojiImageUrl } from "$lib/demo/mock/gaymoji";
-import { demoRoute } from "$lib/demo/route";
-import { gaymojiManifestSchema } from "$lib/model/messaging/gaymoji";
+} from "#lib/chat/gaymoji-sections.ts";
+import { demoGaymojiImageUrl, demoRoute } from "#lib/demo/index.ts";
+import { gaymojiManifestSchema } from "#lib/model/messaging/gaymoji.ts";
 
 function manifest() {
 	return gaymojiManifestSchema.parse(

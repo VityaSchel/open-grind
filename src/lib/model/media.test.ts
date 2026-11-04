@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mediaUrlSchema } from "$lib/model/media";
+import { mediaUrlSchema } from "#lib/model/media.ts";
 
 describe("mediaUrlSchema", () => {
 	it.each([

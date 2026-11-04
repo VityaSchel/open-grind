@@ -3,20 +3,20 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	loadAlbumSlides: vi.fn(),
 	openAlbumLightbox: vi.fn(),
 }));
 
-import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { albumProcessingPlaceholderUrl } from "#lib/demo/mock/albums.ts";
 import {
 	bracketCounts,
 	restoreCountFormatter,
-} from "$lib/i18n/fixtures/count-formatter";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+} from "#lib/i18n/fixtures/count-formatter.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import type { UploadLimits } from "../album-uploads/album-uploads-state.svelte";
 import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
 

@@ -1,9 +1,9 @@
 import { vi } from "vitest";
 
-import { ApiError } from "$lib/api/api-error";
-import type { AlbumContentResponse } from "$lib/api/messaging/albums";
-import type { AlbumContent } from "$lib/model/messaging/albums";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { ApiError } from "#lib/api/api-error.ts";
+import type { AlbumContentResponse } from "#lib/api/messaging/albums.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import type {
 	AlbumUploads,
 	InspectedPick,

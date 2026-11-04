@@ -1,11 +1,11 @@
 <script lang="ts">
-	import DisplayName from "$lib/components/profile/DisplayName.svelte";
-	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
-	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
-	import * as Avatar from "$lib/components/ui/avatar";
-	import * as Item from "$lib/components/ui/item";
-	import { t } from "$lib/i18n";
-	import { longPressHandlers } from "$lib/util/long-press";
+	import DisplayName from "#lib/components/profile/DisplayName.svelte";
+	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
+	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import * as Avatar from "#lib/components/ui/avatar/index.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { longPressHandlers } from "#lib/util/long-press.ts";
 
 	let {
 		avatar,

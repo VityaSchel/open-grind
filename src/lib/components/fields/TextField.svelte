@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { HTMLInputTypeAttribute } from "svelte/elements";
 
-	import { Input } from "$lib/components/ui/input";
-	import { formatInteger } from "$lib/i18n/format";
+	import { Input } from "#lib/components/ui/input/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
 	import Field from "./Field.svelte";
 
 	let {

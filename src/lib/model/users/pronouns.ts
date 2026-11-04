@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { arrayOfParsableEntries } from "$lib/model/tolerance";
+import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
 
 export const pronounSchema = z.object({
 	pronounId: z.int().nonnegative(),

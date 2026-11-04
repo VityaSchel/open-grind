@@ -12,14 +12,14 @@ const { desktopEntry, setDesktopEntryInstalled, showErrorToast } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/platform/desktop-entry.svelte", () => ({
+vi.mock("#lib/platform/desktop-entry.svelte.ts", () => ({
 	desktopEntryInstalled: () => desktopEntry.installed,
 	setDesktopEntryInstalled,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast }));
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 
 afterEach(async () => {

@@ -1,4 +1,4 @@
-import { env } from "$env/dynamic/public";
+import { PUBLIC_BACKDROP_BLUR } from "$app/env/public";
 import z from "zod";
 
 export const backdropBlurQualitySchema = z.enum([
@@ -34,8 +34,7 @@ export function backdropFilterSupported(): boolean {
 }
 
 export function configuredBackdropBlurQuality(): BackdropBlurQuality | null {
-	const configured = backdropBlurQualitySchema.safeParse(
-		env.PUBLIC_BACKDROP_BLUR,
-	);
+	const configured =
+		backdropBlurQualitySchema.safeParse(PUBLIC_BACKDROP_BLUR);
 	return configured.success ? configured.data : null;
 }

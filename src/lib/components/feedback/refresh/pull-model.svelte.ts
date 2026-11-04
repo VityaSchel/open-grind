@@ -1,4 +1,4 @@
-import { playHaptic } from "$lib/haptics";
+import { playHaptic } from "#lib/haptics.ts";
 
 export type PullSource = "touch" | "overscroll" | "click";
 export type PullPhase = "idle" | "pulling" | "armed" | "refreshing";

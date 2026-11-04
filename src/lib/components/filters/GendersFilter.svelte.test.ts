@@ -11,13 +11,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getGendersMock } = vi.hoisted(() => ({ getGendersMock: vi.fn() }));
 
-vi.mock("$lib/api/users/genders", () => ({ getGenders: getGendersMock }));
+vi.mock("#lib/api/users/genders.ts", () => ({ getGenders: getGendersMock }));
 
-import { demoGenders } from "$lib/demo/mock/reference";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { GENDER_ASK_ME } from "$lib/model/browse/grid/filters";
-import type { Gender } from "$lib/model/users/genders";
+import { demoGenders } from "#lib/demo/mock/reference.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { GENDER_ASK_ME } from "#lib/model/browse/grid/filters.ts";
+import type { Gender } from "#lib/model/users/genders.ts";
 import GendersFilter from "./GendersFilter.svelte";
 
 const MAN = 1;

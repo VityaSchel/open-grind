@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { refreshFeatureFlags } from "$lib/api/feature-flags-state.svelte";
-	import { getGenders } from "$lib/api/users/genders";
-	import { getProfile } from "$lib/api/users/profiles";
-	import { getPronouns } from "$lib/api/users/pronouns";
-	import { getTags } from "$lib/api/users/tags";
-	import { t } from "$lib/i18n";
+	import { refreshFeatureFlags } from "#lib/api/feature-flags-state.svelte.ts";
+	import { getGenders } from "#lib/api/users/genders.ts";
+	import { getProfile } from "#lib/api/users/profiles.ts";
+	import { getPronouns } from "#lib/api/users/pronouns.ts";
+	import { getTags } from "#lib/api/users/tags.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import ProfileForm from "./ProfileForm.svelte";
 	import ProfileFormSkeleton from "./ProfileFormSkeleton.svelte";
 

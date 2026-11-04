@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { LoadedEntry } from "$lib/credits";
+	import type { LoadedEntry } from "#lib/credits/index.ts";
 	import BlurbText from "./BlurbText.svelte";
 	import LicenseDisclosure from "./LicenseDisclosure.svelte";
 

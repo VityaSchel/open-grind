@@ -1,5 +1,5 @@
-import { playHaptic } from "$lib/haptics";
-import { firedByTouch } from "$lib/platform/touch-origin";
+import { playHaptic } from "#lib/haptics.ts";
+import { firedByTouch } from "#lib/platform/touch-origin.ts";
 
 const TEXT_INPUT_TYPES = new Set([
 	"email",

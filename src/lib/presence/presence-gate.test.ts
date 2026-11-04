@@ -5,11 +5,11 @@ const { preferences, pushDeeplinkAheadMock } = vi.hoisted(() => ({
 	pushDeeplinkAheadMock: vi.fn(() => Promise.resolve(false)),
 }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesLoaded: () => preferences.loaded,
 	preferencesSnapshot: () => preferences,
 }));
-vi.mock("$lib/push/opening-deeplink", () => ({
+vi.mock("#lib/push/opening-deeplink.ts", () => ({
 	pushDeeplinkAhead: pushDeeplinkAheadMock,
 }));
 

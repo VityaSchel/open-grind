@@ -1,7 +1,7 @@
 import z from "zod";
 
-import { arrayOfParsableEntries } from "$lib/model/tolerance";
-import type { OutboundMessage } from "$lib/model/messaging/messages";
+import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
+import type { OutboundMessage } from "#lib/model/messaging/messages.ts";
 
 const IMAGE_HASH_PREFIX = "giphy/";
 

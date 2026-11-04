@@ -1,11 +1,11 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api/transport";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	type Conversation,
 	conversationEntrySchema,
-} from "$lib/model/messaging/conversations";
-import { arrayOfKnownVariants } from "$lib/model/tolerance";
+} from "#lib/model/messaging/conversations.ts";
+import { arrayOfKnownVariants } from "#lib/model/tolerance.ts";
 
 const conversationsSchema = z.object({
 	entries: arrayOfKnownVariants({

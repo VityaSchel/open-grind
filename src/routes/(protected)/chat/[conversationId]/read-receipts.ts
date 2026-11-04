@@ -1,4 +1,4 @@
-import { now } from "$lib/util/clock";
+import { now } from "#lib/util/clock.ts";
 
 const READ_DEBOUNCE_MS = 500;
 const READ_MAX_WAIT_MS = 2000;

@@ -1,6 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 
-import { toBase64 } from "$lib/util/base64";
+import { toBase64 } from "#lib/util/base64.ts";
 import {
 	existsWebAppDataFile,
 	readWebAppDataFile,

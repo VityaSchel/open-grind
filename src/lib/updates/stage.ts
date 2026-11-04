@@ -1,4 +1,4 @@
-import { type PlainMessageKey, t } from "$lib/i18n";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import { ADDON_MESSAGES } from "./addon-messages";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import type { Progress, Release, UpdateError } from "./types";

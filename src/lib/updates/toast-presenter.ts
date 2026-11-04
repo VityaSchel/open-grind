@@ -1,4 +1,4 @@
-import { t } from "$lib/i18n";
+import { t } from "#lib/i18n/index.ts";
 import { ADDON_MESSAGES } from "./addon-messages";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import { problemBody } from "./error-copy";

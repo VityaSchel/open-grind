@@ -2,18 +2,18 @@
 	import { untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 
-	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { type PlainMessageKey, t } from "$lib/i18n";
-	import { isAndroidPlatform } from "$lib/platform/os";
+	import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+	import { isAndroidPlatform } from "#lib/platform/os.ts";
 	import {
 		loadNotificationCategories,
 		notificationCategories,
 		toggleNotificationCategory,
-	} from "$lib/push/categories.svelte";
-	import { notificationSettings } from "$lib/push/notification-state.svelte";
-	import type { PushCategoryName } from "$lib/push/types";
+	} from "#lib/push/categories.svelte.ts";
+	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
+	import type { PushCategoryName } from "#lib/push/types.ts";
 
 	const titleKeys = {
 		messages: "settings.notifications.categories.messages",

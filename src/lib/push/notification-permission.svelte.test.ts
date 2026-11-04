@@ -15,10 +15,10 @@ import {
 import type { NotificationPermission } from "./types";
 
 vi.mock("./index", () => push);
-vi.mock("$lib/updates/addon.svelte", () => addon);
-vi.mock("$lib/api/settings/account", () => account);
-vi.mock("$lib/api/error-toast", () => toasts);
-vi.mock("$lib/app-data/preferences.svelte", () => preferences);
+vi.mock("#lib/updates/addon.svelte.ts", () => addon);
+vi.mock("#lib/api/settings/account.ts", () => account);
+vi.mock("#lib/api/error-toast.ts", () => toasts);
+vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
 
 const unasked: NotificationPermission = { granted: false, state: "prompt" };
 const refusedOnce: NotificationPermission = {

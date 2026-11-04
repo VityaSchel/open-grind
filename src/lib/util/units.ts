@@ -1,8 +1,8 @@
 import z from "zod";
 
-import { t } from "$lib/i18n";
-import { formatNumber, isolate } from "$lib/i18n/format";
-import type { MeasurementSystem } from "$lib/i18n/regional";
+import { formatNumber, isolate } from "#lib/i18n/format.ts";
+import { t } from "#lib/i18n/index.ts";
+import type { MeasurementSystem } from "#lib/i18n/regional.ts";
 
 export const unitSystemSchema = z.enum(["metric", "imperial"]);
 

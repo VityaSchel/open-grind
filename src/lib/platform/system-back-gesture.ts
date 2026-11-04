@@ -1,7 +1,7 @@
 import {
 	backGestureEventHandlers,
 	topBackGestureHandler,
-} from "$lib/platform/back-gesture-event.svelte";
+} from "#lib/platform/back-gesture-event.svelte.ts";
 
 export type SwipeBackStack = {
 	readonly tracking: boolean;

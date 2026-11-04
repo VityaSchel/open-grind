@@ -4,9 +4,9 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { createRawSnippet, mount, type Snippet, unmount } from "svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { untranslatableTexts } from "$lib/test/untranslatable";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import FavoriteStar from "./FavoriteStar.svelte";
 import ProfileItem from "./ProfileItem.svelte";
 

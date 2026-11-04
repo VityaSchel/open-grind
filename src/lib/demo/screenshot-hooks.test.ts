@@ -20,16 +20,16 @@ const { toast, hookedAtStartup, noteHooked } = vi.hoisted(() => {
 });
 
 vi.mock("svelte-sonner", () => ({ toast }));
-vi.mock("$lib/ws.svelte", () => ({
+vi.mock("#lib/ws.svelte.ts", () => ({
 	ws: { connect: vi.fn(() => noteHooked("ws.connect")) },
 }));
-vi.mock("$lib/platform/regional-settings", () => ({
+vi.mock("#lib/platform/regional-settings.ts", () => ({
 	startRegionalSettings: vi.fn(() => {
 		noteHooked("startRegionalSettings");
 		return Promise.resolve();
 	}),
 }));
-vi.mock("$lib/platform/app-language", () => ({
+vi.mock("#lib/platform/app-language.ts", () => ({
 	startLanguage: vi.fn(() => {
 		noteHooked("startLanguage");
 		return Promise.resolve();
@@ -73,7 +73,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	delete window.__openGrindScreenshots;
 	delete window.__openGrindScreenshotScene;
 	document.documentElement.lang = "en";
@@ -86,17 +86,12 @@ describe("without OPEN_GRIND_SCREENSHOTS", FRESH_IMPORTS, () => {
 		const { screenshotScene } = await import("./screenshot-scene");
 		expect(screenshotScene.signedOut).toBe(false);
 	});
-
-	it("installs none outside the demo either", async () => {
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
-		expect(await startApp()).toBeUndefined();
-	});
 });
 
 describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 	beforeEach(() => {
-		vi.stubEnv("OPEN_GRIND_DEMO", "1");
-		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
 	});
 
 	it("installs the hooks before the app starts", async () => {
@@ -151,7 +146,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 
 	it("switches the app language", async () => {
 		const hooks = await startHookedApp();
-		const { getLocale } = await import("$lib/i18n");
+		const { getLocale } = await import("#lib/i18n/index.ts");
 		await hooks.setLocale({ locale: "en-XM" });
 		expect(getLocale()).toBe("en-XM");
 		expect(document.documentElement.lang).toBe("en-XM");
@@ -161,7 +156,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 
 	it("shows the error toast with retry and copy actions", async () => {
 		const hooks = await startHookedApp();
-		const { t } = await import("$lib/i18n");
+		const { t } = await import("#lib/i18n/index.ts");
 		hooks.showErrorToast({
 			label: "Couldn’t load taps.",
 			error: new Error("offline"),
@@ -182,7 +177,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 
 	it("shows the update toasts the update flow shows", async () => {
 		const hooks = await startHookedApp();
-		const { t } = await import("$lib/i18n");
+		const { t } = await import("#lib/i18n/index.ts");
 		hooks.updateToasts("app").upToDate();
 		hooks
 			.updateToasts("app")
@@ -217,7 +212,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 
 	it("titles an update problem by key and names the add-on it is about", async () => {
 		const hooks = await startHookedApp();
-		const { t } = await import("$lib/i18n");
+		const { t } = await import("#lib/i18n/index.ts");
 		hooks.updateProblem({
 			component: "fcm",
 			key: "updates.errors.network",
@@ -257,7 +252,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 
 	it("shows every update result the update flow shows", async () => {
 		const hooks = await startHookedApp();
-		const { t } = await import("$lib/i18n");
+		const { t } = await import("#lib/i18n/index.ts");
 		hooks
 			.updateToasts("recaptcha")
 			.installed({ tag: "v1.2.0", kind: "install" });

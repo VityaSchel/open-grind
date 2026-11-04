@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Command from "$lib/components/ui/command";
-	import { t } from "$lib/i18n";
+	import * as Command from "#lib/components/ui/command/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import QuickGoToCommandItem from "./QuickGoToCommandItem.svelte";
 </script>
 

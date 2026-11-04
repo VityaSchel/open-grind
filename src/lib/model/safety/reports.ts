@@ -3,8 +3,8 @@ import z from "zod";
 import {
 	albumContentMin,
 	albumPreviewSchema,
-} from "$lib/model/messaging/albums";
-import { unixTimestampMsSchema } from "$lib/model/types";
+} from "#lib/model/messaging/albums.ts";
+import { unixTimestampMsSchema } from "#lib/model/types.ts";
 
 export const reportReasonSchema = z.enum([
 	"SPAM",

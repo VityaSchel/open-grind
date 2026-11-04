@@ -10,8 +10,8 @@ import {
 	FilterRelationshipStatus,
 	HEIGHT_CM_MAX,
 	WEIGHT_KG_MAX,
-} from "$lib/model/browse/grid/filters";
-import { SexualPosition, Tribe } from "$lib/model/users/profiles";
+} from "#lib/model/browse/grid/filters.ts";
+import { SexualPosition, Tribe } from "#lib/model/users/profiles.ts";
 import { sentFilterKeysWithoutQuickFilter } from "./quick-filters";
 
 describe("sentFilterKeysWithoutQuickFilter", () => {

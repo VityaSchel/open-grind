@@ -1,5 +1,5 @@
 <script lang="ts">
-	import NavBar from "$lib/components/shared/NavBar.svelte";
+	import NavBar from "#lib/components/shared/NavBar.svelte";
 
 	let { data, children }: import("./$types").LayoutProps = $props();
 </script>

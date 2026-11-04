@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { featureFlagsState } from "$lib/api/feature-flags-state.svelte";
-import { sentFilterKeys } from "$lib/grid/grid-query";
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { featureFlagsState } from "#lib/api/feature-flags-state.svelte.ts";
+import { sentFilterKeys } from "#lib/grid/grid-query.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import {
 	defaultFilters,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
+} from "#lib/model/browse/grid/filters.ts";
 import { filterErrorText } from "./filter-error-text";
 import { type ParsedFilter, parseFilterGridQuery } from "./filter-grid-query";
 

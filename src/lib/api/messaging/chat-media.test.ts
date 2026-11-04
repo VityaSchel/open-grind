@@ -10,21 +10,21 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
 }));
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	addMediaToDrawer,
 	UnsupportedChatMediaError,
 	uploadChatMediaFile,
-} from "$lib/api/messaging/chat-media";
-import { CHAT_MEDIA_MAX_BYTES } from "$lib/model/messaging/chat-media-limits";
-import { toBase64 } from "$lib/util/base64";
-import type { MediaFileInspection } from "$lib/platform/media-file";
-import type { PickedMedia } from "$lib/platform/media-picker";
+} from "#lib/api/messaging/chat-media.ts";
+import { CHAT_MEDIA_MAX_BYTES } from "#lib/model/messaging/chat-media-limits.ts";
+import { toBase64 } from "#lib/util/base64.ts";
+import type { MediaFileInspection } from "#lib/platform/media-file.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const pickedMedia = {
 	source: "desktop",

@@ -28,14 +28,15 @@ async function buildWith({
 	screenshots?: boolean;
 }) {
 	vi.stubEnv("DEV", dev);
-	if (demo) vi.stubEnv("OPEN_GRIND_DEMO", "1");
-	if (screenshots) vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+	if (demo) vi.stubGlobal("__DEMO__", true);
+	if (screenshots) vi.stubGlobal("__SCREENSHOTS__", true);
 	vi.resetModules();
 	return import("./index");
 }
 
 afterEach(() => {
 	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	vi.resetModules();
 });
 

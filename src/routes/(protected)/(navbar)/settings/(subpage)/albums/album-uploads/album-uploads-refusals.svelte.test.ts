@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { ApiError } from "$lib/api/api-error";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { ApiError } from "#lib/api/api-error.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { getAlbumUploads } from "./album-uploads-state.svelte";
 import {
 	ALBUM_ID,
@@ -24,23 +24,23 @@ vi.mock("svelte-sonner", () => ({
 	toast: { error: toastError, success: vi.fn() },
 }));
 
-vi.mock("$lib/platform/media-file", async (importOriginal) => ({
+vi.mock("#lib/platform/media-file.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	discardStagedMedia,
 }));
 
-vi.mock("$lib/api/messaging/albums", async (importOriginal) => ({
+vi.mock("#lib/api/messaging/albums.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	getMyAlbums: vi.fn(),
 	uploadAlbumContent: vi.fn(),
 }));
 
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	forgetAlbumSlides: vi.fn(),
 }));
 
 const { getMyAlbums, uploadAlbumContent } =
-	await import("$lib/api/messaging/albums");
+	await import("#lib/api/messaging/albums.ts");
 
 vi.spyOn(console, "error").mockImplementation(() => undefined);
 

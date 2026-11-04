@@ -1,4 +1,4 @@
-import { systemLanguage } from "$lib/util/language";
+import { systemLanguage } from "#lib/util/language.ts";
 
 const helpCenterPaths = {
 	inPersonIncidentForm: "requests/new?ticket_form_id=16925729533971",

@@ -1,4 +1,4 @@
-import type { GridProfile, RenderedGridProfile } from "$lib/grid/grid";
+import type { GridProfile, RenderedGridProfile } from "#lib/grid/grid.ts";
 
 export function browseOrder({
 	profiles,

@@ -1,4 +1,4 @@
-import type { ScrollGestureState } from "$lib/platform/scroll-gesture";
+import type { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
 import type { PullModel } from "./pull-model.svelte";
 import {
 	AT_BOUNDARY_PX,

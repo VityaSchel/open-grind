@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { MAX_DRAG_PX } from "$lib/util/swipe-to-reply.svelte";
+import { MAX_DRAG_PX } from "#lib/util/swipe-to-reply.svelte.ts";
 import {
 	pointer,
 	RAIL_RELEASE_FALLBACK_MS,

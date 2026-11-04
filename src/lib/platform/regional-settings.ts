@@ -1,13 +1,13 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-import { setRegionalSettings } from "$lib/i18n";
+import { setRegionalSettings } from "#lib/i18n/index.ts";
 import {
 	parseRegionalOverride,
 	type RegionalSettings,
 	regionalSettingsSchema,
 	webRegionalSettings,
-} from "$lib/i18n/regional";
+} from "#lib/i18n/regional.ts";
 
 export const NATIVE_READ_TIMEOUT_MS = 500;
 export const NATIVE_READ_LIMIT_MS = 5000;

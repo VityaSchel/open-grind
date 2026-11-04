@@ -12,18 +12,20 @@ vi.mock("./grid", () => ({
 	resolveLazyProfile: vi.fn(),
 	setCachedProfile: vi.fn(),
 }));
-vi.mock("$lib/api/users/tags", () => ({ getTags: vi.fn() }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/api/users/tags.ts", () => ({ getTags: vi.fn() }));
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => () => {} },
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({}),
 	preferencesLoaded: () => true,
 	preferencesSnapshot: () => ({ geohash: null, stayOnline: true }),
 	setPreferences: () => Promise.resolve(),
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/location/auto-location", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/location/auto-location.ts", () => ({
 	autoLocation: {
 		resolveGeohash: (geohash: string) => Promise.resolve(geohash),
 	},

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { env } from "$env/dynamic/public";
+	import { PUBLIC_ENABLE_BLUR_EFFECTS } from "$app/env/public";
 
-	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { profileMediaUrl } from "$lib/util/media";
+	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { profileMediaUrl } from "#lib/util/media.ts";
 
 	let {
 		mediaHash,
@@ -25,7 +25,7 @@
 			class="h-full w-full"
 			imgClass={[
 				"bg-neutral-600",
-				{ "blur-2xl": env.PUBLIC_ENABLE_BLUR_EFFECTS },
+				{ "blur-2xl": PUBLIC_ENABLE_BLUR_EFFECTS },
 			]}
 			tone="photo"
 			{size}

@@ -7,7 +7,7 @@ import {
 } from "@testing-library/svelte";
 import { expect, vi } from "vitest";
 
-import { slot } from "$lib/i18n/fixtures/dom";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
 import { commandCenterState } from "./command-center-state.svelte";
 import CommandCenter from "./CommandCenter.svelte";
 

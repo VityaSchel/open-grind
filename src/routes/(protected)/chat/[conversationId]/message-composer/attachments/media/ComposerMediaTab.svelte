@@ -4,18 +4,18 @@
 	import {
 		addMediaToDrawer,
 		chatMediaFailureMessage,
-	} from "$lib/api/messaging/chat-media";
+	} from "#lib/api/messaging/chat-media.ts";
 	import {
 		deleteDrawerMedia,
 		type DrawerMedia,
 		getDrawerMedia,
-	} from "$lib/api/messaging/drawer";
-	import MediaSheetGrid from "$lib/components/media-sheet/MediaSheetGrid.svelte";
-	import { t } from "$lib/i18n";
-	import { mediaFileKindOf } from "$lib/platform/media-file";
-	import { pickMultipleMedia } from "$lib/platform/media-picker";
-	import { proxyMediaUrl } from "$lib/util/media";
-	import { SelectionSet } from "$lib/util/selection.svelte";
+	} from "#lib/api/messaging/drawer.ts";
+	import MediaSheetGrid from "#lib/components/media-sheet/MediaSheetGrid.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { mediaFileKindOf } from "#lib/platform/media-file.ts";
+	import { pickMultipleMedia } from "#lib/platform/media-picker.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import { getConversationState } from "../../../conversation-state.svelte";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import type { TabSelection } from "../tabs";

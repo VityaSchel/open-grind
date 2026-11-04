@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { gaymojiSections } from "$lib/chat/gaymoji-sections";
-import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
+import { gaymojiSections } from "#lib/chat/gaymoji-sections.ts";
+import type {
+	GaymojiCategory,
+	GaymojiItem,
+} from "#lib/api/messaging/gaymoji.ts";
 
 function item(id: string): GaymojiItem {
 	return {

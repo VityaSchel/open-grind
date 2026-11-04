@@ -1,11 +1,11 @@
 import z from "zod";
 
-import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
+import { rightNowAttributionStatusSchema } from "#lib/model/right-now.ts";
 import {
 	profileMaskedMinSchema,
 	profileMaskedSchema,
 	profileMinSchema,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 
 export const viewPreviewSchema = z.object({
 	profileImageMediaHash: profileMaskedMinSchema.shape.profileImageMediaHash,

@@ -4,14 +4,14 @@
 	import { type Snippet, untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import AddTile from "$lib/components/shared/AddTile.svelte";
-	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
-	import type { SelectionSet } from "$lib/util/selection.svelte";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import AddTile from "#lib/components/shared/AddTile.svelte";
+	import MediaGrid from "#lib/components/shared/MediaGrid.svelte";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import DeleteMediaDialog from "./DeleteMediaDialog.svelte";
 	import MediaSheetTile from "./MediaSheetTile.svelte";
 	import MediaTileMenu from "./MediaTileMenu.svelte";

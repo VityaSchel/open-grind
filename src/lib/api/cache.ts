@@ -2,9 +2,9 @@ import {
 	accountEpoch,
 	isAccountEpochCurrent,
 	registerAccountCache,
-} from "$lib/api/account-caches";
-import { now } from "$lib/util/clock";
-import { Generation } from "$lib/util/generation";
+} from "#lib/api/account-caches.ts";
+import { now } from "#lib/util/clock.ts";
+import { Generation } from "#lib/util/generation.ts";
 
 type CacheOptions = { ttlMs?: number };
 

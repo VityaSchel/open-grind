@@ -2,9 +2,9 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import type { ModeratedField } from "$lib/api/users/profile-moderation";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import type { ModeratedField } from "#lib/api/users/profile-moderation.ts";
 import { bannedTermsDetail } from "./banned-terms";
 
 afterEach(async () => {

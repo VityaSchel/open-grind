@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 
 const { canOpenAppSettingsMock, openAppSettingsMock, toastMock } = vi.hoisted(
 	() => ({
@@ -11,7 +11,7 @@ const { canOpenAppSettingsMock, openAppSettingsMock, toastMock } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/platform/app-settings", () => ({
+vi.mock("#lib/platform/app-settings.ts", () => ({
 	canOpenAppSettings: canOpenAppSettingsMock,
 	openAppSettings: openAppSettingsMock,
 }));

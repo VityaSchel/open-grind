@@ -3,19 +3,19 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Gender } from "$lib/model/users/genders";
-import type { Pronoun } from "$lib/model/users/pronouns";
+import type { Gender } from "#lib/model/users/genders.ts";
+import type { Pronoun } from "#lib/model/users/pronouns.ts";
 
 const { getGendersMock, getPronounsMock } = vi.hoisted(() => ({
 	getGendersMock: vi.fn<() => Promise<Gender[]>>(),
 	getPronounsMock: vi.fn<() => Promise<Pronoun[]>>(),
 }));
 
-vi.mock("$lib/api/users/genders", () => ({ getGenders: getGendersMock }));
-vi.mock("$lib/api/users/pronouns", () => ({ getPronouns: getPronounsMock }));
+vi.mock("#lib/api/users/genders.ts", () => ({ getGenders: getGendersMock }));
+vi.mock("#lib/api/users/pronouns.ts", () => ({ getPronouns: getPronounsMock }));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import GendersPronouns from "./GendersPronouns.svelte";
 
 const UNKNOWN_ID = 99;

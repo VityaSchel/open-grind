@@ -1,7 +1,7 @@
 <script lang="ts">
 	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 
-	import Rich from "$lib/i18n/Rich.svelte";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import IssueLink from "./IssueLink.svelte";
 	import type { UnimplementedMessageKey } from "./unimplemented";
 

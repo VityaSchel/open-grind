@@ -1,4 +1,4 @@
-import { registerAccountCache } from "$lib/api/account-caches";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
 
 export type ProfileViewabilityChange = { profileId: number; viewable: boolean };
 

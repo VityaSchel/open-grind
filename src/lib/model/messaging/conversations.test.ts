@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	conversationEntrySchema,
 	fullConversationSchema,
-} from "$lib/model/messaging/conversations";
+} from "#lib/model/messaging/conversations.ts";
 
 function conversation(data: Record<string, unknown> = {}) {
 	return {

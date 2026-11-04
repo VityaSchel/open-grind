@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Slider as SliderPrimitive } from "bits-ui";
 
-	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
+	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import { type SliderScale, TRACK_RESOLUTION } from "./scale";
 
 	let {

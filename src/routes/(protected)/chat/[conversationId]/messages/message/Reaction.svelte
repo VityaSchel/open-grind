@@ -1,7 +1,7 @@
 <script lang="ts">
-	import fireEmoji from "$lib/assets/emojis/fire/32px.png";
-	import { Badge } from "$lib/components/ui/badge";
-	import { t } from "$lib/i18n";
+	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let { type }: { type: number } = $props();
 </script>

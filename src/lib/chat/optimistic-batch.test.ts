@@ -4,13 +4,15 @@ const { showErrorToastMock } = vi.hoisted(() => ({
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/i18n", async (importOriginal) => {
-	const i18n = await importOriginal<typeof import("$lib/i18n")>();
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/i18n/index.ts", async (importOriginal) => {
+	const i18n = await importOriginal<typeof import("#lib/i18n/index.ts")>();
 	return { ...i18n, t: vi.fn(i18n.t) };
 });
 
-import { t } from "$lib/i18n";
+import { t } from "#lib/i18n/index.ts";
 import { applyOptimisticBatch } from "./optimistic-batch";
 
 const errorLabel = "chat.conversations.errors.deleteFailed";

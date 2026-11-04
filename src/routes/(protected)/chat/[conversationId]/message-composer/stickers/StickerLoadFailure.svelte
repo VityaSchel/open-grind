@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let { message, onRetry }: { message: string; onRetry: () => void } =
 		$props();

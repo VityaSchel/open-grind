@@ -1,11 +1,11 @@
-import { FetchCache } from "$lib/api/cache";
-import { fetchRest } from "$lib/api/transport";
+import { FetchCache } from "#lib/api/cache.ts";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	type FavoriteNote,
 	favoriteNoteSchema,
 	favoriteNotesResponseSchema,
-} from "$lib/model/users/favorites";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/model/users/favorites.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
 export async function addFavoriteUser({
 	profileId,

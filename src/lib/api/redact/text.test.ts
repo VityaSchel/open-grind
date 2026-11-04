@@ -7,7 +7,7 @@ import {
 	redactPath,
 	redactStack,
 	scrubText,
-} from "$lib/api/redact/text";
+} from "#lib/api/redact/text.ts";
 
 describe("maskGeohash", () => {
 	it("keeps the first two characters and masks the rest", () => {

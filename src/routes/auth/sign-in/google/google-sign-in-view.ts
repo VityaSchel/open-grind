@@ -1,5 +1,5 @@
-import { t } from "$lib/i18n";
-import type { UpdateStage } from "$lib/updates/stage";
+import { t } from "#lib/i18n/index.ts";
+import type { UpdateStage } from "#lib/updates/stage.ts";
 
 export type GoogleSignInView = "install" | "continue" | "paste";
 

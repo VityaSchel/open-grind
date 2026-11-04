@@ -5,15 +5,17 @@ const dimensions = vi.hoisted(() => ({ measureImage: vi.fn() }));
 
 const failures = vi.hoisted(() => ({ mediaFailure: vi.fn() }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
-vi.mock("$lib/platform/media-failure", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/media-failure")>()),
+vi.mock("#lib/api/messaging/albums.ts", () => api);
+vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/platform/media-failure.ts")
+	>()),
 	...failures,
 }));
-vi.mock("$lib/util/media-dimensions", () => dimensions);
-vi.mock("$lib/util/photoswipe", () => ({}));
+vi.mock("#lib/util/media-dimensions.ts", () => dimensions);
+vi.mock("#lib/util/photoswipe/index.ts", () => ({}));
 
-import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
+import { albumProcessingPlaceholderUrl } from "#lib/demo/mock/albums.ts";
 import {
 	albumPhotoRenewal,
 	forgetAlbumSlides,

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
-	import FavoriteStar from "$lib/components/profile/FavoriteStar.svelte";
-	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
-	import TapIcon from "$lib/components/profile/TapIcon.svelte";
-	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import type { TapProfile } from "$lib/model/interest/tap-profile";
+	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import FavoriteStar from "#lib/components/profile/FavoriteStar.svelte";
+	import ProfileItem from "#lib/components/profile/ProfileItem.svelte";
+	import TapIcon from "#lib/components/profile/TapIcon.svelte";
+	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import type { TapProfile } from "#lib/model/interest/tap-profile.ts";
 
 	let { tap }: { tap: TapProfile } = $props();
 </script>

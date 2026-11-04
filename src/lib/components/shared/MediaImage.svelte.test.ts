@@ -4,18 +4,18 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
+import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
 import MediaImage from "./MediaImage.svelte";
 
 const loadSlots = vi.hoisted(() => ({
 	oneAtATime: undefined as
-		| import("$lib/util/media-load-slots").LoadSlots
+		| import("#lib/util/media-load-slots.ts").LoadSlots
 		| undefined,
 }));
 
-vi.mock("$lib/util/media-load-slots", async (importOriginal) => {
+vi.mock("#lib/util/media-load-slots.ts", async (importOriginal) => {
 	const actual =
-		await importOriginal<typeof import("$lib/util/media-load-slots")>();
+		await importOriginal<typeof import("#lib/util/media-load-slots.ts")>();
 	return {
 		...actual,
 		acquireMediaLoadSlot: (grant: () => void) =>
@@ -86,8 +86,8 @@ async function comeIntoView(image: HTMLImageElement) {
 describe("MediaImage", () => {
 	beforeEach(async () => {
 		const { LoadSlots } = await vi.importActual<
-			typeof import("$lib/util/media-load-slots")
-		>("$lib/util/media-load-slots");
+			typeof import("#lib/util/media-load-slots.ts")
+		>("#lib/util/media-load-slots.ts");
 		loadSlots.oneAtATime = new LoadSlots(1);
 	});
 

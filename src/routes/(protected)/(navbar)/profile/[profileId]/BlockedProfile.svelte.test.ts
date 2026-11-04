@@ -8,12 +8,14 @@ const { unblockUserMock, showErrorToastMock } = vi.hoisted(() => ({
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/browse/blocks", () => ({ unblockUser: unblockUserMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/browse/blocks.ts", () => ({ unblockUser: unblockUserMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import BlockedProfile from "./BlockedProfile.svelte";
 
 const PROFILE_ID = 7;

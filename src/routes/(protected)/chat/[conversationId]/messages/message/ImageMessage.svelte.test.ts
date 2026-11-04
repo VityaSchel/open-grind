@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import Message from "./Message.svelte";
 
 const signed = ({ file, signature }: { file: string; signature: string }) =>

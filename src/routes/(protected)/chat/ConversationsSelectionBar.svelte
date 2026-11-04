@@ -7,12 +7,12 @@
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import XIcon from "phosphor-svelte/lib/XIcon";
 
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { t } from "$lib/i18n";
-	import { below } from "$lib/util/breakpoints.svelte";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { below } from "#lib/util/breakpoints.svelte.ts";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 	let {
 		count,

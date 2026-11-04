@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { HighlightCard } from "$lib/credits";
+	import type { HighlightCard } from "#lib/credits/index.ts";
 	import BlurbText from "./BlurbText.svelte";
 	import LicenseDisclosure from "./LicenseDisclosure.svelte";
 

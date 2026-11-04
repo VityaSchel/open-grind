@@ -33,8 +33,8 @@ vi.mock("./grid", () => ({
 	resolveLazyProfile: resolveLazyProfileMock,
 	setCachedProfile: vi.fn(),
 }));
-vi.mock("$lib/api/users/tags", () => ({ getTags: getTagsMock }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/api/users/tags.ts", () => ({ getTags: getTagsMock }));
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe: (handler: (cause?: string) => unknown) => {
 			reconcileHandlers.push(handler);
@@ -42,25 +42,27 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({}),
 	preferencesLoaded: () => storedPreferences.loaded,
 	preferencesSnapshot: () => storedPreferences,
 	setPreferences: setPreferencesMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/location/auto-location", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/location/auto-location.ts", () => ({
 	autoLocation: { resolveGeohash: resolveGeohashMock },
 	BACKGROUND_FIX_MAX_AGE_MS: 6 * 60 * 1000,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
-import { defaultFilters } from "$lib/model/browse/grid/filters";
+} from "#lib/api/users/profile-viewability.ts";
+import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
+import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 import { gridState } from "./grid-state.svelte";
 import { rendered } from "./grid-test-helpers";
 
@@ -139,6 +141,18 @@ describe("grid reconciliation", () => {
 		expect(during).toEqual([[1]]);
 		expect(gridState.items.map((item) => item.id)).toEqual([2]);
 		expect(gridState.loading).toBe(false);
+	});
+
+	it("keeps the grid without a toast when a reconcile fails", async () => {
+		showErrorToastMock.mockClear();
+		getGridMock.mockRejectedValueOnce(new Error("offline"));
+
+		await reconcileHandlers[0]?.();
+
+		expect(getGridMock).toHaveBeenCalledOnce();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+		expect(gridState.error).toBeNull();
+		expect(gridState.items.map((item) => item.id)).toEqual([1]);
 	});
 
 	it("does nothing until a location has been loaded", async () => {

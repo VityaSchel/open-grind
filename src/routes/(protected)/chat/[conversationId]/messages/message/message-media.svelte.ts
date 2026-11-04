@@ -1,7 +1,7 @@
 import type { Attachment } from "svelte/attachments";
 import type { ClassValue } from "svelte/elements";
 
-import type { MediaDimensions } from "$lib/util/media-dimensions";
+import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import { getMessageContext, getMessageMetaContext } from "./context";
 
 export class MessageMediaState {

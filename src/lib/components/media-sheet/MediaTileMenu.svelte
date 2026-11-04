@@ -2,10 +2,10 @@
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import { type Snippet, untrack } from "svelte";
 
-	import ContextMenu from "$lib/components/shared/ContextMenu.svelte";
-	import ContextMenuPanel from "$lib/components/shared/ContextMenuPanel.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
+	import ContextMenu from "#lib/components/shared/ContextMenu.svelte";
+	import ContextMenuPanel from "#lib/components/shared/ContextMenuPanel.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import MediaTileOverlay from "./MediaTileOverlay.svelte";
 	import { isPastMiddleColumn } from "./tile-menu.svelte";
 

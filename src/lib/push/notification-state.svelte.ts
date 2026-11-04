@@ -1,4 +1,4 @@
-import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 import type { NotificationMode } from "./types";
 
 type Phase = "idle" | "enablingFast" | "working";

@@ -1,5 +1,5 @@
-import { type MessageKey, t } from "$lib/i18n";
-import type { GifAlt } from "$lib/api/messaging/gifs";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
+import type { GifAlt } from "#lib/api/messaging/gifs.ts";
 
 const fallbackAltKeys = {
 	untitled: "chat.messagePreview.gif",

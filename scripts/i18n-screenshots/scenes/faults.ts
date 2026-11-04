@@ -9,6 +9,7 @@ import { overrideNative } from "../stubs";
 export const CONNECT_FAILED: NativeError = { kind: "Connect" };
 export const STORAGE_FULL = "No space left on the device";
 export const UNREADABLE_PREFERENCES = [0xc1];
+export const LIGHTBOX_CHUNK_TEXT = "pswpModule is not valid";
 const APP_CHUNKS = "**/_app/immutable/chunks/*.js";
 
 export function failing({

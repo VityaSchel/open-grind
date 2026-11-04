@@ -24,7 +24,7 @@ export function traverseBackTo(pathname: string): boolean {
 }
 
 export function returnTo(pathname: string): void {
-	if (!traverseBackTo(pathname)) void goto(pathname, { replaceState: true });
+	if (!traverseBackTo(pathname)) void goto(pathname, { replace: true });
 }
 
 export function navigationPending({

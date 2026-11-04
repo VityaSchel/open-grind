@@ -2,8 +2,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { encodeGeohash } from "$lib/model/geohash";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import { encodeGeohash } from "#lib/model/geohash.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 
 const {
 	abortStaleMock,
@@ -38,12 +38,16 @@ const locationRequestMock = vi.hoisted(() => ({
 	generation: 7,
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: preferencesSnapshotMock,
 	setPreferences: setPreferencesMock,
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
+vi.mock("#lib/platform/os.ts", () => ({
+	isMobilePlatform: isMobilePlatformMock,
+}));
 vi.mock("./location-request.svelte", () => ({
 	locationRequest: locationRequestMock,
 }));

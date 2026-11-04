@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
-} from "$lib/platform/back-gesture-event.svelte";
+} from "#lib/platform/back-gesture-event.svelte.ts";
 import {
 	attachSystemBackGesture,
 	type SwipeBackStack,

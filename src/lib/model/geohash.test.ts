@@ -5,7 +5,7 @@ import {
 	decodeGeohash,
 	encodeGeohash,
 	geohashSchema,
-} from "$lib/model/geohash";
+} from "#lib/model/geohash.ts";
 
 describe("geohashSchema", () => {
 	it("accepts twelve-character base32 geohashes", () => {

@@ -1,5 +1,3 @@
-import "photoswipe/style.css";
-
 import "./message-lightbox.css";
 
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
@@ -10,7 +8,8 @@ import {
 	applyPhotoSwipeLabels,
 	applyPhotoSwipeThumbDimensions,
 	applyPhotoSwipeViewportSync,
-} from "$lib/util/photoswipe";
+	CLOSE_SVG,
+} from "#lib/util/photoswipe/index.ts";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
 
@@ -131,6 +130,7 @@ export function attachGalleryLightbox({
 				mainClass: "pswp--buttons-visible",
 				showAnimationDuration: 500,
 				hideAnimationDuration: 500,
+				closeSVG: CLOSE_SVG,
 			});
 			configure({ lightbox, gallery, thumbScale });
 			lightbox.init();

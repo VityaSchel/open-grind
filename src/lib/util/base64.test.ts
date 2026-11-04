@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fromBase64, toBase64, toBase64Url } from "$lib/util/base64";
+import { fromBase64, toBase64, toBase64Url } from "#lib/util/base64.ts";
 
 describe("base64 helpers", () => {
 	it("round-trips arbitrary byte values", () => {

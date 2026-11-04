@@ -3,13 +3,13 @@
 	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import { untrack } from "svelte";
 
-	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
-	import { albumCoverContent } from "$lib/components/album/album";
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { t } from "$lib/i18n";
-	import { proxyMediaUrl } from "$lib/util/media";
+	import { getMyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+	import { albumCoverContent } from "#lib/components/album/album.ts";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { proxyMediaUrl } from "#lib/util/media.ts";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
 

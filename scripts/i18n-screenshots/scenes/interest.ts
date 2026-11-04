@@ -1,10 +1,15 @@
 import type { Page } from "@playwright/test";
 
-import { setPageVisibility } from "../../../e2e/support/geolocation";
-import { TAPS_PANE, VIEWS_PANE } from "../../../e2e/support/interest-pager";
+import {
+	TAPS_PANE,
+	TAPS_SCROLLER,
+	VIEWS_PANE,
+	VIEWS_SCROLLER,
+} from "../../../e2e/support/interest-pager";
 import { demoMeProfileId } from "../../../src/lib/demo/config";
 import type { RestFault } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene } from ".";
+import { revealRefreshButton } from "./chat-drive";
 import { changeScene } from "./drive";
 import { CONNECT_FAILED } from "./faults";
 import { addingToast, toastsShown } from "./toast";
@@ -23,6 +28,27 @@ const VIEWED_AT = [
 ];
 const VIEWER_PHOTO = "0a1b2c3d4e5f60718293a4b5c6d7e8f901234567";
 const PREFERENCES = "/v3/me/prefs/settings";
+
+async function refreshPaneThatFails({
+	page,
+	tab,
+	pane,
+	scroller,
+}: {
+	page: Page;
+	tab: string;
+	pane: string;
+	scroller: string;
+}): Promise<void> {
+	await page.getByRole("link", { name: tab }).click();
+	const refresh = await revealRefreshButton({
+		page,
+		scroller,
+		towardTop: true,
+		within: pane,
+	});
+	await addingToast({ page, action: () => refresh.click() });
+}
 
 function preview({
 	secretAdmirer,
@@ -190,8 +216,18 @@ export const interestRefreshFailures: Scene = {
 						],
 					},
 				});
-				await setPageVisibility(page, "hidden");
-				await setPageVisibility(page, "visible");
+				await refreshPaneThatFails({
+					page,
+					tab: "Taps",
+					pane: TAPS_PANE,
+					scroller: TAPS_SCROLLER,
+				});
+				await refreshPaneThatFails({
+					page,
+					tab: "Views",
+					pane: VIEWS_PANE,
+					scroller: VIEWS_SCROLLER,
+				});
 				await toastsShown({ page, count: 2 });
 			},
 		},

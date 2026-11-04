@@ -4,7 +4,7 @@
 	import { expoOut } from "svelte/easing";
 	import type { TransitionConfig } from "svelte/transition";
 
-	import { instantWhenReducedMotion } from "$lib/util/reduced-motion";
+	import { instantWhenReducedMotion } from "#lib/util/reduced-motion.ts";
 	import FilterBoolean from "./FilterBoolean.svelte";
 
 	let {

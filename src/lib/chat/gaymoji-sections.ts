@@ -1,9 +1,12 @@
 import {
 	FEATURED_ORIGINAL_IDS,
 	GAYMOJI_SECTION_ICON_IDS,
-} from "$lib/chat/gaymoji-ids";
-import { type MessageKey, t } from "$lib/i18n";
-import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
+} from "#lib/chat/gaymoji-ids.ts";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
+import type {
+	GaymojiCategory,
+	GaymojiItem,
+} from "#lib/api/messaging/gaymoji.ts";
 
 export type GaymojiSection = {
 	key: string;

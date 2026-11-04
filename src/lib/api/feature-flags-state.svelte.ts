@@ -2,10 +2,10 @@ import {
 	accountEpoch,
 	isAccountEpochCurrent,
 	registerAccountCache,
-} from "$lib/api/account-caches";
-import { callMethod } from "$lib/api/methods";
-import { isTribeOffered } from "$lib/model/users/profiles";
-import { isTagKeyOffered } from "$lib/model/users/tags";
+} from "#lib/api/account-caches.ts";
+import { callMethod } from "#lib/api/methods.ts";
+import { isTribeOffered } from "#lib/model/users/profiles.ts";
+import { isTagKeyOffered } from "#lib/model/users/tags.ts";
 
 const GENDER_FILTER_FLAG = "gender-filter";
 

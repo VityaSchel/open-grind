@@ -26,9 +26,9 @@ import {
 	onUpdateProgress,
 	setAutomaticUpdateChecks,
 	startUpdateDownload,
-} from "$lib/updates";
-import { stageOf } from "$lib/updates/stage";
-import type { Progress } from "$lib/updates/types";
+} from "#lib/updates/index.ts";
+import { stageOf } from "#lib/updates/stage.ts";
+import type { Progress } from "#lib/updates/types.ts";
 
 const release = {
 	component: "app",

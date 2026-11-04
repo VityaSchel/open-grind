@@ -65,6 +65,17 @@ const readProperty = async ({
 	return value;
 };
 
+const requireBuildPhases = async (commit: string): Promise<void> => {
+	const script =
+		await $`git -C ${root} show ${`${commit}:ci/fdroid/build-android.sh`}`
+			.quiet()
+			.text();
+	if (!script.includes("prebuild | build)"))
+		throw new Error(
+			`ci/fdroid/build-android.sh at ${commit} has no prebuild phase, so its recipe has to inline the build`,
+		);
+};
+
 type Split = { abi: string; offset: number };
 
 const readSplits = async (commit: string): Promise<Split[]> =>
@@ -97,6 +108,7 @@ const recipe = async ({
 	conf: TauriConf;
 	splits: Split[];
 }): Promise<string> => {
+	await requireBuildPhases(commit);
 	const libclangVersion = await readProperty({
 		commit,
 		file: "ci/fdroid/toolchain.properties",
@@ -164,7 +176,9 @@ if (process.argv[2] === "emit") {
 	process.exit(0);
 }
 
-const sha = await resolveCommit(process.env.FORGEJO_SHA ?? "HEAD");
+const sha = await resolveCommit(
+	process.env.FDROID_TAG || process.env.FORGEJO_SHA || "HEAD",
+);
 const conf = await readConf(sha);
 const splits = await readSplits(sha);
 const baseCode = conf.bundle.android.versionCode;
@@ -189,7 +203,11 @@ const buildScript = await Bun.file(path.join(root, "ci/fdroid/build.sh"))
 		s
 			.replaceAll("${APPID}", APPID)
 			.replaceAll("${commit}", sha)
-			.replaceAll("${repoUrl}", repoUrl),
+			.replaceAll("${repoUrl}", repoUrl)
+			.replaceAll(
+				"${versionCodes}",
+				splits.map(({ offset }) => baseCode + offset).join(" "),
+			),
 	);
 await $`docker run --rm -v ${fdd}:/repo ${IMAGE} bash -lc ${buildScript}`;
 

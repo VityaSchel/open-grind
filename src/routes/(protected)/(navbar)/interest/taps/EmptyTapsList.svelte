@@ -1,9 +1,9 @@
 <script lang="ts">
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 
-	import * as Empty from "$lib/components/ui/empty";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 </script>
 
 <Empty.Root>

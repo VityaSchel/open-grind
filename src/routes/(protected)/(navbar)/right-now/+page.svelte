@@ -1,10 +1,10 @@
 <script lang="ts">
 	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
 
-	import IssueLink from "$lib/components/feedback/IssueLink.svelte";
-	import * as Alert from "$lib/components/ui/alert";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import IssueLink from "#lib/components/feedback/IssueLink.svelte";
+	import * as Alert from "#lib/components/ui/alert/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 </script>
 
 <main class="flex flex-1 px-8">

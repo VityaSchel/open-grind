@@ -1,27 +1,16 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 
-const flags = vi.hoisted(() => ({ screenshots: true }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
-
-import { conversationEntrySchema } from "$lib/model/messaging/conversations";
+import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { conversationEntrySchema } from "#lib/model/messaging/conversations.ts";
 import {
 	previewFromMessage,
 	previewLabel,
 	quoteLabel,
-} from "$lib/model/messaging/message-preview";
-import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/message-preview.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { demoMeProfileId } from "./config";
 import type { DemoInbox } from "./mock/conversation-seeds";
-import { conversationIdFor } from "./mock/conversations";
 import { demoRoute } from "./route";
 import { screenshotScene } from "./screenshot-scene";
 
@@ -107,14 +96,18 @@ function inboxPage(page: number) {
 function messagesOf(withId: number) {
 	return messagesResponseSchema.parse(
 		route({
-			path: `/v5/chat/conversation/${conversationIdFor(withId)}/message?profile=true`,
+			path: `/v5/chat/conversation/${conversationIdFor({ profileId: withId, ourProfileId: demoMeProfileId })}/message?profile=true`,
 		}),
 	);
 }
 
+beforeEach(() => {
+	vi.stubGlobal("__SCREENSHOTS__", true);
+});
+
 afterEach(() => {
 	screenshotScene.inbox = null;
-	flags.screenshots = true;
+	vi.unstubAllGlobals();
 });
 
 describe("a scene's inbox", () => {
@@ -142,6 +135,32 @@ describe("a scene's inbox", () => {
 		expect(previewLabel(nameless?.data.preview)).toBe("Photo");
 	});
 
+	it("previews a conversation with the scene's preview when it has one", () => {
+		screenshotScene.inbox = {
+			nextPage: null,
+			conversations: [
+				{
+					withId: NAMELESS_ID,
+					unread: 0,
+					pinned: false,
+					favorite: false,
+					muted: false,
+					lastActivityAgo: 1,
+					preview: { type: "ProfilePhotoReply" },
+					messages: [
+						{
+							fromMe: false,
+							kind: "profilePhotoReply",
+							text: "Lorem ipsum.",
+						},
+					],
+				},
+			],
+		};
+		const [entry] = inboxPage(1).entries;
+		expect(previewLabel(entry?.data.preview)).toBe("Replied to a photo");
+	});
+
 	it("builds wire messages and quotes that the real schemas accept", () => {
 		screenshotScene.inbox = inbox;
 		const [reply, location] = messagesOf(QUOTING_ID).messages;
@@ -163,7 +182,10 @@ describe("a scene's inbox", () => {
 
 	it("answers single messages from the scene's threads", () => {
 		screenshotScene.inbox = inbox;
-		const conversationId = conversationIdFor(QUOTING_ID);
+		const conversationId = conversationIdFor({
+			profileId: QUOTING_ID,
+			ourProfileId: demoMeProfileId,
+		});
 		const [, location] = messagesOf(QUOTING_ID).messages;
 		const { message } = z
 			.object({ message: apiResponseMessageSchema })
@@ -176,7 +198,7 @@ describe("a scene's inbox", () => {
 	});
 
 	it("keeps the demo conversations without the flag", () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		screenshotScene.inbox = inbox;
 		const ids = inboxPage(1).entries.map(
 			({ data }) => data.participants[0]?.profileId,

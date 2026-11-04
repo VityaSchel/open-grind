@@ -9,15 +9,17 @@ const { toastErrorMock, showErrorToastMock, openExternalLinkMock } = vi.hoisted(
 );
 
 vi.mock("svelte-sonner", () => ({ toast: { error: toastErrorMock } }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/platform/link-opener", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/platform/link-opener.ts", () => ({
 	openExternalLink: openExternalLinkMock,
 }));
 
-import { ApiError } from "$lib/api/api-error";
-import { BlockDidNotStickError } from "$lib/api/browse/blocks";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { ApiError } from "#lib/api/api-error.ts";
+import { BlockDidNotStickError } from "#lib/api/browse/blocks.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { showBlockFailure } from "./block-failure";
 
 const WHY_BLOCKING_FAILS =

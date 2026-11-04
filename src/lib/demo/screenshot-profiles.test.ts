@@ -1,25 +1,11 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-
-const flags = vi.hoisted(() => ({ screenshots: true }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		demoEnabled: true,
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	BlockedProfileError,
 	clearProfileCaches,
 	getProfile,
-} from "$lib/api/users/profiles";
-import { loadDemo } from "$lib/demo";
-import { profileSchema } from "$lib/model/users/profiles";
+} from "#lib/api/users/profiles.ts";
+import { profileSchema } from "#lib/model/users/profiles.ts";
 import { demoRoute } from "./route";
 import { type ScreenshotScene, screenshotScene } from "./screenshot-scene";
 
@@ -72,12 +58,15 @@ async function blockedByUs(profileId: number): Promise<boolean> {
 	return error.blockedByUs;
 }
 
-beforeAll(loadDemo);
+beforeEach(() => {
+	vi.stubGlobal("__DEMO__", true);
+	vi.stubGlobal("__SCREENSHOTS__", true);
+});
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));
-	flags.screenshots = true;
 	clearProfileCaches();
+	vi.unstubAllGlobals();
 });
 
 describe("scene profiles", () => {
@@ -151,7 +140,7 @@ describe("scene profiles", () => {
 			},
 			maskedProfiles: [UNPATCHED_ID],
 		});
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		expect(fetchedProfile(PATCHED_ID)).toMatchObject({
 			isNew: false,
 			nsfw: null,

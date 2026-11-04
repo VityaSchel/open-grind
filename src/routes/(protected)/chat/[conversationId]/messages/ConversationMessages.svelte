@@ -2,10 +2,10 @@
 	import { tick, untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 
-	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
-	import { edgeGap } from "$lib/components/feedback/refresh/scroll-geometry";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
+	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import { edgeGap } from "#lib/components/feedback/refresh/scroll-geometry.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ConversationError from "./ConversationError.svelte";
 	import ConversationPaginationSentinel from "./ConversationPaginationSentinel.svelte";

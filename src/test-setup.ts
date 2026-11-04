@@ -1,6 +1,10 @@
 import { vi } from "vitest";
 
-vi.mock("$env/dynamic/public", () => ({ env: import.meta.env }));
+vi.mock("$app/env/public", () => ({
+	PUBLIC_BACKDROP_BLUR: undefined,
+	PUBLIC_ENABLE_BLUR_EFFECTS: false,
+	PUBLIC_TEST_INSETS: false,
+}));
 
 // jsdom has no matchMedia, and svelte/motion reads it for reduced motion.
 if (typeof window !== "undefined" && !window.matchMedia) {

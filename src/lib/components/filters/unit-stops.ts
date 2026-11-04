@@ -3,14 +3,14 @@ import {
 	HEIGHT_CM_MIN,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
+} from "#lib/model/browse/grid/filters.ts";
 import {
 	cmToInches,
 	inchesToCm,
 	kgToPounds,
 	poundsToKg,
 	type UnitSystem,
-} from "$lib/util/units";
+} from "#lib/util/units.ts";
 
 export type UnitStops = {
 	first: number;

@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { arrayOfParsableEntries, serverDefault } from "$lib/model/tolerance";
+import { arrayOfParsableEntries, serverDefault } from "#lib/model/tolerance.ts";
 
 export const assignmentSchema = z.object({
 	key: z.string(),

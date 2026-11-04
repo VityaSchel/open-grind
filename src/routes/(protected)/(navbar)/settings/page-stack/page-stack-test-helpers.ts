@@ -1,11 +1,11 @@
 import { vi } from "vitest";
 
-import { stackMotion } from "$lib/components/navigation/stack/motion";
+import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
 import {
 	fakeSurface,
 	navigationEvent,
 	settleLast,
-} from "$lib/components/navigation/stack/stack-test-helpers";
+} from "#lib/components/navigation/stack/stack-test-helpers.ts";
 import { PageStackState } from "./page-stack-state.svelte";
 
 export const motion = stackMotion({ platform: "android" });

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { ApiError, apiErrorMessage } from "$lib/api/api-error";
-	import { promptCopyError } from "$lib/api/error-copy";
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
+	import { ApiError, apiErrorMessage } from "#lib/api/api-error.ts";
+	import { promptCopyError } from "#lib/api/error-copy.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		error,
@@ -13,7 +13,7 @@
 		error: unknown;
 		onRetry?: () => void;
 		class?: import("svelte/elements").ClassValue;
-		buttonVariant?: import("$lib/components/ui/button").ButtonVariant;
+		buttonVariant?: import("#lib/components/ui/button/index.ts").ButtonVariant;
 	} = $props();
 
 	const apiError = $derived(error instanceof ApiError ? error : null);

@@ -1,10 +1,10 @@
-import { showErrorToast } from "$lib/api/error-toast";
+import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	preferencesLoaded,
 	preferencesSnapshot,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
-import { t } from "$lib/i18n";
+} from "#lib/app-data/preferences.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 
 export function giphyConsented(): boolean {
 	return preferencesLoaded() && preferencesSnapshot().giphyConsent;

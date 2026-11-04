@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
-import { ScrollGestureState } from "$lib/platform/scroll-gesture";
-import { SnapPager } from "$lib/util/snap-pager";
+import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
+import { SnapPager } from "#lib/util/snap-pager.ts";
 
 export const WIDTH = 411.43;
 

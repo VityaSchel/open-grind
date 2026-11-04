@@ -1,6 +1,6 @@
 import type { Platform } from "@tauri-apps/plugin-os";
 
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export const STACK_Z = { back: "10", dim: "11", front: "12" } as const;
 

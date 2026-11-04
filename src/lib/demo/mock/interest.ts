@@ -1,4 +1,4 @@
-import { TapType } from "$lib/model/interest/taps";
+import { TapType } from "#lib/model/interest/taps.ts";
 import { HOUR, MINUTE, NOW } from "../config";
 import { demoFavoriteOf } from "./favorites";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Plugin } from "vite";
-import { collectedRoots } from "./collected-roots";
+import { collectedRoots } from "./collected-roots.ts";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 

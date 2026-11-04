@@ -22,8 +22,8 @@ const { hides, profileList } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("$lib/api/browse/hides", () => hides);
-vi.mock("$lib/components/profile-list/ProfileList.svelte", () => ({
+vi.mock("#lib/api/browse/hides.ts", () => hides);
+vi.mock("#lib/components/profile-list/ProfileList.svelte", () => ({
 	default: (_anchor: unknown, props: typeof profileList.props) => {
 		profileList.props = props;
 	},

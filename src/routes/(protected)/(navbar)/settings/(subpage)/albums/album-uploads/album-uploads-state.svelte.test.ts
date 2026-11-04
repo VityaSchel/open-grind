@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { ApiError } from "$lib/api/api-error";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { ApiError } from "#lib/api/api-error.ts";
 import { getAlbumUploads } from "./album-uploads-state.svelte";
 import {
 	ALBUM_ID,
@@ -25,7 +25,7 @@ vi.mock("svelte-sonner", () => ({
 	toast: { error: toastError, success: toastSuccess },
 }));
 
-vi.mock("$lib/api/messaging/albums", async (importOriginal) => ({
+vi.mock("#lib/api/messaging/albums.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	getAlbumContent: vi.fn(),
 	getAlbumContentProcessing: vi.fn(),
@@ -33,7 +33,7 @@ vi.mock("$lib/api/messaging/albums", async (importOriginal) => ({
 	uploadAlbumContent: vi.fn(),
 }));
 
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	forgetAlbumSlides: vi.fn(),
 }));
 
@@ -42,9 +42,9 @@ const {
 	getAlbumContentProcessing,
 	getMyAlbums,
 	uploadAlbumContent,
-} = await import("$lib/api/messaging/albums");
+} = await import("#lib/api/messaging/albums.ts");
 const { forgetAlbumSlides } =
-	await import("$lib/components/album/album-lightbox");
+	await import("#lib/components/album/album-lightbox.ts");
 
 vi.spyOn(console, "error").mockImplementation(() => undefined);
 

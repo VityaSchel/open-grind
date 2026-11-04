@@ -1,4 +1,4 @@
-import { nearestScrollableAncestor } from "$lib/util/scroll";
+import { nearestScrollableAncestor } from "#lib/util/scroll.ts";
 
 type ObserveIntersectionOptions = {
 	handle?: () => unknown;

@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
 	apiResponseMessageSchema,
+	draftFromAlbumContent,
+	draftFromAlbumReaction,
 	messageSchema,
-} from "$lib/model/messaging/messages";
+} from "#lib/model/messaging/messages.ts";
 
 function incoming(messageId: string) {
 	return {
@@ -20,7 +22,7 @@ function incoming(messageId: string) {
 
 async function freshApiResponseMessageSchema() {
 	vi.resetModules();
-	const messages = await import("$lib/model/messaging/messages");
+	const messages = await import("#lib/model/messaging/messages.ts");
 	return messages.apiResponseMessageSchema;
 }
 
@@ -380,5 +382,58 @@ describe("apiResponseMessageSchema", () => {
 		expect(result).toHaveProperty("body.medias", [
 			{ mediaHash: "abc123", isNsfw: false },
 		]);
+	});
+});
+
+it("sends only album reply fields while keeping preview metadata optimistically", () => {
+	const target = {
+		albumId: 7,
+		albumContentId: 71,
+		ownerProfileId: 2,
+		previewUrl: "https://example.invalid/photo.jpg",
+		expiresAt: null,
+		viewable: true,
+		contentType: "image/jpeg",
+	};
+	const draft = draftFromAlbumContent({ target, text: "Nice photo" });
+	expect(draft.outbound).toEqual({
+		type: "AlbumContentReply",
+		body: {
+			albumId: 7,
+			albumContentId: 71,
+			albumContentReply: "Nice photo",
+		},
+	});
+	expect(draft.optimistic).toEqual({
+		type: "AlbumContentReply",
+		body: { ...target, albumContentReply: "Nice photo" },
+	});
+});
+
+it("sends only reaction identifiers while keeping the optimistic preview", () => {
+	const target = {
+		albumId: 7,
+		albumContentId: 71,
+		ownerProfileId: 2,
+		previewUrl: "https://example.invalid/photo.jpg",
+		expiresAt: null,
+		viewable: true,
+		contentType: "image/jpeg",
+	};
+	const draft = draftFromAlbumReaction({ target });
+	expect(draft.outbound).toEqual({
+		type: "AlbumContentReaction",
+		body: { albumId: 7, albumContentId: 71 },
+	});
+	expect(draft.optimistic).toEqual({
+		type: "AlbumContentReaction",
+		body: {
+			albumId: 7,
+			albumContentId: 71,
+			ownerProfileId: 2,
+			previewUrl: target.previewUrl,
+			expiresAt: null,
+			viewable: true,
+		},
 	});
 });

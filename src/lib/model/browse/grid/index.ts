@@ -1,7 +1,7 @@
 import z from "zod";
 
-import { filterGendersSchema } from "$lib/model/browse/grid/filters";
-import { geohashSchema } from "$lib/model/geohash";
+import { filterGendersSchema } from "#lib/model/browse/grid/filters.ts";
+import { geohashSchema } from "#lib/model/geohash.ts";
 
 export const gridQuerySchema = z.object({
 	nearbyGeoHash: geohashSchema,

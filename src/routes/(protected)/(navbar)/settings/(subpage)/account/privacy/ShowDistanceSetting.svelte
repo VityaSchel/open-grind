@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { getProfile, patchOwnProfile } from "$lib/api/users/profiles";
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { t } from "$lib/i18n";
-	import { formatDistance } from "$lib/util/units";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { getProfile, patchOwnProfile } from "#lib/api/users/profiles.ts";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { formatDistance } from "#lib/util/units.ts";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
 

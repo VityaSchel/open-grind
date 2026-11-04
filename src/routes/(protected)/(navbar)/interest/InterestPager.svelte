@@ -3,8 +3,8 @@
 	import { navigating, page } from "$app/state";
 	import { untrack } from "svelte";
 
-	import { navigationPending } from "$lib/util/history";
-	import { SnapPager } from "$lib/util/snap-pager";
+	import { navigationPending } from "#lib/util/history.ts";
+	import { SnapPager } from "#lib/util/snap-pager.ts";
 	import { INTEREST_TABS, interestTabIndex } from "./tabs";
 	import TapsReceivedList from "./taps/TapsReceivedList.svelte";
 	import ViewsGrid from "./views/ViewsGrid.svelte";
@@ -56,7 +56,7 @@
 			)
 				return;
 			restedPane = pane;
-			void goto(landed, { replaceState: true, noScroll: true });
+			void goto(landed, { replace: true, reset: false });
 		},
 	});
 

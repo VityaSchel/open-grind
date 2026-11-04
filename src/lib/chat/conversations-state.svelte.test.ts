@@ -5,10 +5,10 @@ const {
 	markConversationAsReadMock,
 	setConversationPinnedMock,
 	setConversationMutedMock,
-	showErrorToastMock,
+	showErrorToast,
 	onIncomingMessage,
 	currentPage,
-	singleColumn,
+	narrow,
 	reconcileHandlers,
 	messageSentHandlers,
 	conversationDeleteHandlers,
@@ -17,26 +17,26 @@ const {
 	markConversationAsReadMock: vi.fn(() => Promise.resolve()),
 	setConversationPinnedMock: vi.fn(() => Promise.resolve()),
 	setConversationMutedMock: vi.fn(() => Promise.resolve()),
-	showErrorToastMock: vi.fn(),
+	showErrorToast: vi.fn(),
 	onIncomingMessage: vi.fn(),
 	currentPage: { route: { id: "/(protected)/chat" } },
-	singleColumn: { current: false },
+	narrow: { current: false },
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	messageSentHandlers: [] as ((event: unknown) => void)[],
 	conversationDeleteHandlers: [] as ((event: unknown) => void)[],
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast }));
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: markConversationAsReadMock,
 	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: setConversationPinnedMock,
 	setConversationMuted: setConversationMutedMock,
 }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({ below: () => singleColumn }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({ below: () => narrow }));
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
 			reconcileHandlers.push(handler);
@@ -44,8 +44,8 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
 			if (eventType === "chat.v1.message_sent")
@@ -57,7 +57,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
-import type { Conversation } from "$lib/model/messaging/conversations";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -79,7 +79,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	localStorage.clear();
 	currentPage.route.id = "/(protected)/chat";
-	singleColumn.current = false;
+	narrow.current = false;
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
 	conversationDeleteHandlers.length = 0;
@@ -279,7 +279,7 @@ describe("ConversationsState unread accounting", () => {
 		const message = fromPeer("b:2", 3000);
 
 		emitMessageSent(message);
-		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+		await vi.waitFor(() => expect(showErrorToast).toHaveBeenCalled());
 
 		getConversationsMock.mockResolvedValue({
 			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
@@ -300,10 +300,10 @@ describe("ConversationsState unread accounting", () => {
 		getConversationsMock.mockRejectedValue(new Error("offline"));
 
 		emitMessageSent(fromPeer("b:2", 3000));
-		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+		await vi.waitFor(() => expect(showErrorToast).toHaveBeenCalled());
 		await microtasks();
 
-		expect(showErrorToastMock).toHaveBeenCalledOnce();
+		expect(showErrorToast).toHaveBeenCalledOnce();
 		expect(getConversationsMock).toHaveBeenCalledOnce();
 		expect(state.entries).toHaveLength(1);
 		getConversationsMock.mockReset();
@@ -333,7 +333,7 @@ describe("ConversationsState unread accounting", () => {
 
 		expect(entryFor(state, "b:2").data.unreadCount).toBe(1);
 		expect(getConversationsMock).toHaveBeenCalledTimes(2);
-		expect(showErrorToastMock).not.toHaveBeenCalled();
+		expect(showErrorToast).not.toHaveBeenCalled();
 	});
 
 	it("leaves no badge on a conversation opened while its sync was in flight", async () => {
@@ -341,7 +341,7 @@ describe("ConversationsState unread accounting", () => {
 		onTestFinished(() => focus.mockRestore());
 		const state = await inboxWith([conversation("a:1", 1000)]);
 		currentPage.route.id = "/(protected)/(navbar)";
-		singleColumn.current = true;
+		narrow.current = true;
 		const gate = deferred<{
 			entries: Conversation[];
 			nextPage: number | null;
@@ -610,7 +610,7 @@ describe("ConversationsState paging failures", () => {
 
 		expect(state.paging.failure).toEqual(new Error("offline"));
 		expect(state.paging.running).toBe(false);
-		expect(showErrorToastMock).not.toHaveBeenCalledWith(
+		expect(showErrorToast).not.toHaveBeenCalledWith(
 			expect.objectContaining({
 				label: "Couldn’t load more conversations",
 			}),
@@ -656,5 +656,53 @@ describe("ConversationsState paging failures", () => {
 
 		expect(state.paging.failure).toBeNull();
 		expect(state.paging.armToken).not.toBe(wedged);
+	});
+});
+
+describe("ConversationsState refresh failures", () => {
+	async function inboxFailingNextRefresh() {
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+		});
+		await settled(state);
+		getConversationsMock.mockClear();
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		return state;
+	}
+
+	it("keeps the inbox without a toast when a reconcile fails", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = await inboxFailingNextRefresh();
+
+		await reconcileHandlers[0]?.();
+
+		expect(getConversationsMock).toHaveBeenCalledOnce();
+		expect(showErrorToast).not.toHaveBeenCalled();
+		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
+			"a:1",
+		]);
+		vi.restoreAllMocks();
+	});
+
+	it("reports a pull-to-refresh failure", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = await inboxFailingNextRefresh();
+
+		await state.refresh();
+
+		expect(showErrorToast).toHaveBeenCalledWith({
+			label: "Couldn’t refresh conversations",
+			error: expect.any(Error),
+			onRetry: expect.any(Function),
+		});
+		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
+			"a:1",
+		]);
+		vi.restoreAllMocks();
 	});
 });

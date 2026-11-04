@@ -1,4 +1,4 @@
-import type { FilterPositionId } from "$lib/model/browse/grid/filters";
+import type { FilterPositionId } from "#lib/model/browse/grid/filters.ts";
 
 export type ConversationFilterValues = {
 	favorites: boolean;

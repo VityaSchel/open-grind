@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Checkbox } from "$lib/components/ui/checkbox";
-	import { Label } from "$lib/components/ui/label";
-	import { t } from "$lib/i18n";
-	import { ageRangeLabel } from "$lib/model/browse/grid/filters";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.ts";
+	import { Label } from "#lib/components/ui/label/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { ageRangeLabel } from "#lib/model/browse/grid/filters.ts";
 	import FilterField from "../FilterField.svelte";
 	import AgeFilterSlider from "./AgeFilterSlider.svelte";
 

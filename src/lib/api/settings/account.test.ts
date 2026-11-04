@@ -6,8 +6,8 @@ const { fetchRestMock, assertOkMock } = vi.hoisted(() => ({
 	assertOkMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
@@ -16,7 +16,7 @@ import {
 	registerPushToken,
 	setPushSettings,
 	unregisterPushToken,
-} from "$lib/api/settings/account";
+} from "#lib/api/settings/account.ts";
 
 function respondWith(body: unknown) {
 	fetchRestMock.mockResolvedValue({

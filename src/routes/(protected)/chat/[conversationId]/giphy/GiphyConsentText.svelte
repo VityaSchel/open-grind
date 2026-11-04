@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { t } from "$lib/i18n";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { t } from "#lib/i18n/index.ts";
 </script>
 
 {t("chat.giphy.consent.description")}

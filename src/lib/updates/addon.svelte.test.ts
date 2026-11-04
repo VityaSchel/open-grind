@@ -28,7 +28,7 @@ vi.mock("./index", async () => ({
 	getUpdateCapability,
 }));
 vi.mock("./toasts", () => toasts);
-vi.mock("$lib/platform/os", () => platform);
+vi.mock("#lib/platform/os.ts", () => platform);
 
 const releaseSigned: Capability = {
 	state: "supported",

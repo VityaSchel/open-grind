@@ -8,7 +8,7 @@
 	<string name="addon_update_transfer_title_recaptcha">Downloading the Open Grind reCAPTCHA helper update…</string>
 	<string name="media_upload_transfer_title">Uploading media…</string>
 	<string name="push_body_album">Shared their album</string>
-	<string name="push_body_album_reaction">Liked your album content</string>
+	<string name="push_body_album_reaction">Reacted to your album</string>
 	<string name="push_body_audio">Sent you an audio message</string>
 	<string name="push_body_expiring_image">Sent you an expiring image</string>
 	<string name="push_body_gaymoji">Sent you a Gaymoji</string>

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { explainedPushError } from "./explained-error";
 
 function pushFailure(reason: string) {

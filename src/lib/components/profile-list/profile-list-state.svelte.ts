@@ -1,10 +1,10 @@
 import { untrack } from "svelte";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
-import { showErrorToast } from "$lib/api/error-toast";
-import { getProfiles } from "$lib/api/users/profiles";
-import { t } from "$lib/i18n";
-import { Generation } from "$lib/util/generation";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { getProfiles } from "#lib/api/users/profiles.ts";
+import { t } from "#lib/i18n/index.ts";
+import { Generation } from "#lib/util/generation.ts";
 import type { ProfileListOptions, ProfileListProfile } from "./profile-list";
 
 const CHUNK_SIZE = 50;

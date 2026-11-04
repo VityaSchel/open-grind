@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const profiles = vi.hoisted(() => ({ saveProfilePhotos: vi.fn() }));
 
-vi.mock("$lib/api/users/profiles", () => profiles);
+vi.mock("#lib/api/users/profiles.ts", () => profiles);
 
 import { saveProfilePhotoOrder } from "./profile-photo-order";
 

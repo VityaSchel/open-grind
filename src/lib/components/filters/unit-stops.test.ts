@@ -5,8 +5,8 @@ import {
 	HEIGHT_CM_MIN,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
-import { formatHeight, formatWeightKg } from "$lib/util/units";
+} from "#lib/model/browse/grid/filters.ts";
+import { formatHeight, formatWeightKg } from "#lib/util/units.ts";
 import {
 	HEIGHT_STOPS,
 	storedAfterMove,

@@ -11,15 +11,15 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
 }));
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
 
-import { setPreferences } from "$lib/app-data/preferences.svelte";
-import { hapticsAvailable, playHaptic } from "$lib/haptics";
+import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { hapticsAvailable, playHaptic } from "#lib/haptics.ts";
 
 const tauri = globalThis as {
 	isTauri?: boolean;
@@ -93,7 +93,7 @@ describe("playHaptic", () => {
 
 	it("stays quiet until preferences have loaded", async () => {
 		vi.resetModules();
-		const haptics = await import("$lib/haptics");
+		const haptics = await import("#lib/haptics.ts");
 		runningOn("android");
 
 		haptics.playHaptic("dragStart");

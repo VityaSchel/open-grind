@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { Generation } from "$lib/util/generation";
+import { Generation } from "#lib/util/generation.ts";
 
 it("keeps a captured generation fresh until the next one starts", () => {
 	const generation = new Generation();

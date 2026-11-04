@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 const PROPS = {
+	mediaHash: "a",
 	src: "https://cdns.grindr.com/images/profile/1024x1024/a",
 	eager: true,
 	createdAt: null,

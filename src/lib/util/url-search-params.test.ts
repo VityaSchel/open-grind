@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { urlSearchParamsCodec } from "$lib/util/url-search-params";
+import { urlSearchParamsCodec } from "#lib/util/url-search-params.ts";
 
 describe("urlSearchParamsCodec", () => {
 	const codec = urlSearchParamsCodec(

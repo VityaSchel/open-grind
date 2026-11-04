@@ -8,9 +8,12 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { gaymojiFromImageHash, getGaymoji } from "$lib/api/messaging/gaymoji";
-import { toBase64 } from "$lib/util/base64";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import {
+	gaymojiFromImageHash,
+	getGaymoji,
+} from "#lib/api/messaging/gaymoji.ts";
+import { toBase64 } from "#lib/util/base64.ts";
 
 const manifest = {
 	lastUpdateTime: 1605145583000,

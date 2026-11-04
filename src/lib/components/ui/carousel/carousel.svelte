@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { t } from "$lib/i18n";
-	import { cn, type WithElementRef } from "$lib/util/utils.js";
+	import { t } from "#lib/i18n/index.ts";
+	import { cn, type WithElementRef } from "#lib/util/utils.ts";
 	import {
 		type CarouselAPI,
 		type CarouselProps,

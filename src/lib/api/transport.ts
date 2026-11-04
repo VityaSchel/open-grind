@@ -2,22 +2,23 @@ import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { noticeAccountStatusError } from "$lib/api/account-status-state.svelte";
-import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
+import { noticeAccountStatusError } from "#lib/api/account-status-state.svelte.ts";
+import { ApiError, type ApiErrorKind } from "#lib/api/api-error.ts";
 import {
 	asAppError,
 	blockedKindOf,
 	diagnosticMessage,
 	markRequestBlocked,
-} from "$lib/api/methods";
-import { redactPath } from "$lib/api/redact/text";
-import { parseJson } from "$lib/api/redact/value";
-import { signOutIfSessionLost } from "$lib/api/session-lost";
-import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
-import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
-import { schemaName } from "$lib/model/schema-names";
-import { fromBase64, toBase64 } from "$lib/util/base64";
-import type { MediaFileDescriptor } from "$lib/platform/media-file";
+} from "#lib/api/methods.ts";
+import { redactPath } from "#lib/api/redact/text.ts";
+import { parseJson } from "#lib/api/redact/value.ts";
+import { signOutIfSessionLost } from "#lib/api/session-lost.ts";
+import { demoRoute } from "#lib/demo/index.ts";
+import { neverSettles, sceneRestFault } from "#lib/demo/screenshot-scene.ts";
+import { deprecatedClientVersionErrorSchema } from "#lib/model/authentication.ts";
+import { schemaName } from "#lib/model/schema-names.ts";
+import { fromBase64, toBase64 } from "#lib/util/base64.ts";
+import type { MediaFileDescriptor } from "#lib/platform/media-file.ts";
 
 type RequestInfo = { method: string; path: string; body?: unknown };
 
@@ -140,11 +141,11 @@ async function respondFromDemoOrSend({
 	invokeError: InvokeError;
 	send: () => Promise<RestResponse>;
 }): Promise<RestResponse> {
-	if (!demoEnabled) return await send();
+	if (!__DEMO__) return await send();
 	const faulted = await sceneFault({ requestInfo, ErrorClass, invokeError });
 	if (faulted !== undefined) return faulted;
 	const { path, method } = requestInfo;
-	const { status, body } = demo().demoRoute({
+	const { status, body } = demoRoute({
 		path,
 		method,
 		body: requestInfo.body,
@@ -271,11 +272,11 @@ async function sceneFault({
 	invokeError: InvokeError;
 }) {
 	const { path, method } = requestInfo;
-	const fault = screenshotsEnabled
-		? demo().sceneRestFault({ path, method })
+	const fault = __SCREENSHOTS__
+		? sceneRestFault({ path, method })
 		: undefined;
 	if (fault === undefined) return undefined;
-	if ("pending" in fault) return demo().neverSettles();
+	if ("pending" in fault) return neverSettles();
 	if ("error" in fault) {
 		throw invokeError({ error: fault.error, requestInfo });
 	}

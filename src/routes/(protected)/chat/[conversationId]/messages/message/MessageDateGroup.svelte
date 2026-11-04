@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { isToday, startOfToday } from "date-fns";
 
-	import { t } from "$lib/i18n";
-	import { formatDate } from "$lib/i18n/format";
+	import { formatDate } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let { dayStart }: { dayStart: number } = $props();
 </script>

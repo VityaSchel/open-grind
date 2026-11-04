@@ -2,7 +2,7 @@
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 	import ProhibitIcon from "phosphor-svelte/lib/ProhibitIcon";
 
-	import { mediaDrop } from "$lib/platform/media-intake.svelte";
+	import { mediaDrop } from "#lib/platform/media-intake.svelte.ts";
 </script>
 
 {#if mediaDrop.label !== null}

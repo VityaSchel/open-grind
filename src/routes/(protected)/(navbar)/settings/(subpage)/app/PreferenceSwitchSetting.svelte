@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		type BooleanPreference,
 		preferencesLoaded,
 		preferencesSnapshot,
 		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
-	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { t } from "$lib/i18n";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		preference,

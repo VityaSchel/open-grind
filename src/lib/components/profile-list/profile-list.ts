@@ -1,6 +1,6 @@
 import type { Snippet } from "svelte";
 
-import type { getProfiles } from "$lib/api/users/profiles";
+import type { getProfiles } from "#lib/api/users/profiles.ts";
 
 export type ProfileListProfile = Awaited<
 	ReturnType<typeof getProfiles>

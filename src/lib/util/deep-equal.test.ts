@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { deepEqual } from "$lib/util/deep-equal";
+import { deepEqual } from "#lib/util/deep-equal.ts";
 
 describe("primitives", () => {
 	it("compares by value", () => {

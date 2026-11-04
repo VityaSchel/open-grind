@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TextMessage } from "$lib/model/messaging/messages";
+	import type { TextMessage } from "#lib/model/messaging/messages.ts";
 	import MessageBubble from "./MessageBubble.svelte";
 
 	let { message }: { message: TextMessage["body"] } = $props();

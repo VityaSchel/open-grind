@@ -6,11 +6,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { applyPhotoSwipeErrorUi } from "./error-ui";
 import { applyPhotoSwipeVideo } from "./video";
 
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	isLinuxPlatform: () => true,
 }));
-vi.mock("$lib/platform/video-codecs", () => ({ canDecodeH264: () => false }));
+vi.mock("#lib/platform/video-codecs.ts", () => ({
+	canDecodeH264: () => false,
+}));
 
 const VIDEO = '[data-slot="video-player-media"]';
 const teardowns: (() => void)[] = [];

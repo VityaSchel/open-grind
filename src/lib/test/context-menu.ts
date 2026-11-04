@@ -1,6 +1,6 @@
 import { fireEvent } from "@testing-library/svelte";
 
-import type { TouchOriginHints } from "$lib/platform/touch-origin";
+import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
 
 export function contextMenuEvent(origin: TouchOriginHints = {}): MouseEvent {
 	return Object.assign(

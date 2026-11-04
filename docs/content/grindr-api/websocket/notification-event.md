@@ -85,6 +85,19 @@ Signals the client to refresh its inbox.
 - *everything from [Notification Event](#notification-event)*
 - `payload` — WIP
 
+## `rightnow.v1.request`
+
+New [Right Now request](/grindr-api/right-now#send-right-now-request) for one of your posts. Sent to the post author.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — object
+  - `title` — string, e.g. `RIGHT_NOW_REQUEST_NOTIFICATION_TITLE`, a translation key when `translateTitle` is `true`
+  - `body` — string, e.g. `RIGHT_NOW_REQUEST_NOTIFICATION_BODY`, a translation key when `translateBody` is `true`
+  - `translateTitle` — boolean
+  - `translateBody` — boolean
+  - `imageUrl` — string or `null`
+  - `action` — deep link, e.g. `grindr://right-now-inbox`
+
 ## `notification.undelivered`
 
 WIP

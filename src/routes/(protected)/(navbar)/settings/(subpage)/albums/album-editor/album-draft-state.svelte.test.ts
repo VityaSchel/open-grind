@@ -9,18 +9,18 @@ const { deleteMock, albumMock, renameMock, reorderMock, forgetMock } =
 		forgetMock: vi.fn(),
 	}));
 
-vi.mock("$lib/api/messaging/albums", () => ({
+vi.mock("#lib/api/messaging/albums.ts", () => ({
 	deleteAlbumContent: deleteMock,
 	getAlbumContent: albumMock,
 	renameAlbum: renameMock,
 	reorderAlbumContent: reorderMock,
 }));
-vi.mock("$lib/components/album/album-lightbox", () => ({
+vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	forgetAlbumSlides: forgetMock,
 }));
 
-import { ApiError } from "$lib/api/api-error";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import { ApiError } from "#lib/api/api-error.ts";
+import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import {
 	AlbumDraftState,
 	StillProcessingError,

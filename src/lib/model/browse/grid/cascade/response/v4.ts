@@ -1,11 +1,14 @@
 import z from "zod";
 
-import { mediaUrlSchema } from "$lib/model/media";
-import { arrayOfKnownVariants, knownValueOrNull } from "$lib/model/tolerance";
+import { mediaUrlSchema } from "#lib/model/media.ts";
+import {
+	arrayOfKnownVariants,
+	knownValueOrNull,
+} from "#lib/model/tolerance.ts";
 import {
 	bodyTypeSchema,
 	sexualPositionSchema,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import {
 	cascadeResponseAdvertV1Schema,
 	cascadeResponseBoostUpsellV1Schema,

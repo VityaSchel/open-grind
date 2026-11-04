@@ -26,7 +26,7 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => "macos" }));
 
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () =>
 		preferences.readable
 			? Promise.resolve({ ...preferences.stored })
@@ -41,9 +41,9 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	},
 }));
 
-vi.mock("$lib/i18n/catalog-files", async (importOriginal) => {
+vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => {
 	const actual =
-		await importOriginal<typeof import("$lib/i18n/catalog-files")>();
+		await importOriginal<typeof import("#lib/i18n/catalog-files.ts")>();
 	const directories = ["de", "es", "es-419", "fr", "pt-BR", "pt-PT"];
 	return {
 		...actual,
@@ -61,7 +61,7 @@ vi.mock("$lib/i18n/catalog-files", async (importOriginal) => {
 	};
 });
 
-import { getCatalogLocale, getLocale, setLocale } from "$lib/i18n";
+import { getCatalogLocale, getLocale, setLocale } from "#lib/i18n/index.ts";
 import { chooseLanguage, startLanguage } from "./app-language";
 import { NATIVE_READ_TIMEOUT_MS } from "./regional-settings";
 

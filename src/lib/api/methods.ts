@@ -7,28 +7,32 @@ import {
 	apiErrorKinds,
 	apiErrorMessageKeys,
 	httpStatusOf,
-} from "$lib/api/api-error";
-import { capText } from "$lib/api/redact/text";
-import { summariseNonJson } from "$lib/api/redact/value";
+} from "#lib/api/api-error.ts";
+import { capText } from "#lib/api/redact/text.ts";
+import { summariseNonJson } from "#lib/api/redact/value.ts";
 import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
-} from "$lib/api/request-blocked-state.svelte";
-import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
+} from "#lib/api/request-blocked-state.svelte.ts";
+import { demoCallMethod } from "#lib/demo/index.ts";
+import {
+	neverSettles,
+	sceneMethodOutcome,
+} from "#lib/demo/screenshot-scene.ts";
+import { formatInteger } from "#lib/i18n/format.ts";
 import {
 	type MessageKey,
 	type PlainMessageKey,
 	sourceText,
 	t,
 	type Translate,
-} from "$lib/i18n";
-import { formatInteger } from "$lib/i18n/format";
+} from "#lib/i18n/index.ts";
 import {
 	type AccountStatusError,
 	accountStatusErrorSchema,
-} from "$lib/model/authentication";
-import { geohashSchema } from "$lib/model/geohash";
-import { BYTES_PER_MEGABYTE } from "$lib/util/bytes";
+} from "#lib/model/authentication.ts";
+import { geohashSchema } from "#lib/model/geohash.ts";
+import { BYTES_PER_MEGABYTE } from "#lib/util/bytes.ts";
 
 const maxPrettyMessageChars = 200;
 
@@ -223,10 +227,7 @@ export const methods = {
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
 function demoMethodAnswer(method: string): unknown {
-	const { demoCallMethod, neverSettles, sceneMethodOutcome } = demo();
-	const scripted = screenshotsEnabled
-		? sceneMethodOutcome(method)
-		: undefined;
+	const scripted = __SCREENSHOTS__ ? sceneMethodOutcome(method) : undefined;
 	if (scripted === undefined) return demoCallMethod(method);
 	// eslint-disable-next-line @typescript-eslint/only-throw-error -- Tauri commands reject with the bare AppError object
 	if ("error" in scripted) throw scripted.error;
@@ -263,7 +264,7 @@ export async function callMethod<T extends keyof typeof methods>(
 		? [data?: z.infer<(typeof methods)[T]["request"]>]
 		: [data: z.infer<(typeof methods)[T]["request"]>]
 ): Promise<MethodResult<T>> {
-	if (demoEnabled) {
+	if (__DEMO__) {
 		return parseAnswer({ method, answer: () => demoMethodAnswer(method) });
 	}
 	return parseAnswer({ method, answer: () => invoke(method, args[0]) });

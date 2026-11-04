@@ -1,5 +1,5 @@
-import { callMethod } from "$lib/api/methods";
-import { isMobilePlatform } from "$lib/platform/os";
+import { callMethod } from "#lib/api/methods.ts";
+import { isMobilePlatform } from "#lib/platform/os.ts";
 
 class AppLifecycle {
 	active = $state(true);

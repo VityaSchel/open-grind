@@ -1,11 +1,11 @@
 <script lang="ts">
 	import RulerIcon from "phosphor-svelte/lib/RulerIcon";
 
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import { Separator } from "$lib/components/ui/separator";
-	import { bodyTypes } from "$lib/model/users/profiles";
-	import { labelFromMap } from "$lib/util/options";
-	import { formatHeight, formatWeightGrams } from "$lib/util/units";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { Separator } from "#lib/components/ui/separator/index.ts";
+	import { bodyTypes } from "#lib/model/users/profiles.ts";
+	import { labelFromMap } from "#lib/util/options.ts";
+	import { formatHeight, formatWeightGrams } from "#lib/util/units.ts";
 
 	let {
 		height,

@@ -1,5 +1,5 @@
-import { type CascadeFilterKey, sentFilterKeys } from "$lib/grid/grid-query";
-import type { GridSearchFilters } from "$lib/model/browse/grid/filters";
+import { type CascadeFilterKey, sentFilterKeys } from "#lib/grid/grid-query.ts";
+import type { GridSearchFilters } from "#lib/model/browse/grid/filters.ts";
 
 const QUICK_FILTER_KEYS = new Set<CascadeFilterKey>([
 	"onlineOnly",

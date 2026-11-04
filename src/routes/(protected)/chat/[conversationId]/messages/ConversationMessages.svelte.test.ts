@@ -28,7 +28,7 @@ vi.mock("./ConversationError.svelte", () => ({ default: () => ({}) }));
 vi.mock("./ConversationPaginationSentinel.svelte", () => ({
 	default: () => ({}),
 }));
-vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
+vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: () => ({ scrollToRest: () => {} }),
 }));
 

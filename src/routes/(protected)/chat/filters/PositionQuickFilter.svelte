@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
-	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
-	import { t } from "$lib/i18n";
-	import type { FilterPositionId } from "$lib/model/browse/grid/filters";
+	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
+	import PositionFilterToggle from "#lib/components/filters/position/PositionFilterToggle.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import type { FilterPositionId } from "#lib/model/browse/grid/filters.ts";
 
 	let {
 		open = $bindable(),

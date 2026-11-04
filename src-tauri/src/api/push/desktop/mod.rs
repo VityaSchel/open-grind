@@ -29,7 +29,7 @@ pub fn plugin() -> TauriPlugin<Wry> {
 	Builder::new("push")
 		.setup(|app, _api| {
 			let categories_file =
-				app.path().app_local_data_dir()?.join(CATEGORIES_FILE);
+				crate::app_data::data_dir(app)?.join(CATEGORIES_FILE);
 			app.manage(DesktopPush::load(categories_file));
 			system::install(app);
 			Ok(())

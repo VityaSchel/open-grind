@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatTimeRelativeCustom } from "$lib/util/format-time";
-	import { getNow } from "$lib/util/now";
+	import { formatTimeRelativeCustom } from "#lib/util/format-time.ts";
+	import { getNow } from "#lib/util/now.ts";
 
 	let { date }: { date: number } = $props();
 

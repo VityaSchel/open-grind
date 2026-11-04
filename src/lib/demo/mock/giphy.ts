@@ -1,6 +1,6 @@
-import { giphyBody } from "$lib/model/messaging/gifs";
-import { hashString } from "$lib/util/random";
-import type { MediaDimensions } from "$lib/util/media-dimensions";
+import { giphyBody } from "#lib/model/messaging/gifs.ts";
+import { hashString } from "#lib/util/random.ts";
+import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 
 const DEMO_GIPHY_TRENDING_TOTAL = 172;
 const DEMO_GIPHY_EMPTY_QUERY = "zzzz";

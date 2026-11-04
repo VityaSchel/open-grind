@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
-	import { Slider } from "$lib/components/ui/slider";
-	import { t } from "$lib/i18n";
-	import { formatRange } from "$lib/i18n/format";
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import FilterDropdown from "#lib/components/filters/FilterDropdown.svelte";
+	import { Slider } from "#lib/components/ui/slider/index.ts";
+	import { formatRange } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		rangeBoundTexts,
 		WEIGHT_KG_MAX,
 		WEIGHT_KG_MIN,
-	} from "$lib/model/browse/grid/filters";
-	import { formatWeightKg } from "$lib/util/units";
+	} from "#lib/model/browse/grid/filters.ts";
+	import { formatWeightKg } from "#lib/util/units.ts";
 	import { WEIGHT_SLIDER_SCALES } from "./slider-scale";
 	import { storedAfterMove, WEIGHT_STOPS } from "./unit-stops";
 

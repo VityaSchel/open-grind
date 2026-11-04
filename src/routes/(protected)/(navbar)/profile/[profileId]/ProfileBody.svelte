@@ -8,7 +8,7 @@
 	import UsersIcon from "phosphor-svelte/lib/UsersIcon";
 	import UsersThreeIcon from "phosphor-svelte/lib/UsersThreeIcon";
 
-	import { t } from "$lib/i18n";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		acceptNSFWPics,
 		ethnicities,
@@ -19,7 +19,7 @@
 		relationshipStatuses,
 		tribes,
 		vaccines as vaccineLabels,
-	} from "$lib/model/users/profiles";
+	} from "#lib/model/users/profiles.ts";
 	import AboutMe from "./AboutMe.svelte";
 	import Distance from "./Distance.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";

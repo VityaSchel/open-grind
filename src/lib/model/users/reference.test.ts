@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { gendersSchema } from "$lib/model/users/genders";
-import { pronounsSchema } from "$lib/model/users/pronouns";
-import { profileTagsResponseSchema } from "$lib/model/users/tags";
+import { gendersSchema } from "#lib/model/users/genders.ts";
+import { pronounsSchema } from "#lib/model/users/pronouns.ts";
+import { profileTagsResponseSchema } from "#lib/model/users/tags.ts";
 
 const gender = { genderId: 1, gender: "Man", displayGroup: 1 };
 const pronoun = { pronounId: 1, pronoun: "he/him" };

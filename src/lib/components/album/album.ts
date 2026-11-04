@@ -1,9 +1,12 @@
-import { t } from "$lib/i18n";
-import { type MediaFileKind, mediaFileKindOf } from "$lib/platform/media-file";
+import { t } from "#lib/i18n/index.ts";
+import {
+	type MediaFileKind,
+	mediaFileKindOf,
+} from "#lib/platform/media-file.ts";
 import type {
 	AlbumContent,
 	AlbumStorageLimits,
-} from "$lib/model/messaging/albums";
+} from "#lib/model/messaging/albums.ts";
 
 export type AlbumRoom = { photos: boolean; videos: boolean };
 

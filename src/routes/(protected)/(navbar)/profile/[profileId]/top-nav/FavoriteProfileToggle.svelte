@@ -1,13 +1,13 @@
 <script lang="ts">
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		addFavoriteUser,
 		removeFavoriteUser,
-	} from "$lib/api/users/favorites";
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
+	} from "#lib/api/users/favorites.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		profileId,

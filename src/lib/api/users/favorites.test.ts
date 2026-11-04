@@ -2,12 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
 
-import { addFavoriteUser, removeFavoriteUser } from "$lib/api/users/favorites";
+import {
+	addFavoriteUser,
+	removeFavoriteUser,
+} from "#lib/api/users/favorites.ts";
 
 const assertOk = vi.fn();
 

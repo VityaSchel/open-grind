@@ -1,4 +1,4 @@
-import type { PlainMessageKey } from "$lib/i18n";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 
 export const INTEREST_TABS = [
 	{ href: "/interest/views", label: "interest.tabs.views" },

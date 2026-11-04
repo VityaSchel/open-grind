@@ -4,11 +4,11 @@ import { revealedGridScrollTop } from "./grid-reveal";
 
 const { revealRowScrollTop } = vi.hoisted(() => ({
 	revealRowScrollTop:
-		vi.fn<typeof import("$lib/util/grid-window").revealRowScrollTop>(),
+		vi.fn<typeof import("#lib/util/grid-window.ts").revealRowScrollTop>(),
 }));
 
-vi.mock("$lib/util/grid-window", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/util/grid-window")>()),
+vi.mock("#lib/util/grid-window.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/util/grid-window.ts")>()),
 	revealRowScrollTop,
 }));
 

@@ -1,5 +1,5 @@
-import { proseKeys, verbatimKeys } from "$lib/api/redact/policy";
-import { capText, documentTitle, scrubText } from "$lib/api/redact/text";
+import { proseKeys, verbatimKeys } from "#lib/api/redact/policy.ts";
+import { capText, documentTitle, scrubText } from "#lib/api/redact/text.ts";
 
 const maxDepth = 6;
 const maxArrayItems = 10;

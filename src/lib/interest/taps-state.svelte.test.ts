@@ -28,25 +28,27 @@ const {
 	unlistenTapMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/interest/taps", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
+vi.mock("#lib/api/interest/taps.ts", () => ({
 	getReceivedTaps: getReceivedTapsMock,
 }));
-vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
+vi.mock("#lib/api/browse/blocks.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/browse/blocks.ts")>()),
 	markBlockedProfilesUnviewable: markBlockedProfilesUnviewableMock,
 }));
-vi.mock("$lib/app-data/preferences.svelte", async (importOriginal) => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", async (importOriginal) => ({
 	...(await importOriginal<
-		typeof import("$lib/app-data/preferences.svelte")
+		typeof import("#lib/app-data/preferences.svelte.ts")
 	>()),
 	preferencesLoaded: () => true,
 	preferencesSnapshot: () => preferences,
 }));
-vi.mock("$lib/push/opening-deeplink", () => ({
+vi.mock("#lib/push/opening-deeplink.ts", () => ({
 	pushDeeplinkAhead: () => Promise.resolve(false),
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(
 			handler: (cause?: string) => void | Promise<void>,
@@ -59,17 +61,17 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
-import type { TapProfile } from "$lib/model/interest/tap-profile";
+} from "#lib/api/users/profile-viewability.ts";
+import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
+import type { TapProfile } from "#lib/model/interest/tap-profile.ts";
 import { getTapsState, TapsState } from "./taps-state.svelte";
 
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(
 			eventType: string | string[],

@@ -6,25 +6,25 @@
 	import PushPinSlashIcon from "phosphor-svelte/lib/PushPinSlashIcon";
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 
-	import { getConversations } from "$lib/chat/conversations-context.svelte";
-	import FavoriteStar from "$lib/components/profile/FavoriteStar.svelte";
-	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
-	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
-	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import * as ContextMenu from "$lib/components/ui/context-menu";
-	import * as Item from "$lib/components/ui/item";
-	import { playHaptic } from "$lib/haptics";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import { getConversations } from "#lib/chat/conversations-context.svelte.ts";
+	import FavoriteStar from "#lib/components/profile/FavoriteStar.svelte";
+	import ProfileItem from "#lib/components/profile/ProfileItem.svelte";
+	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
+	import SelectionCheck from "#lib/components/shared/SelectionCheck.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import * as ContextMenu from "#lib/components/ui/context-menu/index.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import { playHaptic } from "#lib/haptics.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import {
 		previewIsUserText,
 		previewLabel,
-	} from "$lib/model/messaging/message-preview";
-	import { firedByTouch } from "$lib/platform/touch-origin";
-	import type { Conversation } from "$lib/model/messaging/conversations";
-	import type { SelectionSet } from "$lib/util/selection.svelte";
+	} from "#lib/model/messaging/message-preview.ts";
+	import { firedByTouch } from "#lib/platform/touch-origin.ts";
+	import type { Conversation } from "#lib/model/messaging/conversations.ts";
+	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 
 	let {
 		conversation,

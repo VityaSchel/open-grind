@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import {
 	allowsNativeMenu,
 	blockNativeMenu,
-} from "$lib/platform/block-native-menu";
-import { contextMenuEvent } from "$lib/test/context-menu";
-import type { TouchOriginHints } from "$lib/platform/touch-origin";
+} from "#lib/platform/block-native-menu.ts";
+import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
 
 function mount(html: string): HTMLElement {
 	document.body.innerHTML = html;

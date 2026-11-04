@@ -1,8 +1,8 @@
 import z from "zod";
 
-import { mediaUrlSchema } from "$lib/model/media";
-import { knownValueOrNull } from "$lib/model/tolerance";
-import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
+import { mediaUrlSchema } from "#lib/model/media.ts";
+import { knownValueOrNull } from "#lib/model/tolerance.ts";
+import { unixTimestampMsSchema, unmodeledSchema } from "#lib/model/types.ts";
 
 export const albumPreviewSchema = z.object({
 	albumId: z.int(),

@@ -3,13 +3,13 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	defaultFilters,
 	type GridSearchFilters,
-} from "$lib/model/browse/grid/filters";
+} from "#lib/model/browse/grid/filters.ts";
 import EmptyGrid from "./EmptyGrid.svelte";
 
 const fakeGrid = vi.hoisted(() => ({
@@ -19,7 +19,7 @@ const fakeGrid = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("$lib/grid/grid-state.svelte", () => ({ gridState: fakeGrid }));
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({ gridState: fakeGrid }));
 
 const variants = [
 	{

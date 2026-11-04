@@ -1,8 +1,8 @@
-import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
-import { signedInProfileId } from "$lib/api/current-session";
-import { awaitHomeLocation } from "$lib/entitlements/honduras-hold";
-import { isMobilePlatform } from "$lib/platform/os";
-import { ws } from "$lib/ws.svelte";
+import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+import { signedInProfileId } from "#lib/api/current-session.ts";
+import { awaitHomeLocation } from "#lib/entitlements/honduras-hold.ts";
+import { isMobilePlatform } from "#lib/platform/os.ts";
+import { ws } from "#lib/ws.svelte.ts";
 
 const THROTTLE_MS = 2000;
 const DESKTOP_LONG_ABSENCE_MS = 5 * 60 * 1000;

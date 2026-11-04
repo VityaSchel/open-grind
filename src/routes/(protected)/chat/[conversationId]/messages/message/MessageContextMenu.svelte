@@ -7,13 +7,13 @@
 	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 	import type { ComponentProps } from "svelte";
 
-	import { copyToClipboard } from "$lib/api/error-copy";
-	import fireEmoji from "$lib/assets/emojis/fire/32px.png";
-	import ContextMenu from "$lib/components/shared/ContextMenu.svelte";
-	import ContextMenuPanel from "$lib/components/shared/ContextMenuPanel.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import { copyToClipboard } from "#lib/api/error-copy.ts";
+	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
+	import ContextMenu from "#lib/components/shared/ContextMenu.svelte";
+	import ContextMenuPanel from "#lib/components/shared/ContextMenuPanel.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 
 	let {
 		textContent,

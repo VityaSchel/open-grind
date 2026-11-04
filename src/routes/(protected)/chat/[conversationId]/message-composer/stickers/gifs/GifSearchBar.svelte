@@ -2,8 +2,8 @@
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 	import XIcon from "phosphor-svelte/lib/XIcon";
 
-	import * as InputGroup from "$lib/components/ui/input-group";
-	import { t } from "$lib/i18n";
+	import * as InputGroup from "#lib/components/ui/input-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { GIF_INPUT_MAX_LENGTH } from "./gif-feed.svelte";
 
 	let {

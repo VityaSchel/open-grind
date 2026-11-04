@@ -7,7 +7,7 @@ import {
 	Submenu,
 } from "@tauri-apps/api/menu";
 
-import { followLocale, type MessageKey, t } from "$lib/i18n";
+import { followLocale, type MessageKey, t } from "#lib/i18n/index.ts";
 import { isMacosPlatform } from "./os";
 
 const WINDOW_SUBMENU_ID = "__tauri_window_menu__";

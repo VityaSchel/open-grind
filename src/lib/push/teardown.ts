@@ -1,5 +1,5 @@
-import { unregisterPushToken } from "$lib/api/settings/account";
-import { setPreferences } from "$lib/app-data/preferences.svelte";
+import { unregisterPushToken } from "#lib/api/settings/account.ts";
+import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
 import {
 	deletePushToken,
 	inFastMode,

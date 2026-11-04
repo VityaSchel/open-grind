@@ -2,9 +2,14 @@ import {
 	conditionalClassSelectors,
 	sveltekit,
 } from "@opengrind/config/eslint/svelte";
+import { loadConfig } from "@sveltejs/load-config";
 import { defineConfig } from "eslint/config";
 
-import svelteConfig from "./svelte.config.js";
+const loaded = await loadConfig(import.meta.dirname, { traverse: false });
+if (!loaded || "error" in loaded)
+	throw new Error("Could not load the Svelte config from vite.config.mjs", {
+		cause: loaded?.error,
+	});
 
 const vendoredGlob = "src/lib/components/ui/**";
 
@@ -145,7 +150,7 @@ const svelteStaleTextSelectors = [
 
 export default defineConfig(
 	...sveltekit({
-		svelteConfig,
+		svelteConfig: { compilerOptions: loaded.config.compilerOptions },
 		tailwindEntry: "src/layout.css",
 		vendoredGlob,
 		ignores: [

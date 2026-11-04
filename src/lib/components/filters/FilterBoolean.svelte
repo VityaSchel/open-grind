@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Checkbox } from "$lib/components/ui/checkbox";
-	import { Label } from "$lib/components/ui/label";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.ts";
+	import { Label } from "#lib/components/ui/label/index.ts";
 	import FilterField from "./FilterField.svelte";
 
 	let {

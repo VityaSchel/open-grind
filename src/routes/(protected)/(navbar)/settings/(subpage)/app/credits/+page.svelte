@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { loadCredits } from "$lib/credits";
-	import { t } from "$lib/i18n";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { loadCredits } from "#lib/credits/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import CreditsList from "./CreditsList.svelte";
 
 	const credits = loadCredits();

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 
-	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
-	import { isPlainClick } from "$lib/util/plain-click";
+	import ProfileMiniCard from "#lib/components/profile/ProfileMiniCard.svelte";
+	import { isPlainClick } from "#lib/util/plain-click.ts";
 
 	let {
 		id,

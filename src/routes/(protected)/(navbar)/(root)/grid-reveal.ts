@@ -1,5 +1,5 @@
-import { revealRowScrollTop } from "$lib/util/grid-window";
-import { readGridMetrics } from "$lib/util/virtual-grid.svelte";
+import { revealRowScrollTop } from "#lib/util/grid-window.ts";
+import { readGridMetrics } from "#lib/util/virtual-grid.svelte.ts";
 
 export function revealedGridScrollTop({
 	scroller,

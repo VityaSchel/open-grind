@@ -2,12 +2,12 @@
 	import { goto } from "$app/navigation";
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { Badge } from "$lib/components/ui/badge";
-	import * as Command from "$lib/components/ui/command";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import * as Command from "#lib/components/ui/command/index.ts";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import {
 		commandCenterClose,
 		commandCenterState,
@@ -78,18 +78,22 @@
 				<div class="flex flex-wrap gap-1">
 					{#each result.parsed as filter, index (index)}
 						{#if filter.error === undefined}
-							<Badge variant="secondary">
-								<span class="opacity-60">
-									{@render filterName(filter)}
+							<Badge variant="secondary" class="max-w-full">
+								<span class="truncate">
+									<span class="opacity-60">
+										{@render filterName(filter)}
+									</span>
+									{@render filterValue(filter)}
 								</span>
-								{@render filterValue(filter)}
 							</Badge>
 						{:else}
-							<Badge variant="destructive">
-								<span class="opacity-80">
-									{@render filterName(filter)}
+							<Badge variant="destructive" class="max-w-full">
+								<span class="truncate">
+									<span class="opacity-80">
+										{@render filterName(filter)}
+									</span>
+									{filterErrorText(filter.error)}
 								</span>
-								{filterErrorText(filter.error)}
 							</Badge>
 						{/if}
 					{/each}

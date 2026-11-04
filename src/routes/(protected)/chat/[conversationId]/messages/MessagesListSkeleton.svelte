@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-	import { mulberry32 } from "$lib/util/random";
+	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { mulberry32 } from "#lib/util/random.ts";
 
 	const seededRandom = mulberry32(Math.random() * 2 ** 32);
 </script>

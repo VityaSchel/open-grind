@@ -1,8 +1,8 @@
 import {
 	getConversations,
 	type InboxFilterRequest,
-} from "$lib/api/messaging/conversations";
-import type { Conversation } from "$lib/model/messaging/conversations";
+} from "#lib/api/messaging/conversations.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 const MAX_PAGES = 100;
 

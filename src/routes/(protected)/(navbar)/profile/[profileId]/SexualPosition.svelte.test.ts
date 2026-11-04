@@ -3,7 +3,7 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { SexualPosition, sexualPositions } from "$lib/model/users/profiles";
+import { SexualPosition, sexualPositions } from "#lib/model/users/profiles.ts";
 import SexualPositionLabel from "./SexualPosition.svelte";
 
 afterEach(cleanup);

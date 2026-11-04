@@ -1,16 +1,19 @@
-import { accountEpoch, isAccountEpochCurrent } from "$lib/api/account-caches";
-import { updateLocation } from "$lib/api/browse/location";
-import { callMethod } from "$lib/api/methods";
-import { onSignOut } from "$lib/api/sign-out";
+import {
+	accountEpoch,
+	isAccountEpochCurrent,
+} from "#lib/api/account-caches.ts";
+import { updateLocation } from "#lib/api/browse/location.ts";
+import { callMethod } from "#lib/api/methods.ts";
+import { onSignOut } from "#lib/api/sign-out.ts";
 import {
 	existsAppDataFile,
 	removeAppDataFile,
 	writeAppDataFileAtomic,
-} from "$lib/app-data";
-import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { isMobilePlatform } from "$lib/platform/os";
-import { withDeadline } from "$lib/util/deadline";
-import { ws } from "$lib/ws.svelte";
+} from "#lib/app-data/index.ts";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { isMobilePlatform } from "#lib/platform/os.ts";
+import { withDeadline } from "#lib/util/deadline.ts";
+import { ws } from "#lib/ws.svelte.ts";
 import { randomHondurasGeohash } from "./honduras";
 
 const HOLD_TIMEOUT_MS = 15_000;

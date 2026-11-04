@@ -1,10 +1,10 @@
 import {
 	type ConversationFilterValues,
 	defaultConversationFilters,
-} from "$lib/model/messaging/conversation-filters";
-import { deepEqual } from "$lib/util/deep-equal";
-import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
-import type { Conversation } from "$lib/model/messaging/conversations";
+} from "#lib/model/messaging/conversation-filters.ts";
+import { deepEqual } from "#lib/util/deep-equal.ts";
+import type { InboxFilterRequest } from "#lib/api/messaging/conversations.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 export function inboxFilterRequest(
 	values: ConversationFilterValues,

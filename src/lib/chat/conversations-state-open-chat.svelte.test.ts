@@ -19,22 +19,22 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/messaging/conversations", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/messaging/conversations.ts", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead,
 	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: vi.fn(() => Promise.resolve()),
 	setConversationMuted: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("$lib/util/breakpoints.svelte", () => ({
+vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	below: () => ({ current: false }),
 }));
-vi.mock("$lib/util/reconcile", () => ({
+vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => vi.fn() },
 }));
-vi.mock("$lib/ws.svelte", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
+vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/ws.svelte.ts")>()),
 	ws: {
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
 			wsHandlers.set(eventType, handler);
@@ -43,8 +43,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
-import { requestInboxResync } from "$lib/chat/inbox-resync";
-import { whileOpeningPushDeeplink } from "$lib/push/opening-deeplink";
+import { requestInboxResync } from "#lib/chat/inbox-resync.ts";
+import { whileOpeningPushDeeplink } from "#lib/push/opening-deeplink.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,

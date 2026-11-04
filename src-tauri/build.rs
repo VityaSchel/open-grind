@@ -10,10 +10,19 @@ const EXTENSION_LIBRARIES: [&str; 4] = [
 ];
 
 fn main() {
+	declare_demo_build();
 	if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
 		build_webkit_extension();
 	}
 	tauri_build::build()
+}
+
+fn declare_demo_build() {
+	println!("cargo:rustc-check-cfg=cfg(demo)");
+	println!("cargo:rerun-if-env-changed=OPEN_GRIND_DEMO");
+	if std::env::var("OPEN_GRIND_DEMO").as_deref() == Ok("1") {
+		println!("cargo:rustc-cfg=demo");
+	}
 }
 
 fn build_webkit_extension() {

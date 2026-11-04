@@ -1,4 +1,4 @@
-import { ApiError } from "$lib/api/api-error";
+import { ApiError } from "#lib/api/api-error.ts";
 
 const RETRY_DELAYS_MS = [2_000, 6_000, 18_000];
 

@@ -6,7 +6,7 @@ import {
 	rightNowPostReportRequestSchema,
 	rightNowPostSubmittedReportResponseSchema,
 	submittedReportSchema,
-} from "$lib/model/safety/reports";
+} from "#lib/model/safety/reports.ts";
 
 const report = {
 	reason: "IMPERSONATION",

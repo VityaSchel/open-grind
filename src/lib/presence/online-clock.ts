@@ -1,5 +1,5 @@
-import { registerAccountCache } from "$lib/api/account-caches";
-import { now } from "$lib/util/clock";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import { now } from "#lib/util/clock.ts";
 
 let refreshedAt: number | null = null;
 

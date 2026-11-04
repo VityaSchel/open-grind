@@ -1,14 +1,14 @@
 <script lang="ts">
 	import ArrowSquareOutIcon from "phosphor-svelte/lib/ArrowSquareOutIcon";
 
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { type PlainMessageKey, t } from "$lib/i18n";
-	import { platformNames } from "$lib/platform/os";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+	import { platformNames } from "#lib/platform/os.ts";
 	import type {
 		Credits,
 		CreditSection,
 		SharedCreditSection,
-	} from "$lib/credits";
+	} from "#lib/credits/index.ts";
 	import CreditCard from "./CreditCard.svelte";
 	import CreditRow from "./CreditRow.svelte";
 	import { FrameCounter } from "./frame-counter.svelte";

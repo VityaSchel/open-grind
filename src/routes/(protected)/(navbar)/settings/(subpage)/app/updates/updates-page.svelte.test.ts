@@ -11,13 +11,13 @@ import {
 	vi,
 } from "vitest";
 
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import {
 	installedBy,
 	toastsFake,
 	updateApiFake,
-} from "$lib/updates/updates-test-helpers";
-import type { Capability } from "$lib/updates/types";
+} from "#lib/updates/updates-test-helpers.ts";
+import type { Capability } from "#lib/updates/types.ts";
 
 const FOREIGN_SIGNER = {
 	state: "unsupported",
@@ -36,22 +36,22 @@ const { updateSettings, platform } = vi.hoisted(() => ({
 	platform: { isAndroidPlatform: vi.fn(() => true) },
 }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: () => Promise.resolve(encode({})),
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: () => Promise.resolve(),
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/updates/index", async () => ({
-	...(await import("$lib/updates/types")),
-	...(await import("$lib/updates/components")),
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/updates/index.ts", async () => ({
+	...(await import("#lib/updates/types.ts")),
+	...(await import("#lib/updates/components.ts")),
 	...fake.api,
 	...updateSettings,
 }));
-vi.mock("$lib/updates/toasts", () => toasts);
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
+vi.mock("#lib/updates/toasts.ts", () => toasts);
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
 	...platform,
 }));
 
@@ -61,7 +61,7 @@ async function opened(capability: Capability) {
 	updateSettings.getUpdateCapability.mockResolvedValue(capability);
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
-		await import("$lib/updates/capability.svelte");
+		await import("#lib/updates/capability.svelte.ts");
 	await hydrateUpdateCapability();
 	const { default: UpdatesPage } = await import("./+page.svelte");
 	testing.render(UpdatesPage);
@@ -149,8 +149,8 @@ describe("the Updates settings in another language", () => {
 			screen.getByText(/^Periodically ask git\.opengrind\.org/),
 			screen.getByRole("button", { name: "Check for updates" }),
 		];
-		const { setLocale } = await import("$lib/i18n");
-		const { showErrorToast } = await import("$lib/api/error-toast");
+		const { setLocale } = await import("#lib/i18n/index.ts");
+		const { showErrorToast } = await import("#lib/api/error-toast.ts");
 
 		await setLocale({ locale: "en-XA" });
 		automaticChecks.click();

@@ -5,12 +5,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getTagsMock } = vi.hoisted(() => ({ getTagsMock: vi.fn() }));
 
-vi.mock("$lib/api/users/tags", () => ({ getTags: getTagsMock }));
+vi.mock("#lib/api/users/tags.ts", () => ({ getTags: getTagsMock }));
 
-import { setCountFormatter, setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { restoreCountFormatter } from "$lib/i18n/fixtures/count-formatter";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import type { ProfileTagsResponse } from "$lib/model/users/tags";
+import { restoreCountFormatter } from "#lib/i18n/fixtures/count-formatter.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import {
+	setCountFormatter,
+	setLocale,
+	SOURCE_LOCALE,
+} from "#lib/i18n/index.ts";
+import type { ProfileTagsResponse } from "#lib/model/users/tags.ts";
 import TagsFilter from "./TagsFilter.svelte";
 
 const SEARCH_RESULTS_SHOWN = 50;

@@ -1,22 +1,8 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const flags = vi.hoisted(() => ({ screenshots: true }));
-
-vi.mock("$lib/demo/config", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("./config")>();
-	return {
-		...actual,
-		demoEnabled: true,
-		get screenshotsEnabled() {
-			return flags.screenshots;
-		},
-	};
-});
-
-import { ApiError, httpStatusOf } from "$lib/api/api-error";
-import { uploadAlbumContent } from "$lib/api/messaging/albums";
-import { loadDemo } from "$lib/demo";
-import type { MediaFileInspection } from "$lib/platform/media-file";
+import { ApiError, httpStatusOf } from "#lib/api/api-error.ts";
+import { uploadAlbumContent } from "#lib/api/messaging/albums.ts";
+import type { MediaFileInspection } from "#lib/platform/media-file.ts";
 import { settlesSoon } from "./demo-test-helpers";
 import {
 	type NativeError,
@@ -65,11 +51,14 @@ function upload({
 	});
 }
 
-beforeAll(loadDemo);
+beforeEach(() => {
+	vi.stubGlobal("__DEMO__", true);
+	vi.stubGlobal("__SCREENSHOTS__", true);
+});
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));
-	flags.screenshots = true;
+	vi.unstubAllGlobals();
 });
 
 describe("album upload faults", () => {
@@ -114,7 +103,7 @@ describe("album upload faults", () => {
 	});
 
 	it("ignores faults without the flag", async () => {
-		flags.screenshots = false;
+		vi.stubGlobal("__SCREENSHOTS__", false);
 		faultUploads({ status: 402 });
 		await expect(upload()).resolves.toMatchObject({
 			contentId: expect.any(Number) as number,

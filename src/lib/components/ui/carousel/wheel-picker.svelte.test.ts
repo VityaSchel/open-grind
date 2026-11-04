@@ -8,7 +8,7 @@ vi.mock("embla-carousel-svelte", () => ({ default: () => {} }));
 import {
 	bracketCounts,
 	restoreCountFormatter,
-} from "$lib/i18n/fixtures/count-formatter";
+} from "#lib/i18n/fixtures/count-formatter.ts";
 import WheelPicker from "./wheel-picker.svelte";
 
 const range = { value: 30, min: 18, max: 99, unit: "years" };

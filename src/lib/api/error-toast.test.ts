@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { toastMock } = vi.hoisted(() => ({ toastMock: { error: vi.fn() } }));
 
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("$lib/api/error-copy", () => ({ promptCopyError: vi.fn() }));
+vi.mock("#lib/api/error-copy.ts", () => ({ promptCopyError: vi.fn() }));
 
 import { showErrorToast } from "./error-toast";
 

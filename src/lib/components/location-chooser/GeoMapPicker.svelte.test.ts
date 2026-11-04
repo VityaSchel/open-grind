@@ -4,12 +4,12 @@ import { cleanup, render } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 
-vi.mock("$lib/location/location-request.svelte", () => ({
+vi.mock("#lib/location/location-request.svelte.ts", () => ({
 	locationRequest: { pending: false, lastFix: null },
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: () => false }));
+vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => false }));
 
 const GeoMapPicker = (await import("./GeoMapPicker.svelte")).default;
 

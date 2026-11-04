@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isTagKeyOffered } from "$lib/model/users/tags";
+import { isTagKeyOffered } from "#lib/model/users/tags.ts";
 
 describe("isTagKeyOffered", () => {
 	it("withholds the FTM and MTF tags while the gender filter flag is on", () => {

@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { type PlainMessageKey, t } from "$lib/i18n";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import { ADDON_MESSAGES, type AddonErrorName } from "./addon-messages";
 import {
 	ADDON_NAME,

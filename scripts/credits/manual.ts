@@ -167,7 +167,7 @@ const bundledOutsideNodeModules: ManualEntry[] = [
 	{
 		id: "shadcn-svelte",
 		name: "shadcn-svelte",
-		version: "1.2.7",
+		version: "1.7.0",
 		ecosystem: "npm",
 		spdx: "MIT",
 		url: "https://shadcn-svelte.com",

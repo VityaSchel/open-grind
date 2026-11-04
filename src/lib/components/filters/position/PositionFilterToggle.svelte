@@ -5,14 +5,14 @@
 	import {
 		sexualPositionIcons,
 		sexualPositionOrder,
-	} from "$lib/components/profile/sexual-position-icons";
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { t } from "$lib/i18n";
+	} from "#lib/components/profile/sexual-position-icons.ts";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		FilterPosition,
 		filterPositionSchema,
-	} from "$lib/model/browse/grid/filters";
-	import { sexualPositions } from "$lib/model/users/profiles";
+	} from "#lib/model/browse/grid/filters.ts";
+	import { sexualPositions } from "#lib/model/users/profiles.ts";
 
 	let {
 		value = $bindable(),

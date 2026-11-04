@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { getPlaces } from "$lib/api/browse/location";
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Input } from "$lib/components/ui/input";
-	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { t } from "$lib/i18n";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { getPlaces } from "#lib/api/browse/location.ts";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Input } from "#lib/components/ui/input/index.ts";
+	import Spinner from "#lib/components/ui/spinner/spinner.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let {
 		onpick,

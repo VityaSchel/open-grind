@@ -4,7 +4,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { createRawSnippet } from "svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { untranslatableTexts } from "$lib/test/untranslatable";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import AboutMe from "./AboutMe.svelte";
 
 afterEach(cleanup);

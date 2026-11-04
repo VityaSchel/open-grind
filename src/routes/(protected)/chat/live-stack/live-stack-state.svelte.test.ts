@@ -1,14 +1,14 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { NavigationTarget } from "@sveltejs/kit";
+import type { NavigationTarget } from "$app/navigation";
 
-import { stackMotion } from "$lib/components/navigation/stack/motion";
+import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
 import {
 	fakeSurface,
 	flushMicrotasks,
 	navigationEvent,
 	settleLast,
-} from "$lib/components/navigation/stack/stack-test-helpers";
+} from "#lib/components/navigation/stack/stack-test-helpers.ts";
 import { LiveStackState } from "./live-stack-state.svelte";
 
 const LIST = "/chat";

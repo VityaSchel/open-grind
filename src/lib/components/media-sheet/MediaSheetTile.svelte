@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import VideoPreview from "$lib/components/shared/VideoPreview.svelte";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
-	import { longPressHandlers } from "$lib/util/long-press";
+	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import VideoPreview from "#lib/components/shared/VideoPreview.svelte";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { longPressHandlers } from "#lib/util/long-press.ts";
 	import MediaTileOverlay from "./MediaTileOverlay.svelte";
 
 	let {

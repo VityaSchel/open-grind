@@ -4,29 +4,34 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { copyToClipboard } from "$lib/api/error-copy";
+	import { copyToClipboard } from "#lib/api/error-copy.ts";
 	import {
 		asAppError,
 		blockedKindOf,
 		callMethod,
 		markRequestBlocked,
 		summarizeServerMessage,
-	} from "$lib/api/methods";
-	import { capText, scrubText } from "$lib/api/redact/text";
+	} from "#lib/api/methods.ts";
+	import { capText, scrubText } from "#lib/api/redact/text.ts";
 	import {
 		clearSessionError,
 		type SessionErrorKind,
 		sessionErrorKinds,
 		sessionErrorState,
-	} from "$lib/api/session-error-state.svelte";
-	import { sessionRecovery } from "$lib/api/session-recovery.svelte";
-	import { signOut } from "$lib/api/sign-out";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button } from "$lib/components/ui/button";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { type MessageKey, sourceText, t, type Translate } from "$lib/i18n";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { ws } from "$lib/ws.svelte";
+	} from "#lib/api/session-error-state.svelte.ts";
+	import { sessionRecovery } from "#lib/api/session-recovery.svelte.ts";
+	import { signOut } from "#lib/api/sign-out.ts";
+	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import {
+		type MessageKey,
+		sourceText,
+		t,
+		type Translate,
+	} from "#lib/i18n/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { ws } from "#lib/ws.svelte.ts";
 
 	type SessionErrorVariant = "rateLimited" | "refused" | "unreachable";
 

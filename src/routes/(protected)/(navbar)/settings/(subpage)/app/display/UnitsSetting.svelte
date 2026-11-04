@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error-toast";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import {
 		preferencesSnapshot,
 		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
-	import * as Item from "$lib/components/ui/item";
-	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { t } from "$lib/i18n";
-	import type { UnitSystem } from "$lib/util/units";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import * as Item from "#lib/components/ui/item/index.ts";
+	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import type { UnitSystem } from "#lib/util/units.ts";
 
 	let pending = $state<UnitSystem | null>(null);
 	const value = $derived(pending ?? preferencesSnapshot().units);

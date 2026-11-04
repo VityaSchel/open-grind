@@ -2,9 +2,9 @@
 	import type { Snippet } from "svelte";
 	import type { ClassValue } from "svelte/elements";
 
-	import * as Dialog from "$lib/components/ui/dialog";
-	import * as Drawer from "$lib/components/ui/drawer";
-	import { cn } from "$lib/util/utils.js";
+	import * as Dialog from "#lib/components/ui/dialog/index.ts";
+	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import { getResponsiveDialogContext } from "./context.js";
 
 	let {

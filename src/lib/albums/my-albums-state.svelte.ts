@@ -1,7 +1,10 @@
-import { accountScoped } from "$lib/api/account-caches";
-import { getAlbumStorageLimits, getMyAlbums } from "$lib/api/messaging/albums";
-import { Generation } from "$lib/util/generation";
-import type { MyAlbum } from "$lib/model/messaging/albums";
+import { accountScoped } from "#lib/api/account-caches.ts";
+import {
+	getAlbumStorageLimits,
+	getMyAlbums,
+} from "#lib/api/messaging/albums.ts";
+import { Generation } from "#lib/util/generation.ts";
+import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 
 async function loadMaxAlbums(): Promise<number | null> {
 	try {

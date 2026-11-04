@@ -15,14 +15,14 @@ const { api, errorToast, sonner } = vi.hoisted(() => ({
 	sonner: { toast: { success: vi.fn() } },
 }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
-vi.mock("$lib/api/error-toast", () => errorToast);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
+vi.mock("#lib/api/error-toast.ts", () => errorToast);
 vi.mock("svelte-sonner", () => sonner);
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import AlbumMenu from "./AlbumMenu.svelte";
 
 const ALBUM_ID = 900;

@@ -1,5 +1,5 @@
-import { mediaRetry } from "$lib/util/media-retry.svelte";
-import { reconciler } from "$lib/util/reconcile";
+import { mediaRetry } from "#lib/util/media-retry.svelte.ts";
+import { reconciler } from "#lib/util/reconcile.ts";
 
 export function retryBrokenMediaWhenOnline(): () => void {
 	const nudge = () => mediaRetry.nudge();

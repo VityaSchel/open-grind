@@ -1,10 +1,10 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api/transport";
+import { fetchRest } from "#lib/api/transport.ts";
 import {
 	viewerProfileSchema,
 	viewPreviewSchema,
-} from "$lib/model/interest/views";
+} from "#lib/model/interest/views.ts";
 
 const viewsListResponseSchema = z.object({
 	profiles: z.array(viewerProfileSchema),

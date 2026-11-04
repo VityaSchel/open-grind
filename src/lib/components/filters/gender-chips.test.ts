@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { GENDER_ASK_ME } from "$lib/model/browse/grid/filters";
+import { GENDER_ASK_ME } from "#lib/model/browse/grid/filters.ts";
 import { isGenderChipShown, selectGenders } from "./gender-chips";
 
 const chip = ({

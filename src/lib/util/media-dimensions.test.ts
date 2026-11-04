@@ -4,12 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { mediaFailureMock } = vi.hoisted(() => ({ mediaFailureMock: vi.fn() }));
 
-vi.mock("$lib/platform/media-failure", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/media-failure")>()),
+vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/platform/media-failure.ts")
+	>()),
 	mediaFailure: mediaFailureMock,
 }));
 
-import { measureImage } from "$lib/util/media-dimensions";
+import { measureImage } from "#lib/util/media-dimensions.ts";
 
 const SIGNED_SRC =
 	"http://ogmedia.localhost/iaHR0cHM6Ly9kMy5jbG91ZGZyb250Lm5ldA";

@@ -7,12 +7,12 @@ const { api } = vi.hoisted(() => ({
 	api: { getMyAlbums: vi.fn(), getAlbumStorageLimits: vi.fn() },
 }));
 
-vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("#lib/api/messaging/albums.ts", () => api);
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { demoMyAlbums } from "$lib/demo/mock/albums";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { demoMyAlbums } from "#lib/demo/mock/albums.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import MyAlbumsPage from "./+page.svelte";
 
 const ALBUM_TILE = '[data-slot="album-tile"]';

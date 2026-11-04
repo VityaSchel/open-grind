@@ -1,5 +1,5 @@
-import { parseSignedUrl, unsignedUrl } from "$lib/util/signed-url";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { parseSignedUrl, unsignedUrl } from "#lib/util/signed-url.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 
 const RECONCILE_RENEWAL_AGE_MS = 10 * 60 * 1000;
 const REFRESH_RENEWAL_AGE_MS = 1000;

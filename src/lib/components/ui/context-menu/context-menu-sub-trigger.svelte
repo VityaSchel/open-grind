@@ -2,7 +2,7 @@
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
-	import { cn, type WithoutChild } from "$lib/util/utils.js";
+	import { cn, type WithoutChild } from "#lib/util/utils.ts";
 
 	let {
 		ref = $bindable(null),

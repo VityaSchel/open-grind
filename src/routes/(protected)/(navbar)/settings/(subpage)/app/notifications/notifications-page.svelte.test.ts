@@ -10,12 +10,12 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { failureLabels } from "$lib/push/push-test-helpers";
-import type * as Os from "$lib/platform/os";
-import type { PushToken } from "$lib/push/types";
-import type * as Capability from "$lib/updates/capability.svelte";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { failureLabels } from "#lib/push/push-test-helpers.ts";
+import type * as Os from "#lib/platform/os.ts";
+import type { PushToken } from "#lib/push/types.ts";
+import type * as Capability from "#lib/updates/capability.svelte.ts";
 import {
 	account,
 	addon,
@@ -36,39 +36,39 @@ import {
 } from "./notifications-page-test-helpers.svelte";
 
 vi.mock(
-	"$lib/push/index",
+	"#lib/push/index.ts",
 	async () => (await import("./notifications-page-test-helpers.svelte")).push,
 );
 vi.mock(
-	"$lib/api/settings/account",
+	"#lib/api/settings/account.ts",
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).account,
 );
 vi.mock(
-	"$lib/app-data/preferences.svelte",
+	"#lib/app-data/preferences.svelte.ts",
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).preferences,
 );
 vi.mock(
-	"$lib/updates/addon.svelte",
+	"#lib/updates/addon.svelte.ts",
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).addon,
 );
-vi.mock("$lib/updates/capability.svelte", async (importOriginal) => ({
+vi.mock("#lib/updates/capability.svelte.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof Capability>()),
 	installedFromFdroid: (
 		await import("./notifications-page-test-helpers.svelte")
 	).installedFromFdroid,
 }));
-vi.mock("$lib/api/error-toast", async () => ({
+vi.mock("#lib/api/error-toast.ts", async () => ({
 	showErrorToast: (await import("./notifications-page-test-helpers.svelte"))
 		.showErrorToast,
 }));
-vi.mock("$lib/platform/link-opener", async () => ({
+vi.mock("#lib/platform/link-opener.ts", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => {
+vi.mock("#lib/platform/os.ts", async (importOriginal) => {
 	const { currentPlatform } =
 		await import("./notifications-page-test-helpers.svelte");
 	return {
@@ -77,14 +77,14 @@ vi.mock("$lib/platform/os", async (importOriginal) => {
 		isAndroidPlatform: () => currentPlatform() === "android",
 	};
 });
-vi.mock("$lib/api/app-lifecycle.svelte", () => ({
+vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({
 	appLifecycle: { active: true },
 }));
 
 const NotificationsPage = (await import("./+page.svelte")).default;
 
 const { reconcileNotifications } =
-	await import("$lib/push/notifications.svelte");
+	await import("#lib/push/notifications.svelte.ts");
 
 const FAST_DESCRIPTION =
 	"Use Google’s Firebase proprietary service to receive push notifications instantly.";

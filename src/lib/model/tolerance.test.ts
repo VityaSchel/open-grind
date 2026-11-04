@@ -7,7 +7,7 @@ import {
 	knownValueOr,
 	knownValueOrNull,
 	serverDefault,
-} from "$lib/model/tolerance";
+} from "#lib/model/tolerance.ts";
 
 const variants = z.discriminatedUnion("@type", [
 	z.object({ "@type": z.literal("Location"), name: z.string() }),
@@ -16,7 +16,7 @@ const variants = z.discriminatedUnion("@type", [
 
 async function freshArrayOfKnownVariants() {
 	vi.resetModules();
-	const tolerance = await import("$lib/model/tolerance");
+	const tolerance = await import("#lib/model/tolerance.ts");
 	return tolerance.arrayOfKnownVariants({ variants, label: "probe" });
 }
 
@@ -172,7 +172,7 @@ describe("arrayOfParsableEntries", () => {
 	it("names the drifted field once", async () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		vi.resetModules();
-		const tolerance = await import("$lib/model/tolerance");
+		const tolerance = await import("#lib/model/tolerance.ts");
 		const fresh = tolerance.arrayOfParsableEntries({
 			entries: z.object({ id: z.int(), name: z.string() }),
 			label: "probe",

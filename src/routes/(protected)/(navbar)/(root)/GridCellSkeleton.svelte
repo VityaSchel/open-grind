@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { observeIntersection } from "$lib/util/observe-intersection";
+	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 
 	let { onVisible }: { onVisible?: () => void } = $props();
 </script>

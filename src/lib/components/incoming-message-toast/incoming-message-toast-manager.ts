@@ -1,7 +1,7 @@
 import { toast } from "svelte-sonner";
 
-import { registerAccountCache } from "$lib/api/account-caches";
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import { registerAccountCache } from "#lib/api/account-caches.ts";
+import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import IncomingMessageToast from "./IncomingMessageToast.svelte";
 
 const shownToastIds = new Set<string>();

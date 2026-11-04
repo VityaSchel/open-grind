@@ -4,8 +4,8 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { createRawSnippet } from "svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { setRegionalSettings } from "$lib/i18n";
-import { webRegionalSettings } from "$lib/i18n/regional";
+import { setRegionalSettings } from "#lib/i18n/index.ts";
+import { webRegionalSettings } from "#lib/i18n/regional.ts";
 import type { ProfileListProfile } from "./profile-list";
 import ProfileListRow from "./ProfileListRow.svelte";
 

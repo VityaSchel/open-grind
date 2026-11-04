@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
 	messageSchema,
 	outboundMessageSchema,
-} from "$lib/model/messaging/messages";
-import type { DrawerMedia } from "$lib/api/messaging/drawer";
+} from "#lib/model/messaging/messages.ts";
+import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
 import { mediaMessageDraft } from "./media-messages";
 
 const HASH = "a".repeat(64);

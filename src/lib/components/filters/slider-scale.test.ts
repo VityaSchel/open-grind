@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
 	type SliderScale,
 	TRACK_RESOLUTION,
-} from "$lib/components/ui/slider/scale";
-import { WEIGHT_KG_MAX, WEIGHT_KG_MIN } from "$lib/model/browse/grid/filters";
-import { kgToPounds } from "$lib/util/units";
+} from "#lib/components/ui/slider/scale.ts";
+import {
+	WEIGHT_KG_MAX,
+	WEIGHT_KG_MIN,
+} from "#lib/model/browse/grid/filters.ts";
+import { kgToPounds } from "#lib/util/units.ts";
 import {
 	AGE_SLIDER_SCALE,
 	taperedScale,

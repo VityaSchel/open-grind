@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setVisibility } from "$lib/test/visibility";
+import { setVisibility } from "#lib/test/visibility.ts";
 
 const mocks = vi.hoisted(() => ({
 	journal: [] as string[],
@@ -19,19 +19,19 @@ const mocks = vi.hoisted(() => ({
 	removeAppDataFile: vi.fn<(path: string) => Promise<void>>(),
 }));
 
-vi.mock("$lib/api/browse/location", () => ({
+vi.mock("#lib/api/browse/location.ts", () => ({
 	updateLocation: mocks.updateLocation,
 }));
-vi.mock("$lib/api/methods", () => ({ callMethod: mocks.callMethod }));
-vi.mock("$lib/api/sign-out", () => ({ onSignOut: mocks.onSignOut }));
-vi.mock("$lib/ws.svelte", () => ({ ws: { reconnect: mocks.reconnect } }));
-vi.mock("$lib/platform/os", () => ({
+vi.mock("#lib/api/methods.ts", () => ({ callMethod: mocks.callMethod }));
+vi.mock("#lib/api/sign-out.ts", () => ({ onSignOut: mocks.onSignOut }));
+vi.mock("#lib/ws.svelte.ts", () => ({ ws: { reconnect: mocks.reconnect } }));
+vi.mock("#lib/platform/os.ts", () => ({
 	isMobilePlatform: mocks.isMobilePlatform,
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: mocks.getPreferences,
 }));
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	writeAppDataFileAtomic: mocks.writeAppDataFileAtomic,
 	existsAppDataFile: mocks.existsAppDataFile,
 	removeAppDataFile: mocks.removeAppDataFile,
@@ -44,7 +44,7 @@ const SETTLE_WAIT_MS = 10_000;
 const RETRY_MS = 60_000;
 
 let hold: typeof import("./honduras-hold");
-let accounts: typeof import("$lib/api/account-caches");
+let accounts: typeof import("#lib/api/account-caches.ts");
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -101,7 +101,7 @@ beforeEach(async () => {
 	mocks.isMobilePlatform.mockReturnValue(false);
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	hold = await import("./honduras-hold");
-	accounts = await import("$lib/api/account-caches");
+	accounts = await import("#lib/api/account-caches.ts");
 });
 
 afterEach(() => {

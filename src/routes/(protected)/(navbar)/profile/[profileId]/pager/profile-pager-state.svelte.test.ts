@@ -13,13 +13,13 @@ const { getProfileMock, recordProfileVisitMock, forgetProfileVisitsMock } =
 		forgetProfileVisitsMock: vi.fn<() => void>(),
 	}));
 
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/api/users/favorites", () => ({
+vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: vi.fn(),
 	invalidateFavoriteNote: vi.fn(),
 }));
-vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	getProfile: getProfileMock,
 	refreshProfile: vi.fn(),
 	isProfileCached: () => true,
@@ -29,12 +29,12 @@ vi.mock("../record-visit", () => ({
 	forgetProfileVisits: forgetProfileVisitsMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	markProfileUnviewable,
 	markProfileViewable,
-} from "$lib/api/users/profile-viewability";
-import type { Profile } from "$lib/model/users/profiles";
+} from "#lib/api/users/profile-viewability.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 import {
 	destroyOpenedPagers,
 	flush,

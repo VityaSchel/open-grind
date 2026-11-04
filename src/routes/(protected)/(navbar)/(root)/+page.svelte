@@ -2,12 +2,12 @@
 	import {
 		hydratePreferences,
 		preferencesSnapshot,
-	} from "$lib/app-data/preferences.svelte";
-	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
-	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
+	} from "#lib/app-data/preferences.svelte.ts";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { revealedGridScrollTop } from "./grid-reveal";
 	import Grid from "./Grid.svelte";
 	import LocationChooser from "./LocationEmpty.svelte";

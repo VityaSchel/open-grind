@@ -3,17 +3,21 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	accountStatusState,
 	showAccountStatusForError,
-} from "$lib/api/account-status-state.svelte";
-import { setLocale, setRegionalSettings, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { webRegionalSettings } from "$lib/i18n/regional";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
-import type { AccountStatusError } from "$lib/model/authentication";
+} from "#lib/api/account-status-state.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import {
+	setLocale,
+	setRegionalSettings,
+	SOURCE_LOCALE,
+} from "#lib/i18n/index.ts";
+import { webRegionalSettings } from "#lib/i18n/regional.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
+import type { AccountStatusError } from "#lib/model/authentication.ts";
 import AccountStatusAlert from "./AccountStatusAlert.svelte";
 
 const {
@@ -42,8 +46,8 @@ vi.mock("@tauri-apps/api/event", () => ({
 		return Promise.resolve(() => tauriListeners.delete(name));
 	},
 }));
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({
@@ -52,11 +56,11 @@ vi.mock("svelte-sonner", () => ({
 vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
-vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
-vi.mock("$lib/updates/capability.svelte", () => ({
+vi.mock("#lib/api/sign-out.ts", () => ({ signOut: signOutMock }));
+vi.mock("#lib/updates/capability.svelte.ts", () => ({
 	updatesSelfManaged: () => updater.selfManaged,
 }));
-vi.mock("$lib/updates/update-checks", () => ({
+vi.mock("#lib/updates/update-checks.ts", () => ({
 	checkForUpdatesNow: checkForUpdatesNowMock,
 }));
 

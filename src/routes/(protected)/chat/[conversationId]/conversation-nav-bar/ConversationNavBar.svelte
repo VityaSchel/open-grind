@@ -1,11 +1,11 @@
 <script lang="ts">
 	import ArrowLeftIcon from "phosphor-svelte/lib/ArrowLeftIcon";
 
-	import BackLink from "$lib/components/navigation/BackLink.svelte";
-	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { t } from "$lib/i18n";
-	import { topChrome } from "$lib/util/screen-chrome.svelte";
+	import BackLink from "#lib/components/navigation/BackLink.svelte";
+	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ConversationNavBarProfile from "./ConversationNavBarProfile.svelte";
 

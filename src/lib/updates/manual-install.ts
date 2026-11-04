@@ -1,4 +1,4 @@
-import { isPlayBuild } from "$lib/platform/store";
+import { isPlayBuild } from "#lib/platform/store.ts";
 import {
 	COMPONENT_REPO,
 	FCM_COMPONENT,

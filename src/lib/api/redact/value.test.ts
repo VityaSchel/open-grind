@@ -5,7 +5,7 @@ import {
 	redactResponseBody,
 	redactValue,
 	summariseNonJson,
-} from "$lib/api/redact/value";
+} from "#lib/api/redact/value.ts";
 
 describe("redactValue", () => {
 	it("strips the outgoing chat message but keeps both type tags", () => {

@@ -5,13 +5,13 @@
 	import {
 		getOrCreateConversationsState,
 		setConversations,
-	} from "$lib/chat/conversations-context.svelte";
-	import NavBar from "$lib/components/shared/NavBar.svelte";
-	import * as Card from "$lib/components/ui/card";
-	import * as Resizable from "$lib/components/ui/resizable";
-	import { t } from "$lib/i18n";
-	import { defaultConversationFilters } from "$lib/model/messaging/conversation-filters";
-	import { below } from "$lib/util/breakpoints.svelte";
+	} from "#lib/chat/conversations-context.svelte.ts";
+	import NavBar from "#lib/components/shared/NavBar.svelte";
+	import * as Card from "#lib/components/ui/card/index.ts";
+	import * as Resizable from "#lib/components/ui/resizable/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { defaultConversationFilters } from "#lib/model/messaging/conversation-filters.ts";
+	import { below } from "#lib/util/breakpoints.svelte.ts";
 	import ConversationScreen from "./[conversationId]/ConversationScreen.svelte";
 	import {
 		ComposerSheetsState,

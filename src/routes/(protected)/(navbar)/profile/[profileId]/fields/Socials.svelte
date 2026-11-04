@@ -3,8 +3,8 @@
 	import SiInstagram from "@icons-pack/svelte-simple-icons/icons/SiInstagram";
 	import SiX from "@icons-pack/svelte-simple-icons/icons/SiX";
 
-	import Link from "$lib/components/ui/link/Link.svelte";
-	import { type SocialNetworks } from "$lib/model/users/profiles";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { type SocialNetworks } from "#lib/model/users/profiles.ts";
 	import ProfileField from "./ProfileField.svelte";
 
 	let { socials }: { socials: SocialNetworks | null } = $props();

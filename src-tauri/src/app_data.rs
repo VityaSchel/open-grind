@@ -10,6 +10,11 @@ use tauri::{AppHandle, Manager};
 
 static APP_DATA_LOCK: Mutex<()> = Mutex::new(());
 
+pub(crate) fn data_dir(app: &AppHandle) -> tauri::Result<PathBuf> {
+	let dir = app.path().app_local_data_dir()?;
+	Ok(if cfg!(demo) { dir.join("demo") } else { dir })
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum AppDataFile {
@@ -51,7 +56,7 @@ struct AppDataDir(PathBuf);
 
 impl AppDataDir {
 	fn of(app: &AppHandle) -> Result<Self, AppDataError> {
-		Ok(Self(app.path().app_local_data_dir()?))
+		Ok(Self(data_dir(app)?))
 	}
 
 	fn path(&self, file: AppDataFile) -> PathBuf {

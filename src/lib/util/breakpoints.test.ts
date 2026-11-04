@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { breakpoints } from "$lib/util/breakpoints.svelte";
+import { breakpoints } from "#lib/util/breakpoints.svelte.ts";
 
 function parseBreakpointTokens(css: string) {
 	const tokens: Record<string, string> = {};

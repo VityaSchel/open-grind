@@ -3,8 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import RequestBlockedAlert from "./RequestBlockedAlert.svelte";
 
 const { callMethodMock, toastMock } = vi.hoisted(() => ({
@@ -12,8 +12,8 @@ const { callMethodMock, toastMock } = vi.hoisted(() => ({
 	toastMock: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
 }));
 
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/methods")>()),
+vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));

@@ -1,12 +1,12 @@
-import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
-import { refreshMessagesById } from "$lib/api/messaging/messages";
-import { now } from "$lib/util/clock";
+import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+import { refreshMessagesById } from "#lib/api/messaging/messages.ts";
+import { now } from "#lib/util/clock.ts";
 import {
 	chatV1MessageSentKindEventSchema,
 	chatV1RefreshDynamicEventSchema,
 	stopListening,
 	ws,
-} from "$lib/ws.svelte";
+} from "#lib/ws.svelte.ts";
 import { type OptimisticMessage, patchMessages } from "./merge-messages";
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;

@@ -3,8 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import {
 	preferencesLoaded,
 	preferencesSnapshot,
-} from "$lib/app-data/preferences.svelte";
-import { isAndroidPlatform, isMacosPlatform } from "$lib/platform/os";
+} from "#lib/app-data/preferences.svelte.ts";
+import { isAndroidPlatform, isMacosPlatform } from "#lib/platform/os.ts";
 
 export type HapticKind = "longPress" | "threshold" | "dragStart";
 

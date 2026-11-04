@@ -4,14 +4,14 @@
 	import { onDestroy, onMount, untrack } from "svelte";
 	import { tinykeys } from "tinykeys";
 
-	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { navigationPending } from "$lib/util/history";
+	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { navigationPending } from "#lib/util/history.ts";
 	import {
 		isPhotoSwipeBusy,
 		onPhotoSwipeIdle,
 		onPhotoSwipeOpening,
-	} from "$lib/util/photoswipe";
-	import { SnapPager } from "$lib/util/snap-pager";
+	} from "#lib/util/photoswipe/index.ts";
+	import { SnapPager } from "#lib/util/snap-pager.ts";
 	import { arrowKeyAction } from "./keyboard-paging";
 	import {
 		type ProfilePagerEntry,
@@ -56,9 +56,8 @@
 			const pathname = `/profile/${profileId}`;
 			pendingPathname = pathname;
 			void goto(pathname, {
-				replaceState: true,
-				noScroll: true,
-				keepFocus: true,
+				replace: true,
+				reset: false,
 				state: { profileOrigin: "browse" },
 			}).finally(() => {
 				if (pendingPathname === pathname) pendingPathname = null;

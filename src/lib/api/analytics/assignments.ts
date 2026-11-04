@@ -1,11 +1,11 @@
-import { FetchCache } from "$lib/api/cache";
-import { fetchRest } from "$lib/api/transport";
-import { getPreferences } from "$lib/app-data/preferences.svelte";
+import { FetchCache } from "#lib/api/cache.ts";
+import { fetchRest } from "#lib/api/transport.ts";
+import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
 import {
 	type Assignment,
 	assignmentsResponseSchema,
-} from "$lib/model/analytics/assignments";
-import { coarsenGeohash } from "$lib/model/geohash";
+} from "#lib/model/analytics/assignments.ts";
+import { coarsenGeohash } from "#lib/model/geohash.ts";
 
 const ASSIGNMENTS_TTL_MS = 5 * 60_000;
 

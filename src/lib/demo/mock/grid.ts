@@ -3,12 +3,12 @@ import type z from "zod";
 import type {
 	cascadeV4ResponseFullProfileV1Schema,
 	cascadeV4ResponsePartialProfileV1Schema,
-} from "$lib/model/browse/grid/cascade/response/v4";
+} from "#lib/model/browse/grid/cascade/response/v4.ts";
 import type {
 	Profile,
 	profileRightNowSchema,
 	profileShortSchema,
-} from "$lib/model/users/profiles";
+} from "#lib/model/users/profiles.ts";
 import {
 	DAY,
 	DEMO_ID_START,
@@ -17,7 +17,6 @@ import {
 	GRID_PAGE_SIZE,
 	MINUTE,
 	NOW,
-	screenshotsEnabled,
 } from "../config";
 import { sceneProfile } from "../screenshot-scene";
 import { demoProfileResolves } from "./blocks";
@@ -176,7 +175,7 @@ function cascadeProfileData(seed: DemoSeed) {
 		onlineUntil = onlineUntilOf(seed),
 		unreadCount = seed.unread,
 		isVisiting = false,
-	} = screenshotsEnabled ? sceneProfile(seed.id) : {};
+	} = __SCREENSHOTS__ ? sceneProfile(seed.id) : {};
 	return {
 		profileId: seed.id,
 		onlineUntil,

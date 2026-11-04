@@ -15,20 +15,20 @@ const {
 	clearProfileCachesMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/browse/grid", () => ({ getCascadeV4: getCascadeV4Mock }));
-vi.mock("$lib/api/browse/location", () => ({
+vi.mock("#lib/api/browse/grid.ts", () => ({ getCascadeV4: getCascadeV4Mock }));
+vi.mock("#lib/api/browse/location.ts", () => ({
 	updateLocation: updateLocationMock,
 }));
-vi.mock("$lib/api/users/profiles", () => ({
+vi.mock("#lib/api/users/profiles.ts", () => ({
 	getProfiles: getProfilesMock,
 	clearProfileCaches: clearProfileCachesMock,
 }));
-vi.mock("$lib/entitlements/honduras-hold", () => ({
+vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	atHomeLocation: atHomeLocationMock,
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import {
 	getCachedProfile,
 	getGrid,

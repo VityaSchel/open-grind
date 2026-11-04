@@ -1,18 +1,18 @@
-import { accountScoped } from "$lib/api/account-caches";
-import { markBlockedProfilesUnviewable } from "$lib/api/browse/blocks";
-import { markHiddenProfilesUnviewable } from "$lib/api/browse/hides";
-import { getReceivedTaps } from "$lib/api/interest/taps";
+import { accountScoped } from "#lib/api/account-caches.ts";
+import { markBlockedProfilesUnviewable } from "#lib/api/browse/blocks.ts";
+import { markHiddenProfilesUnviewable } from "#lib/api/browse/hides.ts";
+import { getReceivedTaps } from "#lib/api/interest/taps.ts";
 import {
 	isProfileViewable,
 	onProfileViewabilityChange,
-} from "$lib/api/users/profile-viewability";
-import { onProfileEdit } from "$lib/api/users/profiles";
-import { t } from "$lib/i18n";
-import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
-import { announceTap } from "$lib/push/announce";
-import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
-import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
-import type { TapProfile } from "$lib/model/interest/tap-profile";
+} from "#lib/api/users/profile-viewability.ts";
+import { onProfileEdit } from "#lib/api/users/profiles.ts";
+import { t } from "#lib/i18n/index.ts";
+import { tapsLastViewed } from "#lib/interest/taps-last-viewed.ts";
+import { announceTap } from "#lib/push/announce.ts";
+import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
+import { tapV1TapSentEventSchema, ws } from "#lib/ws.svelte.ts";
+import type { TapProfile } from "#lib/model/interest/tap-profile.ts";
 
 const PAGE_SIZE = 20;
 

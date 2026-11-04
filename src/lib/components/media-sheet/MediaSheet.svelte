@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import * as Drawer from "$lib/components/ui/drawer";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { anchorToastsAbove } from "./toast-anchor";
 
 	let {

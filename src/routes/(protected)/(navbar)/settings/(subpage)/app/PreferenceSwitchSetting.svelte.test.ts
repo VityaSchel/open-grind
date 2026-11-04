@@ -10,18 +10,20 @@ const { readMock, writeMock, showErrorToastMock } = vi.hoisted(() => ({
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/app-data", () => ({
+vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 
 import {
 	type BooleanPreference,
 	setPreferences,
-} from "$lib/app-data/preferences.svelte";
+} from "#lib/app-data/preferences.svelte.ts";
 import PreferenceSwitchSetting from "./PreferenceSwitchSetting.svelte";
 
 function toggle() {

@@ -1,7 +1,7 @@
 import {
 	geohashQueryParams,
 	verbatimQueryParams,
-} from "$lib/api/redact/policy";
+} from "#lib/api/redact/policy.ts";
 
 const idPlaceholder = "{id}";
 

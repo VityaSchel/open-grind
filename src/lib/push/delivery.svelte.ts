@@ -1,14 +1,14 @@
-import { showErrorToast } from "$lib/api/error-toast";
-import { registerPushToken } from "$lib/api/settings/account";
-import { t } from "$lib/i18n";
-import { openExternalLink } from "$lib/platform/link-opener";
+import { showErrorToast } from "#lib/api/error-toast.ts";
+import { registerPushToken } from "#lib/api/settings/account.ts";
+import { t } from "#lib/i18n/index.ts";
+import { openExternalLink } from "#lib/platform/link-opener.ts";
 import {
 	addonFlow,
 	addonInstallerAvailable,
 	onAddonInstalled,
-} from "$lib/updates/addon.svelte";
-import { FCM_COMPONENT } from "$lib/updates/components";
-import { manualInstallHref } from "$lib/updates/manual-install";
+} from "#lib/updates/addon.svelte.ts";
+import { FCM_COMPONENT } from "#lib/updates/components.ts";
+import { manualInstallHref } from "#lib/updates/manual-install.ts";
 import { pushFailures } from "./error-copy";
 import { explainedPushError } from "./explained-error";
 import {

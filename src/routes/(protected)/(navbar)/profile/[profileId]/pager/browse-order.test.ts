@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { rendered } from "$lib/grid/grid-test-helpers";
-import type { LazyGridProfile } from "$lib/grid/grid";
+import { rendered } from "#lib/grid/grid-test-helpers.ts";
+import type { LazyGridProfile } from "#lib/grid/grid.ts";
 import { browseOrder } from "./browse-order";
 
 function lazy(id: number): LazyGridProfile {

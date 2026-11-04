@@ -6,21 +6,21 @@ const { fetchRestMock, preferences } = vi.hoisted(() => ({
 	preferences: { geohash: null as string | null },
 }));
 
-vi.mock("$lib/api/transport", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api/transport")>()),
+vi.mock("#lib/api/transport.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/transport.ts")>()),
 	fetchRest: fetchRestMock,
 }));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ geohash: preferences.geohash }),
 }));
 
-import { clearAccountCaches } from "$lib/api/account-caches";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
 	getAssignments,
 	getPublicAssignments,
 	isAssignmentOn,
-} from "$lib/api/analytics/assignments";
-import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+} from "#lib/api/analytics/assignments.ts";
+import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 
 const MADRID = "ezjmgtwuz2n0";
 const MADRID_COARSE = "ezjmgtwy4dck";

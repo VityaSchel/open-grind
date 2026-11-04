@@ -1,8 +1,8 @@
 import {
 	preferencesLoaded,
 	preferencesSnapshot,
-} from "$lib/app-data/preferences.svelte";
-import { pushDeeplinkAhead } from "$lib/push/opening-deeplink";
+} from "#lib/app-data/preferences.svelte.ts";
+import { pushDeeplinkAhead } from "#lib/push/opening-deeplink.ts";
 
 export function staysOnline(): boolean {
 	return preferencesLoaded() && preferencesSnapshot().stayOnline;

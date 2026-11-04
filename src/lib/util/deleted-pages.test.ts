@@ -11,10 +11,13 @@ import type {
 	AfterNavigate,
 	BeforeNavigate,
 	NavigationType,
-} from "@sveltejs/kit";
+} from "$app/navigation";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
-import { guardDeletedPages, leaveDeletedPages } from "$lib/util/deleted-pages";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import {
+	guardDeletedPages,
+	leaveDeletedPages,
+} from "#lib/util/deleted-pages.ts";
 
 const { afterNavigate, beforeNavigate, earlierPathnames, page, returnTo } =
 	vi.hoisted(() => ({
@@ -29,7 +32,7 @@ const { afterNavigate, beforeNavigate, earlierPathnames, page, returnTo } =
 
 vi.mock("$app/navigation", () => ({ afterNavigate, beforeNavigate }));
 vi.mock("$app/state", () => ({ page }));
-vi.mock("$lib/util/history", () => ({ earlierPathnames, returnTo }));
+vi.mock("#lib/util/history.ts", () => ({ earlierPathnames, returnTo }));
 
 let go: MockInstance<History["go"]>;
 

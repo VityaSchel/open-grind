@@ -1,5 +1,5 @@
-import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
-import type { Conversation } from "$lib/model/messaging/conversations";
+import type { InboxFilterRequest } from "#lib/api/messaging/conversations.ts";
+import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 export function isTierGatedFilter(
 	filters: Partial<InboxFilterRequest>,

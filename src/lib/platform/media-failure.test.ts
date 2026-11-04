@@ -17,7 +17,7 @@ import {
 	type MediaFailure,
 	mediaFailure,
 	remedyFor,
-} from "$lib/platform/media-failure";
+} from "#lib/platform/media-failure.ts";
 
 const SRC = "http://ogmedia.localhost/iPAYLOAD";
 

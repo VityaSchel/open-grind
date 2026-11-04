@@ -31,7 +31,7 @@ import {
 	QUOTES_ID,
 } from "./chat-fixtures";
 import { changeScene } from "./drive";
-import { failChunks, failing } from "./faults";
+import { failChunks, failing, LIGHTBOX_CHUNK_TEXT } from "./faults";
 import { addingToast, holdToast } from "./toast";
 import { visit } from "./visit";
 
@@ -40,7 +40,6 @@ const OLDER_MESSAGES = { pattern: "^/v5/chat/conversation/.*[?&]pageKey=" };
 const SINGLE_MESSAGE = { pattern: "^/v4/chat/conversation/[^/]+/message/" };
 const SEND = "/v4/chat/message/send";
 const REACT_WITH_FIRE = "React with fire";
-const LIGHTBOX_BANNER = "PhotoSwipe Lightbox";
 
 async function showWholeThread({
 	page,
@@ -240,7 +239,7 @@ export const expiringMediaOpenFailures: Scene = {
 			screen: "chat/conversation/kinds#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await failChunks({ page, containing: LIGHTBOX_BANNER });
+				await failChunks({ page, containing: LIGHTBOX_CHUNK_TEXT });
 				await openConversation({ page, withId: KINDS_ID });
 				for (const media of [EXPIRING_IMAGE, EXPIRING_VIDEO]) {
 					await addingToast({

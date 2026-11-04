@@ -6,14 +6,14 @@
 	import ProhibitIcon from "phosphor-svelte/lib/ProhibitIcon";
 	import { toast } from "svelte-sonner";
 
-	import { blockUser } from "$lib/api/browse/blocks";
-	import { hideUser } from "$lib/api/browse/hides";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { showBlockFailure } from "$lib/components/report/block-failure";
-	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { t } from "$lib/i18n";
+	import { blockUser } from "#lib/api/browse/blocks.ts";
+	import { hideUser } from "#lib/api/browse/hides.ts";
+	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { showBlockFailure } from "#lib/components/report/block-failure.ts";
+	import ReportSheet from "#lib/components/report/ReportSheet.svelte";
+	import { Button } from "#lib/components/ui/button/index.ts";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		applyViewabilityChange,
 		type PendingViewabilityChange,

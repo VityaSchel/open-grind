@@ -3,9 +3,9 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import BackButton from "./BackButton.svelte";
 
 const { afterNavigateCallbacks, gotoMock } = vi.hoisted(() => ({
@@ -132,7 +132,7 @@ describe("BackButton", () => {
 		expect(link.getAttribute("href")).toBe("/");
 		expect(clickFollowsLink(link)).toBe(false);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(back).not.toHaveBeenCalled();
 	});
@@ -142,7 +142,7 @@ describe("BackButton", () => {
 
 		expect(clickFollowsLink(link)).toBe(false);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(back).not.toHaveBeenCalled();
 	});
@@ -162,7 +162,7 @@ describe("BackButton", () => {
 		pressEscape();
 
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replaceState: true,
+			replace: true,
 		});
 		expect(back).not.toHaveBeenCalled();
 	});

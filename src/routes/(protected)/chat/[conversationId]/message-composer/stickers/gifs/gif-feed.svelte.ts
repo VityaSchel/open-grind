@@ -3,10 +3,10 @@ import {
 	type GiphyPage,
 	type GiphyTile,
 	searchGifs,
-} from "$lib/api/messaging/gifs";
-import { getGifById, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
-import { Generation } from "$lib/util/generation";
-import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
+} from "#lib/api/messaging/gifs.ts";
+import { getGifById, giphyIdFromLink } from "#lib/api/messaging/giphy-link.ts";
+import { Generation } from "#lib/util/generation.ts";
+import { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 
 export const SEARCH_DEBOUNCE_MS = 400;
 const GIF_SEARCH_MAX_LENGTH = 50;

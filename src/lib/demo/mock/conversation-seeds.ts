@@ -7,6 +7,7 @@ export type DemoMessage = {
 } & (
 	| { kind?: "text"; text: string }
 	| { kind: "image" }
+	| { kind: "profilePhotoReply"; text: string }
 	| { kind: "expiringImage"; expired?: boolean }
 	| {
 			kind: "album";
@@ -16,10 +17,18 @@ export type DemoMessage = {
 			unseen?: boolean;
 			coverUrl?: null;
 	  }
+	| {
+			kind: "albumReply";
+			albumId: number;
+			albumContentId: number;
+			text: string;
+	  }
 	| { kind: "unsent" }
 	| { kind: "gif" }
 	| { kind: "wire"; type: string; body: unknown }
 );
+
+export type DemoPreview = { type: string };
 
 export type DemoConversation = {
 	withId: number;
@@ -32,6 +41,7 @@ export type DemoConversation = {
 	rightNow?: DemoRightNow;
 	chemistry?: boolean;
 	hidesDistance?: boolean;
+	preview?: DemoPreview;
 	messages: DemoMessage[];
 };
 
@@ -86,6 +96,18 @@ export function demoConversationSeeds(): DemoConversation[] {
 				{ fromMe: false, kind: "expiringImage", expired: true },
 				{ fromMe: false, text: "Did you catch it? 👀" },
 				{ fromMe: false, kind: "album", albumId: 5004, reactions: 1 },
+				{
+					fromMe: false,
+					kind: "profilePhotoReply",
+					text: "Great profile photo!",
+				},
+				{
+					fromMe: false,
+					kind: "albumReply",
+					albumId: 901,
+					albumContentId: 90100,
+					text: "Great video!",
+				},
 			],
 		},
 		{

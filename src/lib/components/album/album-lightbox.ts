@@ -4,25 +4,48 @@ import {
 	accountEpoch,
 	isAccountEpochCurrent,
 	registerAccountCache,
-} from "$lib/api/account-caches";
+} from "#lib/api/account-caches.ts";
 import {
 	type AlbumContentResponse,
 	getAlbumContent,
-} from "$lib/api/messaging/albums";
-import { mediaFailure, remedyFor } from "$lib/platform/media-failure";
-import { now } from "$lib/util/clock";
-import { proxyMediaUrl } from "$lib/util/media";
-import { measureImage, type MediaDimensions } from "$lib/util/media-dimensions";
+} from "#lib/api/messaging/albums.ts";
+import { mediaFailure, remedyFor } from "#lib/platform/media-failure.ts";
+import { now } from "#lib/util/clock.ts";
+import {
+	measureImage,
+	type MediaDimensions,
+} from "#lib/util/media-dimensions.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import {
 	applyPhotoSwipeComponent,
 	type LightboxItem,
 	openLightbox,
-} from "$lib/util/photoswipe";
+} from "#lib/util/photoswipe/index.ts";
+import { applyPhotoSwipeReply } from "#lib/util/photoswipe/reply.ts";
+import type { AlbumReplyTarget } from "#lib/model/messaging/messages.ts";
 import { hasNoPlaysLeft, isVideoContent } from "./album";
 import NoPlaysLeftSlide from "./NoPlaysLeftSlide.svelte";
 
 export type AlbumSlide = AlbumContentResponse["content"][number] &
 	Partial<MediaDimensions>;
+
+export function albumReplyTarget({
+	album,
+	slide,
+}: {
+	album: Pick<AlbumReplyTarget, "albumId" | "ownerProfileId" | "expiresAt">;
+	slide: AlbumSlide;
+}): AlbumReplyTarget {
+	return {
+		albumId: album.albumId,
+		ownerProfileId: album.ownerProfileId,
+		expiresAt: album.expiresAt,
+		albumContentId: slide.contentId,
+		previewUrl: slide.thumbUrl,
+		viewable: true,
+		contentType: slide.contentType,
+	};
+}
 
 const SLIDES_TTL_MS = 5 * 60 * 1000;
 const UNMEASURED: MediaDimensions = { width: 1080, height: 1080 };
@@ -115,23 +138,39 @@ export function albumPhotoRenewal({
 
 export function openAlbumLightbox({
 	albumId,
+	albumContentId,
 	slides,
+	onreply,
+	onreact,
 	signal,
 	onClosed,
 }: {
 	albumId: number;
+	albumContentId?: number;
 	slides: AlbumSlide[];
+	onreply?: (reply: { slide: AlbumSlide; text: string }) => void;
+	onreact?: (slide: AlbumSlide) => void;
 	signal: AbortSignal;
 	onClosed: () => void;
 }): Promise<void> {
-	const items = slides.map(({ url, width, height }) => ({
-		src: url,
-		width,
-		height,
+	const index =
+		albumContentId === undefined
+			? 0
+			: slides.findIndex((slide) => slide.contentId === albumContentId);
+	if (index < 0)
+		return Promise.reject(
+			new Error("This album item is no longer available."),
+		);
+	const items = slides.map((slide) => ({
+		src: slide.url,
+		width: slide.width,
+		height: slide.height,
 	}));
 	const renew = albumPhotoRenewal({ albumId, slides, items });
+	const reacted = new Set<number>();
 	return openLightbox({
 		items,
+		index,
 		videoAt: (index) => {
 			const slide = slides[index];
 			if (
@@ -143,6 +182,35 @@ export function openAlbumLightbox({
 			return { src: slide.url, poster: slide.coverUrl };
 		},
 		configure: (lightbox) => {
+			if (onreply || onreact)
+				applyPhotoSwipeReply(lightbox, {
+					label: "media.lightbox.reply.a11y.albumItem",
+					signal,
+					canReply: (pswp) => {
+						const slide = slides[pswp.currIndex];
+						return !!slide && !hasNoPlaysLeft(slide);
+					},
+					onreply: onreply
+						? ({ text, pswp }) => {
+								const slide = slides[pswp.currIndex];
+								if (!slide) return;
+								return () => onreply({ slide, text });
+							}
+						: undefined,
+					hasReacted: (pswp) => {
+						const slide = slides[pswp.currIndex];
+						return !!slide && reacted.has(slide.contentId);
+					},
+					onreact: onreact
+						? (pswp) => {
+								const slide = slides[pswp.currIndex];
+								if (!slide || reacted.has(slide.contentId))
+									return;
+								onreact(slide);
+								reacted.add(slide.contentId);
+							}
+						: undefined,
+				});
 			lightbox.on("loadError", ({ content }) => {
 				void renew({
 					index: content.index,
