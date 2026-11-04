@@ -111,6 +111,13 @@
 			animation-timeline: --interest-pager;
 		}
 	}
+	@supports not (timeline-scope: none) {
+		@media (prefers-reduced-motion: no-preference) {
+			.tab-chip {
+				transition: translate 300ms ease-in-out;
+			}
+		}
+	}
 	@keyframes follow-pager {
 		from {
 			translate: 0;
