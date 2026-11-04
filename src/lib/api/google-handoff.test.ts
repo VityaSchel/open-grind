@@ -276,4 +276,19 @@ describe("watching for a Google handoff", () => {
 		expect(listen).not.toHaveBeenCalled();
 		expect(mocks.invoke).not.toHaveBeenCalled();
 	});
+
+	it("still picks up the scripted handoff in the translator screenshots", async () => {
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
+
+		await startGoogleHandoffWatch();
+
+		expect(listen).toHaveBeenCalledWith(
+			"google-oauth:handoff",
+			expect.any(Function),
+		);
+		await vi.waitFor(() =>
+			expect(mocks.events).toContain("google_handoff_pending"),
+		);
+	});
 });

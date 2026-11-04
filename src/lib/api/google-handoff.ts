@@ -20,7 +20,8 @@ const GOOGLE_SIGN_IN = "/auth/sign-in/google";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
 
-const available = () => !__DEMO__ && isTauri() && isAndroidPlatform();
+const available = () =>
+	(!__DEMO__ || __SCREENSHOTS__) && isTauri() && isAndroidPlatform();
 
 function reportExpired(): void {
 	toast.error(t("auth.googleHandoff.errors.expired"));
