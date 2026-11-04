@@ -1,5 +1,4 @@
 <script lang="ts">
-	import XIcon from "phosphor-svelte/lib/XIcon";
 	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
@@ -11,11 +10,8 @@
 	import { drawerPhotoUploads } from "#lib/components/media-sheet/drawer-photos.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "#lib/components/shared/AddTile.svelte";
-	import MediaImage from "#lib/components/shared/MediaImage.svelte";
-	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
-	import { Button } from "#lib/components/ui/button/index.ts";
+	import MediaSlot from "#lib/components/shared/MediaSlot.svelte";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
-	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { type PickedMedia, pickMedia } from "#lib/platform/media-picker.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
@@ -35,21 +31,26 @@
 	} = $props();
 
 	let sheetOpen = $state(false);
-	let confirmingRemoval = $state(false);
+	let removedPhoto = $state.raw<PostPhoto | null>(null);
 	let mounted = true;
 
 	$effect(() => () => {
 		mounted = false;
 	});
 
-	const src = $derived(proxyMediaUrl(photo?.thumbnailUrl));
+	const shown = $derived(photo ?? removedPhoto);
+	const removed = $derived(photo === null && removedPhoto !== null);
+	const src = $derived(proxyMediaUrl(shown?.thumbnailUrl));
 
-	dismissOnBackGesture({
-		active: () => confirmingRemoval,
-		dismiss: () => {
-			confirmingRemoval = false;
-		},
-	});
+	function toggleRemoved() {
+		if (removed) {
+			photo = removedPhoto;
+			removedPhoto = null;
+		} else {
+			removedPhoto = photo;
+			photo = null;
+		}
+	}
 
 	async function upload({
 		send,
@@ -59,7 +60,9 @@
 		uploading = true;
 		try {
 			const { mediaId, thumbnailUrl } = await send();
-			if (mounted) photo = { mediaId, thumbnailUrl };
+			if (!mounted) return;
+			photo = { mediaId, thumbnailUrl };
+			removedPhoto = null;
 		} catch (error) {
 			console.error(error);
 			if (error instanceof RightNowPhotoTooSmallError) {
@@ -99,48 +102,37 @@
 
 <div data-slot="post-photo-field" class="flex flex-col gap-1.5">
 	<p class="px-1 text-sm font-medium">Photo</p>
-	{#if uploading}
-		<div
-			data-slot="post-photo-uploading"
-			role="status"
-			class="flex aspect-square w-28 flex-col items-center justify-center gap-1 rounded-xl bg-muted text-xs text-muted-foreground"
-		>
-			<Spinner aria-hidden="true" />
-			Uploading photo
-		</div>
-	{:else if photo !== null}
-		<div
-			data-slot="post-photo"
-			class="relative aspect-square w-28 overflow-hidden rounded-xl bg-muted"
-		>
-			<MediaImage
-				{src}
-				alt={rejected ? "Post photo, rejected" : "Post photo"}
-				class="size-full"
-				aspectRatio="1 / 1"
-				tone="photo"
-				size="sm"
-				skeleton
-			/>
-			<Button
-				variant="secondary"
-				size="icon-xs"
-				class="absolute end-1.5 top-1.5 shadow-sm"
-				aria-label="Remove photo"
-				{disabled}
-				onclick={() => (confirmingRemoval = true)}
+	<fieldset {disabled} class="flex gap-2">
+		{#if shown !== null}
+			<div data-slot="post-photo" class="w-28">
+				<MediaSlot
+					{src}
+					alt={rejected ? "Post photo, rejected" : "Post photo"}
+					{removed}
+					deleteLabel="Remove photo"
+					undoLabel="Keep photo"
+					onDelete={toggleRemoved}
+				/>
+			</div>
+		{/if}
+		{#if uploading}
+			<div
+				data-slot="post-photo-uploading"
+				role="status"
+				class="flex aspect-square w-28 flex-col items-center justify-center gap-1 rounded-xl bg-muted text-xs text-muted-foreground"
 			>
-				<XIcon weight="bold" />
-			</Button>
-		</div>
-	{:else}
-		<AddTile
-			label="Add photo"
-			class="aspect-square w-28 rounded-xl"
-			{disabled}
-			onclick={() => (sheetOpen = true)}
-		/>
-	{/if}
+				<Spinner aria-hidden="true" />
+				Uploading photo
+			</div>
+		{:else if shown === null || removed}
+			<AddTile
+				label="Add photo"
+				class="aspect-square w-28 rounded-xl"
+				{disabled}
+				onclick={() => (sheetOpen = true)}
+			/>
+		{/if}
+	</fieldset>
 </div>
 
 <PreviousUploadsSheet
@@ -152,27 +144,3 @@
 	onUpload={() => void addFromDevice()}
 	onSubmit={addFromUploads}
 />
-
-<AlertDialog.Root bind:open={confirmingRemoval}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Remove photo?</AlertDialog.Title>
-			<AlertDialog.Description>
-				This photo will be removed from your post.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action
-				variant="destructive"
-				size="lg"
-				onclick={() => {
-					confirmingRemoval = false;
-					photo = null;
-				}}
-			>
-				Remove
-			</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>

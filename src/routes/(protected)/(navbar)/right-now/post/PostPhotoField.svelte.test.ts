@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { drawerApi, photoApi, pickMediaMock, toastMock, errorToast } =
@@ -232,36 +233,71 @@ describe("the post photo field", () => {
 		);
 	});
 
-	it("removes the photo only after confirming", async () => {
+	it("marks the photo removed without asking and keeps it on undo", async () => {
+		const shownPhoto = { mediaId: 51, thumbnailUrl: UPLOADED.thumbnailUrl };
+		const stored = renderField({ photo: shownPhoto });
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Remove photo" }),
+		);
+
+		expect(stored.photo).toBeNull();
+		expect(screen.queryByRole("alertdialog")).toBeNull();
+		expect(screen.getByRole("img", { name: "Post photo" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Add photo" })).toBeTruthy();
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Keep photo" }),
+		);
+
+		expect(stored.photo).toEqual(shownPhoto);
+		expect(screen.queryByRole("button", { name: "Add photo" })).toBeNull();
+		expect(
+			screen.getByRole("button", { name: "Remove photo" }),
+		).toBeTruthy();
+	});
+
+	it("keeps an undo for a photo uploaded in this edit", async () => {
+		drawerApi.getAllDrawerMedia.mockResolvedValue([]);
+		pickMediaMock.mockResolvedValue(PICKED);
+		photoApi.uploadRightNowPickedPhoto.mockResolvedValue(UPLOADED);
+		const stored = renderField();
+		await openUploads();
+		await fireEvent.click(
+			await screen.findByRole("button", { name: "Upload a photo" }),
+		);
+		const remove = await screen.findByRole("button", {
+			name: "Remove photo",
+		});
+
+		await fireEvent.click(remove);
+
+		expect(stored.photo).toBeNull();
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Keep photo" }),
+		);
+		expect(stored.photo).toEqual({
+			mediaId: 88,
+			thumbnailUrl: UPLOADED.thumbnailUrl,
+		});
+	});
+
+	it("drops the undo once a new photo replaces the removed one", async () => {
 		const stored = renderField({
 			photo: { mediaId: 51, thumbnailUrl: UPLOADED.thumbnailUrl },
 		});
-
 		await fireEvent.click(
 			screen.getByRole("button", { name: "Remove photo" }),
 		);
-		const confirm = await screen.findByRole("alertdialog", {
-			name: "Remove photo?",
-		});
-		expect(confirm.textContent).toContain(
-			"This photo will be removed from your post.",
-		);
 
-		await fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-		await vi.waitFor(() =>
-			expect(screen.queryByRole("alertdialog")).toBeNull(),
-		);
-		expect(stored.photo).not.toBeNull();
+		stored.photo = { mediaId: 53, thumbnailUrl: UPLOADED.thumbnailUrl };
+		flushSync();
 
-		await fireEvent.click(
+		expect(screen.queryByRole("button", { name: "Keep photo" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Add photo" })).toBeNull();
+		expect(
 			screen.getByRole("button", { name: "Remove photo" }),
-		);
-		await fireEvent.click(
-			await screen.findByRole("button", { name: "Remove" }),
-		);
-
-		await vi.waitFor(() => expect(stored.photo).toBeNull());
-		expect(screen.getByRole("button", { name: "Add photo" })).toBeTruthy();
+		).toBeTruthy();
 	});
 
 	it("locks adding while disabled", () => {

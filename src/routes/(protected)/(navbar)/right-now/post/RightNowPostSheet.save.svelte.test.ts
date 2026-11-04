@@ -26,7 +26,7 @@ vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
 import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import type { RightNowMediaUploadResponse } from "#lib/model/right-now/post.ts";
-import { ownPost } from "../right-now-post-test-helpers";
+import { ownPost, postPhoto } from "../right-now-post-test-helpers";
 import { runningPost } from "./post-test-helpers.svelte";
 import {
 	renderSheet,
@@ -149,6 +149,29 @@ describe("saving the Right Now post", () => {
 				.getByRole("switch", { name: "Hosting" })
 				.matches(":disabled"),
 		).toBe(true);
+	});
+
+	it("removes the saved photo only when saving, and keeps it on undo", async () => {
+		const fake = runningPost({ media: [postPhoto({ mediaId: 316 })] });
+		await renderSheet(fake);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Remove photo" }),
+		);
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Keep photo" }),
+		);
+
+		expect(saveButton().matches(":disabled")).toBe(true);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Remove photo" }),
+		);
+		await fireEvent.click(saveButton());
+
+		expect(fake.save).toHaveBeenCalledExactlyOnceWith({
+			changes: { media: [] },
+		});
 	});
 
 	it("stays open with the edits when saving fails", async () => {
