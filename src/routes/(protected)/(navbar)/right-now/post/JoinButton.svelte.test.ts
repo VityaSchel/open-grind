@@ -31,7 +31,7 @@ describe("the Right Now join pill", () => {
 	it.each<[FakeRightNowPostState["freePostsLeft"], string]>([
 		[3, "Join · 3 left"],
 		[1, "Join · 1 left"],
-		["unlimited", "Join · Free"],
+		["unlimited", "Join"],
 		[null, "Join"],
 	])("with %s free posts reads %s and asks to join", async (free, label) => {
 		const fake = new FakeRightNowPostState();

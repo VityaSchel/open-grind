@@ -32,8 +32,7 @@
 		Math.min(1, Math.max(0, post.timeLeftMs / lifetimeMs)),
 	);
 	const joinLabel = $derived.by(() => {
-		if (post.freePostsLeft === "unlimited") return "Join · Free";
-		if (post.freePostsLeft === null) return "Join";
+		if (typeof post.freePostsLeft !== "number") return "Join";
 		return `Join · ${post.freePostsLeft} left`;
 	});
 	const runningLabel = $derived(
