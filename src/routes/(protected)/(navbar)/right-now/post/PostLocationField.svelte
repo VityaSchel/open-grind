@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { expoOut } from "svelte/easing";
+	import { cubicOut } from "svelte/easing";
 
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 	import { Slider } from "#lib/components/ui/slider/index.ts";
@@ -55,14 +55,14 @@
 	{#if showOnMap}
 		<div
 			data-slot="post-location-accuracy"
-			transition:slide={{ duration: 200, easing: expoOut }}
+			transition:slide={{ duration: 400, easing: cubicOut }}
 		>
 			<div class="flex flex-col gap-3 border-t p-4">
 				<div class="flex items-baseline justify-between gap-2 text-sm">
 					<p class="font-medium">Location accuracy</p>
 					<p
 						data-slot="post-location-radius"
-						class="text-muted-foreground tabular-nums"
+						class="text-end text-muted-foreground tabular-nums"
 					>
 						{radiusLabel}
 					</p>
