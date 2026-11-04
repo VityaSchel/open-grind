@@ -120,7 +120,7 @@ test("the profile reply composer matches the date gradient's bottom stop", async
 	await page.getByRole("link", { name: /Profile photo 1 of/ }).click();
 	const label = page.locator(".pswp__created-at-label");
 	await expect(label).toBeVisible();
-	await expect(label).toHaveText(/\d{4}/);
+	await expect(label).toHaveText(/\w+ \d{1,2}, \d{4}/);
 	const background = await page
 		.locator(".pswp__reply-composer")
 		.evaluate((composer) => getComputedStyle(composer).backgroundColor);
