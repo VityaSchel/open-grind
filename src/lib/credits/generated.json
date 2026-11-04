@@ -1771,7 +1771,7 @@
 			"ecosystem": "rust",
 			"platform": "linux",
 			"versions": [
-				"1.14.0"
+				"1.14.1"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
