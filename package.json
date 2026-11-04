@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"postinstall": "bun run patch-deps",
-		"build": "bun run patch-deps && vite build",
+		"build": "bun run patch-deps && vite build && bun run check:release-bundle",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:tools": "bun x tsc --noEmit -p tsconfig.tools.json && bun x tsc --noEmit -p scripts/store-screenshots",
 		"check:config": "opengrind-config check",
@@ -17,6 +17,7 @@
 		"bump": "bun scripts/bump-version.ts",
 		"check:version": "bun scripts/check-version.ts",
 		"check:backup-rules": "bun scripts/check-backup-rules.ts",
+		"check:release-bundle": "bun scripts/check-release-bundle.ts",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"dev": "bun dev:desktop",
 		"dev:android": "bash scripts/dev-android.sh",
