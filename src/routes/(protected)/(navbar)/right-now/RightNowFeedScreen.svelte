@@ -50,7 +50,7 @@
 	<div
 		bind:this={container}
 		data-slot="right-now-scroller"
-		class="pull-scroller"
+		class="relative pull-scroller"
 		onscroll={() => (feed.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div

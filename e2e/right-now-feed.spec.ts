@@ -103,6 +103,20 @@ test.describe("the demo feed", () => {
 		}
 	});
 
+	test("only the feed scrolls, never the page around it", async ({
+		page,
+	}) => {
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						document.documentElement.scrollHeight -
+						document.documentElement.clientHeight,
+				),
+			)
+			.toBe(0);
+	});
+
 	test("sorting by Distance lists the closest posts first", async ({
 		page,
 	}) => {
