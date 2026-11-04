@@ -4,6 +4,7 @@
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 	import { Slider } from "#lib/components/ui/slider/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { decodeGeohash } from "#lib/model/geohash.ts";
 	import { slide } from "#lib/util/reduced-motion.ts";
 	import { formatDistance } from "#lib/util/units.ts";
 	import {
@@ -12,6 +13,7 @@
 		type PostForm,
 		showsOnMap,
 	} from "./post-form";
+	import PostLocationMap from "./PostLocationMap.svelte";
 
 	let {
 		shareLocation = $bindable(),
@@ -25,12 +27,19 @@
 
 	const showOnMap = $derived(showsOnMap({ shareLocation }));
 	const units = $derived(preferencesSnapshot().units);
+	const storedGeohash = $derived(preferencesSnapshot().geohash);
+	const center = $derived(
+		storedGeohash ? decodeGeohash(storedGeohash) : null,
+	);
 	const radiusLabel = $derived(
 		`Within about ${formatDistance(approximateRadiusMeters({ locationRadius }), units)}`,
 	);
 </script>
 
-<div data-slot="post-location" class="overflow-hidden rounded-xl border">
+<div
+	data-slot="post-location"
+	class="shrink-0 overflow-hidden rounded-xl border"
+>
 	<SwitchField
 		title="Show me on map"
 		class="rounded-none border-0"
@@ -76,6 +85,9 @@
 					<span>More</span>
 					<span>Less</span>
 				</div>
+				{#if center !== null}
+					<PostLocationMap {center} {locationRadius} />
+				{/if}
 			</div>
 		</div>
 	{/if}

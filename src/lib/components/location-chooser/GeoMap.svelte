@@ -18,10 +18,15 @@
 
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { locationRequest } from "#lib/location/location-request.svelte.ts";
-	import { openExternalLink } from "#lib/platform/link-opener.ts";
 	import { isMobilePlatform } from "#lib/platform/os.ts";
-	import { PIN_ZOOM } from "./constants";
+	import {
+		ACCURACY_CIRCLE_COLOR,
+		OSM_TILE_OPTIONS,
+		OSM_TILE_URL,
+		PIN_ZOOM,
+	} from "./constants";
 	import LocateMeButton from "./LocateMeButton.svelte";
+	import { openMapLinksExternally } from "./map-links";
 	import PlaceSearch from "./PlaceSearch.svelte";
 
 	let {
@@ -127,20 +132,7 @@
 
 	$effect(() => {
 		const container = map?.getContainer();
-		if (!container) return;
-		const openExternally = (event: MouseEvent) => {
-			if (event.target instanceof HTMLElement) {
-				const href = event.target
-					?.closest("a[href]")
-					?.getAttribute("href");
-				if (href) {
-					event.preventDefault();
-					openExternalLink(href);
-				}
-			}
-		};
-		container.addEventListener("click", openExternally);
-		return () => container.removeEventListener("click", openExternally);
+		if (container) return openMapLinksExternally(container);
 	});
 
 	$effect(() => {
@@ -186,17 +178,7 @@
 		}}
 		bind:instance={map}
 	>
-		<TileLayer
-			url={"https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
-			options={{
-				maxZoom: 19,
-				referrerPolicy: "strict-origin-when-cross-origin",
-				attribution:
-					'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer nofollow noopener">OpenStreetMap contributors</a> &nbsp;',
-				// do not enable: https://github.com/Leaflet/Leaflet/issues/6195
-				// detectRetina: true,
-			}}
-		/>
+		<TileLayer url={OSM_TILE_URL} options={OSM_TILE_OPTIONS} />
 		<ControlAttribution options={{ prefix: undefined }} />
 
 		{#if showAccuracy && fix}
@@ -204,10 +186,10 @@
 				latLng={[fix.lat, fix.lon]}
 				options={{
 					radius: fix.accuracyMeters,
-					color: "#3b82f6",
+					color: ACCURACY_CIRCLE_COLOR,
 					weight: 0.5,
 					opacity: 0.5,
-					fillColor: "#3b82f6",
+					fillColor: ACCURACY_CIRCLE_COLOR,
 					fillOpacity: 0.15,
 				}}
 			/>

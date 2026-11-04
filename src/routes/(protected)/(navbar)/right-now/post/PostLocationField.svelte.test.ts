@@ -3,7 +3,10 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const preferences = vi.hoisted(() => ({ units: "metric" }));
+const preferences = vi.hoisted(() => ({
+	units: "metric",
+	geohash: null as string | null,
+}));
 
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
@@ -46,7 +49,11 @@ function renderField({
 afterEach(() => {
 	cleanup();
 	preferences.units = "metric";
+	preferences.geohash = null;
 });
+
+const mapPreview = (container: HTMLElement) =>
+	container.querySelector('[data-slot="post-location-map"]');
 
 describe("the post location field", () => {
 	it("starts off the map with no accuracy slider", () => {
@@ -89,6 +96,29 @@ describe("the post location field", () => {
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
 			"Within about 2.0 km",
 		);
+	});
+
+	it("previews the shared area on a map around the stored location", () => {
+		preferences.geohash = "u33dc0cpgp00";
+		const { container } = render(PostLocationField, {
+			props: { shareLocation: "DISTANCE_AND_MAP", locationRadius: 50 },
+		});
+
+		expect(mapPreview(container)).not.toBeNull();
+	});
+
+	it("shows no map preview without a stored location or while off the map", () => {
+		const { container } = render(PostLocationField, {
+			props: { shareLocation: "DISTANCE_AND_MAP", locationRadius: 50 },
+		});
+		expect(mapPreview(container)).toBeNull();
+		cleanup();
+
+		preferences.geohash = "u33dc0cpgp00";
+		const off = render(PostLocationField, {
+			props: { shareLocation: "NONE", locationRadius: 50 },
+		});
+		expect(mapPreview(off.container)).toBeNull();
 	});
 
 	it("keeps the map switch and the accuracy in one group", () => {
