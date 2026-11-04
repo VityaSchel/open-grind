@@ -39,7 +39,12 @@ export const chooseLocation: Scene = {
 
 export async function chooseNeutralLocation(page: Page): Promise<void> {
 	await visit({ page, path: "/", ready: page.locator(LOCATION_TITLE) });
-	await runPaletteCommand(page, `@${NEUTRAL_GEOHASH}`);
+	await Promise.all([
+		page.waitForEvent("framenavigated", {
+			predicate: (frame) => frame === page.mainFrame(),
+		}),
+		runPaletteCommand(page, `@${NEUTRAL_GEOHASH}`),
+	]);
 }
 
 export const grid: Scene = {
