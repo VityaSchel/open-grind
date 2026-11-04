@@ -7,6 +7,7 @@ import { canGoBack } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
+import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
 import { ancestorsOf, stackRelation, type StackRelation } from "./hierarchy";
 import { type PaneSnapshot, snapshotPane } from "./snapshot";
 
@@ -158,15 +159,21 @@ export class PageStackState {
 		this.#settle.track(progress);
 	}
 
-	commitSwipeBack(): void {
-		this.#finishSwipeBack(true);
+	commitSwipeBack(release?: SwipeRelease): void {
+		this.#finishSwipeBack({ commit: true, velocity: release?.velocity });
 	}
 
-	cancelSwipeBack(): void {
-		this.#finishSwipeBack(false);
+	cancelSwipeBack(release?: SwipeRelease): void {
+		this.#finishSwipeBack({ commit: false, velocity: release?.velocity });
 	}
 
-	#finishSwipeBack(commit: boolean): void {
+	#finishSwipeBack({
+		commit,
+		velocity,
+	}: {
+		commit: boolean;
+		velocity: number | undefined;
+	}): void {
 		if (!this.tracking) return;
 		this.tracking = false;
 		this.#backOwed = commit && canGoBack();
@@ -175,6 +182,7 @@ export class PageStackState {
 			.settleTo({
 				target: commit ? 1 : 0,
 				intent: commit ? "commit" : "cancel",
+				velocity,
 			})
 			.then((settled) => {
 				if (!settled) return;

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { stackMotion } from "./motion";
+import { releaseTiming, stackMotion } from "./motion";
 import { StackSettle } from "./settle.svelte";
 import { fakeSurface, settleLast } from "./stack-test-helpers";
 
 const slide = stackMotion({ platform: "android" });
+const ios = stackMotion({ platform: "ios" });
 
 function makeSettle({ reducedMotion = false, motion = slide } = {}) {
 	const { surface, applied, animations } = fakeSurface();
@@ -112,6 +113,68 @@ describe("StackSettle settling", () => {
 		void settle.settleTo({ target: 0, intent: "commit" });
 
 		expect(animations.at(-1)).toMatchObject({ from: 0.7, to: 0 });
+	});
+});
+
+describe("StackSettle releasing a swipe", () => {
+	it("finishes an iOS release on the spring, at the finger's speed", () => {
+		const { settle, animations } = makeSettle({ motion: ios });
+		settle.track(0.6);
+
+		void settle.settleTo({ target: 1, intent: "commit", velocity: 1.2 });
+
+		expect(animations.at(-1)).toMatchObject({
+			from: 0.6,
+			to: 1,
+			...releaseTiming({
+				distance: 0.4,
+				velocity: 1.2,
+				spring: ios.release!,
+			}),
+		});
+	});
+
+	it("keeps the fixed settle for a release on Android", () => {
+		const { settle, animations } = makeSettle();
+		settle.track(0.6);
+
+		void settle.settleTo({ target: 0, intent: "cancel", velocity: -2 });
+
+		expect(animations.at(-1)).toMatchObject({
+			duration: slide.settleMs * 0.6,
+			easing: slide.cancelEasing,
+		});
+	});
+
+	it("settles a release instantly under reduced motion", () => {
+		const { settle, animations } = makeSettle({
+			motion: ios,
+			reducedMotion: true,
+		});
+		settle.track(0.6);
+
+		void settle.settleTo({ target: 1, intent: "commit", velocity: 1.2 });
+
+		expect(animations.at(-1)).toMatchObject({ duration: 0 });
+	});
+
+	it("hands the spring the page's speed when the finger drove only the rest of a picked-up slide", () => {
+		const { settle, animations } = makeSettle({ motion: ios });
+		settle.progress = 1;
+		void settle.settleTo({ target: 0, intent: "commit" });
+		animations.at(-1)!.reached = 0.5;
+		settle.pickUp();
+		settle.track(0.5);
+
+		void settle.settleTo({ target: 1, intent: "commit", velocity: 2 });
+
+		expect(animations.at(-1)).toMatchObject(
+			releaseTiming({
+				distance: 0.25,
+				velocity: 1,
+				spring: ios.release!,
+			}),
+		);
 	});
 });
 

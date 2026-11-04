@@ -25,6 +25,7 @@ import {
 	attachSystemBackGesture,
 	installSystemBack,
 	type SwipeBackStack,
+	type SwipeRelease,
 } from "./system-back-gesture.svelte";
 
 function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
@@ -32,6 +33,7 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 	let canBeginSwipeBack = $state(canBegin);
 	const calls = { begin: 0, commit: 0, cancel: 0, prepare: 0, undo: 0 };
 	const tracked: number[] = [];
+	const releases: (SwipeRelease | undefined)[] = [];
 
 	const stack: SwipeBackStack = {
 		get tracking() {
@@ -48,11 +50,13 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 		trackSwipeBack: (progress) => {
 			tracked.push(progress);
 		},
-		commitSwipeBack: () => {
+		commitSwipeBack: (release) => {
+			releases.push(release);
 			calls.commit += 1;
 			tracking = false;
 		},
-		cancelSwipeBack: () => {
+		cancelSwipeBack: (release) => {
+			releases.push(release);
 			calls.cancel += 1;
 			tracking = false;
 		},
@@ -69,7 +73,7 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 		flushSync();
 	};
 
-	return { stack, calls, tracked, allowBegin };
+	return { stack, calls, tracked, releases, allowBegin };
 }
 
 function armedPushes() {
@@ -332,7 +336,7 @@ describe("on iOS", () => {
 			(callback) => frames.push(callback),
 		);
 		const runFrame = () => frames.shift()?.(performance.now());
-		const { stack, calls, tracked } = makeStack();
+		const { stack, calls, tracked, releases } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 		flushSync();
 
@@ -347,6 +351,7 @@ describe("on iOS", () => {
 
 		expect(tracked).toEqual([0.25, 0.5]);
 		expect(calls.cancel).toBe(1);
+		expect(releases).toEqual([{ velocity: -0.4 }]);
 		expect(calls.commit, "a finish after the swipe ended is stale").toBe(0);
 		expect(frames).toHaveLength(0);
 		detach();

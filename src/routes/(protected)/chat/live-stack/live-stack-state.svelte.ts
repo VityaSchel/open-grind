@@ -6,6 +6,7 @@ import { Generation } from "#lib/util/generation.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
+import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
 
 const BACK_WATCHDOG_MS = 1000;
 
@@ -169,13 +170,14 @@ export class LiveStackState {
 		this.#settle.track(progress);
 	}
 
-	commitSwipeBack(): void {
+	commitSwipeBack(release?: SwipeRelease): void {
 		if (!this.tracking) return;
 		this.tracking = false;
 		this.moving = true;
 		this.#committedSlide = this.#settle.settleTo({
 			target: 1,
 			intent: "commit",
+			velocity: release?.velocity,
 		});
 		this.#watchdog = setTimeout(
 			() => this.#abandonBack(),
@@ -184,11 +186,11 @@ export class LiveStackState {
 		history.back();
 	}
 
-	cancelSwipeBack(): void {
+	cancelSwipeBack(release?: SwipeRelease): void {
 		if (!this.tracking) return;
 		this.tracking = false;
 		this.moving = true;
-		this.#returnToCovered();
+		this.#returnToCovered({ velocity: release?.velocity });
 	}
 
 	dispose(): void {
@@ -214,10 +216,10 @@ export class LiveStackState {
 		this.#returnToCovered();
 	}
 
-	#returnToCovered(): void {
+	#returnToCovered({ velocity }: { velocity?: number } = {}): void {
 		const generation = this.#generation.current;
 		void this.#settle
-			.settleTo({ target: 0, intent: "cancel" })
+			.settleTo({ target: 0, intent: "cancel", velocity })
 			.then((settled) => {
 				if (settled && !this.#generation.isStale(generation))
 					this.moving = false;

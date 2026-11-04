@@ -7,13 +7,15 @@ import {
 import { iosSystemBack } from "#lib/platform/ios-native-bridge.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 
+export type SwipeRelease = { velocity: number };
+
 export type SwipeBackStack = {
 	readonly tracking: boolean;
 	readonly canBeginSwipeBack: boolean;
 	beginSwipeBack(): boolean;
 	trackSwipeBack(progress: number): void;
-	commitSwipeBack(): void;
-	cancelSwipeBack(): void;
+	commitSwipeBack(release?: SwipeRelease): void;
+	cancelSwipeBack(release?: SwipeRelease): void;
 	prepareSwipeBack?(): () => void;
 };
 
@@ -99,11 +101,11 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 			stopReading();
 			stack.cancelSwipeBack();
 		},
-		finish: ({ commit }) => {
+		finish: ({ commit, velocity }) => {
 			if (!stack.tracking) return;
 			stopReading();
-			if (commit) stack.commitSwipeBack();
-			else stack.cancelSwipeBack();
+			if (commit) stack.commitSwipeBack({ velocity });
+			else stack.cancelSwipeBack({ velocity });
 		},
 		prepare: () => stack.prepareSwipeBack?.(),
 	};

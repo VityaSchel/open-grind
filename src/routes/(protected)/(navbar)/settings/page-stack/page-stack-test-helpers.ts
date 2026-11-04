@@ -1,6 +1,9 @@
 import { vi } from "vitest";
 
-import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
+import {
+	type StackMotion,
+	stackMotion,
+} from "#lib/components/navigation/stack/motion.ts";
 import {
 	fakeSurface,
 	navigationEvent,
@@ -14,10 +17,12 @@ export function makeStack({
 	reducedMotion = false,
 	canGoBack = true,
 	pushedFrom = [],
+	stackedMotion = motion,
 }: {
 	reducedMotion?: boolean;
 	canGoBack?: boolean;
 	pushedFrom?: { path: string }[];
+	stackedMotion?: StackMotion;
 } = {}) {
 	const index = canGoBack ? 1 : 0;
 	vi.stubGlobal("navigation", {
@@ -35,7 +40,7 @@ export function makeStack({
 
 	const stack = new PageStackState({
 		surface,
-		motion,
+		motion: stackedMotion,
 		livePane: () => pane,
 		reducedMotion: () => reducedMotion,
 		scope: "/settings",

@@ -2,7 +2,10 @@ import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationTarget } from "$app/navigation";
 
-import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
+import {
+	releaseTiming,
+	stackMotion,
+} from "#lib/components/navigation/stack/motion.ts";
 import {
 	fakeSurface,
 	flushMicrotasks,
@@ -22,6 +25,7 @@ function makeStack({
 	backLandsOnBase = true,
 	keyboardVisible = false,
 	startAt = LIST,
+	stackedMotion = motion,
 } = {}) {
 	let top = $state<string | null>(keyOf(startAt));
 	let landsOnBase = $state(backLandsOnBase);
@@ -30,7 +34,7 @@ function makeStack({
 
 	const stack = new LiveStackState({
 		surface,
-		motion,
+		motion: stackedMotion,
 		top: () => top,
 		keyOf: (target: NavigationTarget) => keyOf(target.url.pathname),
 		scope: LIST,
@@ -447,6 +451,27 @@ describe("LiveStackState back gesture", () => {
 
 		await navigate(harness, { from: FIRST, to: LIST });
 		expect(animations.at(-1)).toMatchObject({ from: 0, to: 1 });
+	});
+
+	it("finishes a released swipe at the finger's speed where the platform matches it", () => {
+		vi.stubGlobal("history", { back: vi.fn() });
+		const ios = stackMotion({ platform: "ios" });
+		const spring = ios.release!;
+		const committed = makeStack({ startAt: FIRST, stackedMotion: ios });
+		committed.stack.beginSwipeBack();
+		committed.stack.trackSwipeBack(0.6);
+		committed.stack.commitSwipeBack({ velocity: 1.5 });
+		const cancelled = makeStack({ startAt: FIRST, stackedMotion: ios });
+		cancelled.stack.beginSwipeBack();
+		cancelled.stack.trackSwipeBack(0.3);
+		cancelled.stack.cancelSwipeBack({ velocity: -1 });
+
+		expect(committed.animations.at(-1)).toMatchObject(
+			releaseTiming({ distance: 0.4, velocity: 1.5, spring }),
+		);
+		expect(cancelled.animations.at(-1)).toMatchObject(
+			releaseTiming({ distance: -0.3, velocity: -1, spring }),
+		);
 	});
 
 	it("settles a committed swipe instantly under reduced motion", () => {
