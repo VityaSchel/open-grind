@@ -52,7 +52,7 @@
 
 <div
 	data-slot="post-location-map"
-	class="leaflet-container relative isolate h-40 overflow-hidden rounded-lg"
+	class="leaflet-container relative isolate h-40 overflow-hidden rounded-lg md:h-60"
 	{@attach openMapLinksExternally}
 >
 	<div

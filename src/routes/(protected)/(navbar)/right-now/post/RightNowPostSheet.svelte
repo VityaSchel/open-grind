@@ -6,7 +6,7 @@
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import * as Alert from "#lib/components/ui/alert/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
-	import * as Drawer from "#lib/components/ui/drawer/index.ts";
+	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
@@ -88,15 +88,6 @@
 	}
 
 	dismissOnBackGesture({
-		active: () => open,
-		dismiss: () => {
-			if (busy) return;
-			if (dirty) confirmingDiscard = true;
-			else open = false;
-		},
-	});
-
-	dismissOnBackGesture({
 		active: () => confirmingDiscard,
 		dismiss: () => (confirmingDiscard = false),
 	});
@@ -120,110 +111,141 @@
 	}
 </script>
 
-<Drawer.Root bind:open dismissible={!busy && !dirty}>
-	<Drawer.Content
-		class="mx-auto max-w-160"
-		onInteractOutside={askToDiscard}
-		onEscapeKeydown={askToDiscard}
-	>
-		<Drawer.Header
-			class="flex-row items-center justify-between gap-3 text-start group-data-[vaul-drawer-direction=bottom]/drawer-content:text-start"
+<ResponsiveDialog.Root
+	bind:open
+	dismissible={!busy && !dirty}
+	onDismissBlocked={askToDiscard}
+>
+	{#snippet children({ desktop })}
+		{@const twoColumns = desktop && post.mapAvailable}
+		<ResponsiveDialog.Content
+			class="flex flex-col"
+			drawerClass="mx-auto max-w-160"
+			dialogClass={{
+				"sm:max-w-4xl": twoColumns,
+				"sm:max-w-lg": !twoColumns,
+			}}
+			dialogProps={{ showCloseButton: true }}
 		>
-			<div class="flex min-w-0 flex-col gap-0.5">
-				<Drawer.Title>Right Now</Drawer.Title>
-				<p
-					data-slot="right-now-post-sheet-status"
-					class="text-sm text-muted-foreground tabular-nums"
-				>
-					{off ? "Off" : "Active"} · {timeLeft} left
-				</p>
-			</div>
-			<div class="flex shrink-0 items-center gap-2">
-				{#if toggling}
-					<Spinner class="text-muted-foreground" aria-hidden="true" />
-				{/if}
-				<Switch
-					aria-label="Show my post"
-					aria-busy={toggling}
-					disabled={busy}
-					bind:checked={
-						() => visible,
-						(next: boolean) => void setVisible({ next })
-					}
-				/>
-			</div>
-		</Drawer.Header>
-		<fieldset disabled={busy} class="contents">
-			<Drawer.Body class="flex flex-col gap-4 px-4 pb-2">
-				{#if off}
+			<ResponsiveDialog.Header
+				class="flex-row items-center justify-between gap-3 text-start"
+				drawerClass="group-data-[vaul-drawer-direction=bottom]/drawer-content:text-start"
+				dialogClass="pe-12"
+			>
+				<div class="flex min-w-0 flex-col gap-0.5">
+					<ResponsiveDialog.Title>Right Now</ResponsiveDialog.Title>
 					<p
-						data-slot="right-now-post-sheet-off-note"
-						class="text-sm text-muted-foreground"
+						data-slot="right-now-post-sheet-status"
+						class="text-sm text-muted-foreground tabular-nums"
 					>
-						Your timer keeps running while you're off.
+						{off ? "Off" : "Active"} · {timeLeft} left
 					</p>
-				{/if}
-				{#if post.rejected.text || post.rejected.photo}
-					<Alert.Root variant="destructive">
-						<WarningCircleIcon weight="fill" />
-						<Alert.Title>{rejectionTitle}</Alert.Title>
-						<Alert.Description>
-							{#if post.rejected.reasons.length > 0}
-								<ul class="list-disc ps-4">
-									{#each post.rejected.reasons as reason (reason)}
-										<li>{reason}</li>
-									{/each}
-								</ul>
-							{:else}
-								No reason was given.
-							{/if}
-						</Alert.Description>
-					</Alert.Root>
-				{/if}
-				<MultilineField
-					label="Text"
-					placeholder="What are you looking for?"
-					maxLength={POST_TEXT_MAX_LENGTH}
-					bind:value={
-						() => form.text,
-						(next: string) =>
-							(form.text = singleLinePostText({ text: next }))
-					}
-				/>
-				<PostPhotoField
-					bind:photo={form.photo}
-					bind:uploading
-					disabled={busy}
-					rejected={post.rejected.photo}
-				/>
-				<SwitchField
-					title="Hosting"
-					bind:checked={form.hosting}
-					disabled={busy}
-				/>
-				{#if post.mapAvailable}
-					<PostLocationField
-						bind:shareLocation={form.shareLocation}
-						bind:locationRadius={form.locationRadius}
-						disabled={busy}
-					/>
-				{/if}
-			</Drawer.Body>
-			<Drawer.Footer>
-				<Button
-					disabled={!dirty || over || uploading}
-					aria-busy={savingEdits}
-					onclick={() => void save()}
-				>
-					{#if savingEdits}
-						<Spinner aria-hidden="true" />
+				</div>
+				<div class="flex shrink-0 items-center gap-2">
+					{#if toggling}
+						<Spinner
+							class="text-muted-foreground"
+							aria-hidden="true"
+						/>
 					{/if}
-					Save
-				</Button>
-			</Drawer.Footer>
-		</fieldset>
-	</Drawer.Content>
-</Drawer.Root>
+					<Switch
+						aria-label="Show my post"
+						aria-busy={toggling}
+						disabled={busy}
+						bind:checked={
+							() => visible,
+							(next: boolean) => void setVisible({ next })
+						}
+					/>
+				</div>
+			</ResponsiveDialog.Header>
+			<fieldset disabled={busy} class="contents">
+				<ResponsiveDialog.Body
+					class="flex flex-col gap-4"
+					drawerClass="px-4 pb-2"
+				>
+					{#if off}
+						<p
+							data-slot="right-now-post-sheet-off-note"
+							class="text-sm text-muted-foreground"
+						>
+							Your timer keeps running while you're off.
+						</p>
+					{/if}
+					{#if post.rejected.text || post.rejected.photo}
+						<Alert.Root variant="destructive">
+							<WarningCircleIcon weight="fill" />
+							<Alert.Title>{rejectionTitle}</Alert.Title>
+							<Alert.Description>
+								{#if post.rejected.reasons.length > 0}
+									<ul class="list-disc ps-4">
+										{#each post.rejected.reasons as reason (reason)}
+											<li>{reason}</li>
+										{/each}
+									</ul>
+								{:else}
+									No reason was given.
+								{/if}
+							</Alert.Description>
+						</Alert.Root>
+					{/if}
+					<div
+						data-slot="right-now-post-sheet-columns"
+						class={{
+							"grid grid-cols-2 items-start gap-6": twoColumns,
+							"flex flex-col gap-4": !twoColumns,
+						}}
+					>
+						<div class="flex flex-col gap-4">
+							<MultilineField
+								label="Text"
+								placeholder="What are you looking for?"
+								maxLength={POST_TEXT_MAX_LENGTH}
+								bind:value={
+									() => form.text,
+									(next: string) =>
+										(form.text = singleLinePostText({
+											text: next,
+										}))
+								}
+							/>
+							<PostPhotoField
+								bind:photo={form.photo}
+								bind:uploading
+								disabled={busy}
+								rejected={post.rejected.photo}
+							/>
+							<SwitchField
+								title="Hosting"
+								bind:checked={form.hosting}
+								disabled={busy}
+							/>
+						</div>
+						{#if post.mapAvailable}
+							<PostLocationField
+								bind:shareLocation={form.shareLocation}
+								bind:locationRadius={form.locationRadius}
+								disabled={busy}
+							/>
+						{/if}
+					</div>
+				</ResponsiveDialog.Body>
+				<ResponsiveDialog.Footer>
+					<Button
+						disabled={!dirty || over || uploading}
+						aria-busy={savingEdits}
+						onclick={() => void save()}
+					>
+						{#if savingEdits}
+							<Spinner aria-hidden="true" />
+						{/if}
+						Save
+					</Button>
+				</ResponsiveDialog.Footer>
+			</fieldset>
+		</ResponsiveDialog.Content>
+	{/snippet}
+</ResponsiveDialog.Root>
 
 <AlertDialog.Root bind:open={confirmingDiscard}>
 	<AlertDialog.Content>
