@@ -274,6 +274,27 @@ describe("ReconcilingListState", () => {
 		expect(ids(state)).toEqual([1]);
 	});
 
+	it("remembers that its latest refresh failed, reconcile or pull, until the next one lands", async () => {
+		fetchMock
+			.mockResolvedValueOnce([item(1)])
+			.mockRejectedValueOnce(new Error("offline"))
+			.mockRejectedValueOnce(new Error("offline"))
+			.mockResolvedValueOnce([item(2)]);
+		const state = new TestList();
+		await waitForLoaded(state);
+		expect(state.refreshFailed).toBe(false);
+
+		await reconcileHandlers[0]?.();
+		expect(state.refreshFailed).toBe(true);
+
+		await state.refresh();
+		expect(state.refreshFailed).toBe(true);
+
+		await state.refresh();
+		expect(state.refreshFailed).toBe(false);
+		expect(ids(state)).toEqual([2]);
+	});
+
 	it("loads once, including when the list is legitimately empty", async () => {
 		fetchMock.mockResolvedValueOnce([]);
 		const state = new TestList();

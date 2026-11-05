@@ -22,6 +22,7 @@
 		pullStyleHere,
 	} from "./refresh/pull-style";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
+	import RefreshStatus from "./refresh/RefreshStatus.svelte";
 	import RefreshTicks, {
 		TICKS_PLATE_PX,
 	} from "./refresh/RefreshTicks.svelte";
@@ -31,6 +32,7 @@
 
 	let {
 		updating,
+		failed,
 		position,
 		container,
 		hintOffset = 0,
@@ -39,6 +41,7 @@
 		oninsetchange,
 	}: {
 		updating?: boolean;
+		failed: boolean;
 		position: "top" | "bottom";
 		container?: HTMLElement | null;
 		hintOffset?: number;
@@ -64,7 +67,6 @@
 		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
 	};
 
-	const mounted = $derived(!!container);
 	let distance = $state(Infinity);
 	const headerOffset = fixedHeaderOffset({
 		container: () => container,
@@ -80,9 +82,7 @@
 
 	const busy = $derived((updating ?? false) || model.phase === "refreshing");
 
-	$effect(() => {
-		model.setUpdating(updating ?? false);
-	});
+	$effect(() => model.setUpdating(updating ?? false));
 	model.onTrigger = () => onrefresh?.();
 	model.getBaseline = () => (restingButton.shown ? REST_HEIGHT_PX : 0);
 
@@ -300,7 +300,7 @@
 	});
 </script>
 
-{#if mounted}
+{#if container}
 	<div
 		data-refresh-phase={model.phase}
 		data-refresh-source={model.source}
@@ -342,7 +342,7 @@
 						Pull to refresh
 					{/if}
 				</span>
-			{:else if buttonShown}
+			{:else if buttonShown || restingButton.keptForAssistiveTech}
 				<div
 					class={[
 						"absolute left-1/2 -translate-x-1/2",
@@ -351,6 +351,7 @@
 							"top-3": position === "bottom",
 						},
 					]}
+					style:opacity={buttonShown ? null : 0}
 				>
 					{@render button()}
 				</div>
@@ -395,6 +396,9 @@
 				</div>
 			{/if}
 		</div>
+		{#if restingButton.alwaysOffered}
+			<RefreshStatus {busy} {updating} {failed} list={container} />
+		{/if}
 	</div>
 {/if}
 
@@ -403,6 +407,8 @@
 		size="sm"
 		class="pointer-events-auto h-(--height) w-25"
 		style="--height: {BUTTON_HEIGHT_PX}px;"
+		aria-disabled={busy || undefined}
+		aria-busy={busy || undefined}
 		onclick={() => model.clickTrigger()}
 	>
 		Refresh

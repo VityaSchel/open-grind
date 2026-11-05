@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, vi } from "vitest";
 import DataRefreshControl from "./DataRefreshControl.svelte";
 import { contentSlideRecorder } from "./refresh/content-slide-test-helpers";
 import { touchEvent } from "./refresh/pull-test-helpers";
+import RefreshAnnouncements from "./refresh/RefreshAnnouncements.svelte";
 
 export const FRAME_MS = 16;
 export const TWEEN_FRAMES = 20;
@@ -39,6 +40,41 @@ export const distinctBands = (frames: ContentFrame[]) => [
 export type HeldAnimation = { onfinish: (() => void) | null };
 
 let heldAnimations: HeldAnimation[] = [];
+let listOnScreen = true;
+let listIntersections = new Set<() => void>();
+
+class ListIntersectionObserver {
+	readonly #callback: IntersectionObserverCallback;
+	readonly #reports = new Set<() => void>();
+
+	constructor(callback: IntersectionObserverCallback) {
+		this.#callback = callback;
+	}
+
+	observe(target: Element) {
+		const report = () =>
+			this.#callback(
+				[
+					{
+						target,
+						intersectionRatio: listOnScreen ? 1 : 0,
+					} as IntersectionObserverEntry,
+				],
+				this as unknown as IntersectionObserver,
+			);
+		this.#reports.add(report);
+		listIntersections.add(report);
+		queueMicrotask(() => {
+			if (this.#reports.has(report)) report();
+		});
+	}
+
+	disconnect() {
+		for (const report of this.#reports) listIntersections.delete(report);
+		this.#reports.clear();
+	}
+}
+
 export let slideRecorder = contentSlideRecorder();
 export let outroEvents: string[] = [];
 let outroListeners = new AbortController();
@@ -49,8 +85,14 @@ export async function settle() {
 
 export async function mountAtRest(
 	edge: Edge,
-	{ floorRoundingPx = 0, contentHeight = CONTENT_HEIGHT } = {},
+	{
+		floorRoundingPx = 0,
+		contentHeight = CONTENT_HEIGHT,
+		updating = false,
+		onScreen = true,
+	} = {},
 ) {
+	listOnScreen = onScreen;
 	const scroller = document.createElement("div");
 	const intoContent = edge === "top" ? 1 : -1;
 	const contentInset = () =>
@@ -103,11 +145,13 @@ export async function mountAtRest(
 
 	const onrefresh = vi.fn();
 	const oninsetchange = vi.fn();
+	render(RefreshAnnouncements);
 	const view = render(DataRefreshControl, {
 		props: {
 			container: scroller,
 			position: edge,
-			updating: false,
+			updating,
+			failed: false,
 			onrefresh,
 			oninsetchange,
 		},
@@ -152,13 +196,26 @@ export async function mountAtRest(
 		disc: () => discWindow().querySelector("[data-refresh-disc]"),
 		ticks: () => anchor().querySelector("[data-refresh-ticks]"),
 		button: () => band().querySelector("button"),
+		status: () => document.querySelector('[role="status"]'),
 		discClipBoxes: () =>
 			[discWindow(), anchor()].map((box) => ({
 				height: box.style.height,
 				opacity: box.style.opacity,
 			})),
-		async setUpdating(updating: boolean) {
-			await view.rerender({ updating });
+		async setUpdating(updating: boolean, { failed = false } = {}) {
+			await view.rerender({ updating, failed });
+			await settle();
+		},
+		async showList(onScreen: boolean) {
+			listOnScreen = onScreen;
+			for (const report of listIntersections) report();
+			await settle();
+		},
+		async coverList(attribute: "inert" | "aria-hidden") {
+			const cover = document.createElement("div");
+			cover.setAttribute(attribute, attribute === "inert" ? "" : "true");
+			scroller.before(cover);
+			cover.append(scroller);
 			await settle();
 		},
 		async moveBandTo({
@@ -265,6 +322,9 @@ export function useRefreshControlHarness({
 			],
 		});
 		heldAnimations = [];
+		listOnScreen = true;
+		listIntersections = new Set();
+		vi.stubGlobal("IntersectionObserver", ListIntersectionObserver);
 		slideRecorder = contentSlideRecorder();
 		slideRecorder.installTimeline();
 		reducedMotion.current = false;

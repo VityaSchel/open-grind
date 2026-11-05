@@ -110,6 +110,27 @@ describe("the refresh control", () => {
 		expect(view.band().style.height).toBe(BUTTON_REST_HEIGHT);
 	});
 
+	it("takes the button away for a clicked refresh and never speaks about it", async () => {
+		const view = await mountAtRest("top");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+		expect(view.status()!.textContent).toBe("");
+
+		view.button()!.click();
+		await view.setUpdating(true);
+		expect(view.button()).toBeNull();
+		expect(view.status()!.textContent).toBe("");
+
+		await view.wait(MIN_REFRESHING_MS);
+		await view.setUpdating(false);
+		const button = view.button();
+		expect(button).not.toBeNull();
+		expect(button!.hasAttribute("aria-busy")).toBe(false);
+		expect(button!.hasAttribute("aria-disabled")).toBe(false);
+		expect(button!.parentElement!.style.opacity).toBe("");
+		expect(view.status()!.textContent).toBe("");
+	});
+
 	it("shows the pull hint and no button for a band that no wheel comes with", async () => {
 		const view = await mountAtRest("top");
 

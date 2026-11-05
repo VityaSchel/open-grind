@@ -1,4 +1,4 @@
-/* eslint max-lines: ["error", { "max": 602, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
+/* eslint max-lines: ["error", { "max": 605, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
 
 import { createContext } from "svelte";
 
@@ -64,6 +64,7 @@ export class ConversationState {
 	loading = $state(true);
 	loadingMore = $state(false);
 	refreshing = $state(false);
+	refreshFailed = $state(false);
 	error: Error | null = $state(null);
 	lastReadTimestamp: number | null = $state(null);
 	// Resolved from the stored id on every read, so unsending, deleting or
@@ -223,6 +224,7 @@ export class ConversationState {
 			return;
 		}
 		this.refreshing = true;
+		this.refreshFailed = false;
 		this.#refreshRequestedSinceFetchStart = false;
 		const localIdsAtFetchStart = this.messages.map((m) => m.messageId);
 		try {
@@ -259,6 +261,7 @@ export class ConversationState {
 		} catch (error) {
 			if (this.#destroyed) return;
 			console.error("Failed to reconcile messages", error);
+			this.refreshFailed = true;
 			if (error instanceof ConversationUnavailableError) {
 				this.error = error;
 			} else {

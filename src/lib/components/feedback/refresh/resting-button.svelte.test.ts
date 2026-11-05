@@ -130,4 +130,34 @@ describe("RestingButtonModel", () => {
 		assisted = false;
 		expect(button.offered).toBe(false);
 	});
+
+	it("keeps the shown button for assistive tech only while it asks for it", () => {
+		let assisted = true;
+		const button = new RestingButtonModel({
+			probeMs: PROBE_MS,
+			alwaysOffered: () => assisted,
+		});
+
+		expect(button.alwaysOffered).toBe(true);
+		expect(button.keptForAssistiveTech).toBe(false);
+		button.shown = true;
+		expect(button.keptForAssistiveTech).toBe(true);
+
+		assisted = false;
+		expect(button.alwaysOffered).toBe(false);
+		expect(button.keptForAssistiveTech).toBe(false);
+	});
+
+	it("never keeps a button that only the pointer or keys brought", () => {
+		const button = new RestingButtonModel({
+			probeMs: PROBE_MS,
+			alwaysOffered: () => false,
+		});
+
+		button.offerWithoutPull();
+		button.shown = true;
+
+		expect(button.alwaysOffered).toBe(false);
+		expect(button.keptForAssistiveTech).toBe(false);
+	});
 });

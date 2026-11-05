@@ -559,6 +559,26 @@ describe("ConversationState error classification", () => {
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
+	it("remembers that its latest refresh failed until the next one lands", async () => {
+		getConversationMock.mockResolvedValue(loaded);
+		const state = create();
+		await flush();
+		expect(state.refreshFailed).toBe(false);
+
+		getConversationMock.mockRejectedValueOnce(blocked());
+		await state.refresh();
+		expect(state.refreshFailed).toBe(true);
+
+		getConversationMock.mockRejectedValueOnce(
+			new ConversationUnavailableError(CONVERSATION_ID),
+		);
+		await state.refresh();
+		expect(state.refreshFailed).toBe(true);
+
+		await state.refresh();
+		expect(state.refreshFailed).toBe(false);
+	});
+
 	it("keeps the loaded messages when pagination is blocked", async () => {
 		getConversationMock.mockResolvedValue(loaded);
 		const state = create();

@@ -24,6 +24,14 @@ export class RestingButtonModel {
 		return this.#offered || this.#alwaysOffered();
 	}
 
+	get alwaysOffered(): boolean {
+		return this.#alwaysOffered();
+	}
+
+	get keptForAssistiveTech(): boolean {
+		return this.shown && this.#alwaysOffered();
+	}
+
 	probePointer(): void {
 		if (this.#sawPull || this.#offered) return;
 		clearTimeout(this.#probe);

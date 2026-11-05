@@ -1,4 +1,4 @@
-/* eslint max-lines: ["error", { "max": 630, "skipBlankLines": true, "skipComments": true }] -- Keep lifecycle guards with the state they protect. */
+/* eslint max-lines: ["error", { "max": 633, "skipBlankLines": true, "skipComments": true }] -- Keep lifecycle guards with the state they protect. */
 
 import { page } from "$app/state";
 
@@ -66,6 +66,7 @@ class ConversationsState {
 	entries = $state<Conversation[]>([]);
 	nextPage = $state<number | null>(null);
 	refreshing = $state(false);
+	refreshFailed = $state(false);
 	loading = $state(true);
 	error: Error | null = $state(null);
 	scrollY = 0;
@@ -240,6 +241,7 @@ class ConversationsState {
 			return;
 		}
 		this.refreshing = true;
+		this.refreshFailed = false;
 		let reconciled = false;
 		try {
 			await this.#initialLoad.catch(() => {});
@@ -332,6 +334,7 @@ class ConversationsState {
 			});
 		} finally {
 			this.refreshing = false;
+			this.refreshFailed = !reconciled;
 			if (reconciled || this.paging.failure === null) this.paging.rearm();
 			this.#runRequestedRefresh();
 		}

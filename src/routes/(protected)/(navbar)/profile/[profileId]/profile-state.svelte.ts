@@ -61,6 +61,7 @@ export class ProfileState {
 	note: FavoriteNote | null = $state(null);
 	loading = $state(true);
 	refreshing = $state(false);
+	refreshFailed = $state(false);
 	error: Error | null = $state(null);
 	changingViewability = $state(false);
 
@@ -250,6 +251,7 @@ export class ProfileState {
 	}
 
 	async #load({ refresh }: { refresh: boolean }): Promise<void> {
+		this.refreshFailed = false;
 		if (refresh) {
 			this.refreshing = true;
 			invalidateFavoriteNote({ profileId: this.profileId });
@@ -271,6 +273,7 @@ export class ProfileState {
 			if (profile.isFavorite) void this.#loadNote();
 		} catch (error) {
 			if (this.#superseded(generation)) return;
+			this.refreshFailed = true;
 			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
 				showErrorToast({

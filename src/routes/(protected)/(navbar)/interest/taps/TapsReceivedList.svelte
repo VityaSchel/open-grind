@@ -34,6 +34,7 @@
 		<DataRefreshControl
 			{container}
 			updating={taps.refreshing}
+			failed={taps.refreshFailed}
 			position="top"
 			onrefresh={() => void taps.refresh()}
 		/>

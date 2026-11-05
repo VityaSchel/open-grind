@@ -8,6 +8,7 @@ import { reconciler } from "#lib/util/reconcile.ts";
 export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	loading = $state(true);
 	refreshing = $state(false);
+	refreshFailed = $state(false);
 	error: Error | null = $state(null);
 	visibleCount = $state(0);
 	scrollY = 0;
@@ -109,10 +110,12 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			return;
 		}
 		this.refreshing = true;
+		this.refreshFailed = false;
 		try {
 			await this.#replaceFromServer();
 		} catch (error) {
 			console.error(error);
+			this.refreshFailed = true;
 			if (automatic) return;
 			showErrorToast({
 				label: this.#refreshErrorLabel,

@@ -105,6 +105,7 @@
 			<DataRefreshControl
 				container={scroller}
 				updating={profileState.refreshing}
+				failed={profileState.refreshFailed}
 				position="top"
 				onrefresh={() => profileState.refresh()}
 			/>

@@ -317,6 +317,7 @@
 			bind:this={refreshControl}
 			{container}
 			updating={conversationState.refreshing}
+			failed={conversationState.refreshFailed}
 			anchorOffset={composerHeight}
 			hintOffset={8}
 			position="bottom"

@@ -53,6 +53,7 @@
 				<DataRefreshControl
 					container={gridContainer}
 					updating={gridState.refreshing}
+					failed={gridState.refreshFailed}
 					position="top"
 					onrefresh={() =>
 						void gridState.refresh({ keepLoadedPages: false })}

@@ -267,6 +267,43 @@ describe("ProfileState refresh", () => {
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
+	it("remembers that its latest refresh failed until the next one lands", async () => {
+		const state = create();
+		await flush();
+		expect(state.refreshFailed).toBe(false);
+
+		refreshProfileMock.mockRejectedValueOnce(new Error("offline"));
+		state.refresh();
+		await flush();
+		expect(state.refreshFailed).toBe(true);
+
+		refreshProfileMock.mockResolvedValueOnce(profile());
+		state.refresh();
+		await flush();
+		expect(state.refreshFailed).toBe(false);
+	});
+
+	it("counts a load that overtakes a refresh as that refresh's outcome", async () => {
+		const state = create();
+		await flush();
+
+		refreshProfileMock.mockReturnValueOnce(new Promise<Profile>(() => {}));
+		getProfileMock.mockRejectedValueOnce(new Error("offline"));
+		state.refresh();
+		state.retry();
+		expect(state.refreshing).toBe(true);
+		await flush();
+		expect(state.refreshing).toBe(false);
+		expect(state.refreshFailed).toBe(true);
+
+		refreshProfileMock.mockReturnValueOnce(new Promise<Profile>(() => {}));
+		state.refresh();
+		state.retry();
+		await flush();
+		expect(state.refreshing).toBe(false);
+		expect(state.refreshFailed).toBe(false);
+	});
+
 	it("does not clear the loading flag of the load that superseded it", async () => {
 		const state = create();
 		await flush();
