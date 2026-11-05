@@ -13,8 +13,8 @@ import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import org.opengrind.MainActivity
 import org.opengrind.R
+import org.opengrind.disguise.Disguise
 
 object PushNotifier {
 	const val EXTRA_DEEPLINK = "org.opengrind.push.extra.DEEPLINK"
@@ -123,12 +123,13 @@ object PushNotifier {
 		val channel = channelOf(decision.kind)
 		val id = decision.postedId
 		val builder = NotificationCompat.Builder(context, channel)
-			.setSmallIcon(R.drawable.ic_notification)
+			.setSmallIcon(Disguise.current(context).notificationIcon)
 			.setColor(ContextCompat.getColor(context, R.color.brand_primary))
 			.setShowWhen(true)
 			.setAutoCancel(true)
 			.setContentIntent(openIntent(context, id, decision.deeplink))
 			.addExtras(Bundle().apply { putString(EXTRA_SENDER_ID, decision.senderId) })
+			.addExtras(Disguise.notificationExtras(context))
 		when (decision.kind) {
 			PushKind.Message -> ConversationNotification.post(
 				context,
@@ -169,7 +170,7 @@ object PushNotifier {
 	}
 
 	private fun openIntent(context: Context, requestCode: Int, deeplink: String): PendingIntent {
-		val intent = Intent(context, MainActivity::class.java)
+		val intent = Disguise.launchIntent(context)
 			.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
 			.putExtra(EXTRA_DEEPLINK, deeplink)
 		return PendingIntent.getActivity(

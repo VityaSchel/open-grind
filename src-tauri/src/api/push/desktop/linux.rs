@@ -84,7 +84,7 @@ fn notify(app: &AppHandle, announcement: &Announcement) -> zbus::Result<()> {
 		Some(SERVICE),
 		"Notify",
 		&(
-			app.package_info().name.as_str(),
+			crate::disguise::desktop::display_name(app),
 			replaces,
 			"",
 			announcement.title.as_str(),

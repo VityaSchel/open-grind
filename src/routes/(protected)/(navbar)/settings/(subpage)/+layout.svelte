@@ -34,6 +34,10 @@
 			title: "Notifications",
 			back: "/settings/app",
 		},
+		[`${base}/app/discreet-icon`]: {
+			title: "Discreet App Icon",
+			back: "/settings/app",
+		},
 		[`${base}/app/credits`]: {
 			title: "Credits & Licenses",
 			back: "/settings/app",
