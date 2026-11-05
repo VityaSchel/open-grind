@@ -25,6 +25,7 @@
 		"docs": "bun run --cwd docs start",
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",
+		"gen:disguise-icons": "cargo run --release --manifest-path scripts/disguise-icons/Cargo.toml",
 		"gen:screenshots": "bun scripts/store-screenshots/capture.ts",
 		"gen:screenshot-grids": "bun scripts/store-screenshots/grids.ts",
 		"gen:hero": "bun scripts/store-screenshots/hero.ts",

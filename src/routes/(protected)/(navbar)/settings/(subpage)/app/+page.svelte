@@ -9,6 +9,7 @@
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import { hapticsAvailable } from "#lib/haptics.ts";
 	import { desktopEntryAvailable } from "#lib/platform/desktop-entry.svelte.ts";
+	import { disguiseAvailable } from "#lib/platform/disguise.svelte.ts";
 	import { addonInstallerAvailable } from "#lib/updates/addon.svelte.ts";
 	import {
 		updatesSelfManaged,
@@ -103,10 +104,20 @@
 	description="Search and load GIFs from GIPHY in chats. GIPHY sees your IP address, what you search for and that the requests come from a Grindr app."
 />
 <h2>Security</h2>
-{@render item({
-	title: "Discreet app icon",
-	unimplemented: { feature: "Discreet app icon", issue: 97 },
-})}
+{#if disguiseAvailable()}
+	<Item.Root variant="outline">
+		{#snippet child({ props })}
+			<a href="/settings/app/discreet-icon" {...props}>
+				{@render rowContent({ title: "Discreet app icon" })}
+			</a>
+		{/snippet}
+	</Item.Root>
+{:else}
+	{@render item({
+		title: "Discreet app icon",
+		unimplemented: { feature: "Discreet app icon", issue: 97 },
+	})}
+{/if}
 {@render item({ title: "PIN", unimplemented: { feature: "PIN", issue: 50 } })}
 {#if updatesSelfManaged() || updatesUnsupportedReason() !== null || addonInstallerAvailable()}
 	<h2>Updates</h2>

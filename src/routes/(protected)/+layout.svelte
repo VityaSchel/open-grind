@@ -4,6 +4,7 @@
 	import CommandCenter from "#lib/components/command-center/CommandCenter.svelte";
 	import MediaDropOverlay from "#lib/components/shared/MediaDropOverlay.svelte";
 	import { restoreStrandedLocation } from "#lib/entitlements/honduras-hold.ts";
+	import { reopenAfterDisguiseRestart } from "#lib/platform/disguise.svelte.ts";
 	import { listenForKeyboardMedia } from "#lib/platform/keyboard-media.svelte.ts";
 	import { listenForMedia } from "#lib/platform/media-intake.svelte.ts";
 	import { startOnlineHeartbeat } from "#lib/presence/online-heartbeat.ts";
@@ -22,6 +23,9 @@
 	onMount(() => {
 		restoreStrandedLocation().catch((error: unknown) => {
 			console.error("Could not move back from Honduras", error);
+		});
+		reopenAfterDisguiseRestart().catch((error: unknown) => {
+			console.error("Could not reopen the discreet icon settings", error);
 		});
 	});
 </script>
