@@ -52,7 +52,7 @@
 
 <div
 	data-slot="post-location-map"
-	class="relative isolate h-40 overflow-hidden rounded-lg bg-muted"
+	class="leaflet-container relative isolate h-40 overflow-hidden rounded-lg"
 	{@attach openMapLinksExternally}
 >
 	<div
@@ -88,12 +88,13 @@
 		style:border-color={ACCURACY_CIRCLE_COLOR}
 		bind:offsetWidth={circleDiameterPx}
 	></div>
-	<a
-		href={OSM_COPYRIGHT_URL}
-		target="_blank"
-		rel="noreferrer nofollow noopener"
-		class="absolute end-0 bottom-0 rounded-tl-md bg-background/80 px-1.5 text-xs text-muted-foreground underline"
-	>
-		© OpenStreetMap contributors
-	</a>
+	<div class="leaflet-bottom leaflet-right">
+		<div class="leaflet-control-attribution leaflet-control">
+			&copy; <a
+				href={OSM_COPYRIGHT_URL}
+				target="_blank"
+				rel="noreferrer nofollow noopener">OpenStreetMap contributors</a
+			> &nbsp;
+		</div>
+	</div>
 </div>
