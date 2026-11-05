@@ -24,6 +24,7 @@ describe("attachTouchPull", () => {
 			scrollRoot: () => root,
 			boundaryDistance: () => boundary,
 			position,
+			honorNoPull: true,
 		});
 		return { model, onTrigger, root, leaf, detach };
 	}
@@ -142,6 +143,58 @@ describe("attachTouchPull", () => {
 		leaf.dispatchEvent(touchEvent("touchstart", { y: 100 }));
 		leaf.dispatchEvent(touchEvent("touchmove", { y: 200 }));
 		expect(model.phase).toBe("idle");
+		detach();
+	});
+
+	it("leaves a drag from a no-pull area to the browser, while the rest of the list still pulls", () => {
+		const { model, onTrigger, root, leaf, detach } = setup();
+		const carousel = document.createElement("div");
+		const photo = document.createElement("img");
+		carousel.setAttribute("data-refresh-no-pull", "");
+		carousel.append(photo);
+		root.append(carousel);
+
+		photo.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+		const move = touchEvent("touchmove", { y: 260 });
+		const prevent = vi.spyOn(move, "preventDefault");
+		photo.dispatchEvent(move);
+		photo.dispatchEvent(touchEvent("touchend", { y: 260 }));
+		expect(model.phase).toBe("idle");
+		expect(prevent).not.toHaveBeenCalled();
+		expect(onTrigger).not.toHaveBeenCalled();
+
+		leaf.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+		leaf.dispatchEvent(touchEvent("touchmove", { y: 260 }));
+		leaf.dispatchEvent(touchEvent("touchend", { y: 260 }));
+		expect(onTrigger).toHaveBeenCalledOnce();
+		detach();
+	});
+
+	it("pulls once a drag from a no-pull area has scrolled the list back to its edge", () => {
+		const { model, onTrigger } = makeModel();
+		const root = document.createElement("div");
+		const carousel = document.createElement("div");
+		const photo = document.createElement("img");
+		carousel.setAttribute("data-refresh-no-pull", "");
+		carousel.append(photo);
+		root.append(carousel);
+		document.body.append(root);
+		let boundary = 150;
+		const detach = attachTouchPull(model, {
+			listenTarget: root,
+			scrollRoot: () => root,
+			boundaryDistance: () => boundary,
+			position: "top",
+			honorNoPull: true,
+		});
+
+		photo.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+		photo.dispatchEvent(touchEvent("touchmove", { y: 250 }));
+		boundary = 0;
+		photo.dispatchEvent(touchEvent("touchmove", { y: 410 }));
+		expect(model.phase).toBe("armed");
+		photo.dispatchEvent(touchEvent("touchend", { y: 410 }));
+		expect(onTrigger).toHaveBeenCalledOnce();
 		detach();
 	});
 

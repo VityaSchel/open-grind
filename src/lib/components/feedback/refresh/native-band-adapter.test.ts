@@ -10,7 +10,10 @@ import type { PullPosition } from "./scroll-chain";
 const ARM_PX = 58;
 const FRAME_MS = 16;
 
-function harness({ position = "top" }: { position?: PullPosition } = {}) {
+function harness({
+	position = "top",
+	markCarousel = false,
+}: { position?: PullPosition; markCarousel?: boolean } = {}) {
 	const scroller = document.createElement("div");
 	const row = document.createElement("a");
 	const carousel = document.createElement("div");
@@ -20,6 +23,7 @@ function harness({ position = "top" }: { position?: PullPosition } = {}) {
 	scroller.append(row, carousel);
 	document.body.append(outside, scroller);
 	makeScrollable(carousel, { scrollTop: 0 });
+	if (markCarousel) carousel.setAttribute("data-refresh-no-pull", "");
 
 	const { model, onTrigger } = makeModel();
 	model.space = ARM_PX;
@@ -29,6 +33,7 @@ function harness({ position = "top" }: { position?: PullPosition } = {}) {
 		scroller,
 		position,
 		overscrollPx: () => band,
+		honorNoPull: true,
 		onPullBand,
 	});
 
@@ -289,6 +294,37 @@ describe("the native rubber band under a finger", () => {
 		h.bandTo(ARM_PX + 3);
 		h.lift();
 
+		expect(h.onTrigger).toHaveBeenCalledOnce();
+		h.detach();
+	});
+
+	it("never pulls from a no-pull area at its own top, while the rest of the list still pulls", () => {
+		const h = harness({ markCarousel: true });
+
+		h.touch(h.photo);
+		h.bandTo(ARM_PX + 3);
+		h.lift();
+		expect(h.model.phase).toBe("idle");
+		expect(h.onPullBand).not.toHaveBeenCalled();
+		expect(h.onTrigger).not.toHaveBeenCalled();
+
+		h.bandTo(0);
+		h.touch();
+		h.bandTo(ARM_PX + 3);
+		h.lift();
+		expect(h.onTrigger).toHaveBeenCalledOnce();
+		h.detach();
+	});
+
+	it("pulls once a drag from a no-pull area has scrolled the list back to its edge", () => {
+		const h = harness({ markCarousel: true });
+		h.bandTo(-150);
+
+		h.touch(h.photo);
+		h.bandTo(-40);
+		h.bandTo(0);
+		h.bandTo(ARM_PX + 3);
+		h.lift();
 		expect(h.onTrigger).toHaveBeenCalledOnce();
 		h.detach();
 	});

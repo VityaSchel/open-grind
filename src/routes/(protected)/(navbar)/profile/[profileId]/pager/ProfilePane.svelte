@@ -18,6 +18,7 @@
 	import ProfileBottomNavBar from "../bottom-nav/ProfileBottomNavBar.svelte";
 	import FavoriteNoteButton from "../favorite-note/FavoriteNoteButton.svelte";
 	import HiddenProfile from "../HiddenProfile.svelte";
+	import { holdsStillHere, holdsStillOnPull } from "../hold-still-on-pull";
 	import ImageCarousel from "../ImageCarousel.svelte";
 	import type { ProfileState } from "../profile-state.svelte";
 	import ProfileBody from "../ProfileBody.svelte";
@@ -111,7 +112,7 @@
 		<div
 			bind:this={scroller}
 			{...scrollerHooks}
-			class="h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto"
+			class="@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto"
 			{@attach active && scrollsToTopOnStatusBarTap}
 		>
 			<main
@@ -119,21 +120,36 @@
 				data-refresh-content
 				class="relative mx-auto min-h-overscrollable w-full max-w-200"
 			>
-				{#if profile || medias.length > 0}
-					<ImageCarousel
-						{medias}
-						onreply={profile && !ourProfile && active
-							? (reply) => {
-									if (active && !leaving)
-										void profileState.replyToPhoto(reply);
-								}
-							: undefined}
-					/>
-				{:else}
-					<Skeleton
-						class="aspect-3/4 h-auto max-h-photo w-full rounded-none"
-					/>
-				{/if}
+				<div
+					data-slot="profile-photo-row"
+					data-refresh-no-pull=""
+					class={[
+						"relative",
+						{
+							"before:absolute before:inset-x-[calc(50%-50cqw)] before:inset-y-0":
+								holdsStillHere(),
+						},
+					]}
+					{@attach holdsStillOnPull}
+				>
+					{#if profile || medias.length > 0}
+						<ImageCarousel
+							{medias}
+							onreply={profile && !ourProfile && active
+								? (reply) => {
+										if (active && !leaving)
+											void profileState.replyToPhoto(
+												reply,
+											);
+									}
+								: undefined}
+						/>
+					{:else}
+						<Skeleton
+							class="aspect-3/4 h-auto max-h-photo w-full rounded-none"
+						/>
+					{/if}
+				</div>
 				{#if profile?.isFavorite && profileState.note && !ourProfile}
 					<FavoriteNoteButton
 						profileId={profile.profileId}

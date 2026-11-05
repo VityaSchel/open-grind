@@ -118,10 +118,12 @@ function harness({
 
 beforeEach(() => {
 	vi.useFakeTimers();
+	runningOn("windows");
 });
 
 afterEach(() => {
 	vi.useRealTimers();
+	resetPlatform();
 });
 
 describe("the mouse probe at the boundary", () => {
@@ -493,10 +495,6 @@ describe("the pull inputs on iOS", () => {
 		runningOn("ios");
 	});
 
-	afterEach(() => {
-		resetPlatform();
-	});
-
 	it("reads a pull from the rubber band under a finger and refreshes on lift", () => {
 		const h = harness({ position: "top", pullFromNativeBand: true });
 		const refreshed = vi.fn();
@@ -541,4 +539,49 @@ describe("the pull inputs on iOS", () => {
 		expect(h.model.source).toBe("touch");
 		h.detach();
 	});
+});
+
+describe("a pull from a no-pull area", () => {
+	function touchPullFromNoPullArea() {
+		const h = harness({ position: "top" });
+		h.row.setAttribute("data-refresh-no-pull", "");
+		h.dragFinger(120);
+		const pulledFrom = h.model.source;
+		h.detach();
+		return pulledFrom;
+	}
+
+	function bandPullFromNoPullArea() {
+		const h = harness({ position: "top", pullFromNativeBand: true });
+		h.model.space = BAND_PX;
+		h.row.setAttribute("data-refresh-no-pull", "");
+		h.touchRow();
+		h.band({ pulledByWheel: false });
+		const pulledFrom = h.model.source;
+		h.liftFinger();
+		h.detach();
+		return pulledFrom;
+	}
+
+	it("is refused under a finger on android", () => {
+		runningOn("android");
+
+		expect(touchPullFromNoPullArea()).toBeNull();
+	});
+
+	it("is refused from the rubber band on ios", () => {
+		runningOn("ios");
+
+		expect(bandPullFromNoPullArea()).toBeNull();
+	});
+
+	it.each(["linux", "macos", "windows"] as const)(
+		"still pulls on %s",
+		(platform) => {
+			runningOn(platform);
+
+			expect(touchPullFromNoPullArea()).toBe("touch");
+			expect(bandPullFromNoPullArea()).toBe("band");
+		},
+	);
 });

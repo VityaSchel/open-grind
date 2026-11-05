@@ -12,12 +12,19 @@ export interface NativeBandPullOptions {
 	scroller: HTMLElement;
 	position: PullPosition;
 	overscrollPx: () => number;
+	honorNoPull?: boolean;
 	onPullBand?: () => void;
 }
 
 export function attachNativeBandPull(
 	model: PullModel,
-	{ scroller, position, overscrollPx, onPullBand }: NativeBandPullOptions,
+	{
+		scroller,
+		position,
+		overscrollPx,
+		honorNoPull,
+		onPullBand,
+	}: NativeBandPullOptions,
 ): () => void {
 	let ours = false;
 	const fingersOnList = new Set<number>();
@@ -86,9 +93,15 @@ export function attachNativeBandPull(
 		}
 		if (pulling) model.cancel();
 		reset();
+		const landedAtEdge = overscrollPx() >= -AT_BOUNDARY_PX;
 		ours =
 			landedOnList &&
-			chainAllowsPull({ start, root: scroller, position });
+			chainAllowsPull({
+				start,
+				root: scroller,
+				position,
+				honorNoPull: honorNoPull && landedAtEdge,
+			});
 		if (!ours) return;
 		trackFingers(event.changedTouches);
 		seenInBounds = overscrollPx() <= PAST_EDGE_PX;

@@ -12,11 +12,18 @@ export interface TouchPullOptions {
 	scrollRoot: () => Element | null;
 	boundaryDistance: () => number;
 	position: PullPosition;
+	honorNoPull?: boolean;
 }
 
 export function attachTouchPull(
 	model: PullModel,
-	{ listenTarget, scrollRoot, boundaryDistance, position }: TouchPullOptions,
+	{
+		listenTarget,
+		scrollRoot,
+		boundaryDistance,
+		position,
+		honorNoPull,
+	}: TouchPullOptions,
 ): () => void {
 	let touchId: number | null = null;
 	let startX = 0;
@@ -78,7 +85,12 @@ export function attachTouchPull(
 			const root = scrollRoot();
 			if (
 				!root ||
-				!chainAllowsPull({ start: startTarget, root, position }) ||
+				!chainAllowsPull({
+					start: startTarget,
+					root,
+					position,
+					honorNoPull: honorNoPull && landedAtPullEdge,
+				}) ||
 				!model.beginPull("touch")
 			) {
 				browserTookTheGesture = true;
