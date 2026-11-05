@@ -72,29 +72,25 @@ describe("the post location field", () => {
 			shareLocation: "DISTANCE_AND_MAP",
 			locationRadius: 100,
 		});
-		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("100");
+		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("0");
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
 			"Within about 2.0 km",
 		);
 		expect(screen.getByText("Within about 2.0 km")).toBeTruthy();
 	});
 
-	it("grows the radius as the slider moves toward Less", async () => {
+	it("narrows the radius as the slider moves toward More", async () => {
 		const stored = renderField({
 			shareLocation: "DISTANCE_AND_MAP",
-			locationRadius: 0,
+			locationRadius: 100,
 		});
-
-		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
-			"Within about 100 m",
-		);
 
 		await fireEvent.keyDown(accuracy() as HTMLElement, { key: "End" });
 
-		expect(stored.locationRadius).toBe(100);
+		expect(stored.locationRadius).toBe(0);
 		expect(accuracy()?.getAttribute("aria-valuenow")).toBe("100");
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
-			"Within about 2.0 km",
+			"Within about 100 m",
 		);
 	});
 

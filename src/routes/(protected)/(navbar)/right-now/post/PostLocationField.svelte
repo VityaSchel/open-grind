@@ -76,14 +76,18 @@
 					{disabled}
 					thumbLabels={["Location accuracy"]}
 					thumbValueTexts={[radiusLabel]}
-					bind:value={locationRadius}
+					bind:value={
+						() => LEAST_PRECISE_RADIUS - locationRadius,
+						(next: number) =>
+							(locationRadius = LEAST_PRECISE_RADIUS - next)
+					}
 				/>
 				<div
 					aria-hidden="true"
 					class="flex justify-between text-xs text-muted-foreground"
 				>
-					<span>More</span>
 					<span>Less</span>
+					<span>More</span>
 				</div>
 				{#if center !== null}
 					<PostLocationMap {center} {locationRadius} />
