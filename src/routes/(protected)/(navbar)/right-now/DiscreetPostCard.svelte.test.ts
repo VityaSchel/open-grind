@@ -53,7 +53,9 @@ describe("a discreet Right Now post card", () => {
 			},
 		});
 
-		expect(screen.getByText("27 · 180 cm · 70 kg · Vers Top")).toBeTruthy();
+		expect(
+			screen.getByText("27 years old · 180 cm · 70 kg · Vers Top"),
+		).toBeTruthy();
 	});
 
 	it("leaves out the profile fields the author kept private", () => {
@@ -66,7 +68,7 @@ describe("a discreet Right Now post card", () => {
 			},
 		});
 
-		expect(screen.getByText("31")).toBeTruthy();
+		expect(screen.getByText("31 years old")).toBeTruthy();
 		expect(screen.queryByText(/·/)).toBeNull();
 	});
 

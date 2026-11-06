@@ -17,7 +17,9 @@
 	const photo = $derived(post.media?.at(0));
 	const fields = $derived(
 		[
-			post.profileFields.age?.toString(),
+			post.profileFields.age === null
+				? undefined
+				: `${post.profileFields.age} years old`,
 			post.profileFields.height === null
 				? undefined
 				: formatHeight(post.profileFields.height, units),
