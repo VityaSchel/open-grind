@@ -17,7 +17,7 @@ function renderCard(overrides: Partial<DiscreetPostData> = {}) {
 afterEach(cleanup);
 
 describe("a discreet Right Now post card", () => {
-	it("offers no link or button to reach the anonymous author", () => {
+	it("offers no link or button to reach the anonymous author, only one to open the photo", () => {
 		renderCard({
 			text: "Hosting tonight",
 			hosting: true,
@@ -31,7 +31,10 @@ describe("a discreet Right Now post card", () => {
 			within(card).getByRole("img", { name: "Post photo" }),
 		).toBeTruthy();
 		expect(within(card).queryAllByRole("link")).toHaveLength(0);
-		expect(within(card).queryAllByRole("button")).toHaveLength(0);
+		expect(
+			within(card).getByRole("button", { name: "Open photo" }),
+		).toBeTruthy();
+		expect(within(card).queryAllByRole("button")).toHaveLength(1);
 	});
 
 	it("heads the post with its text", () => {

@@ -8,12 +8,16 @@ import {
 	installTauriShim,
 } from "./support/app";
 import { failDemoRequests } from "./support/demo-faults";
+import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import { goToRightNow, RIGHT_NOW_FEED_TIMEOUT } from "./support/right-now";
 
 const POST = '[data-slot="right-now-post"]';
 const DISCREET_POST = '[data-slot="right-now-discreet-post"]';
 const POST_DISTANCE = '[data-slot="right-now-post-distance"]';
 const FEED_SCROLLER = '[data-slot="right-now-scroller"]';
+const LIGHTBOX = ".pswp";
+const OPEN_PHOTO = "Open photo";
+const NOT_OPEN_PHOTO = /^(?!Open photo$)/;
 const DEMO_DISCREET_POSTS = 2;
 const ORDERED_DISTANCES_CHECKED = 10;
 const SCROLLED_TOP = 1200;
@@ -78,7 +82,7 @@ test.describe("the demo feed", () => {
 			.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 	});
 
-	test("posts show their headlines, and discreet posts offer no link or button", async ({
+	test("posts show their headlines, and discreet posts offer no link or button but their photo", async ({
 		page,
 	}) => {
 		await expect(
@@ -99,7 +103,9 @@ test.describe("the demo feed", () => {
 		for (const card of await discreet.all()) {
 			await expect(card.getByRole("heading")).not.toBeEmpty();
 			await expect(card.getByRole("link")).toHaveCount(0);
-			await expect(card.getByRole("button")).toHaveCount(0);
+			await expect(
+				card.getByRole("button", { name: NOT_OPEN_PHOTO }),
+			).toHaveCount(0);
 		}
 	});
 
@@ -225,6 +231,29 @@ test.describe("the demo feed", () => {
 				timeout: RIGHT_NOW_FEED_TIMEOUT,
 			})
 			.toBe(offset);
+	});
+
+	test("a post photo opens in the lightbox, and Escape closes it in place", async ({
+		page,
+	}) => {
+		await serveImages(page, CHAT_MEDIA_HOST);
+
+		await page.getByRole("button", { name: OPEN_PHOTO }).first().click();
+		await expect(page.locator(LIGHTBOX)).toBeVisible({ timeout: 30_000 });
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						(window as { pswp?: { opener: { isOpen: boolean } } })
+							.pswp?.opener.isOpen,
+				),
+			)
+			.toBe(true);
+
+		await page.keyboard.press("Escape");
+
+		await expect(page.locator(LIGHTBOX)).toBeHidden();
+		await expect(page).toHaveURL(/\/right-now$/);
 	});
 });
 
