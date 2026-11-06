@@ -165,14 +165,6 @@
 					class="flex flex-col gap-4"
 					drawerClass="px-4 pb-2"
 				>
-					{#if off}
-						<p
-							data-slot="right-now-post-sheet-off-note"
-							class="text-sm text-muted-foreground"
-						>
-							Your timer keeps running while you're off.
-						</p>
-					{/if}
 					{#if post.rejected.text || post.rejected.photo}
 						<Alert.Root variant="destructive">
 							<WarningCircleIcon weight="fill" />

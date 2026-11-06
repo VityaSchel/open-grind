@@ -38,21 +38,15 @@ describe("the Right Now post sheet header", () => {
 
 		expect(screen.getByText("Active · 42m left")).toBeTruthy();
 		expect(visibilitySwitch().getAttribute("aria-checked")).toBe("true");
-		expect(
-			screen.queryByText("Your timer keeps running while you're off."),
-		).toBeNull();
 	});
 
-	it("shows a hidden post as off and says the timer keeps running", async () => {
+	it("shows a hidden post as off with its time left", async () => {
 		const fake = runningPost();
 		fake.status = "off";
 		await renderSheet(fake);
 
 		expect(screen.getByText("Off · 42m left")).toBeTruthy();
 		expect(visibilitySwitch().getAttribute("aria-checked")).toBe("false");
-		expect(
-			screen.getByText("Your timer keeps running while you're off."),
-		).toBeTruthy();
 	});
 
 	it("counts the time left down", async () => {

@@ -10,7 +10,6 @@ import {
 } from "./support/right-now";
 
 const POST_TEXT = "Coffee at mine?";
-const OFF_NOTE = "Your timer keeps running while you're off.";
 const ENTITLEMENTS_PATH = "/v1/rightnow/entitlements/posts";
 
 const articles = (page: Page) => page.getByRole("article");
@@ -46,9 +45,9 @@ async function join(page: Page): Promise<void> {
 async function setShown(page: Page, shown: boolean): Promise<void> {
 	await timeLeftPill(page).click();
 	await showMyPost(page).setChecked(shown);
-	await expect(postSheet(page).getByText(OFF_NOTE)).toHaveCount(
-		shown ? 0 : 1,
-	);
+	await expect(
+		postSheet(page).locator('[data-slot="right-now-post-sheet-status"]'),
+	).toHaveText(new RegExp(`^${shown ? "Active" : "Off"} · `));
 	await closeSheet(page);
 }
 
