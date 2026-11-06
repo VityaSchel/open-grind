@@ -14,7 +14,8 @@ export const NATIVE_READ_LIMIT_MS = 5000;
 
 const CHANGED_EVENT = "regional-settings-changed";
 
-let systemRead: Promise<void> = Promise.resolve();
+let systemArrival: Promise<void> = Promise.resolve();
+let systemArrivedInTime: Promise<boolean> = Promise.resolve(true);
 
 function regionalOverride(): RegionalSettings | undefined {
 	const value = new URLSearchParams(location.search).get("regional");
@@ -32,10 +33,10 @@ function settledWithin({
 }: {
 	promise: Promise<void>;
 	ms: number;
-}): Promise<void> {
+}): Promise<boolean> {
 	return Promise.race([
-		promise,
-		new Promise<void>((resolve) => setTimeout(resolve, ms)),
+		promise.then(() => true),
+		new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ms)),
 	]);
 }
 
@@ -61,7 +62,11 @@ async function followNativeSettings(): Promise<void> {
 				setRegionalSettings(settings);
 		})
 		.catch(console.error);
-	systemRead = settledWithin({ promise: initial, ms: NATIVE_READ_LIMIT_MS });
+	systemArrival = initial;
+	systemArrivedInTime = settledWithin({
+		promise: initial,
+		ms: NATIVE_READ_LIMIT_MS,
+	});
 	await settledWithin({ promise: initial, ms: NATIVE_READ_TIMEOUT_MS });
 }
 
@@ -77,10 +82,15 @@ async function start(): Promise<void> {
 }
 
 export function startRegionalSettings(): Promise<void> {
-	systemRead = Promise.resolve();
+	systemArrival = Promise.resolve();
+	systemArrivedInTime = Promise.resolve(true);
 	return start();
 }
 
-export function regionalSettingsReady(): Promise<void> {
-	return systemRead;
+export function regionalSettingsArrived(): Promise<void> {
+	return systemArrival;
+}
+
+export function regionalSettingsArrivedInTime(): Promise<boolean> {
+	return systemArrivedInTime;
 }
