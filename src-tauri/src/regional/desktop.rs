@@ -27,7 +27,7 @@ pub enum HourCycle {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(
-	not(any(target_os = "macos", target_os = "windows")),
+	not(any(target_os = "macos", target_os = "windows", target_os = "linux")),
 	allow(dead_code)
 )]
 pub enum DateOrder {
