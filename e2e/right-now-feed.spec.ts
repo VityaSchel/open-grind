@@ -102,9 +102,9 @@ test.describe("the demo feed", () => {
 
 		for (const card of await discreet.all()) {
 			await expect(card.getByRole("heading")).not.toBeEmpty();
-			await expect(card.getByRole("link")).toHaveCount(0);
+			await expect(card.getByRole("button")).toHaveCount(0);
 			await expect(
-				card.getByRole("button", { name: NOT_OPEN_PHOTO }),
+				card.getByRole("link", { name: NOT_OPEN_PHOTO }),
 			).toHaveCount(0);
 		}
 	});
@@ -238,7 +238,7 @@ test.describe("the demo feed", () => {
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
 
-		await page.getByRole("button", { name: OPEN_PHOTO }).first().click();
+		await page.getByRole("link", { name: OPEN_PHOTO }).first().click();
 		await expect(page.locator(LIGHTBOX)).toBeVisible({ timeout: 30_000 });
 		await expect
 			.poll(() =>

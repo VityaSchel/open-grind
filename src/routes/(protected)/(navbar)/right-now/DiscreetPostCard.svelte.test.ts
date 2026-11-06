@@ -30,11 +30,11 @@ describe("a discreet Right Now post card", () => {
 		expect(
 			within(card).getByRole("img", { name: "Post photo" }),
 		).toBeTruthy();
-		expect(within(card).queryAllByRole("link")).toHaveLength(0);
+		expect(within(card).queryAllByRole("button")).toHaveLength(0);
 		expect(
-			within(card).getByRole("button", { name: "Open photo" }),
+			within(card).getByRole("link", { name: "Open photo" }),
 		).toBeTruthy();
-		expect(within(card).queryAllByRole("button")).toHaveLength(1);
+		expect(within(card).queryAllByRole("link")).toHaveLength(1);
 	});
 
 	it("heads the post with its text", () => {
