@@ -210,6 +210,17 @@ pub fn posix_two_digit_hour(time_format: &str) -> Option<bool> {
 	None
 }
 
+#[cfg(any(target_os = "linux", test))]
+pub fn gnome_two_digit_hour(
+	clock_format: Option<HourCycle>,
+	time_format_padding: Option<bool>,
+) -> Option<bool> {
+	match clock_format {
+		Some(HourCycle::H11 | HourCycle::H12) => Some(false),
+		Some(HourCycle::H23 | HourCycle::H24) | None => time_format_padding,
+	}
+}
+
 #[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
 pub fn gnome_clock_format(value: &str) -> Option<HourCycle> {
 	match value {
@@ -443,6 +454,32 @@ mod tests {
 			"%r %H",
 		] {
 			assert_eq!(posix_two_digit_hour(format), None, "{format}");
+		}
+	}
+
+	#[test]
+	fn a_12_hour_gnome_clock_leaves_hours_unpadded() {
+		for clock_format in [HourCycle::H11, HourCycle::H12] {
+			for padding in [Some(true), Some(false), None] {
+				assert_eq!(
+					gnome_two_digit_hour(Some(clock_format), padding),
+					Some(false),
+					"{clock_format:?} {padding:?}"
+				);
+			}
+		}
+	}
+
+	#[test]
+	fn a_24_hour_or_unknown_gnome_clock_keeps_the_time_format_padding() {
+		for clock_format in [Some(HourCycle::H23), Some(HourCycle::H24), None] {
+			for padding in [Some(true), Some(false), None] {
+				assert_eq!(
+					gnome_two_digit_hour(clock_format, padding),
+					padding,
+					"{clock_format:?} {padding:?}"
+				);
+			}
 		}
 	}
 

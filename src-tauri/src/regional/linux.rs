@@ -92,7 +92,7 @@ pub async fn read() -> RegionalSettings {
 	let time_locale = category("LC_TIME");
 	let locale = time_locale.as_deref().and_then(pattern::posix_locale);
 	#[cfg(target_os = "linux")]
-	let two_digit_hour = time_locale
+	let time_format_padding = time_locale
 		.as_deref()
 		.filter(|_| locale.is_some())
 		.and_then(time_format_two_digit_hour);
@@ -100,12 +100,16 @@ pub async fn read() -> RegionalSettings {
 		.as_deref()
 		.and_then(pattern::posix_locale)
 		.filter(|number_locale| Some(number_locale) != locale.as_ref());
+	let hour_cycle = clock_format().await;
 	RegionalSettings {
 		locale: locale.unwrap_or_else(|| "und".into()),
 		number_locale,
-		hour_cycle: clock_format().await,
+		hour_cycle,
 		#[cfg(target_os = "linux")]
-		two_digit_hour,
+		two_digit_hour: pattern::gnome_two_digit_hour(
+			hour_cycle,
+			time_format_padding,
+		),
 		measurement_system: category("LC_MEASUREMENT")
 			.as_deref()
 			.and_then(pattern::posix_measurement_system),
