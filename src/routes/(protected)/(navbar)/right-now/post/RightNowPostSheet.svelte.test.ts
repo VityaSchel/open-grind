@@ -177,6 +177,20 @@ describe("the Right Now post sheet form", () => {
 		).toBeNull();
 	});
 
+	it("marks the Hosting switch with an icon and leaves the map switch plain", async () => {
+		await renderSheet(runningPost());
+
+		const iconOfSwitch = (name: string) =>
+			screen
+				.getByRole("switch", { name })
+				.closest('[data-slot="label"]')
+				?.querySelector('[data-slot="switch-field-icon"]');
+		expect(iconOfSwitch("Hosting")?.querySelector("svg")).toBeInstanceOf(
+			SVGElement,
+		);
+		expect(iconOfSwitch("Show me on map")).toBeNull();
+	});
+
 	it("starts from the post's text, hosting and location", async () => {
 		await renderSheet(
 			runningPost({

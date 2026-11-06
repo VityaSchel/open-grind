@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
 	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 	import { untrack } from "svelte";
 
@@ -219,7 +220,15 @@
 								title="Hosting"
 								bind:checked={form.hosting}
 								disabled={busy}
-							/>
+							>
+								{#snippet icon()}
+									<HouseIcon
+										weight="fill"
+										class="size-5"
+										aria-hidden="true"
+									/>
+								{/snippet}
+							</SwitchField>
 						</div>
 						{#if post.mapAvailable}
 							<PostLocationField
