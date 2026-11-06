@@ -1,4 +1,4 @@
-import "./message-lightbox.css";
+import "./gallery-lightbox.css";
 
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
@@ -8,7 +8,7 @@ import {
 	applyPhotoSwipeThumbDimensions,
 	applyPhotoSwipeViewportSync,
 	CLOSE_SVG,
-} from "#lib/util/photoswipe/index.ts";
+} from ".";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
 
