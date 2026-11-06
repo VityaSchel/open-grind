@@ -456,7 +456,11 @@ test.describe("pull to refresh", () => {
 		await expect(
 			page.locator("[data-refresh-disc][data-spinning]"),
 		).toBeVisible();
-		await expect(refreshButton(page)).toBeVisible();
+		await expect(page.locator("[data-refresh-phase]")).toHaveAttribute(
+			"data-refresh-phase",
+			"idle",
+		);
+		await expect(refreshButton(page)).toHaveCSS("pointer-events", "auto");
 
 		expect(await rowTops.evaluate((seen) => [...seen])).toEqual([
 			restingTop + BUTTON_ROW_PX,

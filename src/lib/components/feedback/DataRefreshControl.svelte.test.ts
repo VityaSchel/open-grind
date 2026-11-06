@@ -98,7 +98,7 @@ describe("the refresh control", () => {
 		view.button()!.click();
 		await view.setUpdating(true);
 		expect(view.disc()).not.toBeNull();
-		expect(view.button()).toBeNull();
+		expect(view.button()!.parentElement!.style.opacity).toBe("0");
 
 		await view.wait(MIN_REFRESHING_MS);
 		await view.setUpdating(false);
@@ -110,25 +110,134 @@ describe("the refresh control", () => {
 		expect(view.band().style.height).toBe(BUTTON_REST_HEIGHT);
 	});
 
-	it("takes the button away for a clicked refresh and never speaks about it", async () => {
+	it("keeps keyboard focus on the same Refresh button, hidden from the pointer and busy under the disc, through a refresh it starts", async () => {
 		const view = await mountAtRest("top");
 		await view.wheelWithoutBand();
 		await view.wait(TWEEN_MS);
+		const button = view.button()!;
+		button.focus();
+		expect(button.style.pointerEvents).toBe("auto");
 		expect(view.status()!.textContent).toBe("");
+
+		button.click();
+		await view.setUpdating(true);
+		expect(view.disc()).not.toBeNull();
+		expect(view.button()).toBe(button);
+		expect(document.activeElement).toBe(button);
+		expect(button.parentElement!.style.opacity).toBe("0");
+		expect(button.style.pointerEvents).toBe("none");
+		expect(button.getAttribute("tabindex")).toBe("-1");
+		expect(button.getAttribute("aria-busy")).toBe("true");
+		expect(button.getAttribute("aria-disabled")).toBe("true");
+		expect(view.status()!.textContent).toBe("Refreshing");
+
+		button.click();
+		await view.wait(MIN_REFRESHING_MS);
+		await view.setUpdating(false);
+
+		expect(view.onrefresh).toHaveBeenCalledOnce();
+		expect(view.button()).toBe(button);
+		expect(document.activeElement).toBe(button);
+		expect(button.parentElement!.style.opacity).toBe("");
+		expect(button.style.pointerEvents).toBe("auto");
+		expect(button.hasAttribute("tabindex")).toBe(false);
+		expect(button.hasAttribute("aria-busy")).toBe(false);
+		expect(button.hasAttribute("aria-disabled")).toBe(false);
+		expect(view.status()!.textContent).toBe("Refreshed");
+	});
+
+	it("leaves focus where it was through a refresh when the Refresh button did not have it", async () => {
+		const view = await mountAtRest("top");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+		const elsewhere = document.body.appendChild(
+			document.createElement("button"),
+		);
+		elsewhere.focus();
 
 		view.button()!.click();
 		await view.setUpdating(true);
-		expect(view.button()).toBeNull();
+		await view.wait(MIN_REFRESHING_MS);
+		await view.setUpdating(false);
+
+		expect(document.activeElement).toBe(elsewhere);
+	});
+
+	it("takes the Refresh button out of the Tab order while a refresh started elsewhere hides it", async () => {
+		const view = await mountAtRest("top");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+		const button = view.button()!;
+		expect(button.hasAttribute("tabindex")).toBe(false);
+
+		await view.setUpdating(true);
+		expect(view.button()).toBe(button);
+		expect(button.parentElement!.style.opacity).toBe("0");
+		expect(button.getAttribute("tabindex")).toBe("-1");
+
+		await view.setUpdating(false);
+		expect(button.parentElement!.style.opacity).toBe("");
+		expect(button.hasAttribute("tabindex")).toBe(false);
+	});
+
+	it("says nothing once a clicked refresh fails", async () => {
+		const view = await mountAtRest("top");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+
+		view.button()!.click();
+		await view.setUpdating(true);
+		await view.wait(MIN_REFRESHING_MS);
+		await view.setUpdating(false, { failed: true });
+
 		expect(view.status()!.textContent).toBe("");
+	});
+
+	it("keeps keyboard focus on the same Refresh button through a refresh on Android too, under the same disc, and speaks about it", async () => {
+		runningOn("android");
+		const view = await mountAtRest("top");
+		await view.pressInsideList("ArrowUp");
+		await view.wait(TWEEN_MS);
+		const button = view.button()!;
+		button.focus();
+		expect(view.status()!.textContent).toBe("");
+
+		button.click();
+		await view.setUpdating(true);
+		expect(view.disc()).not.toBeNull();
+		expect(view.band().style.height).toBe(BUTTON_REST_HEIGHT);
+		expect(view.button()).toBe(button);
+		expect(document.activeElement).toBe(button);
+		expect(button.parentElement!.style.opacity).toBe("0");
+		expect(button.style.pointerEvents).toBe("none");
+		expect(button.getAttribute("tabindex")).toBe("-1");
+		expect(button.getAttribute("aria-busy")).toBe("true");
+		expect(button.getAttribute("aria-disabled")).toBe("true");
+		expect(view.status()!.textContent).toBe("Refreshing");
 
 		await view.wait(MIN_REFRESHING_MS);
 		await view.setUpdating(false);
-		const button = view.button();
-		expect(button).not.toBeNull();
-		expect(button!.hasAttribute("aria-busy")).toBe(false);
-		expect(button!.hasAttribute("aria-disabled")).toBe(false);
-		expect(button!.parentElement!.style.opacity).toBe("");
-		expect(view.status()!.textContent).toBe("");
+
+		expect(view.onrefresh).toHaveBeenCalledOnce();
+		expect(view.button()).toBe(button);
+		expect(document.activeElement).toBe(button);
+		expect(button.parentElement!.style.opacity).toBe("");
+		expect(button.style.pointerEvents).toBe("auto");
+		expect(button.hasAttribute("tabindex")).toBe(false);
+		expect(button.hasAttribute("aria-busy")).toBe(false);
+		expect(view.status()!.textContent).toBe("Refreshed");
+	});
+
+	it("speaks about a refresh on Android that no Refresh button started", async () => {
+		runningOn("android");
+		const view = await mountAtRest("top");
+
+		await view.setUpdating(true);
+		expect(view.button()).toBeNull();
+		expect(view.status()!.textContent).toBe("Refreshing");
+
+		await view.setUpdating(false);
+		expect(view.status()!.textContent).toBe("Refreshed");
 	});
 
 	it("shows the pull hint and no button for a band that no wheel comes with", async () => {

@@ -342,7 +342,7 @@
 						Pull to refresh
 					{/if}
 				</span>
-			{:else if buttonShown || restingButton.keptForAssistiveTech}
+			{:else if buttonShown || restingButton.shown}
 				<div
 					class={[
 						"absolute left-1/2 -translate-x-1/2",
@@ -396,17 +396,17 @@
 				</div>
 			{/if}
 		</div>
-		{#if restingButton.alwaysOffered}
-			<RefreshStatus {busy} {updating} {failed} list={container} />
-		{/if}
+		<RefreshStatus {busy} {updating} {failed} list={container} />
 	</div>
 {/if}
 
 {#snippet button()}
+	{@const pointerEvents = buttonShown ? "auto" : "none"}
 	<Button
 		size="sm"
-		class="pointer-events-auto h-(--height) w-25"
-		style="--height: {BUTTON_HEIGHT_PX}px;"
+		class="h-(--height) w-25"
+		style="--height: {BUTTON_HEIGHT_PX}px; pointer-events: {pointerEvents};"
+		tabindex={buttonShown ? undefined : -1}
 		aria-disabled={busy || undefined}
 		aria-busy={busy || undefined}
 		onclick={() => model.clickTrigger()}
