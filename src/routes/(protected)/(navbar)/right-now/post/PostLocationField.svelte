@@ -82,13 +82,6 @@
 							(locationRadius = LEAST_PRECISE_RADIUS - next)
 					}
 				/>
-				<div
-					aria-hidden="true"
-					class="flex justify-between text-xs text-muted-foreground"
-				>
-					<span>Less</span>
-					<span>More</span>
-				</div>
 				{#if center !== null}
 					<PostLocationMap {center} {locationRadius} />
 				{/if}
