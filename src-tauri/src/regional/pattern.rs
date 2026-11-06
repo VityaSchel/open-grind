@@ -182,6 +182,34 @@ pub fn monday_zero_weekday(day: u32) -> Option<u8> {
 	(day <= 6).then(|| u8::try_from(day + 1).ok()).flatten()
 }
 
+#[cfg(any(target_os = "linux", test))]
+pub fn posix_two_digit_hour(time_format: &str) -> Option<bool> {
+	let mut letters = time_format.chars().peekable();
+	while let Some(letter) = letters.next() {
+		if letter != '%' {
+			continue;
+		}
+		let mut zero_padded = None;
+		while let Some(flag) =
+			letters.next_if(|c| matches!(c, '_' | '-' | '0' | '^' | '#'))
+		{
+			if matches!(flag, '_' | '-' | '0') {
+				zero_padded = Some(flag == '0');
+			}
+		}
+		while letters.next_if(char::is_ascii_digit).is_some() {}
+		letters.next_if(|c| matches!(c, 'E' | 'O'));
+		match letters.next()? {
+			'H' => return Some(zero_padded.unwrap_or(true)),
+			'k' => return Some(zero_padded.unwrap_or(false)),
+			'R' | 'T' => return Some(true),
+			'I' | 'l' | 'r' => return None,
+			_ => {}
+		}
+	}
+	None
+}
+
 #[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
 pub fn gnome_clock_format(value: &str) -> Option<HourCycle> {
 	match value {
@@ -377,6 +405,45 @@ mod tests {
 				None
 			]
 		);
+	}
+
+	#[test]
+	fn the_first_24_hour_posix_conversion_says_whether_hours_are_padded() {
+		for (format, padded) in [
+			("%H:%M:%S", true),
+			("%T", true),
+			("%R", true),
+			("%k:%M", false),
+			("%-H:%M", false),
+			("%_H:%M", false),
+			("%0k:%M", true),
+			("%-0k:%M", true),
+			("%^2H:%M", true),
+			("%OH:%OM:%OS", true),
+			("%H時%M分%S秒", true),
+			("%%H %k:%M", false),
+			("%-T", true),
+		] {
+			assert_eq!(posix_two_digit_hour(format), Some(padded), "{format}");
+		}
+		for format in ["%M:%S", "%%H", "", "%", "%-"] {
+			assert_eq!(posix_two_digit_hour(format), None, "{format}");
+		}
+	}
+
+	#[test]
+	fn a_12_hour_posix_format_leaves_the_padding_unread() {
+		for format in [
+			"%r",
+			"%I:%M:%S %p",
+			"%p %I:%M",
+			"%l:%M %p",
+			"%0l:%M %p",
+			"%-I:%M %p",
+			"%r %H",
+		] {
+			assert_eq!(posix_two_digit_hour(format), None, "{format}");
+		}
 	}
 
 	#[test]

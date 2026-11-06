@@ -1,3 +1,7 @@
+#[cfg(target_os = "linux")]
+use std::ffi::{CStr, CString};
+#[cfg(target_os = "linux")]
+use std::ptr;
 use std::time::Duration;
 
 use tokio::sync::OnceCell;
@@ -60,10 +64,38 @@ async fn clock_format() -> Option<HourCycle> {
 	pattern::gnome_clock_format(&value)
 }
 
+#[cfg(target_os = "linux")]
+fn langinfo(locale: libc::locale_t, item: libc::nl_item) -> Option<String> {
+	let value = unsafe { libc::nl_langinfo_l(item, locale) };
+	(!value.is_null()).then(|| {
+		unsafe { CStr::from_ptr(value) }
+			.to_string_lossy()
+			.into_owned()
+	})
+}
+
+#[cfg(target_os = "linux")]
+fn time_format_two_digit_hour(name: &str) -> Option<bool> {
+	let name = CString::new(name).ok()?;
+	let locale = unsafe {
+		libc::newlocale(libc::LC_TIME_MASK, name.as_ptr(), ptr::null_mut())
+	};
+	if locale.is_null() {
+		return None;
+	}
+	let time_format = langinfo(locale, libc::T_FMT);
+	unsafe { libc::freelocale(locale) };
+	pattern::posix_two_digit_hour(&time_format?)
+}
+
 pub async fn read() -> RegionalSettings {
-	let locale = category("LC_TIME")
+	let time_locale = category("LC_TIME");
+	let locale = time_locale.as_deref().and_then(pattern::posix_locale);
+	#[cfg(target_os = "linux")]
+	let two_digit_hour = time_locale
 		.as_deref()
-		.and_then(pattern::posix_locale);
+		.filter(|_| locale.is_some())
+		.and_then(time_format_two_digit_hour);
 	let number_locale = category("LC_NUMERIC")
 		.as_deref()
 		.and_then(pattern::posix_locale)
@@ -72,6 +104,8 @@ pub async fn read() -> RegionalSettings {
 		locale: locale.unwrap_or_else(|| "und".into()),
 		number_locale,
 		hour_cycle: clock_format().await,
+		#[cfg(target_os = "linux")]
+		two_digit_hour,
 		measurement_system: category("LC_MEASUREMENT")
 			.as_deref()
 			.and_then(pattern::posix_measurement_system),

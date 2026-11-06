@@ -90,6 +90,7 @@ windows-core = "0.61"
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
 gdk = "0.18"
 gdkwayland-sys = "0.18"
+libc = "0.2"
 webkit2gtk = { version = "2", features = ["v2_28"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios", target_os = "macos", target_os = "windows")))'.dependencies]
