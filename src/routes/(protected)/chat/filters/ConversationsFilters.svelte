@@ -26,7 +26,7 @@
 	const LABELLED_TOGGLES = [
 		{ key: "unread", label: "Unread" },
 		{ key: "online", label: "Online" },
-		{ key: "rightNow", label: "Right now" },
+		{ key: "rightNow", label: "Right Now" },
 	] as const;
 
 	const values = $derived(filters.value);

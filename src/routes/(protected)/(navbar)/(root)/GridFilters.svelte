@@ -66,7 +66,7 @@
 		Online
 	</FilterBoolean>
 	<FilterBoolean id="right-now" bind:checked={filters.isRightNow}>
-		Right now
+		Right Now
 	</FilterBoolean>
 	<FilterBoolean id="fresh" bind:checked={filters.isFresh}>
 		Fresh

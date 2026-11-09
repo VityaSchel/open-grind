@@ -69,7 +69,7 @@
 		value="isRightNow"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Right now
+		Right Now
 	</ToggleGroup.Item>
 	<ToggleGroup.Item
 		value="isFresh"
