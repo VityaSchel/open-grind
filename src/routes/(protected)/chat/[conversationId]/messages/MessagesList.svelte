@@ -154,8 +154,6 @@
 {#if reportProfileId !== null}
 	<ReportSheet
 		bind:open={reportOpen}
-		profileId={reportProfileId}
-		subject="message"
-		locations={["CHAT_MESSAGE"]}
+		target={{ kind: "message", profileId: reportProfileId }}
 	/>
 {/if}

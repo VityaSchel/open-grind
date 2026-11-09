@@ -26,11 +26,13 @@ import {
 	getProfileReportV31,
 	getProfileReportV4,
 	getRightNowPostReport,
+	getRightNowPostReportV1,
 	reportProfile,
 	reportProfileV31,
 	reportProfileV4,
 	reportProfileV5,
 	reportRightNowPost,
+	reportRightNowPostV1,
 } from "#lib/api/safety/reports.ts";
 import type {
 	ProfileReportRequest,
@@ -173,11 +175,11 @@ describe("profile report submissions", () => {
 	});
 });
 
-describe("Right Now post reports", () => {
+describe("anonymous Right Now post reports", () => {
 	it("reads the report on the post", async () => {
 		respond({ body: { flagReport: { createTime: CREATE_TIME } } });
 
-		expect(await getRightNowPostReport({ postId: POST_ID })).toEqual({
+		expect(await getRightNowPostReportV1({ postId: POST_ID })).toEqual({
 			status: null,
 			createTime: CREATE_TIME,
 		});
@@ -194,21 +196,21 @@ describe("Right Now post reports", () => {
 	])("reads %s as not reported", async (_, response) => {
 		respond(response);
 
-		expect(await getRightNowPostReport({ postId: POST_ID })).toBeNull();
+		expect(await getRightNowPostReportV1({ postId: POST_ID })).toBeNull();
 	});
 
 	it("throws any other failure", async () => {
 		respond({ status: 500 });
 
 		await expect(
-			getRightNowPostReport({ postId: POST_ID }),
+			getRightNowPostReportV1({ postId: POST_ID }),
 		).rejects.toThrow("status 500");
 	});
 
 	it("posts the report without asking for a token", async () => {
 		assignmentsOn.add("right-now-moderation");
 
-		await reportRightNowPost({
+		await reportRightNowPostV1({
 			postId: POST_ID,
 			report: rightNowPostReport,
 		});
@@ -351,6 +353,109 @@ describe("reportProfile", () => {
 				).rejects.toThrow("Network error");
 				expect(requestedPaths()).toStrictEqual(["/v5/flags/42"]);
 			});
+		});
+	});
+});
+
+describe("getRightNowPostReport", () => {
+	it("reads the post's own report when its author is anonymous", async () => {
+		respond({ body: { flagReport: { createTime: CREATE_TIME } } });
+
+		expect(
+			await getRightNowPostReport({ postId: POST_ID, profileId: null }),
+		).toEqual({ status: null, createTime: CREATE_TIME });
+		expect(onlyRequest().path).toBe("/v1/flags/right-now/7001");
+	});
+
+	it("reads the author's profile report when the author is known", async () => {
+		assignmentsOn.add("right-now-moderation");
+		respond({ status: 404 });
+
+		expect(
+			await getRightNowPostReport({
+				postId: POST_ID,
+				profileId: PROFILE_ID,
+			}),
+		).toBeNull();
+		expect(onlyRequest().path).toBe("/v4/flags/42");
+	});
+});
+
+describe("reportRightNowPost", () => {
+	it("posts an anonymous author's post report to the post, without a token", async () => {
+		assignmentsOn.add("right-now-moderation");
+
+		await reportRightNowPost({
+			postId: POST_ID,
+			profileId: null,
+			report: rightNowPostReport,
+		});
+
+		expect(onlyRequest()).toStrictEqual({
+			path: "/v1/flags/right-now/7001",
+			options: { method: "POST", body: rightNowPostReport },
+		});
+		expect(callMethodMock).not.toHaveBeenCalled();
+	});
+
+	it("reports a known author's profile with the post attached on v3.1", async () => {
+		await reportRightNowPost({
+			postId: POST_ID,
+			profileId: PROFILE_ID,
+			report: rightNowPostReport,
+		});
+
+		expect(onlyRequest()).toStrictEqual({
+			path: "/v3.1/flags/42",
+			options: {
+				method: "POST",
+				body: {
+					...rightNowPostReport,
+					rightNowInfo: { postId: POST_ID },
+				},
+			},
+		});
+	});
+
+	it("reports a known author's profile with the post attached on v5 while right-now-moderation is on", async () => {
+		assignmentsOn.add("right-now-moderation");
+		callMethodMock.mockResolvedValue("minted-token");
+
+		await reportRightNowPost({
+			postId: POST_ID,
+			profileId: PROFILE_ID,
+			report: rightNowPostReport,
+		});
+
+		expect(onlyRequest()).toStrictEqual({
+			path: "/v5/flags/42",
+			options: {
+				method: "POST",
+				body: {
+					...rightNowPostReport,
+					rightNowInfo: { postId: POST_ID },
+					captchaToken: "minted-token",
+				},
+			},
+		});
+	});
+
+	it("attaches the post to a known author's spam report too", async () => {
+		const spam: RightNowPostReportRequest = {
+			reason: "SPAM",
+			comment: "",
+			locations: ["CHAT_MESSAGE"],
+		};
+
+		await reportRightNowPost({
+			postId: POST_ID,
+			profileId: PROFILE_ID,
+			report: spam,
+		});
+
+		expect(onlyRequest().options.body).toStrictEqual({
+			...spam,
+			rightNowInfo: { postId: POST_ID },
 		});
 	});
 });

@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	reportProfileMock,
+	reportRightNowPostMock,
 	blockUserMock,
 	showBlockFailureMock,
 	openExternalLinkMock,
 } = vi.hoisted(() => ({
 	reportProfileMock: vi.fn<() => Promise<void>>(),
+	reportRightNowPostMock: vi.fn<() => Promise<void>>(),
 	blockUserMock: vi.fn<() => Promise<void>>(),
 	showBlockFailureMock: vi.fn(),
 	openExternalLinkMock: vi.fn(),
@@ -17,6 +19,7 @@ const {
 
 vi.mock("#lib/api/safety/reports.ts", () => ({
 	reportProfile: reportProfileMock,
+	reportRightNowPost: reportRightNowPostMock,
 }));
 vi.mock("#lib/api/browse/blocks.ts", () => ({ blockUser: blockUserMock }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
@@ -25,13 +28,16 @@ vi.mock("#lib/platform/link-opener.ts", () => ({
 	openExternalLink: openExternalLinkMock,
 }));
 
+import type { ReportTarget } from "./report-request";
 import ReportSheet from "./ReportSheet.svelte";
 
 const PROFILE_ID = 100010;
+const POST_ID = 880_009;
+const profileTarget: ReportTarget = { kind: "profile", profileId: PROFILE_ID };
 
 async function submitSpamReport({ onBlock }: { onBlock?: () => void } = {}) {
 	render(ReportSheet, {
-		props: { open: true, profileId: PROFILE_ID, onBlock },
+		props: { open: true, target: profileTarget, onBlock },
 	});
 	await fireEvent.click(await screen.findByRole("radio", { name: "Spam" }));
 	await fireEvent.click(
@@ -45,6 +51,7 @@ async function submitSpamReport({ onBlock }: { onBlock?: () => void } = {}) {
 beforeEach(() => {
 	vi.clearAllMocks();
 	reportProfileMock.mockResolvedValue(undefined);
+	reportRightNowPostMock.mockResolvedValue(undefined);
 	blockUserMock.mockResolvedValue(undefined);
 	vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -106,7 +113,7 @@ describe("report sheet", () => {
 describe("serious in-person incident", () => {
 	async function chooseIncident() {
 		vi.spyOn(navigator, "language", "get").mockReturnValue("de-AT");
-		render(ReportSheet, { props: { open: true, profileId: PROFILE_ID } });
+		render(ReportSheet, { props: { open: true, target: profileTarget } });
 		await fireEvent.click(
 			await screen.findByRole("radio", {
 				name: "Serious In Person Incident",
@@ -140,5 +147,105 @@ describe("serious in-person incident", () => {
 		expect(
 			screen.getByText(/handles serious in-person incidents/),
 		).not.toBeNull();
+	});
+});
+
+describe("reported targets", () => {
+	async function chooseHarassment(target: ReportTarget) {
+		render(ReportSheet, { props: { open: true, target } });
+		await fireEvent.click(
+			await screen.findByRole("radio", {
+				name: "Harassment or Bullying",
+			}),
+		);
+	}
+
+	const whereGroup = () =>
+		screen.queryByRole("group", { name: "Where it happened" });
+
+	it("asks a profile report where it happened", async () => {
+		await chooseHarassment(profileTarget);
+
+		expect(
+			screen.getByRole("heading", { name: "Report profile" }),
+		).toBeTruthy();
+		expect(whereGroup()).not.toBeNull();
+	});
+
+	it("files a message report from the chat without asking where", async () => {
+		await chooseHarassment({ kind: "message", profileId: PROFILE_ID });
+		expect(whereGroup()).toBeNull();
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Submit report" }),
+		);
+
+		expect(reportProfileMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+			report: {
+				reason: "HARASSMENT_BULLYING",
+				comment: "",
+				locations: ["CHAT_MESSAGE"],
+			},
+		});
+	});
+
+	it("files a known author's Right Now post report about the post, then offers to block them", async () => {
+		await chooseHarassment({
+			kind: "rightNowPost",
+			postId: POST_ID,
+			profileId: PROFILE_ID,
+		});
+		expect(
+			screen.getByRole("heading", { name: "Report post" }),
+		).toBeTruthy();
+		expect(whereGroup()).toBeNull();
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Submit report" }),
+		);
+
+		expect(reportRightNowPostMock).toHaveBeenCalledExactlyOnceWith({
+			postId: POST_ID,
+			profileId: PROFILE_ID,
+			report: {
+				reason: "HARASSMENT_BULLYING",
+				comment: "",
+				locations: ["RIGHT_NOW_PHOTO", "RIGHT_NOW_TEXT"],
+			},
+		});
+		expect(reportProfileMock).not.toHaveBeenCalled();
+		expect(
+			await screen.findByText("Grindr will review this post."),
+		).toBeTruthy();
+		expect(
+			screen.getByRole("button", { name: "Block profile" }),
+		).toBeTruthy();
+	});
+
+	it("offers only Done after reporting an anonymous Right Now post", async () => {
+		await chooseHarassment({
+			kind: "rightNowPost",
+			postId: POST_ID,
+			profileId: null,
+		});
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Submit report" }),
+		);
+
+		expect(reportRightNowPostMock).toHaveBeenCalledWith(
+			expect.objectContaining({ postId: POST_ID, profileId: null }),
+		);
+		await screen.findByText("Grindr will review this post.");
+		expect(
+			screen.queryByRole("button", { name: "Block profile" }),
+		).toBeNull();
+		expect(
+			screen.queryByText(
+				"You can block this profile so you stop seeing it.",
+			),
+		).toBeNull();
+		expect(screen.getByRole("button", { name: "Done" })).toBeTruthy();
 	});
 });
