@@ -9,6 +9,7 @@
 	import * as Avatar from "#lib/components/ui/avatar/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import type { PostData } from "#lib/model/right-now/feed.ts";
+	import ReportPostButton from "./ReportPostButton.svelte";
 	import RightNowPostMeta from "./RightNowPostMeta.svelte";
 	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
@@ -17,17 +18,20 @@
 		ourProfileId,
 		underReview = false,
 		onedit,
+		onreport,
 	}: {
 		post: PostData;
 		ourProfileId: number;
 		underReview?: boolean;
 		onedit: (() => void) | null;
+		onreport: () => Promise<void>;
 	} = $props();
 
 	const headlineId = $props.id();
 
 	const photo = $derived(post.media.at(0));
 	const ownPost = $derived(post.profileId === ourProfileId);
+	const reportable = $derived(Boolean(post.text) || photo !== undefined);
 	const conversationId = $derived(
 		conversationIdFor({ profileId: post.profileId, ourProfileId }),
 	);
@@ -69,15 +73,20 @@
 		/>
 	</div>
 	<div class="flex min-w-0 flex-1 flex-col gap-2">
-		<h2
-			id={headlineId}
-			class={[
-				"font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
-				{ "text-muted-foreground": !post.text },
-			]}
-		>
-			{post.text || joinedHeadline}
-		</h2>
+		<div class="flex items-start gap-2">
+			<h2
+				id={headlineId}
+				class={[
+					"min-w-0 flex-1 font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
+					{ "text-muted-foreground": !post.text },
+				]}
+			>
+				{post.text || joinedHeadline}
+			</h2>
+			{#if !ownPost && reportable}
+				<ReportPostButton {onreport} />
+			{/if}
+		</div>
 		{#if ownPost && underReview}
 			<p
 				data-slot="right-now-post-review"

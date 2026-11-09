@@ -6,15 +6,21 @@
 	import { labelFromMap } from "#lib/util/options.ts";
 	import { formatHeight, formatWeightGrams } from "#lib/util/units.ts";
 	import type { DiscreetPostData } from "#lib/model/right-now/feed.ts";
+	import ReportPostButton from "./ReportPostButton.svelte";
 	import RightNowPostMeta from "./RightNowPostMeta.svelte";
 	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
-	let { post }: { post: DiscreetPostData } = $props();
+	let {
+		post,
+		onreport,
+	}: { post: DiscreetPostData; onreport: (() => Promise<void>) | null } =
+		$props();
 
 	const headlineId = $props.id();
 
 	const units = $derived(preferencesSnapshot().units);
 	const photo = $derived(post.media?.at(0));
+	const reportable = $derived(Boolean(post.text) || photo !== undefined);
 	const fields = $derived(
 		[
 			post.profileFields.age === null
@@ -48,15 +54,20 @@
 	</div>
 	<div class="flex min-w-0 flex-1 flex-col gap-2">
 		<div class="flex flex-col gap-1">
-			<h2
-				id={headlineId}
-				class={[
-					"font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
-					{ "text-muted-foreground": !post.text },
-				]}
-			>
-				{post.text || "Discreet post"}
-			</h2>
+			<div class="flex items-start gap-2">
+				<h2
+					id={headlineId}
+					class={[
+						"min-w-0 flex-1 font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
+						{ "text-muted-foreground": !post.text },
+					]}
+				>
+					{post.text || "Discreet post"}
+				</h2>
+				{#if onreport !== null && reportable}
+					<ReportPostButton {onreport} />
+				{/if}
+			</div>
 			{#if fields.length > 0}
 				<p
 					data-slot="right-now-discreet-post-fields"

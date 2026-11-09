@@ -16,11 +16,13 @@ function renderCard({
 	ourProfileId = OUR_PROFILE_ID,
 	underReview = false,
 	onedit = vi.fn(),
+	onreport = vi.fn(() => Promise.resolve()),
 }: {
 	overrides?: Partial<PostData>;
 	ourProfileId?: number;
 	underReview?: boolean;
 	onedit?: (() => void) | null;
+	onreport?: () => Promise<void>;
 } = {}) {
 	return render(RightNowPostCard, {
 		props: {
@@ -32,6 +34,7 @@ function renderCard({
 			ourProfileId,
 			underReview,
 			onedit,
+			onreport,
 		},
 	});
 }
@@ -221,5 +224,60 @@ describe("a Right Now post card", () => {
 				.closest("time")
 				?.getAttribute("datetime"),
 		).toBe(new Date(posted).toISOString());
+	});
+
+	it("offers to report someone else's post", async () => {
+		const onreport = vi.fn(() => Promise.resolve());
+		renderCard({ overrides: { text: "Coffee at mine?" }, onreport });
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Report post" }),
+		);
+
+		expect(onreport).toHaveBeenCalledOnce();
+	});
+
+	it("shows the report button busy while the earlier-report check runs", async () => {
+		const check = Promise.withResolvers<void>();
+		const onreport = vi.fn(() => check.promise);
+		renderCard({ overrides: { text: "Coffee at mine?" }, onreport });
+		const report = screen.getByRole("button", { name: "Report post" });
+
+		await fireEvent.click(report);
+		await fireEvent.click(report);
+		expect(report.getAttribute("aria-busy")).toBe("true");
+		expect(report.matches(":disabled")).toBe(false);
+		expect(onreport).toHaveBeenCalledOnce();
+
+		check.resolve();
+		await vi.waitFor(() =>
+			expect(report.getAttribute("aria-busy")).not.toBe("true"),
+		);
+	});
+
+	it("offers no report on our own post", () => {
+		renderCard({
+			overrides: { profileId: OUR_PROFILE_ID, text: "Coffee at mine?" },
+		});
+
+		expect(
+			screen.queryByRole("button", { name: "Report post" }),
+		).toBeNull();
+	});
+
+	it("offers no report on a post with neither text nor photo", () => {
+		renderCard();
+
+		expect(
+			screen.queryByRole("button", { name: "Report post" }),
+		).toBeNull();
+	});
+
+	it("offers to report a photo-only post", () => {
+		renderCard({ overrides: { media: [photo(1)] } });
+
+		expect(
+			screen.getByRole("button", { name: "Report post" }),
+		).toBeTruthy();
 	});
 });

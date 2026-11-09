@@ -9,7 +9,11 @@ import {
 } from "./support/app";
 import { failDemoRequests } from "./support/demo-faults";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
-import { goToRightNow, RIGHT_NOW_FEED_TIMEOUT } from "./support/right-now";
+import {
+	goToRightNow,
+	RIGHT_NOW_FEED_TIMEOUT,
+	scrollFeedToBottom,
+} from "./support/right-now";
 
 const POST = '[data-slot="right-now-post"]';
 const DISCREET_POST = '[data-slot="right-now-discreet-post"]';
@@ -18,6 +22,7 @@ const FEED_SCROLLER = '[data-slot="right-now-scroller"]';
 const LIGHTBOX = ".pswp";
 const OPEN_PHOTO = "Open photo";
 const NOT_OPEN_PHOTO = /^(?!Open photo$)/;
+const NOT_REPORT_POST = /^(?!Report post$)/;
 const DEMO_DISCREET_POSTS = 2;
 const ORDERED_DISTANCES_CHECKED = 10;
 const SCROLLED_TOP = 1200;
@@ -48,12 +53,6 @@ function feedScrollTop(page: Page): Promise<number> {
 	return feedScroller(page).evaluate((scroller) => scroller.scrollTop);
 }
 
-function scrollFeedToBottom(page: Page): Promise<void> {
-	return feedScroller(page).evaluate((scroller) => {
-		scroller.scrollTop = scroller.scrollHeight;
-	});
-}
-
 function feedScrollRange(page: Page): Promise<number> {
 	return feedScroller(page).evaluate(
 		(scroller) => scroller.scrollHeight - scroller.clientHeight,
@@ -82,7 +81,7 @@ test.describe("the demo feed", () => {
 			.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 	});
 
-	test("posts show their headlines, and discreet posts offer no link or button but their photo", async ({
+	test("posts show their headlines, and discreet posts offer no link or button but their photo and Report", async ({
 		page,
 	}) => {
 		await expect(
@@ -102,7 +101,12 @@ test.describe("the demo feed", () => {
 
 		for (const card of await discreet.all()) {
 			await expect(card.getByRole("heading")).not.toBeEmpty();
-			await expect(card.getByRole("button")).toHaveCount(0);
+			await expect(
+				card.getByRole("button", { name: "Report post" }),
+			).toHaveCount(1);
+			await expect(
+				card.getByRole("button", { name: NOT_REPORT_POST }),
+			).toHaveCount(0);
 			await expect(
 				card.getByRole("link", { name: NOT_OPEN_PHOTO }),
 			).toHaveCount(0);

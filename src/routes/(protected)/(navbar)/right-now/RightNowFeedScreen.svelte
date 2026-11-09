@@ -60,6 +60,7 @@
 			<RightNowFeedList
 				{feed}
 				{ourProfileId}
+				ownPostId={ownPost.post?.id ?? null}
 				ownPostUnderReview={ownPost.pendingModeration}
 				onedit={ownPost.post === null ? null : () => (sheetOpen = true)}
 			/>
