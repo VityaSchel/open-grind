@@ -38,6 +38,10 @@ vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
 }));
 
+import {
+	defaultRightNowFeedFilters,
+	type RightNowFeedFilters,
+} from "#lib/model/right-now/filters.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
 import type { SubmittedReport } from "#lib/model/safety/reports.ts";
 import { discreetPostData, postData } from "./feed-post-test-helpers";
@@ -55,11 +59,14 @@ type FeedListState = Pick<
 const OUR_PROFILE_ID = 100;
 
 function stubFeed(items: RightNowFeedPost[]): RightNowFeedState {
-	const feed: FeedListState = {
+	const feed: FeedListState & {
+		filters: { current: RightNowFeedFilters; resetFilters: () => void };
+	} = {
 		loading: false,
 		error: null,
 		entries: items,
 		hasMore: false,
+		filters: { current: defaultRightNowFeedFilters, resetFilters: vi.fn() },
 	};
 	return feed as unknown as RightNowFeedState;
 }
@@ -94,6 +101,7 @@ function renderList({
 			ourProfileId: OUR_PROFILE_ID,
 			ownPostId,
 			ownPostUnderReview: false,
+			joinable: true,
 			onedit: vi.fn(),
 			feed: stubFeed(items),
 		},
@@ -131,6 +139,7 @@ describe("the Right Now feed list", () => {
 				ourProfileId: OUR_PROFILE_ID,
 				ownPostId: null,
 				ownPostUnderReview: false,
+				joinable: true,
 				onedit: vi.fn(),
 				feed: stubFeed([
 					{
@@ -189,6 +198,7 @@ describe("the Right Now feed list", () => {
 				ourProfileId: OUR_PROFILE_ID,
 				ownPostId: 1,
 				ownPostUnderReview: true,
+				joinable: false,
 				onedit,
 				feed: stubFeed([
 					{
@@ -210,6 +220,23 @@ describe("the Right Now feed list", () => {
 		);
 
 		expect(onedit).toHaveBeenCalledOnce();
+	});
+});
+
+describe("the Right Now feed list's room for the Join pill", () => {
+	const clearance = (container: HTMLElement) =>
+		container.querySelector('[data-slot="right-now-join-clearance"]');
+
+	it("sits under the posts", () => {
+		const { container } = renderList({ items: [standardPost] });
+
+		expect(clearance(container)).not.toBeNull();
+	});
+
+	it("is left out of the empty state so it stays centered", () => {
+		const { container } = renderList({ items: [] });
+
+		expect(clearance(container)).toBeNull();
 	});
 });
 
@@ -260,7 +287,7 @@ describe("reporting from the Right Now feed list", () => {
 
 		await vi.waitFor(() =>
 			expect(toastMock).toHaveBeenCalledExactlyOnceWith(
-				"Report submitted",
+				"Already reported",
 				{ description: "5 mins · Awaiting moderation" },
 			),
 		);
@@ -278,7 +305,7 @@ describe("reporting from the Right Now feed list", () => {
 
 		await vi.waitFor(() =>
 			expect(toastMock).toHaveBeenCalledExactlyOnceWith(
-				"Report submitted",
+				"Already reported",
 				{ description: "Awaiting moderation" },
 			),
 		);

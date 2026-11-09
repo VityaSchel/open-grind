@@ -20,12 +20,14 @@
 		ourProfileId,
 		ownPostId,
 		ownPostUnderReview,
+		joinable,
 		onedit,
 	}: {
 		feed: RightNowFeedState;
 		ourProfileId: number;
 		ownPostId: RightNowPostId | null;
 		ownPostUnderReview: boolean;
+		joinable: boolean;
 		onedit: (() => void) | null;
 	} = $props();
 
@@ -45,7 +47,7 @@
 			const earlier = await getRightNowPostReport({ postId, profileId });
 			if (check !== latestReportCheck) return;
 			if (earlier !== null) {
-				toast("Report submitted", {
+				toast("Already reported", {
 					description:
 						earlier.createTime === null
 							? "Awaiting moderation"
@@ -74,7 +76,10 @@
 			<div class="flex min-w-0 flex-1 flex-col gap-2">
 				<Skeleton class="h-6 w-3/4" />
 				<Skeleton class="aspect-square w-full max-w-3xs rounded-xl" />
-				<Skeleton class="my-2 h-5 w-1/3" />
+				<div class="flex items-center justify-between gap-2">
+					<Skeleton class="h-5 w-1/3" />
+					<Skeleton class="h-8 w-24 rounded-4xl" />
+				</div>
 			</div>
 		</div>
 	{/each}
@@ -87,7 +92,11 @@
 		/>
 	</div>
 {:else if feed.entries.length === 0}
-	<EmptyRightNowFeed filters={feed.filters} />
+	<EmptyRightNowFeed
+		filters={feed.filters}
+		ownPostRunning={ownPostId !== null}
+		{joinable}
+	/>
 {:else}
 	<ul class="flex flex-col">
 		{#each feed.entries as item (item.data.id)}
@@ -128,6 +137,7 @@
 			}}
 		></div>
 	{/if}
+	<div data-slot="right-now-join-clearance" class="h-12 shrink-0"></div>
 {/if}
 
 {#if reportTarget !== null}

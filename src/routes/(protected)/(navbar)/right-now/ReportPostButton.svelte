@@ -30,6 +30,6 @@
 	{#if checking}
 		<Spinner aria-hidden="true" />
 	{:else}
-		<FlagIcon weight="fill" class="size-4" />
+		<FlagIcon class="size-4" />
 	{/if}
 </Button>

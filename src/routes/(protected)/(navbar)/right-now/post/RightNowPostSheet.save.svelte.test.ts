@@ -218,7 +218,9 @@ describe("saving the Right Now post", () => {
 			await screen.findByRole("button", { name: "Upload a photo" }),
 		);
 
-		expect(await screen.findByText("Uploading photo")).toBeTruthy();
+		expect(
+			await screen.findByRole("img", { name: "Uploading photo" }),
+		).toBeTruthy();
 		expect(saveButton().matches(":disabled")).toBe(true);
 
 		upload.resolve({

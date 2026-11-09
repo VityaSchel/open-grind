@@ -17,7 +17,7 @@
 	class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground"
 >
 	<span class="flex items-center gap-1">
-		<ClockIcon class="size-4" />
+		<ClockIcon weight="fill" class="size-4" />
 		<time datetime={new Date(posted).toISOString()}>
 			<RelativeTimeDynamic date={posted} />
 		</time>

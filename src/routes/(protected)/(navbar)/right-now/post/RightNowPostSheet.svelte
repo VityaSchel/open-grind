@@ -135,12 +135,11 @@
 			>
 				<div class="flex min-w-0 flex-col gap-0.5">
 					<ResponsiveDialog.Title>Right Now</ResponsiveDialog.Title>
-					<p
-						data-slot="right-now-post-sheet-status"
-						class="text-sm text-muted-foreground tabular-nums"
-					>
-						{off ? "Off" : "Active"} · {timeLeft} left
-					</p>
+					<ResponsiveDialog.Description class="tabular-nums">
+						<span data-slot="right-now-post-sheet-status">
+							{off ? "Off" : "Active"} · {timeLeft} left
+						</span>
+					</ResponsiveDialog.Description>
 				</div>
 				<div class="flex shrink-0 items-center gap-2">
 					{#if toggling}

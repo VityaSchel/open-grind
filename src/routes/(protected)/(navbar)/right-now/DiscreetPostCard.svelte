@@ -50,7 +50,7 @@
 	<div
 		class="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
 	>
-		<DetectiveIcon class="size-6" />
+		<DetectiveIcon weight="fill" class="size-6" />
 	</div>
 	<div class="flex min-w-0 flex-1 flex-col gap-2">
 		<div class="flex flex-col gap-1">
@@ -58,7 +58,7 @@
 				<h2
 					id={headlineId}
 					class={[
-						"min-w-0 flex-1 font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
+						"min-w-0 flex-1 font-heading text-base font-medium wrap-break-word whitespace-pre-wrap",
 						{ "text-muted-foreground": !post.text },
 					]}
 				>
@@ -80,7 +80,7 @@
 		{#if photo}
 			<RightNowPostPhoto media={photo} />
 		{/if}
-		<div class="flex min-h-9 items-center">
+		<div class="flex min-h-8 items-center">
 			<RightNowPostMeta
 				posted={post.posted}
 				distance={post.distance}

@@ -77,7 +77,7 @@
 			<h2
 				id={headlineId}
 				class={[
-					"min-w-0 flex-1 font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
+					"min-w-0 flex-1 font-heading text-base font-medium wrap-break-word whitespace-pre-wrap",
 					{ "text-muted-foreground": !post.text },
 				]}
 			>

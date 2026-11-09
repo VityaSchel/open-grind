@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -100,6 +106,17 @@ afterEach(() => {
 });
 
 describe("the post photo field", () => {
+	it("names its controls after the Photo label", () => {
+		renderField();
+
+		expect(
+			within(screen.getByRole("group", { name: "Photo" })).getByRole(
+				"button",
+				{ name: "Add photo" },
+			),
+		).toBeTruthy();
+	});
+
 	it("lists only the chat drawer photos to pick from", async () => {
 		drawerApi.getAllDrawerMedia.mockResolvedValue([
 			drawerItem({ id: 301 }),
@@ -135,7 +152,9 @@ describe("the post photo field", () => {
 		expect(photoApi.uploadRightNowPhotoFromUrl).toHaveBeenCalledWith({
 			url: "https://cdns.grindr.com/chat/drawer/301",
 		});
-		expect(await screen.findByText("Uploading photo")).toBeTruthy();
+		expect(
+			await screen.findByRole("img", { name: "Uploading photo" }),
+		).toBeTruthy();
 		expect(stored.uploading).toBe(true);
 
 		upload.resolve(UPLOADED);

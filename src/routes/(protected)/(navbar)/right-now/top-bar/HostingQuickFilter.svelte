@@ -55,7 +55,7 @@
 			<RadioListItem value={optionValue}>
 				{#snippet children({ checked })}
 					<Item.Media>
-						<Icon class="size-5" />
+						<Icon weight="fill" class="size-5" />
 					</Item.Media>
 					<Item.Content>
 						<Item.Title>{label}</Item.Title>

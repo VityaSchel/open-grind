@@ -49,6 +49,16 @@ describe("the Right Now post sheet header", () => {
 		expect(visibilitySwitch().getAttribute("aria-checked")).toBe("false");
 	});
 
+	it("describes the sheet with the post's status", async () => {
+		await renderSheet(runningPost());
+
+		const sheet = screen.getByRole("dialog", { name: "Right Now" });
+		const description = document.getElementById(
+			sheet.getAttribute("aria-describedby") ?? "",
+		);
+		expect(description?.textContent.trim()).toBe("Active · 42m left");
+	});
+
 	it("counts the time left down", async () => {
 		const fake = runningPost();
 		await renderSheet(fake);

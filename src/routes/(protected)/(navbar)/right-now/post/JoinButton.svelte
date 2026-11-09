@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { sineOut } from "svelte/easing";
+
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { fly } from "#lib/util/reduced-motion.ts";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import { formatTimeLeft } from "./time-left";
 
@@ -40,22 +43,26 @@
 			? `Your Right Now post, off, ${timeLeft} left`
 			: `Your Right Now post, ${timeLeft} left`,
 	);
+	const runningText = $derived(
+		off ? `Off · ${timeLeft}` : `${timeLeft} left`,
+	);
 </script>
 
 {#if !unknown}
 	<div
 		data-slot="join-button"
 		class={[
-			"absolute end-4 bottom-nav-clear z-10 max-w-[calc(50%-var(--spacing)*11)]",
+			"absolute end-[max(var(--spacing)*4,calc(50%-var(--spacing)*80+var(--spacing)*4))] bottom-nav-clear z-10 max-w-[min(calc(50%-var(--spacing)*11),var(--spacing)*69)]",
 			{ "floating-chip": running },
 		]}
+		transition:fly={{ y: 48, opacity: 0, duration: 200, easing: sineOut }}
 	>
 		{#if running}
 			<Button
 				variant="outline"
 				size="lg"
 				aria-label={runningLabel}
-				class={["max-w-full ps-2.5 shadow-sm", { "opacity-60": off }]}
+				class="max-w-full ps-2.5 shadow-sm"
 				onclick={onopen}
 			>
 				<svg
@@ -82,15 +89,18 @@
 						stroke-linecap="round"
 						stroke-dasharray={RING_LENGTH}
 						stroke-dashoffset={RING_LENGTH * (1 - remaining)}
-						class="stroke-primary"
+						class={{
+							"stroke-primary": !off,
+							"stroke-muted-foreground": off,
+						}}
 					/>
 				</svg>
-				<span class="truncate tabular-nums">{timeLeft} left</span>
+				<span class="truncate tabular-nums">{runningText}</span>
 			</Button>
 		{:else}
 			<Button
 				size="lg"
-				class="max-w-full shadow-md"
+				class="max-w-full shadow-sm"
 				disabled={exhausted || post.joining}
 				aria-label={exhausted
 					? `${joinLabel}. No free posts left in this area`

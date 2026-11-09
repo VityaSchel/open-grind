@@ -125,14 +125,18 @@ describe("the Right Now join pill", () => {
 		expect(ringElapsed()).toBeCloseTo(0.75);
 	});
 
-	it("says the post is off while it is hidden", () => {
+	it("says the post is off while it is hidden, with a grey ring", () => {
 		renderButton(runningPost({ postStatus: "HIDDEN" }));
 
+		const button = screen.getByRole("button", {
+			name: "Your Right Now post, off, 42m left",
+		});
+		expect(button.textContent.trim()).toBe("Off · 42m");
 		expect(
-			screen.getByRole("button", {
-				name: "Your Right Now post, off, 42m left",
-			}),
-		).toBeTruthy();
+			button
+				.querySelector("[data-slot=join-button-ring-progress]")
+				?.classList.contains("stroke-muted-foreground"),
+		).toBe(true);
 	});
 
 	it("goes back to joining once the post ends", () => {

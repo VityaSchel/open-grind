@@ -3,6 +3,7 @@
 
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
+	import LocationChange from "#lib/components/location-chooser/LocationChange.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import RightNowPostControls from "./post/RightNowPostControls.svelte";
@@ -36,10 +37,11 @@
 </script>
 
 <main class="screen-nav-host">
-	<QuickFiltersBar>
+	<QuickFiltersBar contentClass="mx-auto w-full max-w-160">
+		<LocationChange />
 		<QuickFilters filters={feed.filters} />
 	</QuickFiltersBar>
-	{#if !feed.loading && !feed.error}
+	{#if !feed.loading && (feed.entries.length > 0 || !feed.error)}
 		<DataRefreshControl
 			{container}
 			updating={feed.refreshing}
@@ -50,7 +52,7 @@
 	<div
 		bind:this={container}
 		data-slot="right-now-scroller"
-		class="relative pull-scroller"
+		class="relative pull-scroller [scrollbar-gutter:stable_both-edges]"
 		onscroll={() => (feed.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div
@@ -62,12 +64,10 @@
 				{ourProfileId}
 				ownPostId={ownPost.post?.id ?? null}
 				ownPostUnderReview={ownPost.pendingModeration}
+				joinable={ownPost.status === "none" &&
+					ownPost.freePostsLeft !== 0}
 				onedit={ownPost.post === null ? null : () => (sheetOpen = true)}
 			/>
-			<div
-				data-slot="right-now-join-clearance"
-				class="h-12 shrink-0"
-			></div>
 		</div>
 	</div>
 	<ScrollToTopButton {container} class="bottom-nav-clear" />

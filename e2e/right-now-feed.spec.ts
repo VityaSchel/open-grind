@@ -204,7 +204,7 @@ test.describe("the demo feed", () => {
 		await dialog.getByRole("slider", { name: "Minimum age" }).press("End");
 		await dialog.getByRole("button", { name: "Apply" }).click();
 
-		await expect(page.getByText("No posts found")).toBeVisible({
+		await expect(page.getByText("No Results")).toBeVisible({
 			timeout: RIGHT_NOW_FEED_TIMEOUT,
 		});
 		await expect(articles(page)).toHaveCount(0);
@@ -214,7 +214,7 @@ test.describe("the demo feed", () => {
 		await expect(articles(page).first()).toBeVisible({
 			timeout: RIGHT_NOW_FEED_TIMEOUT,
 		});
-		await expect(page.getByText("No posts found")).toHaveCount(0);
+		await expect(page.getByText("No Results")).toHaveCount(0);
 	});
 
 	test("returning from a profile keeps the feed's scroll offset", async ({
