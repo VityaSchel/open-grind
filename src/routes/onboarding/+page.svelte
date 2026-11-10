@@ -3,6 +3,7 @@
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Checkbox } from "#lib/components/ui/checkbox/index.ts";
 	import { Label } from "#lib/components/ui/label/index.ts";
@@ -50,9 +51,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{t("shell.onboarding.title")}</title>
-</svelte:head>
+<PageTitle page={t("shell.onboarding.title")} />
 
 <main class="flex min-h-dvh flex-col px-8 pt-[calc(2rem+var(--safe-area-top))]">
 	<div

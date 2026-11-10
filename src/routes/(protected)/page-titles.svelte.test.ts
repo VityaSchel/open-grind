@@ -22,26 +22,30 @@ vi.mock("./(navbar)/settings/(me)/SignOutButton.svelte", () => ({
 vi.mock("./(navbar)/settings/(me)/Socials.svelte", () => ({
 	default: () => {},
 }));
-vi.mock("./(navbar)/profile/[profileId]/BackButton.svelte", () => ({
-	default: () => {},
+vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
+	hydratePreferences: () => new Promise(() => {}),
+	preferencesSnapshot: () => ({ geohash: null }),
 }));
-vi.mock("./(navbar)/profile/[profileId]/pager/ProfilePager.svelte", () => ({
-	default: () => {},
+vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
+	gridState: { onStartOver: () => () => {} },
+}));
+vi.mock("#lib/util/scroll-restore.svelte.ts", () => ({
+	restoreScrollOnce: () => {},
 }));
 
-import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import BrowsePage from "./(navbar)/(root)/+page.svelte";
 import TapsPage from "./(navbar)/interest/taps/+page.svelte";
 import ViewsPage from "./(navbar)/interest/views/+page.svelte";
-import ProfilePage from "./(navbar)/profile/[profileId]/+page.svelte";
 import RightNowPage from "./(navbar)/right-now/+page.svelte";
 import MePage from "./(navbar)/settings/(me)/+page.svelte";
-import ConversationPage from "./chat/[conversationId]/+page.svelte";
 import InboxPage from "./chat/+page.svelte";
 
 const DATA = { ourProfileId: 1 };
 
 const pages = [
+	{ route: "/", title: "Browse", open: () => render(BrowsePage) },
 	{
 		route: "/settings",
 		title: "Me",
@@ -55,19 +59,6 @@ const pages = [
 	{ route: "/interest/taps", title: "Taps", open: () => render(TapsPage) },
 	{ route: "/interest/views", title: "Views", open: () => render(ViewsPage) },
 	{ route: "/chat", title: "Inbox", open: () => render(InboxPage) },
-	{
-		route: "/chat/[conversationId]",
-		title: "Conversation",
-		open: () => render(ConversationPage),
-	},
-	{
-		route: "/profile/[profileId]",
-		title: "Profile",
-		open: () =>
-			render(ProfilePage, {
-				props: { data: DATA, params: { profileId: "100001" } },
-			}),
-	},
 ];
 
 afterEach(async () => {
@@ -84,12 +75,12 @@ describe("page titles", () => {
 
 			open();
 
-			expect(document.title).toBe(title);
+			expect(document.title).toBe(`${title} — Open Grind`);
 
 			await setLocale({ locale: "en-XA" });
 
 			await vi.waitFor(() =>
-				expect(document.title).toMatch(PSEUDO_MESSAGE),
+				expect(document.title).toMatch(PSEUDO_TITLE),
 			);
 		},
 	);

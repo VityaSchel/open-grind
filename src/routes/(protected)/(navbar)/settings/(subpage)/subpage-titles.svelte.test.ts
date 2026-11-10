@@ -14,7 +14,7 @@ vi.mock("$app/navigation", () => ({
 	beforeNavigate: vi.fn(),
 }));
 
-import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import SubpageLayout from "./+layout.svelte";
 
@@ -72,12 +72,12 @@ describe("settings subpages", () => {
 
 			openSubpage(route);
 
-			expect(document.title).toBe(title);
+			expect(document.title).toBe(`${title} — Open Grind`);
 
 			await setLocale({ locale: "en-XA" });
 
 			await vi.waitFor(() =>
-				expect(document.title).toMatch(PSEUDO_MESSAGE),
+				expect(document.title).toMatch(PSEUDO_TITLE),
 			);
 		},
 	);

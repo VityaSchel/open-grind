@@ -63,6 +63,10 @@ describe("the unexpected error page", () => {
 		copyErrorConfirmState.resolve = null;
 	});
 
+	it("names the error in the window title", () => {
+		expect(document.title).toBe("Unexpected error — Open Grind");
+	});
+
 	it("asks whether to redact the error before copying anything", async () => {
 		await fireEvent.click(
 			screen.getByRole("button", { name: "Copy error details" }),

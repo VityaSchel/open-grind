@@ -3,7 +3,7 @@ import { readdirSync } from "node:fs";
 import { sep } from "node:path";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
+import { PSEUDO_TITLE } from "../src/lib/i18n/fixtures/pseudo-message";
 import { SHARED_ALBUM_ID } from "./support/albums";
 import {
 	DEMO_GEOHASH,
@@ -13,7 +13,7 @@ import {
 	runPaletteCommand,
 } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
-import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
+import { readPseudoText } from "./support/pseudo";
 
 test.use({ baseURL: DEV_SERVER_URL });
 
@@ -30,7 +30,6 @@ interface RouteCase {
 	shows: string;
 	state?: string;
 	platforms?: readonly Platform[];
-	title?: string | RegExp;
 	layout?: ModuleOverride;
 	prepare?: (page: Page) => Promise<void>;
 }
@@ -64,18 +63,12 @@ async function chooseDemoLocation(page: Page): Promise<void> {
 }
 
 const routes: readonly RouteCase[] = [
-	{
-		route: "/(protected)/(navbar)/(root)",
-		path: "/",
-		shows: EMPTY_TITLE,
-		title: BRAND_TITLE,
-	},
+	{ route: "/(protected)/(navbar)/(root)", path: "/", shows: EMPTY_TITLE },
 	{
 		route: "/(protected)/(navbar)/(root)",
 		state: "with a location",
 		path: "/",
 		shows: '[data-slot="grid-cells"] a[href^="/profile/"]',
-		title: BRAND_TITLE,
 		prepare: chooseDemoLocation,
 	},
 	{
@@ -282,7 +275,6 @@ for (const {
 	path,
 	shows,
 	platforms = SIGNED_IN,
-	title = PSEUDO_MESSAGE,
 	layout,
 	prepare,
 } of routes) {
@@ -299,10 +291,9 @@ for (const {
 				.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 			expect(await pathname(page)).toBe(path);
 			await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
-			await expect(page).toHaveTitle(title);
+			await expect(page).toHaveTitle(PSEUDO_TITLE);
 			const { messages, leaks } = await readPseudoText(
 				page.locator("body"),
-				{ brandTitle: BRAND_TITLE },
 			);
 			expect(messages).toBeGreaterThan(0);
 			expect(leaks).toEqual([]);

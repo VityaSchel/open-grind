@@ -2,14 +2,13 @@
 	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
 
 	import IssueLink from "#lib/components/feedback/IssueLink.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import * as Alert from "#lib/components/ui/alert/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import Rich from "#lib/i18n/Rich.svelte";
 </script>
 
-<svelte:head>
-	<title>{t("shell.navBar.tabs.rightNow")}</title>
-</svelte:head>
+<PageTitle page={t("shell.navBar.tabs.rightNow")} />
 
 <main class="flex flex-1 px-8">
 	<Alert.Root class="m-auto w-full max-w-sm">

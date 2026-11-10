@@ -3,7 +3,7 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 
 vi.mock("./sign-in/SignInForm.svelte", () => ({ default: () => {} }));
@@ -50,11 +50,11 @@ describe("auth pages", () => {
 			const { default: page } = await load();
 			render(page);
 
-			expect(document.title).toBe(title);
+			expect(document.title).toBe(`${title} — Open Grind`);
 
 			await setLocale({ locale: "en-XA" });
 
-			expect(document.title).toMatch(PSEUDO_MESSAGE);
+			expect(document.title).toMatch(PSEUDO_TITLE);
 		},
 	);
 });

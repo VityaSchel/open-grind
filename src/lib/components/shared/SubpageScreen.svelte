@@ -15,6 +15,7 @@
 	import type { Snippet } from "svelte";
 
 	import BackLink from "#lib/components/navigation/BackLink.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
@@ -57,9 +58,9 @@
 	});
 </script>
 
-<svelte:head>
-	<title>{title}</title>
-</svelte:head>
+{#if current.title !== undefined}
+	<PageTitle page={title} />
+{/if}
 
 <ProgressiveBlur
 	direction="topToBottom"

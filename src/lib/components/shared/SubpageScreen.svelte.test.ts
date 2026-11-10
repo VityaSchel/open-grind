@@ -13,7 +13,10 @@ vi.mock("$app/navigation", () => ({
 	beforeNavigate: vi.fn(),
 }));
 
-import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import {
+	PSEUDO_MESSAGE,
+	PSEUDO_TITLE,
+} from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import SubpageScreen from "./SubpageScreen.svelte";
 
@@ -51,16 +54,13 @@ describe("SubpageScreen", () => {
 
 		renderAt("/settings/account");
 
-		expect(document.title).toBe("Account Settings");
+		expect(document.title).toBe("Account Settings — Open Grind");
 	});
 
 	it("leaves an unlisted route untitled and goes back to the parent", () => {
-		document.title = "Edit Album";
-
 		const header = renderAt("/settings/elsewhere");
 
 		expect(header.textContent.trim()).toBe("");
-		expect(document.title).toBe("");
 		expect(
 			screen.getByRole("link", { name: "Back" }).getAttribute("href"),
 		).toBe("/");
@@ -74,6 +74,7 @@ describe("SubpageScreen", () => {
 		await vi.waitFor(() =>
 			expect(header.textContent.trim()).toMatch(PSEUDO_MESSAGE),
 		);
-		expect(document.title).toBe(header.textContent.trim());
+		expect(document.title).toMatch(PSEUDO_TITLE);
+		expect(document.title).toContain(header.textContent.trim());
 	});
 });

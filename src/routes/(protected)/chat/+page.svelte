@@ -1,7 +1,6 @@
 <script lang="ts">
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { t } from "#lib/i18n/index.ts";
 </script>
 
-<svelte:head>
-	<title>{t("shell.navBar.tabs.inbox")}</title>
-</svelte:head>
+<PageTitle page={t("shell.navBar.tabs.inbox")} />

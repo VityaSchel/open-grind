@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { version } from "$app/env";
 
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import AccountSettingsLink from "./AccountSettingsLink.svelte";
 	import AlbumsLink from "./AlbumsLink.svelte";
@@ -12,9 +13,7 @@
 	const { data }: import("./$types").PageProps = $props();
 </script>
 
-<svelte:head>
-	<title>{t("shell.navBar.a11y.me")}</title>
-</svelte:head>
+<PageTitle page={t("shell.navBar.a11y.me")} />
 
 <main class="screen-nav-host">
 	<div
