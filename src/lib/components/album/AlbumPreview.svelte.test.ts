@@ -124,7 +124,9 @@ describe("album warning", () => {
 				ourAlbum,
 			},
 		});
-		return screen.getByRole("button", { name: "Open album" });
+		return screen.getByRole<HTMLButtonElement>("button", {
+			name: "Open album",
+		});
 	}
 
 	it("asks before loading someone else's album and opens it after View", async () => {

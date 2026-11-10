@@ -43,6 +43,16 @@ const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
 const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
 const versionName = `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`;
 
+const releaseTreeShakesDemo = {
+	name: "open-grind:release-tree-shakes-demo",
+	apply: (_config, { command }) =>
+		command === "build" && process.env.OPEN_GRIND_DEMO !== "1",
+	transform: {
+		filter: { id: /\/src\/lib\/demo\// },
+		handler: () => ({ moduleSideEffects: false }),
+	},
+};
+
 // https://vite.dev/config/
 export default defineConfig(async ({ command }) => ({
 	plugins: [
@@ -53,6 +63,7 @@ export default defineConfig(async ({ command }) => ({
 			version: { name: versionName, pollInterval: 0 },
 		}),
 		tailwindcss(),
+		releaseTreeShakesDemo,
 	],
 	resolve: {
 		alias: { $layout: path.join(root, "src/layout.css") },
