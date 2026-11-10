@@ -7,6 +7,10 @@
 	import Rich from "#lib/i18n/Rich.svelte";
 </script>
 
+<svelte:head>
+	<title>{t("shell.navBar.tabs.rightNow")}</title>
+</svelte:head>
+
 <main class="flex flex-1 px-8">
 	<Alert.Root class="m-auto w-full max-w-sm">
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { version } from "$app/env";
 
+	import { t } from "#lib/i18n/index.ts";
 	import AccountSettingsLink from "./AccountSettingsLink.svelte";
 	import AlbumsLink from "./AlbumsLink.svelte";
 	import AppSettingsLink from "./AppSettingsLink.svelte";
@@ -10,6 +11,10 @@
 
 	const { data }: import("./$types").PageProps = $props();
 </script>
+
+<svelte:head>
+	<title>{t("shell.navBar.a11y.me")}</title>
+</svelte:head>
 
 <main class="screen-nav-host">
 	<div

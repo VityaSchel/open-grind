@@ -32,6 +32,7 @@ function renderAt(routeId: string) {
 
 afterEach(async () => {
 	cleanup();
+	document.title = "";
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -45,10 +46,21 @@ describe("SubpageScreen", () => {
 		).toBe("/settings");
 	});
 
+	it("replaces the previous page's document title with its own", () => {
+		document.title = "Edit Album";
+
+		renderAt("/settings/account");
+
+		expect(document.title).toBe("Account Settings");
+	});
+
 	it("leaves an unlisted route untitled and goes back to the parent", () => {
+		document.title = "Edit Album";
+
 		const header = renderAt("/settings/elsewhere");
 
 		expect(header.textContent.trim()).toBe("");
+		expect(document.title).toBe("");
 		expect(
 			screen.getByRole("link", { name: "Back" }).getAttribute("href"),
 		).toBe("/");
@@ -62,5 +74,6 @@ describe("SubpageScreen", () => {
 		await vi.waitFor(() =>
 			expect(header.textContent.trim()).toMatch(PSEUDO_MESSAGE),
 		);
+		expect(document.title).toBe(header.textContent.trim());
 	});
 });

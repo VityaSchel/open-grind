@@ -692,6 +692,7 @@ export interface Messages {
 	"profile.onlineStatus.onlineNowVisiting": undefined;
 	"profile.onlineStatus.visiting": undefined;
 	"profile.page.errors.refreshFailed": undefined;
+	"profile.page.title": undefined;
 	"profile.relationshipStatus.committed": undefined;
 	"profile.relationshipStatus.dating": undefined;
 	"profile.relationshipStatus.engaged": undefined;

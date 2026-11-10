@@ -30,7 +30,7 @@ interface RouteCase {
 	shows: string;
 	state?: string;
 	platforms?: readonly Platform[];
-	titled?: boolean;
+	title?: string | RegExp;
 	layout?: ModuleOverride;
 	prepare?: (page: Page) => Promise<void>;
 }
@@ -64,12 +64,18 @@ async function chooseDemoLocation(page: Page): Promise<void> {
 }
 
 const routes: readonly RouteCase[] = [
-	{ route: "/(protected)/(navbar)/(root)", path: "/", shows: EMPTY_TITLE },
+	{
+		route: "/(protected)/(navbar)/(root)",
+		path: "/",
+		shows: EMPTY_TITLE,
+		title: BRAND_TITLE,
+	},
 	{
 		route: "/(protected)/(navbar)/(root)",
 		state: "with a location",
 		path: "/",
 		shows: '[data-slot="grid-cells"] a[href^="/profile/"]',
+		title: BRAND_TITLE,
 		prepare: chooseDemoLocation,
 	},
 	{
@@ -106,13 +112,11 @@ const routes: readonly RouteCase[] = [
 		route: "/(protected)/(navbar)/settings/(subpage)/account/blocked",
 		path: `${ACCOUNT}/blocked`,
 		shows: SWITCH,
-		titled: true,
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/account/hidden",
 		path: `${ACCOUNT}/hidden`,
 		shows: `${EMPTY_TITLE}, ${SWITCH}`,
-		titled: true,
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/account/privacy",
@@ -123,19 +127,16 @@ const routes: readonly RouteCase[] = [
 		route: "/(protected)/(navbar)/settings/(subpage)/albums",
 		path: ALBUMS,
 		shows: '[data-slot="album-tile"]',
-		titled: true,
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/albums/[albumId]",
 		path: `${ALBUMS}/${SHARED_ALBUM_ID}`,
 		shows: '[data-slot="media-slot"]',
-		titled: true,
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/albums/new",
 		path: `${ALBUMS}/new`,
 		shows: EMPTY_TITLE,
-		titled: true,
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/app",
@@ -193,7 +194,6 @@ const routes: readonly RouteCase[] = [
 		path: "/auth/password-reset",
 		shows: ALERT,
 		platforms: SIGNED_OUT,
-		titled: true,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -201,7 +201,6 @@ const routes: readonly RouteCase[] = [
 		path: "/auth/sign-in",
 		shows: '[data-slot="input"][type="email"]',
 		platforms: SIGNED_OUT,
-		titled: true,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -210,7 +209,6 @@ const routes: readonly RouteCase[] = [
 		path: "/auth/sign-in/google",
 		shows: '[data-slot="textarea"]',
 		platforms: ["web", "desktop"],
-		titled: true,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -219,7 +217,6 @@ const routes: readonly RouteCase[] = [
 		path: "/auth/sign-in/google",
 		shows: '[data-slot="card-footer"] [data-slot="button"][type="button"]',
 		platforms: ["android"],
-		titled: true,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -227,14 +224,12 @@ const routes: readonly RouteCase[] = [
 		path: "/auth/sign-up",
 		shows: ALERT,
 		platforms: SIGNED_OUT,
-		titled: true,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
 		route: "/onboarding",
 		path: "/onboarding",
 		shows: 'main [data-slot="button"]',
-		titled: true,
 		layout: ROOT_LAYOUT_WITHOUT_REDIRECTS,
 	},
 ];
@@ -287,7 +282,7 @@ for (const {
 	path,
 	shows,
 	platforms = SIGNED_IN,
-	titled = false,
+	title = PSEUDO_MESSAGE,
 	layout,
 	prepare,
 } of routes) {
@@ -304,7 +299,7 @@ for (const {
 				.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 			expect(await pathname(page)).toBe(path);
 			await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
-			if (titled) await expect(page).toHaveTitle(PSEUDO_MESSAGE);
+			await expect(page).toHaveTitle(title);
 			const { messages, leaks } = await readPseudoText(
 				page.locator("body"),
 				{ brandTitle: BRAND_TITLE },

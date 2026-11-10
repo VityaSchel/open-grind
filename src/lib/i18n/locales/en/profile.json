@@ -207,6 +207,7 @@
 		}
 	},
 	"page": {
+		"title": "Profile",
 		"errors": {
 			"refreshFailed": "Couldn’t refresh profile"
 		}

@@ -14,10 +14,6 @@
 	import { t } from "#lib/i18n/index.ts";
 </script>
 
-<svelte:head>
-	<title>{t("settings.subpage.titles.hidden")}</title>
-</svelte:head>
-
 {#snippet icon(on: boolean)}
 	<EyeSlashIcon weight={on ? "fill" : "regular"} class="size-6" />
 {/snippet}

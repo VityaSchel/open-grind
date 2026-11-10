@@ -36,6 +36,8 @@
 		(page.route.id && routes[page.route.id]) ?? { back: parent },
 	);
 
+	const title = $derived(current.title === undefined ? "" : t(current.title));
+
 	let scroller: HTMLDivElement | null = $state(null);
 	const offsets: Record<string, number> = {};
 
@@ -55,6 +57,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{title}</title>
+</svelte:head>
+
 <ProgressiveBlur
 	direction="topToBottom"
 	class="fixed top-0 left-0 z-20 h-[calc(4.75rem+var(--safe-area-top))] w-full shrink-0"
@@ -70,9 +76,7 @@
 	>
 		<ArrowLeftIcon size={32} />
 	</BackLink>
-	<span class="min-w-0 flex-1 truncate">
-		{current.title === undefined ? "" : t(current.title)}
-	</span>
+	<span class="min-w-0 flex-1 truncate">{title}</span>
 	{@render actions.snippet?.()}
 </ProgressiveBlur>
 <main class="screen-nav-host">
