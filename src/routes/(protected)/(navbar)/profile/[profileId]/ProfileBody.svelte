@@ -31,6 +31,7 @@
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import type { ProfileState } from "./profile-state.svelte";
 	import ProfileHeading from "./ProfileHeading.svelte";
+	import ProfileRightNowPost from "./ProfileRightNowPost.svelte";
 	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
 	import RightNowBadge from "./RightNowBadge.svelte";
@@ -99,6 +100,12 @@
 				{/if}
 				<Height {height} {weight} {bodyType} />
 			</div>
+		{/if}
+		{#if profileState.rightNowPost !== null}
+			<ProfileRightNowPost
+				post={profileState.rightNowPost}
+				own={ourProfile}
+			/>
 		{/if}
 		<ProfileTags tags={profileTags} />
 		{#if aboutMe !== null}

@@ -78,7 +78,10 @@
 			{/if}
 		</div>
 		{#if photo}
-			<RightNowPostPhoto media={photo.data} />
+			<RightNowPostPhoto
+				media={photo.data}
+				blurred={photo.data.isNsfw && photo.data.shouldBlur}
+			/>
 		{/if}
 		<div class="flex min-h-8 items-center">
 			<RightNowPostMeta

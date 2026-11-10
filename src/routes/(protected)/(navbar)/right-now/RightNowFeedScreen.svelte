@@ -4,6 +4,7 @@
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
 	import LocationChange from "#lib/components/location-chooser/LocationChange.svelte";
+	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.svelte.ts";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import RightNowPostControls from "./post/RightNowPostControls.svelte";
@@ -20,6 +21,8 @@
 
 	let container: HTMLDivElement | null = $state(null);
 	let sheetOpen = $state(false);
+	let sheetRequested = rightNowPostSheetRequest.pending;
+	rightNowPostSheetRequest.settle();
 	let labeledChip = $state(false);
 
 	$effect(() => feed.attachView());
@@ -27,6 +30,12 @@
 	$effect(() => feed.followLocation(geohash));
 
 	$effect(() => ownPost.followLocation(geohash));
+
+	$effect(() => {
+		if (!sheetRequested || ownPost.loading) return;
+		sheetRequested = false;
+		if (ownPost.post !== null) sheetOpen = true;
+	});
 
 	restoreScrollOnce({ container: () => container, state: feed });
 

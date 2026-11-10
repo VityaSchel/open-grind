@@ -6,6 +6,7 @@ import {
 } from "#lib/api/account-caches.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { sendMessage } from "#lib/api/messaging/messages.ts";
+import { getProfileRightNowPost } from "#lib/api/right-now/post.ts";
 import {
 	getFavoriteNote,
 	invalidateFavoriteNote,
@@ -24,6 +25,7 @@ import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
 import type { TapType } from "#lib/model/interest/taps.ts";
+import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
 import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
 
@@ -59,6 +61,7 @@ export async function applyViewabilityChange(
 export class ProfileState {
 	profile: Profile | null = $state(null);
 	note: FavoriteNote | null = $state(null);
+	rightNowPost: RightNowPostDetails | null = $state.raw(null);
 	loading = $state(true);
 	refreshing = $state(false);
 	error: Error | null = $state(null);
@@ -72,6 +75,7 @@ export class ProfileState {
 	#viewabilityChanges = new Generation();
 	#destroyed = false;
 	#active = false;
+	#rightNowPostGeneration = -1;
 
 	constructor({
 		profileId,
@@ -155,6 +159,11 @@ export class ProfileState {
 		if (this.#active) return;
 		this.#active = true;
 		if (this.profile?.isFavorite && !this.note) void this.#loadNote();
+		if (
+			!this.refreshing &&
+			this.#rightNowPostGeneration !== this.#generation.current
+		)
+			void this.#loadRightNowPost();
 	}
 
 	deactivate(): void {
@@ -258,6 +267,7 @@ export class ProfileState {
 			this.error = null;
 			this.profile = null;
 			this.note = null;
+			this.rightNowPost = null;
 		}
 		const generation = this.#generation.next();
 		const errorBeforeLoad = this.error;
@@ -269,6 +279,7 @@ export class ProfileState {
 			this.profile = profile;
 			if (this.error === errorBeforeLoad) this.error = null;
 			if (profile.isFavorite) void this.#loadNote();
+			void this.#loadRightNowPost();
 		} catch (error) {
 			if (this.#superseded(generation)) return;
 			if (refresh && !isUnviewableProfileError(error)) {
@@ -278,6 +289,8 @@ export class ProfileState {
 					error,
 					onRetry: () => void this.refresh(),
 				});
+				if (this.#rightNowPostGeneration !== this.#generation.current)
+					void this.#loadRightNowPost();
 				return;
 			}
 			this.error =
@@ -298,6 +311,26 @@ export class ProfileState {
 			const note = await getFavoriteNote({ profileId: this.profileId });
 			if (this.#superseded(generation)) return;
 			this.note = note;
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	async #loadRightNowPost(): Promise<void> {
+		if (!this.#active || this.profile === null) return;
+		const generation = this.#generation.current;
+		this.#rightNowPostGeneration = generation;
+		const { rightNow } = this.profile;
+		if (rightNow !== "HOSTING" && rightNow !== "NOT_HOSTING") {
+			this.rightNowPost = null;
+			return;
+		}
+		try {
+			const post = await getProfileRightNowPost({
+				profileId: this.profileId,
+			});
+			if (this.#superseded(generation)) return;
+			this.rightNowPost = post;
 		} catch (error) {
 			console.error(error);
 		}

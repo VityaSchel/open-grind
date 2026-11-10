@@ -55,6 +55,17 @@ export async function getActiveRightNowPost() {
 	return post;
 }
 
+export async function getProfileRightNowPost({
+	profileId,
+}: {
+	profileId: number;
+}): Promise<RightNowPostDetails | null> {
+	const { post } = await fetchRest(`/v3/rightnow/profiles/${profileId}`).then(
+		(res) => res.jsonParsed(rightNowPostResponseSchema),
+	);
+	return post;
+}
+
 export async function createRightNowPost({
 	post,
 }: {

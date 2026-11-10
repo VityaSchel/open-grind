@@ -6,6 +6,7 @@ const {
 	getActiveRightNowPostMock,
 	getPreferencesMock,
 	getRightNowPostEntitlementsMock,
+	invalidateProfileMock,
 	isAssignmentOnMock,
 	NoFreeRightNowPostsError,
 	refreshFeedMock,
@@ -23,6 +24,7 @@ const {
 	getActiveRightNowPostMock: vi.fn(),
 	getPreferencesMock: vi.fn(),
 	getRightNowPostEntitlementsMock: vi.fn(),
+	invalidateProfileMock: vi.fn(),
 	isAssignmentOnMock: vi.fn<(flag: { key: string }) => Promise<boolean>>(),
 	NoFreeRightNowPostsError: class extends Error {},
 	refreshFeedMock: vi.fn(() => Promise.resolve()),
@@ -62,6 +64,10 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 }));
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: storeLocationMock }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
+	invalidateProfile: invalidateProfileMock,
+}));
 vi.mock("./right-now-feed-state.svelte", () => ({
 	getRightNowFeedState: () => ({ refreshOrDefer: refreshFeedMock }),
 }));
@@ -295,7 +301,7 @@ describe("RightNowPostState load", () => {
 });
 
 describe("RightNowPostState join", () => {
-	it("creates an empty post inside the location hold and refreshes the feed", async () => {
+	it("creates an empty post inside the location hold and refreshes the feed and our profile", async () => {
 		const state = await loadedState();
 		storeLocationMock.mockClear();
 
@@ -313,6 +319,7 @@ describe("RightNowPostState join", () => {
 		expect(state.freePostsLeft).toBe(2);
 		expect(state.joining).toBe(false);
 		expect(refreshFeedMock).toHaveBeenCalledWith({ attended: true });
+		expect(invalidateProfileMock).toHaveBeenCalledWith(PROFILE_ID);
 	});
 
 	it("shows joining while the post is created", async () => {

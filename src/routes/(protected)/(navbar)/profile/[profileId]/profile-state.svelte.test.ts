@@ -8,6 +8,7 @@ const {
 	invalidateFavoriteNoteMock,
 	showErrorToastMock,
 	isProfileCachedMock,
+	getProfileRightNowPostMock,
 } = vi.hoisted(() => ({
 	getProfileMock: vi.fn(),
 	refreshProfileMock: vi.fn(),
@@ -16,6 +17,7 @@ const {
 	invalidateFavoriteNoteMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	isProfileCachedMock: vi.fn<(profileId: number) => boolean>(),
+	getProfileRightNowPostMock: vi.fn(),
 }));
 
 vi.mock("#lib/api/error-toast.ts", () => ({
@@ -24,6 +26,9 @@ vi.mock("#lib/api/error-toast.ts", () => ({
 vi.mock("#lib/api/users/favorites.ts", () => ({
 	getFavoriteNote: getFavoriteNoteMock,
 	invalidateFavoriteNote: invalidateFavoriteNoteMock,
+}));
+vi.mock("#lib/api/right-now/post.ts", () => ({
+	getProfileRightNowPost: getProfileRightNowPostMock,
 }));
 vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
@@ -39,6 +44,7 @@ import {
 	ProfileUnavailableError,
 } from "#lib/api/users/profiles.ts";
 import { TapType } from "#lib/model/interest/taps.ts";
+import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
 import { ProfileState } from "./profile-state.svelte";
 
@@ -76,6 +82,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(profile());
 	getFavoriteNoteMock.mockResolvedValue({ notes: "", phoneNumber: "" });
+	getProfileRightNowPostMock.mockResolvedValue(null);
 });
 
 describe("ProfileState loading", () => {
@@ -581,5 +588,134 @@ describe("ProfileState favorite notes", () => {
 
 		expect(state.profile?.isFavorite).toBe(true);
 		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("ProfileState Right Now post", () => {
+	const post = { id: 880_001, profileId: PROFILE_ID } as RightNowPostDetails;
+
+	it("does not ask for the post of a profile that is not on Right Now", async () => {
+		getProfileMock.mockResolvedValue(profile({ rightNow: "NOT_ACTIVE" }));
+		const state = create();
+		state.activate();
+		await flush();
+
+		expect(getProfileRightNowPostMock).not.toHaveBeenCalled();
+		expect(state.rightNowPost).toBeNull();
+	});
+
+	it("waits until the profile is the active one before asking for its post", async () => {
+		getProfileMock.mockResolvedValue(profile({ rightNow: "HOSTING" }));
+		getProfileRightNowPostMock.mockResolvedValue(post);
+		const state = create();
+		await flush();
+
+		expect(getProfileRightNowPostMock).not.toHaveBeenCalled();
+
+		state.activate();
+		state.deactivate();
+		state.activate();
+		await flush();
+
+		expect(getProfileRightNowPostMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+		});
+		expect(state.rightNowPost).toBe(post);
+	});
+
+	it("asks again on refresh and drops an answer the refresh overtook", async () => {
+		getProfileMock.mockResolvedValue(profile({ rightNow: "NOT_HOSTING" }));
+		refreshProfileMock.mockResolvedValue(
+			profile({ rightNow: "NOT_HOSTING" }),
+		);
+		const stale = Promise.withResolvers<RightNowPostDetails | null>();
+		getProfileRightNowPostMock
+			.mockReturnValueOnce(stale.promise)
+			.mockResolvedValueOnce(post);
+		const state = create();
+		state.activate();
+		await flush();
+
+		state.refresh();
+		await flush();
+		stale.resolve({ ...post, id: 1 });
+		await flush();
+
+		expect(getProfileRightNowPostMock).toHaveBeenCalledTimes(2);
+		expect(state.rightNowPost).toBe(post);
+	});
+
+	it("asks once for the post of a profile fetched earlier once it becomes active", async () => {
+		getProfileRightNowPostMock.mockResolvedValue(post);
+		const state = new ProfileState({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+			fetched: { profile: profile({ rightNow: "HOSTING" }), note: null },
+		});
+
+		state.activate();
+		await flush();
+
+		expect(getProfileRightNowPostMock).toHaveBeenCalledOnce();
+		expect(state.rightNowPost).toBe(post);
+	});
+
+	it("asks once when the profile becomes active while a refresh is running", async () => {
+		getProfileRightNowPostMock.mockResolvedValue(post);
+		const refreshed = Promise.withResolvers<Profile>();
+		refreshProfileMock.mockReturnValueOnce(refreshed.promise);
+		const state = new ProfileState({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+			fetched: {
+				profile: profile({ rightNow: "NOT_ACTIVE" }),
+				note: null,
+			},
+		});
+
+		state.refresh();
+		state.activate();
+		refreshed.resolve(profile({ rightNow: "HOSTING" }));
+		await flush();
+
+		expect(getProfileRightNowPostMock).toHaveBeenCalledOnce();
+		expect(state.rightNowPost).toBe(post);
+	});
+
+	it("asks for the post when the profile became active during a refresh that failed", async () => {
+		getProfileRightNowPostMock.mockResolvedValue(post);
+		refreshProfileMock.mockRejectedValueOnce(new Error("offline"));
+		const state = new ProfileState({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+			fetched: { profile: profile({ rightNow: "HOSTING" }), note: null },
+		});
+
+		state.refresh();
+		state.activate();
+		await flush();
+
+		expect(getProfileRightNowPostMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+		});
+		expect(state.rightNowPost).toBe(post);
+	});
+
+	it("clears the post once a refresh shows the profile left Right Now", async () => {
+		getProfileMock.mockResolvedValue(profile({ rightNow: "HOSTING" }));
+		getProfileRightNowPostMock.mockResolvedValue(post);
+		const state = create();
+		state.activate();
+		await flush();
+		expect(state.rightNowPost).toBe(post);
+
+		refreshProfileMock.mockResolvedValue(
+			profile({ rightNow: "NOT_ACTIVE" }),
+		);
+		state.refresh();
+		await flush();
+
+		expect(state.rightNowPost).toBeNull();
+		expect(getProfileRightNowPostMock).toHaveBeenCalledOnce();
 	});
 });

@@ -255,16 +255,35 @@ function feedOrder(
 }
 
 export function demoRightNowStatusOf(profileId: number): RightNowStatus {
+	const post = demoProfileRightNowPost(profileId);
+	if (post === null) return "NOT_ACTIVE";
+	return post.hosting ? "HOSTING" : "NOT_HOSTING";
+}
+
+export function demoProfileRightNowPost(profileId: number) {
 	if (profileId === demoMeProfileId) {
 		const own = demoActiveRightNowPost();
-		if (own?.postStatus !== "ACTIVE") return "NOT_ACTIVE";
-		return own.hosting ? "HOSTING" : "NOT_HOSTING";
+		return own?.postStatus === "ACTIVE" ? own : null;
 	}
 	const index = feedAuthorIds.indexOf(profileId);
-	if (index === -1 || DISCREET_INDEXES.has(index)) return "NOT_ACTIVE";
-	return feedPost({ index, profileId }).item.data.hosting
-		? "HOSTING"
-		: "NOT_HOSTING";
+	if (index === -1 || DISCREET_INDEXES.has(index)) return null;
+	const { data } = feedPost({ index, profileId }).item;
+	return {
+		id: data.id,
+		profileId,
+		posted: data.posted,
+		expiration: data.expiration,
+		hosting: data.hosting,
+		activeText: data.text ?? null,
+		moderatedText: null,
+		media: data.media.map((media) => media.data),
+		lat: null,
+		lon: null,
+		postStatus: "ACTIVE",
+		shareLocation: "NONE",
+		locationRadius: null,
+		isDiscreet: "FALSE",
+	};
 }
 
 export function demoRightNowFeed(params: URLSearchParams) {

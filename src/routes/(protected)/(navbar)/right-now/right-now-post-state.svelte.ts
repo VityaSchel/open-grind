@@ -20,6 +20,7 @@ import {
 	setRightNowPostHidden,
 	updateRightNowPost,
 } from "#lib/api/right-now/post.ts";
+import { invalidateProfile } from "#lib/api/users/profiles.ts";
 import {
 	type FreeRightNowPosts,
 	freeRightNowPostsLeft,
@@ -269,7 +270,7 @@ export class RightNowPostState {
 			if (typeof this.freePostsLeft === "number")
 				this.freePostsLeft = Math.max(0, this.freePostsLeft - 1);
 			this.#applyPost(created);
-			this.#refreshFeed();
+			this.#ownPostChanged();
 			return true;
 		} catch (error) {
 			if (this.#isGone(epoch)) return false;
@@ -317,7 +318,7 @@ export class RightNowPostState {
 			await send(post.id);
 			if (this.#isGone(epoch)) return false;
 			this.#mergeIntoPost({ postId: post.id, merge });
-			this.#refreshFeed();
+			this.#ownPostChanged();
 			await this.#refetch({ epoch });
 			return true;
 		} catch (error) {
@@ -375,7 +376,8 @@ export class RightNowPostState {
 		});
 	}
 
-	#refreshFeed(): void {
+	#ownPostChanged(): void {
+		invalidateProfile(this.#profileId);
 		void getRightNowFeedState(this.#profileId)
 			.refreshOrDefer({ attended: true })
 			.catch((error: unknown) => console.error(error));
@@ -407,7 +409,7 @@ export class RightNowPostState {
 		if (this.pendingModeration) this.#pendingSince ??= now();
 		else this.#pendingSince = null;
 		if (wasPending && this.#pendingSince === null && this.post !== null)
-			this.#refreshFeed();
+			this.#ownPostChanged();
 		const fresh = rejectionKeys(this.post).filter(
 			(key) => !this.#notifiedRejections.includes(key),
 		);
@@ -428,7 +430,7 @@ export class RightNowPostState {
 				onClick: () => void this.#goAgainAndOpenSheet(),
 			},
 		});
-		this.#refreshFeed();
+		this.#ownPostChanged();
 		this.#refreshAllowance();
 	}
 

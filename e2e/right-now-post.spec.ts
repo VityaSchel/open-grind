@@ -92,6 +92,40 @@ test.describe("our own Right Now post in the demo", () => {
 		});
 	});
 
+	test("our profile shows our post, and Edit post opens the post sheet in Right Now", async ({
+		page,
+	}) => {
+		await join(page);
+		await ownCard(page)
+			.getByRole("button", { name: "Edit your post" })
+			.click();
+		const sheet = postSheet(page);
+		await sheet.getByRole("textbox", { name: "Text" }).fill(POST_TEXT);
+		await sheet.getByRole("button", { name: "Save" }).click();
+		await expect(sheet).toBeHidden();
+
+		await ownCard(page).locator('a[href^="/profile/"]').click();
+		const ours = page.getByRole("region", { name: "Right Now" });
+		await expect(ours).toContainText(POST_TEXT, {
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
+		await expect(
+			ours.getByRole("button", { name: "Report post" }),
+		).toHaveCount(0);
+
+		await ours.getByRole("button", { name: "Edit post" }).click();
+
+		await expect(page).toHaveURL(/\/right-now$/);
+		await expect(showMyPost(page)).toBeVisible({
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
+		await closeSheet(page);
+		await page.goBack();
+		await page.goForward();
+		await expect(page).toHaveURL(/\/right-now$/);
+		await expect(postSheet(page)).toBeHidden();
+	});
+
 	test("turning off takes our card out of the feed until it is turned back on", async ({
 		page,
 	}) => {

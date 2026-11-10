@@ -8,6 +8,7 @@ import { ApiError } from "#lib/api/api-error.ts";
 import {
 	createRightNowPost,
 	getActiveRightNowPost,
+	getProfileRightNowPost,
 	getRightNowPostEntitlements,
 	NoFreeRightNowPostsError,
 	RightNowPostAlreadyRunningError,
@@ -78,6 +79,27 @@ describe("getActiveRightNowPost", () => {
 		respondInTurn({ body: { post: null } });
 
 		await expect(getActiveRightNowPost()).resolves.toBeNull();
+	});
+});
+
+describe("getProfileRightNowPost", () => {
+	it("reads another profile's running post", async () => {
+		respondInTurn({ body: { post: joinedPost } });
+
+		const post = await getProfileRightNowPost({ profileId: 42 });
+
+		expect(post?.id).toBe(POST_ID);
+		expect(requestsOf(fetchRestMock)[0]?.path).toBe(
+			"/v3/rightnow/profiles/42",
+		);
+	});
+
+	it("reads a profile without a visible post as null", async () => {
+		respondInTurn({ body: { post: null } });
+
+		await expect(
+			getProfileRightNowPost({ profileId: 42 }),
+		).resolves.toBeNull();
 	});
 });
 
