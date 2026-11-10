@@ -18,16 +18,21 @@ vi.mock("#lib/util/photoswipe/gallery-lightbox.ts", () => ({
 }));
 
 import { proxyMediaUrl } from "#lib/util/media.ts";
-import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
-import { photo } from "./feed-post-test-helpers";
+import type { RightNowPostMediaData } from "#lib/model/right-now/feed.ts";
 import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
-function blurredPhoto(): RightNowPostMediaItem {
-	const media = photo(1);
+function photo(mediaId: number): RightNowPostMediaData {
 	return {
-		...media,
-		data: { ...media.data, isNsfw: true, shouldBlur: true },
+		mediaId,
+		thumbnailUrl: `https://cdns.grindr.com/rightnow/thumb/${mediaId}`,
+		fullImageUrl: `https://cdns.grindr.com/rightnow/full/${mediaId}`,
+		isNsfw: false,
+		shouldBlur: false,
 	};
+}
+
+function blurredPhoto(): RightNowPostMediaData {
+	return { ...photo(1), isNsfw: true, shouldBlur: true };
 }
 
 const openLink = () => screen.getByRole("link", { name: "Open photo" });
@@ -43,7 +48,7 @@ describe("a Right Now post photo", () => {
 		render(RightNowPostPhoto, { props: { media } });
 
 		expect(openLink().getAttribute("href")).toBe(
-			proxyMediaUrl(media.data.fullImageUrl),
+			proxyMediaUrl(media.fullImageUrl),
 		);
 		expect(attachGalleryLightboxMock).toHaveBeenCalledOnce();
 		const gallery = attachGalleryLightboxMock.mock.calls[0]?.[0]?.gallery;

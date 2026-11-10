@@ -1,14 +1,9 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-
-	import { showErrorToast } from "#lib/api/error-toast.ts";
-	import { getRightNowPostReport } from "#lib/api/safety/reports.ts";
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
-	import ReportSheet from "#lib/components/report/ReportSheet.svelte";
+	import { RightNowPostReport } from "#lib/components/report/right-now-post-report.svelte.ts";
+	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
-	import { formatTimeRelativeCustom } from "#lib/util/format-time.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
-	import type { ReportTarget } from "#lib/components/report/report-request.ts";
 	import type { RightNowPostId } from "#lib/model/safety/reports.ts";
 	import DiscreetPostCard from "./DiscreetPostCard.svelte";
 	import EmptyRightNowFeed from "./EmptyRightNowFeed.svelte";
@@ -31,42 +26,7 @@
 		onedit: (() => void) | null;
 	} = $props();
 
-	let reportOpen = $state(false);
-	let reportTarget = $state<ReportTarget | null>(null);
-	let latestReportCheck = 0;
-
-	async function report({
-		postId,
-		profileId,
-	}: {
-		postId: RightNowPostId;
-		profileId: number | null;
-	}) {
-		const check = ++latestReportCheck;
-		try {
-			const earlier = await getRightNowPostReport({ postId, profileId });
-			if (check !== latestReportCheck) return;
-			if (earlier !== null) {
-				toast("Already reported", {
-					description:
-						earlier.createTime === null
-							? "Awaiting moderation"
-							: `${formatTimeRelativeCustom(earlier.createTime)} · Awaiting moderation`,
-				});
-				return;
-			}
-		} catch (error) {
-			console.error(error);
-			if (check === latestReportCheck)
-				showErrorToast({
-					label: "Failed to check for an earlier report",
-					error,
-				});
-			return;
-		}
-		reportTarget = { kind: "rightNowPost", postId, profileId };
-		reportOpen = true;
-	}
+	const report = new RightNowPostReport();
 </script>
 
 {#if feed.loading}
@@ -108,7 +68,7 @@
 						underReview={ownPostUnderReview}
 						{onedit}
 						onreport={() =>
-							report({
+							report.request({
 								postId: item.data.id,
 								profileId: item.data.profileId,
 							})}
@@ -119,7 +79,7 @@
 						onreport={item.data.id === ownPostId
 							? null
 							: () =>
-									report({
+									report.request({
 										postId: item.data.id,
 										profileId: null,
 									})}
@@ -140,8 +100,4 @@
 	<div data-slot="right-now-join-clearance" class="h-12 shrink-0"></div>
 {/if}
 
-{#if reportTarget !== null}
-	{#key reportTarget}
-		<ReportSheet bind:open={reportOpen} target={reportTarget} />
-	{/key}
-{/if}
+<RightNowPostReportSheet {report} />

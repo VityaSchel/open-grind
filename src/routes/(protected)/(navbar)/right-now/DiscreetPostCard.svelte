@@ -2,13 +2,13 @@
 	import DetectiveIcon from "phosphor-svelte/lib/DetectiveIcon";
 
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import ReportPostButton from "#lib/components/right-now/ReportPostButton.svelte";
+	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
+	import RightNowPostPhoto from "#lib/components/right-now/RightNowPostPhoto.svelte";
 	import { sexualPositions } from "#lib/model/users/profiles.ts";
 	import { labelFromMap } from "#lib/util/options.ts";
 	import { formatHeight, formatWeightGrams } from "#lib/util/units.ts";
 	import type { DiscreetPostData } from "#lib/model/right-now/feed.ts";
-	import ReportPostButton from "./ReportPostButton.svelte";
-	import RightNowPostMeta from "./RightNowPostMeta.svelte";
-	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
 	let {
 		post,
@@ -78,7 +78,7 @@
 			{/if}
 		</div>
 		{#if photo}
-			<RightNowPostPhoto media={photo} />
+			<RightNowPostPhoto media={photo.data} />
 		{/if}
 		<div class="flex min-h-8 items-center">
 			<RightNowPostMeta
