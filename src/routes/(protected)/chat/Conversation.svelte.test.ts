@@ -290,3 +290,42 @@ describe("Conversation menu back gesture", () => {
 		).toBe(true);
 	});
 });
+
+describe("Conversation Right Now status", () => {
+	beforeEach(() => {
+		drafts = new Drafts();
+		conversations.drafts = drafts;
+	});
+
+	afterEach(cleanup);
+
+	it.each([
+		["HOSTING", "Right Now · Hosting"],
+		["NOT_HOSTING", "Right Now"],
+	] as const)(
+		"marks a %s participant next to the name",
+		(rightNow, title) => {
+			const base = conversation(textPreview("hi"));
+			const { container } = render(Conversation, {
+				props: {
+					conversation: { ...base, data: { ...base.data, rightNow } },
+					onEnterSelection: () => {},
+				},
+			});
+
+			expect(
+				container
+					.querySelector('[data-slot="right-now-indicator"]')
+					?.getAttribute("title"),
+			).toBe(title);
+		},
+	);
+
+	it("marks nothing for a participant not on Right Now", () => {
+		const { container } = renderRow(textPreview("hi"));
+
+		expect(
+			container.querySelector('[data-slot="right-now-indicator"]'),
+		).toBeNull();
+	});
+});

@@ -9,6 +9,7 @@
 	import { getConversations } from "#lib/chat/conversations-context.svelte.ts";
 	import FavoriteStar from "#lib/components/profile/FavoriteStar.svelte";
 	import ProfileItem from "#lib/components/profile/ProfileItem.svelte";
+	import ProfileRightNowIndicator from "#lib/components/profile/ProfileRightNowIndicator.svelte";
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
 	import SelectionCheck from "#lib/components/shared/SelectionCheck.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
@@ -69,6 +70,10 @@
 	{#if conversation.data.favorite}
 		<FavoriteStar />
 	{/if}
+	<ProfileRightNowIndicator
+		status={conversation.data.rightNow}
+		iconClass="size-4"
+	/>
 	{#if conversation.data.muted}
 		<BellSimpleSlashIcon
 			weight="fill"

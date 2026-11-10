@@ -7,9 +7,11 @@
 	let {
 		status,
 		class: className,
+		iconClass = "size-3",
 	}: {
 		status: RightNowStatus;
 		class?: import("svelte/elements").ClassValue;
+		iconClass?: import("svelte/elements").ClassValue;
 	} = $props();
 
 	const title = $derived(
@@ -24,9 +26,9 @@
 		{title}
 	>
 		{#if status === "HOSTING"}
-			<HouseIcon weight="fill" class="size-3" />
+			<HouseIcon weight="fill" class={iconClass} />
 		{:else}
-			<DropIcon weight="fill" class="size-3" />
+			<DropIcon weight="fill" class={iconClass} />
 		{/if}
 		<span class="sr-only">{title}</span>
 	</div>
