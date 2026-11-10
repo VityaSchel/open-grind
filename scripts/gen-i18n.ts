@@ -14,10 +14,12 @@ import {
 } from "./i18n/android-strings";
 import { LOCALES, readLocaleFiles, SHIPPED } from "./i18n/locale-files";
 import {
+	GRADLE_PROPERTIES,
 	INFO_PLIST,
 	LOCALES_CONFIG,
 	renderLocalesConfig,
 	withBundleLocalizations,
+	withLocaleFilters,
 } from "./i18n/native-languages";
 import { renderTypes } from "./i18n/render-types";
 import { checkShipped, renderShippedFiles } from "./i18n/shipped";
@@ -151,6 +153,13 @@ const outputs = [
 	},
 	{ file: LOCALES_CONFIG, text: renderLocalesConfig(shipped.languages) },
 	{ file: INFO_PLIST, text: infoPlist },
+	{
+		file: GRADLE_PROPERTIES,
+		text: withLocaleFilters({
+			properties: await readText(GRADLE_PROPERTIES),
+			shipped: shipped.languages,
+		}),
+	},
 ];
 
 const changed: typeof outputs = [];
