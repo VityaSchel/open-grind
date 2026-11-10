@@ -8,9 +8,15 @@
 
 	let {
 		container,
+		text,
+		onjump,
+		labeled = $bindable(false),
 		class: className,
 	}: {
 		container: HTMLElement | null;
+		text?: string;
+		onjump?: () => void;
+		labeled?: boolean;
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
@@ -52,11 +58,16 @@
 		};
 	});
 
+	$effect.pre(() => {
+		if (!atTop) labeled = text !== undefined;
+	});
+
 	function scrollToTop() {
 		const el = container;
 		if (!el) return;
 		releaseGlide();
 		atTop = true;
+		onjump?.();
 		if (prefersReducedMotion.current) {
 			el.scrollTop = 0;
 			return;
@@ -72,10 +83,15 @@
 
 {#if !atTop}
 	<ScrollJumpButton
-		label="Scroll to top"
+		label={text === undefined ? "Scroll to top" : `${text}, scroll to top`}
+		size={labeled ? "lg" : "icon-lg"}
 		class={cn("absolute inset-x-0 z-10 mx-auto w-fit", className)}
 		onclick={scrollToTop}
+		onoutroend={() => (labeled = false)}
 	>
 		<CaretUpIcon />
+		{#if text !== undefined}
+			{text}
+		{/if}
 	</ScrollJumpButton>
 {/if}

@@ -7,25 +7,30 @@
 	let {
 		label,
 		onclick,
+		size = "icon-lg",
 		class: className,
 		children,
 		badge,
+		onoutroend,
 	}: {
 		label: string;
 		onclick: () => void;
+		size?: "icon-lg" | "lg";
 		class?: import("svelte/elements").ClassValue;
 		children: import("svelte").Snippet;
 		badge?: import("svelte").Snippet;
+		onoutroend?: () => void;
 	} = $props();
 </script>
 
 <div
 	class={["floating-chip", className]}
 	transition:fly={{ y: 48, opacity: 0, duration: 200, easing: sineOut }}
+	{onoutroend}
 >
 	<Button
 		variant="outline"
-		size="icon-lg"
+		{size}
 		aria-label={label}
 		class="shadow-sm"
 		onclick={() => onclick()}
