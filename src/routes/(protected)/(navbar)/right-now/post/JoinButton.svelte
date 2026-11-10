@@ -8,10 +8,15 @@
 
 	let {
 		post,
+		compact = false,
 		onjoin,
 		onopen,
-	}: { post: RightNowPostState; onjoin: () => void; onopen: () => void } =
-		$props();
+	}: {
+		post: RightNowPostState;
+		compact?: boolean;
+		onjoin: () => void;
+		onopen: () => void;
+	} = $props();
 
 	const RING_RADIUS = 9;
 	const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
@@ -34,10 +39,12 @@
 	const remaining = $derived(
 		Math.min(1, Math.max(0, post.timeLeftMs / lifetimeMs)),
 	);
-	const joinLabel = $derived.by(() => {
-		if (typeof post.freePostsLeft !== "number") return "Join";
-		return `Join · ${post.freePostsLeft} left`;
-	});
+	const allowanceText = $derived(
+		typeof post.freePostsLeft === "number"
+			? ` · ${post.freePostsLeft} left`
+			: "",
+	);
+	const joinLabel = $derived(`Join${allowanceText}`);
 	const runningLabel = $derived(
 		off
 			? `Your Right Now post, off, ${timeLeft} left`
@@ -62,7 +69,10 @@
 				variant="outline"
 				size="lg"
 				aria-label={runningLabel}
-				class="max-w-full ps-2.5 shadow-sm"
+				class={[
+					"max-w-full ps-2.5 shadow-sm",
+					{ "max-sm:pe-2.5": compact },
+				]}
 				onclick={onopen}
 			>
 				<svg
@@ -95,7 +105,14 @@
 						}}
 					/>
 				</svg>
-				<span class="truncate tabular-nums">{runningText}</span>
+				<span
+					class={[
+						"truncate tabular-nums",
+						{ "max-sm:hidden": compact },
+					]}
+				>
+					{runningText}
+				</span>
 			</Button>
 		{:else}
 			<Button
@@ -104,10 +121,14 @@
 				disabled={exhausted || post.joining}
 				aria-label={exhausted
 					? `${joinLabel}. No free posts left in this area`
-					: undefined}
+					: joinLabel}
 				onclick={onjoin}
 			>
-				<span class="truncate">{joinLabel}</span>
+				<span class="truncate"
+					>Join<span class={{ "max-sm:hidden": compact }}
+						>{allowanceText}</span
+					></span
+				>
 			</Button>
 		{/if}
 	</div>

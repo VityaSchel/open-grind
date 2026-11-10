@@ -6,8 +6,13 @@
 
 	let {
 		post,
+		compact = false,
 		sheetOpen = $bindable(false),
-	}: { post: RightNowPostState; sheetOpen?: boolean } = $props();
+	}: {
+		post: RightNowPostState;
+		compact?: boolean;
+		sheetOpen?: boolean;
+	} = $props();
 
 	let confirmOpen = $state(false);
 
@@ -18,6 +23,7 @@
 
 <JoinButton
 	{post}
+	{compact}
 	onjoin={() => (confirmOpen = true)}
 	onopen={() => (sheetOpen = true)}
 />

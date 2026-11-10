@@ -1,15 +1,18 @@
+import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	appLifecycle,
 	getRightNowFeedMock,
 	preferences,
+	stored,
 	reconcileHandlers,
 	showErrorToastMock,
 } = vi.hoisted(() => ({
 	appLifecycle: { active: true },
 	getRightNowFeedMock: vi.fn(),
 	preferences: { stayOnline: true },
+	stored: { geohash: null as string | null },
 	reconcileHandlers: [] as ((cause?: string) => void | Promise<void>)[],
 	showErrorToastMock: vi.fn(),
 }));
@@ -34,10 +37,13 @@ vi.mock("#lib/app-data/preferences.svelte.ts", async (importOriginal) => ({
 	...(await importOriginal<
 		typeof import("#lib/app-data/preferences.svelte.ts")
 	>()),
-	getPreferences: () => Promise.resolve({ geohash: null }),
+	getPreferences: () => Promise.resolve({ geohash: stored.geohash }),
 	preferencesLoaded: () => true,
 	preferencesSnapshot: () => preferences,
 	setPreferences: () => Promise.resolve(),
+}));
+vi.mock("#lib/grid/grid.ts", () => ({
+	storeLocation: () => Promise.resolve(),
 }));
 vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	atHomeLocation: (request: () => Promise<unknown>) => request(),
@@ -58,10 +64,12 @@ import type { RightNowFeedResponse } from "#lib/model/right-now/feed.ts";
 import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
 	createState,
+	curatedPost,
 	destroyCreatedStates,
 	feed,
 	post,
 	shown,
+	upsellInsert,
 } from "./right-now-feed-test-helpers";
 import { MINUTE, SECOND } from "./right-now-post-test-helpers";
 
@@ -69,6 +77,7 @@ beforeEach(() => {
 	clearAccountCaches();
 	appLifecycle.active = true;
 	preferences.stayOnline = true;
+	stored.geohash = null;
 	getRightNowFeedMock.mockReset();
 	getRightNowFeedMock.mockResolvedValue(feed([post(1)]));
 	showErrorToastMock.mockReset();
@@ -91,10 +100,28 @@ describe("RightNowFeedState polling", () => {
 		vi.useRealTimers();
 	});
 
-	it("refetches once two minutes have passed since the last fetch", async () => {
+	it("leaves a failed first load failed while an effect keeps the view attached", async () => {
+		getRightNowFeedMock.mockRejectedValueOnce(
+			new Error("Service unavailable"),
+		);
+		const state = createState();
+		const stop = $effect.root(() => {
+			$effect(() => state.attachView());
+		});
+
+		await settle();
+		flushSync();
+		await settle();
+
+		expect(getRightNowFeedMock).toHaveBeenCalledOnce();
+		expect(state.error).not.toBeNull();
+		stop();
+	});
+
+	it("checks for new posts once two minutes have passed, keeping the shown list", async () => {
 		getRightNowFeedMock
 			.mockResolvedValueOnce(feed([post(1)]))
-			.mockResolvedValueOnce(feed([post(2)]));
+			.mockResolvedValueOnce(feed([post(2), post(1)]));
 		const state = createState();
 		await settle();
 		const detach = state.attachView();
@@ -106,7 +133,145 @@ describe("RightNowFeedState polling", () => {
 		await vi.advanceTimersByTimeAsync(1);
 
 		expect(getRightNowFeedMock).toHaveBeenCalledTimes(2);
+		expect(shown(state)).toEqual([1]);
+		expect(state.hasNewPosts).toBe(true);
+		detach();
+	});
+
+	it("finds nothing new when the check returns only shown posts and inserts", async () => {
+		getRightNowFeedMock
+			.mockResolvedValueOnce(feed([post(1), post(2)]))
+			.mockResolvedValueOnce(
+				feed([curatedPost(), post(2), upsellInsert()]),
+			);
+		const state = createState();
+		await settle();
+		const detach = state.attachView();
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(2);
+		expect(state.hasNewPosts).toBe(false);
+		expect(shown(state)).toEqual([1, 2]);
+		detach();
+	});
+
+	it("stops checking once new posts are found, and a refresh shows them and resumes checking", async () => {
+		getRightNowFeedMock
+			.mockResolvedValueOnce(feed([post(1)]))
+			.mockResolvedValueOnce(feed([post(2), post(1)]))
+			.mockResolvedValueOnce(feed([post(2), post(1)]));
+		const state = createState();
+		await settle();
+		const detach = state.attachView();
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		await vi.advanceTimersByTimeAsync(6 * MINUTE);
+
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(2);
+
+		await state.refresh();
+
+		expect(shown(state)).toEqual([2, 1]);
+		expect(state.hasNewPosts).toBe(false);
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(4);
+		detach();
+	});
+
+	it("fills an empty feed on the next poll instead of flagging new posts", async () => {
+		getRightNowFeedMock
+			.mockResolvedValueOnce(feed([]))
+			.mockResolvedValueOnce(feed([post(2)]));
+		const state = createState();
+		await settle();
+		const detach = state.attachView();
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
 		expect(shown(state)).toEqual([2]);
+		expect(state.hasNewPosts).toBe(false);
+		detach();
+	});
+
+	it("recovers from a failed first load on the next poll", async () => {
+		getRightNowFeedMock
+			.mockRejectedValueOnce(new Error("offline"))
+			.mockResolvedValueOnce(feed([post(1)]));
+		const state = createState();
+		const detach = state.attachView();
+		await settle();
+		expect(state.error).not.toBeNull();
+		expect(getRightNowFeedMock).toHaveBeenCalledOnce();
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(2);
+		expect(shown(state)).toEqual([1]);
+		expect(state.error).toBeNull();
+		detach();
+	});
+
+	it("shows the latest posts straight away on coming back after the poll interval", async () => {
+		getRightNowFeedMock
+			.mockResolvedValueOnce(feed([post(1)]))
+			.mockResolvedValueOnce(feed([post(2)]));
+		const state = createState();
+		await settle();
+		state.attachView()();
+
+		await vi.advanceTimersByTimeAsync(3 * MINUTE);
+		const detach = state.attachView();
+		await settle();
+
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(2);
+		expect(shown(state)).toEqual([2]);
+		detach();
+	});
+
+	it("drops a check that saw another stored location, leaving the move to followLocation", async () => {
+		stored.geohash = "u0nd9h";
+		getRightNowFeedMock
+			.mockResolvedValueOnce(feed([post(1)]))
+			.mockResolvedValueOnce(feed([post(2)]))
+			.mockResolvedValueOnce(feed([post(3)]));
+		const state = createState();
+		await settle();
+		const detach = state.attachView();
+		stored.geohash = "ezjmgt";
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(2);
+		expect(state.hasNewPosts).toBe(false);
+		expect(shown(state)).toEqual([1]);
+
+		state.followLocation("ezjmgt");
+		await settle();
+
+		expect(shown(state)).toEqual([3]);
+		detach();
+	});
+
+	it("drops a check that a refresh overtook", async () => {
+		const check = Promise.withResolvers<RightNowFeedResponse>();
+		getRightNowFeedMock.mockResolvedValueOnce(feed([post(1)]));
+		const state = createState();
+		await settle();
+		getRightNowFeedMock
+			.mockReturnValueOnce(check.promise)
+			.mockResolvedValueOnce(feed([post(3), post(1)]));
+		const detach = state.attachView();
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		await state.refresh();
+		check.resolve(feed([post(2), post(1)]));
+		await settle();
+
+		expect(shown(state)).toEqual([3, 1]);
+		expect(state.hasNewPosts).toBe(false);
 		detach();
 	});
 

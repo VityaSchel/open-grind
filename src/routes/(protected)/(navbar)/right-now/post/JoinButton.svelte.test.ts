@@ -8,10 +8,15 @@ import { MINUTE } from "../right-now-post-test-helpers";
 import JoinButton from "./JoinButton.svelte";
 import { FakeRightNowPostState, runningPost } from "./post-test-helpers.svelte";
 
-function renderButton(fake = new FakeRightNowPostState()) {
+function renderButton(
+	fake = new FakeRightNowPostState(),
+	{ compact = false }: { compact?: boolean } = {},
+) {
 	const onjoin = vi.fn();
 	const onopen = vi.fn();
-	render(JoinButton, { props: { post: fake.state, onjoin, onopen } });
+	render(JoinButton, {
+		props: { post: fake.state, compact, onjoin, onopen },
+	});
 	return { fake, onjoin, onopen };
 }
 
@@ -150,5 +155,38 @@ describe("the Right Now join pill", () => {
 		expect(
 			screen.getByRole("button", { name: "Join · 2 left" }),
 		).toBeTruthy();
+	});
+
+	it("drops the count on narrow screens while compact, keeping it in the name", () => {
+		renderButton(new FakeRightNowPostState(), { compact: true });
+
+		const button = screen.getByRole("button", { name: "Join · 3 left" });
+		const count = [...button.querySelectorAll("span")].find(
+			(span) => span.textContent === " · 3 left",
+		);
+		expect(count?.classList.contains("max-sm:hidden")).toBe(true);
+	});
+
+	it("shrinks to its ring on narrow screens while compact, keeping the time in the name", () => {
+		renderButton(runningPost(), { compact: true });
+
+		const button = screen.getByRole("button", {
+			name: "Your Right Now post, 42m left",
+		});
+		const time = [...button.querySelectorAll("span")].find(
+			(span) => span.textContent.trim() === "42m left",
+		);
+		expect(time?.classList.contains("max-sm:hidden")).toBe(true);
+	});
+
+	it.each([
+		["the join pill", () => new FakeRightNowPostState()],
+		["the running pill", () => runningPost()],
+	])("keeps %s's full label while not compact", (_, fake) => {
+		renderButton(fake());
+
+		expect(
+			screen.getByRole("button").querySelector(".max-sm\\:hidden"),
+		).toBeNull();
 	});
 });

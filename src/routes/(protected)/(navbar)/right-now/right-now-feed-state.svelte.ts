@@ -1,6 +1,10 @@
 import { untrack } from "svelte";
 
-import { accountEpoch, accountScoped } from "#lib/api/account-caches.ts";
+import {
+	accountEpoch,
+	accountScoped,
+	isAccountEpochCurrent,
+} from "#lib/api/account-caches.ts";
 import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
 import { markBlockedAndHiddenProfilesUnviewable } from "#lib/api/browse/unviewable-profiles.ts";
 import {
@@ -12,6 +16,7 @@ import {
 	onProfileViewabilityChange,
 } from "#lib/api/users/profile-viewability.ts";
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
+import { staysOnline } from "#lib/presence/presence-gate.ts";
 import { now } from "#lib/util/clock.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
 import type {
@@ -48,6 +53,19 @@ function keysOf(posts: RightNowFeedPost[]): Set<number> {
 	return new Set(posts.map((post) => post.data.id));
 }
 
+function shownPostsOf(snapshot: RightNowFeedResponse): RightNowFeedPost[] {
+	return snapshot.items
+		.filter(
+			(item) =>
+				item.type !== "curated_post_v1" &&
+				item.type !== "upsell_insert_v1",
+		)
+		.filter((post) => {
+			const author = authorOf(post);
+			return author === null || isProfileViewable(author);
+		});
+}
+
 export class RightNowFeedState extends ReconcilingListState<
 	RightNowFeedPost,
 	RightNowFeedResponse
@@ -56,7 +74,10 @@ export class RightNowFeedState extends ReconcilingListState<
 		onQueryChange: () => this.#startOver(),
 	});
 
+	hasNewPosts = $state(false);
+
 	#entries: RightNowFeedPost[] = $state.raw([]);
+	#shownSnapshots = 0;
 	#fetchStartedAt = 0;
 	#poll: ReturnType<typeof setInterval> | null = null;
 	#startOverListeners: (() => void)[] = [];
@@ -94,6 +115,10 @@ export class RightNowFeedState extends ReconcilingListState<
 		const detach = super.attachView();
 		this.#stopPolling();
 		this.#poll = setInterval(() => this.#pollTick(), POLL_TICK_MS);
+		untrack(() => {
+			if (!this.loading && !this.refreshing && this.#pollDue())
+				void this.refreshOrDefer({ attended: true });
+		});
 		return () => {
 			detach();
 			if (!this.viewActive) this.#stopPolling();
@@ -127,35 +152,21 @@ export class RightNowFeedState extends ReconcilingListState<
 		return this.#entries.length;
 	}
 
-	protected async fetch(): Promise<RightNowFeedResponse> {
-		const epoch = accountEpoch();
-		this.#fetchStartedAt = now();
-		markBlockedAndHiddenProfilesUnviewable();
-		await this.filters.ready;
-		const version = await rightNowFeedVersion();
-		const query = rightNowFeedQuery(this.filters.snapshot());
-		return atStoredLocation({
-			epoch,
+	protected fetch(): Promise<RightNowFeedResponse> {
+		return this.#request({
+			epoch: accountEpoch(),
 			onGeohash: (geohash) => {
 				this.#fetchedGeohash = geohash;
 			},
-			request: () => getRightNowFeed({ version, query }),
 		});
 	}
 
 	protected applySnapshotReturningCoveredKeys(
 		snapshot: RightNowFeedResponse,
 	): Set<number> {
-		this.#entries = snapshot.items
-			.filter(
-				(item) =>
-					item.type !== "curated_post_v1" &&
-					item.type !== "upsell_insert_v1",
-			)
-			.filter((post) => {
-				const author = authorOf(post);
-				return author === null || isProfileViewable(author);
-			});
+		this.#shownSnapshots += 1;
+		this.hasNewPosts = false;
+		this.#entries = shownPostsOf(snapshot);
 		return keysOf(this.#entries);
 	}
 
@@ -169,14 +180,69 @@ export class RightNowFeedState extends ReconcilingListState<
 		return Promise.resolve(() => {});
 	}
 
+	async #request({
+		epoch,
+		onGeohash,
+	}: {
+		epoch: number;
+		onGeohash: (geohash: string | null) => void;
+	}): Promise<RightNowFeedResponse> {
+		this.#fetchStartedAt = now();
+		markBlockedAndHiddenProfilesUnviewable();
+		await this.filters.ready;
+		const version = await rightNowFeedVersion();
+		const query = rightNowFeedQuery(this.filters.snapshot());
+		return atStoredLocation({
+			epoch,
+			onGeohash,
+			request: () => getRightNowFeed({ version, query }),
+		});
+	}
+
+	#pollDue(): boolean {
+		return (
+			now() - this.#fetchStartedAt >= POLL_INTERVAL_MS - POLL_TICK_MS / 2
+		);
+	}
+
 	#pollTick(): void {
 		if (document.hidden || !appLifecycle.active) return;
-		if (now() - this.#fetchStartedAt < POLL_INTERVAL_MS - POLL_TICK_MS / 2)
+		if (this.hasNewPosts || this.loading || this.refreshing) return;
+		if (!this.#pollDue()) return;
+		if (staysOnline() && this.#entries.length > 0)
+			void this.#checkForNewPosts();
+		else void this.refreshOrDefer({ attended: false });
+	}
+
+	async #checkForNewPosts(): Promise<void> {
+		const epoch = accountEpoch();
+		const shownSnapshot = this.#shownSnapshots;
+		const checked: { geohash?: string | null } = {};
+		let latest: RightNowFeedResponse;
+		try {
+			latest = await this.#request({
+				epoch,
+				onGeohash: (geohash) => {
+					checked.geohash = geohash;
+				},
+			});
+		} catch (error) {
+			if (isAccountEpochCurrent(epoch)) console.error(error);
 			return;
-		void this.refreshOrDefer({ attended: false });
+		}
+		if (
+			shownSnapshot !== this.#shownSnapshots ||
+			checked.geohash !== this.#fetchedGeohash
+		)
+			return;
+		const shown = keysOf(this.#entries);
+		if (shownPostsOf(latest).some((post) => !shown.has(post.data.id)))
+			this.hasNewPosts = true;
 	}
 
 	#startOver(): void {
+		this.#shownSnapshots += 1;
+		this.hasNewPosts = false;
 		this.#entries = [];
 		this.visibleCount = PAGE_SIZE;
 		this.scrollY = 0;

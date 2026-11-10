@@ -20,6 +20,7 @@
 
 	let container: HTMLDivElement | null = $state(null);
 	let sheetOpen = $state(false);
+	let labeledChip = $state(false);
 
 	$effect(() => feed.attachView());
 
@@ -70,6 +71,12 @@
 			/>
 		</div>
 	</div>
-	<ScrollToTopButton {container} class="bottom-nav-clear" />
-	<RightNowPostControls post={ownPost} bind:sheetOpen />
+	<ScrollToTopButton
+		{container}
+		text={feed.hasNewPosts ? "New posts" : undefined}
+		onjump={feed.hasNewPosts ? () => void feed.refresh() : undefined}
+		bind:labeled={labeledChip}
+		class="bottom-nav-clear"
+	/>
+	<RightNowPostControls post={ownPost} compact={labeledChip} bind:sheetOpen />
 </main>
