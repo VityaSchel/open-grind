@@ -61,4 +61,16 @@ describe("a browse grid tile", () => {
 		expect(click(link, { metaKey: true }).prevented).toBe(false);
 		expect(goto).not.toHaveBeenCalled();
 	});
+
+	it("shows the profile's Right Now status", () => {
+		render(GridProfileMiniCard, {
+			props: { id: PROFILE_ID, displayName: "Peer", rightNow: "HOSTING" },
+		});
+
+		expect(
+			screen
+				.getByRole("link")
+				.querySelector('[title="Right Now · Hosting"]'),
+		).not.toBeNull();
+	});
 });

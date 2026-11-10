@@ -1,7 +1,8 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "#lib/model/media.ts";
-import { arrayOfKnownVariants } from "#lib/model/tolerance.ts";
+import { rightNowStatusSchema } from "#lib/model/right-now/index.ts";
+import { arrayOfKnownVariants, knownValueOr } from "#lib/model/tolerance.ts";
 import { unixTimestampMsSchema, unmodeledSchema } from "#lib/model/types.ts";
 
 export const cascadeResponseProfileSchema = z.object({
@@ -10,7 +11,11 @@ export const cascadeResponseProfileSchema = z.object({
 	displayName: z.string().nullish(),
 	distanceMeters: z.number().nonnegative().nullish(),
 	lastOnline: unixTimestampMsSchema.nullish(),
-	rightNow: z.string().nullish(),
+	rightNow: knownValueOr({
+		value: rightNowStatusSchema,
+		fallback: "NOT_ACTIVE",
+		label: "cascade rightNow",
+	}).nullish(),
 	unreadCount: z.int().nonnegative().nullish(),
 	isVisiting: z.boolean().nullish(),
 	isPopular: z.boolean().nullish(),

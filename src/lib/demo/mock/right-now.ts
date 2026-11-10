@@ -8,7 +8,8 @@ import {
 	type Rng,
 } from "#lib/util/random.ts";
 import type { DiscreetPostData, PostData } from "#lib/model/right-now/feed.ts";
-import { DEMO_ID_START, MINUTE, NOW } from "../config";
+import type { RightNowStatus } from "#lib/model/right-now/index.ts";
+import { DEMO_ID_START, demoMeProfileId, MINUTE, NOW } from "../config";
 import { demoFavoriteOf } from "./favorites";
 import { num } from "./grid";
 import {
@@ -251,6 +252,19 @@ function feedOrder(
 	const distance = ({ item }: DemoFeedPost) =>
 		item.data.distance ?? Number.POSITIVE_INFINITY;
 	return (a, b) => distance(a) - distance(b) || newestFirst(a, b);
+}
+
+export function demoRightNowStatusOf(profileId: number): RightNowStatus {
+	if (profileId === demoMeProfileId) {
+		const own = demoActiveRightNowPost();
+		if (own?.postStatus !== "ACTIVE") return "NOT_ACTIVE";
+		return own.hosting ? "HOSTING" : "NOT_HOSTING";
+	}
+	const index = feedAuthorIds.indexOf(profileId);
+	if (index === -1 || DISCREET_INDEXES.has(index)) return "NOT_ACTIVE";
+	return feedPost({ index, profileId }).item.data.hosting
+		? "HOSTING"
+		: "NOT_HOSTING";
 }
 
 export function demoRightNowFeed(params: URLSearchParams) {

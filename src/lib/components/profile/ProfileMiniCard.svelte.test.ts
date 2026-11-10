@@ -51,4 +51,35 @@ describe("ProfileMiniCard", () => {
 		expect(screen.queryByText("Someone")).toBeNull();
 		expect(screen.getByRole("link", { name: "Profile" })).toBeTruthy();
 	});
+
+	it.each([
+		["HOSTING", "Right Now · Hosting"],
+		["NOT_HOSTING", "Right Now"],
+	] as const)(
+		"marks a %s Right Now profile inside the name pill",
+		(rightNow, title) => {
+			const { container } = render(ProfileMiniCard, {
+				displayName: "Simon",
+				rightNow,
+				href: "/profile/1",
+			});
+
+			const indicator = container.querySelector(
+				'[data-slot="right-now-indicator"]',
+			);
+			expect(indicator?.getAttribute("title")).toBe(title);
+			expect(indicator?.closest('[data-slot="badge"]')).not.toBeNull();
+		},
+	);
+
+	it("marks no Right Now status by default", () => {
+		const { container } = render(ProfileMiniCard, {
+			displayName: "Simon",
+			href: "/profile/1",
+		});
+
+		expect(
+			container.querySelector('[data-slot="right-now-indicator"]'),
+		).toBeNull();
+	});
 });

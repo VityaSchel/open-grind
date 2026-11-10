@@ -20,5 +20,6 @@ export function rendered({
 		isFavorite,
 		isVisiting: false,
 		hasChattedInLast24Hrs: false,
+		rightNow: "NOT_ACTIVE",
 	};
 }
