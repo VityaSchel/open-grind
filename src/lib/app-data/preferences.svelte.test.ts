@@ -62,6 +62,14 @@ async function launch({ system }: { system: () => Promise<unknown> }) {
 
 const systemWith = (settings: object) => () => Promise.resolve(settings);
 
+const usSystemAfter = (ms: number) => () =>
+	new Promise((resolve) =>
+		setTimeout(
+			() => resolve({ locale: "en-US", measurementSystem: "us" }),
+			ms,
+		),
+	);
+
 function stored(): Record<string, unknown> | undefined {
 	const content = files.get(PREFERENCES);
 	return content === undefined
@@ -150,7 +158,7 @@ describe("units on first run", () => {
 		expect((await loaded).units).toBe("imperial");
 	});
 
-	it("fall back to metric when the system never answers", async () => {
+	it("use metric without storing it when the system never answers", async () => {
 		vi.useFakeTimers();
 		const { started, preferences } = await launch({
 			system: () => new Promise(() => {}),
@@ -170,7 +178,70 @@ describe("units on first run", () => {
 		await vi.advanceTimersByTimeAsync(1);
 
 		expect((await loaded).units).toBe("metric");
+		expect(files.has(PREFERENCES)).toBe(false);
+	});
+
+	it("store the system's units when its read arrives after the wait", async () => {
+		vi.useFakeTimers();
+		const { started, preferences } = await launch({
+			system: usSystemAfter(NATIVE_READ_LIMIT_MS * 2),
+		});
+		const loaded = preferences.getPreferences();
+		await vi.advanceTimersByTimeAsync(NATIVE_READ_LIMIT_MS);
+		await started;
+		expect((await loaded).units).toBe("metric");
+
+		await vi.advanceTimersByTimeAsync(NATIVE_READ_LIMIT_MS);
+
+		expect((await preferences.getPreferences()).units).toBe("imperial");
+		expect(stored()?.units).toBe("imperial");
+	});
+
+	it("keep units chosen before a late system read", async () => {
+		vi.useFakeTimers();
+		const first = await launch({
+			system: usSystemAfter(NATIVE_READ_LIMIT_MS * 2),
+		});
+		const loaded = first.preferences.getPreferences();
+		await vi.advanceTimersByTimeAsync(NATIVE_READ_LIMIT_MS);
+		await first.started;
+		await loaded;
+		await first.preferences.setPreferences({ units: "metric" });
+		await vi.advanceTimersByTimeAsync(NATIVE_READ_LIMIT_MS);
+
+		expect((await first.preferences.getPreferences()).units).toBe("metric");
 		expect(stored()?.units).toBe("metric");
+
+		vi.useRealTimers();
+		const next = await launch({
+			system: systemWith({ locale: "en-US", measurementSystem: "us" }),
+		});
+
+		expect((await next.preferences.getPreferences()).units).toBe("metric");
+	});
+
+	it("read the system again on the next launch after it never answered", async () => {
+		vi.useFakeTimers();
+		const first = await launch({ system: () => new Promise(() => {}) });
+		const loaded = first.preferences.getPreferences();
+		await vi.advanceTimersByTimeAsync(NATIVE_READ_LIMIT_MS);
+		await first.started;
+		await loaded;
+		await first.preferences.setPreferences({ hapticFeedback: false });
+
+		vi.useRealTimers();
+		const next = await launch({
+			system: systemWith({ locale: "en-US", measurementSystem: "us" }),
+		});
+
+		expect(await next.preferences.getPreferences()).toMatchObject({
+			hapticFeedback: false,
+			units: "imperial",
+		});
+		expect(stored()).toMatchObject({
+			hapticFeedback: false,
+			units: "imperial",
+		});
 	});
 
 	it("stay as first written when the system changes later", async () => {

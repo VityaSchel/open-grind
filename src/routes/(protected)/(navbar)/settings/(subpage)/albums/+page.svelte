@@ -20,10 +20,6 @@
 	void myAlbums.refresh();
 </script>
 
-<svelte:head>
-	<title>{t("settings.subpage.titles.albums")}</title>
-</svelte:head>
-
 <MediaGrid
 	items={myAlbums.albums}
 	key={(album) => album.albumId}

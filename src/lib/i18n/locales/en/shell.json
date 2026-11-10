@@ -1,4 +1,5 @@
 {
+	"documentTitle": "{{page}} — Open Grind",
 	"error": {
 		"pageNotFound": "Page not found",
 		"title": "Unexpected error",

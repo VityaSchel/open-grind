@@ -9,6 +9,7 @@
 		stackMotion,
 	} from "#lib/components/navigation/stack/motion.ts";
 	import { paneSurface } from "#lib/components/navigation/stack/surface.ts";
+	import { followLocale } from "#lib/i18n/index.ts";
 	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.ts";
 	import { earlierPathnames } from "#lib/util/history.ts";
 	import { pushedFromChain } from "./hierarchy";
@@ -62,6 +63,8 @@
 	};
 
 	onNavigate((navigation) => stack.navigate(navigation));
+
+	$effect(() => followLocale(() => stack.forgetSnapshots()));
 
 	$effect(() => attachSystemBackGesture(stack));
 </script>

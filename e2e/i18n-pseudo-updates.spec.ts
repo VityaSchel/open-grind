@@ -13,7 +13,7 @@ import type * as ToastPresenter from "../src/lib/updates/toast-presenter";
 import type * as UpdateToasts from "../src/lib/updates/toasts";
 import type * as UpdateChecks from "../src/lib/updates/update-checks";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
-import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
+import { readPseudoText } from "./support/pseudo";
 
 test.use({ baseURL: DEV_SERVER_URL });
 
@@ -154,9 +154,7 @@ test("the update toasts render only pseudo-translated text", async ({
 	const toaster = page.locator(TOASTER);
 	const scanToasts = async (title: string) => {
 		await toaster.getByText(title, { exact: true }).waitFor();
-		const { messages, labels, leaks } = await readPseudoText(toaster, {
-			brandTitle: BRAND_TITLE,
-		});
+		const { messages, labels, leaks } = await readPseudoText(toaster);
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
 		return labels;

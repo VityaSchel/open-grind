@@ -7,6 +7,7 @@
 		setConversations,
 	} from "#lib/chat/conversations-context.svelte.ts";
 	import NavBar from "#lib/components/shared/NavBar.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import * as Card from "#lib/components/ui/card/index.ts";
 	import * as Resizable from "#lib/components/ui/resizable/index.ts";
 	import { t } from "#lib/i18n/index.ts";
@@ -74,6 +75,9 @@
 	/>
 {/snippet}
 
+{#if conversationId === null}
+	<PageTitle page={t("shell.navBar.tabs.inbox")} />
+{/if}
 {#if mobile.current}
 	<LiveStack
 		basePath="/chat"

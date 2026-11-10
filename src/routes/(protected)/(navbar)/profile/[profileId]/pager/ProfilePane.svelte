@@ -10,6 +10,7 @@
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import NotFound from "#lib/components/feedback/NotFound.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { t } from "#lib/i18n/index.ts";
@@ -51,6 +52,12 @@
 	const showsErrorScreen = $derived(
 		error !== null && (row === null || isUnviewableProfileError(error)),
 	);
+	const titleName = $derived.by(() => {
+		if (showsErrorScreen) return null;
+		return profile === null
+			? (row?.displayName ?? null)
+			: profile.displayName;
+	});
 	const medias = $derived(
 		profile?.medias ??
 			(heroHash === null
@@ -65,6 +72,9 @@
 	);
 </script>
 
+{#if active}
+	<PageTitle page={titleName ?? t("profile.page.title")} />
+{/if}
 <section
 	data-slot="profile-pane"
 	aria-hidden={active ? undefined : "true"}

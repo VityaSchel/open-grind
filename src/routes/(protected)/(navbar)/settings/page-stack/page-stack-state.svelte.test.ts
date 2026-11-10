@@ -595,3 +595,85 @@ describe("PageStackState state under interruption", () => {
 		).toBe(before);
 	});
 });
+
+describe("PageStackState after a language change", () => {
+	it("stops revealing the cached page to the back gesture, while Back still slides over a fresh copy", async () => {
+		const harness = makeStack();
+		const { stack } = harness;
+		await push(harness, { from: "/settings", to: "/settings/app" });
+
+		stack.forgetSnapshots();
+
+		expect(stack.canSwipeBack).toBe(false);
+		expect(stack.beginSwipeBack()).toBe(false);
+
+		await stack.navigate(
+			navigationEvent({ from: "/settings/app", to: "/settings" }),
+		);
+		expect(stack.liveRole).toBe("back");
+		expect(stack.ghost?.path).toBe("/settings/app");
+	});
+
+	it("drops the copy of the previous page from a push still sliding in", async () => {
+		const { stack, applied, animations } = makeStack();
+		const start = await stack.navigate(
+			navigationEvent({ from: "/settings", to: "/settings/app" }),
+		);
+		start?.();
+		expect(stack.ghost?.path).toBe("/settings");
+
+		stack.forgetSnapshots();
+
+		expect(stack.ghost).toBeNull();
+		expect(stack.liveRole).toBe("front");
+		expect(applied.at(-1)).toBe(0);
+		await settleLast(animations);
+		expect(stack.ghost).toBeNull();
+	});
+
+	it("ignores the settle starter of a push it interrupted", async () => {
+		const { stack, animations } = makeStack();
+		const start = await stack.navigate(
+			navigationEvent({ from: "/settings", to: "/settings/app" }),
+		);
+
+		stack.forgetSnapshots();
+		start?.();
+
+		expect(animations).toHaveLength(0);
+		expect(stack.ghost).toBeNull();
+	});
+
+	it("goes back at once when a committed swipe is still sliding out", async () => {
+		const harness = makeStack();
+		const { stack, applied } = harness;
+		const back = vi.spyOn(history, "back").mockImplementation(() => {});
+		await push(harness, { from: "/settings", to: "/settings/app" });
+		stack.beginSwipeBack();
+		stack.trackSwipeBack(0.6);
+		stack.commitSwipeBack();
+
+		stack.forgetSnapshots();
+
+		expect(back).toHaveBeenCalledTimes(1);
+		expect(applied.at(-1)).toBe(1);
+	});
+
+	it("lets a swipe in progress finish over the page it revealed", async () => {
+		const harness = makeStack();
+		const { stack, animations } = harness;
+		await push(harness, { from: "/settings", to: "/settings/app" });
+		stack.beginSwipeBack();
+		stack.trackSwipeBack(0.3);
+
+		stack.forgetSnapshots();
+
+		expect(stack.tracking).toBe(true);
+		expect(stack.ghost?.path).toBe("/settings");
+
+		stack.cancelSwipeBack();
+		await settleLast(animations);
+		expect(stack.ghost).toBeNull();
+		expect(stack.beginSwipeBack()).toBe(false);
+	});
+});

@@ -3767,6 +3767,7 @@ dependencies = [
  "image",
  "jni",
  "keyring-core",
+ "libc",
  "moxcms",
  "objc2",
  "objc2-app-kit",

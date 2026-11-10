@@ -26,7 +26,10 @@ vi.mock("#lib/platform/desktop-entry.svelte.ts", () => ({
 	setDesktopEntryInstalled,
 }));
 
-import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import {
+	PSEUDO_MESSAGE,
+	PSEUDO_TITLE,
+} from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import OnboardingPage from "./+page.svelte";
 
@@ -49,7 +52,7 @@ describe("Onboarding page", () => {
 	it("introduces the app and its setup choices", () => {
 		const { container } = render(OnboardingPage);
 
-		expect(document.title).toBe("Welcome");
+		expect(document.title).toBe("Welcome — Open Grind");
 		expect(
 			[...container.querySelectorAll("h1, p, label, button")].map(
 				(node) => node.textContent.replaceAll(/\s+/g, " ").trim(),
@@ -105,7 +108,7 @@ describe("Onboarding page", () => {
 			.map((node) => node.textContent.trim())
 			.filter((line) => line !== "");
 		expect(heading.textContent.trim()).toBe("Open Grind");
-		expect(document.title).toMatch(PSEUDO_MESSAGE);
+		expect(document.title).toMatch(PSEUDO_TITLE);
 		expect(lines).toHaveLength(5);
 		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
 

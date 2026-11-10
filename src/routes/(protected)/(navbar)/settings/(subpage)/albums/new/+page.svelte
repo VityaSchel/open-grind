@@ -41,10 +41,6 @@
 	);
 </script>
 
-<svelte:head>
-	<title>{t("settings.subpage.titles.newAlbum")}</title>
-</svelte:head>
-
 <AlbumHeaderLayout>
 	{#snippet preview()}
 		<MediaImage src={null} class="aspect-3/4 w-full rounded-xl" />

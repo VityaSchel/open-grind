@@ -1,10 +1,17 @@
 import { pickerTag } from "../../src/lib/i18n/matcher";
 import { SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
+import { androidQualifier } from "./android-strings";
 
 export const LOCALES_CONFIG =
 	"src-tauri/gen/android/app/src/main/res/xml/locales_config.xml";
 
 export const INFO_PLIST = "src-tauri/Info.plist";
+
+export const GRADLE_PROPERTIES = "src-tauri/gen/android/gradle.properties";
+
+const LOCALE_FILTERS_KEY = "opengrind.android.localeFilters";
+
+const LOCALE_FILTERS = /^opengrind\.android\.localeFilters=.*$/m;
 
 const EMPTY_PLIST = [
 	'<?xml version="1.0" encoding="UTF-8"?>',
@@ -35,6 +42,23 @@ export function renderLocalesConfig(shipped: readonly string[]): string {
 		locales,
 		"</locale-config>\n",
 	].join("");
+}
+
+export function withLocaleFilters({
+	properties,
+	shipped,
+}: {
+	properties: string;
+	shipped: readonly string[];
+}): string {
+	const qualifiers = catalogs(shipped).map(androidQualifier).join(",");
+	const line = `${LOCALE_FILTERS_KEY}=${qualifiers}`;
+	if (LOCALE_FILTERS.test(properties)) {
+		return properties.replace(LOCALE_FILTERS, () => line);
+	}
+	const separator =
+		properties === "" || properties.endsWith("\n") ? "" : "\n";
+	return `${properties}${separator}${line}\n`;
 }
 
 function localizationsEntry({

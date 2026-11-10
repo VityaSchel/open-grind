@@ -5,6 +5,7 @@
 
 	import { promptCopyError } from "#lib/api/error-copy.ts";
 	import NotFound from "#lib/components/feedback/NotFound.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
@@ -20,9 +21,7 @@
 	);
 </script>
 
-<svelte:head>
-	<title>{title}</title>
-</svelte:head>
+<PageTitle page={title} />
 <main class="flex min-h-dvh w-full p-8">
 	{#if page.status === 404}
 		<NotFound />

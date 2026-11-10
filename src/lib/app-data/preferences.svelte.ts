@@ -11,7 +11,10 @@ import {
 	languageSyncSchema,
 	languageTagSchema,
 } from "#lib/platform/language-sync.ts";
-import { regionalSettingsReady } from "#lib/platform/regional-settings.ts";
+import {
+	regionalSettingsArrived,
+	regionalSettingsArrivedInTime,
+} from "#lib/platform/regional-settings.ts";
 import { unitSystemFor, unitSystemSchema } from "#lib/util/units.ts";
 import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
@@ -37,6 +40,7 @@ const preferencesSchema = z.object({
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
 	stayOnline: z.boolean().default(true),
+	systemUnitsPending: z.boolean().default(false),
 	units: unitSystemSchema.default("metric"),
 });
 
@@ -70,10 +74,39 @@ function publish(preferences: Preferences): void {
 	loaded = true;
 }
 
-async function defaultPreferences(): Promise<Preferences> {
-	await regionalSettingsReady();
-	const { measurementSystem } = getRegionalSettings();
-	return preferencesSchema.parse({ units: unitSystemFor(measurementSystem) });
+function adoptSystemUnitsOnArrival(): void {
+	void regionalSettingsArrived()
+		.then(() =>
+			enqueueWrite(async () => {
+				const current = await getPreferences();
+				if (!current.systemUnitsPending) return;
+				const preferences = preferencesSchema.parse({
+					...current,
+					units: unitSystemFor(
+						getRegionalSettings().measurementSystem,
+					),
+					systemUnitsPending: false,
+				});
+				await writePreferences(preferences);
+				publish(preferences);
+			}),
+		)
+		.catch(console.error);
+}
+
+async function withSystemUnits(
+	preferences: Partial<Preferences>,
+): Promise<Preferences> {
+	const arrived = await regionalSettingsArrivedInTime();
+	if (!arrived) adoptSystemUnitsOnArrival();
+	const measurementSystem = arrived
+		? getRegionalSettings().measurementSystem
+		: undefined;
+	return preferencesSchema.parse({
+		...preferences,
+		units: unitSystemFor(measurementSystem),
+		systemUnitsPending: !arrived,
+	});
 }
 
 async function writePreferences(preferences: Preferences): Promise<void> {
@@ -83,13 +116,18 @@ async function writePreferences(preferences: Preferences): Promise<void> {
 	});
 }
 
+async function readStoredPreferences(): Promise<Preferences | undefined> {
+	if (!(await existsAppDataFile("preferences.data"))) return undefined;
+	const bytes = await readAppDataFile("preferences.data");
+	return preferencesSchema.parse(decode(bytes));
+}
+
 async function readFromDisk(): Promise<Preferences> {
-	if (await existsAppDataFile("preferences.data")) {
-		const bytes = await readAppDataFile("preferences.data");
-		return preferencesSchema.parse(decode(bytes));
-	}
-	const preferences = await defaultPreferences();
-	await writePreferences(preferences).catch(console.error);
+	const stored = await readStoredPreferences();
+	if (stored !== undefined && !stored.systemUnitsPending) return stored;
+	const preferences = await withSystemUnits(stored ?? {});
+	if (!preferences.systemUnitsPending)
+		await writePreferences(preferences).catch(console.error);
 	return preferences;
 }
 
@@ -138,6 +176,8 @@ export async function setPreferences(
 		const preferences = preferencesSchema.parse({
 			...oldValues,
 			...newValues,
+			systemUnitsPending:
+				oldValues.systemUnitsPending && newValues.units === undefined,
 		});
 		await writePreferences(preferences);
 		publish(preferences);
@@ -146,7 +186,7 @@ export async function setPreferences(
 
 async function resetToDefaults(): Promise<void> {
 	await enqueueWrite(async () => {
-		const preferences = await defaultPreferences();
+		const preferences = await withSystemUnits({});
 		await writePreferences(preferences);
 		publish(preferences);
 	});

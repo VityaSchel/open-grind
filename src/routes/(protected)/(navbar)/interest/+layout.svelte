@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import { onDestroy } from "svelte";
 
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { toggleVariants } from "#lib/components/ui/toggle/index.ts";
@@ -23,6 +24,9 @@
 	let settling = 0;
 
 	const routedTab = $derived(interestTabIndex(page.url.pathname));
+	const routedLabel = $derived(
+		(INTEREST_TABS[routedTab] ?? INTEREST_TABS[0]).label,
+	);
 	const chipFollows = $derived(
 		!chipDetachesAtRest ||
 			pagerUnsettled ||
@@ -63,6 +67,7 @@
 		{label}
 	</Button>
 {/snippet}
+<PageTitle page={t(routedLabel)} />
 <div class="interest">
 	<ProgressiveBlur
 		direction="topToBottom"

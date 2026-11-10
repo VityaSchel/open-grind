@@ -1,7 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
+import {
+	PSEUDO_MESSAGE,
+	PSEUDO_TITLE,
+} from "../src/lib/i18n/fixtures/pseudo-message";
 import {
 	enterAlbum,
 	openAlbums,
@@ -20,7 +23,7 @@ import {
 	runPaletteCommand,
 } from "./support/app";
 import { DRAWER, MEDIA_TILE } from "./support/drawer";
-import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
+import { readPseudoText } from "./support/pseudo";
 import {
 	DEMO_GIPHY_EMPTY_QUERY,
 	GAYMOJI_TAB,
@@ -104,7 +107,7 @@ test.describe("error pages under en-XA", () => {
 			const content = await open(page, { locale: "en-XA" });
 			await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
 			await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-			await expect(page).toHaveTitle(PSEUDO_MESSAGE);
+			await expect(page).toHaveTitle(PSEUDO_TITLE);
 			const { messages, leaks } = await readPseudoText(content);
 			expect(messages).toBeGreaterThan(0);
 			expect(leaks).toEqual([]);
@@ -143,12 +146,12 @@ test("the browse grid top bar and its quick-filter drawers render only pseudo-tr
 		.filter({ hasText: PSEUDO_MESSAGE });
 	await expect(drawerPills).toHaveCount(2, { timeout: 60_000 });
 	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
-	const scans = [await readPseudoText(topBar, { brandTitle: BRAND_TITLE })];
+	const scans = [await readPseudoText(topBar)];
 	for (const pill of await drawerPills.all()) {
 		await pill.click();
 		const drawer = page.getByRole("dialog");
 		await drawer.waitFor();
-		scans.push(await readPseudoText(drawer, { brandTitle: BRAND_TITLE }));
+		scans.push(await readPseudoText(drawer));
 		await page.keyboard.press("Escape");
 		await expect(drawer).toBeHidden();
 	}
@@ -193,9 +196,7 @@ test("the command center trigger, palette and commands render only pseudo-transl
 		.filter({ has: page.locator(KBD) });
 	await trigger.waitFor({ timeout: 60_000 });
 	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
-	const triggerScan = await readPseudoText(trigger, {
-		brandTitle: BRAND_TITLE,
-	});
+	const triggerScan = await readPseudoText(trigger);
 
 	await page.keyboard.press("ControlOrMeta+k");
 	const input = palette.getByRole("combobox");
@@ -204,7 +205,7 @@ test("the command center trigger, palette and commands render only pseudo-transl
 	for (const { query, shows = paletteOption(query) } of views) {
 		await input.fill(query);
 		await palette.locator(shows).waitFor();
-		scans.push(await readPseudoText(palette, { brandTitle: BRAND_TITLE }));
+		scans.push(await readPseudoText(palette));
 	}
 
 	expect(triggerScan.labels).toBeGreaterThan(0);
@@ -424,9 +425,7 @@ test("the account popups render only pseudo-translated text", async ({
 		const before = shown ? await dialog.textContent() : null;
 		await show();
 		await expect.poll(() => dialog.textContent()).not.toBe(before);
-		const { messages, leaks } = await readPseudoText(dialog, {
-			brandTitle: BRAND_TITLE,
-		});
+		const { messages, leaks } = await readPseudoText(dialog);
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
 	};

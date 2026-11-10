@@ -4,7 +4,6 @@
 	import { getAlbumContent } from "#lib/api/messaging/albums.ts";
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
-	import { t } from "#lib/i18n/index.ts";
 	import AlbumEditor from "../album-editor/AlbumEditor.svelte";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 
@@ -19,10 +18,6 @@
 		return getAlbumContent(albumId);
 	});
 </script>
-
-<svelte:head>
-	<title>{t("settings.subpage.titles.editAlbum")}</title>
-</svelte:head>
 
 {#await album}
 	<AlbumHeaderLayout>

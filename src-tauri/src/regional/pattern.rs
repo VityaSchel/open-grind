@@ -1,4 +1,9 @@
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
+#[cfg(any(
+	target_os = "macos",
+	target_os = "windows",
+	target_os = "linux",
+	test
+))]
 use super::desktop::DateOrder;
 use super::desktop::{HourCycle, MeasurementSystem};
 
@@ -38,16 +43,15 @@ pub fn two_digit_hour(pattern: &str) -> Option<bool> {
 		.map(|run| run.len() >= 2)
 }
 
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
-pub fn date_order(pattern: &str) -> Option<DateOrder> {
+#[cfg(any(
+	target_os = "macos",
+	target_os = "windows",
+	target_os = "linux",
+	test
+))]
+fn field_order(fields: impl Iterator<Item = char>) -> Option<DateOrder> {
 	let mut order = String::new();
-	for run in unquoted(pattern).chunk_by(|a, b| a == b) {
-		let field = match run[0] {
-			'd' if run.len() <= 2 => 'd',
-			'M' | 'L' => 'm',
-			'y' | 'Y' | 'u' => 'y',
-			_ => continue,
-		};
+	for field in fields {
 		if !order.contains(field) {
 			order.push(field);
 		}
@@ -58,6 +62,18 @@ pub fn date_order(pattern: &str) -> Option<DateOrder> {
 		"ymd" => Some(DateOrder::Ymd),
 		_ => None,
 	}
+}
+
+#[cfg(any(target_os = "macos", target_os = "windows", test))]
+pub fn date_order(pattern: &str) -> Option<DateOrder> {
+	field_order(unquoted(pattern).chunk_by(|a, b| a == b).filter_map(|run| {
+		match run[0] {
+			'd' if run.len() <= 2 => Some('d'),
+			'M' | 'L' => Some('m'),
+			'y' | 'Y' | 'u' => Some('y'),
+			_ => None,
+		}
+	}))
 }
 
 #[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
@@ -180,6 +196,82 @@ pub fn sunday_first_weekday(day: usize) -> Option<u8> {
 #[cfg(any(target_os = "windows", test))]
 pub fn monday_zero_weekday(day: u32) -> Option<u8> {
 	(day <= 6).then(|| u8::try_from(day + 1).ok()).flatten()
+}
+
+#[cfg(any(target_os = "linux", test))]
+struct PosixConversion {
+	letter: char,
+	zero_padded: Option<bool>,
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn posix_conversions(
+	format: &str,
+) -> impl Iterator<Item = PosixConversion> + '_ {
+	let mut letters = format.chars().peekable();
+	std::iter::from_fn(move || {
+		while letters.next()? != '%' {}
+		let mut zero_padded = None;
+		while let Some(flag) =
+			letters.next_if(|c| matches!(c, '_' | '-' | '0' | '^' | '#'))
+		{
+			if matches!(flag, '_' | '-' | '0') {
+				zero_padded = Some(flag == '0');
+			}
+		}
+		while letters.next_if(char::is_ascii_digit).is_some() {}
+		letters.next_if(|c| matches!(c, 'E' | 'O'));
+		Some(PosixConversion {
+			letter: letters.next()?,
+			zero_padded,
+		})
+	})
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub fn posix_two_digit_hour(time_format: &str) -> Option<bool> {
+	for PosixConversion {
+		letter,
+		zero_padded,
+	} in posix_conversions(time_format)
+	{
+		match letter {
+			'H' => return Some(zero_padded.unwrap_or(true)),
+			'k' => return Some(zero_padded.unwrap_or(false)),
+			'R' | 'T' => return Some(true),
+			'I' | 'l' | 'r' => return None,
+			_ => {}
+		}
+	}
+	None
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub fn posix_date_order(date_format: &str) -> Option<DateOrder> {
+	field_order(posix_conversions(date_format).flat_map(
+		|PosixConversion { letter, .. }| {
+			match letter {
+				'd' | 'e' => "d",
+				'm' | 'b' | 'B' | 'h' => "m",
+				'y' | 'Y' | 'C' | 'G' | 'g' => "y",
+				'D' => "mdy",
+				'F' => "ymd",
+				_ => "",
+			}
+			.chars()
+		},
+	))
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub fn gnome_two_digit_hour(
+	clock_format: Option<HourCycle>,
+	time_format_padding: Option<bool>,
+) -> Option<bool> {
+	match clock_format {
+		Some(HourCycle::H11 | HourCycle::H12) => Some(false),
+		Some(HourCycle::H23 | HourCycle::H24) | None => time_format_padding,
+	}
 }
 
 #[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
@@ -377,6 +469,94 @@ mod tests {
 				None
 			]
 		);
+	}
+
+	#[test]
+	fn the_first_24_hour_posix_conversion_says_whether_hours_are_padded() {
+		for (format, padded) in [
+			("%H:%M:%S", true),
+			("%T", true),
+			("%R", true),
+			("%k:%M", false),
+			("%-H:%M", false),
+			("%_H:%M", false),
+			("%0k:%M", true),
+			("%-0k:%M", true),
+			("%^2H:%M", true),
+			("%OH:%OM:%OS", true),
+			("%H時%M分%S秒", true),
+			("%%H %k:%M", false),
+			("%-T", true),
+		] {
+			assert_eq!(posix_two_digit_hour(format), Some(padded), "{format}");
+		}
+		for format in ["%M:%S", "%%H", "", "%", "%-"] {
+			assert_eq!(posix_two_digit_hour(format), None, "{format}");
+		}
+	}
+
+	#[test]
+	fn a_12_hour_posix_format_leaves_the_padding_unread() {
+		for format in [
+			"%r",
+			"%I:%M:%S %p",
+			"%p %I:%M",
+			"%l:%M %p",
+			"%0l:%M %p",
+			"%-I:%M %p",
+			"%r %H",
+		] {
+			assert_eq!(posix_two_digit_hour(format), None, "{format}");
+		}
+	}
+
+	#[test]
+	fn the_posix_date_fields_name_the_date_order() {
+		for (format, order) in [
+			("%d.%m.%Y", DateOrder::Dmy),
+			("%d/%m/%y", DateOrder::Dmy),
+			("%m/%d/%Y", DateOrder::Mdy),
+			("%Y-%m-%d", DateOrder::Ymd),
+			("%D", DateOrder::Mdy),
+			("%F", DateOrder::Ymd),
+			("%Y年%m月%d日", DateOrder::Ymd),
+			("%-d.%-m.%Y", DateOrder::Dmy),
+			("%e %b %Y", DateOrder::Dmy),
+			("%Ey/%Om/%Od", DateOrder::Ymd),
+			("%d/%m/%C%y", DateOrder::Dmy),
+			("%a %d %B %Y", DateOrder::Dmy),
+		] {
+			assert_eq!(posix_date_order(format), Some(order), "{format}");
+		}
+		for format in ["%m/%y", "%y/%d/%m", "%%d/%m/%Y", "%x", "", "%"] {
+			assert_eq!(posix_date_order(format), None, "{format}");
+		}
+	}
+
+	#[test]
+	fn a_12_hour_gnome_clock_leaves_hours_unpadded() {
+		for clock_format in [HourCycle::H11, HourCycle::H12] {
+			for padding in [Some(true), Some(false), None] {
+				assert_eq!(
+					gnome_two_digit_hour(Some(clock_format), padding),
+					Some(false),
+					"{clock_format:?} {padding:?}"
+				);
+			}
+		}
+	}
+
+	#[test]
+	fn a_24_hour_or_unknown_gnome_clock_keeps_the_time_format_padding() {
+		for clock_format in [Some(HourCycle::H23), Some(HourCycle::H24), None] {
+			for padding in [Some(true), Some(false), None] {
+				assert_eq!(
+					gnome_two_digit_hour(clock_format, padding),
+					padding,
+					"{clock_format:?} {padding:?}"
+				);
+			}
+		}
 	}
 
 	#[test]

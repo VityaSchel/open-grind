@@ -543,3 +543,46 @@ describe("ProfilePane hiding and blocking", () => {
 		expect(getProfileMock).toHaveBeenCalledOnce();
 	});
 });
+
+describe("ProfilePane window title", () => {
+	beforeEach(() => {
+		document.title = "Previous Page";
+	});
+
+	it("names the person from the grid row, then from the loaded profile", async () => {
+		const response = Promise.withResolvers<Profile>();
+		getProfileMock.mockReturnValueOnce(response.promise);
+		renderPane({ active: true, row: gridRow() });
+		await tick();
+
+		expect(document.title).toBe("Peer — Open Grind");
+
+		response.resolve(fullProfile(LOADED));
+		await flush();
+
+		expect(document.title).toBe("Loaded — Open Grind");
+	});
+
+	it("falls back to Profile while a pane without a row loads", async () => {
+		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
+		renderPane({ active: true, row: null });
+		await tick();
+
+		expect(document.title).toBe("Profile — Open Grind");
+	});
+
+	it("leaves out the name of a hidden user", async () => {
+		getProfileMock.mockRejectedValue(new HiddenProfileError());
+		renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		expect(document.title).toBe("Profile — Open Grind");
+	});
+
+	it("leaves the title to the active pane", async () => {
+		renderPane({ active: false, row: gridRow() });
+		await flush();
+
+		expect(document.title).toBe("Previous Page");
+	});
+});

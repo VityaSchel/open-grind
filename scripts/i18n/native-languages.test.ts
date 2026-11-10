@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	renderLocalesConfig,
 	withBundleLocalizations,
+	withLocaleFilters,
 } from "./native-languages";
 
 const HEADER = [
@@ -46,6 +47,75 @@ describe("renderLocalesConfig", () => {
 			),
 		].map(([, name]) => name);
 		expect(names).toEqual(["de", "en-US", "es-ES", "pt-BR", "zh-Hant"]);
+	});
+});
+
+describe("withLocaleFilters", () => {
+	const properties = (...lines: string[]) =>
+		[
+			"android.useAndroidX=true",
+			"opengrind.android.minSdk=28",
+			...lines,
+			"",
+		].join("\n");
+
+	it("keeps only English while nothing else ships", () => {
+		expect(
+			withLocaleFilters({
+				properties: properties("opengrind.android.localeFilters=en,fr"),
+				shipped: [],
+			}),
+		).toBe(properties("opengrind.android.localeFilters=en"));
+	});
+
+	it("lists the resource qualifier of each shipped catalog", () => {
+		expect(
+			withLocaleFilters({
+				properties: properties("opengrind.android.localeFilters=en"),
+				shipped: ["pt-BR", "es-419", "zh-Hant", "he", "de"],
+			}),
+		).toBe(
+			properties(
+				"opengrind.android.localeFilters=de,en,b+es+419,iw,pt-rBR,b+zh+Hant",
+			),
+		);
+	});
+
+	it("replaces the filters in place and keeps the other properties", () => {
+		const text = [
+			"opengrind.android.localeFilters=en",
+			"opengrind.android.ndk=29",
+			"",
+		].join("\n");
+		expect(withLocaleFilters({ properties: text, shipped: ["de"] })).toBe(
+			[
+				"opengrind.android.localeFilters=de,en",
+				"opengrind.android.ndk=29",
+				"",
+			].join("\n"),
+		);
+	});
+
+	it.each([
+		["ends with a newline", properties()],
+		["ends without one", properties().trimEnd()],
+	])(
+		"adds the filters to properties that lack them and %s",
+		(_name, text) => {
+			expect(
+				withLocaleFilters({ properties: text, shipped: ["es-419"] }),
+			).toBe(properties("opengrind.android.localeFilters=en,b+es+419"));
+		},
+	);
+
+	it("is stable when applied to its own output", () => {
+		const once = withLocaleFilters({
+			properties: properties(),
+			shipped: ["de"],
+		});
+		expect(withLocaleFilters({ properties: once, shipped: ["de"] })).toBe(
+			once,
+		);
 	});
 });
 

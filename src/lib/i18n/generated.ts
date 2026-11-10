@@ -692,6 +692,7 @@ export interface Messages {
 	"profile.onlineStatus.onlineNowVisiting": undefined;
 	"profile.onlineStatus.visiting": undefined;
 	"profile.page.errors.refreshFailed": undefined;
+	"profile.page.title": undefined;
 	"profile.relationshipStatus.committed": undefined;
 	"profile.relationshipStatus.dating": undefined;
 	"profile.relationshipStatus.engaged": undefined;
@@ -954,6 +955,7 @@ export interface Messages {
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;
+	"shell.documentTitle": { page: string };
 	"shell.error.description": undefined;
 	"shell.error.goHome": undefined;
 	"shell.error.pageNotFound": undefined;
@@ -1276,6 +1278,7 @@ export interface RichMessages {
 	"settings.profile.photos.a11y.slot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: "placeholder" };
 	"settings.profile.photos.errors.leftOut": { count: "count"; max: "placeholder" };
+	"shell.documentTitle": { page: "placeholder" };
 	"shell.webViewWarning.description": { minimumVersion: "placeholder" };
 	"shell.webViewWarning.detected": { provider: "placeholder"; version: "placeholder" };
 	"updates.addons.fcm.installedVersion": { tag: "placeholder" };

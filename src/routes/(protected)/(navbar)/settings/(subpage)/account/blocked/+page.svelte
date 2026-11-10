@@ -14,10 +14,6 @@
 	import { t } from "#lib/i18n/index.ts";
 </script>
 
-<svelte:head>
-	<title>{t("settings.subpage.titles.blocked")}</title>
-</svelte:head>
-
 {#snippet icon(on: boolean)}
 	<ProhibitIcon weight={on ? "fill" : "regular"} class="size-6" />
 {/snippet}
