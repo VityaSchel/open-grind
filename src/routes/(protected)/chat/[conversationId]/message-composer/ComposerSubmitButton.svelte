@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
 	import PrimaryComposerButton from "#lib/components/shared/PrimaryComposerButton.svelte";
@@ -7,7 +7,7 @@
 
 	const { disabled } = $derived(getMessageComposerContext()());
 
-	function keepKeyboardUp(event) {
+	function keepKeyboardUp(event: Event) {
 		if (softKeyboardVisibility() !== false) event.preventDefault();
 	}
 </script>
