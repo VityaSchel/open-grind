@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import DropIcon from "phosphor-svelte/lib/DropIcon";
 	import PencilIcon from "phosphor-svelte/lib/PencilIcon";
 
 	import { RightNowPostReport } from "#lib/components/report/right-now-post-report.svelte.ts";
@@ -8,6 +7,7 @@
 	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.svelte.ts";
 	import ReportPostButton from "#lib/components/right-now/ReportPostButton.svelte";
 	import RightNowPostPhoto from "#lib/components/right-now/RightNowPostPhoto.svelte";
+	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as Card from "#lib/components/ui/card/index.ts";
@@ -93,7 +93,7 @@
 				<p
 					class="flex min-w-0 flex-1 items-center gap-1.5 text-muted-foreground"
 				>
-					<DropIcon
+					<SplashIcon
 						weight="fill"
 						class="size-4 shrink-0 text-purple-500"
 					/>

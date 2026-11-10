@@ -1,7 +1,7 @@
 <script lang="ts">
-	import DropIcon from "phosphor-svelte/lib/DropIcon";
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
+	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
 	import { rightNowFeedQuery } from "./feed-query";
@@ -24,7 +24,7 @@
 			query.ageMax !== undefined ||
 			query.sexualPositions !== undefined,
 	);
-	const Icon = $derived(filtered ? FunnelIcon : DropIcon);
+	const Icon = $derived(filtered ? FunnelIcon : SplashIcon);
 	const nobodyDescription = $derived.by(() => {
 		if (ownPostRunning) return "No one else nearby is on Right Now.";
 		if (joinable)

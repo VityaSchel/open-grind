@@ -1,7 +1,7 @@
 <script lang="ts">
-	import DropIcon from "phosphor-svelte/lib/DropIcon";
 	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
 
+	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 	let { status }: { status: RightNowStatus } = $props();
@@ -16,7 +16,7 @@
 			<HouseIcon weight="fill" class="shrink-0" />
 			Hosting
 		{:else}
-			<DropIcon weight="fill" class="shrink-0" />
+			<SplashIcon weight="fill" class="shrink-0" />
 			Right Now
 		{/if}
 	</span>

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import DropIcon from "phosphor-svelte/lib/DropIcon";
 	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
 
+	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 	let {
@@ -28,7 +28,7 @@
 		{#if status === "HOSTING"}
 			<HouseIcon weight="fill" class={iconClass} />
 		{:else}
-			<DropIcon weight="fill" class={iconClass} />
+			<SplashIcon weight="fill" class={iconClass} />
 		{/if}
 		<span class="sr-only">{title}</span>
 	</div>
