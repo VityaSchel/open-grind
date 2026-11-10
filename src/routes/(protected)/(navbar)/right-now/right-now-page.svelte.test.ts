@@ -11,8 +11,8 @@ describe("Right Now page", () => {
 	it("explains that the tab is not implemented yet", () => {
 		const { container, getByRole } = render(RightNowPage);
 
-		expect(container.textContent).toBe(
-			" Unimplemented The Right Now tab isn’t implemented yet. Follow the progress in #43.",
+		expect(container.textContent?.replace(/\s+/g, " ").trim()).toBe(
+			"Unimplemented The Right Now tab isn’t implemented yet. Follow the progress in #43.",
 		);
 		expect(getByRole("link", { name: "#43" }).getAttribute("href")).toBe(
 			"https://git.opengrind.org/open-grind/open-grind/issues/43",
