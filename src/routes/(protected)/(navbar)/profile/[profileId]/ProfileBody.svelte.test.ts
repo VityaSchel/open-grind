@@ -17,17 +17,20 @@ import ProfileBody from "./ProfileBody.svelte";
 
 const PROFILE_ID = 100001;
 
-function renderedFields(overrides: Partial<Profile>): string[] {
+function renderBody(overrides: Partial<Profile>): HTMLElement {
 	const profile = { ...fullProfile({ profileId: PROFILE_ID }), ...overrides };
 	const profileState = new ProfileState({
 		profileId: PROFILE_ID,
 		ourProfileId: OUR_ID,
 		fetched: { profile, note: null },
 	});
-	const { container } = render(ProfileBody, { props: { profileState } });
-	return [...container.querySelectorAll("[data-slot=profile-field]")].map(
-		(field) => field.textContent.replace(/\s+/g, " ").trim(),
-	);
+	return render(ProfileBody, { props: { profileState } }).container;
+}
+
+function renderedFields(overrides: Partial<Profile>): string[] {
+	return [
+		...renderBody(overrides).querySelectorAll("[data-slot=profile-field]"),
+	].map((field) => field.textContent.replace(/\s+/g, " ").trim());
 }
 
 describe("ProfileBody", () => {
@@ -56,5 +59,25 @@ describe("ProfileBody", () => {
 		expect(vaccinated).toBeGreaterThanOrEqual(0);
 		expect(fields[vaccinated - 1]).toMatch(/^Last Tested /);
 		expect(fields[vaccinated + 1]).toMatch(/^Health Practices /);
+	});
+
+	it("shows the Right Now status in the status row before the New badge", () => {
+		const container = renderBody({ rightNow: "HOSTING", isNew: true });
+
+		const row = container.querySelector("[data-slot=profile-status-row]");
+		const badges = [
+			...(row?.querySelectorAll(
+				"[data-slot=profile-right-now-badge], [data-slot=new-badge]",
+			) ?? []),
+		].map((badge) => badge.textContent.trim());
+		expect(badges).toEqual(["Hosting", "New"]);
+	});
+
+	it("shows no Right Now status for a profile that is not on Right Now", () => {
+		const container = renderBody({ rightNow: "NOT_ACTIVE" });
+
+		expect(
+			container.querySelector("[data-slot=profile-right-now-badge]"),
+		).toBeNull();
 	});
 });

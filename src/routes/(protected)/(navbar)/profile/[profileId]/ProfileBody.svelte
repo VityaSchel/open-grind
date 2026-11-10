@@ -33,6 +33,7 @@
 	import ProfileHeading from "./ProfileHeading.svelte";
 	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
+	import RightNowBadge from "./RightNowBadge.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
 
 	let { profileState }: { profileState: ProfileState } = $props();
@@ -48,6 +49,7 @@
 		onlineUntil,
 		seen,
 		distance,
+		rightNow,
 		isNew,
 		sexualPosition,
 		height,
@@ -87,6 +89,7 @@
 				self={ourProfile}
 			/>
 			<Distance {distance} />
+			<RightNowBadge status={rightNow} />
 			<NewBadge {isNew} />
 		</div>
 		{#if sexualPosition !== null || height !== null || weight !== null || bodyType !== null}
