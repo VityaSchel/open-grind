@@ -36,11 +36,8 @@ vi.mock("#lib/util/scroll-restore.svelte.ts", () => ({
 import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import BrowsePage from "./(navbar)/(root)/+page.svelte";
-import TapsPage from "./(navbar)/interest/taps/+page.svelte";
-import ViewsPage from "./(navbar)/interest/views/+page.svelte";
 import RightNowPage from "./(navbar)/right-now/+page.svelte";
 import MePage from "./(navbar)/settings/(me)/+page.svelte";
-import InboxPage from "./chat/+page.svelte";
 
 const DATA = { ourProfileId: 1 };
 
@@ -56,9 +53,6 @@ const pages = [
 		title: "Right Now",
 		open: () => render(RightNowPage),
 	},
-	{ route: "/interest/taps", title: "Taps", open: () => render(TapsPage) },
-	{ route: "/interest/views", title: "Views", open: () => render(ViewsPage) },
-	{ route: "/chat", title: "Inbox", open: () => render(InboxPage) },
 ];
 
 afterEach(async () => {
