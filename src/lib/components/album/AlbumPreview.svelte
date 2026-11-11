@@ -14,6 +14,8 @@
 		loadAlbumSlides,
 		openAlbumLightbox,
 	} from "./album-lightbox";
+	import { albumWarningDue, markAlbumWarningSeen } from "./album-warning";
+	import AlbumWarningDialog from "./AlbumWarningDialog.svelte";
 
 	let {
 		albumId,
@@ -21,6 +23,7 @@
 		coverUrl,
 		hasPhoto,
 		hasVideo,
+		ourAlbum = false,
 		label = "Open album",
 		class: className,
 		contentClass,
@@ -35,6 +38,7 @@
 		coverUrl: string | null;
 		hasPhoto: boolean;
 		hasVideo: boolean;
+		ourAlbum?: boolean;
 		label?: string;
 		class?: ClassValue;
 		contentClass?: ClassValue;
@@ -47,6 +51,7 @@
 
 	type PreviewState =
 		| { status: "idle" }
+		| { status: "warning" }
 		| { status: "loading" }
 		| { status: "open"; slides: AlbumSlide[] };
 
@@ -58,7 +63,15 @@
 	);
 
 	function open() {
+		preview =
+			!ourAlbum && albumWarningDue()
+				? { status: "warning" }
+				: { status: "loading" };
+	}
+
+	function view() {
 		preview = { status: "loading" };
+		markAlbumWarningSeen();
 	}
 
 	$effect(() => {
@@ -157,6 +170,15 @@
 	</div>
 	{@render children?.()}
 </button>
+<AlbumWarningDialog
+	bind:open={
+		() => preview.status === "warning",
+		(next) => {
+			if (!next) preview = { status: "idle" };
+		}
+	}
+	onview={view}
+/>
 
 <style>
 	:global(.pswp__img) {

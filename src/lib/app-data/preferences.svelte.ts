@@ -16,6 +16,7 @@ import {
 } from ".";
 
 const preferencesSchema = z.object({
+	albumWarningSeen: z.boolean().default(false),
 	autoUpdateLocation: z.boolean().default(false),
 	backdropBlurCalibration: backdropBlurCalibrationSchema
 		.nullable()

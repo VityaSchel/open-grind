@@ -6,6 +6,8 @@ import {
 	type test,
 } from "@playwright/test";
 
+import { serveDemoImages } from "./media";
+
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
 export const MESSAGE_ROW = '[role="article"]';
@@ -318,6 +320,7 @@ export async function installTauriShim(
 	page: Page,
 	{ platform = "macos" } = {},
 ): Promise<void> {
+	await serveDemoImages(page.context());
 	await page.addInitScript((platformName: string) => {
 		interface AppDataArgs {
 			file?: string;
