@@ -111,7 +111,9 @@ describe("on ios", () => {
 		attach(list);
 		hitting(list.firstElementChild);
 
-		document.body.dispatchEvent(new FocusEvent("focusin"));
+		document.body.dispatchEvent(
+			new FocusEvent("focusin", { bubbles: true }),
+		);
 
 		expect(targets()).toEqual([{ x: 201, y: 62 + 778 / 2 }]);
 	});
@@ -122,7 +124,9 @@ describe("on ios", () => {
 		attach(list);
 
 		for (const callback of resized) callback([], {} as ResizeObserver);
-		document.body.dispatchEvent(new FocusEvent("focusin"));
+		document.body.dispatchEvent(
+			new FocusEvent("focusin", { bubbles: true }),
+		);
 
 		expect(targets()).toHaveLength(1);
 	});
@@ -134,7 +138,9 @@ describe("on ios", () => {
 
 		detach?.();
 		detachers = [];
-		document.body.dispatchEvent(new FocusEvent("focusin"));
+		document.body.dispatchEvent(
+			new FocusEvent("focusin", { bubbles: true }),
+		);
 
 		expect(targets()).toEqual([{ x: 201, y: 62 + 778 / 2 }, null]);
 	});

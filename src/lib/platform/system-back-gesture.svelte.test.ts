@@ -276,6 +276,7 @@ describe("on iOS", () => {
 	});
 
 	afterEach(() => {
+		vi.runOnlyPendingTimers();
 		vi.useRealTimers();
 	});
 

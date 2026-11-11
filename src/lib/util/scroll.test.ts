@@ -22,6 +22,7 @@ import {
 
 const SCREEN_HEIGHT = 800;
 const GLIDE_MS = 400;
+const FRAME_MS = 16;
 
 function scrolledList(scrollTop: number): HTMLElement {
 	const element = document.createElement("div");
@@ -103,7 +104,7 @@ describe("jumpThenGlideToTop", () => {
 		const halfway = list.scrollTop;
 		inserted = 300;
 		list.scrollTop += inserted;
-		vi.advanceTimersByTime(16);
+		vi.advanceTimersByTime(FRAME_MS);
 
 		expect(list.scrollTop).toBeGreaterThan(inserted);
 		expect(list.scrollTop).toBeLessThan(halfway + inserted);
@@ -118,7 +119,7 @@ describe("jumpThenGlideToTop", () => {
 		jumpThenGlideToTop({ element: list, onLanded: firstLanded });
 		vi.advanceTimersByTime(GLIDE_MS / 4);
 		jumpThenGlideToTop({ element: list, landing: () => 40 });
-		vi.advanceTimersByTime(GLIDE_MS);
+		vi.advanceTimersByTime(GLIDE_MS + FRAME_MS);
 
 		expect(list.scrollTop).toBe(40);
 		expect(firstLanded).not.toHaveBeenCalled();

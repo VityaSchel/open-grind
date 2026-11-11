@@ -70,13 +70,25 @@ function keyOf(pathname: string): string | null {
 		: null;
 }
 
+async function navigating({
+	stack,
+	from,
+	to,
+}: {
+	stack: LiveStackState;
+	from: string;
+	to: string;
+}): Promise<(() => void) | void> {
+	const afterUpdate = stack.navigate(navigationEvent({ from, to }));
+	await vi.advanceTimersByTimeAsync(0);
+	return afterUpdate;
+}
+
 async function navigate(
 	harness: ReturnType<typeof makeStack>,
 	{ from, to }: { from: string; to: string },
 ) {
-	const afterUpdate = await harness.stack.navigate(
-		navigationEvent({ from, to }),
-	);
+	const afterUpdate = await navigating({ stack: harness.stack, from, to });
 	harness.arrive(to);
 	afterUpdate?.();
 	vi.advanceTimersToNextFrame();
@@ -114,9 +126,7 @@ describe("LiveStackState opening a sheet", () => {
 		const harness = makeStack();
 		const { stack, animations } = harness;
 
-		const afterUpdate = await stack.navigate(
-			navigationEvent({ from: LIST, to: FIRST }),
-		);
+		const afterUpdate = await navigating({ stack, from: LIST, to: FIRST });
 		expect(stack.moving).toBe(true);
 		expect(harness.applied.at(-1)).toBe(1);
 
@@ -188,7 +198,7 @@ describe("LiveStackState closing a sheet", () => {
 	it("lets a Back that lands before the push slid in rest without flashing the sheet over the list", async () => {
 		const harness = makeStack();
 		const { stack, animations, applied } = harness;
-		await stack.navigate(navigationEvent({ from: LIST, to: FIRST }));
+		await navigating({ stack, from: LIST, to: FIRST });
 		harness.arrive(FIRST);
 		const appliedBeforeBack = applied.length;
 
@@ -218,9 +228,7 @@ describe("LiveStackState closing a sheet", () => {
 		await navigate(harness, { from: FIRST, to: LIST });
 		animations.at(-1)!.reached = 0.6;
 
-		const afterUpdate = await stack.navigate(
-			navigationEvent({ from: LIST, to: SECOND }),
-		);
+		const afterUpdate = await navigating({ stack, from: LIST, to: SECOND });
 		expect(stack.leaving).toBeNull();
 		expect(stack.sheetKey).toBeNull();
 		expect(applied.at(-1)).toBe(1);
@@ -242,9 +250,7 @@ describe("LiveStackState closing a sheet", () => {
 		await navigate(harness, { from: FIRST, to: LIST });
 		animations.at(-1)!.reached = 0.6;
 
-		const afterUpdate = await stack.navigate(
-			navigationEvent({ from: LIST, to: FIRST }),
-		);
+		const afterUpdate = await navigating({ stack, from: LIST, to: FIRST });
 		expect(stack.sheetKey, "stays mounted until the route arrives").toBe(
 			"1:2",
 		);
@@ -267,9 +273,7 @@ describe("LiveStackState closing a sheet", () => {
 		const harness = await opened();
 		const { stack, animations } = harness;
 
-		const staleUpdate = await stack.navigate(
-			navigationEvent({ from: FIRST, to: LIST }),
-		);
+		const staleUpdate = await navigating({ stack, from: FIRST, to: LIST });
 		await navigate(harness, { from: FIRST, to: SECOND });
 		const count = animations.length;
 		staleUpdate?.();
@@ -639,9 +643,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 
 	it("leaves the gesture to the system before the sheet starts sliding in", async () => {
 		const harness = makeStack();
-		await harness.stack.navigate(
-			navigationEvent({ from: LIST, to: FIRST }),
-		);
+		await navigating({ stack: harness.stack, from: LIST, to: FIRST });
 		harness.arrive(FIRST);
 
 		expect(harness.stack.beginSwipeBack()).toBe(false);

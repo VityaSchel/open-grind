@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { NativeInsets } from "./native-insets";
 import type { SupportedPlatform } from "./os";
+import * as softKeyboardOnTestRuntime from "./soft-keyboard.svelte";
 
 const remeasureScreenChrome = vi.hoisted(() => vi.fn());
 
@@ -194,10 +195,10 @@ describe("on ios", () => {
 		expect(softKeyboardShrinksPage()).toBe(true);
 	});
 
-	it("tells its readers when the page shrinks and grows back", async () => {
+	it("tells its readers when the page shrinks and grows back", () => {
 		runningOn("ios");
 		const { noteSoftKeyboardOpen, softKeyboardShrinksPage } =
-			await loadSoftKeyboard();
+			softKeyboardOnTestRuntime;
 		const seen: boolean[] = [];
 		const stop = $effect.root(() => {
 			$effect(() => {
