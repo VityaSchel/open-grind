@@ -107,7 +107,10 @@ test("the scan reads the document title's keys apart from the page's", async ({
 	}, MARKERS_MODULE);
 	const nested = await scan(page);
 
-	expect(signIn.titleKeys).toEqual(["auth.signIn.title"]);
+	expect(signIn.titleKeys).toEqual([
+		"auth.signIn.title",
+		"shell.documentTitle",
+	]);
 	expect(shownKey(signIn, "auth.signIn.title")).toBeUndefined();
 	expect(shownKey(signIn, "auth.signIn.submit")).toEqual({
 		via: "text",
