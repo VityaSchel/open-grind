@@ -95,7 +95,7 @@
 				>
 					<SplashIcon
 						weight="fill"
-						class="size-4 shrink-0 text-purple-500"
+						class="size-4 shrink-0 text-purple-400"
 					/>
 					<span id={titleId} class="font-medium text-foreground">
 						Right Now

@@ -22,7 +22,7 @@
 {#if status !== "NOT_ACTIVE"}
 	<div
 		data-slot="right-now-indicator"
-		class={["flex shrink-0 text-purple-500", className]}
+		class={["flex shrink-0 text-purple-400", className]}
 		{title}
 	>
 		{#if status === "HOSTING"}

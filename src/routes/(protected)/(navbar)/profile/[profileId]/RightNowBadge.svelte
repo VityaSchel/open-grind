@@ -10,7 +10,7 @@
 {#if status !== "NOT_ACTIVE"}
 	<span
 		data-slot="profile-right-now-badge"
-		class="flex items-center gap-1 whitespace-nowrap text-purple-500"
+		class="flex items-center gap-1 whitespace-nowrap text-purple-400"
 	>
 		{#if status === "HOSTING"}
 			<HouseIcon weight="fill" class="shrink-0" />
