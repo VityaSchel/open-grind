@@ -6,8 +6,9 @@ class AppLifecycle {
 	#pending: Promise<void> | null = null;
 
 	constructor() {
-		if (typeof document === "undefined" || !isMobilePlatform()) return;
+		if (typeof document === "undefined") return;
 		document.addEventListener("visibilitychange", () => {
+			if (!isMobilePlatform()) return;
 			if (document.visibilityState === "hidden") void this.deactivate();
 			else void this.activate();
 		});
