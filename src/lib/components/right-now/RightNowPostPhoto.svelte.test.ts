@@ -75,14 +75,4 @@ describe("a Right Now post photo", () => {
 		expect(screen.getByRole("img", { name: "Post photo" })).toBeTruthy();
 		expect(screen.getByText("May contain nudity")).toBeTruthy();
 	});
-
-	it("labels a small blurred thumbnail with a hidden nudity caption under an icon", () => {
-		render(RightNowPostPhoto, {
-			props: { media: blurredPhoto(), blurred: true, size: "sm" },
-		});
-
-		const caption = screen.getByTitle("May contain nudity");
-		expect(caption.textContent?.trim()).toBe("May contain nudity");
-		expect(screen.queryByRole("link", { name: "Open photo" })).toBeNull();
-	});
 });

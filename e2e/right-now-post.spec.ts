@@ -92,7 +92,7 @@ test.describe("our own Right Now post in the demo", () => {
 		});
 	});
 
-	test("our profile shows our post, and Edit post opens the post sheet in Right Now", async ({
+	test("our profile opens our post full screen, where Edit post opens the post sheet in Right Now", async ({
 		page,
 	}) => {
 		await join(page);
@@ -104,16 +104,21 @@ test.describe("our own Right Now post in the demo", () => {
 		await sheet.getByRole("button", { name: "Save" }).click();
 		await expect(sheet).toBeHidden();
 
-		await ownCard(page).locator('a[href^="/profile/"]').click();
+		await ownCard(page)
+			.getByRole("link", { name: /^View .*profile$/ })
+			.click();
 		const ours = page.getByRole("region", { name: "Right Now" });
 		await expect(ours).toContainText(POST_TEXT, {
 			timeout: RIGHT_NOW_FEED_TIMEOUT,
 		});
+		await ours.getByRole("button", { name: "Right Now" }).click();
+		const viewer = page.locator(".pswp");
+		await expect(viewer).toContainText(POST_TEXT);
 		await expect(
-			ours.getByRole("button", { name: "Report post" }),
+			viewer.getByRole("button", { name: "Report post" }),
 		).toHaveCount(0);
 
-		await ours.getByRole("button", { name: "Edit post" }).click();
+		await viewer.getByRole("button", { name: "Edit post" }).click();
 
 		await expect(page).toHaveURL(/\/right-now$/);
 		await expect(showMyPost(page)).toBeVisible({
@@ -123,6 +128,9 @@ test.describe("our own Right Now post in the demo", () => {
 		await page.goBack();
 		await page.goForward();
 		await expect(page).toHaveURL(/\/right-now$/);
+		await expect(timeLeftPill(page)).toBeVisible({
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
 		await expect(postSheet(page)).toBeHidden();
 	});
 

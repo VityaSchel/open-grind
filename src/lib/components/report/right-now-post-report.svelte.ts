@@ -16,9 +16,11 @@ export class RightNowPostReport {
 	async request({
 		postId,
 		profileId,
+		beforeOpen,
 	}: {
 		postId: RightNowPostId;
 		profileId: Profile["profileId"] | null;
+		beforeOpen?: () => void;
 	}): Promise<void> {
 		const check = ++this.#latestCheck;
 		try {
@@ -42,6 +44,7 @@ export class RightNowPostReport {
 				});
 			return;
 		}
+		beforeOpen?.();
 		this.target = { kind: "rightNowPost", postId, profileId };
 		this.open = true;
 	}

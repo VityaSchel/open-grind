@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
 import {
 	FIRST_ROUTE_COMPILE_MS,
@@ -8,9 +8,32 @@ import {
 import { DRAWER } from "./support/drawer";
 
 const HOSTING_AUTHOR = "/profile/100006";
-const HOSTING_AUTHOR_CHAT = 'a[href="/chat/100006:123456000"]';
+const HOSTING_AUTHOR_CONVERSATION = "/chat/100006:123456000";
+const HOSTING_AUTHOR_CHAT = `a[href="${HOSTING_AUTHOR_CONVERSATION}"]`;
+const HOSTING_AUTHOR_POST_TEXT = "Gym's done, now what?";
 const TILE = 'a[href^="/profile/"]';
 const INDICATOR = '[data-slot="right-now-indicator"]';
+const PROFILE_SCROLLER = '[data-slot="profile-scroller"]';
+
+async function layoutBox(target: Locator) {
+	const box = await target.boundingBox();
+	if (box === null) throw new Error("the element is not laid out");
+	return box;
+}
+
+async function clickOver(
+	container: Locator,
+	{ target }: { target: Locator },
+): Promise<void> {
+	const outer = await layoutBox(container);
+	const inner = await layoutBox(target);
+	await container.click({
+		position: {
+			x: inner.x - outer.x + inner.width / 2,
+			y: inner.y - outer.y + inner.height / 2,
+		},
+	});
+}
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(240_000);
@@ -42,7 +65,7 @@ test("Browse's Right Now filter lists only tiles marked as on Right Now", async 
 	).toBeVisible();
 });
 
-test("a hosting author's profile shows the status and the post, and the post can be reported", async ({
+test("a hosting author's profile shows the status and the post, which opens full screen to be reported", async ({
 	page,
 }) => {
 	await page.goto(HOSTING_AUTHOR);
@@ -52,14 +75,58 @@ test("a hosting author's profile shows the status and the post, and the post can
 	).toHaveText("Hosting", { timeout: FIRST_ROUTE_COMPILE_MS });
 	const post = page.getByRole("region", { name: "Right Now" });
 	await expect(post).toBeVisible();
-	await expect(post.getByRole("button", { name: "Edit" })).toHaveCount(0);
+	await expect(post.getByRole("button")).toHaveText(["Right Now"]);
 
-	await post.getByRole("button", { name: "Report post" }).click();
+	await clickOver(post, { target: post.getByText(HOSTING_AUTHOR_POST_TEXT) });
+	const viewer = page.locator(".pswp");
+	await expect(viewer).toContainText(HOSTING_AUTHOR_POST_TEXT);
+	await expect(viewer.getByRole("button", { name: "Edit post" })).toHaveCount(
+		0,
+	);
+	await viewer.getByRole("button", { name: "Report post" }).click();
+	await expect(viewer).toHaveCount(0);
 	const drawer = page.locator(DRAWER);
 	await drawer.waitFor({ timeout: 10_000 });
 	await expect(
 		drawer.getByRole("heading", { name: "Report post" }),
 	).toBeVisible();
+});
+
+test("Write a message stays clickable while the Right Now post is scrolled under the chat bar", async ({
+	page,
+}) => {
+	await page.goto(HOSTING_AUTHOR);
+	const post = page.getByRole("region", { name: "Right Now" });
+	await expect(post).toContainText(HOSTING_AUTHOR_POST_TEXT, {
+		timeout: FIRST_ROUTE_COMPILE_MS,
+	});
+	const write = page
+		.getByRole("navigation", { name: "Chat and tap" })
+		.getByRole("link", { name: "Write a message..." });
+	await expect(write).toBeVisible();
+
+	const writeBox = await layoutBox(write);
+	const writeCenter = writeBox.y + writeBox.height / 2;
+	const postBox = await layoutBox(post);
+	await page
+		.locator(PROFILE_SCROLLER)
+		.evaluate(
+			(scroller, top) => scroller.scrollBy({ top, behavior: "instant" }),
+			postBox.y + postBox.height / 2 - writeCenter,
+		);
+	await expect
+		.poll(
+			async () => {
+				const { y, height } = await layoutBox(post);
+				return y < writeCenter && writeCenter < y + height;
+			},
+			{ message: "the post straddles the link's vertical center" },
+		)
+		.toBe(true);
+
+	await write.click();
+
+	await expect(page).toHaveURL(new RegExp(`${HOSTING_AUTHOR_CONVERSATION}$`));
 });
 
 test("the inbox marks a conversation with someone on Right Now", async ({

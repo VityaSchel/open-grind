@@ -105,6 +105,9 @@
 			<ProfileRightNowPost
 				post={profileState.rightNowPost}
 				own={ourProfile}
+				{displayName}
+				onlineUntil={onlineUntil ?? null}
+				distance={distance ?? undefined}
 			/>
 		{/if}
 		<ProfileTags tags={profileTags} />

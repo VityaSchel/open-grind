@@ -1,7 +1,7 @@
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
-import { onSafeAreaChange } from "#lib/util/safe-area.ts";
+import { onSafeAreaChange, safeAreaInsets } from "#lib/util/safe-area.ts";
 
 const LAYOUT_UNIT_PX = 1 / 64;
 
@@ -65,6 +65,30 @@ export function applyPhotoSwipeLoadedSize(lightbox: PhotoSwipeLightbox): void {
 		slide.applyCurrentZoomPan();
 		slide.updateContentSize(true);
 	});
+}
+
+export function reservePhotoSwipeBottom(
+	lightbox: PhotoSwipeLightbox,
+	{ height }: { height: () => number | null },
+): void {
+	applyPhotoSwipeSafeAreaSync(lightbox);
+	const paddingFn = lightbox.options.paddingFn;
+	lightbox.options.paddingFn = (viewport, item, index) => {
+		const padding = paddingFn?.(viewport, item, index) ??
+			lightbox.options.padding ?? {
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0,
+			};
+		const reserved = height();
+		if (reserved === null) return padding;
+		return {
+			...padding,
+			bottom:
+				Math.max(padding.bottom, safeAreaInsets().bottom) + reserved,
+		};
+	};
 }
 
 const safeAreaSynced = new WeakSet<PhotoSwipeLightbox>();
