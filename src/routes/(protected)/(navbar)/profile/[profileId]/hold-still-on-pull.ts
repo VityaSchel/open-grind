@@ -36,13 +36,21 @@ function holdHere(): Hold | null {
 const touchOf = ({ event, id }: { event: TouchEvent; id: number }) =>
 	[...event.changedTouches].find(({ identifier }) => identifier === id);
 
-function replayTap({ target, touch }: { target: Element; touch: Touch }) {
+function replayTap({
+	target,
+	touch,
+	view,
+}: {
+	target: Element;
+	touch: Touch;
+	view: Window | null;
+}) {
 	target.dispatchEvent(
 		new MouseEvent("click", {
 			bubbles: true,
 			cancelable: true,
 			composed: true,
-			view: window,
+			view,
 			detail: 1,
 			clientX: touch.clientX,
 			clientY: touch.clientY,
@@ -153,7 +161,7 @@ function holdStillOnPull({
 		)
 			return;
 		if (event.cancelable) event.preventDefault();
-		replayTap({ target: heldTap.target, touch });
+		replayTap({ target: heldTap.target, touch, view: event.view });
 		stopSwallowing();
 		stopSwallowing = swallowNativeClick();
 	};
