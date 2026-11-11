@@ -47,6 +47,8 @@ function easedProgress(
 	[x1, y1, x2, y2]: KeyboardCurve,
 	progress: number,
 ): number {
+	if (progress <= 0) return 0;
+	if (progress >= 1) return 1;
 	let low = 0;
 	let high = 1;
 	while (high - low > CURVE_PRECISION) {
