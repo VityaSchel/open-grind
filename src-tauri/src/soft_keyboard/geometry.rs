@@ -118,6 +118,8 @@ mod tests {
 		include_str!("../../../src/lib/platform/keyboard-follow.ts");
 	const KEYBOARD_DRAG_DISMISS: &str =
 		include_str!("../../../src/lib/platform/keyboard-drag-dismiss.ts");
+	const UNCOVERED_CENTER: &str =
+		include_str!("../../../src/lib/util/uncovered-center.ts");
 
 	const PORTRAIT: Rect = Rect {
 		x: 0.0,
@@ -318,9 +320,10 @@ mod tests {
 
 	#[test]
 	fn the_drag_target_is_the_point_the_page_sends() {
-		assert!(KEYBOARD_DRAG_DISMISS.contains(
-			"export type DragDismissTarget = { x: number; y: number };"
-		));
+		assert!(UNCOVERED_CENTER
+			.contains("export type PagePoint = { x: number; y: number };"));
+		assert!(KEYBOARD_DRAG_DISMISS
+			.contains("function letDragDismiss(target: PagePoint | null)"));
 		assert!(KEYBOARD_DRAG_DISMISS
 			.contains("invoke(\"set_keyboard_drag_dismiss\", { target })"));
 		assert_eq!(
