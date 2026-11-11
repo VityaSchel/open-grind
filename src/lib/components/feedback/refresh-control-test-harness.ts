@@ -1,5 +1,6 @@
 import { cleanup, render } from "@testing-library/svelte";
-import { tick } from "svelte";
+import { flushSync, tick } from "svelte";
+import { SvelteMap } from "svelte/reactivity";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import DataRefreshControl from "./DataRefreshControl.svelte";
@@ -145,13 +146,21 @@ export async function mountAtRest(
 
 	const onrefresh = vi.fn();
 	const oninsetchange = vi.fn();
+	const refreshProps = new SvelteMap<"updating" | "failed", boolean>([
+		["updating", updating],
+		["failed", false],
+	]);
 	render(RefreshAnnouncements);
 	const view = render(DataRefreshControl, {
 		props: {
 			container: scroller,
 			position: edge,
-			updating,
-			failed: false,
+			get updating() {
+				return refreshProps.get("updating");
+			},
+			get failed() {
+				return refreshProps.get("failed") === true;
+			},
 			onrefresh,
 			oninsetchange,
 		},
@@ -203,7 +212,10 @@ export async function mountAtRest(
 				opacity: box.style.opacity,
 			})),
 		async setUpdating(updating: boolean, { failed = false } = {}) {
-			await view.rerender({ updating, failed });
+			flushSync(() => {
+				refreshProps.set("updating", updating);
+				refreshProps.set("failed", failed);
+			});
 			await settle();
 		},
 		async showList(onScreen: boolean) {
