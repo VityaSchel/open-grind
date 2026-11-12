@@ -31,10 +31,10 @@ export function addonInstallerAvailable(): boolean {
 	);
 }
 
-export async function addonPublishedHere(): Promise<boolean> {
-	const readiness = await getUpdateReadiness(GOOGLE_OAUTH_COMPONENT).catch(
-		() => null,
-	);
+export async function addonPublishedHere(
+	component: AddonKey,
+): Promise<boolean> {
+	const readiness = await getUpdateReadiness(component).catch(() => null);
 	return !(
 		readiness?.state === "unsupported" &&
 		readiness.detail.reason === "noReleaseArtifacts"

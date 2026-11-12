@@ -55,6 +55,7 @@ const guidesSidebar: DefaultTheme.SidebarItem[] = [
 				text: "Sign in with Facebook",
 				link: "/guides/sign-in-with-facebook",
 			},
+			{ text: "reCAPTCHA helper", link: "/guides/recaptcha-helper" },
 			{ text: "Video codecs on Linux", link: "/guides/codecs" },
 			{ text: "Notifications", link: "/guides/notifications" },
 			{

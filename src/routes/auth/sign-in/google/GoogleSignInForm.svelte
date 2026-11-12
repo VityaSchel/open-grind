@@ -97,7 +97,7 @@
 				void continueInCompanion();
 			} else if (
 				addonInstallerAvailable() &&
-				(await addonPublishedHere())
+				(await addonPublishedHere(GOOGLE_OAUTH_COMPONENT))
 			) {
 				await addonUpdates.installNow();
 			} else {

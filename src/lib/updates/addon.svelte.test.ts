@@ -277,7 +277,7 @@ describe("whether the Google OAuth app is published for this device", () => {
 		});
 		const { addonPublishedHere } = await import("./addon.svelte");
 
-		expect(await addonPublishedHere()).toBe(false);
+		expect(await addonPublishedHere("google-oauth")).toBe(false);
 		expect(api.getUpdateReadiness).toHaveBeenCalledExactlyOnceWith(
 			"google-oauth",
 		);
@@ -293,7 +293,7 @@ describe("whether the Google OAuth app is published for this device", () => {
 			unsupported({ reason: "undetermined" }),
 		] satisfies Readiness[]) {
 			readiness["google-oauth"] = answer;
-			expect(await addonPublishedHere()).toBe(true);
+			expect(await addonPublishedHere("google-oauth")).toBe(true);
 		}
 	});
 
@@ -301,6 +301,6 @@ describe("whether the Google OAuth app is published for this device", () => {
 		api.getUpdateReadiness.mockRejectedValue(new Error("plugin gone"));
 		const { addonPublishedHere } = await import("./addon.svelte");
 
-		expect(await addonPublishedHere()).toBe(true);
+		expect(await addonPublishedHere("google-oauth")).toBe(true);
 	});
 });

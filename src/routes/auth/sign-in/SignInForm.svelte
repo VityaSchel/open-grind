@@ -22,6 +22,18 @@
 	import { Input } from "#lib/components/ui/input/index.ts";
 	import { Label } from "#lib/components/ui/label/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
+	import {
+		addonInstallerAvailable,
+		addonPublishedHere,
+		recaptchaUpdates,
+	} from "#lib/updates/addon.svelte.ts";
+	import { RECAPTCHA_COMPONENT } from "#lib/updates/components.ts";
+	import {
+		manualInstallHref,
+		RECAPTCHA_HELPER_GUIDE,
+	} from "#lib/updates/manual-install.ts";
+	import RecaptchaHelperDialog from "./RecaptchaHelperDialog.svelte";
 
 	type OauthProvider = "google" | "facebook";
 
@@ -70,12 +82,20 @@
 	let password = $state("");
 	let submitting: false | "password" | OauthProvider = $state(false);
 
-	const invalidCredentialsSchema = z.object({
-		kind: z.literal("Api"),
-		message: z.object({
-			code: z.literal(4),
-			message: z.literal("Invalid input parameters"),
+	const refusedCredentialsSchema = z.union([
+		z.object({ kind: z.literal("Unauthorized") }),
+		z.object({
+			kind: z.literal("Api"),
+			message: z.object({
+				code: z.literal(4),
+				message: z.literal("Invalid input parameters"),
+			}),
 		}),
+	]);
+
+	const rejectedCaptchaSchema = z.object({
+		kind: z.literal("Api"),
+		message: z.object({ code: z.literal(18) }),
 	});
 
 	const recaptchaErrorSchema = z.object({
@@ -83,32 +103,50 @@
 		message: z.object({ reason: z.string() }),
 	});
 
-	const captchaSignInMessages: Record<string, string> = {
+	const captchaGuideMessages: Record<string, string> = {
 		unsupportedPlatform:
-			"This account needs captcha verification, available through the Open Grind reCAPTCHA helper on Android.",
-		addonUnavailable:
-			"Install the Open Grind reCAPTCHA helper to sign in to this account.",
+			"Wrong email or password, or Grindr wants a captcha check, which needs the reCAPTCHA helper on Android.",
+		grindrMissing:
+			"The reCAPTCHA helper needs the official Grindr app installed to verify this sign-in.",
+	};
+
+	const captchaSignInMessages: Record<string, string> = {
 		addonDisabled:
 			"Enable the Open Grind reCAPTCHA helper to sign in to this account.",
 		addonUntrusted:
 			"The installed reCAPTCHA helper isn't the official Open Grind build.",
-		grindrMissing:
-			"The reCAPTCHA helper needs the Grindr app installed to verify this sign-in.",
 	};
+
+	let helperDialog: "install" | "manual" | null = $state(null);
 
 	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
 		if (submitting) return;
 		submitting = "password";
 		try {
-			if (await trySignIn()) return;
-			await trySignInWithCaptcha();
+			const refusal = await trySignIn();
+			if (refusal) await trySignInWithCaptcha(refusal);
 		} finally {
 			submitting = false;
 		}
 	}
 
-	async function trySignIn(captchaToken?: string): Promise<boolean> {
+	type Refusal = "credentials" | "captcha";
+
+	const refusalAfterCaptchaMessages: Record<Refusal, string> = {
+		captcha: "Grindr rejected the reCAPTCHA helper's check.",
+		credentials:
+			"Wrong email or password, or Grindr rejected the reCAPTCHA helper's check.",
+	};
+
+	function refusalOf(error: unknown): Refusal | null {
+		if (rejectedCaptchaSchema.safeParse(error).success) return "captcha";
+		if (refusedCredentialsSchema.safeParse(error).success)
+			return "credentials";
+		return null;
+	}
+
+	async function trySignIn(captchaToken?: string): Promise<Refusal | null> {
 		try {
 			finishSignIn(
 				await callMethod("sign_in_with_email", {
@@ -117,39 +155,30 @@
 					captchaToken,
 				}),
 			);
-			return true;
+			return null;
 		} catch (error) {
-			let invalidCredentials = false;
-			reportSignInFailure({
-				error,
-				onFailure: (appError) => {
-					if (
-						appError.kind !== "Unauthorized" &&
-						!invalidCredentialsSchema.safeParse(appError).success
-					) {
-						return false;
-					}
-					invalidCredentials = true;
-					return true;
-				},
-			});
-			if (invalidCredentials && captchaToken === undefined) return false;
-			if (invalidCredentials) toast.error("Invalid email or password");
-			return true;
+			const refusal = refusalOf(error);
+			reportSignInFailure({ error, onFailure: () => refusal !== null });
+			if (refusal === null || captchaToken === undefined) return refusal;
+			showCaptchaGuideToast(refusalAfterCaptchaMessages[refusal]);
+			return null;
 		}
 	}
 
-	async function trySignInWithCaptcha() {
-		let required = false;
+	async function captchaAssigned(): Promise<boolean> {
 		try {
-			required = await callMethod("recaptcha_first_party_enabled");
+			return await callMethod("recaptcha_first_party_enabled");
 		} catch (error) {
 			console.error(
 				"[sign-in] failed to check recaptcha_first_party assignment",
 				error,
 			);
+			return false;
 		}
-		if (!required) {
+	}
+
+	async function trySignInWithCaptcha(refusal: Refusal) {
+		if (refusal === "credentials" && !(await captchaAssigned())) {
 			toast.error("Invalid email or password");
 			return;
 		}
@@ -167,10 +196,38 @@
 		const parsed = recaptchaErrorSchema.safeParse(error);
 		const reason = parsed.success ? parsed.data.message.reason : undefined;
 		if (reason === "cancelled") return;
+		if (reason === "addonUnavailable") {
+			helperDialog = addonInstallerAvailable() ? "install" : "manual";
+			return;
+		}
+		const guided = reason ? captchaGuideMessages[reason] : undefined;
+		if (guided) {
+			showCaptchaGuideToast(guided);
+			return;
+		}
 		toast.error(
 			(reason ? captchaSignInMessages[reason] : undefined) ??
 				"Captcha verification failed. Try again.",
 		);
+	}
+
+	function showCaptchaGuideToast(message: string) {
+		toast.error(message, {
+			action: {
+				label: "Learn more",
+				onClick: () => openExternalLink(RECAPTCHA_HELPER_GUIDE),
+			},
+		});
+	}
+
+	async function continueToHelper() {
+		const installable = helperDialog === "install";
+		helperDialog = null;
+		if (installable && (await addonPublishedHere(RECAPTCHA_COMPONENT))) {
+			await recaptchaUpdates.installNow();
+			return;
+		}
+		openExternalLink(manualInstallHref(RECAPTCHA_COMPONENT));
 	}
 
 	async function signInWith(provider: OauthProvider) {
@@ -288,3 +345,12 @@
 		</Card.Footer>
 	</Card.Root>
 </form>
+<RecaptchaHelperDialog
+	bind:open={
+		() => helperDialog !== null,
+		(next) => {
+			if (!next) helperDialog = null;
+		}
+	}
+	onContinue={() => void continueToHelper()}
+/>
