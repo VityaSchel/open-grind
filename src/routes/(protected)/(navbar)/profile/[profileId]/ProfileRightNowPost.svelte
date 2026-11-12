@@ -14,6 +14,10 @@
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { getNow } from "#lib/util/now.ts";
 	import {
+		fullImageSizeWithin,
+		preloadFullImage,
+	} from "#lib/util/photoswipe/full-size.ts";
+	import {
 		applyPhotoSwipeComponent,
 		openLightbox,
 	} from "#lib/util/photoswipe/index.ts";
@@ -40,6 +44,8 @@
 		distance?: number;
 	} = $props();
 
+	const FULL_SIZE_WAIT_MS = 1500;
+
 	const titleId = $props.id();
 	const report = new RightNowPostReport();
 
@@ -48,7 +54,9 @@
 		post.media.find((media) => media.state === "APPROVED") ?? null,
 	);
 	const blurred = $derived(photo !== null && !own && photo.shouldBlur);
-	const viewerPhoto = $derived(blurred ? null : photo);
+	const viewerSrc = $derived(
+		photo === null || blurred ? null : proxyMediaUrl(photo.fullImageUrl),
+	);
 	const expired = $derived(
 		post.expiration !== null && post.expiration <= getNow(),
 	);
@@ -56,15 +64,30 @@
 
 	let viewing = $state(false);
 	let openButton: HTMLButtonElement | null = $state(null);
+	let photoFrame: HTMLDivElement | null = $state(null);
+
+	$effect(() => {
+		if (viewerSrc !== null) void preloadFullImage(viewerSrc);
+	});
 
 	$effect(() => {
 		if (!viewing) return;
 		const controller = new AbortController();
-		untrack(() => openViewer(controller.signal));
+		untrack(() => void openViewer(controller.signal));
 		return () => controller.abort();
 	});
 
-	function openViewer(signal: AbortSignal) {
+	async function openViewer(signal: AbortSignal) {
+		const src = viewerSrc;
+		const size =
+			src === null
+				? null
+				: await fullImageSizeWithin({
+						src,
+						timeoutMs: FULL_SIZE_WAIT_MS,
+					});
+		if (signal.aborted) return;
+		const frame = photoFrame;
 		const caption = {
 			text,
 			displayName,
@@ -75,16 +98,26 @@
 		};
 		openLightbox({
 			items: [
-				{
-					src:
-						viewerPhoto === null
-							? ""
-							: proxyMediaUrl(viewerPhoto.fullImageUrl),
-				},
+				src === null
+					? { src: "" }
+					: {
+							src,
+							...size,
+							element: frame ?? undefined,
+							msrc: size === null ? undefined : src,
+							thumbCropped: true,
+						},
 			],
+			animation: size === null || frame === null ? "fade" : "zoom",
 			configure: (lightbox) => {
 				lightbox.options.bgOpacity = 1;
-				if (viewerPhoto === null)
+				if (frame !== null && src !== null) {
+					const hideFrame = () => (frame.style.visibility = "hidden");
+					lightbox.on("openingAnimationStart", hideFrame);
+					lightbox.on("closingAnimationStart", hideFrame);
+					lightbox.on("destroy", () => (frame.style.visibility = ""));
+				}
+				if (src === null)
 					applyPhotoSwipeComponent(lightbox, {
 						slideAt: () => caption,
 						render: ({ target, slide, content }) => {
@@ -188,6 +221,7 @@
 				{/if}
 				{#if photo !== null}
 					<div
+						bind:this={photoFrame}
 						data-slot="profile-right-now-post-photo"
 						class="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted"
 					>

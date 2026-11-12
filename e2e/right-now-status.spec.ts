@@ -6,6 +6,11 @@ import {
 	openGrid,
 } from "./support/app";
 import { DRAWER } from "./support/drawer";
+import {
+	heightPerWidth,
+	PORTRAIT_HEIGHT_PER_WIDTH,
+	serveRightNowPortraitPhotos,
+} from "./support/media";
 
 const HOSTING_AUTHOR = "/profile/100006";
 const HOSTING_AUTHOR_CONVERSATION = "/chat/100006:123456000";
@@ -14,6 +19,9 @@ const HOSTING_AUTHOR_POST_TEXT = "Gym's done, now what?";
 const TILE = 'a[href^="/profile/"]';
 const INDICATOR = '[data-slot="right-now-indicator"]';
 const PROFILE_SCROLLER = '[data-slot="profile-scroller"]';
+const POST_PHOTO = '[data-slot="profile-right-now-post-photo"]';
+const VIEWER = ".pswp";
+const VIEWER_PHOTO = ".pswp__img:not(.pswp__img--placeholder)";
 
 async function layoutBox(target: Locator) {
 	const box = await target.boundingBox();
@@ -90,6 +98,38 @@ test("a hosting author's profile shows the status and the post, which opens full
 	await expect(
 		drawer.getByRole("heading", { name: "Report post" }),
 	).toBeVisible();
+});
+
+test("a portrait post photo opens from its square card thumbnail at its own shape, with the thumbnail hidden until the viewer closes", async ({
+	page,
+}) => {
+	await serveRightNowPortraitPhotos(page);
+	await page.goto(HOSTING_AUTHOR);
+	const post = page.getByRole("region", { name: "Right Now" });
+	await expect(post).toContainText(HOSTING_AUTHOR_POST_TEXT, {
+		timeout: FIRST_ROUTE_COMPILE_MS,
+	});
+	const cardPhoto = post.locator(POST_PHOTO);
+	await expect(cardPhoto).toHaveCSS("visibility", "visible");
+
+	await post.getByRole("button", { name: "Right Now" }).click();
+
+	const viewer = page.locator(VIEWER);
+	await expect(viewer).toBeVisible();
+	await expect
+		.poll(() => heightPerWidth(viewer.locator(VIEWER_PHOTO)), {
+			message: "the full photo keeps its portrait shape",
+		})
+		.toBeCloseTo(PORTRAIT_HEIGHT_PER_WIDTH, 1);
+	await expect(
+		cardPhoto,
+		"the card thumbnail does not show behind the photo it grew into",
+	).toHaveCSS("visibility", "hidden");
+
+	await page.keyboard.press("Escape");
+
+	await expect(viewer).toHaveCount(0);
+	await expect(cardPhoto).toHaveCSS("visibility", "visible");
 });
 
 test("Write a message stays clickable while the Right Now post is scrolled under the chat bar", async ({

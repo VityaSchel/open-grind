@@ -43,12 +43,20 @@ export const CLOSE_SVG = `<svg aria-hidden="true" class="pswp__icn" viewBox="0 0
 
 export const ZOOM_SVG = `<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 256 256" width="32" height="32"><path d="M156,112a12,12,0,0,1-12,12H80a12,12,0,0,1,0-24h64A12,12,0,0,1,156,112Zm76.49,120.49a12,12,0,0,1-17,0L168,185a92.12,92.12,0,1,1,17-17l47.54,47.53A12,12,0,0,1,232.49,232.49ZM112,180a68,68,0,1,0-68-68A68.08,68.08,0,0,0,112,180Z"/><rect class="pswp__zoom-icn-bar-v" x="100" y="68" width="24" height="88" rx="12"/></svg>`;
 
-export type LightboxItem = { src: string } & Partial<MediaDimensions>;
+export type LightboxItem = {
+	src: string;
+	element?: HTMLElement;
+	msrc?: string;
+	thumbCropped?: boolean;
+} & Partial<MediaDimensions>;
+
+const ZOOM_ANIMATION_MS = 500;
 
 export async function openLightbox({
 	items,
 	index = 0,
 	videoAt,
+	animation = "fade",
 	configure,
 	signal,
 	onClosed,
@@ -56,6 +64,7 @@ export async function openLightbox({
 	items: LightboxItem[];
 	index?: number;
 	videoAt?: (index: number) => VideoSlide | null;
+	animation?: "fade" | "zoom";
 	configure?: (lightbox: PhotoSwipeLightbox) => void;
 	signal: AbortSignal;
 	onClosed: () => void;
@@ -72,7 +81,11 @@ export async function openLightbox({
 		return;
 	}
 	const lightbox = new Lightbox({
-		showHideAnimationType: "fade",
+		showHideAnimationType: animation,
+		...(animation === "zoom" && {
+			showAnimationDuration: ZOOM_ANIMATION_MS,
+			hideAnimationDuration: ZOOM_ANIMATION_MS,
+		}),
 		pswpModule: () =>
 			import("photoswipe").catch((error: unknown) => {
 				release();
@@ -93,6 +106,9 @@ export async function openLightbox({
 			src: item.src,
 			width: item.width ?? 0,
 			height: item.height ?? 0,
+			element: item.element,
+			msrc: item.msrc,
+			thumbCropped: item.thumbCropped,
 		};
 	});
 	applyPhotoSwipeLoadedSize(lightbox);
