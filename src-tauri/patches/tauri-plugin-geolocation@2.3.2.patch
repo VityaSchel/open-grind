@@ -262,3 +262,28 @@ index 444711a..034d372 100644
                      lastLoc = tmpLoc
                  }
              }
+diff --git a/ios/Sources/GeolocationPlugin.swift b/ios/Sources/GeolocationPlugin.swift
+index 7a2b57a..66fc60c 100644
+--- a/ios/Sources/GeolocationPlugin.swift
++++ b/ios/Sources/GeolocationPlugin.swift
+@@ -115,11 +115,19 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+       return
+     }
+ 
+-    let result = ["location": status, "coarseLocation": status]
++    let preciseStatus = status == "granted" && reducedAccuracy ? "denied" : status
++    let result = ["location": preciseStatus, "coarseLocation": status]
+ 
+     invoke.resolve(result)
+   }
+ 
++  private var reducedAccuracy: Bool {
++    if #available(iOS 14, *) {
++      return locationManager.accuracyAuthorization == .reducedAccuracy
++    }
++    return false
++  }
++
+   @objc override public func requestPermissions(_ invoke: Invoke) {
+     if CLLocationManager.locationServicesEnabled() {
+       // TODO: Use the authorizationStatus instance property with locationManagerDidChangeAuthorization(_:) instead.

@@ -252,12 +252,13 @@ describe("autoLocation.resolveGeohash", () => {
 		);
 	});
 
-	it("turns the setting off and explains when permission is refused", async () => {
-		runMock.mockResolvedValue({ status: "denied" });
+	it("turns the setting off and explains what was refused", async () => {
+		const refused = { status: "denied", missing: "precision" } as const;
+		runMock.mockResolvedValue(refused);
 		await expect(autoLocation.resolveGeohash(CURRENT)).resolves.toBe(
 			CURRENT,
 		);
-		expect(permissionToastMock).toHaveBeenCalledTimes(1);
+		expect(permissionToastMock).toHaveBeenCalledExactlyOnceWith(refused);
 		expect(setPreferencesMock).toHaveBeenCalledExactlyOnceWith({
 			autoUpdateLocation: false,
 		});

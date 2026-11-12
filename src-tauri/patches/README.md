@@ -129,6 +129,14 @@ Accuracy and time to first fix are worse where Play Services exists, since the p
 
 **Delete when upstream drops `play-services-location`.** [plugins-workspace#3377](https://github.com/tauri-apps/plugins-workspace/pull/3377) does not: it keeps the dependency and the GMS-first path, and needs API 31.
 
+On iOS the plugin reported `location` as granted with Precise Location off, so the app took fixes that are off by kilometers.
+
+| File                                  | Change                                                                                                                              |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ios/Sources/GeolocationPlugin.swift` | Report `location` as denied and `coarseLocation` as granted under reduced accuracy, as Android does without `ACCESS_FINE_LOCATION`. |
+
+Not a backport. **Keep it.**
+
 ## tao
 
 UIKit asks the app delegate for a scene configuration, and tao answers with a pointer to an object it frees on return. Release iOS builds crash at launch once `Info.ios.plist` declares a scene manifest, which the iOS 27 SDK requires.

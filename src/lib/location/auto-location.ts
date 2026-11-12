@@ -62,7 +62,7 @@ class AutoLocation {
 			return moved ? encodeGeohash(outcome.coords) : current;
 		}
 		if (outcome.status === "denied") {
-			showLocationPermissionToast();
+			showLocationPermissionToast(outcome);
 			setPreferences({ autoUpdateLocation: false }).catch(
 				(error: unknown) => console.error(error),
 			);
