@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { chromiumRadios } from "./support/a11y";
 import { GRID_READY_SELECTOR, installTauriShim, openGrid } from "./support/app";
 import {
 	chooseUnits,
@@ -77,6 +78,19 @@ test("in imperial units the height and weight filters step by whole inches and p
 	page,
 }) => {
 	await pickInImperial(page);
+});
+
+test("the units options reach Chromium's accessibility tree as radios in a radio group with the chosen one checked", async ({
+	page,
+}) => {
+	await chooseUnits(page, { units: "Imperial" });
+
+	await expect
+		.poll(() => chromiumRadios(page))
+		.toEqual([
+			{ name: "Metric", checked: "false", group: "radiogroup" },
+			{ name: "Imperial", checked: "true", group: "radiogroup" },
+		]);
 });
 
 test("a filter picked in inches and pounds stays as saved in metric units until its own thumb moves", async ({

@@ -201,7 +201,7 @@ describe("the Language page", () => {
 
 	it("keeps the English names when the page changes language", async () => {
 		render(LanguagePage);
-		const group = screen.getByRole("group");
+		const group = screen.getByRole("radiogroup");
 		expect(group.getAttribute("aria-label")).toBe("Language");
 
 		await fireEvent.click(option("English (Pseudo-Accents)"));

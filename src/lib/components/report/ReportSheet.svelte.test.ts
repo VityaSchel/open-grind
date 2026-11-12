@@ -112,7 +112,9 @@ const footerButtons = () =>
 	within(slot("drawer-footer")).queryAllByRole("button");
 const submitButton = () => within(slot("drawer-footer")).getByRole("button");
 const toggleGroupLabel = (slotName: string) =>
-	slot(slotName).querySelector('[role="group"]')?.getAttribute("aria-label");
+	slot(slotName)
+		.querySelector('[data-slot="toggle-group"]')
+		?.getAttribute("aria-label");
 const texts = (elements: HTMLElement[]) =>
 	elements.map((element) => element.textContent.trim());
 
@@ -172,7 +174,7 @@ describe("ReportSheet", () => {
 	it("offers every reason by its label, in the wire order", () => {
 		renderSheet();
 
-		const group = screen.getByRole("group", { name: "Reason" });
+		const group = screen.getByRole("radiogroup", { name: "Reason" });
 		expect(texts(within(group).getAllByRole("radio"))).toEqual(
 			reportReasonSchema.options.map((reason) => reasonLabels[reason]),
 		);

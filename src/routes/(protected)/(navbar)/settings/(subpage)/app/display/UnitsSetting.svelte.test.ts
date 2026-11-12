@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import { encode } from "@msgpack/msgpack";
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { readMock, writeMock, showErrorToastMock } = vi.hoisted(() => ({
@@ -39,6 +45,22 @@ afterEach(async () => {
 });
 
 describe("UnitsSetting", () => {
+	it("offers the units as radios in a radio group with the stored one checked", () => {
+		render(UnitsSetting);
+
+		expect(
+			within(screen.getByRole("radiogroup"))
+				.getAllByRole("radio")
+				.map((radio) => [
+					radio.textContent.trim(),
+					radio.getAttribute("aria-checked"),
+				]),
+		).toEqual([
+			["Metric", "true"],
+			["Imperial", "false"],
+		]);
+	});
+
 	it("words its title, description and options in the active locale", async () => {
 		render(UnitsSetting);
 		const copy = [
