@@ -1,7 +1,7 @@
 pub mod api;
 mod app_data;
 mod app_origin;
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 mod app_settings;
 mod appearance;
 #[cfg(target_os = "linux")]
@@ -192,7 +192,7 @@ pub fn run() {
 		.plugin(media_drag::plugin())
 		.plugin(api::recaptcha::plugin())
 		.plugin(app_origin::android::plugin())
-		.plugin(app_settings::plugin())
+		.plugin(app_settings::android::plugin())
 		.plugin(media_picker::android::plugin());
 
 	let builder = builder.plugin(api::push::plugin());
@@ -311,7 +311,9 @@ pub fn run() {
             #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_discard,
             #[cfg(target_os = "android")]
-            app_settings::open_app_settings,
+            app_settings::android::open_app_settings,
+            #[cfg(target_os = "ios")]
+            app_settings::ios::open_app_settings,
             #[cfg(target_os = "android")]
             media_picker::android::pick_android_media,
             #[cfg(target_os = "ios")]

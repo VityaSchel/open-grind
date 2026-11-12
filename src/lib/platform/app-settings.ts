@@ -5,8 +5,8 @@ import { currentPlatform } from "#lib/platform/os.ts";
 export function canOpenAppSettings(): boolean {
 	switch (currentPlatform()) {
 		case "android":
-			return true;
 		case "ios":
+			return true;
 		case "linux":
 		case "macos":
 		case "windows":
