@@ -120,3 +120,16 @@ index 6eee6d400cce1b95b6d4d4bb2a6012fdb43912c3..e7012c0ba52f4ce8ab307a234d47e836
 +export function isHoverPointerEvent(event) {
 +    return event.pointerType === "mouse" || (event.pointerType === "pen" && event.buttons === 0);
 +}
+diff --git a/dist/bits/toggle-group/toggle-group.svelte.js b/dist/bits/toggle-group/toggle-group.svelte.js
+index 2cf6f0603216e0b4093de48ed29cc5028d96095e..0b73f0a1c84d4b2a1481b5feb2c873f22f043b65 100644
+--- a/dist/bits/toggle-group/toggle-group.svelte.js
++++ b/dist/bits/toggle-group/toggle-group.svelte.js
+@@ -25,7 +25,7 @@
+     props = $derived.by(() => ({
+         id: this.opts.id.current,
+         [toggleGroupAttrs.root]: "",
+-        role: "group",
++        role: this.isMulti ? "group" : "radiogroup",
+         "data-orientation": this.opts.orientation.current,
+         "data-disabled": boolToEmptyStrOrUndef(this.opts.disabled.current),
+         ...this.attachment,
