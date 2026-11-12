@@ -74,13 +74,18 @@ function recordStackFrames(page: Page): Promise<StackFrame[]> {
 						.querySelector(`[data-slot="page-stack-${slot}"]`)
 						?.getBoundingClientRect().x ?? null;
 				const started = performance.now();
-				const sample = () => {
-					frames.push({ live: x("pane") ?? 0, ghost: x("ghost") });
-					if (performance.now() - started < 1500)
-						requestAnimationFrame(sample);
-					else resolve(frames);
+				const frame = (now: number) => {
+					const last = now - started >= 1500;
+					setTimeout(() => {
+						frames.push({
+							live: x("pane") ?? 0,
+							ghost: x("ghost"),
+						});
+						if (last) resolve(frames);
+					});
+					if (!last) requestAnimationFrame(frame);
 				};
-				requestAnimationFrame(sample);
+				requestAnimationFrame(frame);
 			}),
 	);
 }
