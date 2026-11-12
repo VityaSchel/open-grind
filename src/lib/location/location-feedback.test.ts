@@ -21,8 +21,11 @@ vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
 }));
 
-const { reportLocationFailure, showLocationPermissionToast } =
-	await import("./location-feedback");
+const {
+	reportLocationFailure,
+	showLocationErrorToast,
+	showLocationPermissionToast,
+} = await import("./location-feedback");
 
 const PERMISSION_MISSING = { missing: "permission" } as const;
 const PRECISION_MISSING = { missing: "precision" } as const;
@@ -79,12 +82,47 @@ describe("showLocationPermissionToast", () => {
 	});
 });
 
+describe("showLocationErrorToast", () => {
+	afterEach(() => {
+		vi.resetAllMocks();
+	});
+
+	it("tells the user to turn Location Services on instead of a generic failure", () => {
+		showLocationErrorToast({
+			label: "Failed to get current location",
+			error: "[disabled] - Location services are not enabled.",
+			reason: "disabled",
+		});
+
+		expect(toastMock.error.mock.calls.at(-1)?.[0]).toBe(
+			"Location Services are off or restricted. Turn them on in your system settings to use GPS.",
+		);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("keeps the generic failure toast for a fix that never came", () => {
+		const error = "[timeout] - Timed out waiting for a location fix.";
+		showLocationErrorToast({
+			label: "Failed to get current location",
+			error,
+			reason: "timeout",
+		});
+
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to get current location",
+			error,
+		});
+		expect(toastMock.error).not.toHaveBeenCalled();
+	});
+});
+
 describe("reportLocationFailure", () => {
 	beforeEach(() => {
 		canOpenAppSettingsMock.mockReturnValue(true);
 	});
 
 	afterEach(() => {
+		vi.restoreAllMocks();
 		vi.resetAllMocks();
 	});
 
@@ -93,6 +131,20 @@ describe("reportLocationFailure", () => {
 
 		expect(toastMock.error.mock.calls.at(-1)?.[0]).toMatch(
 			/^Precise Location is off\./,
+		);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("explains Location Services being off by name", () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		reportLocationFailure({
+			status: "error",
+			error: "[disabled] - Location access is restricted.",
+			reason: "disabled",
+		});
+
+		expect(toastMock.error.mock.calls.at(-1)?.[0]).toMatch(
+			/^Location Services are off or restricted\./,
 		);
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});

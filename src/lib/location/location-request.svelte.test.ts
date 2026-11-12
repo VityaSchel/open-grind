@@ -158,6 +158,43 @@ describe("locationRequest", () => {
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "error",
 			error: "Location unavailable.",
+			reason: "failed",
+		});
+	});
+
+	it("reads a denied rejection from the plugin as a denial", async () => {
+		runningOn("ios");
+		getCurrentPositionMock.mockRejectedValue(
+			"[denied] - The operation couldn’t be completed.",
+		);
+		await expect(locationRequest.run()).resolves.toEqual({
+			status: "denied",
+			missing: "permission",
+		});
+	});
+
+	it("tells Location Services being off apart from other failures", async () => {
+		runningOn("ios");
+		checkPermissionsMock.mockRejectedValue(
+			"[disabled] - Location services are not enabled.",
+		);
+		await expect(locationRequest.run()).resolves.toEqual({
+			status: "error",
+			error: "[disabled] - Location services are not enabled.",
+			reason: "disabled",
+		});
+		expect(getCurrentPositionMock).not.toHaveBeenCalled();
+	});
+
+	it("tells a fix that never came apart from other failures", async () => {
+		runningOn("ios");
+		getCurrentPositionMock.mockRejectedValue(
+			"[timeout] - Timed out waiting for a location fix.",
+		);
+		await expect(locationRequest.run()).resolves.toEqual({
+			status: "error",
+			error: "[timeout] - Timed out waiting for a location fix.",
+			reason: "timeout",
 		});
 	});
 

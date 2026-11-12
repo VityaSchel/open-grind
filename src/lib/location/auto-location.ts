@@ -1,4 +1,3 @@
-import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	preferencesSnapshot,
 	setPreferences,
@@ -9,6 +8,7 @@ import { now } from "#lib/util/clock.ts";
 import { distanceMeters } from "./distance";
 import {
 	reportLocationFailure,
+	showLocationErrorToast,
 	showLocationPermissionToast,
 } from "./location-feedback";
 import {
@@ -71,9 +71,10 @@ class AutoLocation {
 		if (outcome.status === "error") {
 			console.error(outcome.error);
 			this.#reportOnce(() => {
-				showErrorToast({
+				showLocationErrorToast({
 					label: "Failed to update your location automatically",
 					error: outcome.error,
+					reason: outcome.reason,
 				});
 			});
 		}

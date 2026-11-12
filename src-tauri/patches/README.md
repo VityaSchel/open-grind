@@ -129,11 +129,15 @@ Accuracy and time to first fix are worse where Play Services exists, since the p
 
 **Delete when upstream drops `play-services-location`.** [plugins-workspace#3377](https://github.com/tauri-apps/plugins-workspace/pull/3377) does not: it keeps the dependency and the GMS-first path, and needs API 31.
 
-On iOS the plugin reported `location` as granted with Precise Location off, so the app took fixes that are off by kilometers.
+On iOS the plugin reported `location` as granted with Precise Location off, so the app took fixes that are off by kilometers. It also failed a request on the first `kCLErrorLocationUnknown`, which is transient, and answered every earlier request again on each new fix.
 
 | File                                  | Change                                                                                                                              |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `ios/Sources/GeolocationPlugin.swift` | Report `location` as denied and `coarseLocation` as granted under reduced accuracy, as Android does without `ACCESS_FINE_LOCATION`. |
+| `ios/Sources/GeolocationPlugin.swift` | Retry `requestLocation` every second through `kCLErrorLocationUnknown`, and reject a position request after 15 s.                   |
+| `ios/Sources/GeolocationPlugin.swift` | Drop a position request once it is answered.                                                                                        |
+| `ios/Sources/GeolocationPlugin.swift` | Reject with the code `denied`, `disabled` (Location Services off or restricted), `timeout` or `failed`.                             |
+| `ios/Sources/GeolocationPlugin.swift` | Queue requests on the main thread, where the location delegate reads them.                                                          |
 
 Not a backport. **Keep it.**
 

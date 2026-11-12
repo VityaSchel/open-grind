@@ -8,20 +8,20 @@ import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 
 const {
 	abortStaleMock,
+	locationErrorToastMock,
 	preferencesSnapshotMock,
 	permissionToastMock,
 	reportFailureMock,
 	runMock,
 	setPreferencesMock,
-	showErrorToastMock,
 } = vi.hoisted(() => ({
 	abortStaleMock: vi.fn(),
+	locationErrorToastMock: vi.fn(),
 	preferencesSnapshotMock: vi.fn(),
 	permissionToastMock: vi.fn(),
 	reportFailureMock: vi.fn(),
 	runMock: vi.fn(),
 	setPreferencesMock: vi.fn(),
-	showErrorToastMock: vi.fn(),
 }));
 
 const locationRequestMock = vi.hoisted(() => ({
@@ -37,9 +37,6 @@ const locationRequestMock = vi.hoisted(() => ({
 	generation: 7,
 }));
 
-vi.mock("#lib/api/error-toast.ts", () => ({
-	showErrorToast: showErrorToastMock,
-}));
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: preferencesSnapshotMock,
 	setPreferences: setPreferencesMock,
@@ -49,6 +46,7 @@ vi.mock("./location-request.svelte", () => ({
 }));
 vi.mock("./location-feedback", () => ({
 	reportLocationFailure: reportFailureMock,
+	showLocationErrorToast: locationErrorToastMock,
 	showLocationPermissionToast: permissionToastMock,
 }));
 
@@ -265,17 +263,42 @@ describe("autoLocation.resolveGeohash", () => {
 	});
 
 	it("reports a failure streak once, and again after a recovery", async () => {
-		runMock.mockResolvedValue({ status: "error", error: "unavailable" });
+		runMock.mockResolvedValue({
+			status: "error",
+			error: "unavailable",
+			reason: "failed",
+		});
 		await autoLocation.resolveGeohash(CURRENT);
 		await autoLocation.resolveGeohash(CURRENT);
-		expect(showErrorToastMock).toHaveBeenCalledTimes(1);
+		expect(locationErrorToastMock).toHaveBeenCalledTimes(1);
 
 		runMock.mockResolvedValue(ok(metersNorth(250)));
 		await autoLocation.resolveGeohash(CURRENT);
 
-		runMock.mockResolvedValue({ status: "error", error: "unavailable" });
+		runMock.mockResolvedValue({
+			status: "error",
+			error: "unavailable",
+			reason: "failed",
+		});
 		await autoLocation.resolveGeohash(CURRENT);
-		expect(showErrorToastMock).toHaveBeenCalledTimes(2);
+		expect(locationErrorToastMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("passes on why the fix failed so Location Services off gets its own copy", async () => {
+		await autoLocation.resolveGeohash(CURRENT);
+		const disabled = {
+			status: "error",
+			error: "[disabled] - Location services are not enabled.",
+			reason: "disabled",
+		} as const;
+		runMock.mockResolvedValue(disabled);
+		await autoLocation.resolveGeohash(CURRENT);
+		expect(locationErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to update your location automatically",
+			error: disabled.error,
+			reason: "disabled",
+		});
+		expect(setPreferencesMock).not.toHaveBeenCalled();
 	});
 
 	it("gives up on a hung fix instead of blocking the grid", async () => {

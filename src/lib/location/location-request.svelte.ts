@@ -14,13 +14,16 @@ export type Coordinates = { lat: number; lon: number };
 type Fix = Coordinates & { accuracyMeters: number };
 
 export type MissingLocationGrant = "permission" | "precision";
+export type LocationErrorReason = "disabled" | "timeout" | "failed";
 
 export type LocationOutcome =
 	| { status: "ok"; coords: Fix }
 	| { status: "denied"; missing: MissingLocationGrant }
 	| { status: "aborted" }
 	| { status: "unsupported" }
-	| { status: "error"; error: unknown };
+	| { status: "error"; error: unknown; reason: LocationErrorReason };
+
+const PLUGIN_ERROR_CODE = /^\[(\w+)\]/;
 
 function missingGrant({
 	coarseLocation,
@@ -33,6 +36,22 @@ function missingGrant({
 		case "macos":
 		case "windows":
 			return "permission";
+	}
+}
+
+function failureOutcome(error: unknown): LocationOutcome {
+	const code =
+		typeof error === "string"
+			? PLUGIN_ERROR_CODE.exec(error)?.[1]
+			: undefined;
+	switch (code) {
+		case "denied":
+			return { status: "denied", missing: "permission" };
+		case "disabled":
+		case "timeout":
+			return { status: "error", error, reason: code };
+		default:
+			return { status: "error", error, reason: "failed" };
 	}
 }
 
@@ -93,7 +112,7 @@ class LocationRequest {
 			return { status: "ok", coords: fix };
 		} catch (error) {
 			if (superseded()) return { status: "aborted" };
-			return { status: "error", error };
+			return failureOutcome(error);
 		} finally {
 			if (!superseded()) this.pending = false;
 		}

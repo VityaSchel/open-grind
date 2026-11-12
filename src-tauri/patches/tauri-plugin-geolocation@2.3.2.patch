@@ -263,10 +263,53 @@ index 444711a..034d372 100644
                  }
              }
 diff --git a/ios/Sources/GeolocationPlugin.swift b/ios/Sources/GeolocationPlugin.swift
-index 7a2b57a..66fc60c 100644
+index 7a2b57a..f5bf9cc 100644
 --- a/ios/Sources/GeolocationPlugin.swift
 +++ b/ios/Sources/GeolocationPlugin.swift
-@@ -115,11 +115,19 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+@@ -23,7 +23,10 @@ class ClearWatchArgs: Decodable {
+ 
+ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+   private let locationManager = CLLocationManager()
++  private let positionTimeout: TimeInterval = 15
++  private let positionRetryDelay: TimeInterval = 1
+   private var isUpdatingLocation: Bool = false
++  private var isPositionRetryScheduled: Bool = false
+   private var permissionRequests: [Invoke] = []
+   private var positionRequests: [Invoke] = []
+   private var watcherChannels: [Channel] = []
+@@ -40,9 +43,12 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+   @objc public func getCurrentPosition(_ invoke: Invoke) throws {
+     let args = try invoke.parseArgs(GetPositionArgs.self)
+ 
+-    self.positionRequests.append(invoke)
+-
+     DispatchQueue.main.async {
++      self.positionRequests.append(invoke)
++      DispatchQueue.main.asyncAfter(deadline: .now() + self.positionTimeout) {
++        self.expirePositionRequest(invoke)
++      }
++
+       if args.enableHighAccuracy == true {
+         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+       } else {
+@@ -103,7 +109,10 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+       switch CLLocationManager.authorizationStatus() {
+       case .notDetermined:
+         status = "prompt"
+-      case .restricted, .denied:
++      case .restricted:
++        invoke.reject("Location access is restricted.", code: "disabled")
++        return
++      case .denied:
+         status = "denied"
+       case .authorizedAlways, .authorizedWhenInUse:
+         status = "granted"
+@@ -111,29 +120,36 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+         status = "prompt"
+       }
+     } else {
+-      invoke.reject("Location services are not enabled.")
++      invoke.reject("Location services are not enabled.", code: "disabled")
        return
      }
  
@@ -287,3 +330,85 @@ index 7a2b57a..66fc60c 100644
    @objc override public func requestPermissions(_ invoke: Invoke) {
      if CLLocationManager.locationServicesEnabled() {
        // TODO: Use the authorizationStatus instance property with locationManagerDidChangeAuthorization(_:) instead.
+       if CLLocationManager.authorizationStatus() == .notDetermined {
+-        self.permissionRequests.append(invoke)
+-
+         DispatchQueue.main.async {
++          self.permissionRequests.append(invoke)
+           self.locationManager.requestWhenInUseAuthorization()
+         }
+       } else {
+         checkPermissions(invoke)
+       }
+     } else {
+-      invoke.reject("Location services are not enabled.")
++      invoke.reject("Location services are not enabled.", code: "disabled")
+     }
+   }
+ 
+@@ -144,12 +160,17 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+   public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+     Logger.error(error)
+ 
+-    let requests = self.positionRequests + self.permissionRequests
+-    self.positionRequests.removeAll()
+-    self.permissionRequests.removeAll()
++    if (error as? CLError)?.code == .locationUnknown {
++      schedulePositionRetry()
++    } else {
++      let code = failureCode(error)
++      let requests = self.positionRequests + self.permissionRequests
++      self.positionRequests.removeAll()
++      self.permissionRequests.removeAll()
+ 
+-    for request in requests {
+-      request.reject(error.localizedDescription)
++      for request in requests {
++        request.reject(error.localizedDescription, code: code)
++      }
+     }
+ 
+     for channel in self.watcherChannels {
+@@ -164,8 +185,11 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+   public func locationManager(
+     _ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]
+   ) {
++    let requests = self.positionRequests
++    self.positionRequests.removeAll()
++
+     // Respond to all getCurrentPosition() calls.
+-    for request in self.positionRequests {
++    for request in requests {
+       // The capacitor plugin uses locations.first but .last should be the most current one
+       // and i don't see a reason to use old locations
+       if let location = locations.last {
+@@ -220,6 +244,29 @@ class GeolocationPlugin: Plugin, CLLocationManagerDelegate {
+   // Internal/Helper methods
+   //
+ 
++  private func schedulePositionRetry() {
++    guard !self.positionRequests.isEmpty, !self.isPositionRetryScheduled else { return }
++    self.isPositionRetryScheduled = true
++    DispatchQueue.main.asyncAfter(deadline: .now() + self.positionRetryDelay) {
++      self.isPositionRetryScheduled = false
++      if !self.positionRequests.isEmpty {
++        self.locationManager.requestLocation()
++      }
++    }
++  }
++
++  private func expirePositionRequest(_ invoke: Invoke) {
++    guard let index = self.positionRequests.firstIndex(where: { $0 === invoke }) else { return }
++    self.positionRequests.remove(at: index)
++    invoke.reject("Timed out waiting for a location fix.", code: "timeout")
++  }
++
++  private func failureCode(_ error: Error) -> String {
++    guard (error as? CLError)?.code == .denied else { return "failed" }
++    let restricted = CLLocationManager.authorizationStatus() == .restricted
++    return !CLLocationManager.locationServicesEnabled() || restricted ? "disabled" : "denied"
++  }
++
+   // TODO: Why is this pub in capacitor
+   private func stopUpdating() {
+     self.locationManager.stopUpdatingLocation()

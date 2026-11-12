@@ -6,6 +6,7 @@ import {
 	openAppSettings,
 } from "#lib/platform/app-settings.ts";
 import type {
+	LocationErrorReason,
 	LocationOutcome,
 	MissingLocationGrant,
 } from "./location-request.svelte";
@@ -18,6 +19,9 @@ const DENIAL_COPY = {
 	precision:
 		"Precise Location is off. Turn it on in your system settings to use GPS.",
 } as const satisfies Record<MissingLocationGrant, string>;
+
+const LOCATION_DISABLED_COPY =
+	"Location Services are off or restricted. Turn them on in your system settings to use GPS.";
 
 export function showLocationPermissionToast({
 	missing,
@@ -32,13 +36,33 @@ export function showLocationPermissionToast({
 	});
 }
 
+export function showLocationErrorToast({
+	label,
+	error,
+	reason,
+}: {
+	label: string;
+	error: unknown;
+	reason: LocationErrorReason;
+}): void {
+	switch (reason) {
+		case "disabled":
+			toast.error(LOCATION_DISABLED_COPY, { id: PERMISSION_TOAST_ID });
+			return;
+		case "timeout":
+		case "failed":
+			showErrorToast({ label, error });
+	}
+}
+
 export function reportLocationFailure(outcome: LocationOutcome): void {
 	if (outcome.status === "denied") showLocationPermissionToast(outcome);
 	if (outcome.status === "error") {
 		console.error(outcome.error);
-		showErrorToast({
+		showLocationErrorToast({
 			label: "Failed to get current location",
 			error: outcome.error,
+			reason: outcome.reason,
 		});
 	}
 }
