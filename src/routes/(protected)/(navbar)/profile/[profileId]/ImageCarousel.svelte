@@ -13,6 +13,7 @@
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 		CLOSE_SVG,
+		ZOOM_SVG,
 	} from "#lib/util/photoswipe/index.ts";
 	import { applyProfilePhotoReply } from "#lib/util/photoswipe/profile-photo-reply.ts";
 	import { devicePixelHeight } from "./device-pixel-height";
@@ -60,6 +61,7 @@
 					pswpModule: () => import("photoswipe"),
 					mainClass,
 					closeSVG: CLOSE_SVG,
+					zoomSVG: ZOOM_SVG,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);

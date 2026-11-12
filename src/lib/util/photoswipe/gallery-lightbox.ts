@@ -8,6 +8,7 @@ import {
 	applyPhotoSwipeThumbDimensions,
 	applyPhotoSwipeViewportSync,
 	CLOSE_SVG,
+	ZOOM_SVG,
 } from ".";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
@@ -129,6 +130,7 @@ export function attachGalleryLightbox({
 				showAnimationDuration: 500,
 				hideAnimationDuration: 500,
 				closeSVG: CLOSE_SVG,
+				zoomSVG: ZOOM_SVG,
 			});
 			configure({ lightbox, gallery, thumbScale });
 			lightbox.init();
