@@ -11,6 +11,7 @@ import {
 	sendInsets,
 	switchKeyboardAtOnce,
 } from "./support/keyboard";
+import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const MESSAGE = '[data-slot="message"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
@@ -53,6 +54,7 @@ function readView(page: Page): Promise<View> {
 
 async function openConversation(page: Page): Promise<void> {
 	await page.setViewportSize(KEYBOARD_CLOSED.viewport);
+	await serveImages(page, CHAT_MEDIA_HOST);
 	await installTauriShim(page, { platform: "android" });
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE).first().waitFor({ timeout: 60_000 });

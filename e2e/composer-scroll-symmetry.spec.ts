@@ -5,6 +5,7 @@ import {
 	installTauriShim,
 	MESSAGE_ROW,
 } from "./support/app";
+import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const SCROLLER = '[data-slot="messages-scroller"]';
 const LONG_DRAFT =
@@ -44,6 +45,7 @@ function readView(page: Page): Promise<View> {
 }
 
 async function openConversation(page: Page) {
+	await serveImages(page, CHAT_MEDIA_HOST);
 	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 30_000 });
