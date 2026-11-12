@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 use crate::error::AppError;
 use crate::media::MediaProxy;
 use crate::state::AppState;
-use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
+use crate::storage::{
+	remember_sign_out, AuthStorage, DeviceStorage, SigningKeyStorage,
+};
 
 static SIGN_OUT: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
@@ -216,6 +218,7 @@ pub(crate) async fn forget_account(
 	client: &grindr::GrindrClient,
 	media: &MediaProxy,
 ) -> Result<(), AppError> {
+	remember_sign_out();
 	client.sign_out().await;
 	AuthStorage::delete_credentials();
 	SigningKeyStorage::delete();

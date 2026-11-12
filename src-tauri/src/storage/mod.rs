@@ -1,6 +1,7 @@
 use std::sync::{Mutex, PoisonError};
 
 mod entries;
+mod fallback;
 #[cfg(any(
 	target_os = "linux",
 	all(target_os = "macos", not(feature = "keychain"))
@@ -11,6 +12,7 @@ mod keyring;
 mod legacy;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
+pub use fallback::remember_sign_out;
 pub(crate) use keyring::{entry, Entry};
 #[cfg(all(target_os = "macos", feature = "keychain"))]
 pub use legacy::adopt_legacy_items;
@@ -78,7 +80,14 @@ fn probe_keyring(
 	let file_store =
 		keyring_core::get_default_store().filter(|_| HAS_FILE_STORE);
 	match install_platform_store() {
-		Ok(()) if round_trips() => return StorageBackend::Keyring,
+		Ok(()) if round_trips() => {
+			if file_store
+				.as_deref()
+				.is_none_or(fallback::keyring_takes_over)
+			{
+				return StorageBackend::Keyring;
+			}
+		}
 		Ok(()) => {
 			tracing::warn!(
 				"[storage] the platform keyring failed a round trip"
@@ -95,6 +104,7 @@ fn probe_keyring(
 		tracing::error!("[storage] the file store failed a round trip");
 		return StorageBackend::Unavailable;
 	}
+	fallback::mark_fallback();
 	StorageBackend::File
 }
 
@@ -169,9 +179,12 @@ fn round_trips() -> bool {
 ))]
 pub(crate) mod test_support {
 	use std::path::Path;
-	use std::sync::Mutex;
+	use std::sync::{Arc, Mutex};
 
-	use super::{file_store, init_file_store};
+	use keyring_core::api::CredentialStoreApi;
+	use keyring_core::mock;
+
+	use super::{file_store, init_file_store, keyring};
 
 	static DEFAULT_STORE: Mutex<()> = Mutex::new(());
 
@@ -186,6 +199,28 @@ pub(crate) mod test_support {
 		test(&base);
 		std::fs::remove_dir_all(&base).ok();
 	}
+
+	pub(crate) fn install_mock(
+		store: &Arc<mock::Store>,
+	) -> impl FnOnce() -> Result<(), String> {
+		let store = Arc::clone(store);
+		move || {
+			keyring_core::set_default_store(store);
+			Ok(())
+		}
+	}
+
+	pub(crate) fn refuse_next_call(store: &mock::Store, name: &str) {
+		store
+			.build(keyring::SERVICE, name, None)
+			.unwrap()
+			.as_any()
+			.downcast_ref::<mock::Cred>()
+			.unwrap()
+			.set_error(keyring_core::Error::NoStorageAccess(
+				"the collection is locked".into(),
+			));
+	}
 }
 
 #[cfg(all(
@@ -199,7 +234,11 @@ mod tests {
 	use std::sync::Barrier;
 	use std::time::Duration;
 
-	use super::test_support::{lock, with_file_store};
+	use keyring_core::mock;
+
+	use super::test_support::{
+		install_mock, lock, refuse_next_call, with_file_store,
+	};
 	use super::*;
 
 	const PERSISTED_ENTRIES: [&str; 3] =
@@ -257,25 +296,6 @@ mod tests {
 		}
 	}
 
-	fn install_mock_keyring(refuses_writes: bool) -> Result<(), String> {
-		use keyring_core::api::CredentialStoreApi;
-
-		let store = keyring_core::mock::Store::new().unwrap();
-		if refuses_writes {
-			store
-				.build(keyring::SERVICE, STARTUP_PROBE, None)
-				.unwrap()
-				.as_any()
-				.downcast_ref::<keyring_core::mock::Cred>()
-				.unwrap()
-				.set_error(keyring_core::Error::NoStorageAccess(
-					"the default collection is locked".into(),
-				));
-		}
-		keyring_core::set_default_store(store);
-		Ok(())
-	}
-
 	fn session_file_exists(base: &std::path::Path) -> bool {
 		base.join("credentials").join("session").exists()
 	}
@@ -294,7 +314,10 @@ mod tests {
 	#[test]
 	fn a_keyring_that_refuses_writes_falls_back_to_the_file_store() {
 		with_file_store(|base| {
-			let backend = probe_keyring(|| install_mock_keyring(true));
+			let keyring = mock::Store::new().unwrap();
+			refuse_next_call(&keyring, STARTUP_PROBE);
+
+			let backend = probe_keyring(install_mock(&keyring));
 			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
 
 			assert_eq!(backend, StorageBackend::File);
@@ -303,9 +326,10 @@ mod tests {
 	}
 
 	#[test]
-	fn a_working_keyring_takes_over_from_the_file_store() {
+	fn a_working_keyring_receives_new_sign_ins() {
 		with_file_store(|base| {
-			let backend = probe_keyring(|| install_mock_keyring(false));
+			let backend =
+				probe_keyring(install_mock(&mock::Store::new().unwrap()));
 			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
 
 			assert_eq!(backend, StorageBackend::Keyring);

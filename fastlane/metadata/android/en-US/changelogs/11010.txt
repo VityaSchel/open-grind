@@ -1,0 +1,7 @@
+- Fixed "The client version is deprecated" sign-in error
+- Fixed Android app freezing on the splash screen
+- Fixed "can't keep you signed in" warning on Linux
+- Fixed command palette running commands twice
+- Fixed long profile values and filter badges overflowing
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-rc.1.1

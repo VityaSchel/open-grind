@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 
 import { SKIP_TAGS } from "./generator/context";
-import type { OpenApiDoc } from "./generator/types";
+import type { OpenApiDoc, Schema } from "./generator/types";
 import { HTTP_METHODS } from "./generator/types";
 
 const doc = JSON.parse(readFileSync("lib/openapi.json", "utf8")) as OpenApiDoc;
@@ -127,6 +127,65 @@ for (const [p, item] of Object.entries(doc.paths)) {
 		if (doc.components.schemas[name]?.["x-render-on-tag"]) continue;
 		warn(`schema "${name}" is defined but never referenced`);
 	}
+}
+
+{
+	const SCHEMA_REF = "#/components/schemas/";
+	const resolve = (schema: Schema | undefined): Schema | undefined => {
+		const inner = schema?.allOf?.length === 1 ? schema.allOf[0] : schema;
+		return inner?.$ref
+			? doc.components.schemas[inner.$ref.replace(SCHEMA_REF, "")]
+			: inner;
+	};
+	const variantRefs = (schema: Schema): string[] =>
+		(resolve(schema)?.oneOf ?? []).flatMap((variant) =>
+			variant.$ref ? [variant.$ref] : [],
+		);
+
+	function checkDiscriminators(node: unknown, path: string): void {
+		if (Array.isArray(node)) {
+			node.forEach((v, i) => checkDiscriminators(v, `${path}[${i}]`));
+			return;
+		}
+		if (!node || typeof node !== "object") return;
+		const properties = (node as Schema).properties ?? {};
+		for (const [name, property] of Object.entries(properties)) {
+			const discriminator = property["x-discriminator"];
+			if (!discriminator) continue;
+			const at = `${path}.properties.${name}`;
+			const { propertyName, mapping } = discriminator;
+			const values = resolve(properties[propertyName])?.enum;
+			if (!values) {
+				err(
+					`${at}: x-discriminator.propertyName "${propertyName}" is not a sibling enum property`,
+				);
+				continue;
+			}
+			const variants = variantRefs(property);
+			for (const [value, target] of Object.entries(mapping)) {
+				if (!values.includes(value)) {
+					err(
+						`${at}: x-discriminator maps "${value}", which is not a "${propertyName}" value`,
+					);
+				}
+				if (!variants.includes(target)) {
+					err(
+						`${at}: x-discriminator maps "${value}" to ${target}, which is not one of its oneOf variants`,
+					);
+				}
+			}
+			const mapped = new Set(Object.values(mapping));
+			for (const variant of variants) {
+				if (!mapped.has(variant)) {
+					err(`${at}: oneOf variant ${variant} has no x-discriminator mapping`);
+				}
+			}
+		}
+		for (const [k, v] of Object.entries(node)) {
+			checkDiscriminators(v, `${path}.${k}`);
+		}
+	}
+	checkDiscriminators(doc, "");
 }
 
 for (const [p, item] of Object.entries(doc.paths)) {

@@ -47,7 +47,13 @@ export interface Schema {
 	"x-key-description"?: string;
 	"x-exclude-from-markdown"?: string;
 	"x-original-type"?: string;
+	"x-discriminator"?: SiblingDiscriminator;
 	__allOfRefs?: string[];
+}
+
+export interface SiblingDiscriminator {
+	propertyName: string;
+	mapping: Record<string, string>;
 }
 
 export interface PropertyGroup {

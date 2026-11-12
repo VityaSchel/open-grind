@@ -428,21 +428,29 @@ a {
 }
 
 .toast[data-styled="true"] {
+	--toast-close-button-start: auto;
+	--toast-close-button-end: 0;
+	--toast-close-button-transform: translate(35%, -35%);
 	background-color: var(--color-accent) !important;
 	color: var(--popover) !important;
 	border-radius: 1.25rem !important;
 	border: 1px solid var(--color-border) !important;
 }
 
+.toast[data-styled="true"]:dir(rtl) {
+	--toast-close-button-start: 0;
+	--toast-close-button-end: auto;
+	--toast-close-button-transform: translate(-35%, -35%);
+}
+
 .toast[data-styled="true"] [data-close-button] {
-	background-color: var(--color-accent) !important;
-	color: var(--popover) !important;
+	background-color: var(--color-popover) !important;
+	color: var(--color-popover-foreground) !important;
 	border-color: var(--color-border) !important;
 }
 
 .toast[data-styled="true"] [data-close-button]:hover {
-	background-color: var(--popover) !important;
-	color: var(--color-accent) !important;
+	background-color: var(--color-secondary) !important;
 }
 
 :root:not([data-hover-pointer]) .toast [data-close-button] {

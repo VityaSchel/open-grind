@@ -9,13 +9,23 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
+const CREDENTIALS: &str = "credentials";
+const DISCARDED: &str = "credentials.discarded";
+
 fn credential_path(
 	base: &std::path::Path,
 	_service: &str,
 	user: &str,
 ) -> PathBuf {
 	let safe = |s: &str| s.replace(['/', '\\', '\0', ':'], "_");
-	base.join("credentials").join(safe(user))
+	base.join(CREDENTIALS).join(safe(user))
+}
+
+fn remove_tree(path: &std::path::Path) -> std::io::Result<()> {
+	match fs::remove_dir_all(path) {
+		Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+		result => result,
+	}
 }
 
 fn temp_path(path: &std::path::Path) -> PathBuf {
@@ -112,6 +122,24 @@ pub struct FileStore {
 	base: PathBuf,
 }
 
+impl FileStore {
+	pub fn discard(&self) -> std::io::Result<()> {
+		let discarded = self.base.join(DISCARDED);
+		remove_tree(&discarded)?;
+		match fs::rename(self.base.join(CREDENTIALS), &discarded) {
+			Ok(()) => {}
+			Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+			Err(e) => return Err(e),
+		}
+		if let Err(e) = remove_tree(&discarded) {
+			tracing::warn!(
+				"[storage] could not remove the discarded file store: {e}"
+			);
+		}
+		Ok(())
+	}
+}
+
 impl CredentialStoreApi for FileStore {
 	fn vendor(&self) -> String {
 		"open-grind file store".to_string()
@@ -146,7 +174,12 @@ impl CredentialStoreApi for FileStore {
 
 pub fn init(base: PathBuf) {
 	use std::os::unix::fs::PermissionsExt;
-	let creds_dir = base.join("credentials");
+	if let Err(e) = remove_tree(&base.join(DISCARDED)) {
+		tracing::warn!(
+			"[storage] could not remove the discarded file store: {e}"
+		);
+	}
+	let creds_dir = base.join(CREDENTIALS);
 	if let Ok(()) = fs::create_dir_all(&creds_dir) {
 		let _ =
 			fs::set_permissions(&creds_dir, fs::Permissions::from_mode(0o700));
@@ -339,6 +372,100 @@ mod tests {
 		assert_eq!(written, [".._.._escaped"]);
 		assert_eq!(cred.get_secret().unwrap().as_slice(), b"token");
 
+		fs::remove_dir_all(&base).ok();
+	}
+
+	fn store(base: &std::path::Path) -> FileStore {
+		FileStore {
+			base: base.to_path_buf(),
+		}
+	}
+
+	#[test]
+	fn discarding_removes_every_secret_and_unfinished_write() {
+		let base = scratch_dir();
+		credential(&base).set_secret(b"token").unwrap();
+		fs::write(base.join(CREDENTIALS).join("session.1.0.tmp"), b"half")
+			.unwrap();
+
+		store(&base).discard().unwrap();
+
+		assert!(!base.join(CREDENTIALS).exists());
+		assert!(!base.join(DISCARDED).exists());
+		assert!(matches!(
+			credential(&base).get_secret(),
+			Err(Error::NoEntry)
+		));
+		fs::remove_dir_all(&base).ok();
+	}
+
+	#[test]
+	fn discarding_a_store_that_never_wrote_anything_succeeds() {
+		let base = scratch_dir();
+
+		assert!(store(&base).discard().is_ok());
+		fs::remove_dir_all(&base).ok();
+	}
+
+	#[test]
+	fn a_blocked_discard_reports_the_error_and_keeps_every_secret() {
+		let base = scratch_dir();
+		credential(&base).set_secret(b"token").unwrap();
+		fs::write(base.join(DISCARDED), b"").unwrap();
+
+		assert!(store(&base).discard().is_err());
+		assert_eq!(
+			credential(&base).get_secret().unwrap().as_slice(),
+			b"token"
+		);
+		fs::remove_dir_all(&base).ok();
+	}
+
+	#[test]
+	fn a_half_removed_discard_is_cleared_at_the_next_start() {
+		let base = scratch_dir();
+		fs::create_dir_all(base.join(DISCARDED)).unwrap();
+		fs::write(base.join(DISCARDED).join(USER), b"token").unwrap();
+
+		let _guard = crate::storage::test_support::lock();
+		init(base.clone());
+
+		assert!(!base.join(DISCARDED).exists());
+		fs::remove_dir_all(&base).ok();
+	}
+
+	#[test]
+	fn discarding_replaces_a_leftover_discard() {
+		let base = scratch_dir();
+		credential(&base).set_secret(b"token").unwrap();
+		fs::create_dir_all(base.join(DISCARDED)).unwrap();
+		fs::write(base.join(DISCARDED).join(USER), b"older token").unwrap();
+
+		store(&base).discard().unwrap();
+
+		assert!(!base.join(CREDENTIALS).exists());
+		assert!(!base.join(DISCARDED).exists());
+		fs::remove_dir_all(&base).ok();
+	}
+
+	#[test]
+	fn a_store_that_cannot_be_moved_aside_reports_the_error_and_keeps_every_secret(
+	) {
+		let base = scratch_dir();
+		credential(&base).set_secret(b"token").unwrap();
+		fs::set_permissions(&base, fs::Permissions::from_mode(0o500)).unwrap();
+		let denied = fs::create_dir(base.join(DISCARDED)).is_err();
+
+		let discarded = store(&base).discard();
+		fs::set_permissions(&base, fs::Permissions::from_mode(0o700)).unwrap();
+
+		if denied {
+			assert!(discarded.is_err());
+			assert_eq!(
+				credential(&base).get_secret().unwrap().as_slice(),
+				b"token"
+			);
+		}
 		fs::remove_dir_all(&base).ok();
 	}
 }
