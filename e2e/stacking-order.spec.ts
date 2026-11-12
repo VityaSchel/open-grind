@@ -6,7 +6,10 @@ import { animationsFinished, installTauriShim } from "./support/app";
 import { DRAWER } from "./support/drawer";
 import { showRestingToast } from "./support/toast";
 
-test.use({ baseURL: DEV_SERVER_URL });
+const ROOM_FOR_THE_MENU_BELOW = { width: 420, height: 900 };
+const TOO_SHORT_FOR_THE_MENU = { width: 420, height: 300 };
+
+test.use({ baseURL: DEV_SERVER_URL, viewport: ROOM_FOR_THE_MENU_BELOW });
 
 const DEMO_PROFILE = "/profile/100001";
 const SHARED_ALBUM = `/settings/albums/${SHARED_ALBUM_ID}`;
@@ -116,6 +119,7 @@ for (const { trigger, url, edge } of MENUS_REACHING_A_TOAST) {
 test("the safe-area strips stay in front of an open menu and of toasts on both edges", async ({
 	page,
 }) => {
+	await page.setViewportSize(TOO_SHORT_FOR_THE_MENU);
 	await page.goto(DEMO_PROFILE);
 	const menu = await openMenu({ page, trigger: "Profile menu" });
 	await showRestingToast({ page, edge: "top", label: "Top probe" });
