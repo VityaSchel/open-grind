@@ -10,8 +10,10 @@ import {
 	CLOSE_SVG,
 	ZOOM_SVG,
 } from ".";
+import { fullImageSizeWithin, knownFullImageSize } from "./full-size";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
+const FULL_SIZE_WAIT_MS = 1500;
 
 function setThumbRadii(lightbox: PhotoSwipeLightbox) {
 	const slide = lightbox.pswp?.currSlide;
@@ -75,18 +77,59 @@ function scaleThumbSize({
 	}));
 }
 
+function sizeFromFullImages({
+	lightbox,
+	gallery,
+	signal,
+}: {
+	lightbox: PhotoSwipeLightbox;
+	gallery: HTMLElement;
+	signal: AbortSignal;
+}) {
+	let opened: string | null = null;
+	gallery.addEventListener(
+		"click",
+		(event) => {
+			const link =
+				event.target instanceof Element
+					? event.target.closest<HTMLAnchorElement>("a[href]")
+					: null;
+			opened = link?.href ?? null;
+		},
+		{ capture: true, signal },
+	);
+	lightbox.options.preloadFirstSlide = false;
+	lightbox.options.openPromise = () =>
+		opened === null
+			? Promise.resolve(null)
+			: fullImageSizeWithin({
+					src: opened,
+					timeoutMs: FULL_SIZE_WAIT_MS,
+				});
+	lightbox.addFilter("itemData", (itemData) => {
+		const size = itemData.src ? knownFullImageSize(itemData.src) : null;
+		if (size === null) return { ...itemData, width: 0, height: 0 };
+		return { ...itemData, ...size, msrc: itemData.src, thumbCropped: true };
+	});
+}
+
 function configure({
 	lightbox,
 	gallery,
 	thumbScale,
+	croppedThumbs,
+	signal,
 }: {
 	lightbox: PhotoSwipeLightbox;
 	gallery: HTMLElement;
 	thumbScale: number;
+	croppedThumbs: boolean;
+	signal: AbortSignal;
 }) {
 	applyPhotoSwipeErrorUi(lightbox);
 	applyPhotoSwipeThumbDimensions(lightbox);
 	if (thumbScale !== 1) scaleThumbSize({ lightbox, thumbScale });
+	if (croppedThumbs) sizeFromFullImages({ lightbox, gallery, signal });
 	applyPhotoSwipeViewportSync(lightbox);
 	applyPhotoSwipeBackGesture(lightbox);
 
@@ -113,15 +156,17 @@ function configure({
 export function attachGalleryLightbox({
 	gallery,
 	thumbScale = 1,
+	croppedThumbs = false,
 }: {
 	gallery: HTMLElement;
 	thumbScale?: number;
+	croppedThumbs?: boolean;
 }): () => void {
-	let disposed = false;
+	const disposal = new AbortController();
 	let lightbox: PhotoSwipeLightbox | undefined;
 	import("photoswipe/lightbox")
 		.then(({ default: PhotoSwipeLightbox }) => {
-			if (disposed) return;
+			if (disposal.signal.aborted) return;
 			lightbox = new PhotoSwipeLightbox({
 				gallery,
 				children: "a[href]",
@@ -132,12 +177,18 @@ export function attachGalleryLightbox({
 				closeSVG: CLOSE_SVG,
 				zoomSVG: ZOOM_SVG,
 			});
-			configure({ lightbox, gallery, thumbScale });
+			configure({
+				lightbox,
+				gallery,
+				thumbScale,
+				croppedThumbs,
+				signal: disposal.signal,
+			});
 			lightbox.init();
 		})
 		.catch((error) => console.error(error));
 	return () => {
-		disposed = true;
+		disposal.abort();
 		lightbox?.destroy();
 	};
 }

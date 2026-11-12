@@ -8,7 +8,14 @@ import {
 	installTauriShim,
 } from "./support/app";
 import { failDemoRequests } from "./support/demo-faults";
-import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
+import { showsMedia } from "./support/drawer";
+import {
+	CHAT_MEDIA_HOST,
+	heightPerWidth,
+	PORTRAIT_HEIGHT_PER_WIDTH,
+	serveImages,
+	serveRightNowPortraitPhotos,
+} from "./support/media";
 import {
 	goToRightNow,
 	RIGHT_NOW_FEED_TIMEOUT,
@@ -20,6 +27,7 @@ const DISCREET_POST = '[data-slot="right-now-discreet-post"]';
 const POST_DISTANCE = '[data-slot="right-now-post-distance"]';
 const FEED_SCROLLER = '[data-slot="right-now-scroller"]';
 const LIGHTBOX = ".pswp";
+const LIGHTBOX_PHOTO = ".pswp__img:not(.pswp__img--placeholder)";
 const OPEN_PHOTO = "Open photo";
 const NOT_OPEN_PHOTO = /^(?!Open photo$)/;
 const NOT_REPORT_POST = /^(?!Report post$)/;
@@ -258,6 +266,34 @@ test.describe("the demo feed", () => {
 
 		await expect(page.locator(LIGHTBOX)).toBeHidden();
 		await expect(page).toHaveURL(/\/right-now$/);
+	});
+});
+
+test.describe("a feed whose photos are cropped to square thumbnails", () => {
+	test("a portrait post photo opens in the lightbox at its own shape", async ({
+		page,
+	}) => {
+		test.setTimeout(240_000);
+		await installTauriShim(page);
+		await serveRightNowPortraitPhotos(page);
+		await goToRightNow(page);
+		const photo = page.getByRole("link", { name: OPEN_PHOTO }).first();
+		await photo.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
+		await expect
+			.poll(() => showsMedia(photo), {
+				message: "the square thumbnail shows",
+			})
+			.toBe(true);
+
+		await photo.click();
+
+		const lightbox = page.locator(LIGHTBOX);
+		await expect(lightbox).toBeVisible({ timeout: 30_000 });
+		await expect
+			.poll(() => heightPerWidth(lightbox.locator(LIGHTBOX_PHOTO)), {
+				message: "the full photo keeps its portrait shape",
+			})
+			.toBeCloseTo(PORTRAIT_HEIGHT_PER_WIDTH, 1);
 	});
 });
 

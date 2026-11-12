@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { preloadFullImage } from "#lib/util/photoswipe/full-size.ts";
 	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
@@ -16,7 +17,7 @@
 	const blurred = $derived(media.data.isNsfw && media.data.shouldBlur);
 
 	const attachLightbox = (gallery: HTMLElement) =>
-		attachGalleryLightbox({ gallery });
+		attachGalleryLightbox({ gallery, croppedThumbs: true });
 </script>
 
 {#snippet photo()}
@@ -30,6 +31,7 @@
 		size="md"
 		loading="lazy"
 		skeleton
+		onload={blurred ? undefined : () => void preloadFullImage(fullSrc)}
 	/>
 {/snippet}
 
