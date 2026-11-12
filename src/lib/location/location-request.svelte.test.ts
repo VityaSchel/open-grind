@@ -84,57 +84,55 @@ describe("locationRequest", () => {
 		expect(getCurrentPositionMock).not.toHaveBeenCalled();
 	});
 
-	it("on Android reads an Approximate-only grant as a plain denial", async () => {
-		checkPermissionsMock.mockResolvedValue({
-			location: "denied",
-			coarseLocation: "granted",
-		});
-		await expect(locationRequest.run()).resolves.toEqual({
-			status: "denied",
-			missing: "permission",
-		});
-	});
+	it.each(["android", "ios"] as const)(
+		"on %s reports Precise Location as missing when only Approximate is granted",
+		async (platform) => {
+			runningOn(platform);
+			checkPermissionsMock.mockResolvedValue({
+				location: "denied",
+				coarseLocation: "granted",
+			});
+			await expect(locationRequest.run()).resolves.toEqual({
+				status: "denied",
+				missing: "precision",
+			});
+			expect(getCurrentPositionMock).not.toHaveBeenCalled();
+		},
+	);
 
-	it("on iOS reports Precise Location as missing when only Approximate is granted", async () => {
-		runningOn("ios");
-		checkPermissionsMock.mockResolvedValue({
-			location: "denied",
-			coarseLocation: "granted",
-		});
-		await expect(locationRequest.run()).resolves.toEqual({
-			status: "denied",
-			missing: "precision",
-		});
-		expect(getCurrentPositionMock).not.toHaveBeenCalled();
-	});
+	it.each(["android", "ios"] as const)(
+		"on %s reports Precise Location as missing right after the prompt grants Approximate",
+		async (platform) => {
+			runningOn(platform);
+			checkPermissionsMock.mockResolvedValue({
+				location: "prompt",
+				coarseLocation: "prompt",
+			});
+			requestPermissionsMock.mockResolvedValue({
+				location: "denied",
+				coarseLocation: "granted",
+			});
+			await expect(locationRequest.run()).resolves.toEqual({
+				status: "denied",
+				missing: "precision",
+			});
+		},
+	);
 
-	it("on iOS reports Precise Location as missing right after the prompt grants Approximate", async () => {
-		runningOn("ios");
-		checkPermissionsMock.mockResolvedValue({
-			location: "prompt",
-			coarseLocation: "prompt",
-		});
-		requestPermissionsMock.mockResolvedValue({
-			location: "denied",
-			coarseLocation: "granted",
-		});
-		await expect(locationRequest.run()).resolves.toEqual({
-			status: "denied",
-			missing: "precision",
-		});
-	});
-
-	it("on iOS reports the permission as missing when location is refused outright", async () => {
-		runningOn("ios");
-		checkPermissionsMock.mockResolvedValue({
-			location: "denied",
-			coarseLocation: "denied",
-		});
-		await expect(locationRequest.run()).resolves.toEqual({
-			status: "denied",
-			missing: "permission",
-		});
-	});
+	it.each(["android", "ios"] as const)(
+		"on %s reports the permission as missing when location is refused outright",
+		async (platform) => {
+			runningOn(platform);
+			checkPermissionsMock.mockResolvedValue({
+				location: "denied",
+				coarseLocation: "denied",
+			});
+			await expect(locationRequest.run()).resolves.toEqual({
+				status: "denied",
+				missing: "permission",
+			});
+		},
+	);
 
 	it("never prompts when asked not to", async () => {
 		checkPermissionsMock.mockResolvedValue({ location: "prompt" });

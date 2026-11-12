@@ -29,9 +29,9 @@ function missingGrant({
 	coarseLocation,
 }: PermissionStatus): MissingLocationGrant {
 	switch (currentPlatform()) {
+		case "android":
 		case "ios":
 			return coarseLocation === "granted" ? "precision" : "permission";
-		case "android":
 		case "linux":
 		case "macos":
 		case "windows":
