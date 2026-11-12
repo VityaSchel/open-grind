@@ -4,6 +4,7 @@ import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelt
 import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import { applyPhotoSwipeErrorUi } from "./error-ui";
 import { trackPhotoSwipeBusy } from "./open-tracking";
+import { applyPhotoSwipeRoundedCrops } from "./rounded-crop";
 import {
 	applyPhotoSwipeLoadedSize,
 	applyPhotoSwipeViewportSync,
@@ -113,6 +114,7 @@ export async function openLightbox({
 	});
 	applyPhotoSwipeLoadedSize(lightbox);
 	applyPhotoSwipeBackGesture(lightbox);
+	if (animation === "zoom") applyPhotoSwipeRoundedCrops(lightbox);
 	if (videoAt !== undefined) applyPhotoSwipeVideo(lightbox, videoAt);
 	try {
 		configure?.(lightbox);

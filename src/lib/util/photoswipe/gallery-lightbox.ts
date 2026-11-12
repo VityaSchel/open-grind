@@ -11,6 +11,7 @@ import {
 	ZOOM_SVG,
 } from ".";
 import { fullImageSizeWithin, knownFullImageSize } from "./full-size";
+import { applyPhotoSwipeRoundedCrops } from "./rounded-crop";
 
 const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
 const FULL_SIZE_WAIT_MS = 1500;
@@ -111,6 +112,7 @@ function sizeFromFullImages({
 		if (size === null) return { ...itemData, width: 0, height: 0 };
 		return { ...itemData, ...size, msrc: itemData.src, thumbCropped: true };
 	});
+	applyPhotoSwipeRoundedCrops(lightbox);
 }
 
 function configure({
@@ -134,8 +136,10 @@ function configure({
 	applyPhotoSwipeBackGesture(lightbox);
 
 	lightbox.on("openingAnimationStart", () => {
-		setThumbRadii(lightbox);
-		lightbox.pswp?.element?.classList.add("pswp--radius-opening");
+		if (!croppedThumbs) {
+			setThumbRadii(lightbox);
+			lightbox.pswp?.element?.classList.add("pswp--radius-opening");
+		}
 		setThumbsVisibility({ gallery, visibility: "hidden" });
 	});
 	lightbox.on("openingAnimationEnd", () => {
@@ -143,8 +147,10 @@ function configure({
 		clearThumbRadii();
 	});
 	lightbox.on("closingAnimationStart", () => {
-		setThumbRadii(lightbox);
-		lightbox.pswp?.element?.classList.add("pswp--radius-closing");
+		if (!croppedThumbs) {
+			setThumbRadii(lightbox);
+			lightbox.pswp?.element?.classList.add("pswp--radius-closing");
+		}
 		setThumbsVisibility({ gallery, visibility: "hidden" });
 	});
 	lightbox.on("closingAnimationEnd", clearThumbRadii);
