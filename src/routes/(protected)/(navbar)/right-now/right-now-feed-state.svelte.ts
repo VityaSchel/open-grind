@@ -18,6 +18,7 @@ import {
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
 import { staysOnline } from "#lib/presence/presence-gate.ts";
 import { now } from "#lib/util/clock.ts";
+import { getNow } from "#lib/util/now.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
 import type {
 	RightNowFeedResponse,
@@ -108,7 +109,12 @@ export class RightNowFeedState extends ReconcilingListState<
 	}
 
 	get entries(): RightNowFeedPost[] {
-		return this.#entries.slice(0, this.visibleCount);
+		return this.#unexpired.slice(0, this.visibleCount);
+	}
+
+	get #unexpired(): RightNowFeedPost[] {
+		const current = getNow();
+		return this.#entries.filter((post) => post.data.expiration > current);
 	}
 
 	override attachView(): () => void {
@@ -149,7 +155,7 @@ export class RightNowFeedState extends ReconcilingListState<
 	}
 
 	protected get length(): number {
-		return this.#entries.length;
+		return this.#unexpired.length;
 	}
 
 	protected fetch(): Promise<RightNowFeedResponse> {

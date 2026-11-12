@@ -100,6 +100,32 @@ describe("RightNowFeedState polling", () => {
 		vi.useRealTimers();
 	});
 
+	it("drops posts from the list as they expire while the feed stays open", async () => {
+		getRightNowFeedMock.mockResolvedValueOnce(
+			feed([
+				post(1, { expiration: Date.now() + MINUTE }),
+				post(2, { expiration: Date.now() + 10 * MINUTE }),
+			]),
+		);
+		const state = createState();
+		let listed: ReturnType<typeof shown> = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				listed = shown(state);
+			});
+		});
+		await settle();
+		flushSync();
+		expect(listed).toEqual([1, 2]);
+
+		await vi.advanceTimersByTimeAsync(90 * SECOND);
+		flushSync();
+
+		expect(listed).toEqual([2]);
+		expect(getRightNowFeedMock).toHaveBeenCalledOnce();
+		stop();
+	});
+
 	it("leaves a failed first load failed while an effect keeps the view attached", async () => {
 		getRightNowFeedMock.mockRejectedValueOnce(
 			new Error("Service unavailable"),
