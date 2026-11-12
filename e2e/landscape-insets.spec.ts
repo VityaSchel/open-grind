@@ -78,7 +78,7 @@ const DRAWER = '[data-slot="drawer-content"]';
 const SHEET = '[data-slot="sheet-content"]';
 const MESSAGE = '[data-slot="message"]';
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
-const LOW_ROW_OFFSET = { x: 80, y: 110 };
+const LOW_ROW_OFFSET = { x: 160, y: 110 };
 const PAGES_TO_LOAD = 3;
 const SCROLLED_INTO_GRID = 2500;
 
