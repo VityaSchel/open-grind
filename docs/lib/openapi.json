@@ -21660,7 +21660,35 @@
 							{
 								"$ref": "#/components/schemas/MessageBody"
 							}
-						]
+						],
+						"x-discriminator": {
+							"propertyName": "type",
+							"mapping": {
+								"Album": "#/components/schemas/AlbumMessageBody",
+								"AlbumContentReaction": "#/components/schemas/AlbumContentReactionBody",
+								"AlbumContentReply": "#/components/schemas/AlbumContentReplyBody",
+								"Audio": "#/components/schemas/AudioMessageBody",
+								"ExpiringAlbum": "#/components/schemas/ExpiringAlbumBody",
+								"ExpiringAlbumV2": "#/components/schemas/ExpiringAlbumV2Body",
+								"ExpiringImage": "#/components/schemas/ExpiringImageBody",
+								"Video": "#/components/schemas/VideoMessageBody",
+								"Gaymoji": "#/components/schemas/GaymojiBody",
+								"Generative": "#/components/schemas/GenerativeBody",
+								"Giphy": "#/components/schemas/GiphyBody",
+								"Image": "#/components/schemas/ImageMessageBody",
+								"Location": "#/components/schemas/LocationMessageBody",
+								"PrivateVideo": "#/components/schemas/PrivateVideoBody",
+								"ProfileLink": "#/components/schemas/ProfileLinkBody",
+								"ProfilePhotoReply": "#/components/schemas/ProfilePhotoReplyBody",
+								"Retract": "#/components/schemas/RetractMessageBody",
+								"RightNowRequest": "#/components/schemas/RightNowRequestBody",
+								"StoryReply": "#/components/schemas/StoryReplyBody",
+								"Text": "#/components/schemas/TextMessageBody",
+								"Unknown": "#/components/schemas/UnknownMessageBody",
+								"NonExpiringVideo": "#/components/schemas/NonExpiringVideoBody",
+								"VideoCall": "#/components/schemas/VideoCallMessageBody"
+							}
+						}
 					},
 					"replyToMessage": {
 						"nullable": true,
@@ -22029,7 +22057,24 @@
 							{
 								"$ref": "#/components/schemas/SendMessageBody"
 							}
-						]
+						],
+						"x-discriminator": {
+							"propertyName": "type",
+							"mapping": {
+								"Text": "#/components/schemas/TextMessageBody",
+								"Location": "#/components/schemas/LocationMessageBody",
+								"Gaymoji": "#/components/schemas/GaymojiBody",
+								"Giphy": "#/components/schemas/GiphyBody",
+								"ProfilePhotoReply": "#/components/schemas/ProfilePhotoReplyBody",
+								"Image": "#/components/schemas/SendImageBody",
+								"ExpiringImage": "#/components/schemas/SendExpiringImageBody",
+								"Audio": "#/components/schemas/SendAudioBody",
+								"Video": "#/components/schemas/SendVideoBody",
+								"AlbumContentReaction": "#/components/schemas/SendAlbumContentReactionBody",
+								"AlbumContentReply": "#/components/schemas/SendAlbumContentReplyBody",
+								"StoryReply": "#/components/schemas/SendStoryReplyBody"
+							}
+						}
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
@@ -22736,18 +22781,152 @@
 				"type": "object",
 				"properties": {
 					"type": {
-						"type": "string"
+						"type": "string",
+						"enum": [
+							"full_profile_v1",
+							"partial_profile_v1",
+							"advert_v1",
+							"top_picks_v1",
+							"explore_aggregation_v1",
+							"boost_upsell_v1",
+							"unlimited_mpu_v1",
+							"xtra_mpu_v1",
+							"favs_header_v1",
+							"hidden_profile_v1",
+							"smart_boost_profile_v1",
+							"sponsored_profile_v1",
+							"braze_event_profile_v1",
+							"favs_xtra_upsell_v1",
+							"favs_unlimited_upsell_v1",
+							"day_pass_unlimited_upsell_v1",
+							"favorites_header_no_free_results_v1",
+							"favorites_header_no_xtra_results_v1",
+							"profile_hide_status",
+							"rewarded_profiles_entry_point_v1",
+							"right_now_carousel_v1",
+							"edge_carousel_v1",
+							"for_you_now_v1",
+							"map_unavailable_in_region_v1"
+						]
 					},
 					"data": {
-						"type": "object",
-						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1), [edge_carousel_v1](/grindr-api/browse/grid#edge-carousel-v1), [for_you_now_v1](/grindr-api/browse/grid#for-you-now-v1), [map_unavailable_in_region_v1](/grindr-api/browse/grid#map-unavailable-in-region-v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1), [edge_carousel_v1](/grindr-api/browse/grid#edge-carousel-v1), [for_you_now_v1](/grindr-api/browse/grid#for-you-now-v1), [map_unavailable_in_region_v1](/grindr-api/browse/grid#map-unavailable-in-region-v1). For `profile_hide_status`, `count` is on the item itself, not under `data`.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CascadeItemData"
+							}
+						],
+						"x-discriminator": {
+							"propertyName": "type",
+							"mapping": {
+								"full_profile_v1": "#/components/schemas/FullProfileV1",
+								"partial_profile_v1": "#/components/schemas/PartialProfileV1",
+								"advert_v1": "#/components/schemas/AdvertV1",
+								"top_picks_v1": "#/components/schemas/TopPicksV1",
+								"explore_aggregation_v1": "#/components/schemas/ExploreAggregationV1",
+								"boost_upsell_v1": "#/components/schemas/BoostUpsellV1",
+								"unlimited_mpu_v1": "#/components/schemas/UnlimitedMpuV1",
+								"xtra_mpu_v1": "#/components/schemas/XtraMpuV1",
+								"favs_header_v1": "#/components/schemas/FavHeaderV1",
+								"hidden_profile_v1": "#/components/schemas/HiddenProfileV1",
+								"smart_boost_profile_v1": "#/components/schemas/SmartBoostProfileV1",
+								"sponsored_profile_v1": "#/components/schemas/SponsoredProfileV1",
+								"braze_event_profile_v1": "#/components/schemas/BrazeEventProfileV1",
+								"favs_xtra_upsell_v1": "#/components/schemas/FavsXtraUpsellV1",
+								"favs_unlimited_upsell_v1": "#/components/schemas/FavsUnlimitedUpsellV1",
+								"day_pass_unlimited_upsell_v1": "#/components/schemas/DayPassUnlimitedUpsellV1",
+								"favorites_header_no_free_results_v1": "#/components/schemas/FavoritesHeaderNoFreeResultsV1",
+								"favorites_header_no_xtra_results_v1": "#/components/schemas/FavoritesHeaderNoXtraResultsV1",
+								"profile_hide_status": "#/components/schemas/ProfileHideStatus",
+								"rewarded_profiles_entry_point_v1": "#/components/schemas/RewardedProfilesEntryPointV1",
+								"right_now_carousel_v1": "#/components/schemas/RightNowCarouselV1",
+								"edge_carousel_v1": "#/components/schemas/EdgeCarouselV1",
+								"for_you_now_v1": "#/components/schemas/ForYouNowV1",
+								"map_unavailable_in_region_v1": "#/components/schemas/MapUnavailableInRegionV1"
+							}
+						}
 					}
 				},
 				"x-render-on-tag": "browse/grid",
 				"required": [
 					"type",
 					"data"
+				]
+			},
+			"CascadeItemData": {
+				"oneOf": [
+					{
+						"$ref": "#/components/schemas/FullProfileV1"
+					},
+					{
+						"$ref": "#/components/schemas/PartialProfileV1"
+					},
+					{
+						"$ref": "#/components/schemas/AdvertV1"
+					},
+					{
+						"$ref": "#/components/schemas/TopPicksV1"
+					},
+					{
+						"$ref": "#/components/schemas/ExploreAggregationV1"
+					},
+					{
+						"$ref": "#/components/schemas/BoostUpsellV1"
+					},
+					{
+						"$ref": "#/components/schemas/UnlimitedMpuV1"
+					},
+					{
+						"$ref": "#/components/schemas/XtraMpuV1"
+					},
+					{
+						"$ref": "#/components/schemas/FavHeaderV1"
+					},
+					{
+						"$ref": "#/components/schemas/HiddenProfileV1"
+					},
+					{
+						"$ref": "#/components/schemas/SmartBoostProfileV1"
+					},
+					{
+						"$ref": "#/components/schemas/SponsoredProfileV1"
+					},
+					{
+						"$ref": "#/components/schemas/BrazeEventProfileV1"
+					},
+					{
+						"$ref": "#/components/schemas/FavsXtraUpsellV1"
+					},
+					{
+						"$ref": "#/components/schemas/FavsUnlimitedUpsellV1"
+					},
+					{
+						"$ref": "#/components/schemas/DayPassUnlimitedUpsellV1"
+					},
+					{
+						"$ref": "#/components/schemas/FavoritesHeaderNoFreeResultsV1"
+					},
+					{
+						"$ref": "#/components/schemas/FavoritesHeaderNoXtraResultsV1"
+					},
+					{
+						"$ref": "#/components/schemas/ProfileHideStatus"
+					},
+					{
+						"$ref": "#/components/schemas/RewardedProfilesEntryPointV1"
+					},
+					{
+						"$ref": "#/components/schemas/RightNowCarouselV1"
+					},
+					{
+						"$ref": "#/components/schemas/EdgeCarouselV1"
+					},
+					{
+						"$ref": "#/components/schemas/ForYouNowV1"
+					},
+					{
+						"$ref": "#/components/schemas/MapUnavailableInRegionV1"
+					}
 				]
 			},
 			"CascadeResponse": {

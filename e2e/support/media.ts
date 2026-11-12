@@ -1,7 +1,8 @@
-import type { Page, Route } from "@playwright/test";
+import type { BrowserContext, Page, Route } from "@playwright/test";
 
 export const AVATAR_HOST = "**/api.dicebear.com/**";
 export const CHAT_MEDIA_HOST = "**/picsum.photos/**";
+export const STOCK_PHOTO_HOST = "**/images.unsplash.com/**";
 
 const IMAGE = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800" fill="#666"/></svg>`;
 
@@ -11,6 +12,14 @@ function fulfillImage(route: Route): Promise<void> {
 
 export async function serveImages(page: Page, host: string): Promise<void> {
 	await page.route(host, fulfillImage);
+}
+
+export async function serveDemoImages(context: BrowserContext): Promise<void> {
+	await Promise.all(
+		[AVATAR_HOST, CHAT_MEDIA_HOST, STOCK_PHOTO_HOST].map((host) =>
+			context.route(host, fulfillImage),
+		),
+	);
 }
 
 export async function holdImages(

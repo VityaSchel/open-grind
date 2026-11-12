@@ -56,6 +56,7 @@ export async function openTile(
 	await page.locator(`${GRID_TILE}[href="/profile/${tiles[nth]}"]`).click();
 	await expect(page).toHaveURL(profileUrl(tiles[nth]!));
 	await profileLoaded(page);
+	await restsOn(page, { position: nth });
 }
 
 export async function openGridProfile(

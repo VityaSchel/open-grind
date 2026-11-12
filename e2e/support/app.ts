@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 
 import type { SupportedPlatform } from "../../src/lib/platform/os";
+import { serveDemoImages } from "./media";
 
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
@@ -318,6 +319,7 @@ export async function installTauriShim(
 	page: Page,
 	{ platform }: { platform: SupportedPlatform },
 ): Promise<void> {
+	await serveDemoImages(page.context());
 	await page.addInitScript((platformName: string) => {
 		interface AppDataArgs {
 			file?: string;
