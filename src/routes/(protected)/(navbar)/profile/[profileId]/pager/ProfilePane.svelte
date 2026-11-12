@@ -113,7 +113,10 @@
 		<div
 			bind:this={scroller}
 			{...scrollerHooks}
-			class="@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto"
+			class={[
+				"@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto",
+				{ "[scrollbar-gutter:stable]": holdsStillHere() },
+			]}
 			{@attach active && scrollsToTopOnStatusBarTap}
 		>
 			<main
