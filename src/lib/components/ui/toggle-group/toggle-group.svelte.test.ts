@@ -11,6 +11,15 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import ToggleGroupTestHarness from "./toggle-group-test-harness.svelte";
 
+const UNITS = {
+	label: "Units",
+	options: [
+		{ value: "metric", text: "Metric" },
+		{ value: "imperial", text: "Imperial" },
+	],
+	chosen: "metric",
+};
+
 function optionStates(group: HTMLElement, role: string, state: string) {
 	return within(group)
 		.getAllByRole(role)
@@ -24,7 +33,7 @@ afterEach(cleanup);
 
 describe("ToggleGroup", () => {
 	it("offers a single choice as radios in a radio group with the chosen one checked", async () => {
-		render(ToggleGroupTestHarness, { type: "single" });
+		render(ToggleGroupTestHarness, { type: "single", ...UNITS });
 		const group = screen.getByRole("radiogroup", { name: "Units" });
 
 		expect(optionStates(group, "radio", "aria-checked")).toEqual([
@@ -43,7 +52,7 @@ describe("ToggleGroup", () => {
 	});
 
 	it("keeps multiple choices as pressed toggle buttons in a plain group", () => {
-		render(ToggleGroupTestHarness, { type: "multiple" });
+		render(ToggleGroupTestHarness, { type: "multiple", ...UNITS });
 		const group = screen.getByRole("group", { name: "Units" });
 
 		expect(optionStates(group, "button", "aria-pressed")).toEqual([
