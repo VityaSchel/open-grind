@@ -3,7 +3,7 @@ import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 type Listener = () => void;
 
-const busyLightboxes = new Set<PhotoSwipeLightbox>();
+const busyLightboxes = new Set<object>();
 const openingListeners = new Set<Listener>();
 const idleListeners = new Set<Listener>();
 
@@ -29,9 +29,16 @@ function notify(listeners: Set<Listener>): void {
 	for (const listener of [...listeners]) listener();
 }
 
-function release(lightbox: PhotoSwipeLightbox): void {
+function release(lightbox: object): void {
 	if (busyLightboxes.delete(lightbox) && busyLightboxes.size === 0)
 		notify(idleListeners);
+}
+
+export function trackPhotoSwipeBusy(): () => void {
+	const token = {};
+	busyLightboxes.add(token);
+	notify(openingListeners);
+	return () => release(token);
 }
 
 function specialKeyUsed(event: MouseEvent): boolean {

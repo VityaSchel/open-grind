@@ -3,6 +3,7 @@ import type PhotoSwipeLightbox from "photoswipe/lightbox";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import { applyPhotoSwipeErrorUi } from "./error-ui";
+import { trackPhotoSwipeBusy } from "./open-tracking";
 import {
 	applyPhotoSwipeLoadedSize,
 	applyPhotoSwipeViewportSync,
@@ -59,11 +60,24 @@ export async function openLightbox({
 	signal: AbortSignal;
 	onClosed: () => void;
 }): Promise<void> {
-	const { default: Lightbox } = await import("photoswipe/lightbox");
-	if (signal.aborted) return;
+	const release = trackPhotoSwipeBusy();
+	const { default: Lightbox } = await import("photoswipe/lightbox").catch(
+		(error: unknown) => {
+			release();
+			throw error;
+		},
+	);
+	if (signal.aborted) {
+		release();
+		return;
+	}
 	const lightbox = new Lightbox({
 		showHideAnimationType: "fade",
-		pswpModule: () => import("photoswipe"),
+		pswpModule: () =>
+			import("photoswipe").catch((error: unknown) => {
+				release();
+				throw error;
+			}),
 		mainClass: "pswp--buttons-visible",
 		closeSVG: CLOSE_SVG,
 		zoomSVG: ZOOM_SVG,
@@ -84,9 +98,22 @@ export async function openLightbox({
 	applyPhotoSwipeLoadedSize(lightbox);
 	applyPhotoSwipeBackGesture(lightbox);
 	if (videoAt !== undefined) applyPhotoSwipeVideo(lightbox, videoAt);
-	configure?.(lightbox);
+	try {
+		configure?.(lightbox);
+	} catch (error) {
+		release();
+		throw error;
+	}
 	lightbox.on("closingAnimationEnd", onClosed);
-	signal.addEventListener("abort", () => lightbox.destroy(), { once: true });
+	lightbox.on("destroy", release);
+	signal.addEventListener(
+		"abort",
+		() => {
+			release();
+			lightbox.destroy();
+		},
+		{ once: true },
+	);
 	lightbox.init();
 	lightbox.loadAndOpen(index);
 }

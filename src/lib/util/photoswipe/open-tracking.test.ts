@@ -9,6 +9,7 @@ import {
 	isPhotoSwipeBusy,
 	onPhotoSwipeIdle,
 	onPhotoSwipeOpening,
+	trackPhotoSwipeBusy,
 } from "./open-tracking";
 
 class FakeCore {
@@ -181,6 +182,87 @@ describe("applyPhotoSwipeOpenTracking", () => {
 		photo.click();
 		lightbox.destroy();
 		stop();
+
+		expect(idle).toHaveBeenCalledTimes(1);
+		expect(isPhotoSwipeBusy()).toBe(false);
+	});
+});
+
+describe("trackPhotoSwipeBusy", () => {
+	function track() {
+		const release = trackPhotoSwipeBusy();
+		teardowns.push(release);
+		return release;
+	}
+
+	it("marks PhotoSwipe busy until released, once", () => {
+		const { opening, idle } = listen();
+
+		const release = track();
+
+		expect(isPhotoSwipeBusy()).toBe(true);
+		expect(opening).toHaveBeenCalledTimes(1);
+
+		release();
+		release();
+
+		expect(idle).toHaveBeenCalledTimes(1);
+		expect(idle).toHaveReturnedWith(false);
+		expect(isPhotoSwipeBusy()).toBe(false);
+	});
+
+	it("reports idle only once the last busy viewer is released", () => {
+		const { opening, idle } = listen();
+		const first = track();
+		const second = track();
+
+		expect(opening).toHaveBeenCalledTimes(2);
+
+		first();
+		first();
+
+		expect(isPhotoSwipeBusy()).toBe(true);
+		expect(idle).not.toHaveBeenCalled();
+
+		second();
+
+		expect(idle).toHaveBeenCalledTimes(1);
+		expect(isPhotoSwipeBusy()).toBe(false);
+	});
+
+	it("stays busy while a gallery lightbox is still open", async () => {
+		const core = deferredCore();
+		const { lightbox, photo } = mountLightbox({ load: core.load });
+		const { idle } = listen();
+		const release = track();
+		photo.click();
+		await openCore(core);
+
+		release();
+
+		expect(isPhotoSwipeBusy()).toBe(true);
+		expect(idle).not.toHaveBeenCalled();
+
+		lightbox.pswp?.destroy();
+
+		expect(idle).toHaveBeenCalledTimes(1);
+		expect(isPhotoSwipeBusy()).toBe(false);
+	});
+
+	it("stays busy after a gallery lightbox closes while a tracked viewer is still open", async () => {
+		const core = deferredCore();
+		const { lightbox, photo } = mountLightbox({ load: core.load });
+		const { idle } = listen();
+		photo.click();
+		await openCore(core);
+		const release = track();
+
+		lightbox.pswp?.destroy();
+
+		expect(isPhotoSwipeBusy()).toBe(true);
+		expect(idle).not.toHaveBeenCalled();
+
+		release();
 
 		expect(idle).toHaveBeenCalledTimes(1);
 		expect(isPhotoSwipeBusy()).toBe(false);
