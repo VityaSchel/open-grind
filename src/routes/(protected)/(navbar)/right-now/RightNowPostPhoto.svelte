@@ -3,17 +3,17 @@
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import { cn } from "#lib/util/utils.ts";
-	import type { RightNowPostMediaData } from "#lib/model/right-now/feed.ts";
+	import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
 
-	let { media, blurred }: { media: RightNowPostMediaData; blurred: boolean } =
-		$props();
+	let { media }: { media: RightNowPostMediaItem } = $props();
 
 	const frameClass = cn(
 		"relative block aspect-square w-full max-w-3xs overflow-hidden rounded-xl bg-muted",
 	);
 
-	const src = $derived(proxyMediaUrl(media.thumbnailUrl));
-	const fullSrc = $derived(proxyMediaUrl(media.fullImageUrl));
+	const src = $derived(proxyMediaUrl(media.data.thumbnailUrl));
+	const fullSrc = $derived(proxyMediaUrl(media.data.fullImageUrl));
+	const blurred = $derived(media.data.isNsfw && media.data.shouldBlur);
 
 	const attachLightbox = (gallery: HTMLElement) =>
 		attachGalleryLightbox({ gallery });

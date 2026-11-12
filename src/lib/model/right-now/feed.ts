@@ -29,7 +29,6 @@ export const rightNowPostMediaDataSchema = z.object({
 	shouldBlur: serverDefault({ value: z.boolean(), fallback: false }),
 	isNsfw: serverDefault({ value: z.boolean(), fallback: false }),
 });
-export type RightNowPostMediaData = z.infer<typeof rightNowPostMediaDataSchema>;
 
 export const rightNowPostMediaItemSchema = z.object({
 	type: z.enum(["image_v1", "album_v1"]),

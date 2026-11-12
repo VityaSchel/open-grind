@@ -18,21 +18,16 @@ vi.mock("#lib/util/photoswipe/gallery-lightbox.ts", () => ({
 }));
 
 import { proxyMediaUrl } from "#lib/util/media.ts";
-import type { RightNowPostMediaData } from "#lib/model/right-now/feed.ts";
+import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
+import { photo } from "./feed-post-test-helpers";
 import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
-function photo(mediaId: number): RightNowPostMediaData {
+function blurredPhoto(): RightNowPostMediaItem {
+	const media = photo(1);
 	return {
-		mediaId,
-		thumbnailUrl: `https://cdns.grindr.com/rightnow/thumb/${mediaId}`,
-		fullImageUrl: `https://cdns.grindr.com/rightnow/full/${mediaId}`,
-		isNsfw: false,
-		shouldBlur: false,
+		...media,
+		data: { ...media.data, isNsfw: true, shouldBlur: true },
 	};
-}
-
-function blurredPhoto(): RightNowPostMediaData {
-	return { ...photo(1), isNsfw: true, shouldBlur: true };
 }
 
 const openLink = () => screen.getByRole("link", { name: "Open photo" });
@@ -45,10 +40,10 @@ afterEach(() => {
 describe("a Right Now post photo", () => {
 	it("links the full-size photo for the gallery lightbox that chat images use", () => {
 		const media = photo(1);
-		render(RightNowPostPhoto, { props: { media, blurred: false } });
+		render(RightNowPostPhoto, { props: { media } });
 
 		expect(openLink().getAttribute("href")).toBe(
-			proxyMediaUrl(media.fullImageUrl),
+			proxyMediaUrl(media.data.fullImageUrl),
 		);
 		expect(attachGalleryLightboxMock).toHaveBeenCalledOnce();
 		const gallery = attachGalleryLightboxMock.mock.calls[0]?.[0]?.gallery;
@@ -56,9 +51,7 @@ describe("a Right Now post photo", () => {
 	});
 
 	it("detaches the lightbox when the photo goes away", () => {
-		const view = render(RightNowPostPhoto, {
-			props: { media: photo(1), blurred: false },
-		});
+		const view = render(RightNowPostPhoto, { props: { media: photo(1) } });
 
 		view.unmount();
 
@@ -66,9 +59,7 @@ describe("a Right Now post photo", () => {
 	});
 
 	it("keeps a blurred photo closed behind its nudity caption", () => {
-		render(RightNowPostPhoto, {
-			props: { media: blurredPhoto(), blurred: true },
-		});
+		render(RightNowPostPhoto, { props: { media: blurredPhoto() } });
 
 		expect(screen.queryByRole("link", { name: "Open photo" })).toBeNull();
 		expect(attachGalleryLightboxMock).not.toHaveBeenCalled();

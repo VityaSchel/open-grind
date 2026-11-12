@@ -6,12 +6,12 @@
 	import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
-	import ReportPostButton from "#lib/components/right-now/ReportPostButton.svelte";
 	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
-	import RightNowPostPhoto from "#lib/components/right-now/RightNowPostPhoto.svelte";
 	import * as Avatar from "#lib/components/ui/avatar/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import type { PostData } from "#lib/model/right-now/feed.ts";
+	import ReportPostButton from "./ReportPostButton.svelte";
+	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
 	let {
 		post,
@@ -97,10 +97,7 @@
 			</p>
 		{/if}
 		{#if photo}
-			<RightNowPostPhoto
-				media={photo.data}
-				blurred={photo.data.isNsfw && photo.data.shouldBlur}
-			/>
+			<RightNowPostPhoto media={photo} />
 		{/if}
 		<div class="flex items-center justify-between gap-2">
 			<RightNowPostMeta
