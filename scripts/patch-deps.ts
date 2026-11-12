@@ -104,6 +104,9 @@ const BUILD_OUTPUT = [
 	"-o",
 	"-path",
 	"*/android/build",
+	"-o",
+	"-name",
+	"Package.resolved",
 	")",
 ];
 
@@ -200,7 +203,7 @@ async function rediff(crate: Crate) {
 		await pristine(crate, work);
 		await $`cp -R ${outDir}/${crate.name} ${work}/b`;
 		await $`rm -f ${work}/b/.stamp`;
-		await $`find ${work} -type d ${BUILD_OUTPUT} -prune -exec rm -rf ${"{}"} +`;
+		await $`find ${work} ${BUILD_OUTPUT} -prune -exec rm -rf ${"{}"} +`;
 		const diff = await $`git diff --no-index --no-color --no-prefix a b`
 			.cwd(work)
 			.nothrow()
