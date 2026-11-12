@@ -1,3 +1,21 @@
+open-grind (0.1.0-rc.1.1) beta; urgency=medium
+
+  Follow-up update to v0.1.0-rc.1 that restores sign-in after Grindr
+  deprecated the app version it presented, with bug fixes.
+
+  - API UA moved from 26.22.0 to 26.24.0
+  - Fixed "This device can't keep you signed in" when the keyring refuses
+    writes
+  - Fixed command palette running each command twice
+  - Fixed long multi-select values and command palette filter badges
+    overflowing instead of ending in an ellipsis
+  - async-executor upgraded to 1.14.1, replacing the yanked 1.14.0
+
+  Full changelog:
+  https://s.opengrind.org/changelogs/v0.1.0-rc.1.1
+
+ -- Open Grind Governance <https://opengrind.org/governance>  Mon, 09 Nov 2026 22:00:59 +0100
+
 open-grind (0.1.0-rc.1) beta; urgency=medium
 
   First release candidate for v0.1.0.
