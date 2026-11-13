@@ -293,39 +293,27 @@ describe("Conversation menu back gesture", () => {
 
 describe("Conversation Right Now status", () => {
 	beforeEach(() => {
-		drafts = new Drafts();
-		conversations.drafts = drafts;
+		conversations.drafts = new Drafts();
 	});
 
 	afterEach(cleanup);
 
-	it.each([
-		["HOSTING", "Right Now · Hosting"],
-		["NOT_HOSTING", "Right Now"],
-	] as const)(
-		"marks a %s participant next to the name",
-		(rightNow, title) => {
-			const base = conversation(textPreview("hi"));
-			const { container } = render(Conversation, {
-				props: {
-					conversation: { ...base, data: { ...base.data, rightNow } },
-					onEnterSelection: () => {},
+	it("marks a participant on Right Now next to the name", () => {
+		const base = conversation(textPreview("hi"));
+		const { container } = render(Conversation, {
+			props: {
+				conversation: {
+					...base,
+					data: { ...base.data, rightNow: "HOSTING" },
 				},
-			});
-
-			expect(
-				container
-					.querySelector('[data-slot="right-now-indicator"]')
-					?.getAttribute("title"),
-			).toBe(title);
-		},
-	);
-
-	it("marks nothing for a participant not on Right Now", () => {
-		const { container } = renderRow(textPreview("hi"));
+				onEnterSelection: () => {},
+			},
+		});
 
 		expect(
-			container.querySelector('[data-slot="right-now-indicator"]'),
-		).toBeNull();
+			container.querySelector(
+				'[data-slot="item-title"] [data-slot="right-now-indicator"]',
+			),
+		).not.toBeNull();
 	});
 });

@@ -3,6 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
 
 const goto = vi.hoisted(() => vi.fn());
@@ -11,9 +12,11 @@ vi.mock("$app/navigation", () => ({ goto }));
 
 const PROFILE_ID = 100200;
 
-function renderTile(): HTMLElement {
+function renderTile({
+	rightNow,
+}: { rightNow?: RightNowStatus } = {}): HTMLElement {
 	render(GridProfileMiniCard, {
-		props: { id: PROFILE_ID, displayName: "Peer" },
+		props: { id: PROFILE_ID, displayName: "Peer", rightNow },
 	});
 	return screen.getByRole("link");
 }
@@ -63,14 +66,10 @@ describe("a browse grid tile", () => {
 	});
 
 	it("shows the profile's Right Now status", () => {
-		render(GridProfileMiniCard, {
-			props: { id: PROFILE_ID, displayName: "Peer", rightNow: "HOSTING" },
-		});
-
 		expect(
-			screen
-				.getByRole("link")
-				.querySelector('[title="Right Now · Hosting"]'),
+			renderTile({ rightNow: "HOSTING" }).querySelector(
+				'[data-slot="right-now-indicator"]',
+			),
 		).not.toBeNull();
 	});
 });

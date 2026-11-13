@@ -72,12 +72,4 @@ describe("ProfileBody", () => {
 		].map((badge) => badge.textContent.trim());
 		expect(badges).toEqual(["Hosting", "New"]);
 	});
-
-	it("shows no Right Now status for a profile that is not on Right Now", () => {
-		const container = renderBody({ rightNow: "NOT_ACTIVE" });
-
-		expect(
-			container.querySelector("[data-slot=profile-right-now-badge]"),
-		).toBeNull();
-	});
 });

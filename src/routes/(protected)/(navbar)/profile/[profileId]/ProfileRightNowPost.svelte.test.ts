@@ -269,6 +269,9 @@ describe("a profile's Right Now post", () => {
 
 		expect(screen.getByText("Door's open, come over")).toBeTruthy();
 		expect(screen.getByRole("img", { name: "Post photo" })).toBeTruthy();
+		expect(preloadFullImageMock).toHaveBeenCalledExactlyOnceWith(
+			FULL_PHOTO,
+		);
 		expect(card()?.querySelector("time")?.getAttribute("datetime")).toBe(
 			new Date(posted).toISOString(),
 		);
@@ -293,7 +296,8 @@ describe("a profile's Right Now post", () => {
 	});
 
 	it("opens the post full screen with the full-size photo, its text, author and details", async () => {
-		renderCard({ value: photoPost() });
+		const posted = Date.now() - 5 * MINUTE;
+		renderCard({ value: post({ posted, media: [media("APPROVED", 2)] }) });
 
 		await openViewer();
 		const caption = mountViewerPart(captionMock, vi.fn());
@@ -302,9 +306,13 @@ describe("a profile's Right Now post", () => {
 		expect(componentSlideMock).not.toHaveBeenCalled();
 		expect(caption.textContent).toContain("Door's open, come over");
 		expect(caption.textContent).toContain(NAME);
+		expect(caption.querySelector("time")?.getAttribute("datetime")).toBe(
+			new Date(posted).toISOString(),
+		);
 		expect(
-			caption.querySelector('[data-slot="right-now-post-meta"]'),
+			caption.querySelector('[data-slot="right-now-post-distance"]'),
 		).not.toBeNull();
+		expect(within(caption).getByText("Hosting")).toBeTruthy();
 	});
 
 	it("opens a text-only post as its card centered on a slide that lets taps through around it, with no bottom caption", async () => {
