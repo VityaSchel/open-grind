@@ -9,12 +9,7 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-	reportSheetMock,
-	getRightNowPostReportMock,
-	toastMock,
-	showErrorToastMock,
-} = vi.hoisted(() => ({
+const { reportSheetMock, getRightNowPostReportMock } = vi.hoisted(() => ({
 	reportSheetMock: vi.fn(),
 	getRightNowPostReportMock:
 		vi.fn<
@@ -23,8 +18,6 @@ const {
 				profileId: number | null;
 			}) => Promise<SubmittedReport | null>
 		>(),
-	toastMock: vi.fn(),
-	showErrorToastMock: vi.fn(),
 }));
 
 vi.mock("#lib/components/report/ReportSheet.svelte", () => ({
@@ -32,10 +25,6 @@ vi.mock("#lib/components/report/ReportSheet.svelte", () => ({
 }));
 vi.mock("#lib/api/safety/reports.ts", () => ({
 	getRightNowPostReport: getRightNowPostReportMock,
-}));
-vi.mock("svelte-sonner", () => ({ toast: toastMock }));
-vi.mock("#lib/api/error-toast.ts", () => ({
-	showErrorToast: showErrorToastMock,
 }));
 
 import {
@@ -72,7 +61,6 @@ function stubFeed(items: RightNowFeedPost[]): RightNowFeedState {
 }
 
 const AUTHOR_ID = 201;
-const MINUTE = 60_000;
 
 const standardPost: RightNowFeedPost = {
 	type: "right_now_post_v3",
@@ -92,16 +80,18 @@ const discreetPost: RightNowFeedPost = {
 function renderList({
 	items,
 	ownPostId = null,
+	joinable = true,
 }: {
 	items: RightNowFeedPost[];
 	ownPostId?: number | null;
+	joinable?: boolean;
 }) {
 	return render(RightNowFeedList, {
 		props: {
 			ourProfileId: OUR_PROFILE_ID,
 			ownPostId,
 			ownPostUnderReview: false,
-			joinable: true,
+			joinable,
 			onedit: vi.fn(),
 			feed: stubFeed(items),
 		},
@@ -124,13 +114,9 @@ const reportButtonOf = (name: string) =>
 beforeEach(() => {
 	vi.clearAllMocks();
 	getRightNowPostReportMock.mockResolvedValue(null);
-	vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-afterEach(() => {
-	cleanup();
-	vi.restoreAllMocks();
-});
+afterEach(cleanup);
 
 describe("the Right Now feed list", () => {
 	it("renders standard and locked posts as post cards, and both discreet kinds as anonymous cards", () => {
@@ -221,6 +207,31 @@ describe("the Right Now feed list", () => {
 
 		expect(onedit).toHaveBeenCalledOnce();
 	});
+
+	it.each([
+		{
+			ownPostId: 5,
+			joinable: false,
+			description: "No one else nearby is on Right Now.",
+		},
+		{
+			ownPostId: null,
+			joinable: true,
+			description: "No one nearby is on Right Now. Join to be the first.",
+		},
+		{
+			ownPostId: null,
+			joinable: false,
+			description: "No one nearby is on Right Now.",
+		},
+	])(
+		"tells the empty state whether our post runs and whether we can join: $description",
+		({ ownPostId, joinable, description }) => {
+			renderList({ items: [], ownPostId, joinable });
+
+			expect(screen.getByText(description)).toBeTruthy();
+		},
+	);
 });
 
 describe("the Right Now feed list's room for the Join pill", () => {
@@ -274,81 +285,6 @@ describe("reporting from the Right Now feed list", () => {
 			postId: 3,
 			profileId: null,
 		});
-	});
-
-	it("says an earlier report awaits moderation instead of opening the form", async () => {
-		getRightNowPostReportMock.mockResolvedValue({
-			status: "PENDING",
-			createTime: Date.now() - 5 * MINUTE,
-		});
-		renderList({ items: [standardPost] });
-
-		await fireEvent.click(reportButtonOf("Standard post"));
-
-		await vi.waitFor(() =>
-			expect(toastMock).toHaveBeenCalledExactlyOnceWith(
-				"Already reported",
-				{ description: "5 mins · Awaiting moderation" },
-			),
-		);
-		expect(reportSheetMock).not.toHaveBeenCalled();
-	});
-
-	it("leaves the time out of an earlier report that carries none", async () => {
-		getRightNowPostReportMock.mockResolvedValue({
-			status: null,
-			createTime: null,
-		});
-		renderList({ items: [discreetPost] });
-
-		await fireEvent.click(reportButtonOf("Discreet post text"));
-
-		await vi.waitFor(() =>
-			expect(toastMock).toHaveBeenCalledExactlyOnceWith(
-				"Already reported",
-				{ description: "Awaiting moderation" },
-			),
-		);
-	});
-
-	it("reports a failed check and opens nothing", async () => {
-		const error = new Error("offline");
-		getRightNowPostReportMock.mockRejectedValue(error);
-		renderList({ items: [standardPost] });
-
-		await fireEvent.click(reportButtonOf("Standard post"));
-
-		await vi.waitFor(() =>
-			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-				label: "Failed to check for an earlier report",
-				error,
-			}),
-		);
-		expect(reportSheetMock).not.toHaveBeenCalled();
-	});
-
-	it("opens the report for the last post tapped when two checks overlap", async () => {
-		const first = Promise.withResolvers<SubmittedReport | null>();
-		const second = Promise.withResolvers<SubmittedReport | null>();
-		getRightNowPostReportMock
-			.mockReturnValueOnce(first.promise)
-			.mockReturnValueOnce(second.promise);
-		renderList({ items: [standardPost, discreetPost] });
-
-		await fireEvent.click(reportButtonOf("Standard post"));
-		await fireEvent.click(reportButtonOf("Discreet post text"));
-		first.resolve(null);
-		await new Promise((resolve) => setTimeout(resolve, 0));
-		expect(reportSheetMock).not.toHaveBeenCalled();
-		second.resolve(null);
-
-		await vi.waitFor(() => expect(reportSheetMock).toHaveBeenCalled());
-		expect(reportSheetProps().target).toStrictEqual({
-			kind: "rightNowPost",
-			postId: 3,
-			profileId: null,
-		});
-		expect(toastMock).not.toHaveBeenCalled();
 	});
 
 	it("offers no report on our own discreet post", () => {

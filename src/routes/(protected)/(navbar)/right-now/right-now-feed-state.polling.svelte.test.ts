@@ -60,6 +60,7 @@ vi.mock("#lib/util/reconcile.ts", () => ({
 	},
 }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { markProfileUnviewable } from "#lib/api/users/profile-viewability.ts";
 import type { RightNowFeedResponse } from "#lib/model/right-now/feed.ts";
 import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
@@ -113,6 +114,7 @@ describe("RightNowFeedState polling", () => {
 			$effect(() => {
 				listed = shown(state);
 			});
+			$effect(() => state.attachView());
 		});
 		await settle();
 		flushSync();
@@ -164,14 +166,15 @@ describe("RightNowFeedState polling", () => {
 		detach();
 	});
 
-	it("finds nothing new when the check returns only shown posts and inserts", async () => {
+	it("finds nothing new when the check returns only shown posts, inserts and posts by blocked or hidden authors", async () => {
 		getRightNowFeedMock
 			.mockResolvedValueOnce(feed([post(1), post(2)]))
 			.mockResolvedValueOnce(
-				feed([curatedPost(), post(2), upsellInsert()]),
+				feed([curatedPost(), post(5), post(2), upsellInsert()]),
 			);
 		const state = createState();
 		await settle();
+		markProfileUnviewable(5);
 		const detach = state.attachView();
 
 		await vi.advanceTimersByTimeAsync(2 * MINUTE);
