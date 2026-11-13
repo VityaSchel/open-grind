@@ -105,7 +105,7 @@ describe("showLocationErrorToast", () => {
 		showLocationErrorToast({
 			label: "Failed to get current location",
 			error,
-			reason: "timeout",
+			reason: "failed",
 		});
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({

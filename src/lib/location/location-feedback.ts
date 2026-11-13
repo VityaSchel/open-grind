@@ -49,7 +49,6 @@ export function showLocationErrorToast({
 		case "disabled":
 			toast.error(LOCATION_DISABLED_COPY, { id: PERMISSION_TOAST_ID });
 			return;
-		case "timeout":
 		case "failed":
 			showErrorToast({ label, error });
 	}

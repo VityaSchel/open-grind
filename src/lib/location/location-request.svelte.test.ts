@@ -184,7 +184,7 @@ describe("locationRequest", () => {
 		expect(getCurrentPositionMock).not.toHaveBeenCalled();
 	});
 
-	it("tells a fix that never came apart from other failures", async () => {
+	it("treats a fix that never came like any other failure", async () => {
 		runningOn("ios");
 		getCurrentPositionMock.mockRejectedValue(
 			"[timeout] - Timed out waiting for a location fix.",
@@ -192,7 +192,7 @@ describe("locationRequest", () => {
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "error",
 			error: "[timeout] - Timed out waiting for a location fix.",
-			reason: "timeout",
+			reason: "failed",
 		});
 	});
 

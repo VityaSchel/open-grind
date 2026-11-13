@@ -13,7 +13,7 @@ export type Coordinates = { lat: number; lon: number };
 type Fix = Coordinates & { accuracyMeters: number };
 
 export type MissingLocationGrant = "permission" | "precision";
-export type LocationErrorReason = "disabled" | "timeout" | "failed";
+export type LocationErrorReason = "disabled" | "failed";
 
 export type LocationOutcome =
 	| { status: "ok"; coords: Fix }
@@ -33,7 +33,6 @@ function failureOutcome(error: unknown): LocationOutcome {
 		case "denied":
 			return { status: "denied", missing: "permission" };
 		case "disabled":
-		case "timeout":
 			return { status: "error", error, reason: code };
 		default:
 			return { status: "error", error, reason: "failed" };
