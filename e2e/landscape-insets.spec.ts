@@ -75,11 +75,15 @@ const SCROLLED_INTO_GRID = 2500;
 
 test.describe.configure({ timeout: 180_000 });
 
-const safeSpan = (
-	viewport: { width: number },
-	insets: Pick<NativeInsets, "left" | "right">,
+const safeSpan = ({
+	viewport,
+	insets,
 	gutter = 0,
-): Span => ({
+}: {
+	viewport: { width: number };
+	insets: Pick<NativeInsets, "left" | "right">;
+	gutter?: number;
+}): Span => ({
 	left: insets.left + gutter,
 	right: viewport.width - insets.right - gutter,
 });
@@ -90,7 +94,10 @@ async function spanOf(target: Locator): Promise<Span> {
 	return { left: box.x, right: box.x + box.width };
 }
 
-async function expectInside(target: Locator, safe: Span, label: string) {
+async function expectInside(
+	target: Locator,
+	{ safe, label }: { safe: Span; label: string },
+) {
 	const span = await spanOf(target);
 	expect(span.left, `${label} starts past the left cutout`).toBeGreaterThan(
 		safe.left - 0.5,
@@ -100,7 +107,10 @@ async function expectInside(target: Locator, safe: Span, label: string) {
 	);
 }
 
-async function expectEdgeToEdge(target: Locator, width: number, label: string) {
+async function expectEdgeToEdge(
+	target: Locator,
+	{ width, label }: { width: number; label: string },
+) {
 	const span = await spanOf(target);
 	expect(span, `${label} spans the whole screen`).toEqual({
 		left: 0,
@@ -117,11 +127,10 @@ async function startOnIos(page: Page, insets: NativeInsets): Promise<void> {
 
 async function expectCenteredInside(
 	target: Locator,
-	safe: Span,
-	label: string,
+	{ safe, label }: { safe: Span; label: string },
 ) {
 	await animationsFinished(target);
-	await expectInside(target, safe, label);
+	await expectInside(target, { safe, label });
 	const span = await spanOf(target);
 	expect(
 		(span.left + span.right) / 2,
@@ -233,7 +242,11 @@ test.describe("on an iPhone in landscape", () => {
 
 		expect(await firstGridRow(page)).toEqual({
 			columns: 4,
-			...safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS, GRID_GUTTER),
+			...safeSpan({
+				viewport: IPHONE_LANDSCAPE,
+				insets: IPHONE_LANDSCAPE_INSETS,
+				gutter: GRID_GUTTER,
+			}),
 		});
 	});
 
@@ -262,28 +275,28 @@ test.describe("on an iPhone in landscape", () => {
 	}) => {
 		await startOnIos(page, IPHONE_LANDSCAPE_INSETS);
 		await openGrid(page);
-		const safe = safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS);
+		const safe = safeSpan({
+			viewport: IPHONE_LANDSCAPE,
+			insets: IPHONE_LANDSCAPE_INSETS,
+		});
 		const mainNavigation = page.getByRole("navigation", { name: "Main" });
 		const changeLocation = page.getByRole("button", {
 			name: "Change location",
 		});
 
-		await expectEdgeToEdge(
-			mainNavigation,
-			IPHONE_LANDSCAPE.width,
-			"the nav bar",
-		);
-		await expectInside(
-			mainNavigation.locator('[data-scroll-intent="x"]'),
+		await expectEdgeToEdge(mainNavigation, {
+			width: IPHONE_LANDSCAPE.width,
+			label: "the nav bar",
+		});
+		await expectInside(mainNavigation.locator('[data-scroll-intent="x"]'), {
 			safe,
-			"the nav bar's tab scroller",
-		);
+			label: "the nav bar's tab scroller",
+		});
 		await expectEdgeToEdge(
 			page
 				.locator("[data-screen-chrome]")
 				.filter({ has: changeLocation }),
-			IPHONE_LANDSCAPE.width,
-			"the top bar",
+			{ width: IPHONE_LANDSCAPE.width, label: "the top bar" },
 		);
 		expect(
 			(await spanOf(changeLocation)).left,
@@ -300,11 +313,10 @@ test.describe("on an iPhone in landscape", () => {
 		await stackSettled(page);
 		await backLink(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
-		await expectEdgeToEdge(
-			page.getByRole("navigation", { name: "Page" }),
-			IPHONE_LANDSCAPE.width,
-			"the settings header",
-		);
+		await expectEdgeToEdge(page.getByRole("navigation", { name: "Page" }), {
+			width: IPHONE_LANDSCAPE.width,
+			label: "the settings header",
+		});
 		expect((await spanOf(backLink(page))).left).toBeCloseTo(
 			IPHONE_LANDSCAPE_INSETS.left,
 			0,
@@ -314,23 +326,27 @@ test.describe("on an iPhone in landscape", () => {
 	test("the filters sheet paints edge to edge and keeps its controls between the cutouts", async ({
 		page,
 	}) => {
-		const safe = safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS);
+		const safe = safeSpan({
+			viewport: IPHONE_LANDSCAPE,
+			insets: IPHONE_LANDSCAPE_INSETS,
+		});
 		await startOnIos(page, IPHONE_LANDSCAPE_INSETS);
 		await openGrid(page);
 		await openAllFilters(page);
 		await animationsFinished(page.locator(SHEET));
 
-		await expectEdgeToEdge(
-			page.locator(SHEET),
-			IPHONE_LANDSCAPE.width,
-			"the filters sheet",
-		);
-		await expectInside(filtersScroller(page), safe, "the filters");
-		await expectInside(
-			page.getByRole("button", { name: "Apply" }),
+		await expectEdgeToEdge(page.locator(SHEET), {
+			width: IPHONE_LANDSCAPE.width,
+			label: "the filters sheet",
+		});
+		await expectInside(filtersScroller(page), {
 			safe,
-			"the Apply button",
-		);
+			label: "the filters",
+		});
+		await expectInside(page.getByRole("button", { name: "Apply" }), {
+			safe,
+			label: "the Apply button",
+		});
 	});
 
 	test("the attachments drawer stays between the cutouts", async ({
@@ -343,11 +359,13 @@ test.describe("on an iPhone in landscape", () => {
 			stretchPanel: false,
 		});
 
-		await expectCenteredInside(
-			page.locator(DRAWER),
-			safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS),
-			"the attachments drawer",
-		);
+		await expectCenteredInside(page.locator(DRAWER), {
+			safe: safeSpan({
+				viewport: IPHONE_LANDSCAPE,
+				insets: IPHONE_LANDSCAPE_INSETS,
+			}),
+			label: "the attachments drawer",
+		});
 	});
 
 	test("the location dialog is centered between the cutouts", async ({
@@ -358,11 +376,13 @@ test.describe("on an iPhone in landscape", () => {
 		await page.getByRole("button", { name: "Change location" }).click();
 		await page.locator(DIALOG).waitFor();
 
-		await expectCenteredInside(
-			page.locator(DIALOG),
-			safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS),
-			"the location dialog",
-		);
+		await expectCenteredInside(page.locator(DIALOG), {
+			safe: safeSpan({
+				viewport: IPHONE_LANDSCAPE,
+				insets: IPHONE_LANDSCAPE_INSETS,
+			}),
+			label: "the location dialog",
+		});
 	});
 
 	test("after rotating into the split layout the newest message sits above the composer, inside the cutouts", async ({
@@ -383,11 +403,13 @@ test.describe("on an iPhone in landscape", () => {
 		await expect(page.locator(LIVE_STACK.sheet)).toHaveCount(0);
 		await page.locator(MESSAGE).first().waitFor();
 		await expect.poll(() => newestAtRestAboveComposer(page)).toBe(true);
-		await expectInside(
-			page.locator(COMPOSER),
-			safeSpan(IPHONE_LANDSCAPE, IPHONE_LANDSCAPE_INSETS),
-			"the composer",
-		);
+		await expectInside(page.locator(COMPOSER), {
+			safe: safeSpan({
+				viewport: IPHONE_LANDSCAPE,
+				insets: IPHONE_LANDSCAPE_INSETS,
+			}),
+			label: "the composer",
+		});
 	});
 });
 
@@ -403,11 +425,13 @@ test.describe("on an Android phone in landscape", () => {
 		await page.getByRole("button", { name: "Change location" }).click();
 		await page.locator(DRAWER).waitFor();
 
-		await expectCenteredInside(
-			page.locator(DRAWER),
-			safeSpan(ANDROID_LANDSCAPE, ANDROID_LANDSCAPE_INSETS),
-			"the location drawer",
-		);
+		await expectCenteredInside(page.locator(DRAWER), {
+			safe: safeSpan({
+				viewport: ANDROID_LANDSCAPE,
+				insets: ANDROID_LANDSCAPE_INSETS,
+			}),
+			label: "the location drawer",
+		});
 	});
 });
 
@@ -428,11 +452,11 @@ test.describe("on an Android window as narrow as toasts go full width", () => {
 			label: "Landscape probe",
 		});
 		const span = await spanOf(toast);
-		const safe = safeSpan(
-			ANDROID_SPLIT_WINDOW,
-			ANDROID_NAV_ON_THE_RIGHT,
-			TOAST_GUTTER,
-		);
+		const safe = safeSpan({
+			viewport: ANDROID_SPLIT_WINDOW,
+			insets: ANDROID_NAV_ON_THE_RIGHT,
+			gutter: TOAST_GUTTER,
+		});
 
 		expect(span.left).toBeCloseTo(safe.left, 0);
 		expect(span.right).toBeCloseTo(safe.right, 0);
@@ -445,11 +469,17 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 	test("the inbox and the conversation stacked over it keep clear of the cutout", async ({
 		page,
 	}) => {
-		const safe = safeSpan(NARROW_WINDOW, NARROW_WINDOW_INSETS);
+		const safe = safeSpan({
+			viewport: NARROW_WINDOW,
+			insets: NARROW_WINDOW_INSETS,
+		});
 		await openInbox(page, { platform: "android" });
 		await sendInsets(page, NARROW_WINDOW_INSETS);
 
-		await expectInside(rows(page).nth(1), safe, "a conversation row");
+		await expectInside(rows(page).nth(1), {
+			safe,
+			label: "a conversation row",
+		});
 
 		await openConversation(page);
 		await expect(page.locator(LIVE_STACK.sheet)).toHaveCount(1);
@@ -457,7 +487,10 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		expect((await spanOf(backToChats(page))).left).toBeGreaterThan(
 			safe.left - 0.5,
 		);
-		await expectInside(page.locator(COMPOSER), safe, "the composer");
+		await expectInside(page.locator(COMPOSER), {
+			safe,
+			label: "the composer",
+		});
 	});
 
 	test("an alert dialog is centered between the cutout and the far edge", async ({
@@ -476,11 +509,13 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		const alert = page.getByRole("alertdialog", { name: "Sign out?" });
 		await alert.waitFor();
 
-		await expectCenteredInside(
-			alert,
-			safeSpan(TINY_WINDOW, NARROW_WINDOW_INSETS),
-			"the sign-out alert",
-		);
+		await expectCenteredInside(alert, {
+			safe: safeSpan({
+				viewport: TINY_WINDOW,
+				insets: NARROW_WINDOW_INSETS,
+			}),
+			label: "the sign-out alert",
+		});
 		await alert.getByRole("button", { name: "Cancel" }).click();
 	});
 
@@ -496,7 +531,10 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		await stackSettled(page);
 
 		const span = await spanOf(message);
-		const safe = safeSpan(NARROW_WINDOW, NARROW_WINDOW_INSETS);
+		const safe = safeSpan({
+			viewport: NARROW_WINDOW,
+			insets: NARROW_WINDOW_INSETS,
+		});
 
 		expect((span.left + span.right) / 2).toBeCloseTo(
 			(safe.left + safe.right) / 2,
