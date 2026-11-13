@@ -6,12 +6,12 @@
 	import { formatTimeLeft } from "./time-left";
 
 	let {
-		post,
+		ownPost,
 		compact = false,
 		onjoin,
 		onopen,
 	}: {
-		post: RightNowPostState;
+		ownPost: RightNowPostState;
 		compact?: boolean;
 		onjoin: () => void;
 		onopen: () => void;
@@ -21,26 +21,28 @@
 	const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 	const DEFAULT_LIFETIME_MS = 60 * 60_000;
 
-	const running = $derived(post.status !== "none");
-	const off = $derived(post.status === "off");
-	const exhausted = $derived(post.freePostsLeft === 0);
+	const running = $derived(ownPost.status !== "none");
+	const off = $derived(ownPost.status === "off");
+	const exhausted = $derived(ownPost.freePostsLeft === 0);
 	const unknown = $derived(
-		post.post === null && post.freePostsLeft === null && post.loading,
+		ownPost.post === null &&
+			ownPost.freePostsLeft === null &&
+			ownPost.loading,
 	);
-	const timeLeft = $derived(formatTimeLeft({ ms: post.timeLeftMs }));
+	const timeLeft = $derived(formatTimeLeft({ ms: ownPost.timeLeftMs }));
 	const lifetimeMs = $derived.by(() => {
-		const posted = post.post?.posted ?? null;
-		const expiration = post.post?.expiration ?? null;
+		const posted = ownPost.post?.posted ?? null;
+		const expiration = ownPost.post?.expiration ?? null;
 		if (posted === null || expiration === null || expiration <= posted)
 			return DEFAULT_LIFETIME_MS;
 		return expiration - posted;
 	});
 	const remaining = $derived(
-		Math.min(1, Math.max(0, post.timeLeftMs / lifetimeMs)),
+		Math.min(1, Math.max(0, ownPost.timeLeftMs / lifetimeMs)),
 	);
 	const allowanceText = $derived(
-		typeof post.freePostsLeft === "number"
-			? ` · ${post.freePostsLeft} left`
+		typeof ownPost.freePostsLeft === "number"
+			? ` · ${ownPost.freePostsLeft} left`
 			: "",
 	);
 	const joinLabel = $derived(`Join${allowanceText}`);
@@ -118,7 +120,7 @@
 			<Button
 				size="lg"
 				class="max-w-full shadow-sm"
-				disabled={exhausted || post.joining}
+				disabled={exhausted || ownPost.joining}
 				aria-label={exhausted
 					? `${joinLabel}. No free posts left in this area`
 					: joinLabel}

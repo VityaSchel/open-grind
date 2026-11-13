@@ -26,8 +26,8 @@
 
 	let {
 		open = $bindable(),
-		post,
-	}: { open: boolean; post: RightNowPostState } = $props();
+		ownPost,
+	}: { open: boolean; ownPost: RightNowPostState } = $props();
 
 	const EMPTY_FORM: PostForm = {
 		text: "",
@@ -52,17 +52,17 @@
 		changes.text !== undefined && form.text.length > POST_TEXT_MAX_LENGTH,
 	);
 	const toggling = $derived(pendingVisible !== null);
-	const busy = $derived(post.saving || toggling);
-	const savingEdits = $derived(post.saving && !toggling);
-	const visible = $derived(pendingVisible ?? post.status === "active");
-	const off = $derived(post.status === "off");
-	const timeLeft = $derived(formatTimeLeft({ ms: post.timeLeftMs }));
+	const busy = $derived(ownPost.saving || toggling);
+	const savingEdits = $derived(ownPost.saving && !toggling);
+	const visible = $derived(pendingVisible ?? ownPost.status === "active");
+	const off = $derived(ownPost.status === "off");
+	const timeLeft = $derived(formatTimeLeft({ ms: ownPost.timeLeftMs }));
 	const rejectedMediaIds = $derived(
-		rejectedParts(post.post).photos.map(({ mediaId }) => mediaId),
+		rejectedParts(ownPost.post).photos.map(({ mediaId }) => mediaId),
 	);
 
 	$effect(() => {
-		const details = post.post;
+		const details = ownPost.post;
 		const opening = open && !wasOpen;
 		wasOpen = open;
 		if (!open) return;
@@ -87,7 +87,7 @@
 		if (busy) return;
 		pendingVisible = next;
 		try {
-			await post.setHidden({ hidden: !next });
+			await ownPost.setHidden({ hidden: !next });
 		} finally {
 			pendingVisible = null;
 		}
@@ -96,7 +96,7 @@
 	async function save() {
 		if (busy || !dirty || over || uploading) return;
 		const sent = $state.snapshot(form);
-		if (!(await post.save({ changes }))) return;
+		if (!(await ownPost.save({ changes }))) return;
 		baseline = sent;
 		open = false;
 	}
@@ -108,7 +108,7 @@
 	onDismissBlocked={askToDiscard}
 >
 	{#snippet children({ desktop })}
-		{@const twoColumns = desktop && post.mapAvailable}
+		{@const twoColumns = desktop && ownPost.mapAvailable}
 		<ResponsiveDialog.Content
 			class="flex flex-col"
 			drawerClass="mx-auto max-w-160"
@@ -154,8 +154,8 @@
 					class="flex flex-col gap-4"
 					drawerClass="px-4 pb-2"
 				>
-					{#if post.rejected.text || post.rejected.photo}
-						<PostRejectionAlert rejected={post.rejected} />
+					{#if ownPost.rejected.text || ownPost.rejected.photo}
+						<PostRejectionAlert rejected={ownPost.rejected} />
 					{/if}
 					<div
 						data-slot="right-now-post-sheet-columns"
@@ -197,7 +197,7 @@
 								{/snippet}
 							</SwitchField>
 						</div>
-						{#if post.mapAvailable}
+						{#if ownPost.mapAvailable}
 							<PostLocationField
 								bind:shareLocation={form.shareLocation}
 								bind:locationRadius={form.locationRadius}

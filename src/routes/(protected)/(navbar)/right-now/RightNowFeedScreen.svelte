@@ -86,5 +86,5 @@
 		bind:labeled={labeledChip}
 		class="bottom-nav-clear"
 	/>
-	<RightNowPostControls post={ownPost} compact={labeledChip} bind:sheetOpen />
+	<RightNowPostControls {ownPost} compact={labeledChip} bind:sheetOpen />
 </main>

@@ -5,31 +5,31 @@
 	import RightNowPostSheet from "./RightNowPostSheet.svelte";
 
 	let {
-		post,
+		ownPost,
 		compact = false,
 		sheetOpen = $bindable(false),
 	}: {
-		post: RightNowPostState;
+		ownPost: RightNowPostState;
 		compact?: boolean;
 		sheetOpen?: boolean;
 	} = $props();
 
 	let confirmOpen = $state(false);
 
-	$effect(() => post.attachView());
+	$effect(() => ownPost.attachView());
 
-	$effect(() => post.onSheetRequest(() => (sheetOpen = true)));
+	$effect(() => ownPost.onSheetRequest(() => (sheetOpen = true)));
 </script>
 
 <JoinButton
-	{post}
+	{ownPost}
 	{compact}
 	onjoin={() => (confirmOpen = true)}
 	onopen={() => (sheetOpen = true)}
 />
 <JoinConfirmDialog
 	bind:open={confirmOpen}
-	{post}
+	{ownPost}
 	onjoined={() => (sheetOpen = true)}
 />
-<RightNowPostSheet bind:open={sheetOpen} {post} />
+<RightNowPostSheet bind:open={sheetOpen} {ownPost} />

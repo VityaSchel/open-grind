@@ -22,7 +22,7 @@ async function renderDialog() {
 	const fake = new FakeRightNowPostState();
 	const onjoined = vi.fn();
 	render(JoinConfirmDialog, {
-		props: { open: true, post: fake.state, onjoined },
+		props: { open: true, ownPost: fake.state, onjoined },
 	});
 	await vi.waitFor(joinNowButton);
 	return { fake, onjoined };

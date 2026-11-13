@@ -15,7 +15,7 @@ function renderButton(
 	const onjoin = vi.fn();
 	const onopen = vi.fn();
 	render(JoinButton, {
-		props: { post: fake.state, compact, onjoin, onopen },
+		props: { ownPost: fake.state, compact, onjoin, onopen },
 	});
 	return { fake, onjoin, onopen };
 }

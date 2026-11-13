@@ -6,26 +6,28 @@
 
 	let {
 		open = $bindable(),
-		post,
+		ownPost,
 		onjoined,
 	}: {
 		open: boolean;
-		post: RightNowPostState;
+		ownPost: RightNowPostState;
 		onjoined: () => void;
 	} = $props();
 
-	const escapeKeydownBehavior = $derived(post.joining ? "ignore" : "close");
+	const escapeKeydownBehavior = $derived(
+		ownPost.joining ? "ignore" : "close",
+	);
 
 	dismissOnBackGesture({
 		active: () => open,
 		dismiss: () => {
-			if (!post.joining) open = false;
+			if (!ownPost.joining) open = false;
 		},
 	});
 
 	async function join() {
-		if (post.joining) return;
-		const joined = await post.join();
+		if (ownPost.joining) return;
+		const joined = await ownPost.join();
 		open = false;
 		if (joined) onjoined();
 	}
@@ -40,14 +42,14 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<fieldset disabled={post.joining} class="contents">
+			<fieldset disabled={ownPost.joining} class="contents">
 				<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
 				<AlertDialog.Action
 					size="lg"
-					aria-busy={post.joining}
+					aria-busy={ownPost.joining}
 					onclick={() => void join()}
 				>
-					{#if post.joining}
+					{#if ownPost.joining}
 						<Spinner aria-hidden="true" />
 					{/if}
 					Join now

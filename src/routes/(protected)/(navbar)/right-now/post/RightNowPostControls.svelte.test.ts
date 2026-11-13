@@ -27,7 +27,9 @@ const sheet = () => screen.findByRole("dialog", { name: "Right Now" });
 function renderControls(fake = new FakeRightNowPostState()) {
 	const detach = vi.fn();
 	fake.attachView.mockReturnValue(detach);
-	const view = render(RightNowPostControls, { props: { post: fake.state } });
+	const view = render(RightNowPostControls, {
+		props: { ownPost: fake.state },
+	});
 	return { fake, detach, view };
 }
 
