@@ -493,18 +493,20 @@ describe("RightNowPostState save", () => {
 		expect(updateRightNowPostMock).not.toHaveBeenCalled();
 	});
 
-	it("offers a retry when the edit fails", async () => {
+	it("reports a failed save without a Retry, leaving the retry to the open sheet's Save", async () => {
 		getActiveRightNowPostMock.mockResolvedValue(ownPost());
 		const state = await loadedState();
-		updateRightNowPostMock.mockRejectedValueOnce(new Error("offline"));
+		const error = new Error("offline");
+		updateRightNowPostMock.mockRejectedValueOnce(error);
 
 		await expect(state.save({ changes: { hosting: true } })).resolves.toBe(
 			false,
 		);
 
-		expect(showErrorToastMock).toHaveBeenCalledWith(
-			expect.objectContaining({ label: "Failed to save your post" }),
-		);
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to save your post",
+			error,
+		});
 		expect(state.post?.hosting).toBe(false);
 		expect(state.saving).toBe(false);
 		expect(refreshFeedMock).not.toHaveBeenCalled();

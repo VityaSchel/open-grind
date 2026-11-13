@@ -166,7 +166,6 @@ export class RightNowPostState {
 					changes.locationRadius ?? current.locationRadius,
 			}),
 			failureLabel: "Failed to save your post",
-			onRetry: () => void this.save({ changes }),
 		});
 	}
 
@@ -306,7 +305,7 @@ export class RightNowPostState {
 		send: (postId: number) => Promise<void>;
 		merge: (post: RightNowPostDetails) => RightNowPostDetails;
 		failureLabel: string;
-		onRetry: () => void;
+		onRetry?: () => void;
 	}): Promise<boolean> {
 		const post = this.post;
 		if (this.#destroyed || post === null || this.saving) return false;
