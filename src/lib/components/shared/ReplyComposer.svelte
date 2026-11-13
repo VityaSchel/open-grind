@@ -2,7 +2,6 @@
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
 	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
-	import { softKeyboardVisibility } from "#lib/platform/native-insets.ts";
 	import MessageTextInput from "./MessageTextInput.svelte";
 	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
 
@@ -48,10 +47,6 @@
 		reacted = reactionSent;
 		if (reset) text = "";
 	}
-
-	function keepKeyboardUp(event: Event) {
-		if (softKeyboardVisibility() !== false) event.preventDefault();
-	}
 </script>
 
 <form
@@ -82,8 +77,7 @@
 			]}
 			aria-label={react ? "React to album item with fire" : "Send reply"}
 			disabled={!available || (react ? reacted : text.trim() === "")}
-			onpointerdown={keepKeyboardUp}
-			onmousedown={keepKeyboardUp}
+			keepsSoftKeyboardUp
 		>
 			{#snippet icon(props)}
 				{#if react}
