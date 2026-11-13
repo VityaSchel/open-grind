@@ -12,13 +12,12 @@
 
 	let redact = $state(true);
 
-	dismissOnBackGesture({
-		active: () => copyErrorConfirmState.open,
-		dismiss: () => {
-			settleCopyErrorConfirm({ abort: true });
-			redact = true;
-		},
-	});
+	function dismiss() {
+		settleCopyErrorConfirm({ abort: true });
+		redact = true;
+	}
+
+	dismissOnBackGesture({ active: () => copyErrorConfirmState.open, dismiss });
 
 	const preview = $derived(
 		getErrorText(copyErrorConfirmState.error, { redact }),
@@ -28,10 +27,7 @@
 <AlertDialog.Root
 	bind:open={copyErrorConfirmState.open}
 	onOpenChange={(open) => {
-		if (!open) {
-			settleCopyErrorConfirm({ abort: true });
-			redact = true;
-		}
+		if (!open) dismiss();
 	}}
 >
 	<AlertDialog.Content
