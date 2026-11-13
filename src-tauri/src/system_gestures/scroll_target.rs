@@ -1,12 +1,4 @@
-use serde::Deserialize;
-
 pub const STATUS_BAR_TAP_SCRIPT: &str = "window.__iosStatusBarTap?.()";
-
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
-pub struct ScrollerPoint {
-	pub x: f64,
-	pub y: f64,
-}
 
 #[cfg(test)]
 mod tests {
@@ -20,9 +12,6 @@ mod tests {
 
 	#[test]
 	fn the_stop_reads_the_point_the_page_sends() {
-		let point: ScrollerPoint =
-			serde_json::from_str(r#"{"x":201,"y":437.5}"#).unwrap();
-		assert_eq!((point.x, point.y), (201.0, 437.5));
 		assert!(SCROLL_MOMENTUM
 			.contains("invoke(\"stop_scroll_momentum\", { at })"));
 	}

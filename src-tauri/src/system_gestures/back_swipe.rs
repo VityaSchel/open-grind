@@ -15,8 +15,9 @@ use objc2_ui_kit::{
 };
 use tauri::{Manager, WebviewWindow};
 
-use super::edge_pan::{self, EdgePoint, Release};
+use super::edge_pan::{self, Release};
 use crate::child_scroller::child_scroller_at;
+use crate::page_point::PagePoint;
 use crate::presenting::presenting;
 use crate::uikit::{evaluate, on_main_thread, with_webview};
 
@@ -156,7 +157,7 @@ impl BackSwipe {
 				self.ivars().gesture.set(gesture);
 				self.ivars().sent.set(Some(progress));
 				let at = recognizer.locationInView(Some(&host));
-				self.start(&webview, EdgePoint { x: at.x, y: at.y }, gesture);
+				self.start(&webview, PagePoint { x: at.x, y: at.y }, gesture);
 			}
 			UIGestureRecognizerState::Changed => {
 				self.send_progress(&webview, progress);
@@ -187,7 +188,7 @@ impl BackSwipe {
 		}
 	}
 
-	fn start(&self, webview: &UIView, point: EdgePoint, gesture: u64) {
+	fn start(&self, webview: &UIView, point: PagePoint, gesture: u64) {
 		let swipe = Weak::new(self);
 		let answered =
 			RcBlock::new(move |result: *mut AnyObject, _: *mut NSError| {

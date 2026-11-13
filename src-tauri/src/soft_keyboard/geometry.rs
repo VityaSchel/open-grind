@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 const DOCKED_TOLERANCE: f64 = 0.5;
 const EASE_IN_OUT: [f64; 4] = [0.42, 0.0, 0.58, 1.0];
@@ -50,12 +50,6 @@ pub struct KeyboardMotion {
 	pub duration: f64,
 	pub started_at: f64,
 	pub curve: [f64; 4],
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
-pub struct PagePoint {
-	pub x: f64,
-	pub y: f64,
 }
 
 pub fn keyboard_overlap(bounds: Rect, keyboard: Rect) -> f64 {
@@ -118,8 +112,6 @@ mod tests {
 		include_str!("../../../src/lib/platform/keyboard-follow.ts");
 	const KEYBOARD_DRAG_DISMISS: &str =
 		include_str!("../../../src/lib/platform/keyboard-drag-dismiss.ts");
-	const UNCOVERED_CENTER: &str =
-		include_str!("../../../src/lib/util/uncovered-center.ts");
 
 	const PORTRAIT: Rect = Rect {
 		x: 0.0,
@@ -320,21 +312,10 @@ mod tests {
 
 	#[test]
 	fn the_drag_target_is_the_point_the_page_sends() {
-		assert!(UNCOVERED_CENTER
-			.contains("export type PagePoint = { x: number; y: number };"));
 		assert!(KEYBOARD_DRAG_DISMISS
 			.contains("function letDragDismiss(target: PagePoint | null)"));
 		assert!(KEYBOARD_DRAG_DISMISS
 			.contains("invoke(\"set_keyboard_drag_dismiss\", { target })"));
-		assert_eq!(
-			serde_json::from_str::<Option<PagePoint>>(r#"{"x":201,"y":451}"#)
-				.unwrap(),
-			Some(PagePoint { x: 201.0, y: 451.0 })
-		);
-		assert_eq!(
-			serde_json::from_str::<Option<PagePoint>>("null").unwrap(),
-			None
-		);
 	}
 
 	#[test]

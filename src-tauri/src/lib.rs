@@ -25,6 +25,8 @@ pub mod media;
 mod media_drag;
 #[cfg(mobile)]
 mod media_picker;
+#[cfg(any(target_os = "ios", test))]
+mod page_point;
 mod photo;
 #[cfg(test)]
 mod pin_support;

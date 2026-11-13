@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use crate::page_point::PagePoint;
+
 const COMMIT_PAST: f64 = 0.5;
 const RELEASE_PROJECTION_SECONDS: f64 = 0.25;
 const PREPARE_ZONE_POINTS: f64 = 40.0;
@@ -11,12 +13,6 @@ const YIELDING_RECOGNIZERS: [&str; 4] = [
 	"WKImageAnalysisGestureRecognizer",
 	"UIVariableDelayLoupeGesture",
 ];
-
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
-pub struct EdgePoint {
-	pub x: f64,
-	pub y: f64,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub struct Release {
@@ -56,7 +52,7 @@ pub fn yields_to_back_swipe(class_name: &str) -> bool {
 		.any(|name| class_name.ends_with(name))
 }
 
-pub fn start_script(point: EdgePoint) -> String {
+pub fn start_script(point: PagePoint) -> String {
 	let point =
 		serde_json::to_string(&point).expect("plain numbers always serialize");
 	format!("window.__iosBack?.start({point}) === true")
@@ -157,7 +153,7 @@ mod tests {
 	#[test]
 	fn the_start_hands_the_page_the_point_and_reads_back_a_boolean() {
 		assert_eq!(
-			start_script(EdgePoint { x: 2.0, y: 451.5 }),
+			start_script(PagePoint { x: 2.0, y: 451.5 }),
 			r#"window.__iosBack?.start({"x":2.0,"y":451.5}) === true"#
 		);
 		assert!(declared_back_hooks()

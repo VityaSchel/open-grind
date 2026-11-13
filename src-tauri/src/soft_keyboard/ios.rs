@@ -24,10 +24,9 @@ use objc2_ui_kit::{
 use tauri::webview::{PageLoadEvent, PageLoadPayload};
 use tauri::{Manager, WebviewWindow};
 
-use super::geometry::{
-	self, Edges, KeyboardMotion, NativeInsets, PagePoint, Rect,
-};
+use super::geometry::{self, Edges, KeyboardMotion, NativeInsets, Rect};
 use crate::child_scroller::child_scroller_at;
+use crate::page_point::PagePoint;
 use crate::presenting::presenting;
 use crate::uikit::{self, evaluate, on_main_thread, with_webview, Observer};
 

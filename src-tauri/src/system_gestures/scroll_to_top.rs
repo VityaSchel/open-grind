@@ -11,8 +11,9 @@ use objc2_ui_kit::{
 };
 use tauri::WebviewWindow;
 
-use super::scroll_target::{ScrollerPoint, STATUS_BAR_TAP_SCRIPT};
+use super::scroll_target::STATUS_BAR_TAP_SCRIPT;
 use crate::child_scroller::child_scroller_at;
+use crate::page_point::PagePoint;
 use crate::presenting::presenting;
 use crate::uikit::{evaluate, with_webview};
 
@@ -131,7 +132,7 @@ pub fn install(window: &WebviewWindow) {
 	with_webview(window, "scroll to top", attach);
 }
 
-fn stop_momentum(webview: &UIView, at: ScrollerPoint) {
+fn stop_momentum(webview: &UIView, at: PagePoint) {
 	let coasting = child_scroller_at(webview, CGPoint { x: at.x, y: at.y })
 		.filter(|scroller| scroller.isDecelerating());
 	if let Some(scroller) = coasting {
@@ -140,7 +141,7 @@ fn stop_momentum(webview: &UIView, at: ScrollerPoint) {
 }
 
 #[tauri::command]
-pub fn stop_scroll_momentum(window: WebviewWindow, at: ScrollerPoint) {
+pub fn stop_scroll_momentum(window: WebviewWindow, at: PagePoint) {
 	if !NSProcessInfo::processInfo()
 		.isOperatingSystemAtLeastVersion(MOMENTUM_STOP_SINCE)
 	{
