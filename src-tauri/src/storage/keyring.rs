@@ -13,14 +13,18 @@ pub(crate) struct Entry(keyring_core::Entry);
 
 pub(crate) fn entry(name: &str) -> Result<Entry, AppError> {
 	#[cfg(target_os = "ios")]
-	let entry = keyring_core::Entry::new_with_modifiers(
-		SERVICE,
-		name,
-		&std::collections::HashMap::from([(
-			"access-policy",
-			"after-first-unlock-this-device-only",
-		)]),
-	);
+	let entry = if cfg!(demo) {
+		keyring_core::Entry::new(SERVICE, name)
+	} else {
+		keyring_core::Entry::new_with_modifiers(
+			SERVICE,
+			name,
+			&std::collections::HashMap::from([(
+				"access-policy",
+				"after-first-unlock-this-device-only",
+			)]),
+		)
+	};
 	#[cfg(any(target_os = "android", desktop))]
 	let entry = keyring_core::Entry::new(SERVICE, name);
 	entry.map(Entry).map_err(|e| AppError::Auth(e.to_string()))
