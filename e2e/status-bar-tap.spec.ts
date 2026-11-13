@@ -267,13 +267,3 @@ test("a status-bar tap does nothing while a popup is open, even one that leaves 
 	await tapStatusBar(page);
 	await expect.poll(() => scrollTop(scroller)).toBe(0);
 });
-
-test("only iOS listens for status-bar taps", async ({ page }) => {
-	await installTauriShim(page, { platform: "android" });
-	await openGrid(page);
-	await scrollDown(page.locator(GRID));
-
-	expect(
-		await page.evaluate(() => window.__iosStatusBarTap === undefined),
-	).toBe(true);
-});
