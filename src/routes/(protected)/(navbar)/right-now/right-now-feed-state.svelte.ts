@@ -18,6 +18,7 @@ import {
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
 import { staysOnline } from "#lib/presence/presence-gate.ts";
 import { now } from "#lib/util/clock.ts";
+import { Generation } from "#lib/util/generation.ts";
 import { getNow } from "#lib/util/now.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
 import type {
@@ -78,7 +79,7 @@ export class RightNowFeedState extends ReconcilingListState<
 	hasNewPosts = $state(false);
 
 	#entries: RightNowFeedPost[] = $state.raw([]);
-	#shownSnapshots = 0;
+	readonly #shownLists = new Generation();
 	#fetchStartedAt = 0;
 	#poll: ReturnType<typeof setInterval> | null = null;
 	#startOverListeners: (() => void)[] = [];
@@ -170,9 +171,7 @@ export class RightNowFeedState extends ReconcilingListState<
 	protected applySnapshotReturningCoveredKeys(
 		snapshot: RightNowFeedResponse,
 	): Set<number> {
-		this.#shownSnapshots += 1;
-		this.hasNewPosts = false;
-		this.#entries = shownPostsOf(snapshot);
+		this.#show(shownPostsOf(snapshot));
 		return keysOf(this.#entries);
 	}
 
@@ -223,7 +222,7 @@ export class RightNowFeedState extends ReconcilingListState<
 
 	async #checkForNewPosts(): Promise<void> {
 		const epoch = accountEpoch();
-		const shownSnapshot = this.#shownSnapshots;
+		const shownList = this.#shownLists.current;
 		const checked: { geohash?: string | null } = {};
 		let latest: RightNowFeedResponse;
 		try {
@@ -238,7 +237,7 @@ export class RightNowFeedState extends ReconcilingListState<
 			return;
 		}
 		if (
-			shownSnapshot !== this.#shownSnapshots ||
+			this.#shownLists.isStale(shownList) ||
 			checked.geohash !== this.#fetchedGeohash
 		)
 			return;
@@ -247,10 +246,14 @@ export class RightNowFeedState extends ReconcilingListState<
 			this.hasNewPosts = true;
 	}
 
-	#startOver(): void {
-		this.#shownSnapshots += 1;
+	#show(posts: RightNowFeedPost[]): void {
+		this.#shownLists.next();
 		this.hasNewPosts = false;
-		this.#entries = [];
+		this.#entries = posts;
+	}
+
+	#startOver(): void {
+		this.#show([]);
 		this.visibleCount = PAGE_SIZE;
 		this.scrollY = 0;
 		untrack(() => {
