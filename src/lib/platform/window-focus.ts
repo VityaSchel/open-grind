@@ -53,7 +53,6 @@ export function windowFocused(): boolean {
 			return visible && desktopFocused;
 		case "android":
 		case "ios":
-			// Android's WebView keeps document.hasFocus() false while the app is in front
 			return visible;
 	}
 }
