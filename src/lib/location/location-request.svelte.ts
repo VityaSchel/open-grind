@@ -1,12 +1,11 @@
 import {
 	checkPermissions,
 	getCurrentPosition,
-	type PermissionStatus,
 	requestPermissions,
 } from "@tauri-apps/plugin-geolocation";
 
 import { registerAccountCache } from "#lib/api/account-caches.ts";
-import { currentPlatform, isMobilePlatform } from "#lib/platform/os.ts";
+import { isMobilePlatform } from "#lib/platform/os.ts";
 import { now } from "#lib/util/clock.ts";
 import { Generation } from "#lib/util/generation.ts";
 
@@ -24,20 +23,6 @@ export type LocationOutcome =
 	| { status: "error"; error: unknown; reason: LocationErrorReason };
 
 const PLUGIN_ERROR_CODE = /^\[(\w+)\]/;
-
-function missingGrant({
-	coarseLocation,
-}: PermissionStatus): MissingLocationGrant {
-	switch (currentPlatform()) {
-		case "android":
-		case "ios":
-			return coarseLocation === "granted" ? "precision" : "permission";
-		case "linux":
-		case "macos":
-		case "windows":
-			return "permission";
-	}
-}
 
 function failureOutcome(error: unknown): LocationOutcome {
 	const code =
@@ -93,7 +78,13 @@ class LocationRequest {
 				if (superseded()) return { status: "aborted" };
 			}
 			if (permissions.location !== "granted")
-				return { status: "denied", missing: missingGrant(permissions) };
+				return {
+					status: "denied",
+					missing:
+						permissions.coarseLocation === "granted"
+							? "precision"
+							: "permission",
+				};
 			const {
 				coords: { latitude, longitude, accuracy },
 			} = await getCurrentPosition({
