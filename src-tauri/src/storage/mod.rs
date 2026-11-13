@@ -32,6 +32,8 @@ mod sealed;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
 pub use fallback::remember_sign_out;
+#[cfg(target_os = "ios")]
+pub use install_key::init_install_key;
 pub(crate) use keyring::{entry, Entry};
 #[cfg(all(target_os = "macos", feature = "keychain"))]
 pub use legacy::adopt_legacy_items;
@@ -45,11 +47,6 @@ pub fn init_file_store(base: std::path::PathBuf) {
 		return;
 	}
 	file_store::init(base);
-}
-
-#[cfg(target_os = "ios")]
-pub fn init_install_key(dir: std::path::PathBuf) {
-	install_key::locate(dir);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]

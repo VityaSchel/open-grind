@@ -21,7 +21,7 @@ const KEY_FILE: &str = "keychain.key";
 static LOCATION: OnceLock<PathBuf> = OnceLock::new();
 
 #[cfg(target_os = "ios")]
-pub(super) fn locate(dir: PathBuf) {
+pub fn init_install_key(dir: PathBuf) {
 	let _ = LOCATION.set(dir);
 }
 
