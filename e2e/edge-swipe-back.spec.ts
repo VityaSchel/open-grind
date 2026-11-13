@@ -6,30 +6,29 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	MESSAGE_ROW,
-	openGrid,
 } from "./support/app";
 import {
 	backToChats,
 	dim,
 	openConversation,
-	rows,
+	openInbox,
 	sheet,
 } from "./support/chat-stack";
 import {
 	APP_SETTINGS,
 	CREDITS,
 	openAppSettings,
+	openSettings,
 	pane,
 	SETTINGS,
 	STACK_PANE,
 	stackSettled,
 } from "./support/page-stack";
-import { activeProfilePane, openTile, tileIds } from "./support/profile-pager";
+import { activeProfilePane, openGridProfile } from "./support/profile-pager";
 import { PHONE } from "./support/stack-layers";
 import {
 	edgeSwipeArmed,
 	edgeSwipeArmsSent,
-	fakeIosEdgeSwipe,
 	progressEdgeSwipe,
 	releaseEdgeSwipe,
 	startEdgeSwipe,
@@ -40,24 +39,6 @@ test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
 
 const REPLIABLE = "consectetur adipiscing elit";
-
-async function openOnIos(page: Page, path: string) {
-	await installTauriShim(page, { platform: "ios" });
-	await fakeIosEdgeSwipe(page);
-	await page.goto(path);
-}
-
-async function openSettingsOnIos(page: Page) {
-	await openOnIos(page, SETTINGS);
-	await page
-		.getByRole("link", { name: "App Settings" })
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-}
-
-async function openInboxOnIos(page: Page) {
-	await openOnIos(page, "/chat");
-	await rows(page).nth(1).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-}
 
 const paneX = (page: Page) =>
 	pane(page).evaluate((element) => element.getBoundingClientRect().x);
@@ -103,7 +84,7 @@ test.describe("the iOS edge swipe in settings", () => {
 	test("follows the finger from App Settings and lets go onto Settings at the finger's speed", async ({
 		page,
 	}) => {
-		await openSettingsOnIos(page);
+		await openSettings(page, { platform: "ios" });
 		await openAppSettings(page);
 		await expectArmed(page, true);
 
@@ -126,7 +107,7 @@ test.describe("the iOS edge swipe in settings", () => {
 	test("slides App Settings back in when the swipe is let go short", async ({
 		page,
 	}) => {
-		await openSettingsOnIos(page);
+		await openSettings(page, { platform: "ios" });
 		await openAppSettings(page);
 		await expectArmed(page, true);
 
@@ -141,10 +122,10 @@ test.describe("the iOS edge swipe in settings", () => {
 	});
 
 	test("stays off where no settings page lies behind", async ({ page }) => {
-		await openSettingsOnIos(page);
+		await openSettings(page, { platform: "ios" });
 		await expectStaysOff(page);
 
-		await openOnIos(page, CREDITS);
+		await page.goto(CREDITS);
 		await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 		await stackSettled(page);
 		await expectStaysOff(page);
@@ -158,7 +139,7 @@ test.describe("the iOS edge swipe in chats", () => {
 	test("pops a conversation opened from the inbox and keeps its armed reply in the draft", async ({
 		page,
 	}) => {
-		await openInboxOnIos(page);
+		await openInbox(page, { platform: "ios" });
 		await openConversation(page, { href: DEMO_CONVERSATION });
 		await expectArmed(page, true);
 		await messageRow(page).click({ button: "right" });
@@ -180,7 +161,7 @@ test.describe("the iOS edge swipe in chats", () => {
 	test("covers the list again when the swipe is let go short", async ({
 		page,
 	}) => {
-		await openInboxOnIos(page);
+		await openInbox(page, { platform: "ios" });
 		const href = await openConversation(page);
 		await expectArmed(page, true);
 
@@ -195,7 +176,8 @@ test.describe("the iOS edge swipe in chats", () => {
 	test("stays off in a conversation that was not opened from the inbox", async ({
 		page,
 	}) => {
-		await openOnIos(page, DEMO_CONVERSATION);
+		await installTauriShim(page, { platform: "ios" });
+		await page.goto(DEMO_CONVERSATION);
 		await backToChats(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 		await expectStaysOff(page);
@@ -205,14 +187,7 @@ test.describe("the iOS edge swipe in chats", () => {
 test("the iOS edge swipe stays off on a profile and in the chat opened from it", async ({
 	page,
 }) => {
-	await installTauriShim(page, { platform: "ios" });
-	await fakeIosEdgeSwipe(page);
-	await openGrid(page);
-	await page
-		.locator('.photo-grid a[href^="/profile/"]')
-		.nth(8)
-		.waitFor({ timeout: 60_000 });
-	await openTile(page, { tiles: await tileIds(page), nth: 0 });
+	await openGridProfile(page, { nth: 0, platform: "ios" });
 	await expectStaysOff(page);
 
 	await activeProfilePane(page)
