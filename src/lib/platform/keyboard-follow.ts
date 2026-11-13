@@ -22,15 +22,13 @@ export type KeyboardMotion = {
 
 type Travel = KeyboardMotion & { start: number };
 
-type Follower = { animation: Animation | undefined; lift: number };
-
 type CloseWait = {
 	settleMs: number;
 	timeout: ReturnType<typeof setTimeout> | undefined;
 	resolve: () => void;
 };
 
-const followers = new Map<HTMLElement, Follower>();
+const followers = new Map<HTMLElement, KeyboardFollower>();
 const closeWaits = new Set<CloseWait>();
 let travel: Travel | undefined;
 let following = false;
@@ -115,55 +113,69 @@ function restClearance(element: HTMLElement): number {
 	);
 }
 
-function settle(element: HTMLElement, follower: Follower, lift: number) {
-	follower.lift = lift;
-	if (lift > 0) element.style.marginBottom = `${lift}px`;
-	else element.style.removeProperty("margin-bottom");
-}
+class KeyboardFollower {
+	readonly #element: HTMLElement;
+	#animation: Animation | undefined;
+	#lift = 0;
 
-function rest(element: HTMLElement, follower: Follower) {
-	follower.animation?.cancel();
-	follower.animation = undefined;
-	settle(element, follower, 0);
-}
-
-function ride(element: HTMLElement, follower: Follower, journey: Travel) {
-	follower.animation?.cancel();
-	follower.animation = undefined;
-	const clearance = restClearance(element);
-	const liftAbove = (overlap: number) => Math.max(overlap - clearance, 0);
-	const target = liftAbove(journey.to);
-	if (target < follower.lift) settle(element, follower, target);
-	const elapsed = Date.now() - journey.startedAt;
-	const offsets = Array.from(
-		{ length: KEYFRAMES + 1 },
-		(_, index) =>
-			follower.lift - liftAbove(overlapAt(journey, index / KEYFRAMES)),
-	);
-	const still = offsets.every((offset) => Math.abs(offset) < SETTLED_PX);
-	if (still || elapsed >= journey.duration) {
-		settle(element, follower, target);
-		remeasureScreenChrome();
-		rideEnded(journey);
-		return;
+	constructor({ element }: { element: HTMLElement }) {
+		this.#element = element;
 	}
-	const animation = element.animate(
-		offsets.map((offset, index) => ({
-			transform: `translateY(${offset}px)`,
-			offset: index / KEYFRAMES,
-		})),
-		{ duration: journey.duration, easing: "linear", fill: "both" },
-	);
-	animation.startTime = performance.now() - elapsed;
-	animation.addEventListener("finish", () => {
-		if (follower.animation !== animation) return;
-		settle(element, follower, target);
-		animation.cancel();
-		follower.animation = undefined;
+
+	rest() {
+		this.#stopRide();
+		this.#settle(0);
+	}
+
+	ride(journey: Travel) {
+		this.#stopRide();
+		const clearance = restClearance(this.#element);
+		const liftAbove = (overlap: number) => Math.max(overlap - clearance, 0);
+		const target = liftAbove(journey.to);
+		if (target < this.#lift) this.#settle(target);
+		const elapsed = Date.now() - journey.startedAt;
+		const offsets = Array.from(
+			{ length: KEYFRAMES + 1 },
+			(_, index) =>
+				this.#lift - liftAbove(overlapAt(journey, index / KEYFRAMES)),
+		);
+		const still = offsets.every((offset) => Math.abs(offset) < SETTLED_PX);
+		if (still || elapsed >= journey.duration) {
+			this.#land({ lift: target, journey });
+			return;
+		}
+		const animation = this.#element.animate(
+			offsets.map((offset, index) => ({
+				transform: `translateY(${offset}px)`,
+				offset: index / KEYFRAMES,
+			})),
+			{ duration: journey.duration, easing: "linear", fill: "both" },
+		);
+		animation.startTime = performance.now() - elapsed;
+		animation.addEventListener("finish", () => {
+			if (this.#animation === animation)
+				this.#land({ lift: target, journey });
+		});
+		this.#animation = animation;
+	}
+
+	#settle(lift: number) {
+		this.#lift = lift;
+		if (lift > 0) this.#element.style.marginBottom = `${lift}px`;
+		else this.#element.style.removeProperty("margin-bottom");
+	}
+
+	#stopRide() {
+		this.#animation?.cancel();
+		this.#animation = undefined;
+	}
+
+	#land({ lift, journey }: { lift: number; journey: Travel }) {
+		this.#settle(lift);
+		this.#stopRide();
 		remeasureScreenChrome();
 		rideEnded(journey);
-	});
-	follower.animation = animation;
+	}
 }
 
 function followMotion(motion: KeyboardMotion) {
@@ -178,8 +190,7 @@ function followMotion(motion: KeyboardMotion) {
 	};
 	travel = journey;
 	if (journey.to <= 0) for (const wait of closeWaits) armCloseWait(wait);
-	for (const [element, follower] of followers)
-		ride(element, follower, journey);
+	for (const follower of followers.values()) follower.ride(journey);
 }
 
 function letPageFollow(follow: boolean) {
@@ -188,7 +199,7 @@ function letPageFollow(follow: boolean) {
 	notePageFollowsSoftKeyboard(follow);
 	if (!follow) {
 		travel = undefined;
-		for (const [element, follower] of followers) rest(element, follower);
+		for (const follower of followers.values()) follower.rest();
 		endCloseWaits();
 	}
 	invoke("set_keyboard_follow", { follow }).catch((error: unknown) => {
@@ -218,17 +229,17 @@ function stopFollowingWithoutFollowers() {
 }
 
 function followIosKeyboard(element: HTMLElement): () => void {
-	const follower: Follower = { animation: undefined, lift: 0 };
+	const follower = new KeyboardFollower({ element });
 	followers.set(element, follower);
 	if (followers.size === 1) {
 		window.__iosKeyboardMotion = followMotion;
 		document.addEventListener("focusin", followFocus);
 		document.addEventListener("focusout", followBlur);
 	}
-	if (following && travel) ride(element, follower, travel);
+	if (following && travel) follower.ride(travel);
 	else if (followers.size === 1) letPageFollow(true);
 	return () => {
-		rest(element, follower);
+		follower.rest();
 		followers.delete(element);
 		if (followers.size > 0) return;
 		delete window.__iosKeyboardMotion;
