@@ -1,7 +1,3 @@
-<script lang="ts" module>
-	export const TICKS_PLATE_PX = 36;
-</script>
-
 <script lang="ts">
 	let {
 		progress = 0,
@@ -28,9 +24,7 @@
 <div
 	data-refresh-ticks
 	data-spinning={spinning || undefined}
-	class={["plate grid place-items-center rounded-full", { spinning }]}
-	style:width="{TICKS_PLATE_PX}px"
-	style:height="{TICKS_PLATE_PX}px"
+	class={["plate grid size-9 place-items-center rounded-full", { spinning }]}
 >
 	<svg viewBox="0 0 24 24" class="size-6 text-muted-foreground">
 		<g class="turn">

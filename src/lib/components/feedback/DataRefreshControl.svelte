@@ -23,9 +23,7 @@
 	} from "./refresh/pull-style";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
 	import RefreshStatus from "./refresh/RefreshStatus.svelte";
-	import RefreshTicks, {
-		TICKS_PLATE_PX,
-	} from "./refresh/RefreshTicks.svelte";
+	import RefreshTicks from "./refresh/RefreshTicks.svelte";
 	import { RestingButtonModel } from "./refresh/resting-button.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
 	import { scrollGeometry } from "./refresh/scroll-geometry";
@@ -128,7 +126,6 @@
 	const discSpinning = $derived(
 		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
 	);
-	const TICKS_INSET_PX = (ARM_PX - TICKS_PLATE_PX) / 2;
 	let lastDragProgress = $state(0);
 	$effect(() => {
 		if (model.gestureActive && model.source === "touch")
@@ -360,10 +357,11 @@
 		{#if activeFace === "ticks"}
 			<div
 				data-slot="refresh-ticks"
-				class={["absolute left-1/2", anchorEdge]}
-				style:translate="-50% {position === 'top'
-					? TICKS_INSET_PX
-					: -TICKS_INSET_PX}px"
+				class={[
+					"absolute inset-x-0 grid place-items-center",
+					anchorEdge,
+				]}
+				style:height="{ARM_PX}px"
 				out:scale={{ duration: 150, easing: cubicOut }}
 			>
 				<RefreshTicks
