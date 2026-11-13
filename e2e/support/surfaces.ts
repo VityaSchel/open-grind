@@ -5,6 +5,7 @@ import {
 	ensureGridLocation,
 	FIRST_ROUTE_COMPILE_MS,
 } from "./app";
+import { rightNowJoinPill } from "./right-now";
 
 type Edge = "top" | "bottom";
 type Backdrop = "content" | "nothing";
@@ -69,6 +70,7 @@ export const SURFACES: Surface[] = [
 				.getByRole("link", { name: "Right Now" })
 				.click();
 			await shows(rightNowPost)(page);
+			await shows(rightNowJoinPill)(page);
 		},
 	},
 	{

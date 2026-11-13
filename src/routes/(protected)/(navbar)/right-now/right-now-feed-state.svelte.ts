@@ -1,10 +1,6 @@
 import { untrack } from "svelte";
 
-import {
-	accountEpoch,
-	accountScoped,
-	isAccountEpochCurrent,
-} from "#lib/api/account-caches.ts";
+import { accountEpoch, accountScoped } from "#lib/api/account-caches.ts";
 import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
 import { markBlockedAndHiddenProfilesUnviewable } from "#lib/api/browse/unviewable-profiles.ts";
 import {
@@ -16,9 +12,6 @@ import {
 	onProfileViewabilityChange,
 } from "#lib/api/users/profile-viewability.ts";
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
-import { getPreferences } from "#lib/app-data/preferences.svelte.ts";
-import { atHomeLocation } from "#lib/entitlements/honduras-hold.ts";
-import { storeLocation } from "#lib/grid/grid.ts";
 import { now } from "#lib/util/clock.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
 import type {
@@ -27,6 +20,7 @@ import type {
 } from "#lib/model/right-now/feed.ts";
 import { rightNowFeedQuery } from "./feed-query";
 import { RightNowFeedFiltersState } from "./right-now-feed-filters-state.svelte";
+import { atStoredLocation } from "./stored-location";
 
 const PAGE_SIZE = 20;
 const POLL_INTERVAL_MS = 2 * 60_000;
@@ -53,8 +47,6 @@ function authorOf(item: RightNowFeedResponseItem): number | null {
 function keysOf(posts: RightNowFeedPost[]): Set<number> {
 	return new Set(posts.map((post) => post.data.id));
 }
-
-class SignedOutBeforeFeedRequest extends Error {}
 
 export class RightNowFeedState extends ReconcilingListState<
 	RightNowFeedPost,
@@ -142,13 +134,12 @@ export class RightNowFeedState extends ReconcilingListState<
 		await this.filters.ready;
 		const version = await rightNowFeedVersion();
 		const query = rightNowFeedQuery(this.filters.snapshot());
-		return atHomeLocation(async () => {
-			if (!isAccountEpochCurrent(epoch))
-				throw new SignedOutBeforeFeedRequest();
-			const { geohash } = await getPreferences();
-			this.#fetchedGeohash = geohash;
-			if (geohash !== null) await storeLocation({ geohash });
-			return getRightNowFeed({ version, query });
+		return atStoredLocation({
+			epoch,
+			onGeohash: (geohash) => {
+				this.#fetchedGeohash = geohash;
+			},
+			request: () => getRightNowFeed({ version, query }),
 		});
 	}
 

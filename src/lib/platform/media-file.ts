@@ -29,6 +29,14 @@ export function localFileOf(media: PickedMedia): File | null {
 	return null;
 }
 
+export function demoPickedFile(media: PickedMedia): File {
+	const file = localFileOf(media);
+	if (file === null) {
+		throw new Error("The demo only reads files picked in the browser");
+	}
+	return file;
+}
+
 async function photoSizeOf(
 	file: File,
 ): Promise<Pick<MediaFileInspection, "width" | "height">> {

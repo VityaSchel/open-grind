@@ -359,7 +359,7 @@ export async function uploadProfilePhoto(
 	const file = mediaFileDescriptor(media);
 	const path = "/v4/media/upload?takenOnGrindr=false";
 	const response = await invokeRest("upload_media", {
-		args: { path, signed: false, file, squareThumb: true },
+		args: { path, signed: false, file, crop: "thumbCoords" },
 		requestInfo: { method: "POST", path },
 	});
 	const [uploaded] = response.jsonParsed(

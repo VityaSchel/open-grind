@@ -232,6 +232,7 @@ pub fn run() {
             upload::staged::stage_media,
             upload::staged::append_staged_media,
             upload::staged::discard_staged_media,
+            upload::staged::stage_proxied_photo,
             upload::linked::stage_linked_media,
             api::ws::ws_connect,
             api::ws::ws_reconnect,

@@ -10,7 +10,14 @@
 	let {
 		feed,
 		ourProfileId,
-	}: { feed: RightNowFeedState; ourProfileId: number } = $props();
+		ownPostUnderReview,
+		onedit,
+	}: {
+		feed: RightNowFeedState;
+		ourProfileId: number;
+		ownPostUnderReview: boolean;
+		onedit: (() => void) | null;
+	} = $props();
 </script>
 
 {#if feed.loading}
@@ -39,7 +46,12 @@
 		{#each feed.entries as item (item.data.id)}
 			<li>
 				{#if item.type === "right_now_post_v3" || item.type === "locked_post_v1"}
-					<RightNowPostCard post={item.data} {ourProfileId} />
+					<RightNowPostCard
+						post={item.data}
+						{ourProfileId}
+						underReview={ownPostUnderReview}
+						{onedit}
+					/>
 				{:else}
 					<DiscreetPostCard post={item.data} />
 				{/if}

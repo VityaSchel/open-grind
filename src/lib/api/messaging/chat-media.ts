@@ -10,6 +10,7 @@ import {
 	CHAT_MEDIA_MAX_LABEL,
 } from "#lib/model/messaging/chat-media-limits.ts";
 import {
+	demoPickedFile,
 	inspectMediaFile,
 	mediaFileDescriptor,
 	type MediaFileInspection,
@@ -73,11 +74,9 @@ async function uploadChatMedia({
 	takenOnGrindr: boolean;
 }): Promise<MediaUploadResponse> {
 	if (__DEMO__) {
-		if (media.source !== "web") {
-			throw new Error("The demo only reads files picked in the browser");
-		}
+		const file = demoPickedFile(media);
 		return demoUploadChatMedia({
-			bytes: new Uint8Array(await media.file.arrayBuffer()),
+			bytes: new Uint8Array(await file.arrayBuffer()),
 			contentType,
 		});
 	}

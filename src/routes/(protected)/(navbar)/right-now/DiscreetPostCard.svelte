@@ -17,7 +17,9 @@
 	const photo = $derived(post.media?.at(0));
 	const fields = $derived(
 		[
-			post.profileFields.age?.toString(),
+			post.profileFields.age === null
+				? undefined
+				: `${post.profileFields.age} years old`,
 			post.profileFields.height === null
 				? undefined
 				: formatHeight(post.profileFields.height, units),
@@ -45,23 +47,25 @@
 		<DetectiveIcon class="size-6" />
 	</div>
 	<div class="flex min-w-0 flex-1 flex-col gap-2">
-		<h2
-			id={headlineId}
-			class={[
-				"font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
-				{ "text-muted-foreground": !post.text },
-			]}
-		>
-			{post.text || "Discreet post"}
-		</h2>
-		{#if fields.length > 0}
-			<p
-				data-slot="right-now-discreet-post-fields"
-				class="text-sm text-muted-foreground"
+		<div class="flex flex-col gap-1">
+			<h2
+				id={headlineId}
+				class={[
+					"font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
+					{ "text-muted-foreground": !post.text },
+				]}
 			>
-				{fields.join(" · ")}
-			</p>
-		{/if}
+				{post.text || "Discreet post"}
+			</h2>
+			{#if fields.length > 0}
+				<p
+					data-slot="right-now-discreet-post-fields"
+					class="text-sm text-muted-foreground"
+				>
+					{fields.join(" · ")}
+				</p>
+			{/if}
+		</div>
 		{#if photo}
 			<RightNowPostPhoto media={photo} />
 		{/if}

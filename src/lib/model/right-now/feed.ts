@@ -22,15 +22,17 @@ export const rightNowFeedQuerySchema = z.object({
 });
 export type RightNowFeedQuery = z.infer<typeof rightNowFeedQuerySchema>;
 
+export const rightNowPostMediaDataSchema = z.object({
+	mediaId: z.int(),
+	thumbnailUrl: mediaUrlSchema,
+	fullImageUrl: mediaUrlSchema,
+	shouldBlur: serverDefault({ value: z.boolean(), fallback: false }),
+	isNsfw: serverDefault({ value: z.boolean(), fallback: false }),
+});
+
 export const rightNowPostMediaItemSchema = z.object({
 	type: z.enum(["image_v1", "album_v1"]),
-	data: z.object({
-		mediaId: z.int(),
-		thumbnailUrl: mediaUrlSchema,
-		fullImageUrl: mediaUrlSchema,
-		shouldBlur: serverDefault({ value: z.boolean(), fallback: false }),
-		isNsfw: serverDefault({ value: z.boolean(), fallback: false }),
-	}),
+	data: rightNowPostMediaDataSchema,
 });
 export type RightNowPostMediaItem = z.infer<typeof rightNowPostMediaItemSchema>;
 

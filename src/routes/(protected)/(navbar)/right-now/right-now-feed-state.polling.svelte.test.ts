@@ -60,11 +60,10 @@ import {
 	createState,
 	destroyCreatedStates,
 	feed,
-	MINUTE,
 	post,
-	SECOND,
 	shown,
 } from "./right-now-feed-test-helpers";
+import { MINUTE, SECOND } from "./right-now-post-test-helpers";
 
 beforeEach(() => {
 	clearAccountCaches();

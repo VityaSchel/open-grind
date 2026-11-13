@@ -3077,7 +3077,7 @@
 					}
 				},
 				"summary": "Get own Right Now post",
-				"description": "Get the current Right Now post, including a hidden post before expiration. Returns {\"post\":null} when there is no current post or it has expired."
+				"description": "Get the current Right Now post, including a hidden post before expiration. Returns {\"post\":null} when there is no current post or it has expired. Reading it does not refresh the caller's `onlineUntil`."
 			}
 		},
 		"/v3/rightnow/profiles/{profileId}": {
@@ -3185,7 +3185,7 @@
 														"id": {
 															"type": "integer",
 															"format": "int64",
-															"description": "long integer, the `mediaId` returned by [Upload Right Now media](/grindr-api/right-now#upload-right-now-media) or [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2); one `mediaId` can be attached to more than one post"
+															"description": "long integer, the `mediaId` returned by [Upload Right Now media](/grindr-api/right-now#upload-right-now-media) or [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2); one `mediaId` can be attached to more than one post; a chat media drawer ID is ignored without an error"
 														}
 													}
 												}
@@ -3236,7 +3236,7 @@
 					}
 				},
 				"summary": "Update Right Now post",
-				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration. A new `locationRadius` also picks a new offset for the post's `lat` and `lon`. `text` accepts at least 500 characters. The v4 route ignores `isDiscreet` and `sharedFields` and turns a `NOT_SELECTED` `isDiscreet` into `FALSE`; v5 applies them. On v5, `isDiscreet: false` on a `TRUE` post is rejected."
+				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration. A photo set through `media` comes back `APPROVED` at once, and `media: []` removes the photo. A new `locationRadius` also picks a new offset for the post's `lat` and `lon`. `text` accepts at least 500 characters. The v4 route ignores `isDiscreet` and `sharedFields` and turns a `NOT_SELECTED` `isDiscreet` into `FALSE`; v5 applies them. On v5, `isDiscreet: false` on a `TRUE` post is rejected."
 			}
 		},
 		"/v4/rightnow/posts": {
@@ -3329,7 +3329,7 @@
 					}
 				},
 				"summary": "Create Right Now post",
-				"description": "Start a Right Now post. It is `ACTIVE` at once and expires 60 minutes after `posted`. Without `lat` and `lon` it takes the location set by [Update location](/grindr-api/browse/location#update-location). The text waits in `moderatedText` with `textStatus` `AWAITING_MODERATION` and moves to `activeText` once approved. Each post lowers `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements) by one. With `count` at 0 the request still succeeds, but the post has `postStatus` `AWAITING_PAYMENT` with `posted` and `expiration` `null`; [Get own Right Now post](/grindr-api/right-now#get-own-right-now-post) then returns `{\"post\":null}`, the post is absent from the feed, and [Get Right Now post by profile](/grindr-api/right-now#get-right-now-post-by-profile) returns `{\"post\":null}` for it."
+				"description": "Start a Right Now post. It is `ACTIVE` at once and expires 60 minutes after `posted`. An empty post, `{\"shareLocation\":\"NONE\",\"media\":[],\"hosting\":false}`, is accepted, with `activeText` and `moderatedText` `null` and `locationRadius` 0. Without `lat` and `lon` it takes the location set by [Update location](/grindr-api/browse/location#update-location). The text waits in `moderatedText` with `textStatus` `AWAITING_MODERATION` and moves to `activeText` once approved. Each post lowers `count` in [Get Right Now post entitlements](/grindr-api/browse/entitlements#get-right-now-post-entitlements) by one. With `count` at 0 the request still succeeds, but the post has `postStatus` `AWAITING_PAYMENT` with `posted` and `expiration` `null`; [Get own Right Now post](/grindr-api/right-now#get-own-right-now-post) then returns `{\"post\":null}`, the post is absent from the feed, and [Get Right Now post by profile](/grindr-api/right-now#get-right-now-post-by-profile) returns `{\"post\":null}` for it."
 			}
 		},
 		"/v1/rightnow/posts/{postId}/settings": {
@@ -5207,26 +5207,13 @@
 					}
 				],
 				"summary": "Get Right Now post entitlements",
-				"description": "Post-specific Right Now entitlement. `count` depends on the caller's location set by [Update location](/grindr-api/browse/location#update-location). Creating a post lowers it by one; editing, hiding, unhiding and expiry do not change it. It refills over time.",
+				"description": "Post-specific Right Now entitlement. `count` depends on the caller's location set by [Update location](/grindr-api/browse/location#update-location). Creating a post lowers it by one; editing, hiding, unhiding and expiry do not change it. It refills over time. Reading it does not refresh the caller's `onlineUntil`.",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"type": "object",
-									"required": [
-										"type"
-									],
-									"properties": {
-										"type": {
-											"type": "string",
-											"description": "`\"UNLIMITED\"` or `\"GRANTED\"`"
-										},
-										"count": {
-											"type": "integer",
-											"description": "integer, remaining Right Now posts when `type` is `\"GRANTED\"`"
-										}
-									}
+									"$ref": "#/components/schemas/RightNowPostEntitlementsResponse"
 								}
 							}
 						},
@@ -15229,7 +15216,7 @@
 					}
 				],
 				"summary": "Get Right Now feed",
-				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets. A post stays listed near where it was posted after its author moves, while `distance`, `lat` and `lon` follow the author's current location. Reading the feed refreshes the caller's `onlineUntil`. v4, v5 and v6 return the same items, discreet posts included.",
+				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST, the default, orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets. A post stays listed near where it was posted after its author moves, while `distance`, `lat` and `lon` follow the author's current location. Reading the feed refreshes the caller's `onlineUntil`. v4, v5 and v6 return the same items, discreet posts included. The caller's own post is listed without `distance`, `lat` and `lon` while `ACTIVE` and left out while `HIDDEN`.",
 				"parameters": [
 					{
 						"name": "sort",
@@ -16898,6 +16885,7 @@
 					"DISTANCE_ONLY",
 					"NONE"
 				],
+				"description": "How a Right Now post shares its location. With `NONE`, other profiles get the post without `distance`, `lat` and `lon`.",
 				"x-render-on-tag": "right-now"
 			},
 			"ViewSourceEnum": {
@@ -26203,7 +26191,19 @@
 									"type": "string",
 									"description": "e.g. `RIGHT_NOW`"
 								}
-							}
+							},
+							"required": [
+								"mediaId",
+								"thumbnailUrl",
+								"fullImageUrl",
+								"contentType",
+								"state",
+								"reason",
+								"isRejectAutomated",
+								"shouldBlur",
+								"isNsfw",
+								"source"
+							]
 						}
 					},
 					"lat": {
@@ -26296,6 +26296,23 @@
 					}
 				},
 				"x-render-on-tag": "right-now"
+			},
+			"RightNowPostEntitlementsResponse": {
+				"type": "object",
+				"required": [
+					"type"
+				],
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "`\"UNLIMITED\"` or `\"GRANTED\"`"
+					},
+					"count": {
+						"type": "integer",
+						"description": "integer, remaining Right Now posts when `type` is `\"GRANTED\"`"
+					}
+				},
+				"x-render-on-tag": "browse/entitlements"
 			},
 			"Offer": {
 				"type": "object",

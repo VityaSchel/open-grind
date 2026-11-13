@@ -74,12 +74,13 @@ import {
 	demoRightNowPostReport,
 } from "./mock/reports";
 import { demoRightNowFeed } from "./mock/right-now";
+import { demoRightNowPostRoute } from "./mock/right-now-post";
 import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
 } from "./mock/settings";
 
-type DemoResponse = { status: number; body: unknown };
+export type DemoResponse = { status: number; body: unknown };
 
 function ok(body: unknown): DemoResponse {
 	return { status: 200, body };
@@ -177,6 +178,8 @@ export function demoRoute({
 	) {
 		return ok(demoRightNowFeed(params));
 	}
+	const rightNowPost = demoRightNowPostRoute({ method, rawPath, body });
+	if (rightNowPost !== null) return rightNowPost;
 	if (method === "GET" && rawPath === "/v7/search") {
 		return ok({ profiles: demoSearchProfiles(params) });
 	}
@@ -551,6 +554,12 @@ export function demoRoute({
 			assignments: [
 				{
 					key: "right-now-moderation",
+					value: "on",
+					payload: {},
+					type: "FEATURE_FLAG",
+				},
+				{
+					key: "right-now-map",
 					value: "on",
 					payload: {},
 					type: "FEATURE_FLAG",

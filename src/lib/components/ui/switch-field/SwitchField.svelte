@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Snippet } from "svelte";
+
 	import { Label } from "#lib/components/ui/label/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
@@ -7,6 +9,7 @@
 	let {
 		title,
 		description,
+		icon,
 		checked = $bindable(),
 		disabled = false,
 		busy = false,
@@ -14,6 +17,7 @@
 	}: {
 		title: string;
 		description?: string;
+		icon?: Snippet;
 		checked: boolean;
 		disabled?: boolean;
 		busy?: boolean;
@@ -28,6 +32,11 @@
 	)}
 	aria-disabled={disabled || busy}
 >
+	{#if icon !== undefined}
+		<div data-slot="switch-field-icon" class="flex shrink-0">
+			{@render icon()}
+		</div>
+	{/if}
 	<div class="grid flex-1 gap-1.5 font-normal">
 		<p class="text-sm leading-none font-medium">{title}</p>
 		{#if description !== undefined}

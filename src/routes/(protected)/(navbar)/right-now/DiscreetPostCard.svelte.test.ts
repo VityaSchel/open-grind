@@ -17,7 +17,7 @@ function renderCard(overrides: Partial<DiscreetPostData> = {}) {
 afterEach(cleanup);
 
 describe("a discreet Right Now post card", () => {
-	it("offers no link or button to reach the anonymous author", () => {
+	it("offers no link or button to reach the anonymous author, only one to open the photo", () => {
 		renderCard({
 			text: "Hosting tonight",
 			hosting: true,
@@ -30,8 +30,11 @@ describe("a discreet Right Now post card", () => {
 		expect(
 			within(card).getByRole("img", { name: "Post photo" }),
 		).toBeTruthy();
-		expect(within(card).queryAllByRole("link")).toHaveLength(0);
 		expect(within(card).queryAllByRole("button")).toHaveLength(0);
+		expect(
+			within(card).getByRole("link", { name: "Open photo" }),
+		).toBeTruthy();
+		expect(within(card).queryAllByRole("link")).toHaveLength(1);
 	});
 
 	it("heads the post with its text", () => {
@@ -53,7 +56,9 @@ describe("a discreet Right Now post card", () => {
 			},
 		});
 
-		expect(screen.getByText("27 · 180 cm · 70 kg · Vers Top")).toBeTruthy();
+		expect(
+			screen.getByText("27 years old · 180 cm · 70 kg · Vers Top"),
+		).toBeTruthy();
 	});
 
 	it("leaves out the profile fields the author kept private", () => {
@@ -66,7 +71,7 @@ describe("a discreet Right Now post card", () => {
 			},
 		});
 
-		expect(screen.getByText("31")).toBeTruthy();
+		expect(screen.getByText("31 years old")).toBeTruthy();
 		expect(screen.queryByText(/·/)).toBeNull();
 	});
 

@@ -20,10 +20,7 @@
 </script>
 
 <div
-	class={[
-		"rounded-4xl scrim backdrop-filter-(--bd-chip) dark:bg-background/60",
-		className,
-	]}
+	class={["floating-chip", className]}
 	transition:fly={{ y: 48, opacity: 0, duration: 200, easing: sineOut }}
 >
 	<Button

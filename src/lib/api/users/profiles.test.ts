@@ -675,7 +675,7 @@ describe("uploadProfilePhoto", () => {
 				path: "/v4/media/upload?takenOnGrindr=false",
 				signed: false,
 				file: { source: "desktop", path: "/tmp/photo.jpg" },
-				squareThumb: true,
+				crop: "thumbCoords",
 			},
 			requestInfo: {
 				method: "POST",

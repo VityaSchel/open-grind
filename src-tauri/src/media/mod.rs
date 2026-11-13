@@ -39,6 +39,7 @@ use stream::serve_streamed;
 use target::{decode_target, Target};
 use windowed::Windowed;
 
+pub use buffered::read_photo;
 #[cfg(target_os = "linux")]
 pub use element::{serve_element_opens, WEBKIT_EXTENSIONS};
 
