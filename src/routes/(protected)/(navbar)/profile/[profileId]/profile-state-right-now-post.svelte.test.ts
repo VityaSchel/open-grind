@@ -121,6 +121,23 @@ describe("ProfileState Right Now post", () => {
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
+	it("asks for the post again on the next activation after the request failed", async () => {
+		getProfileMock.mockResolvedValue(profile({ rightNow: "HOSTING" }));
+		getProfileRightNowPostMock
+			.mockResolvedValue(post)
+			.mockRejectedValueOnce(new Error("boom"));
+		const state = create();
+		state.activate();
+		await flush();
+
+		state.deactivate();
+		state.activate();
+		await flush();
+
+		expect(getProfileRightNowPostMock).toHaveBeenCalledTimes(2);
+		expect(state.rightNowPost).toBe(post);
+	});
+
 	it("asks again on refresh and drops an answer the refresh overtook", async () => {
 		getProfileMock.mockResolvedValue(profile({ rightNow: "NOT_HOSTING" }));
 		refreshProfileMock.mockResolvedValue(

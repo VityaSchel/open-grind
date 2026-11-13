@@ -333,6 +333,8 @@ export class ProfileState {
 			this.rightNowPost = post;
 		} catch (error) {
 			console.error(error);
+			if (this.#rightNowPostGeneration === generation)
+				this.#rightNowPostGeneration = -1;
 		}
 	}
 
