@@ -260,6 +260,7 @@ describe("recordHistory", () => {
 	afterEach(() => {
 		history.replaceState(null, "", "/");
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
 	});
 
 	async function startRecording() {
@@ -310,6 +311,22 @@ describe("recordHistory", () => {
 
 		expect(historyLog.earlier({ index: LAUNCH + 1, limit: 10 })).toEqual([
 			"/settings",
+		]);
+	});
+
+	it("records a launch address with no path as the root", async () => {
+		const { historyLog, record } = await startRecording();
+		vi.stubGlobal("location", new URL("tauri://localhost"));
+
+		land({
+			record,
+			index: LAUNCH,
+			pathname: "/",
+			navigation: { type: "enter" },
+		});
+
+		expect(historyLog.earlier({ index: LAUNCH + 1, limit: 1 })).toEqual([
+			"/",
 		]);
 	});
 

@@ -3,6 +3,7 @@ import { navigating, page } from "$app/state";
 
 import { liveHistoryIndex } from "#lib/util/history-index.ts";
 import { historyLog } from "#lib/util/history-log.svelte.ts";
+import { entryPathname } from "#lib/util/pathname.ts";
 
 export const BACK_WATCHDOG_MS = 1000;
 
@@ -20,10 +21,6 @@ function trustedNavigation():
 	)
 		return undefined;
 	return { navigation, index };
-}
-
-function entryPathname(url: string): string {
-	return new URL(url).pathname || "/";
 }
 
 export function canGoBack(): boolean {

@@ -8,3 +8,7 @@ export function isWithin({
 	const subtree = root.endsWith("/") ? root : `${root}/`;
 	return pathname === root || pathname.startsWith(subtree);
 }
+
+export function entryPathname(url: string): string {
+	return new URL(url).pathname || "/";
+}

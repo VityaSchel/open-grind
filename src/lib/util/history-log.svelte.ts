@@ -3,6 +3,7 @@ import { SvelteMap } from "svelte/reactivity";
 import z from "zod";
 
 import { liveHistoryIndex } from "#lib/util/history-index.ts";
+import { entryPathname } from "#lib/util/pathname.ts";
 
 const STORAGE_KEY = "open-grind:history-log";
 
@@ -119,7 +120,7 @@ export function recordHistory(): void {
 			if (index === undefined) return;
 			historyLog.record({
 				index,
-				pathname: location.pathname,
+				pathname: entryPathname(location.href),
 				type: navigation.type,
 				length: history.length,
 			});
