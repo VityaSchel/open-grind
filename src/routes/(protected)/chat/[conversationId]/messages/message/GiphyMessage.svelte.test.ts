@@ -123,7 +123,7 @@ describe("a GIF message", () => {
 		renderGif();
 
 		expect(tapToLoad()).not.toBeNull();
-		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
+		expect(await requestedSources()).toEqual([]);
 	});
 
 	it("asks to enable GIPHY on tap, with GIPHY's privacy policy", async () => {
@@ -137,7 +137,7 @@ describe("a GIF message", () => {
 				.getByRole("link", { name: "Privacy Policy" })
 				.getAttribute("href"),
 		).toContain("giphy.com");
-		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
+		expect(await requestedSources()).toEqual([]);
 	});
 
 	it("turns GIPHY on and loads the GIF after Continue", async () => {
@@ -161,7 +161,7 @@ describe("a GIF message", () => {
 		await vi.waitFor(() => expect(consentDialog()).toBeNull());
 		expect(preferences.setPreferences).not.toHaveBeenCalled();
 		expect(tapToLoad()).not.toBeNull();
-		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
+		expect(await requestedSources()).toEqual([]);
 	});
 
 	it("keeps asking when turning GIPHY on fails", async () => {
@@ -180,7 +180,7 @@ describe("a GIF message", () => {
 		expect(consentDialog()).not.toBeNull();
 		expect(choice("Continue").matches(":disabled")).toBe(false);
 		expect(choice("Cancel").matches(":disabled")).toBe(false);
-		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
+		expect(await requestedSources()).toEqual([]);
 	});
 
 	it("locks the question while GIPHY is being turned on", async () => {
