@@ -2,14 +2,15 @@ use std::cell::{Cell, RefCell};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use objc2::rc::{Retained, Weak};
-use objc2::runtime::{AnyObject, NSObject, Sel};
+use objc2::runtime::{NSObject, Sel};
 use objc2::{
 	define_class, msg_send, sel, DefinedClass, MainThreadMarker, MainThreadOnly,
 };
 use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{
 	NSArray, NSNotification, NSNotificationCenter, NSNotificationName,
-	NSNumber, NSString, NSValue,
+	NSNumber, NSObjectNSDelayedPerforming, NSRunLoopCommonModes, NSString,
+	NSValue,
 };
 use objc2_ui_kit::{
 	NSValueUIGeometryExtensions, UICoordinateSpace,
@@ -293,18 +294,11 @@ impl KeyboardFrame {
 	}
 
 	fn after_this_turn(&self, selector: Sel) {
-		let nothing: Option<&AnyObject> = None;
-		let modes = NSArray::from_retained_slice(&[NSString::from_str(
-			"kCFRunLoopCommonModes",
-		)]);
-		let _: () = unsafe {
-			msg_send![
-				self,
-				performSelector: selector,
-				withObject: nothing,
-				afterDelay: 0.0f64,
-				inModes: &*modes
-			]
+		let modes = NSArray::from_slice(&[unsafe { NSRunLoopCommonModes }]);
+		unsafe {
+			self.performSelector_withObject_afterDelay_inModes(
+				selector, None, 0.0, &modes,
+			)
 		};
 	}
 }
