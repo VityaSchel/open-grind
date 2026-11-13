@@ -38,7 +38,6 @@ export type PullInputsOptions = {
 	fingerPhase?: ScrollGestureState | null;
 	nativeBand?: boolean;
 	pullFromNativeBand?: boolean;
-	honorNoPull?: boolean;
 };
 
 function nativeOverscrollBandHere(): boolean {
@@ -65,18 +64,6 @@ function pullFromNativeBandHere(): boolean {
 	}
 }
 
-function noPullHonoredHere(): boolean {
-	switch (currentPlatform()) {
-		case "android":
-		case "ios":
-			return true;
-		case "linux":
-		case "macos":
-		case "windows":
-			return false;
-	}
-}
-
 export function attachPullInputs(
 	target: HTMLElement,
 	{
@@ -94,7 +81,6 @@ export function attachPullInputs(
 		fingerPhase = scrollGestureHere(),
 		nativeBand = nativeOverscrollBandHere(),
 		pullFromNativeBand = pullFromNativeBandHere(),
-		honorNoPull = noPullHonoredHere(),
 	}: PullInputsOptions,
 ): () => void {
 	let trackpadEndedAt = -Infinity;
@@ -176,7 +162,6 @@ export function attachPullInputs(
 					scroller: target,
 					position,
 					overscrollPx,
-					honorNoPull,
 					onPullBand: () => restingButton.leaveBoundary(),
 				}),
 			]
@@ -186,7 +171,6 @@ export function attachPullInputs(
 					scrollRoot: () => target,
 					boundaryDistance,
 					position,
-					honorNoPull,
 				}),
 				attachOverscrollPull(model, {
 					listenTarget: target,

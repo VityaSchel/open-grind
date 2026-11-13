@@ -27,7 +27,6 @@
 	size="sm"
 	variant={empty ? "secondary" : "default"}
 	class="absolute top-2 right-2 z-10 max-w-1/2"
-	data-refresh-no-pull=""
 	onclick={() => (open = true)}
 	{@attach holdsStillOnPull}
 >

@@ -1,6 +1,9 @@
 import type { Attachment } from "svelte/attachments";
 
-import { chainRestsAt } from "#lib/components/feedback/refresh/scroll-chain.ts";
+import {
+	chainRestsAt,
+	NO_PULL_ATTRIBUTE,
+} from "#lib/components/feedback/refresh/scroll-chain.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 
 const DIRECTION_SLOP_PX = 3;
@@ -166,6 +169,7 @@ function holdStillOnPull({
 		stopSwallowing = swallowNativeClick();
 	};
 
+	area.setAttribute(NO_PULL_ATTRIBUTE, "");
 	const listening = new AbortController();
 	area.addEventListener("touchstart", onTouchStart, {
 		passive: true,
@@ -186,6 +190,7 @@ function holdStillOnPull({
 	return () => {
 		listening.abort();
 		stopSwallowing();
+		area.removeAttribute(NO_PULL_ATTRIBUTE);
 	};
 }
 

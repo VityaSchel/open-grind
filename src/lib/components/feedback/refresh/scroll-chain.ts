@@ -4,7 +4,7 @@ export type PullPosition = "top" | "bottom";
 
 export const AT_BOUNDARY_PX = 1;
 
-const NO_PULL_ATTRIBUTE = "data-refresh-no-pull";
+export const NO_PULL_ATTRIBUTE = "data-refresh-no-pull";
 
 function isScrollableY(el: Element): boolean {
 	return hasScrollableOverflowY(el) && el.scrollHeight > el.clientHeight + 1;

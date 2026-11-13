@@ -47,6 +47,7 @@ function harness() {
 
 	return {
 		profile,
+		hero,
 		carousel,
 		clicks,
 		lifts,
@@ -145,6 +146,31 @@ describe("holdsStillHere", () => {
 			runningOn(platform);
 
 			expect(holdsStillHere()).toBe(holds);
+		},
+	);
+});
+
+describe("pull to refresh from the profile photos", () => {
+	it.each(["android", "ios"] as const)(
+		"is refused on %s while the photos hold still",
+		(platform) => {
+			runningOn(platform);
+			const h = harness();
+
+			expect(h.hero.hasAttribute("data-refresh-no-pull")).toBe(true);
+			h.detach();
+			expect(h.hero.hasAttribute("data-refresh-no-pull")).toBe(false);
+		},
+	);
+
+	it.each(["linux", "macos", "windows"] as const)(
+		"still works on %s",
+		(platform) => {
+			runningOn(platform);
+			const h = harness();
+
+			expect(h.hero.hasAttribute("data-refresh-no-pull")).toBe(false);
+			h.detach();
 		},
 	);
 });

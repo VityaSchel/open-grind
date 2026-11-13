@@ -33,7 +33,6 @@ function harness({
 		scroller,
 		position,
 		overscrollPx: () => band,
-		honorNoPull: true,
 		onPullBand,
 	});
 

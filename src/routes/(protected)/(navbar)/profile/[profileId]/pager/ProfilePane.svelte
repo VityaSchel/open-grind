@@ -126,7 +126,6 @@
 			>
 				<div
 					data-slot="profile-photo-row"
-					data-refresh-no-pull=""
 					class={[
 						"relative",
 						{

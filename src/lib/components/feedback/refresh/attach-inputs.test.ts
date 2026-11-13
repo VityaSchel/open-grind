@@ -542,46 +542,28 @@ describe("the pull inputs on iOS", () => {
 });
 
 describe("a pull from a no-pull area", () => {
-	function touchPullFromNoPullArea() {
-		const h = harness({ position: "top" });
-		h.row.setAttribute("data-refresh-no-pull", "");
-		h.dragFinger(120);
-		const pulledFrom = h.model.source;
-		h.detach();
-		return pulledFrom;
-	}
-
-	function bandPullFromNoPullArea() {
-		const h = harness({ position: "top", pullFromNativeBand: true });
-		h.model.space = BAND_PX;
-		h.row.setAttribute("data-refresh-no-pull", "");
-		h.touchRow();
-		h.band({ pulledByWheel: false });
-		const pulledFrom = h.model.source;
-		h.liftFinger();
-		h.detach();
-		return pulledFrom;
-	}
-
 	it("is refused under a finger on android", () => {
 		runningOn("android");
+		const h = harness({ position: "top" });
+		h.row.setAttribute("data-refresh-no-pull", "");
 
-		expect(touchPullFromNoPullArea()).toBeNull();
+		h.dragFinger(120);
+
+		expect(h.model.source).toBeNull();
+		h.detach();
 	});
 
 	it("is refused from the rubber band on ios", () => {
 		runningOn("ios");
+		const h = harness({ position: "top", pullFromNativeBand: true });
+		h.model.space = BAND_PX;
+		h.row.setAttribute("data-refresh-no-pull", "");
 
-		expect(bandPullFromNoPullArea()).toBeNull();
+		h.touchRow();
+		h.band({ pulledByWheel: false });
+
+		expect(h.model.source).toBeNull();
+		h.liftFinger();
+		h.detach();
 	});
-
-	it.each(["linux", "macos", "windows"] as const)(
-		"still pulls on %s",
-		(platform) => {
-			runningOn(platform);
-
-			expect(touchPullFromNoPullArea()).toBe("touch");
-			expect(bandPullFromNoPullArea()).toBe("band");
-		},
-	);
 });

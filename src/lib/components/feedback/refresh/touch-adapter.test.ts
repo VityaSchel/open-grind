@@ -24,7 +24,6 @@ describe("attachTouchPull", () => {
 			scrollRoot: () => root,
 			boundaryDistance: () => boundary,
 			position,
-			honorNoPull: true,
 		});
 		return { model, onTrigger, root, leaf, detach };
 	}
@@ -185,7 +184,6 @@ describe("attachTouchPull", () => {
 			scrollRoot: () => root,
 			boundaryDistance: () => boundary,
 			position: "top",
-			honorNoPull: true,
 		});
 
 		photo.dispatchEvent(touchEvent("touchstart", { y: 100 }));
