@@ -9,7 +9,7 @@ import {
 } from "#lib/model/right-now/post.ts";
 import { now } from "#lib/util/clock.ts";
 import { demoMeProfileId, HOUR, SECOND } from "../config";
-import type { DemoResponse } from "../route";
+import type { DemoResponse } from "../routing";
 import { picsum } from "./avatars";
 
 export type DemoRightNowPostMedia = RightNowOwnPostMedia & {
@@ -18,7 +18,7 @@ export type DemoRightNowPostMedia = RightNowOwnPostMedia & {
 	source: "RIGHT_NOW";
 };
 
-type DemoRightNowPost = Omit<RightNowPostDetails, "media"> & {
+export type DemoRightNowPost = Omit<RightNowPostDetails, "media"> & {
 	media: DemoRightNowPostMedia[];
 	isDiscreet: "NOT_SELECTED" | "FALSE";
 	sharedFields: string[];
@@ -187,7 +187,6 @@ function demoUpdateRightNowPost({
 	const editable = editablePost(postId);
 	if ("refusal" in editable) return editable.refusal;
 	const { post } = editable;
-	settleModeration(post);
 	if (changes.text !== undefined) {
 		post.activeText = changes.text || null;
 		post.moderatedText = null;

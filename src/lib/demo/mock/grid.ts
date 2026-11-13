@@ -18,6 +18,7 @@ import {
 	MINUTE,
 	NOW,
 } from "../config";
+import { num } from "../routing";
 import { demoProfileResolves } from "./blocks";
 import { demoFavoriteOf } from "./favorites";
 import {
@@ -31,12 +32,6 @@ import {
 	socialNetworksOf,
 } from "./profiles";
 import { demoRightNowStatusOf } from "./right-now";
-
-export function num(value: string | null): number | undefined {
-	if (value === null) return undefined;
-	const n = Number(value);
-	return Number.isFinite(n) ? n : undefined;
-}
 
 export type DemoShortProfile = z.infer<typeof profileShortSchema> &
 	z.infer<typeof profileRightNowSchema>;

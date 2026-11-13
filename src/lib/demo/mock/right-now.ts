@@ -10,8 +10,8 @@ import {
 import type { DiscreetPostData, PostData } from "#lib/model/right-now/feed.ts";
 import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 import { DEMO_ID_START, demoMeProfileId, MINUTE, NOW } from "../config";
+import { num } from "../routing";
 import { demoFavoriteOf } from "./favorites";
-import { num } from "./grid";
 import {
 	type DemoSeed,
 	distanceForId,
@@ -22,6 +22,7 @@ import {
 import {
 	demoActiveRightNowPost,
 	demoRightNowPhoto,
+	type DemoRightNowPost,
 	type DemoRightNowPostMedia,
 	POST_LIFETIME,
 } from "./right-now-post";
@@ -260,7 +261,9 @@ export function demoRightNowStatusOf(profileId: number): RightNowStatus {
 	return post.hosting ? "HOSTING" : "NOT_HOSTING";
 }
 
-export function demoProfileRightNowPost(profileId: number) {
+export function demoProfileRightNowPost(
+	profileId: number,
+): DemoRightNowPost | null {
 	if (profileId === demoMeProfileId) {
 		const own = demoActiveRightNowPost();
 		return own?.postStatus === "ACTIVE" ? own : null;
@@ -283,6 +286,8 @@ export function demoProfileRightNowPost(profileId: number) {
 		shareLocation: "NONE",
 		locationRadius: null,
 		isDiscreet: "FALSE",
+		sharedFields: [],
+		boostUpsellOfferAvailableUntil: null,
 	};
 }
 

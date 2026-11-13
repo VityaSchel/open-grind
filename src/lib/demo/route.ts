@@ -57,7 +57,6 @@ import {
 	demoGetProfiles,
 	demoMyUploadedPhotos,
 	demoSearchProfiles,
-	num,
 } from "./mock/grid";
 import {
 	demoHiddenUsers,
@@ -79,8 +78,7 @@ import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
 } from "./mock/settings";
-
-export type DemoResponse = { status: number; body: unknown };
+import { type DemoResponse, num } from "./routing";
 
 function ok(body: unknown): DemoResponse {
 	return { status: 200, body };
