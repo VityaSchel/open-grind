@@ -3,12 +3,12 @@
 
 	let {
 		busy,
-		updating = false,
+		updating,
 		failed,
 		list,
 	}: {
 		busy: boolean;
-		updating?: boolean;
+		updating: boolean;
 		failed: boolean;
 		list: HTMLElement;
 	} = $props();

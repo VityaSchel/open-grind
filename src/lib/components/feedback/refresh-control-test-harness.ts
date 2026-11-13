@@ -135,7 +135,7 @@ export async function mountAtRest(
 			container: scroller,
 			position: edge,
 			get updating() {
-				return refreshProps.get("updating");
+				return refreshProps.get("updating") === true;
 			},
 			get failed() {
 				return refreshProps.get("failed") === true;

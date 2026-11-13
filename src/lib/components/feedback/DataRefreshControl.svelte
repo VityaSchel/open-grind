@@ -38,7 +38,7 @@
 		onrefresh,
 		oninsetchange,
 	}: {
-		updating?: boolean;
+		updating: boolean;
 		failed: boolean;
 		position: "top" | "bottom";
 		container?: HTMLElement | null;
@@ -77,9 +77,9 @@
 	const model = new PullModel();
 	model.space = ARM_PX;
 
-	const busy = $derived((updating ?? false) || model.phase === "refreshing");
+	const busy = $derived(updating || model.phase === "refreshing");
 
-	$effect(() => model.setUpdating(updating ?? false));
+	$effect(() => model.setUpdating(updating));
 	model.onTrigger = () => onrefresh?.();
 	model.getBaseline = () => (restingButton.shown ? REST_HEIGHT_PX : 0);
 
