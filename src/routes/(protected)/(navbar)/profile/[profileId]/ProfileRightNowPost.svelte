@@ -21,6 +21,7 @@
 		applyPhotoSwipeComponent,
 		openLightbox,
 	} from "#lib/util/photoswipe/index.ts";
+	import { trackPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
 	import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
 	import {
 		applyPhotoSwipeBarAction,
@@ -78,97 +79,110 @@
 	});
 
 	async function openViewer(signal: AbortSignal) {
-		const src = viewerSrc;
-		const size =
-			src === null
-				? null
-				: await fullImageSizeWithin({
-						src,
-						timeoutMs: FULL_SIZE_WAIT_MS,
-					});
-		if (signal.aborted) return;
-		const frame = photoFrame;
-		const caption = {
-			text,
-			displayName,
-			onlineUntil,
-			posted: post.posted,
-			distance,
-			hosting: post.hosting,
-		};
-		openLightbox({
-			items: [
+		const release = trackPhotoSwipeBusy();
+		signal.addEventListener("abort", release, { once: true });
+		try {
+			const src = viewerSrc;
+			const size =
 				src === null
-					? { src: "" }
-					: {
+					? null
+					: await fullImageSizeWithin({
 							src,
-							...size,
-							element: frame ?? undefined,
-							msrc: size === null ? undefined : src,
-							thumbCropped: true,
-						},
-			],
-			animation: size === null || frame === null ? "fade" : "zoom",
-			configure: (lightbox) => {
-				lightbox.options.bgOpacity = 1;
-				if (frame !== null && src !== null) {
-					const hideFrame = () => (frame.style.visibility = "hidden");
-					lightbox.on("openingAnimationStart", hideFrame);
-					lightbox.on("closingAnimationStart", hideFrame);
-					lightbox.on("destroy", () => (frame.style.visibility = ""));
-				}
-				if (src === null)
-					applyPhotoSwipeComponent(lightbox, {
-						slideAt: () => caption,
-						render: ({ target, slide, content }) => {
-							target.classList.add("pointer-events-none");
-							const component = mount(RightNowPostCaption, {
+							timeoutMs: FULL_SIZE_WAIT_MS,
+						});
+			if (signal.aborted) return;
+			const frame = photoFrame;
+			const caption = {
+				text,
+				displayName,
+				onlineUntil,
+				posted: post.posted,
+				distance,
+				hosting: post.hosting,
+			};
+			openLightbox({
+				items: [
+					src === null
+						? { src: "" }
+						: {
+								src,
+								...size,
+								element: frame ?? undefined,
+								msrc: size === null ? undefined : src,
+								thumbCropped: true,
+							},
+				],
+				animation: size === null || frame === null ? "fade" : "zoom",
+				configure: (lightbox) => {
+					lightbox.options.bgOpacity = 1;
+					if (frame !== null && src !== null) {
+						const hideFrame = () =>
+							(frame.style.visibility = "hidden");
+						lightbox.on("openingAnimationStart", hideFrame);
+						lightbox.on("closingAnimationStart", hideFrame);
+						lightbox.on(
+							"destroy",
+							() => (frame.style.visibility = ""),
+						);
+					}
+					if (src === null)
+						applyPhotoSwipeComponent(lightbox, {
+							slideAt: () => caption,
+							render: ({ target, slide, content }) => {
+								target.classList.add("pointer-events-none");
+								const component = mount(RightNowPostCaption, {
+									target,
+									props: { ...slide, centered: true },
+								});
+								content.onLoaded();
+								return component;
+							},
+						});
+					else
+						applyPhotoSwipeCaption(lightbox, {
+							render: ({ target }) =>
+								mount(RightNowPostCaption, {
+									target,
+									props: caption,
+								}),
+						});
+					applyPhotoSwipeBarAction(lightbox, {
+						render: ({ target, pswp }) =>
+							mount(RightNowPostViewerAction, {
 								target,
-								props: { ...slide, centered: true },
-							});
-							content.onLoaded();
-							return component;
-						},
-					});
-				else
-					applyPhotoSwipeCaption(lightbox, {
-						render: ({ target }) =>
-							mount(RightNowPostCaption, {
-								target,
-								props: caption,
+								props: {
+									own,
+									onreport: () =>
+										report.request({
+											postId: post.id,
+											profileId: post.profileId,
+											beforeOpen: () => {
+												closeWhenOpen(pswp);
+												openButton?.focus();
+											},
+										}),
+									onedit: () => {
+										closeWhenOpen(pswp);
+										edit();
+									},
+								},
 							}),
 					});
-				applyPhotoSwipeBarAction(lightbox, {
-					render: ({ target, pswp }) =>
-						mount(RightNowPostViewerAction, {
-							target,
-							props: {
-								own,
-								onreport: () =>
-									report.request({
-										postId: post.id,
-										profileId: post.profileId,
-										beforeOpen: () => {
-											closeWhenOpen(pswp);
-											openButton?.focus();
-										},
-									}),
-								onedit: () => {
-									closeWhenOpen(pswp);
-									edit();
-								},
-							},
-						}),
+				},
+				signal,
+				onClosed: () => (viewing = false),
+			}).catch((error: unknown) => {
+				if (signal.aborted) return;
+				console.error(error);
+				showErrorToast({
+					label: "Failed to open Right Now post",
+					error,
 				});
-			},
-			signal,
-			onClosed: () => (viewing = false),
-		}).catch((error: unknown) => {
-			if (signal.aborted) return;
-			console.error(error);
-			showErrorToast({ label: "Failed to open Right Now post", error });
-			viewing = false;
-		});
+				viewing = false;
+			});
+		} finally {
+			release();
+		}
 	}
 
 	function edit() {

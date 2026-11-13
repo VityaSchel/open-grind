@@ -60,6 +60,7 @@ vi.mock("./right-now-viewer.ts", () => ({
 
 import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.svelte.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
+import { isPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
 import type {
 	RightNowOwnPostMedia,
@@ -371,6 +372,7 @@ describe("a profile's Right Now post", () => {
 			timeoutMs: 1500,
 		});
 		expect(lastOpen().animation).toBe("zoom");
+		expect(isPhotoSwipeBusy()).toBe(false);
 		expect(openedItems()).toStrictEqual([
 			{
 				src: FULL_PHOTO,
@@ -399,7 +401,7 @@ describe("a profile's Right Now post", () => {
 		expect(item?.msrc).toBeUndefined();
 	});
 
-	it("waits for the photo's full size before opening, and opens nothing once the card has gone away", async () => {
+	it("waits for the photo's full size before opening, holding PhotoSwipe busy meanwhile, and opens nothing once the card has gone away", async () => {
 		const size = Promise.withResolvers<MediaDimensions | null>();
 		fullImageSizeWithinMock.mockReturnValue(size.promise);
 		const { unmount: unmountCard } = renderCard({ value: photoPost() });
@@ -409,11 +411,14 @@ describe("a profile's Right Now post", () => {
 			expect(fullImageSizeWithinMock).toHaveBeenCalledOnce(),
 		);
 		expect(openLightboxMock).not.toHaveBeenCalled();
+		expect(isPhotoSwipeBusy()).toBe(true);
 		unmountCard();
+		expect(isPhotoSwipeBusy()).toBe(false);
 		size.resolve(FULL_SIZE);
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(openLightboxMock).not.toHaveBeenCalled();
+		expect(isPhotoSwipeBusy()).toBe(false);
 	});
 
 	it.each(["openingAnimationStart", "closingAnimationStart"])(
