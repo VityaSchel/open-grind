@@ -22,9 +22,4 @@ mod tests {
 		);
 		assert!(VOICE_OVER.contains("window.__iosVoiceOver ="));
 	}
-
-	#[test]
-	fn the_page_reads_the_starting_status_from_the_command() {
-		assert!(VOICE_OVER.contains("invoke<boolean>(\"voice_over_running\")"));
-	}
 }

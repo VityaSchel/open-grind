@@ -607,6 +607,10 @@ mod frontend_method_pins {
 		include_str!("../../src/lib/platform/voice-over.svelte.ts");
 	const APP_LIFECYCLE: &str =
 		include_str!("../../src/lib/api/app-lifecycle.svelte.ts");
+	const APP_SETTINGS: &str =
+		include_str!("../../src/lib/platform/app-settings.ts");
+	const MEDIA_PICKER: &str =
+		include_str!("../../src/lib/platform/media-picker.ts");
 
 	fn between<'a>(haystack: &'a str, open: &str, close: &str) -> &'a str {
 		let start = haystack.find(open).expect(open) + open.len();
@@ -618,6 +622,20 @@ mod frontend_method_pins {
 		between(THIS, "tauri::generate_handler![", "])")
 			.split(',')
 			.filter_map(|entry| entry.trim().rsplit("::").next())
+			.collect()
+	}
+
+	fn invoked_commands(source: &str) -> Vec<&str> {
+		source
+			.split("invoke")
+			.skip(1)
+			.filter_map(|rest| {
+				let arguments = match rest.strip_prefix('<') {
+					Some(generic) => generic.split_once(">(")?.1,
+					None => rest.strip_prefix('(')?,
+				};
+				Some(arguments.strip_prefix('"')?.split_once('"')?.0)
+			})
 			.collect()
 	}
 
@@ -640,86 +658,27 @@ mod frontend_method_pins {
 	}
 
 	#[test]
-	fn every_command_the_keyboard_code_invokes_is_registered() {
+	fn every_command_the_native_bridges_invoke_is_registered() {
 		let registered = registered_commands();
-		let invoked: Vec<&str> = [KEYBOARD_FOLLOW, KEYBOARD_DRAG_DISMISS]
-			.into_iter()
-			.flat_map(|source| source.split("invoke(\"").skip(1))
-			.filter_map(|rest| rest.split_once('"'))
-			.map(|(command, _)| command)
-			.collect();
-		assert_eq!(
-			invoked,
-			["set_keyboard_follow", "set_keyboard_drag_dismiss"]
-		);
-		for command in invoked {
-			assert!(
-				registered.contains(&command),
-				"{command} is invoked by the keyboard code but not registered"
-			);
+		let bridges: &[(&str, &[&str])] = &[
+			(KEYBOARD_FOLLOW, &["set_keyboard_follow"]),
+			(KEYBOARD_DRAG_DISMISS, &["set_keyboard_drag_dismiss"]),
+			(IOS_BRIDGE, &["set_back_swipe_armed"]),
+			(VOICE_OVER, &["voice_over_running"]),
+			(SCROLL_MOMENTUM, &["stop_scroll_momentum"]),
+			(APP_LIFECYCLE, &["allow_suspension"]),
+			(APP_SETTINGS, &["open_app_settings"]),
+			(MEDIA_PICKER, &["pick_ios_media", "pick_android_media"]),
+		];
+		for (source, expected) in bridges {
+			assert_eq!(&invoked_commands(source), expected);
+			for command in *expected {
+				assert!(
+					registered.contains(command),
+					"{command} is invoked by a native bridge but not registered"
+				);
+			}
 		}
-	}
-
-	#[test]
-	fn every_command_the_ios_bridge_invokes_is_registered() {
-		let registered = registered_commands();
-		let invoked: Vec<&str> = IOS_BRIDGE
-			.split("invoke(\"")
-			.skip(1)
-			.filter_map(|rest| rest.split_once('"'))
-			.map(|(command, _)| command)
-			.collect();
-		assert_eq!(invoked, ["set_back_swipe_armed"]);
-		for command in invoked {
-			assert!(
-				registered.contains(&command),
-				"{command} is invoked by the iOS bridge but not registered"
-			);
-		}
-	}
-
-	#[test]
-	fn every_command_the_voice_over_watch_invokes_is_registered() {
-		let registered = registered_commands();
-		let invoked: Vec<&str> = VOICE_OVER
-			.split("invoke<boolean>(\"")
-			.skip(1)
-			.filter_map(|rest| rest.split_once('"'))
-			.map(|(command, _)| command)
-			.collect();
-		assert_eq!(invoked, ["voice_over_running"]);
-		assert!(registered.contains(&"voice_over_running"));
-	}
-
-	#[test]
-	fn every_command_the_scroll_code_invokes_is_registered() {
-		let registered = registered_commands();
-		let invoked: Vec<&str> = SCROLL_MOMENTUM
-			.split("invoke(\"")
-			.skip(1)
-			.filter_map(|rest| rest.split_once('"'))
-			.map(|(command, _)| command)
-			.collect();
-		assert_eq!(invoked, ["stop_scroll_momentum"]);
-		for command in invoked {
-			assert!(
-				registered.contains(&command),
-				"{command} is invoked by the scroll code but not registered"
-			);
-		}
-	}
-
-	#[test]
-	fn every_command_the_app_lifecycle_invokes_is_registered() {
-		let registered = registered_commands();
-		let invoked: Vec<&str> = APP_LIFECYCLE
-			.split("invoke(\"")
-			.skip(1)
-			.filter_map(|rest| rest.split_once('"'))
-			.map(|(command, _)| command)
-			.collect();
-		assert_eq!(invoked, ["allow_suspension"]);
-		assert!(registered.contains(&"allow_suspension"));
 	}
 
 	#[test]

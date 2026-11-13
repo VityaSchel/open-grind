@@ -200,6 +200,5 @@ mod tests {
 		for hook in ["start:", "progress:", "finish:", "prepare:"] {
 			assert!(installed.contains(hook), "{hook}");
 		}
-		assert!(IOS_BRIDGE.contains("invoke(\"set_back_swipe_armed\", {"));
 	}
 }
