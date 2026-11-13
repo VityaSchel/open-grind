@@ -28,8 +28,7 @@ thread_local! {
 
 struct Swipe {
 	webview: Weak<UIView>,
-	host: Weak<UIView>,
-	recognizer: RefCell<Option<Retained<UIScreenEdgePanGestureRecognizer>>>,
+	recognizer: Retained<UIScreenEdgePanGestureRecognizer>,
 	sent: Cell<Option<f64>>,
 	gesture: Cell<u64>,
 	arm_order: Cell<u64>,
@@ -85,12 +84,11 @@ impl BackSwipe {
 	fn new(
 		mtm: MainThreadMarker,
 		webview: &UIView,
-		host: &UIView,
+		recognizer: Retained<UIScreenEdgePanGestureRecognizer>,
 	) -> Retained<Self> {
 		let this = Self::alloc(mtm).set_ivars(Swipe {
 			webview: Weak::new(webview),
-			host: Weak::new(host),
-			recognizer: RefCell::new(None),
+			recognizer,
 			sent: Cell::new(None),
 			gesture: Cell::new(0),
 			arm_order: Cell::new(0),
@@ -117,7 +115,7 @@ impl BackSwipe {
 
 	fn touch_landed(&self, touch: &UITouch) {
 		let (Some(webview), Some(host)) =
-			(self.ivars().webview.load(), self.ivars().host.load())
+			(self.ivars().webview.load(), self.ivars().recognizer.view())
 		else {
 			return;
 		};
@@ -142,7 +140,7 @@ impl BackSwipe {
 
 	fn follow(&self, recognizer: &UIScreenEdgePanGestureRecognizer) {
 		let (Some(webview), Some(host)) =
-			(self.ivars().webview.load(), self.ivars().host.load())
+			(self.ivars().webview.load(), recognizer.view())
 		else {
 			return;
 		};
@@ -163,7 +161,6 @@ impl BackSwipe {
 				self.send_progress(&webview, progress);
 			}
 			UIGestureRecognizerState::Ended => {
-				self.ivars().sent.set(None);
 				let velocity = recognizer.velocityInView(Some(&host)).x / width;
 				evaluate(
 					&webview,
@@ -172,7 +169,6 @@ impl BackSwipe {
 			}
 			UIGestureRecognizerState::Cancelled
 			| UIGestureRecognizerState::Failed => {
-				self.ivars().sent.set(None);
 				evaluate(
 					&webview,
 					&edge_pan::finish_script(Release::CANCELLED),
@@ -213,10 +209,7 @@ impl BackSwipe {
 		if self.ivars().gesture.get() != gesture {
 			return;
 		}
-		let recognizer = self.ivars().recognizer.borrow();
-		let Some(recognizer) = recognizer.as_deref() else {
-			return;
-		};
+		let recognizer = &self.ivars().recognizer;
 		let active = matches!(
 			recognizer.state(),
 			UIGestureRecognizerState::Began | UIGestureRecognizerState::Changed
@@ -232,16 +225,12 @@ impl BackSwipe {
 			return;
 		}
 		self.ivars().arm_order.set(order);
-		if let Some(recognizer) = self.ivars().recognizer.borrow().as_deref() {
-			recognizer.setEnabled(armed);
-		}
+		self.ivars().recognizer.setEnabled(armed);
 	}
 
 	fn disarm(&self) {
 		self.ivars().arm_order.set(0);
-		if let Some(recognizer) = self.ivars().recognizer.borrow().as_deref() {
-			recognizer.setEnabled(false);
-		}
+		self.ivars().recognizer.setEnabled(false);
 	}
 }
 
@@ -250,20 +239,14 @@ fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {
 		tracing::warn!("[back swipe] the webview has no superview");
 		return;
 	};
-	let swipe = BackSwipe::new(mtm, &webview, &host);
-	let target: &AnyObject = &swipe;
-	let recognizer = unsafe {
-		UIScreenEdgePanGestureRecognizer::initWithTarget_action(
-			UIScreenEdgePanGestureRecognizer::alloc(mtm),
-			Some(target),
-			Some(sel!(swiped:)),
-		)
-	};
+	let recognizer = UIScreenEdgePanGestureRecognizer::new(mtm);
 	recognizer.setEdges(UIRectEdge::Left);
-	recognizer.setDelegate(Some(ProtocolObject::from_ref(&*swipe)));
 	recognizer.setEnabled(false);
-	host.addGestureRecognizer(&recognizer);
-	*swipe.ivars().recognizer.borrow_mut() = Some(recognizer);
+	let swipe = BackSwipe::new(mtm, &webview, recognizer);
+	let recognizer = &swipe.ivars().recognizer;
+	unsafe { recognizer.addTarget_action(&swipe, sel!(swiped:)) };
+	recognizer.setDelegate(Some(ProtocolObject::from_ref(&*swipe)));
+	host.addGestureRecognizer(recognizer);
 	BACK_SWIPE.with_borrow_mut(|slot| *slot = Some(swipe));
 }
 
