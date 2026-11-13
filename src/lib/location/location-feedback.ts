@@ -23,7 +23,7 @@ const DENIAL_COPY = {
 const LOCATION_DISABLED_COPY =
 	"Location Services are off or restricted. Turn them on in your system settings to use GPS.";
 
-export function showLocationPermissionToast({
+function showLocationPermissionToast({
 	missing,
 }: {
 	missing: MissingLocationGrant;
@@ -36,7 +36,7 @@ export function showLocationPermissionToast({
 	});
 }
 
-export function showLocationErrorToast({
+function showLocationErrorToast({
 	label,
 	error,
 	reason,
@@ -54,12 +54,15 @@ export function showLocationErrorToast({
 	}
 }
 
-export function reportLocationFailure(outcome: LocationOutcome): void {
+export function reportLocationFailure(
+	outcome: LocationOutcome,
+	{ label = "Failed to get current location" }: { label?: string } = {},
+): void {
 	if (outcome.status === "denied") showLocationPermissionToast(outcome);
 	if (outcome.status === "error") {
 		console.error(outcome.error);
 		showLocationErrorToast({
-			label: "Failed to get current location",
+			label,
 			error: outcome.error,
 			reason: outcome.reason,
 		});

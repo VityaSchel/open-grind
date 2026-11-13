@@ -21,14 +21,10 @@ vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
 }));
 
-const {
-	reportLocationFailure,
-	showLocationErrorToast,
-	showLocationPermissionToast,
-} = await import("./location-feedback");
+const { reportLocationFailure } = await import("./location-feedback");
 
-const PERMISSION_MISSING = { missing: "permission" } as const;
-const PRECISION_MISSING = { missing: "precision" } as const;
+const PERMISSION_MISSING = { status: "denied", missing: "permission" } as const;
+const PRECISION_MISSING = { status: "denied", missing: "precision" } as const;
 
 function optionsOfLastToast() {
 	return toastMock.error.mock.calls.at(-1)?.[1] as {
@@ -37,7 +33,7 @@ function optionsOfLastToast() {
 	};
 }
 
-describe("showLocationPermissionToast", () => {
+describe("reportLocationFailure for a denial", () => {
 	beforeEach(() => {
 		canOpenAppSettingsMock.mockReturnValue(true);
 	});
@@ -47,7 +43,7 @@ describe("showLocationPermissionToast", () => {
 	});
 
 	it("offers a shortcut into the system settings", () => {
-		showLocationPermissionToast(PERMISSION_MISSING);
+		reportLocationFailure(PERMISSION_MISSING);
 
 		const options = optionsOfLastToast();
 		expect(options.action?.label).toBe("Settings");
@@ -57,13 +53,13 @@ describe("showLocationPermissionToast", () => {
 
 	it("omits the shortcut where settings cannot be opened", () => {
 		canOpenAppSettingsMock.mockReturnValue(false);
-		showLocationPermissionToast(PERMISSION_MISSING);
+		reportLocationFailure(PERMISSION_MISSING);
 		expect(optionsOfLastToast().action).toBeUndefined();
 	});
 
 	it("reuses one toast id so repeats never stack", () => {
-		showLocationPermissionToast(PERMISSION_MISSING);
-		showLocationPermissionToast(PRECISION_MISSING);
+		reportLocationFailure(PERMISSION_MISSING);
+		reportLocationFailure(PRECISION_MISSING);
 		const ids = toastMock.error.mock.calls.map(
 			(call) => (call[1] as { id?: string }).id,
 		);
@@ -72,24 +68,30 @@ describe("showLocationPermissionToast", () => {
 	});
 
 	it("asks for Precise Location when only precision is missing", () => {
-		showLocationPermissionToast(PRECISION_MISSING);
+		reportLocationFailure(PRECISION_MISSING);
 
 		expect(toastMock.error.mock.calls.at(-1)?.[0]).toBe(
 			"Precise Location is off. Turn it on in your system settings to use GPS.",
 		);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
 		optionsOfLastToast().action?.onClick();
 		expect(openAppSettingsMock).toHaveBeenCalledTimes(1);
 	});
 });
 
-describe("showLocationErrorToast", () => {
+describe("reportLocationFailure for an error", () => {
+	beforeEach(() => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+	});
+
 	afterEach(() => {
+		vi.restoreAllMocks();
 		vi.resetAllMocks();
 	});
 
 	it("tells the user to turn Location Services on instead of a generic failure", () => {
-		showLocationErrorToast({
-			label: "Failed to get current location",
+		reportLocationFailure({
+			status: "error",
 			error: "[disabled] - Location services are not enabled.",
 			reason: "disabled",
 		});
@@ -100,52 +102,17 @@ describe("showLocationErrorToast", () => {
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
-	it("keeps the generic failure toast for a fix that never came", () => {
+	it("keeps the generic failure toast, under the caller's label, for a fix that never came", () => {
 		const error = "[timeout] - Timed out waiting for a location fix.";
-		showLocationErrorToast({
-			label: "Failed to get current location",
-			error,
-			reason: "failed",
-		});
+		reportLocationFailure(
+			{ status: "error", error, reason: "failed" },
+			{ label: "Failed to update your location automatically" },
+		);
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to get current location",
+			label: "Failed to update your location automatically",
 			error,
 		});
 		expect(toastMock.error).not.toHaveBeenCalled();
-	});
-});
-
-describe("reportLocationFailure", () => {
-	beforeEach(() => {
-		canOpenAppSettingsMock.mockReturnValue(true);
-	});
-
-	afterEach(() => {
-		vi.restoreAllMocks();
-		vi.resetAllMocks();
-	});
-
-	it("explains a denial by what is missing", () => {
-		reportLocationFailure({ status: "denied", ...PRECISION_MISSING });
-
-		expect(toastMock.error.mock.calls.at(-1)?.[0]).toMatch(
-			/^Precise Location is off\./,
-		);
-		expect(showErrorToastMock).not.toHaveBeenCalled();
-	});
-
-	it("explains Location Services being off by name", () => {
-		vi.spyOn(console, "error").mockImplementation(() => {});
-		reportLocationFailure({
-			status: "error",
-			error: "[disabled] - Location access is restricted.",
-			reason: "disabled",
-		});
-
-		expect(toastMock.error.mock.calls.at(-1)?.[0]).toMatch(
-			/^Location Services are off or restricted\./,
-		);
-		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 });
