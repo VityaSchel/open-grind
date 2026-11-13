@@ -1,13 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { ensureGridLocation, installTauriShim } from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 
 async function openAgeFilter(page: Page) {
 	await page.setViewportSize({ width: 412, height: 915 });
 	await installTauriShim(page, { platform: "macos" });
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 
 	await page.getByRole("button", { name: "Age", exact: true }).click();
 	const dialog = page.getByRole("dialog");

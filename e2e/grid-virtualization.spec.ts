@@ -1,18 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { ensureGridLocation, installTauriShim } from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 
 const GRID = ".photo-grid";
 const SCROLLER = ".pull-scroller";
 const PROFILE_LINK = 'a[href^="/profile/"]';
 const PAGES_TO_LOAD = 5;
 
-async function openGrid(page: Page) {
+async function openGridWithProfiles(page: Page) {
 	test.setTimeout(180_000);
 	await installTauriShim(page, { platform: "macos" });
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 }
 
@@ -94,7 +92,7 @@ test.describe("grid virtualization", () => {
 	test("keeps the rendered cells to a window of a much taller grid", async ({
 		page,
 	}) => {
-		await openGrid(page);
+		await openGridWithProfiles(page);
 		await loadPages(page, PAGES_TO_LOAD);
 		await scrollTo(page, 4000);
 		await page.waitForTimeout(600);
@@ -109,7 +107,7 @@ test.describe("grid virtualization", () => {
 	test("lays the window out on the same rows a full grid would use", async ({
 		page,
 	}) => {
-		await openGrid(page);
+		await openGridWithProfiles(page);
 		await loadPages(page, PAGES_TO_LOAD);
 		await scrollTo(page, 5000);
 		await page.waitForTimeout(600);

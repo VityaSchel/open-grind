@@ -4,7 +4,7 @@ import {
 	PREFETCH_MARGIN_PX,
 	TRANSPARENT_PIXEL,
 } from "../src/lib/util/load-when-visible";
-import { ensureGridLocation, installTauriShim } from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 import { AVATAR_HOST, serveImages } from "./support/media";
 
 const SCROLLER = ".pull-scroller";
@@ -14,13 +14,11 @@ const JUMP_PAST_MOUNTED_BAND = 3000;
 
 type Tile = { armed: boolean; gapBelow: number; onScreen: boolean };
 
-async function openGrid(page: Page) {
+async function openGridWithPagesLoaded(page: Page) {
 	test.setTimeout(180_000);
 	await installTauriShim(page, { platform: "macos" });
 	await serveImages(page, AVATAR_HOST);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 	for (let page_ = 0; page_ < 5; page_++) {
 		await page.evaluate((selector) => {
@@ -64,7 +62,7 @@ test.describe("media visibility gate", () => {
 	test("loads what is on screen and holds back what is far below", async ({
 		page,
 	}) => {
-		await openGrid(page);
+		await openGridWithPagesLoaded(page);
 
 		for (const offset of [
 			JUMP_PAST_MOUNTED_BAND,
@@ -89,7 +87,7 @@ test.describe("media visibility gate", () => {
 	test("arms a held-back tile once it is scrolled into view", async ({
 		page,
 	}) => {
-		await openGrid(page);
+		await openGridWithPagesLoaded(page);
 		await scrollTo(page, JUMP_PAST_MOUNTED_BAND);
 
 		const before = await tiles(page, TRANSPARENT_PIXEL);
@@ -108,7 +106,7 @@ test.describe("media visibility gate", () => {
 	});
 
 	test("shows photos again on the way back up", async ({ page }) => {
-		await openGrid(page);
+		await openGridWithPagesLoaded(page);
 		await scrollTo(page, JUMP_PAST_MOUNTED_BAND * 3);
 		await scrollTo(page, 0);
 

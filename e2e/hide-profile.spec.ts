@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { ensureGridLocation, installTauriShim } from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 import { clickMeTab } from "./support/page-stack";
 import { activeProfilePane } from "./support/profile-pager";
 
@@ -8,9 +8,7 @@ const GRID_CARD = '.photo-grid a[href^="/profile/"]';
 
 async function openFirstGridProfile(page: Page): Promise<string> {
 	await installTauriShim(page, { platform: "macos" });
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 
 	const cards = page.locator(GRID_CARD);
 	await cards.first().waitFor({ timeout: 60_000 });
