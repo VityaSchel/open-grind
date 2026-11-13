@@ -196,7 +196,7 @@ describe("PageStackState offering a back swipe", () => {
 		const offers: boolean[] = [];
 		const stop = $effect.root(() => {
 			$effect(() => {
-				offers.push(harness.stack.canBeginSwipeBack);
+				offers.push(harness.stack.offersSwipeBack);
 			});
 		});
 		flushSync();
@@ -217,7 +217,7 @@ describe("PageStackState offering a back swipe", () => {
 		stack.trackSwipeBack(0.6);
 		stack.commitSwipeBack();
 
-		expect(stack.canBeginSwipeBack).toBe(true);
+		expect(stack.offersSwipeBack).toBe(true);
 		expect(stack.beginSwipeBack()).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
 	});

@@ -76,7 +76,7 @@ export class LiveStackState {
 		return this.#prepared > 0;
 	}
 
-	get canBeginSwipeBack(): boolean {
+	get offersSwipeBack(): boolean {
 		return (
 			this.#top() !== null &&
 			this.leaving === null &&
@@ -157,7 +157,7 @@ export class LiveStackState {
 	}
 
 	beginSwipeBack(): boolean {
-		if (!this.canBeginSwipeBack) return false;
+		if (!this.offersSwipeBack) return false;
 
 		this.#settle.pickUp();
 		this.moving = false;

@@ -29,10 +29,10 @@ import {
 	type SwipeRelease,
 } from "./system-back-gesture.svelte";
 
-function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
+function makeStack({ offers = true }: { offers?: boolean } = {}) {
 	let tracking = $state(false);
 	let moving = $state(false);
-	let canBeginSwipeBack = $state(canBegin);
+	let offersSwipeBack = $state(offers);
 	const calls = { begin: 0, commit: 0, cancel: 0, prepare: 0, undo: 0 };
 	const tracked: number[] = [];
 	const releases: (SwipeRelease | undefined)[] = [];
@@ -44,8 +44,8 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 		get moving() {
 			return moving;
 		},
-		get canBeginSwipeBack() {
-			return canBeginSwipeBack;
+		get offersSwipeBack() {
+			return offersSwipeBack;
 		},
 		beginSwipeBack: () => {
 			calls.begin += 1;
@@ -73,8 +73,8 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 		},
 	};
 
-	const allowBegin = (allowed: boolean) => {
-		canBeginSwipeBack = allowed;
+	const offerSwipeBack = (offered: boolean) => {
+		offersSwipeBack = offered;
 		flushSync();
 	};
 
@@ -82,7 +82,7 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 		moving = sliding;
 	};
 
-	return { stack, calls, tracked, releases, allowBegin, slide };
+	return { stack, calls, tracked, releases, offerSwipeBack, slide };
 }
 
 function armedPushes() {
@@ -315,19 +315,19 @@ describe("on iOS", () => {
 		expect(addPluginListener).not.toHaveBeenCalled();
 	});
 
-	it("arms the edge swipe while the stack can go back, and disarms it when the stack detaches", () => {
-		const { stack, allowBegin } = makeStack({ canBegin: false });
+	it("arms the edge swipe while the stack offers a swipe back, and disarms it when the stack detaches", () => {
+		const { stack, offerSwipeBack } = makeStack({ offers: false });
 		const detach = attachSystemBackGesture(stack);
 		flushSync();
 		expect(armedPushes()).toEqual([]);
 
-		allowBegin(true);
-		allowBegin(true);
+		offerSwipeBack(true);
+		offerSwipeBack(true);
 		expect(armedPushes()).toEqual([true]);
 
-		allowBegin(false);
+		offerSwipeBack(false);
 		expect(armedPushes()).toEqual([true, false]);
-		allowBegin(true);
+		offerSwipeBack(true);
 		expect(armedPushes()).toEqual([true, false, true]);
 		detach();
 		expect(armedPushes()).toEqual([true, false, true, false]);
@@ -368,11 +368,11 @@ describe("on iOS", () => {
 	});
 
 	it("keeps the swipe armed while it tracks, and cancels it when an overlay opens mid-swipe", () => {
-		const { stack, calls, allowBegin } = makeStack();
+		const { stack, calls, offerSwipeBack } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 		flushSync();
 		expect(start()).toBe(true);
-		allowBegin(false);
+		offerSwipeBack(false);
 		expect(armedPushes()).toEqual([true]);
 
 		backGestureEventHandlers.set(() => false, "overlay");
@@ -386,11 +386,11 @@ describe("on iOS", () => {
 	});
 
 	it("disarms the edge swipe once a tracked swipe ends where the stack no longer offers one", () => {
-		const { stack, allowBegin } = makeStack();
+		const { stack, offerSwipeBack } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 		flushSync();
 		expect(start()).toBe(true);
-		allowBegin(false);
+		offerSwipeBack(false);
 		expect(armedPushes()).toEqual([true]);
 
 		window.__iosBack?.finish({ commit: false, velocity: 0 });

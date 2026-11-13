@@ -14,7 +14,7 @@ export type SwipeRelease = { velocity: number };
 export type SwipeBackStack = {
 	readonly tracking: boolean;
 	readonly moving: boolean;
-	readonly canBeginSwipeBack: boolean;
+	readonly offersSwipeBack: boolean;
 	beginSwipeBack(): boolean;
 	trackSwipeBack(progress: number): void;
 	commitSwipeBack(release?: SwipeRelease): void;
@@ -127,7 +127,7 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 				gesture,
 				armed:
 					ownsTheGesture() &&
-					(stack.tracking || stack.canBeginSwipeBack),
+					(stack.tracking || stack.offersSwipeBack),
 			});
 		});
 	});

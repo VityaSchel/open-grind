@@ -493,28 +493,24 @@ describe("LiveStackState back gesture", () => {
 
 describe("LiveStackState offering a back swipe", () => {
 	it("offers one exactly where a swipe would start", async () => {
-		expect(makeStack().stack.canBeginSwipeBack).toBe(false);
+		expect(makeStack().stack.offersSwipeBack).toBe(false);
 		expect(
 			makeStack({ startAt: FIRST, backLandsOnBase: false }).stack
-				.canBeginSwipeBack,
+				.offersSwipeBack,
 		).toBe(false);
-		expect(makeStack({ startAt: FIRST }).stack.canBeginSwipeBack).toBe(
-			true,
-		);
+		expect(makeStack({ startAt: FIRST }).stack.offersSwipeBack).toBe(true);
 
 		const harness = makeStack();
 		await navigate(harness, { from: LIST, to: FIRST });
 		expect(harness.stack.moving).toBe(true);
-		expect(harness.stack.canBeginSwipeBack, "while it slides in").toBe(
-			true,
-		);
+		expect(harness.stack.offersSwipeBack, "while it slides in").toBe(true);
 	});
 
 	it("stops offering it while a committed swipe slides out", () => {
 		const { stack } = releasedSwipe({ progress: 0.6 });
 
 		expect(stack.moving).toBe(true);
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 	});
 
 	it("reports the offer reactively", () => {
@@ -525,7 +521,7 @@ describe("LiveStackState offering a back swipe", () => {
 		const offers: boolean[] = [];
 		const stop = $effect.root(() => {
 			$effect(() => {
-				offers.push(stack.canBeginSwipeBack);
+				offers.push(stack.offersSwipeBack);
 			});
 		});
 		flushSync();

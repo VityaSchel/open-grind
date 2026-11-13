@@ -101,7 +101,7 @@ describe("PageStackState navigation", () => {
 		const { stack, animations } = makeStack({
 			pushedFrom: [{ path: "/settings" }, { path: "/settings/account" }],
 		});
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 
 		for (const [from, to] of [
 			["/settings/account/blocked", "/settings/account"],
@@ -131,7 +131,7 @@ describe("PageStackState navigation", () => {
 		expect(stack.ghost).toBeNull();
 		expect(start).toBeUndefined();
 		expect(animations).toHaveLength(0);
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 	});
 
 	it("treats a forward history move as a push", async () => {
@@ -177,7 +177,7 @@ describe("PageStackState navigation", () => {
 		expect(stack.ghost).toBeNull();
 		expect(start).toBeUndefined();
 		expect(animations).toHaveLength(0);
-		expect(stack.canBeginSwipeBack).toBe(true);
+		expect(stack.offersSwipeBack).toBe(true);
 	});
 });
 
@@ -225,11 +225,11 @@ describe("PageStackState swipe back", () => {
 	it("is unavailable until a push has been seen", async () => {
 		const harness = makeStack();
 		const { stack } = harness;
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 		expect(stack.beginSwipeBack()).toBe(false);
 
 		await push(harness, { from: "/settings", to: "/settings/app" });
-		expect(stack.canBeginSwipeBack).toBe(true);
+		expect(stack.offersSwipeBack).toBe(true);
 	});
 
 	it("reveals the cached page beneath the live one while tracking", async () => {
@@ -359,7 +359,7 @@ describe("PageStackState swipe back", () => {
 
 		expect(back).not.toHaveBeenCalled();
 		expect(stack.ghost).toBeNull();
-		expect(stack.canBeginSwipeBack).toBe(true);
+		expect(stack.offersSwipeBack).toBe(true);
 	});
 
 	it("adopts the revealed page in place instead of animating it twice", async () => {
@@ -404,7 +404,7 @@ describe("PageStackState swipe back", () => {
 		start?.();
 		await settleLast(animations);
 
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 		expect(stack.beginSwipeBack()).toBe(false);
 	});
 
@@ -416,12 +416,12 @@ describe("PageStackState swipe back", () => {
 			from: "/settings/app",
 			to: "/settings/app/credits",
 		});
-		expect(stack.canBeginSwipeBack).toBe(true);
+		expect(stack.offersSwipeBack).toBe(true);
 
 		await stack.navigate(
 			navigationEvent({ from: "/settings/app/credits", to: "/chat" }),
 		);
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 	});
 
 	it("drops one level per pop", async () => {
@@ -441,14 +441,14 @@ describe("PageStackState swipe back", () => {
 		);
 		start?.();
 		await settleLast(animations);
-		expect(stack.canBeginSwipeBack).toBe(true);
+		expect(stack.offersSwipeBack).toBe(true);
 
 		const toRoot = await stack.navigate(
 			navigationEvent({ from: "/settings/app", to: "/settings" }),
 		);
 		toRoot?.();
 		await settleLast(animations);
-		expect(stack.canBeginSwipeBack).toBe(false);
+		expect(stack.offersSwipeBack).toBe(false);
 	});
 });
 

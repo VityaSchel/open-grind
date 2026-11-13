@@ -61,7 +61,7 @@ export class PageStackState {
 		return this.ghost !== null;
 	}
 
-	get canBeginSwipeBack(): boolean {
+	get offersSwipeBack(): boolean {
 		return this.#ancestors.length > 0 && this.#livePane() !== null;
 	}
 
