@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 const SHARED: &str = "/Applications";
 
-pub fn enforce() {
+pub fn enforce_home() {
 	if cfg!(debug_assertions) {
 		return;
 	}

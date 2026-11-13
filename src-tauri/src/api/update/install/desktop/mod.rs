@@ -16,6 +16,8 @@ use super::super::baseline::Baseline;
 use super::super::component::Component;
 use super::super::error::UpdateError;
 use super::{Outcome, Unsupported};
+#[cfg(target_os = "macos")]
+pub use location::enforce_home;
 
 const INSTALLED_MARKER: &str = "update-installed";
 
@@ -115,11 +117,6 @@ pub fn open_install_permission_settings(
 	_app: &AppHandle,
 ) -> Result<(), UpdateError> {
 	Err(UpdateError::Unsupported(reason()))
-}
-
-#[cfg(target_os = "macos")]
-pub fn enforce_home() {
-	location::enforce();
 }
 
 pub fn take_outcome(app: &AppHandle) -> Option<Outcome> {
