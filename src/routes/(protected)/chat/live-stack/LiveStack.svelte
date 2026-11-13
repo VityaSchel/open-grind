@@ -102,7 +102,7 @@
 <div
 	bind:this={basePane}
 	data-slot="live-stack-base"
-	class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) px-safe pb-(--safe-area-bottom)"
+	class="fixed inset-0 flex flex-col bg-background p-safe"
 	style:z-index={STACK_Z.back}
 	data-covered={(stack.covered && !stack.basePrepared) || undefined}
 	inert={stack.sheetOpen}
@@ -125,7 +125,7 @@
 			{@attach placePane}
 			data-slot="live-stack-sheet"
 			class={[
-				"fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) px-safe pb-(--safe-area-bottom)",
+				"fixed inset-0 flex flex-col bg-background p-safe",
 				{
 					"shadow-(--stack-edge)": motion.edge,
 					"pointer-events-none": motion.fade && leaving,

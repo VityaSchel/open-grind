@@ -8,7 +8,7 @@
 {#if mediaDrop.label !== null}
 	<div
 		data-slot="media-drop-overlay"
-		class="pointer-events-none fixed inset-0 z-drop bg-black/30 scrim pt-[calc(var(--safe-area-top)_+_--spacing(4))] pr-[calc(var(--safe-area-right)_+_--spacing(4))] pb-[calc(var(--safe-area-bottom)_+_--spacing(4))] pl-[calc(var(--safe-area-left)_+_--spacing(4))] backdrop-filter-(--bd-veil)"
+		class="pointer-events-none fixed inset-0 z-drop bg-black/30 scrim p-safe-4 backdrop-filter-(--bd-veil)"
 	>
 		<div
 			data-slot="media-drop-zone"
