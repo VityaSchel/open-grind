@@ -23,13 +23,17 @@ const { goto, navigating, page } = vi.hoisted(() => ({
 vi.mock("$app/navigation", () => ({ goto }));
 vi.mock("$app/state", () => ({ navigating, page }));
 
-function stubEntries(paths: string[], index: number) {
-	const go = vi.fn();
+function navigationWith({ paths, index }: { paths: string[]; index: number }) {
 	vi.stubGlobal("navigation", {
 		currentEntry: { index },
 		entries: () =>
 			paths.map((path) => ({ url: `https://app.test${path}` })),
 	});
+}
+
+function stubEntries(paths: string[], index: number) {
+	const go = vi.fn();
+	navigationWith({ paths, index });
 	vi.stubGlobal("history", { go, length: paths.length });
 	return go;
 }
@@ -274,20 +278,6 @@ describe("the history log", () => {
 			go,
 		});
 		return go;
-	}
-
-	function navigationWith({
-		paths,
-		index,
-	}: {
-		paths: string[];
-		index: number;
-	}) {
-		vi.stubGlobal("navigation", {
-			currentEntry: { index },
-			entries: () =>
-				paths.map((path) => ({ url: `https://app.test${path}` })),
-		});
 	}
 
 	it("walks back through the log without the Navigation API", async () => {
