@@ -352,7 +352,6 @@ export async function installTauriShim(
 		};
 
 		Object.assign(window, {
-			isTauri: true,
 			__TAURI_OS_PLUGIN_INTERNALS__: {
 				eol: "\n",
 				platform: platformName,
