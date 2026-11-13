@@ -5,6 +5,7 @@ import { $ } from "bun";
 import { assetSuffix } from "./lib/asset-suffix";
 import { MACOS_TARGET, macosBundle } from "./lib/macos-bundle";
 import { only } from "./lib/only";
+import { XCRUN } from "./lib/xcrun";
 
 const root = Bun.fileURLToPath(new URL("..", import.meta.url)).replace(
 	/\/$/,
@@ -24,15 +25,6 @@ const EXECUTABLE = "Contents/MacOS/open-grind";
 const identity = Bun.env.MACOS_SIGN_IDENTITY ?? "-";
 const adHoc = identity === "-";
 const notary = await notaryCredentials();
-
-const XCRUN = [
-	"/usr/bin/env",
-	"-u",
-	"DEVELOPER_DIR",
-	"-u",
-	"SDKROOT",
-	"/usr/bin/xcrun",
-];
 
 const epoch = Bun.env.SOURCE_DATE_EPOCH;
 if (!epoch) {
