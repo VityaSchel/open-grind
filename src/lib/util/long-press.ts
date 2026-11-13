@@ -79,7 +79,7 @@ export type LongPressHandlers = Pick<
 
 export type PressPoint = { x: number; y: number };
 
-export type MenuLongPressSource = "holdTimer" | "contextMenu";
+type MenuLongPressSource = "holdTimer" | "contextMenu";
 
 export function menuLongPressSource(): MenuLongPressSource {
 	switch (currentPlatform()) {
@@ -166,4 +166,29 @@ export function longPressHandlers(
 			fireOnce({ onLongPress: () => onLongPress(point), byTouch });
 		},
 	};
+}
+
+export function menuPressHandlers({
+	openMenu,
+	onHold,
+}: {
+	openMenu: (press: { byTouch: boolean }) => boolean;
+	onHold?: () => void;
+}): LongPressHandlers {
+	switch (menuLongPressSource()) {
+		case "holdTimer":
+			return longPressHandlers(() => {
+				onHold?.();
+				openMenu({ byTouch: true });
+			});
+		case "contextMenu":
+			return {
+				oncontextmenu(event) {
+					event.preventDefault();
+					const byTouch = firedByTouch(event);
+					if (openMenu({ byTouch }) && byTouch)
+						playHaptic("longPress");
+				},
+			};
+	}
 }

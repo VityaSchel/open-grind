@@ -61,6 +61,24 @@ describe("tap menu haptics", () => {
 	});
 });
 
+describe("tap picker on Android", () => {
+	beforeEach(() => {
+		runningOn("android");
+	});
+
+	it("still sends one Fire tap for a click after a touch long press", () => {
+		const button = renderButton();
+
+		button.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
+		button.dispatchEvent(pointerClick());
+
+		expect(sendTapMock).toHaveBeenCalledExactlyOnceWith({
+			recipientId: 2,
+			tapType: TapType.Hot,
+		});
+	});
+});
+
 describe("tap picker on iOS", () => {
 	beforeEach(() => {
 		runningOn("ios");

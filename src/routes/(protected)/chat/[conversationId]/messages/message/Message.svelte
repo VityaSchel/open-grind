@@ -6,13 +6,7 @@
 	import type { VirtualElement } from "@floating-ui/dom";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
-	import { playHaptic } from "#lib/haptics.ts";
-	import { firedByTouch } from "#lib/platform/touch-origin.ts";
-	import {
-		type LongPressHandlers,
-		longPressHandlers,
-		menuLongPressSource,
-	} from "#lib/util/long-press.ts";
+	import { menuPressHandlers } from "#lib/util/long-press.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
 	import { returnFocus } from "#lib/util/return-focus.ts";
@@ -237,25 +231,13 @@
 	// tell a double tap (react) from a double click (reply).
 	let lastPointerType = "";
 
-	function rowPressHandlers(): LongPressHandlers {
-		switch (menuLongPressSource()) {
-			case "holdTimer":
-				return longPressHandlers(() => {
-					if (openContextMenu()) swipe?.cancel();
-				});
-			case "contextMenu":
-				return {
-					oncontextmenu(event) {
-						event.preventDefault();
-						if (!openContextMenu() || !firedByTouch(event)) return;
-						swipe?.cancel();
-						playHaptic("longPress");
-					},
-				};
-		}
-	}
-
-	const rowPress = rowPressHandlers();
+	const rowPress = menuPressHandlers({
+		openMenu: ({ byTouch }) => {
+			const opened = openContextMenu();
+			if (opened && byTouch) swipe?.cancel();
+			return opened;
+		},
+	});
 
 	const wheelMode = wheelInputMode();
 	const railWheel = wheelMode === "rail";

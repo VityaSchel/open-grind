@@ -4,13 +4,10 @@
 	import TapIcon from "#lib/components/profile/TapIcon.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
-	import { playHaptic } from "#lib/haptics.ts";
 	import { TapType, tapTypes } from "#lib/model/interest/taps.ts";
-	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 	import {
 		type LongPressHandlers,
-		longPressHandlers,
-		menuLongPressSource,
+		menuPressHandlers,
 	} from "#lib/util/long-press.ts";
 
 	let {
@@ -47,34 +44,21 @@
 
 	const sent = $derived(tapType !== null);
 
-	function pickerPressHandlers(): LongPressHandlers {
-		switch (menuLongPressSource()) {
-			case "holdTimer": {
-				const hold = longPressHandlers(() => {
-					heldOpen = true;
-					open = true;
-				});
-				return {
-					...hold,
-					onpointerdown(event) {
-						heldOpen = false;
-						hold.onpointerdown?.(event);
-					},
-				};
-			}
-			case "contextMenu":
-				return {
-					oncontextmenu(event) {
-						event.preventDefault();
-						if (!open && firedByTouch(event))
-							playHaptic("longPress");
-						open = true;
-					},
-				};
-		}
-	}
-
-	const pickerPress = pickerPressHandlers();
+	const press = menuPressHandlers({
+		openMenu: () => {
+			const opened = !open;
+			open = true;
+			return opened;
+		},
+		onHold: () => (heldOpen = true),
+	});
+	const pickerPress: LongPressHandlers = {
+		...press,
+		onpointerdown(event) {
+			heldOpen = false;
+			press.onpointerdown?.(event);
+		},
+	};
 </script>
 
 <Button
