@@ -33,9 +33,10 @@ import {
 } from "./support/page-stack";
 import { PHONE } from "./support/stack-layers";
 import {
-	commitSystemBack,
-	progressSystemBack,
-	startSystemBack,
+	edgeSwipeArmed,
+	progressEdgeSwipe,
+	releaseEdgeSwipe,
+	startEdgeSwipe,
 } from "./support/system-back";
 
 test.describe.configure({ timeout: 180_000 });
@@ -244,18 +245,20 @@ test.describe("without the Navigation API", () => {
 			await expect(page).toHaveURL(new RegExp(`${href}$`));
 		});
 
-		test("the back gesture drags a conversation off the inbox it was opened from", async ({
+		test("the edge swipe drags a conversation off the inbox it was opened from", async ({
 			page,
 		}) => {
-			await openInbox(page, { platform: "android" });
+			await openInbox(page, { platform: "ios" });
 			await openConversation(page);
 
-			expect(
-				await startSystemBack(page),
-				"the stack knows the inbox is the entry behind",
-			).toBe(true);
-			await progressSystemBack(page, 0.5);
-			expect(await commitSystemBack(page)).toBe(false);
+			await expect
+				.poll(() => edgeSwipeArmed(page), {
+					message: "the stack knows the inbox is the entry behind",
+				})
+				.toBe(true);
+			expect(await startEdgeSwipe(page)).toBe(true);
+			await progressEdgeSwipe(page, 0.5);
+			await releaseEdgeSwipe(page, { commit: true, velocity: 1 });
 
 			await expect(page).toHaveURL(/\/chat$/);
 			await expect(sheet(page)).toHaveCount(0);
