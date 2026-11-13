@@ -85,13 +85,10 @@
 	function triggerPressHandlers(): LongPressHandlers {
 		switch (menuLongPressSource()) {
 			case "holdTimer": {
-				const hold = longPressHandlers(openMenuAt);
-				return {
-					onpointerdown: hold.onpointerdown,
-					onpointermove: hold.onpointermove,
-					onpointerup: hold.onpointerup,
-					onpointercancel: hold.onpointercancel,
-				};
+				const { oncontextmenu: _ownMenu, ...hold } =
+					longPressHandlers(openMenuAt);
+				void _ownMenu;
+				return hold;
 			}
 			case "contextMenu":
 				return {
