@@ -14,6 +14,7 @@ import {
 } from "./support/app";
 import {
 	backToChats,
+	MESSAGE,
 	openConversation,
 	openInbox,
 	rows,
@@ -67,7 +68,6 @@ const COMPOSER = '[data-slot="message-composer"]';
 const DIALOG = '[data-slot="dialog-content"]';
 const DRAWER = '[data-slot="drawer-content"]';
 const SHEET = '[data-slot="sheet-content"]';
-const MESSAGE = '[data-slot="message"]';
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const LOW_ROW_OFFSET = { x: 160, y: 110 };
 const PAGES_TO_LOAD = 3;

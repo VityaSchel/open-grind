@@ -9,9 +9,11 @@ import {
 import {
 	backToChats,
 	listScroller,
+	MESSAGE,
 	openConversation,
 	openInbox,
 	sheet,
+	waitForPagingToSettle,
 } from "./support/chat-stack";
 import { CREDITS, openDeepLink } from "./support/page-stack";
 import { activeProfilePane, profileLoaded } from "./support/profile-pager";
@@ -27,7 +29,6 @@ const SHORT_CONVERSATION = "/chat/100777:123456000";
 const FEATURED_PROFILE = "/profile/100001";
 const NEWEST_BACKLOG_MESSAGE = "Backlog message 80";
 const MESSAGES = '[data-slot="messages-scroller"]';
-const MESSAGE = '[data-slot="message"]';
 const PROFILE_EDITOR = "/settings/profile";
 const SUBPAGE_SCROLLER = '[data-slot="subpage-scroller"]';
 
@@ -61,22 +62,6 @@ const centerUncovered = (scroller: Locator) =>
 		);
 		return hit !== null && element.contains(hit);
 	});
-
-async function waitForPagingToSettle(page: Page): Promise<number> {
-	let previous = -1;
-	await expect
-		.poll(
-			async () => {
-				const count = await page.locator(MESSAGE).count();
-				const settled = count === previous;
-				previous = count;
-				return settled;
-			},
-			{ timeout: 30_000, intervals: [500] },
-		)
-		.toBe(true);
-	return previous;
-}
 
 async function backlogLoaded(page: Page): Promise<number> {
 	await page

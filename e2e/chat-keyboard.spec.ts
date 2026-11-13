@@ -6,6 +6,7 @@ import {
 	installTauriShim,
 	MESSAGE_ROW,
 } from "./support/app";
+import { MESSAGE } from "./support/chat-stack";
 import {
 	type Keyboard,
 	sendInsets,
@@ -13,7 +14,6 @@ import {
 } from "./support/keyboard";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
-const MESSAGE = '[data-slot="message"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
 const COMPOSER = '[data-slot="message-composer"]';
 

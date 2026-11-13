@@ -9,6 +9,7 @@ import {
 import { LIVE_STACK } from "./stack-layers";
 
 export const WIDE = { width: 1024, height: 800 };
+export const MESSAGE = '[data-slot="message"]';
 export const SHEET = LIVE_STACK.sheet;
 export const base = (page: Page) => page.locator(LIVE_STACK.base);
 export const sheet = (page: Page) => page.locator(SHEET);
@@ -85,6 +86,22 @@ export async function deleteFromList(page: Page, { href }: { href: string }) {
 	await page.getByRole("menuitem", { name: "Delete" }).click();
 	await page.getByRole("button", { name: "Delete", exact: true }).click();
 	await expect(row(page, { href })).toHaveCount(0);
+}
+
+export async function waitForPagingToSettle(page: Page): Promise<number> {
+	let previous = -1;
+	await expect
+		.poll(
+			async () => {
+				const count = await page.locator(MESSAGE).count();
+				const settled = count === previous;
+				previous = count;
+				return settled;
+			},
+			{ timeout: 30_000, intervals: [500] },
+		)
+		.toBe(true);
+	return previous;
 }
 
 type Frame = { base: number; sheet: number | null; path: string };

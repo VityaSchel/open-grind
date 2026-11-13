@@ -9,9 +9,9 @@ import {
 	installTauriShim,
 	MESSAGE_ROW,
 } from "./support/app";
+import { MESSAGE } from "./support/chat-stack";
 
 const THEM = 100001;
-const MESSAGE = '[data-slot="message"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
 const SCROLL_DOWN = '[aria-label="Scroll to newest messages"]';
 const BADGE = `${SCROLL_DOWN} + [data-slot="badge"]`;
