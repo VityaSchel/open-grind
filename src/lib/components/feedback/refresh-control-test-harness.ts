@@ -41,39 +41,24 @@ export const distinctBands = (frames: ContentFrame[]) => [
 export type HeldAnimation = { onfinish: (() => void) | null };
 
 let heldAnimations: HeldAnimation[] = [];
-let listOnScreen = true;
-let listIntersections = new Set<() => void>();
 
 class ListIntersectionObserver {
 	readonly #callback: IntersectionObserverCallback;
-	readonly #reports = new Set<() => void>();
 
 	constructor(callback: IntersectionObserverCallback) {
 		this.#callback = callback;
 	}
 
 	observe(target: Element) {
-		const report = () =>
+		queueMicrotask(() =>
 			this.#callback(
-				[
-					{
-						target,
-						intersectionRatio: listOnScreen ? 1 : 0,
-					} as IntersectionObserverEntry,
-				],
+				[{ target, intersectionRatio: 1 } as IntersectionObserverEntry],
 				this as unknown as IntersectionObserver,
-			);
-		this.#reports.add(report);
-		listIntersections.add(report);
-		queueMicrotask(() => {
-			if (this.#reports.has(report)) report();
-		});
+			),
+		);
 	}
 
-	disconnect() {
-		for (const report of this.#reports) listIntersections.delete(report);
-		this.#reports.clear();
-	}
+	disconnect() {}
 }
 
 export let slideRecorder = contentSlideRecorder();
@@ -86,14 +71,8 @@ export async function settle() {
 
 export async function mountAtRest(
 	edge: Edge,
-	{
-		floorRoundingPx = 0,
-		contentHeight = CONTENT_HEIGHT,
-		updating = false,
-		onScreen = true,
-	} = {},
+	{ floorRoundingPx = 0, contentHeight = CONTENT_HEIGHT } = {},
 ) {
-	listOnScreen = onScreen;
 	const scroller = document.createElement("div");
 	const intoContent = edge === "top" ? 1 : -1;
 	const contentInset = () =>
@@ -147,7 +126,7 @@ export async function mountAtRest(
 	const onrefresh = vi.fn();
 	const oninsetchange = vi.fn();
 	const refreshProps = new SvelteMap<"updating" | "failed", boolean>([
-		["updating", updating],
+		["updating", false],
 		["failed", false],
 	]);
 	render(RefreshAnnouncements);
@@ -216,18 +195,6 @@ export async function mountAtRest(
 				refreshProps.set("updating", updating);
 				refreshProps.set("failed", failed);
 			});
-			await settle();
-		},
-		async showList(onScreen: boolean) {
-			listOnScreen = onScreen;
-			for (const report of listIntersections) report();
-			await settle();
-		},
-		async coverList(attribute: "inert" | "aria-hidden") {
-			const cover = document.createElement("div");
-			cover.setAttribute(attribute, attribute === "inert" ? "" : "true");
-			scroller.before(cover);
-			cover.append(scroller);
 			await settle();
 		},
 		async moveBandTo({
@@ -334,8 +301,6 @@ export function useRefreshControlHarness({
 			],
 		});
 		heldAnimations = [];
-		listOnScreen = true;
-		listIntersections = new Set();
 		vi.stubGlobal("IntersectionObserver", ListIntersectionObserver);
 		slideRecorder = contentSlideRecorder();
 		slideRecorder.installTimeline();

@@ -240,6 +240,18 @@ describe("the refresh control", () => {
 		expect(view.status()!.textContent).toBe("Refreshed");
 	});
 
+	it("takes Refreshed back at once when the last list with a refresh control goes away", async () => {
+		const view = await mountAtRest("top");
+		await view.setUpdating(true);
+		await view.setUpdating(false);
+		expect(view.status()!.textContent).toBe("Refreshed");
+
+		view.unmount();
+		await view.wait(0);
+
+		expect(view.status()!.textContent).toBe("");
+	});
+
 	it("shows the pull hint and no button for a band that no wheel comes with", async () => {
 		const view = await mountAtRest("top");
 

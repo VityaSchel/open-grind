@@ -132,7 +132,7 @@ describe("RefreshAnnouncer", () => {
 		expect(announcer.text).toBe("Refreshing");
 	});
 
-	it("says nothing once a refresh fails", () => {
+	it("says nothing once a refresh fails, and speaks again for the next one", () => {
 		const { announcer, start, finish } = announcerFor();
 
 		start();
@@ -140,6 +140,10 @@ describe("RefreshAnnouncer", () => {
 
 		expect(announcer.text).toBe("");
 		expect(vi.getTimerCount()).toBe(0);
+
+		start();
+		finish();
+		expect(announcer.text).toBe("Refreshed");
 	});
 
 	it("never says Refreshed for a refresh its list never ran", () => {
