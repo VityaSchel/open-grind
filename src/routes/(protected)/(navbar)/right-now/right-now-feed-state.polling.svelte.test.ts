@@ -222,6 +222,68 @@ describe("RightNowFeedState polling", () => {
 		detach();
 	});
 
+	it("fills a feed whose posts all expired on the next poll instead of flagging new posts", async () => {
+		getRightNowFeedMock
+			.mockResolvedValueOnce(
+				feed([post(1, { expiration: Date.now() + MINUTE })]),
+			)
+			.mockResolvedValueOnce(feed([post(2)]));
+		const state = createState();
+		let listed: ReturnType<typeof shown> = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				listed = shown(state);
+			});
+		});
+		await settle();
+		flushSync();
+		const detach = state.attachView();
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+		flushSync();
+
+		expect(listed).toEqual([2]);
+		expect(state.hasNewPosts).toBe(false);
+		detach();
+		stop();
+	});
+
+	it("refills a feed whose posts expired while new posts were held back", async () => {
+		getRightNowFeedMock
+			.mockResolvedValueOnce(
+				feed([
+					post(1, {
+						expiration: Date.now() + 2 * MINUTE + 15 * SECOND,
+					}),
+				]),
+			)
+			.mockResolvedValueOnce(feed([post(2), post(1)]))
+			.mockResolvedValueOnce(feed([post(2)]));
+		const state = createState();
+		let listed: ReturnType<typeof shown> = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				listed = shown(state);
+			});
+		});
+		await settle();
+		flushSync();
+		const detach = state.attachView();
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+
+		expect(state.hasNewPosts).toBe(true);
+
+		await vi.advanceTimersByTimeAsync(2 * MINUTE);
+		flushSync();
+
+		expect(listed).toEqual([2]);
+		expect(state.hasNewPosts).toBe(false);
+		expect(getRightNowFeedMock).toHaveBeenCalledTimes(3);
+		detach();
+		stop();
+	});
+
 	it("recovers from a failed first load on the next poll", async () => {
 		getRightNowFeedMock
 			.mockRejectedValueOnce(new Error("offline"))

@@ -213,11 +213,12 @@ export class RightNowFeedState extends ReconcilingListState<
 
 	#pollTick(): void {
 		if (document.hidden || !appLifecycle.active) return;
-		if (this.hasNewPosts || this.loading || this.refreshing) return;
-		if (!this.#pollDue()) return;
-		if (staysOnline() && this.#entries.length > 0)
-			void this.#checkForNewPosts();
-		else void this.refreshOrDefer({ attended: false });
+		if (this.loading || this.refreshing || !this.#pollDue()) return;
+		if (!staysOnline() || this.length === 0) {
+			void this.refreshOrDefer({ attended: false });
+			return;
+		}
+		if (!this.hasNewPosts) void this.#checkForNewPosts();
 	}
 
 	async #checkForNewPosts(): Promise<void> {
