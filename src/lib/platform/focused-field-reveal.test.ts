@@ -45,13 +45,13 @@ describe("revealing the focused field under the keyboard", () => {
 	let scrollIntoView: Mock<HTMLElement["scrollIntoView"]>;
 	let scrollBy: Mock<(options: ScrollToOptions) => void>;
 
-	function focusFieldWithBottomAt(
-		bottom: number,
+	function focusField(
 		element: HTMLElement,
 		{
+			bottom,
 			inside = document.body,
 			height = 40,
-		}: { inside?: HTMLElement; height?: number } = {},
+		}: { bottom: number; inside?: HTMLElement; height?: number },
 	) {
 		inside.append(element);
 		element.focus();
@@ -82,10 +82,15 @@ describe("revealing the focused field under the keyboard", () => {
 		};
 	}
 
-	function bottomChrome(
-		{ top, height }: { top: number; height: number },
-		{ inside }: { inside: HTMLElement },
-	) {
+	function bottomChrome({
+		top,
+		height,
+		inside,
+	}: {
+		top: number;
+		height: number;
+		inside: HTMLElement;
+	}) {
 		const chrome = document.createElement("div");
 		chrome.dataset.screenChrome = "bottom";
 		vi.spyOn(chrome, "getBoundingClientRect").mockReturnValue({
@@ -124,15 +129,15 @@ describe("revealing the focused field under the keyboard", () => {
 	});
 
 	describe("on ios", () => {
-		beforeEach(() => {
+		beforeEach(async () => {
 			runningOn("ios");
 			window.__iosInsets = IOS_INSETS;
-		});
-
-		it("scrolls a field the keyboard covers into view a frame after the keyboard opens", async () => {
 			const { installNativeInsets } = await loadNativeInsets();
 			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
+		});
+
+		it("scrolls a field the keyboard covers into view a frame after the keyboard opens", () => {
+			focusField(field, { bottom: 700 });
 
 			openKeyboard();
 			expect(scrollIntoView).not.toHaveBeenCalled();
@@ -143,10 +148,8 @@ describe("revealing the focused field under the keyboard", () => {
 			});
 		});
 
-		it("reveals the field when the keyboard flip lands without a resize", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
+		it("reveals the field when the keyboard flip lands without a resize", () => {
+			focusField(field, { bottom: 700 });
 			vi.stubGlobal("innerHeight", SCREEN_HEIGHT - KEYBOARD_HEIGHT);
 
 			window.__reapplyInsets(IOS_KEYBOARD_SHOWN);
@@ -156,10 +159,8 @@ describe("revealing the focused field under the keyboard", () => {
 			expect(scrollIntoView).toHaveBeenCalledOnce();
 		});
 
-		it("reveals the field again on each resize while the keyboard stays open", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(500, field);
+		it("reveals the field again on each resize while the keyboard stays open", () => {
+			focusField(field, { bottom: 500 });
 			openKeyboard();
 			vi.advanceTimersToNextFrame();
 			expect(scrollIntoView).not.toHaveBeenCalled();
@@ -173,10 +174,8 @@ describe("revealing the focused field under the keyboard", () => {
 			expect(scrollIntoView).toHaveBeenCalledTimes(2);
 		});
 
-		it("scrolls once for several resizes in one frame", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
+		it("scrolls once for several resizes in one frame", () => {
+			focusField(field, { bottom: 700 });
 			openKeyboard();
 
 			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT - 20);
@@ -186,10 +185,8 @@ describe("revealing the focused field under the keyboard", () => {
 			expect(scrollIntoView).toHaveBeenCalledOnce();
 		});
 
-		it("leaves a field above the keyboard where it is", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(SCREEN_HEIGHT - KEYBOARD_HEIGHT, field);
+		it("leaves a field above the keyboard where it is", () => {
+			focusField(field, { bottom: SCREEN_HEIGHT - KEYBOARD_HEIGHT });
 
 			openKeyboard();
 			vi.advanceTimersToNextFrame();
@@ -197,11 +194,9 @@ describe("revealing the focused field under the keyboard", () => {
 			expect(scrollIntoView).not.toHaveBeenCalled();
 		});
 
-		it("scrolls a field its scroll container clips although the screen still shows it", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
+		it("scrolls a field its scroll container clips although the screen still shows it", () => {
 			const { container } = scrollContainer({ top: 62, height: 400 });
-			focusFieldWithBottomAt(500, field, { inside: container });
+			focusField(field, { bottom: 500, inside: container });
 
 			openKeyboard();
 			vi.advanceTimersToNextFrame();
@@ -218,15 +213,14 @@ describe("revealing the focused field under the keyboard", () => {
 					.container;
 			}
 
-			it("scrolls a field the bottom chrome covers up to its top", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("scrolls a field the bottom chrome covers up to its top", () => {
 				const form = formAboveKeyboard();
-				focusFieldWithBottomAt(ABOVE_KEYBOARD, field, { inside: form });
-				bottomChrome(
-					{ top: SAVE_BAR_TOP, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				);
+				focusField(field, { bottom: ABOVE_KEYBOARD, inside: form });
+				bottomChrome({
+					top: SAVE_BAR_TOP,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				});
 
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
@@ -236,20 +230,20 @@ describe("revealing the focused field under the keyboard", () => {
 				});
 			});
 
-			it("keeps the top of a field taller than the space above the bottom chrome below the top chrome", async () => {
+			it("keeps the top of a field taller than the space above the bottom chrome below the top chrome", () => {
 				const HEADER_BOTTOM = 138;
 				topChromeClearance.mockReturnValue(HEADER_BOTTOM);
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
 				const form = formAboveKeyboard();
-				focusFieldWithBottomAt(ABOVE_KEYBOARD, field, {
+				focusField(field, {
+					bottom: ABOVE_KEYBOARD,
 					inside: form,
 					height: 400,
 				});
-				bottomChrome(
-					{ top: SAVE_BAR_TOP, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				);
+				bottomChrome({
+					top: SAVE_BAR_TOP,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				});
 
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
@@ -259,15 +253,14 @@ describe("revealing the focused field under the keyboard", () => {
 				});
 			});
 
-			it("leaves a field above the bottom chrome where it is", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("leaves a field above the bottom chrome where it is", () => {
 				const form = formAboveKeyboard();
-				focusFieldWithBottomAt(SAVE_BAR_TOP, field, { inside: form });
-				bottomChrome(
-					{ top: SAVE_BAR_TOP, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				);
+				focusField(field, { bottom: SAVE_BAR_TOP, inside: form });
+				bottomChrome({
+					top: SAVE_BAR_TOP,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				});
 
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
@@ -276,19 +269,18 @@ describe("revealing the focused field under the keyboard", () => {
 				expect(scrollIntoView).not.toHaveBeenCalled();
 			});
 
-			it("reveals the field once bottom chrome finishes appearing over it", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("reveals the field once bottom chrome finishes appearing over it", () => {
 				const form = formAboveKeyboard();
-				focusFieldWithBottomAt(ABOVE_KEYBOARD, field, { inside: form });
+				focusField(field, { bottom: ABOVE_KEYBOARD, inside: form });
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
 				expect(scrollBy).not.toHaveBeenCalled();
 
-				bottomChrome(
-					{ top: SAVE_BAR_TOP, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				).dispatchEvent(new CustomEvent("introend"));
+				bottomChrome({
+					top: SAVE_BAR_TOP,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				}).dispatchEvent(new CustomEvent("introend"));
 				vi.advanceTimersToNextFrame();
 
 				expect(scrollBy).toHaveBeenCalledExactlyOnceWith({
@@ -296,40 +288,38 @@ describe("revealing the focused field under the keyboard", () => {
 				});
 			});
 
-			it("reveals a field the bottom chrome covers once focus moves to it", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("reveals a field the bottom chrome covers once focus moves to it", () => {
 				const form = formAboveKeyboard();
-				focusFieldWithBottomAt(300, field, { inside: form });
+				focusField(field, { bottom: 300, inside: form });
 				const lowerRow = document.createElement("div");
 				form.append(lowerRow);
-				bottomChrome(
-					{ top: SAVE_BAR_TOP, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				);
+				bottomChrome({
+					top: SAVE_BAR_TOP,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				});
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
 				expect(scrollBy).not.toHaveBeenCalled();
 
-				focusFieldWithBottomAt(
-					SAVE_BAR_TOP + 40,
-					document.createElement("input"),
-					{ inside: lowerRow },
-				);
+				focusField(document.createElement("input"), {
+					bottom: SAVE_BAR_TOP + 40,
+					inside: lowerRow,
+				});
 				vi.advanceTimersToNextFrame();
 
 				expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 40 });
 			});
 
-			it("ignores bottom chrome that holds the field", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("ignores bottom chrome that holds the field", () => {
 				const form = formAboveKeyboard();
-				const composer = bottomChrome(
-					{ top: SAVE_BAR_TOP, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				);
-				focusFieldWithBottomAt(ABOVE_KEYBOARD - 8, field, {
+				const composer = bottomChrome({
+					top: SAVE_BAR_TOP,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				});
+				focusField(field, {
+					bottom: ABOVE_KEYBOARD - 8,
 					inside: composer,
 				});
 
@@ -339,15 +329,14 @@ describe("revealing the focused field under the keyboard", () => {
 				expect(scrollBy).not.toHaveBeenCalled();
 			});
 
-			it("ignores bottom chrome that comes before the field", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("ignores bottom chrome that comes before the field", () => {
 				const form = formAboveKeyboard();
-				bottomChrome(
-					{ top: 100, height: SAVE_BAR_HEIGHT },
-					{ inside: form },
-				);
-				focusFieldWithBottomAt(300, field, { inside: form });
+				bottomChrome({
+					top: 100,
+					height: SAVE_BAR_HEIGHT,
+					inside: form,
+				});
+				focusField(field, { bottom: 300, inside: form });
 
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
@@ -355,12 +344,10 @@ describe("revealing the focused field under the keyboard", () => {
 				expect(scrollBy).not.toHaveBeenCalled();
 			});
 
-			it("ignores bottom chrome that takes no space", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("ignores bottom chrome that takes no space", () => {
 				const form = formAboveKeyboard();
-				focusFieldWithBottomAt(300, field, { inside: form });
-				bottomChrome({ top: 0, height: 0 }, { inside: form });
+				focusField(field, { bottom: 300, inside: form });
+				bottomChrome({ top: 0, height: 0, inside: form });
 
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
@@ -395,14 +382,12 @@ describe("revealing the focused field under the keyboard", () => {
 				);
 			});
 
-			it("scrolls the field once its scroll container shrinks under it", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("scrolls the field once its scroll container shrinks under it", () => {
 				const { container, shrinkTo } = scrollContainer({
 					top: 62,
 					height: SCREEN_HEIGHT - 62,
 				});
-				focusFieldWithBottomAt(500, field, { inside: container });
+				focusField(field, { bottom: 500, inside: container });
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
 				expect(scrollBy).not.toHaveBeenCalled();
@@ -414,14 +399,12 @@ describe("revealing the focused field under the keyboard", () => {
 				expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 38 });
 			});
 
-			it("stops watching the scroll container once the keyboard closes", async () => {
-				const { installNativeInsets } = await loadNativeInsets();
-				installNativeInsets();
+			it("stops watching the scroll container once the keyboard closes", () => {
 				const { container } = scrollContainer({
 					top: 62,
 					height: SCREEN_HEIGHT - 62,
 				});
-				focusFieldWithBottomAt(500, field, { inside: container });
+				focusField(field, { bottom: 500, inside: container });
 				openKeyboard();
 				vi.advanceTimersToNextFrame();
 				expect(disconnected).toBe(0);
@@ -434,10 +417,8 @@ describe("revealing the focused field under the keyboard", () => {
 			});
 		});
 
-		it("never scrolls while the keyboard is closed", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, field);
+		it("never scrolls while the keyboard is closed", () => {
+			focusField(field, { bottom: 700 });
 
 			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
 			vi.advanceTimersToNextFrame();
@@ -445,10 +426,8 @@ describe("revealing the focused field under the keyboard", () => {
 			expect(scrollIntoView).not.toHaveBeenCalled();
 		});
 
-		it("stops revealing once the keyboard closes", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(500, field);
+		it("stops revealing once the keyboard closes", () => {
+			focusField(field, { bottom: 500 });
 			openKeyboard();
 			vi.advanceTimersToNextFrame();
 
@@ -461,10 +440,8 @@ describe("revealing the focused field under the keyboard", () => {
 			expect(scrollIntoView).not.toHaveBeenCalled();
 		});
 
-		it("leaves a focused control that takes no typing alone", async () => {
-			const { installNativeInsets } = await loadNativeInsets();
-			installNativeInsets();
-			focusFieldWithBottomAt(700, document.createElement("button"));
+		it("leaves a focused control that takes no typing alone", () => {
+			focusField(document.createElement("button"), { bottom: 700 });
 
 			openKeyboard();
 			vi.advanceTimersToNextFrame();
@@ -482,15 +459,16 @@ describe("revealing the focused field under the keyboard", () => {
 			top: 24,
 			height: ABOVE_KEYBOARD - 24,
 		});
-		focusFieldWithBottomAt(ABOVE_KEYBOARD, field, { inside: container });
+		focusField(field, { bottom: ABOVE_KEYBOARD, inside: container });
 		window.__reapplyInsets(KEYBOARD_SHOWN);
 		resizeViewport(ABOVE_KEYBOARD);
 		vi.advanceTimersToNextFrame();
 
-		bottomChrome(
-			{ top: ABOVE_KEYBOARD - SAVE_BAR_HEIGHT, height: SAVE_BAR_HEIGHT },
-			{ inside: container },
-		).dispatchEvent(new CustomEvent("introend"));
+		bottomChrome({
+			top: ABOVE_KEYBOARD - SAVE_BAR_HEIGHT,
+			height: SAVE_BAR_HEIGHT,
+			inside: container,
+		}).dispatchEvent(new CustomEvent("introend"));
 		field.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
 		vi.advanceTimersToNextFrame();
 
@@ -503,7 +481,7 @@ describe("revealing the focused field under the keyboard", () => {
 		window.__AndroidInsets = androidBridge(KEYBOARD_HIDDEN);
 		const { installNativeInsets } = await loadNativeInsets();
 		installNativeInsets();
-		focusFieldWithBottomAt(700, field);
+		focusField(field, { bottom: 700 });
 
 		window.__reapplyInsets(KEYBOARD_SHOWN);
 		resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
@@ -518,7 +496,7 @@ describe("revealing the focused field under the keyboard", () => {
 			runningOn(platform);
 			const { installNativeInsets } = await loadNativeInsets();
 			installNativeInsets({ fallback: FALLBACK_INSETS });
-			focusFieldWithBottomAt(700, field);
+			focusField(field, { bottom: 700 });
 
 			window.__reapplyInsets({
 				...FALLBACK_INSETS,
