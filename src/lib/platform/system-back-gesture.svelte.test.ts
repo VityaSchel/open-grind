@@ -45,7 +45,7 @@ function makeStack({ canBegin = true }: { canBegin?: boolean } = {}) {
 			return moving;
 		},
 		get canBeginSwipeBack() {
-			return tracking || canBeginSwipeBack;
+			return canBeginSwipeBack;
 		},
 		beginSwipeBack: () => {
 			calls.begin += 1;
@@ -382,6 +382,21 @@ describe("on iOS", () => {
 
 		expect(calls.cancel).toBe(1);
 		expect(calls.commit).toBe(0);
+		detach();
+	});
+
+	it("disarms the edge swipe once a tracked swipe ends where the stack no longer offers one", () => {
+		const { stack, allowBegin } = makeStack();
+		const detach = attachSystemBackGesture(stack);
+		flushSync();
+		expect(start()).toBe(true);
+		allowBegin(false);
+		expect(armedPushes()).toEqual([true]);
+
+		window.__iosBack?.finish({ commit: false, velocity: 0 });
+		flushSync();
+
+		expect(armedPushes()).toEqual([true, false]);
 		detach();
 	});
 

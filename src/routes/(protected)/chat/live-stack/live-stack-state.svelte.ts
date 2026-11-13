@@ -77,7 +77,12 @@ export class LiveStackState {
 	}
 
 	get canBeginSwipeBack(): boolean {
-		return this.tracking || this.#swipeBackFits();
+		return (
+			this.#top() !== null &&
+			this.leaving === null &&
+			(!this.moving || this.#settle.settlingIn) &&
+			this.#backLandsOnBase()
+		);
 	}
 
 	applyFrame(): void {
@@ -152,7 +157,7 @@ export class LiveStackState {
 	}
 
 	beginSwipeBack(): boolean {
-		if (!this.#swipeBackFits()) return false;
+		if (!this.canBeginSwipeBack) return false;
 
 		this.#settle.pickUp();
 		this.moving = false;
@@ -191,15 +196,6 @@ export class LiveStackState {
 		this.#backWatchdog.cancel();
 		this.#committedSlide = null;
 		this.tracking = false;
-	}
-
-	#swipeBackFits(): boolean {
-		return (
-			this.#top() !== null &&
-			this.leaving === null &&
-			(!this.moving || this.#settle.settlingIn) &&
-			this.#backLandsOnBase()
-		);
 	}
 
 	#abandonBack(): void {

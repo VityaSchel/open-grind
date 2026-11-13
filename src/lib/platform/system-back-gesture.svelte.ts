@@ -125,7 +125,9 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 		$effect(() => {
 			systemBack.arm({
 				gesture,
-				armed: ownsTheGesture() && stack.canBeginSwipeBack,
+				armed:
+					ownsTheGesture() &&
+					(stack.tracking || stack.canBeginSwipeBack),
 			});
 		});
 	});

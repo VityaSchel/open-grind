@@ -510,17 +510,6 @@ describe("LiveStackState offering a back swipe", () => {
 		);
 	});
 
-	it("keeps offering it while it tracks, whatever history says meanwhile", () => {
-		const { stack, landOnBase } = makeStack({ startAt: FIRST });
-		stack.beginSwipeBack();
-
-		landOnBase(false);
-
-		expect(stack.canBeginSwipeBack).toBe(true);
-		stack.cancelSwipeBack();
-		expect(stack.canBeginSwipeBack).toBe(false);
-	});
-
 	it("stops offering it while a committed swipe slides out", () => {
 		const { stack } = releasedSwipe({ progress: 0.6 });
 
