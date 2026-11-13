@@ -3,6 +3,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
 	captureInvokes,
 	FIRST_ROUTE_COMPILE_MS,
+	GRID_SCROLLER,
 	installTauriShim,
 	openGrid,
 } from "./support/app";
@@ -22,7 +23,6 @@ import { PHONE } from "./support/stack-layers";
 test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
 
-const GRID = ".pull-scroller";
 const SCROLL_TO_TOP = '[aria-label="Scroll to top"]';
 const LONG_CONVERSATION = "/chat/100333:123456000";
 const SHORT_CONVERSATION = "/chat/100777:123456000";
@@ -76,7 +76,7 @@ test("a status-bar tap stops the browse grid, glides it to the top and hides its
 }) => {
 	await installTauriShim(page, { platform: "ios" });
 	await openGrid(page);
-	const grid = page.locator(GRID);
+	const grid = page.locator(GRID_SCROLLER);
 	const stops = await captureInvokes(page, "stop_scroll_momentum");
 	await scrollDown(grid);
 	await expect(page.locator(SCROLL_TO_TOP)).toBeVisible();
@@ -211,7 +211,7 @@ test("a status-bar tap does nothing while a drawer is open over the grid", async
 }) => {
 	await installTauriShim(page, { platform: "ios" });
 	await openGrid(page);
-	const grid = page.locator(GRID);
+	const grid = page.locator(GRID_SCROLLER);
 	const scrolled = await scrollDown(grid, { top: 2000 });
 	await page.getByRole("button", { name: "All filters" }).click();
 	await expect(page.getByRole("dialog")).toBeVisible();

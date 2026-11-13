@@ -4,10 +4,10 @@ import {
 	PREFETCH_MARGIN_PX,
 	TRANSPARENT_PIXEL,
 } from "../src/lib/util/load-when-visible";
-import { installTauriShim, openGrid } from "./support/app";
+import { GRID_SCROLLER, installTauriShim, openGrid } from "./support/app";
+import { loadGridPages } from "./support/grid-window";
 import { AVATAR_HOST, serveImages } from "./support/media";
 
-const SCROLLER = ".pull-scroller";
 const PROFILE_LINK = 'a[href^="/profile/"]';
 
 const JUMP_PAST_MOUNTED_BAND = 3000;
@@ -20,13 +20,7 @@ async function openGridWithPagesLoaded(page: Page) {
 	await serveImages(page, AVATAR_HOST);
 	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
-	for (let page_ = 0; page_ < 5; page_++) {
-		await page.evaluate((selector) => {
-			const scroller = document.querySelector(selector)!;
-			scroller.scrollTo({ top: scroller.scrollHeight });
-		}, SCROLLER);
-		await page.waitForTimeout(400);
-	}
+	await loadGridPages(page, { pages: 5 });
 }
 
 async function scrollTo(page: Page, top: number) {
@@ -34,7 +28,7 @@ async function scrollTo(page: Page, top: number) {
 		({ selector, offset }) => {
 			document.querySelector(selector)!.scrollTo({ top: offset });
 		},
-		{ selector: SCROLLER, offset: top },
+		{ selector: GRID_SCROLLER, offset: top },
 	);
 	await page.waitForTimeout(400);
 }
@@ -54,7 +48,7 @@ function tiles(page: Page, placeholder: string): Promise<Tile[]> {
 				};
 			});
 		},
-		{ selector: SCROLLER, link: PROFILE_LINK, blank: placeholder },
+		{ selector: GRID_SCROLLER, link: PROFILE_LINK, blank: placeholder },
 	);
 }
 

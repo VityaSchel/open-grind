@@ -22,6 +22,13 @@ import {
 import { openSheetFromComposer } from "./support/drawer";
 import { filtersScroller, openAllFilters } from "./support/grid-filters";
 import {
+	GRID_CELL,
+	GRID_CELLS,
+	loadGridPages,
+	measureGridWindow,
+	scrollGridTo,
+} from "./support/grid-window";
+import {
 	IPHONE_LANDSCAPE,
 	IPHONE_LANDSCAPE_INSETS,
 	IPHONE_PORTRAIT,
@@ -62,16 +69,12 @@ const ANDROID_NAV_ON_THE_RIGHT: NativeInsets = {
 const TINY_WINDOW = { width: 400, height: 360 };
 const GRID_GUTTER = 16;
 const TOAST_GUTTER = 16;
-const GRID_CELLS = '[data-slot="grid-cells"]';
-const GRID_CELL = 'a[href^="/profile/"]';
 const COMPOSER = '[data-slot="message-composer"]';
 const DIALOG = '[data-slot="dialog-content"]';
 const DRAWER = '[data-slot="drawer-content"]';
 const SHEET = '[data-slot="sheet-content"]';
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const LOW_ROW_OFFSET = { x: 160, y: 110 };
-const PAGES_TO_LOAD = 3;
-const SCROLLED_INTO_GRID = 2500;
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -153,61 +156,6 @@ function firstGridRow(page: Page) {
 	}, GRID_CELL);
 }
 
-function gridScroller(page: Page) {
-	return page
-		.locator('[data-slot="grid-content"]')
-		.locator("xpath=..")
-		.first();
-}
-
-async function scrollGridIntoLaterPages(page: Page): Promise<void> {
-	const scroller = gridScroller(page);
-	for (let loaded = 0; loaded < PAGES_TO_LOAD; loaded++) {
-		await scroller.evaluate((element) =>
-			element.scrollTo({ top: element.scrollHeight }),
-		);
-		await page.waitForTimeout(400);
-	}
-	await scroller.evaluate(
-		(element, top) => element.scrollTo({ top }),
-		SCROLLED_INTO_GRID,
-	);
-	await page.waitForTimeout(600);
-}
-
-function gridRowLayout(page: Page) {
-	return page.locator(GRID_CELLS).evaluate((grid, cellSelector) => {
-		const scroller = grid.closest(
-			'[data-slot="grid-content"]',
-		)!.parentElement!;
-		const style = getComputedStyle(grid);
-		const tracks = style.gridTemplateColumns.trim().split(/\s+/);
-		const stride = parseFloat(tracks[0]!) + parseFloat(style.rowGap);
-		const gridTop = grid.getBoundingClientRect().top;
-		const view = scroller.getBoundingClientRect();
-		const rowsUsed = new Set<number>();
-		let offGrid = 0;
-		for (const cell of grid.querySelectorAll(cellSelector)) {
-			const top = cell.getBoundingClientRect().top - gridTop;
-			const row = Math.round(top / stride);
-			rowsUsed.add(row);
-			if (Math.abs(row * stride - top) > 1) offGrid++;
-		}
-		const ordered = [...rowsUsed].sort((a, b) => a - b);
-		return {
-			columns: tracks.length,
-			offGrid,
-			holes: ordered.filter(
-				(row, index) => index > 0 && row - ordered[index - 1]! !== 1,
-			).length,
-			coversView:
-				ordered.length > 0 &&
-				gridTop + ordered[0]! * stride <= view.top &&
-				gridTop + (ordered.at(-1)! + 1) * stride >= view.bottom,
-		};
-	}, GRID_CELL);
-}
-
 function newestAtRestAboveComposer(page: Page) {
 	return page.evaluate(
 		({ message, scroller, composer }) => {
@@ -260,14 +208,21 @@ test.describe("on an iPhone in landscape", () => {
 			.locator(GRID_CELL)
 			.first()
 			.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-		await scrollGridIntoLaterPages(page);
-		expect((await gridRowLayout(page)).columns).toBe(4);
+		await loadGridPages(page, { pages: 3 });
+		await scrollGridTo(page, { top: 2500 });
+		expect((await measureGridWindow(page)).columns).toBe(4);
 
 		await sendIosInsets(page, narrower);
 
 		await expect
-			.poll(() => gridRowLayout(page))
-			.toEqual({ columns: 5, offGrid: 0, holes: 0, coversView: true });
+			.poll(() => measureGridWindow(page))
+			.toMatchObject({
+				columns: 5,
+				offGrid: 0,
+				holes: 0,
+				coversTop: true,
+				coversBottom: true,
+			});
 	});
 
 	test("the Browse bars span the screen while their controls clear the cutouts", async ({

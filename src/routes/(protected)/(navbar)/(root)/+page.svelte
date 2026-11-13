@@ -60,6 +60,7 @@
 				/>
 			{/if}
 			<div
+				data-slot="grid-scroller"
 				class="pull-scroller"
 				bind:this={gridContainer}
 				onscroll={() =>

@@ -2,12 +2,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import {
 	afterTwoFrames,
+	GRID_SCROLLER,
 	installTauriShim,
 	openGrid,
 	runPaletteCommand,
 } from "./support/app";
 
-const SCROLLER = ".pull-scroller";
 const PROFILE_LINK = '[data-slot="grid-cells"] a[href^="/profile/"]';
 const SCROLLED_TOP = 1200;
 const ELSEWHERE = "ezs42e44yx96";
@@ -16,7 +16,7 @@ async function scrolledIntoGrid(page: Page): Promise<Locator> {
 	await installTauriShim(page, { platform: "macos" });
 	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
-	const scroller = page.locator(SCROLLER);
+	const scroller = page.locator(GRID_SCROLLER);
 	await expect
 		.poll(() =>
 			scroller.evaluate((el) => el.scrollHeight - el.clientHeight),

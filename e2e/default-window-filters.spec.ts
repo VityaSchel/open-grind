@@ -1,14 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import tauriConfig from "../src-tauri/tauri.conf.json" with { type: "json" };
-import { animationsFinished, CLASSIC_SCROLLBARS } from "./support/app";
+import {
+	animationsFinished,
+	CLASSIC_SCROLLBARS,
+	GRID_SCROLLER,
+} from "./support/app";
 import { openBrowse } from "./support/profile-pager";
 
 const [mainWindow] = tauriConfig.app.windows;
 if (!mainWindow) throw new Error("tauri.conf.json declares no window");
 const DEFAULT_WINDOW = { width: mainWindow.width, height: mainWindow.height };
 const CLASSIC_SCROLLBAR_PX = 17;
-const GRID_SCROLLER = ':has(> [data-slot="grid-content"])';
 
 test.describe.configure({ timeout: 180_000 });
 
