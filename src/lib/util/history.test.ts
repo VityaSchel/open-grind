@@ -26,7 +26,6 @@ vi.mock("$app/state", () => ({ navigating, page }));
 function stubEntries(paths: string[], index: number) {
 	const go = vi.fn();
 	vi.stubGlobal("navigation", {
-		canGoBack: index > 0,
 		currentEntry: { index },
 		entries: () =>
 			paths.map((path) => ({ url: `https://app.test${path}` })),
@@ -110,7 +109,6 @@ describe("returnTo", () => {
 	it("walks back to a launch entry whose address has no path for the root", () => {
 		const go = vi.fn();
 		vi.stubGlobal("navigation", {
-			canGoBack: true,
 			currentEntry: { index: 1 },
 			entries: () => [
 				{ url: "tauri://localhost" },
@@ -286,7 +284,6 @@ describe("the history log", () => {
 		index: number;
 	}) {
 		vi.stubGlobal("navigation", {
-			canGoBack: index > 0,
 			currentEntry: { index },
 			entries: () =>
 				paths.map((path) => ({ url: `https://app.test${path}` })),

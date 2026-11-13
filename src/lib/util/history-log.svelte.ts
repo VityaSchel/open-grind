@@ -78,10 +78,6 @@ export class HistoryLog {
 		);
 	}
 
-	hasEntryBefore(index: number): boolean {
-		return [...this.#entries.keys()].some((key) => key < index);
-	}
-
 	span(index: number): number {
 		let span = 1;
 		while (this.#entries.has(index - span)) span++;

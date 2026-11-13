@@ -54,8 +54,7 @@ describe("HistoryLog", () => {
 			"/settings",
 			"/",
 		]);
-		expect(log.hasEntryBefore(LAUNCH + 2)).toBe(true);
-		expect(log.hasEntryBefore(LAUNCH)).toBe(false);
+		expect(log.earlier({ index: LAUNCH, limit: 10 })).toEqual([]);
 	});
 
 	it("takes the place of an entry that a navigation replaced", () => {
@@ -122,7 +121,9 @@ describe("HistoryLog", () => {
 			null,
 			"/",
 		]);
-		expect(log.hasEntryBefore(LAUNCH + 60_000)).toBe(true);
+		expect(log.earlier({ index: LAUNCH + 60_000, limit: 1 })).toEqual([
+			null,
+		]);
 	});
 
 	it("leaves a gap for an index it never saw instead of shortening the trip", () => {
@@ -159,7 +160,7 @@ describe("HistoryLog", () => {
 			{ index: LAUNCH + 2, pathname: "/settings/app", length: 2 },
 		]);
 
-		expect(log.hasEntryBefore(LAUNCH + 1)).toBe(false);
+		expect(log.earlier({ index: LAUNCH + 1, limit: 10 })).toEqual([]);
 		expect(log.earlier({ index: LAUNCH + 2, limit: 10 })).toEqual([
 			"/settings",
 		]);
@@ -169,7 +170,6 @@ describe("HistoryLog", () => {
 		const { log } = walk([]);
 
 		expect(log.earlier({ index: LAUNCH, limit: 10 })).toEqual([]);
-		expect(log.hasEntryBefore(LAUNCH)).toBe(false);
 		expect(log.span(LAUNCH)).toBe(1);
 	});
 
@@ -205,7 +205,7 @@ describe("HistoryLog", () => {
 		const mistyped = new HistoryLog({ storage: () => storage });
 
 		expect(broken.span(LAUNCH)).toBe(1);
-		expect(mistyped.hasEntryBefore(LAUNCH)).toBe(false);
+		expect(mistyped.earlier({ index: LAUNCH, limit: 10 })).toEqual([]);
 	});
 
 	it("lets a reader in an effect run again after every recorded navigation", () => {

@@ -26,7 +26,6 @@ export function makeStack({
 } = {}) {
 	const index = canGoBack ? 1 : 0;
 	vi.stubGlobal("navigation", {
-		canGoBack,
 		currentEntry: { index },
 		entries: () =>
 			Array.from({ length: index + 1 }, () => ({ url: location.href })),

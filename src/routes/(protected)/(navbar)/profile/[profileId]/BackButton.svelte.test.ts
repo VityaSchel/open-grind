@@ -50,7 +50,6 @@ function renderBackLink({
 		canGoBack === undefined
 			? undefined
 			: {
-					canGoBack,
 					currentEntry: { index },
 					entries: () =>
 						Array.from({ length: index + 1 }, () => ({

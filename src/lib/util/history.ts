@@ -7,42 +7,29 @@ import { entryPathname } from "#lib/util/pathname.ts";
 
 const BACK_WATCHDOG_MS = 1000;
 
-function trustedNavigation():
-	| { navigation: Navigation; index: number }
-	| undefined {
+function navigationEntriesBehind(): NavigationHistoryEntry[] | undefined {
 	const navigation = window.navigation;
 	const index = navigation?.currentEntry?.index;
 	if (!navigation || index === undefined || index < 0) return undefined;
 
+	const entries = navigation.entries();
 	const current = liveHistoryIndex();
-	if (
-		current !== undefined &&
-		navigation.entries().length < historyLog.span(current)
-	)
+	if (current !== undefined && entries.length < historyLog.span(current))
 		return undefined;
-	return { navigation, index };
+	return entries.slice(0, index);
 }
 
 export function canGoBack(): boolean {
-	void historyLog.recorded;
-	const trusted = trustedNavigation();
-	if (trusted) return trusted.navigation.canGoBack;
-
-	const current = liveHistoryIndex();
-	return current !== undefined && historyLog.hasEntryBefore(current);
+	return earlierPathnames().length > 0;
 }
 
 export function earlierPathnames(): (string | null)[] {
 	void historyLog.recorded;
-	const trusted = trustedNavigation();
-	if (trusted) {
-		const { navigation, index } = trusted;
-		return navigation
-			.entries()
-			.slice(0, index)
+	const behind = navigationEntriesBehind();
+	if (behind)
+		return behind
 			.reverse()
 			.map(({ url }) => (url ? entryPathname(url) : null));
-	}
 
 	const current = liveHistoryIndex();
 	if (current === undefined) return [];
