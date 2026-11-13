@@ -5,9 +5,7 @@ import VideoPlayer from "#lib/components/shared/VideoPlayer.svelte";
 import { safeAreaInsets } from "#lib/util/safe-area.ts";
 import { applyPhotoSwipeComponent } from "./component";
 import { type Failure, failures } from "./error-ui";
-import { applyPhotoSwipeSafeAreaSync } from "./sizing";
-
-const NO_PADDING = { top: 0, right: 0, bottom: 0, left: 0 };
+import { applyPhotoSwipeSafeAreaSync, NO_PADDING } from "./sizing";
 
 export type VideoSlide = { src: string; poster: string | null; loop?: boolean };
 

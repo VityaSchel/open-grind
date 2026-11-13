@@ -3,12 +3,12 @@ import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 type Listener = () => void;
 
-const busyLightboxes = new Set<object>();
+const busyOwners = new Set<object>();
 const openingListeners = new Set<Listener>();
 const idleListeners = new Set<Listener>();
 
 export function isPhotoSwipeBusy(): boolean {
-	return busyLightboxes.size > 0;
+	return busyOwners.size > 0;
 }
 
 export function onPhotoSwipeOpening(listener: Listener): () => void {
@@ -29,14 +29,14 @@ function notify(listeners: Set<Listener>): void {
 	for (const listener of [...listeners]) listener();
 }
 
-function release(lightbox: object): void {
-	if (busyLightboxes.delete(lightbox) && busyLightboxes.size === 0)
+function release(owner: object): void {
+	if (busyOwners.delete(owner) && busyOwners.size === 0)
 		notify(idleListeners);
 }
 
 export function trackPhotoSwipeBusy(): () => void {
 	const token = {};
-	busyLightboxes.add(token);
+	busyOwners.add(token);
 	notify(openingListeners);
 	return () => release(token);
 }
@@ -73,7 +73,7 @@ export function applyPhotoSwipeOpenTracking(
 			lightbox,
 		);
 		if (index < 0) return;
-		busyLightboxes.add(lightbox);
+		busyOwners.add(lightbox);
 		notify(openingListeners);
 	};
 	gallery.addEventListener("click", trackOpening, true);

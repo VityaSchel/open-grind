@@ -5,6 +5,8 @@ import { onSafeAreaChange, safeAreaInsets } from "#lib/util/safe-area.ts";
 
 const LAYOUT_UNIT_PX = 1 / 64;
 
+export const NO_PADDING = { top: 0, right: 0, bottom: 0, left: 0 };
+
 function wholePixelsCovering(length: number): number {
 	return Math.ceil(length - LAYOUT_UNIT_PX);
 }
@@ -74,13 +76,10 @@ export function reservePhotoSwipeBottom(
 	applyPhotoSwipeSafeAreaSync(lightbox);
 	const paddingFn = lightbox.options.paddingFn;
 	lightbox.options.paddingFn = (viewport, item, index) => {
-		const padding = paddingFn?.(viewport, item, index) ??
-			lightbox.options.padding ?? {
-				top: 0,
-				right: 0,
-				bottom: 0,
-				left: 0,
-			};
+		const padding =
+			paddingFn?.(viewport, item, index) ??
+			lightbox.options.padding ??
+			NO_PADDING;
 		const reserved = height();
 		if (reserved === null) return padding;
 		return {

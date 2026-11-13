@@ -51,7 +51,7 @@ export type LightboxItem = {
 	thumbCropped?: boolean;
 } & Partial<MediaDimensions>;
 
-const ZOOM_ANIMATION_MS = 500;
+export const ZOOM_ANIMATION_MS = 500;
 
 export async function openLightbox({
 	items,

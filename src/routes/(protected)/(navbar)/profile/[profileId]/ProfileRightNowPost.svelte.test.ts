@@ -20,7 +20,7 @@ const {
 	componentSlideMock,
 	showErrorToastMock,
 	preloadFullImageMock,
-	fullImageSizeWithinMock,
+	fullImageSizeInTimeMock,
 } = vi.hoisted(() => ({
 	gotoMock: vi.fn(),
 	getRightNowPostReportMock: vi.fn(),
@@ -31,7 +31,7 @@ const {
 	componentSlideMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	preloadFullImageMock: vi.fn(),
-	fullImageSizeWithinMock: vi.fn(),
+	fullImageSizeInTimeMock: vi.fn(),
 }));
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
@@ -50,7 +50,7 @@ vi.mock("#lib/util/photoswipe/index.ts", () => ({
 }));
 vi.mock("#lib/util/photoswipe/full-size.ts", () => ({
 	preloadFullImage: preloadFullImageMock,
-	fullImageSizeWithin: fullImageSizeWithinMock,
+	fullImageSizeInTime: fullImageSizeInTimeMock,
 }));
 vi.mock("./right-now-viewer.ts", () => ({
 	applyPhotoSwipeCaption: captionMock,
@@ -239,7 +239,7 @@ const photoPost = () => post({ media: [media("APPROVED", 2)] });
 beforeEach(() => {
 	vi.clearAllMocks();
 	getRightNowPostReportMock.mockResolvedValue(null);
-	fullImageSizeWithinMock.mockResolvedValue(null);
+	fullImageSizeInTimeMock.mockResolvedValue(null);
 	openLightboxMock.mockImplementation(
 		({ configure }: { configure: (lightbox: unknown) => void }) => {
 			configure(fakeLightbox());
@@ -315,7 +315,7 @@ describe("a profile's Right Now post", () => {
 
 		expect(openedItems()).toStrictEqual([{ src: "" }]);
 		expect(lastOpen().animation).toBe("fade");
-		expect(fullImageSizeWithinMock).not.toHaveBeenCalled();
+		expect(fullImageSizeInTimeMock).not.toHaveBeenCalled();
 		expect(captionMock).not.toHaveBeenCalled();
 		const slide = target.querySelector<HTMLElement>(
 			'[data-slot="right-now-post-caption-slide"]',
@@ -336,7 +336,7 @@ describe("a profile's Right Now post", () => {
 		expect(openedItems()).toStrictEqual([{ src: "" }]);
 		expect(lastOpen().animation).toBe("fade");
 		expect(preloadFullImageMock).not.toHaveBeenCalled();
-		expect(fullImageSizeWithinMock).not.toHaveBeenCalled();
+		expect(fullImageSizeInTimeMock).not.toHaveBeenCalled();
 		expect(captionMock).not.toHaveBeenCalled();
 		const slide = target.querySelector<HTMLElement>(
 			'[data-slot="right-now-post-caption-slide"]',
@@ -362,15 +362,14 @@ describe("a profile's Right Now post", () => {
 	});
 
 	it("zooms the photo open out of the card's photo frame once its full size is known", async () => {
-		fullImageSizeWithinMock.mockResolvedValue(FULL_SIZE);
+		fullImageSizeInTimeMock.mockResolvedValue(FULL_SIZE);
 		renderCard({ value: photoPost() });
 
 		await tapCard();
 
-		expect(fullImageSizeWithinMock).toHaveBeenCalledExactlyOnceWith({
-			src: FULL_PHOTO,
-			timeoutMs: 1500,
-		});
+		expect(fullImageSizeInTimeMock).toHaveBeenCalledExactlyOnceWith(
+			FULL_PHOTO,
+		);
 		expect(lastOpen().animation).toBe("zoom");
 		expect(isPhotoSwipeBusy()).toBe(false);
 		expect(openedItems()).toStrictEqual([
@@ -389,10 +388,9 @@ describe("a profile's Right Now post", () => {
 
 		await tapCard();
 
-		expect(fullImageSizeWithinMock).toHaveBeenCalledExactlyOnceWith({
-			src: FULL_PHOTO,
-			timeoutMs: 1500,
-		});
+		expect(fullImageSizeInTimeMock).toHaveBeenCalledExactlyOnceWith(
+			FULL_PHOTO,
+		);
 		expect(lastOpen().animation).toBe("fade");
 		const [item] = openedItems();
 		expect(item?.src).toBe(FULL_PHOTO);
@@ -403,12 +401,12 @@ describe("a profile's Right Now post", () => {
 
 	it("waits for the photo's full size before opening, holding PhotoSwipe busy meanwhile, and opens nothing once the card has gone away", async () => {
 		const size = Promise.withResolvers<MediaDimensions | null>();
-		fullImageSizeWithinMock.mockReturnValue(size.promise);
+		fullImageSizeInTimeMock.mockReturnValue(size.promise);
 		const { unmount: unmountCard } = renderCard({ value: photoPost() });
 
 		await fireEvent.click(openButton());
 		await vi.waitFor(() =>
-			expect(fullImageSizeWithinMock).toHaveBeenCalledOnce(),
+			expect(fullImageSizeInTimeMock).toHaveBeenCalledOnce(),
 		);
 		expect(openLightboxMock).not.toHaveBeenCalled();
 		expect(isPhotoSwipeBusy()).toBe(true);
@@ -424,7 +422,7 @@ describe("a profile's Right Now post", () => {
 	it.each(["openingAnimationStart", "closingAnimationStart"])(
 		"hides the card's photo frame from %s until the viewer is gone, so the photo seems to leave and return to it",
 		async (animationStart) => {
-			fullImageSizeWithinMock.mockResolvedValue(FULL_SIZE);
+			fullImageSizeInTimeMock.mockResolvedValue(FULL_SIZE);
 			renderCard({ value: photoPost() });
 			await tapCard();
 			const lightbox = lastLightbox();

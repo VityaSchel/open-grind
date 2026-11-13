@@ -38,6 +38,13 @@ class FakeImage {
 
 let fullSize: typeof FullSize;
 
+function preloadSixtyFourOthers() {
+	for (let index = 0; index < 64; index++)
+		void fullSize.preloadFullImage(
+			`http://ogmedia.localhost/rightnow/full/other-${index}`,
+		);
+}
+
 beforeEach(async () => {
 	vi.stubGlobal("Image", FakeImage);
 	FakeImage.made = [];
@@ -122,25 +129,17 @@ describe("preloadFullImage", () => {
 
 	it("leaves no size behind for a photo forgotten while it was still decoding", async () => {
 		const evicted = fullSize.preloadFullImage(PHOTO);
-		const others = Array.from({ length: 64 }, (_, index) =>
-			fullSize.preloadFullImage(
-				`http://ogmedia.localhost/rightnow/full/x${index}`,
-			),
-		);
+		preloadSixtyFourOthers();
 
 		FakeImage.made[0]!.decodeAs(SIZE);
 		await evicted;
 
 		expect(fullSize.knownFullImageSize(PHOTO)).toBeNull();
-		expect(others).toHaveLength(64);
 	});
 
 	it("keeps a newer decode when an older, forgotten one for the same photo fails", async () => {
 		const evicted = fullSize.preloadFullImage(PHOTO);
-		for (let index = 0; index < 64; index++)
-			void fullSize.preloadFullImage(
-				`http://ogmedia.localhost/rightnow/full/y${index}`,
-			);
+		preloadSixtyFourOthers();
 		const newer = fullSize.preloadFullImage(PHOTO);
 
 		FakeImage.made[0]!.failToDecode();
@@ -150,16 +149,14 @@ describe("preloadFullImage", () => {
 	});
 });
 
-describe("fullImageSizeWithin", () => {
+describe("fullImageSizeInTime", () => {
 	beforeEach(() => {
 		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 	});
 
 	it("gives up with null once the wait runs out, while the photo keeps decoding for later", async () => {
 		const settled = vi.fn();
-		void fullSize
-			.fullImageSizeWithin({ src: PHOTO, timeoutMs: 1500 })
-			.then(settled);
+		void fullSize.fullImageSizeInTime(PHOTO).then(settled);
 
 		await vi.advanceTimersByTimeAsync(1499);
 		expect(settled).not.toHaveBeenCalled();
@@ -176,10 +173,7 @@ describe("fullImageSizeWithin", () => {
 
 	it("gives the size when the photo decodes in time, joining the decode already under way", async () => {
 		void fullSize.preloadFullImage(PHOTO);
-		const sized = fullSize.fullImageSizeWithin({
-			src: PHOTO,
-			timeoutMs: 1500,
-		});
+		const sized = fullSize.fullImageSizeInTime(PHOTO);
 
 		await vi.advanceTimersByTimeAsync(1000);
 		FakeImage.made[0]!.decodeAs(SIZE);

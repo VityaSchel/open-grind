@@ -14,7 +14,7 @@
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { getNow } from "#lib/util/now.ts";
 	import {
-		fullImageSizeWithin,
+		fullImageSizeInTime,
 		preloadFullImage,
 	} from "#lib/util/photoswipe/full-size.ts";
 	import {
@@ -44,8 +44,6 @@
 		onlineUntil: number | null;
 		distance?: number;
 	} = $props();
-
-	const FULL_SIZE_WAIT_MS = 1500;
 
 	const titleId = $props.id();
 	const report = new RightNowPostReport();
@@ -83,13 +81,7 @@
 		signal.addEventListener("abort", release, { once: true });
 		try {
 			const src = viewerSrc;
-			const size =
-				src === null
-					? null
-					: await fullImageSizeWithin({
-							src,
-							timeoutMs: FULL_SIZE_WAIT_MS,
-						});
+			const size = src === null ? null : await fullImageSizeInTime(src);
 			if (signal.aborted) return;
 			const frame = photoFrame;
 			const caption = {

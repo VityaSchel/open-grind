@@ -4,12 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
-import type { fullImageSizeWithin, knownFullImageSize } from "./full-size";
+import type { fullImageSizeInTime, knownFullImageSize } from "./full-size";
 
-const { lightboxes, fullImageSizeWithinMock, knownFullImageSizeMock } =
+const { lightboxes, fullImageSizeInTimeMock, knownFullImageSizeMock } =
 	vi.hoisted(() => ({
 		lightboxes: [] as PhotoSwipeLightbox[],
-		fullImageSizeWithinMock: vi.fn<typeof fullImageSizeWithin>(),
+		fullImageSizeInTimeMock: vi.fn<typeof fullImageSizeInTime>(),
 		knownFullImageSizeMock: vi.fn<typeof knownFullImageSize>(),
 	}));
 
@@ -25,7 +25,7 @@ vi.mock("photoswipe/lightbox", async (importOriginal) => {
 	return { default: RecordedLightbox };
 });
 vi.mock("./full-size", () => ({
-	fullImageSizeWithin: fullImageSizeWithinMock,
+	fullImageSizeInTime: fullImageSizeInTimeMock,
 	knownFullImageSize: knownFullImageSizeMock,
 }));
 
@@ -75,8 +75,9 @@ const domItem = (link: HTMLAnchorElement) => ({
 
 const stayOnPage = (event: Event) => event.preventDefault();
 
-afterEach(() => {
+afterEach(async () => {
 	for (const detach of detachers.splice(0)) detach();
+	await vi.waitFor(() => expect(window.pswp).toBeUndefined());
 	lightboxes.length = 0;
 	window.removeEventListener("click", stayOnPage);
 	document.body.replaceChildren();
@@ -86,18 +87,27 @@ afterEach(() => {
 describe("a gallery lightbox over cropped thumbnails", () => {
 	it("waits for the tapped photo's full size before opening, never preloading the cropped thumbnail as the first slide", async () => {
 		const size = Promise.withResolvers<MediaDimensions | null>();
-		fullImageSizeWithinMock.mockReturnValue(size.promise);
+		fullImageSizeInTimeMock.mockReturnValue(size.promise);
 		const { lightbox, thumbnail } = await attach({ croppedThumbs: true });
 
 		thumbnail.click();
+		await import("photoswipe");
+		await new Promise((resolve) => setTimeout(resolve));
 
-		expect(lightbox.options.preloadFirstSlide).toBe(false);
-		expect(fullImageSizeWithinMock).toHaveBeenCalledExactlyOnceWith({
-			src: FULL,
-			timeoutMs: 1500,
-		});
-		expect(knownFullImageSizeMock).not.toHaveBeenCalled();
+		expect(fullImageSizeInTimeMock).toHaveBeenCalledExactlyOnceWith(FULL);
+		expect(knownFullImageSizeMock).toHaveBeenCalledOnce();
 		expect(lightbox.pswp).toBeUndefined();
+
+		knownFullImageSizeMock.mockReturnValue(SIZE);
+		size.resolve(SIZE);
+
+		await vi.waitFor(() =>
+			expect(lightbox.pswp?.currSlide?.width).toBe(SIZE.width),
+		);
+		await vi.waitFor(
+			() => expect(lightbox.pswp?.opener.isOpen).toBe(true),
+			{ timeout: 3000 },
+		);
 	});
 
 	it("sizes a slide from its decoded full-size photo and zooms from the thumbnail as a crop of it", async () => {
@@ -125,7 +135,7 @@ describe("a gallery lightbox over cropped thumbnails", () => {
 		expect(item.thumbCropped).toBeUndefined();
 	});
 
-	it("stops following taps on the gallery once detached", async () => {
+	it("stops opening on taps once detached", async () => {
 		window.addEventListener("click", stayOnPage);
 		const { lightbox, thumbnail, detach } = await attach({
 			croppedThumbs: true,
@@ -134,8 +144,8 @@ describe("a gallery lightbox over cropped thumbnails", () => {
 		detach();
 		thumbnail.click();
 
-		await expect(lightbox.options.openPromise?.()).resolves.toBeNull();
-		expect(fullImageSizeWithinMock).not.toHaveBeenCalled();
+		expect(lightbox.shouldOpen).toBe(false);
+		expect(fullImageSizeInTimeMock).not.toHaveBeenCalled();
 	});
 });
 

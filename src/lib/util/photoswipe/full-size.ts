@@ -1,6 +1,8 @@
+import { withDeadline } from "#lib/util/deadline.ts";
 import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 
 const CACHED_SIZES = 64;
+const FULL_SIZE_WAIT_MS = 1500;
 
 const loads = new Map<string, Promise<MediaDimensions | null>>();
 const known = new Map<string, MediaDimensions>();
@@ -41,17 +43,11 @@ export function knownFullImageSize(src: string): MediaDimensions | null {
 	return known.get(src) ?? null;
 }
 
-export function fullImageSizeWithin({
-	src,
-	timeoutMs,
-}: {
-	src: string;
-	timeoutMs: number;
-}): Promise<MediaDimensions | null> {
-	return Promise.race([
-		preloadFullImage(src),
-		new Promise<null>((resolve) =>
-			setTimeout(() => resolve(null), timeoutMs),
-		),
-	]);
+export function fullImageSizeInTime(
+	src: string,
+): Promise<MediaDimensions | null> {
+	return withDeadline({
+		work: () => preloadFullImage(src),
+		ms: FULL_SIZE_WAIT_MS,
+	}).catch(() => null);
 }
