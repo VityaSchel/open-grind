@@ -41,10 +41,6 @@ function at(pathname: string) {
 	history.replaceState(null, "", pathname);
 }
 
-function withEarlierEntries({ earlier }: { earlier: (string | null)[] }) {
-	earlierPathnames.mockReturnValue(earlier);
-}
-
 function cancels({
 	to,
 	type = "popstate",
@@ -146,7 +142,7 @@ describe("guardDeletedPages going Forward", () => {
 	});
 
 	it("stays where it is once a cancelled Forward is reverted", () => {
-		withEarlierEntries({ earlier: ["/chat"] });
+		earlierPathnames.mockReturnValue(["/chat"]);
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: 1 });
@@ -163,7 +159,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("skips past a deleted page to the entry before it once the cancel is reverted", () => {
-		withEarlierEntries({ earlier: ["/chat", "/"] });
+		earlierPathnames.mockReturnValue(["/chat", "/"]);
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		expect(cancels({ to: "/chat/1:2", delta: -1 })).toBe(true);
@@ -174,7 +170,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("skips every consecutive deleted page in one traversal", () => {
-		withEarlierEntries({ earlier: ["/chat/5:6", "/chat/7%3A8", "/chat"] });
+		earlierPathnames.mockReturnValue(["/chat/5:6", "/chat/7%3A8", "/chat"]);
 		leaveDeletedPages({
 			pathnames: ["/chat/1:2", "/chat/5:6", "/chat/7:8"],
 			parent: "/chat",
@@ -187,7 +183,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("skips a deleted page that a jump back lands on", () => {
-		withEarlierEntries({ earlier: ["/chat"] });
+		earlierPathnames.mockReturnValue(["/chat"]);
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: -3 });
@@ -197,7 +193,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("stops at an entry whose address is unknown", () => {
-		withEarlierEntries({ earlier: [null, "/chat"] });
+		earlierPathnames.mockReturnValue([null, "/chat"]);
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: -1 });
@@ -207,7 +203,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("returns to the parent when every earlier entry was deleted", () => {
-		withEarlierEntries({ earlier: ["/chat/5:6"] });
+		earlierPathnames.mockReturnValue(["/chat/5:6"]);
 		leaveDeletedPages({
 			pathnames: ["/chat/1:2", "/chat/5:6"],
 			parent: "/chat",
@@ -221,7 +217,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("returns to the deleted page's own parent from the first entry", () => {
-		withEarlierEntries({ earlier: [] });
+		earlierPathnames.mockReturnValue([]);
 		leaveDeletedPages({
 			pathnames: ["/settings/albums/9"],
 			parent: "/settings/albums",
@@ -234,7 +230,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("drops the skip when the revert does not land back on this page", () => {
-		withEarlierEntries({ earlier: ["/chat"] });
+		earlierPathnames.mockReturnValue(["/chat"]);
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		cancels({ to: "/chat/1:2", delta: -1 });
@@ -247,7 +243,7 @@ describe("guardDeletedPages going Back", () => {
 	});
 
 	it("lets Back into a page that was not deleted through", () => {
-		withEarlierEntries({ earlier: ["/chat"] });
+		earlierPathnames.mockReturnValue(["/chat"]);
 		leaveDeletedPages({ pathnames: ["/chat/1:2"], parent: "/chat" });
 
 		expect(cancels({ to: "/chat/5:6", delta: -1 })).toBe(false);
