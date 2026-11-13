@@ -159,11 +159,7 @@ export class ProfileState {
 		if (this.#active) return;
 		this.#active = true;
 		if (this.profile?.isFavorite && !this.note) void this.#loadNote();
-		if (
-			!this.refreshing &&
-			this.#rightNowPostGeneration !== this.#generation.current
-		)
-			void this.#loadRightNowPost();
+		if (!this.refreshing) void this.#loadRightNowPost();
 	}
 
 	deactivate(): void {
@@ -289,8 +285,7 @@ export class ProfileState {
 					error,
 					onRetry: () => void this.refresh(),
 				});
-				if (this.#rightNowPostGeneration !== this.#generation.current)
-					void this.#loadRightNowPost();
+				void this.#loadRightNowPost();
 				return;
 			}
 			this.error =
@@ -317,8 +312,13 @@ export class ProfileState {
 	}
 
 	async #loadRightNowPost(): Promise<void> {
-		if (!this.#active || this.profile === null) return;
 		const generation = this.#generation.current;
+		if (
+			!this.#active ||
+			this.profile === null ||
+			this.#rightNowPostGeneration === generation
+		)
+			return;
 		this.#rightNowPostGeneration = generation;
 		const { rightNow } = this.profile;
 		if (rightNow !== "HOSTING" && rightNow !== "NOT_HOSTING") {
