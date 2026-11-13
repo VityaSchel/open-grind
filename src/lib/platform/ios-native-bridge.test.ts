@@ -287,10 +287,14 @@ describe("IosSystemBack prepare", () => {
 		expect(undo).toHaveBeenCalledOnce();
 	});
 
-	it("does nothing without a stack", () => {
+	it("ignores a prepare once the stack has gone away", () => {
+		const { gesture, undo } = makeGesture();
+		systemBack.expose(gesture)();
+
 		window.__iosBack?.prepare();
 		window.dispatchEvent(new Event("touchend"));
 
-		expect(invoke).not.toHaveBeenCalled();
+		expect(gesture.prepare).not.toHaveBeenCalled();
+		expect(undo).not.toHaveBeenCalled();
 	});
 });
