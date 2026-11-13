@@ -131,15 +131,11 @@ function springBezier({ launchSlope }: { launchSlope: number }): string {
 	return `cubic-bezier(${SPRING_BEZIER_X1}, ${y1}, ${SPRING_BEZIER_X2}, 1)`;
 }
 
-export function supportsLinearEasing(): boolean {
-	return CSS.supports("animation-timing-function", "linear(0, 1)");
-}
-
 export function releaseTiming({
 	distance,
 	velocity,
 	spring,
-	linearEasing = supportsLinearEasing(),
+	linearEasing = CSS.supports("animation-timing-function", "linear(0, 1)"),
 }: {
 	distance: number;
 	velocity: number;
