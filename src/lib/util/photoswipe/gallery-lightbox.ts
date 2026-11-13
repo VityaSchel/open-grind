@@ -57,7 +57,7 @@ function setThumbsVisibility({
 	visibility,
 }: {
 	gallery: HTMLElement;
-	visibility: "hidden" | "visible";
+	visibility: "hidden" | "";
 }) {
 	gallery.querySelectorAll(".item").forEach((item) => {
 		if (item instanceof HTMLElement) item.style.visibility = visibility;
@@ -155,7 +155,7 @@ function configure({
 	});
 	lightbox.on("closingAnimationEnd", clearThumbRadii);
 	lightbox.on("destroy", () =>
-		setThumbsVisibility({ gallery, visibility: "visible" }),
+		setThumbsVisibility({ gallery, visibility: "" }),
 	);
 }
 

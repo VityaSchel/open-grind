@@ -155,4 +155,15 @@ describe("a gallery lightbox over whole thumbnails", () => {
 		});
 		expect(knownFullImageSizeMock).not.toHaveBeenCalled();
 	});
+
+	it("hands the thumbnails' visibility back to the page once the viewer is gone", async () => {
+		const { lightbox, link } = await attach({});
+		link.classList.add("item");
+
+		lightbox.dispatch("openingAnimationStart");
+		expect(link.style.visibility).toBe("hidden");
+		lightbox.dispatch("destroy");
+
+		expect(link.style.visibility).toBe("");
+	});
 });
