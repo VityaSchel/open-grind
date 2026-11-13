@@ -47,19 +47,19 @@ test("reporting a known author's post files it about the post and blocking takes
 		.filter({ has: page.getByRole("button", { name: REPORT_POST }) })
 		.first();
 	const authorHref = await card
-		.locator('a[href^="/profile/"]')
+		.getByRole("link", { name: /^View .*profile$/ })
 		.getAttribute("href");
-	expect(authorHref).not.toBeNull();
+	if (authorHref === null) throw new Error("the author link has no href");
 
 	const drawer = await openReportSheet({ page, card });
 	await drawer.getByRole("radio", { name: "Harassment or Bullying" }).click();
+	await drawer
+		.getByRole("textbox", { name: "Details" })
+		.fill("keeps posting insults");
 	await expect(
 		drawer.getByRole("button", { name: "Right Now Image" }),
 		"a post report already knows where it happened",
 	).toHaveCount(0);
-	await drawer
-		.getByRole("textbox", { name: "Details" })
-		.fill("keeps posting insults");
 	await drawer.getByRole("button", { name: "Submit report" }).click();
 
 	await expect(

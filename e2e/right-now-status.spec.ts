@@ -1,6 +1,7 @@
 import { expect, type Locator, test } from "@playwright/test";
 
 import {
+	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	openGrid,
@@ -179,7 +180,7 @@ test("the inbox marks a conversation with someone on Right Now", async ({
 	).toHaveAttribute("title", "Right Now · Hosting", {
 		timeout: FIRST_ROUTE_COMPILE_MS,
 	});
-	await expect(
-		page.locator(`a[href="/chat/100001:123456000"] ${INDICATOR}`),
-	).toHaveCount(0);
+	const unmarked = `a[href="${DEMO_CONVERSATION}"]`;
+	await expect(page.locator(unmarked).first()).toBeVisible();
+	await expect(page.locator(`${unmarked} ${INDICATOR}`)).toHaveCount(0);
 });
