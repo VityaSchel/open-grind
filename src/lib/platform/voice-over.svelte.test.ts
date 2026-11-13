@@ -12,7 +12,6 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 }));
 
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
-import type { SupportedPlatform } from "./os";
 
 async function freshWatch() {
 	vi.resetModules();
@@ -67,13 +66,9 @@ describe("the VoiceOver watch", () => {
 		expect(voiceOverRunning()).toBe(true);
 	});
 
-	for (const platform of [
-		"android",
-		"linux",
-		"macos",
-		"windows",
-	] satisfies SupportedPlatform[]) {
-		it(`reads nothing on ${platform}`, async () => {
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"reads nothing on %s",
+		async (platform) => {
 			runningOn(platform);
 			const { installVoiceOverWatch, voiceOverRunning } =
 				await freshWatch();
@@ -83,6 +78,6 @@ describe("the VoiceOver watch", () => {
 			expect(invoke).not.toHaveBeenCalled();
 			expect(window.__iosVoiceOver).toBeUndefined();
 			expect(voiceOverRunning()).toBe(false);
-		});
-	}
+		},
+	);
 });

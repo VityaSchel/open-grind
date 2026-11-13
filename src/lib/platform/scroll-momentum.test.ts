@@ -12,7 +12,6 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 }));
 
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
-import type { SupportedPlatform } from "#lib/platform/os.ts";
 import { stopScrollMomentum } from "./scroll-momentum";
 
 function scrollable(element: HTMLElement, overflowing = true): HTMLElement {
@@ -121,17 +120,13 @@ describe("stopScrollMomentum", () => {
 		expect(logged).toHaveBeenCalled();
 	});
 
-	for (const platform of [
-		"android",
-		"linux",
-		"macos",
-		"windows",
-	] satisfies SupportedPlatform[]) {
-		it(`leaves momentum to the WebView on ${platform}`, () => {
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"leaves momentum to the WebView on %s",
+		(platform) => {
 			runningOn(platform);
 
 			expect(stopScrollMomentum(list())).toBeUndefined();
 			expect(invoke).not.toHaveBeenCalled();
-		});
-	}
+		},
+	);
 });

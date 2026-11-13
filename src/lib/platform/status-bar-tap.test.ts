@@ -14,7 +14,6 @@ vi.mock("#lib/platform/system-back-gesture.svelte.ts", () => ({
 
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
-import type { SupportedPlatform } from "#lib/platform/os.ts";
 import {
 	answerStatusBarTaps,
 	scrollsToTopOnStatusBarTap,
@@ -166,17 +165,13 @@ describe("status-bar taps on iOS", () => {
 });
 
 describe("status-bar taps elsewhere", () => {
-	for (const platform of [
-		"android",
-		"linux",
-		"macos",
-		"windows",
-	] satisfies SupportedPlatform[]) {
-		it(`register nothing on ${platform}`, () => {
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"register nothing on %s",
+		(platform) => {
 			runningOn(platform);
 
 			expect(answer({ scroller: list() })).toBeUndefined();
 			expect(window.__iosStatusBarTap).toBeUndefined();
-		});
-	}
+		},
+	);
 });
