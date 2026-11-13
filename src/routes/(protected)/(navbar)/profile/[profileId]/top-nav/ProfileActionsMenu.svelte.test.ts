@@ -21,7 +21,7 @@ vi.mock("#lib/components/report/block-failure.ts", () => ({
 	showBlockFailure: showBlockFailureMock,
 }));
 
-import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
+import { applyBackGestureHandler } from "#lib/platform/android-system-back.ts";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100010;

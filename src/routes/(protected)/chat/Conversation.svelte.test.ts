@@ -18,7 +18,7 @@ vi.mock("#lib/chat/conversations-context.svelte.ts", () => ({
 }));
 vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
-import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
+import { applyBackGestureHandler } from "#lib/platform/android-system-back.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";

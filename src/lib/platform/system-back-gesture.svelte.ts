@@ -1,12 +1,12 @@
 import { SvelteSet } from "svelte/reactivity";
 
-import { androidSystemBack } from "#lib/platform/android-native-bridge.ts";
+import { androidSystemBack } from "#lib/platform/android-system-back.ts";
 import {
 	backGestureEventHandlers,
 	type BackGestureLayer,
 	topBackGestureHandler,
 } from "#lib/platform/back-gesture-event.svelte.ts";
-import { iosSystemBack } from "#lib/platform/ios-native-bridge.ts";
+import { iosSystemBack } from "#lib/platform/ios-system-back.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 
 export type SwipeRelease = { velocity: number };

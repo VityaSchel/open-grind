@@ -12,8 +12,8 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 }));
 
 import { holdTouch } from "#lib/platform/held-touch.ts";
+import { IosSystemBack } from "#lib/platform/ios-system-back.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
-import { IosSystemBack } from "./ios-native-bridge";
 import type { SystemBackGesture } from "./system-back-gesture.svelte";
 
 class FakePointerEvent extends MouseEvent {

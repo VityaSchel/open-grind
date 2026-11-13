@@ -604,8 +604,8 @@ mod frontend_method_pins {
 		include_str!("../../src/lib/platform/keyboard-follow.ts");
 	const KEYBOARD_DRAG_DISMISS: &str =
 		include_str!("../../src/lib/platform/keyboard-drag-dismiss.ts");
-	const IOS_BRIDGE: &str =
-		include_str!("../../src/lib/platform/ios-native-bridge.ts");
+	const IOS_SYSTEM_BACK: &str =
+		include_str!("../../src/lib/platform/ios-system-back.ts");
 	const SCROLL_MOMENTUM: &str =
 		include_str!("../../src/lib/platform/scroll-momentum.ts");
 	const VOICE_OVER: &str =
@@ -668,7 +668,7 @@ mod frontend_method_pins {
 		let bridges: &[(&str, &[&str])] = &[
 			(KEYBOARD_FOLLOW, &["set_keyboard_follow"]),
 			(KEYBOARD_DRAG_DISMISS, &["set_keyboard_drag_dismiss"]),
-			(IOS_BRIDGE, &["set_back_swipe_armed"]),
+			(IOS_SYSTEM_BACK, &["set_back_swipe_armed"]),
 			(VOICE_OVER, &["voice_over_running"]),
 			(SCROLL_MOMENTUM, &["stop_scroll_momentum"]),
 			(APP_LIFECYCLE, &["allow_suspension"]),

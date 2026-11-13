@@ -73,8 +73,8 @@ mod tests {
 	use super::*;
 
 	const APP_TYPES: &str = include_str!("../../../src/app.d.ts");
-	const IOS_BRIDGE: &str =
-		include_str!("../../../src/lib/platform/ios-native-bridge.ts");
+	const IOS_SYSTEM_BACK: &str =
+		include_str!("../../../src/lib/platform/ios-system-back.ts");
 
 	fn declared_back_hooks() -> &'static str {
 		APP_TYPES
@@ -192,10 +192,10 @@ mod tests {
 
 	#[test]
 	fn the_page_installs_every_hook_native_calls() {
-		let installed = IOS_BRIDGE
+		let installed = IOS_SYSTEM_BACK
 			.split_once("window.__iosBack = {")
 			.and_then(|(_, rest)| rest.split_once("\n\t\t};"))
-			.expect("ios-native-bridge.ts installs window.__iosBack")
+			.expect("ios-system-back.ts installs window.__iosBack")
 			.0;
 		for hook in ["start:", "progress:", "finish:", "prepare:"] {
 			assert!(installed.contains(hook), "{hook}");
