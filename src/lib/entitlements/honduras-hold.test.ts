@@ -17,8 +17,12 @@ const mocks = vi.hoisted(() => ({
 		vi.fn<(args: { path: string; content: Uint8Array }) => Promise<void>>(),
 	existsAppDataFile: vi.fn<(path: string) => Promise<boolean>>(),
 	removeAppDataFile: vi.fn<(path: string) => Promise<void>>(),
+	finishBeforeSuspending: vi.fn<(work: Promise<unknown>) => void>(),
 }));
 
+vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({
+	appLifecycle: { finishBeforeSuspending: mocks.finishBeforeSuspending },
+}));
 vi.mock("#lib/api/browse/location.ts", () => ({
 	updateLocation: mocks.updateLocation,
 }));
@@ -356,6 +360,36 @@ describe("holdInHonduras", () => {
 		expect(mocks.journal.slice(-2)).toEqual(["move:home", "unmark"]);
 		await lease.release();
 		expect(movesHome()).toBe(1);
+	});
+
+	it("keeps the app from suspending until it is back home", async () => {
+		runningOn("ios");
+		const taken = await takeHold();
+		const [work] = mocks.finishBeforeSuspending.mock.lastCall ?? [];
+		if (!work) throw new Error("the hold asked the app to finish nothing");
+		const homecoming = Promise.withResolvers<void>();
+		mocks.updateLocation.mockImplementation(({ geohash }) => {
+			mocks.journal.push(
+				geohash === mocks.HONDURAS ? "move:hn" : "move:home",
+			);
+			return geohash === mocks.HOME
+				? homecoming.promise
+				: Promise.resolve();
+		});
+		let finished = false;
+		void work.then(() => {
+			finished = true;
+		});
+
+		setVisibility("hidden");
+		await taken.ended;
+		await settle();
+		expect(mocks.journal).toContain("move:home");
+		expect(finished).toBe(false);
+
+		homecoming.resolve();
+		await work;
+		expect(mocks.journal.slice(-2)).toEqual(["move:home", "unmark"]);
 	});
 
 	it("keeps the hold while a desktop window is hidden", async () => {

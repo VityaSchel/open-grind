@@ -6,6 +6,8 @@ mod app_settings;
 mod appearance;
 #[cfg(target_os = "linux")]
 mod appimage;
+#[cfg(any(target_os = "ios", test))]
+mod background_task;
 #[cfg(target_os = "ios")]
 mod child_scroller;
 mod context_menu;
@@ -274,6 +276,8 @@ pub fn run() {
             api::client::rotate_api_params,
             api::session_recovery::set_app_active,
             api::session_recovery::current_session,
+            #[cfg(target_os = "ios")]
+            api::session_recovery::allow_suspension,
             haptics::play_haptic,
             scroll_phase::set_scroll_gesture_capture,
             #[cfg(target_os = "linux")]
@@ -335,6 +339,8 @@ pub fn run() {
             app_data::remove_app_data,
         ])
         .setup(|app| {
+            #[cfg(target_os = "ios")]
+            background_task::install(app.handle());
             scroll_phase::install_scroll_gesture_bridge(app.handle());
             #[cfg(target_os = "android")]
             app_origin::android::prepare_served_origin(app.handle());
@@ -591,6 +597,8 @@ mod frontend_method_pins {
 		include_str!("../../src/lib/platform/scroll-momentum.ts");
 	const VOICE_OVER: &str =
 		include_str!("../../src/lib/platform/voice-over.svelte.ts");
+	const APP_LIFECYCLE: &str =
+		include_str!("../../src/lib/api/app-lifecycle.svelte.ts");
 
 	fn between<'a>(haystack: &'a str, open: &str, close: &str) -> &'a str {
 		let start = haystack.find(open).expect(open) + open.len();
@@ -691,6 +699,19 @@ mod frontend_method_pins {
 				"{command} is invoked by the scroll code but not registered"
 			);
 		}
+	}
+
+	#[test]
+	fn every_command_the_app_lifecycle_invokes_is_registered() {
+		let registered = registered_commands();
+		let invoked: Vec<&str> = APP_LIFECYCLE
+			.split("invoke(\"")
+			.skip(1)
+			.filter_map(|rest| rest.split_once('"'))
+			.map(|(command, _)| command)
+			.collect();
+		assert_eq!(invoked, ["allow_suspension"]);
+		assert!(registered.contains(&"allow_suspension"));
 	}
 
 	#[test]
