@@ -74,11 +74,9 @@ export function stopGlidingToTop(element: HTMLElement): void {
 export function jumpThenGlideToTop({
 	element,
 	landing = theTop,
-	onLanded,
 }: {
 	element: HTMLElement;
 	landing?: () => number;
-	onLanded?: () => void;
 }): void {
 	stopGlidingToTop(element);
 	const ending = new AbortController();
@@ -88,22 +86,18 @@ export function jumpThenGlideToTop({
 		stopFrames();
 		if (glidesToTop.get(element) === end) glidesToTop.delete(element);
 	};
-	const land = () => {
-		end();
-		onLanded?.();
-	};
 	const begin = () => {
 		if (ending.signal.aborted) return;
 		if (prefersReducedMotion.current) {
 			element.scrollTop = landing();
-			land();
+			end();
 			return;
 		}
 		element.scrollTop = Math.min(
 			element.scrollTop,
 			landing() + element.clientHeight,
 		);
-		stopFrames = glideScrollTop({ element, landing, onLanded: land });
+		stopFrames = glideScrollTop({ element, landing, onLanded: end });
 	};
 
 	glidesToTop.set(element, end);

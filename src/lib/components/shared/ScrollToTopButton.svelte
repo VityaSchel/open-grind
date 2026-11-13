@@ -53,7 +53,7 @@
 		const el = container;
 		if (!el) return;
 		atTop = true;
-		jumpThenGlideToTop({ element: el, onLanded: settle });
+		jumpThenGlideToTop({ element: el });
 	}
 </script>
 

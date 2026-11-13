@@ -81,18 +81,16 @@ describe("followInsertionsAbove", () => {
 });
 
 describe("jumpThenGlideToTop", () => {
-	it("jumps to a screen above the top, glides the rest and reports the landing", () => {
+	it("jumps to a screen above the top, glides the rest and lets go of the list at the top", () => {
 		const list = scrolledList(5000);
-		const onLanded = vi.fn();
 
-		jumpThenGlideToTop({ element: list, onLanded });
+		jumpThenGlideToTop({ element: list });
 		expect(list.scrollTop).toBe(SCREEN_HEIGHT);
 		expect(glidingToTop(list)).toBe(true);
 
 		vi.advanceTimersByTime(GLIDE_MS);
 		expect(list.scrollTop).toBe(0);
 		expect(glidingToTop(list)).toBe(false);
-		expect(onLanded).toHaveBeenCalledOnce();
 	});
 
 	it("keeps gliding toward a landing that content inserted above pushes down", () => {
@@ -114,23 +112,21 @@ describe("jumpThenGlideToTop", () => {
 
 	it("lets a new glide on the same list replace the running one", () => {
 		const list = scrolledList(5000);
-		const firstLanded = vi.fn();
 
-		jumpThenGlideToTop({ element: list, onLanded: firstLanded });
+		jumpThenGlideToTop({ element: list });
 		vi.advanceTimersByTime(GLIDE_MS / 4);
 		jumpThenGlideToTop({ element: list, landing: () => 40 });
+		expect(vi.getTimerCount()).toBe(1);
 		vi.advanceTimersByTime(GLIDE_MS + FRAME_MS);
 
 		expect(list.scrollTop).toBe(40);
-		expect(firstLanded).not.toHaveBeenCalled();
 	});
 
 	for (const takeover of ["touchstart", "wheel"]) {
 		it(`hands the list back on ${takeover}`, () => {
 			const list = scrolledList(5000);
-			const onLanded = vi.fn();
 
-			jumpThenGlideToTop({ element: list, onLanded });
+			jumpThenGlideToTop({ element: list });
 			vi.advanceTimersByTime(GLIDE_MS / 4);
 			list.dispatchEvent(new Event(takeover));
 			const handedBack = list.scrollTop;
@@ -138,31 +134,27 @@ describe("jumpThenGlideToTop", () => {
 
 			expect(list.scrollTop).toBe(handedBack);
 			expect(glidingToTop(list)).toBe(false);
-			expect(onLanded).not.toHaveBeenCalled();
 		});
 	}
 
-	it("stops on request without reporting a landing", () => {
+	it("stops on request where the list stands", () => {
 		const list = scrolledList(5000);
-		const onLanded = vi.fn();
 
-		jumpThenGlideToTop({ element: list, onLanded });
+		jumpThenGlideToTop({ element: list });
 		stopGlidingToTop(list);
 		vi.advanceTimersByTime(GLIDE_MS);
 
 		expect(list.scrollTop).toBe(SCREEN_HEIGHT);
-		expect(onLanded).not.toHaveBeenCalled();
+		expect(glidingToTop(list)).toBe(false);
 	});
 
 	it("lands at once with reduced motion", () => {
 		motion.reduced = true;
 		const list = scrolledList(5000);
-		const onLanded = vi.fn();
 
-		jumpThenGlideToTop({ element: list, onLanded });
+		jumpThenGlideToTop({ element: list });
 
 		expect(list.scrollTop).toBe(0);
 		expect(glidingToTop(list)).toBe(false);
-		expect(onLanded).toHaveBeenCalledOnce();
 	});
 });
