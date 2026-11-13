@@ -64,6 +64,12 @@ export async function openAppSettings(page: Page) {
 	await stackSettled(page);
 }
 
+export async function openCredits(page: Page) {
+	await page.getByRole("link", { name: "Credits & Licenses" }).click();
+	await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
+	await stackSettled(page);
+}
+
 const currentEntry = (page: Page) =>
 	page.evaluate(() => navigation.currentEntry!.id);
 

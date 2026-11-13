@@ -13,17 +13,18 @@ import {
 } from "./support/app";
 import {
 	backToChats,
+	deleteFromList,
 	openConversation,
 	openInbox,
-	row,
-	rows,
+	openInboxFromHome,
+	openRows,
 	sheet,
-	WIDE,
 } from "./support/chat-stack";
 import {
 	APP_SETTINGS,
 	CREDITS,
 	openAppSettings,
+	openCredits,
 	openDeepLink,
 	openSettings,
 	pane,
@@ -55,12 +56,6 @@ const historyAt = (page: Page) =>
 		}),
 		HISTORY_METADATA_KEY,
 	);
-
-async function openCredits(page: Page) {
-	await page.getByRole("link", { name: "Credits & Licenses" }).click();
-	await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
-	await stackSettled(page);
-}
 
 type StackFrame = { live: number; ghost: number | null };
 
@@ -270,30 +265,11 @@ test.describe("without the Navigation API", () => {
 	test("Back into conversations deleted this session skips them in one traversal", async ({
 		page,
 	}) => {
-		await page.setViewportSize(WIDE);
-		await installTauriShim(page, { platform: "macos" });
-		await page.goto("/");
-		await page
-			.getByRole("link", { name: "Inbox", exact: true })
-			.click({ timeout: FIRST_ROUTE_COMPILE_MS });
-		await expect(page).toHaveURL(/\/chat$/);
-		await rows(page).nth(3).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyAt(page);
-		const hrefs = await rows(page).evaluateAll((links) =>
-			links.slice(1, 4).map((link) => link.getAttribute("href")!),
-		);
-		for (const href of hrefs) {
-			await row(page, { href }).click();
-			await expect(page).toHaveURL(new RegExp(`${href}$`));
-		}
-		for (const href of hrefs.slice(0, 2)) {
-			await row(page, { href }).click({ button: "right" });
-			await page.getByRole("menuitem", { name: "Delete" }).click();
-			await page
-				.getByRole("button", { name: "Delete", exact: true })
-				.click();
-			await expect(row(page, { href })).toHaveCount(0);
-		}
+		const [first, second] = await openRows(page, { count: 3 });
+		await deleteFromList(page, { href: first! });
+		await deleteFromList(page, { href: second! });
 		const messagesShown = await watchRendered(page, {
 			selector: MESSAGE_ROW,
 		});

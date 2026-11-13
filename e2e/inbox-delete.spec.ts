@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import type { SupportedPlatform } from "../src/lib/platform/os";
 import {
 	afterTwoFrames,
 	DEMO_CONVERSATION,
@@ -13,7 +12,11 @@ import {
 } from "./support/app";
 import {
 	backToChats,
+	deleteFromList,
 	dim,
+	openInboxFromHome,
+	openRow,
+	openRows,
 	recordFrames,
 	row,
 	rows,
@@ -23,50 +26,8 @@ import {
 import { systemBack } from "./support/page-stack";
 import { PHONE } from "./support/stack-layers";
 
-async function openInboxFromHome(
-	page: Page,
-	{ platform }: { platform: SupportedPlatform },
-) {
-	await page.setViewportSize(WIDE);
-	await installTauriShim(page, { platform });
-	await page.goto("/");
-	await page
-		.getByRole("link", { name: "Inbox", exact: true })
-		.click({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await expect(page).toHaveURL(/\/chat$/);
-	await rows(page).nth(3).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-}
-
-async function deleteFromList(page: Page, { href }: { href: string }) {
-	await row(page, { href }).click({ button: "right" });
-	await page.getByRole("menuitem", { name: "Delete" }).click();
-	await page.getByRole("button", { name: "Delete", exact: true }).click();
-	await expect(row(page, { href })).toHaveCount(0);
-}
-
 const noConversation = (page: Page) =>
 	page.getByText("Select a conversation to start chatting");
-
-async function openHref(page: Page, { href }: { href: string }) {
-	await row(page, { href }).click();
-	await expect(page).toHaveURL(new RegExp(`${href}$`));
-}
-
-async function openRow(page: Page, { nth }: { nth: number }) {
-	const href = (await rows(page).nth(nth).getAttribute("href"))!;
-	await openHref(page, { href });
-	return href;
-}
-
-async function openRows(page: Page, { count }: { count: number }) {
-	const hrefs = await rows(page).evaluateAll(
-		(links, count) =>
-			links.slice(1, count + 1).map((link) => link.getAttribute("href")!),
-		count,
-	);
-	for (const href of hrefs) await openHref(page, { href });
-	return hrefs;
-}
 
 test("deleting the open conversation from the list walks back to the inbox", async ({
 	page,

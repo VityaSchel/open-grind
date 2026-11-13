@@ -12,10 +12,10 @@ import {
 	clickNavBarBack,
 	CREDITS,
 	openAppSettings,
+	openCredits,
 	openDeepLink,
 	openSettings,
 	SETTINGS,
-	stackSettled,
 	systemBack,
 } from "./support/page-stack";
 
@@ -215,9 +215,7 @@ test("the Me tab still navigates from a deep-linked subpage", async ({
 test("the navbar Back pops two levels opened in the app", async ({ page }) => {
 	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
-	await page.getByRole("link", { name: "Credits & Licenses" }).click();
-	await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
-	await stackSettled(page);
+	await openCredits(page);
 	const atCredits = await historyEntries(page);
 
 	await clickNavBarBack(page);
