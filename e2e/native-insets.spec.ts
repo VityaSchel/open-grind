@@ -40,7 +40,8 @@ const SAVE_CHANGES_BAR = '[data-slot="save-changes-bar"]';
 test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
 
-const mainNav = (page: Page) => page.locator('nav[aria-label="Main"]');
+const mainNav = (page: Page) =>
+	page.getByRole("navigation", { name: "Main", includeHidden: true });
 const landHeldInsets = (page: Page) =>
 	page.evaluate(() => window.dispatchEvent(new Event("resize")));
 const composerField = (page: Page) =>
