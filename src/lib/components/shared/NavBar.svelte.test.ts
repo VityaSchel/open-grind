@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -64,12 +64,6 @@ function avatarSrc(container: HTMLElement): string | null {
 			.querySelector('a[aria-label="Me"] img')
 			?.getAttribute("src") ?? null
 	);
-}
-
-function mainNav(container: HTMLElement): HTMLElement {
-	const nav = container.querySelector<HTMLElement>('nav[aria-label="Main"]');
-	if (!nav) throw new Error("the main nav is not rendered");
-	return nav;
 }
 
 async function renderedAvatar(container: HTMLElement): Promise<string | null> {
@@ -158,46 +152,43 @@ describe("navbar under the soft keyboard", () => {
 		"steps aside on %s while the keyboard shrinks the page and comes back once it closes",
 		async (platform) => {
 			runningOn(platform);
-			const { container } = render(NavBar, {
-				props: { ourProfileId: OUR_ID },
-			});
-			expect(mainNav(container).hidden).toBe(false);
+			render(NavBar, { props: { ourProfileId: OUR_ID } });
+			const nav = screen.getByRole("navigation", { name: "Main" });
+			expect(nav.hidden).toBe(false);
 
 			noteSoftKeyboardOpen(true);
 			await tick();
-			expect(mainNav(container).hidden).toBe(true);
+			expect(nav.hidden).toBe(true);
 
 			noteSoftKeyboardOpen(false);
 			await tick();
-			expect(mainNav(container).hidden).toBe(false);
+			expect(nav.hidden).toBe(false);
 		},
 	);
 
 	it("stays on ios while a conversation follows the keyboard", async () => {
 		runningOn("ios");
-		const { container } = render(NavBar, {
-			props: { ourProfileId: OUR_ID },
-		});
+		render(NavBar, { props: { ourProfileId: OUR_ID } });
+		const nav = screen.getByRole("navigation", { name: "Main" });
 
 		notePageFollowsSoftKeyboard(true);
 		noteSoftKeyboardOpen(true);
 		await tick();
 
-		expect(mainNav(container).hidden).toBe(false);
+		expect(nav.hidden).toBe(false);
 	});
 
 	it.each(["linux", "macos", "windows"] as const)(
 		"stays on %s",
 		async (platform) => {
 			runningOn(platform);
-			const { container } = render(NavBar, {
-				props: { ourProfileId: OUR_ID },
-			});
+			render(NavBar, { props: { ourProfileId: OUR_ID } });
+			const nav = screen.getByRole("navigation", { name: "Main" });
 
 			noteSoftKeyboardOpen(true);
 			await tick();
 
-			expect(mainNav(container).hidden).toBe(false);
+			expect(nav.hidden).toBe(false);
 		},
 	);
 });
