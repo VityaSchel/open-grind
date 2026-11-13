@@ -25,6 +25,8 @@ const shows = (locate: (page: Page) => Locator) => (page: Page) =>
 const mainNavigation = (page: Page) =>
 	page.getByRole("navigation", { name: "Main" });
 const subpage = (page: Page) => page.locator('[data-slot="subpage-scroller"]');
+const rightNowPost = (page: Page) =>
+	page.locator('[data-slot="right-now-post"]');
 const suggestAnEdit = (page: Page) =>
 	page.getByRole("link", { name: "Suggest an edit" });
 
@@ -49,10 +51,25 @@ export const SURFACES: Surface[] = [
 		},
 	},
 	{
-		name: "Right Now",
+		name: "Right Now location chooser",
 		path: "/right-now",
 		bars: { bottom: "nothing" },
-		ready: shows(mainNavigation),
+		ready: shows((page) =>
+			page.getByRole("button", { name: "Pick manually" }),
+		),
+	},
+	{
+		name: "Right Now",
+		path: "/",
+		bars: BARS_OVER_CONTENT,
+		ready: async (page) => {
+			await shows(mainNavigation)(page);
+			await ensureGridLocation(page);
+			await mainNavigation(page)
+				.getByRole("link", { name: "Right Now" })
+				.click();
+			await shows(rightNowPost)(page);
+		},
 	},
 	{
 		name: "Interest views",

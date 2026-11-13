@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { expectEveryControlNamed } from "./support/a11y";
 import {
@@ -81,5 +81,29 @@ test.describe("every control has an accessible name", () => {
 			.getByRole("button", { name: "Selected location" })
 			.waitFor({ timeout: 60_000 });
 		await expectEveryControlNamed(page, "location picker");
+	});
+
+	test("Right Now and its filter sheets", async ({ page }) => {
+		test.setTimeout(240_000);
+		await page.goto("/");
+		await page.locator("nav a").first().waitFor({ timeout: 120_000 });
+		await ensureGridLocation(page);
+		await page
+			.getByRole("navigation", { name: "Main" })
+			.getByRole("link", { name: "Right Now" })
+			.click();
+		await page.getByRole("article").first().waitFor({ timeout: 60_000 });
+		await expectEveryControlNamed(page, "Right Now");
+
+		for (const filter of ["Age", "Position", "Hosting"]) {
+			await page
+				.getByRole("button", { name: filter, exact: true })
+				.click();
+			const sheet = page.getByRole("dialog");
+			await sheet.getByRole("button", { name: "Apply" }).waitFor();
+			await expectEveryControlNamed(page, `${filter} filter`);
+			await page.keyboard.press("Escape");
+			await expect(sheet).toBeHidden();
+		}
 	});
 });

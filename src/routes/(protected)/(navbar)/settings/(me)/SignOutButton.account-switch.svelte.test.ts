@@ -11,6 +11,7 @@ import {
 
 import { conversation, settled } from "#lib/chat/conversations-test-helpers.ts";
 import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
+import { defaultRightNowFeedFilters } from "#lib/model/right-now/filters.ts";
 
 const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 	native: vi.fn(),
@@ -170,6 +171,10 @@ async function firstAccount() {
 		notificationsEnabled: true,
 		autoUpdateLocation: true,
 		gridSearchFilters: { ...defaultFilters, isFavorite: true },
+		rightNowFeedFilters: {
+			...defaultRightNowFeedFilters,
+			hostingEnabled: true,
+		},
 	});
 	markers.inboxLastViewed.save({ profileId: FIRST, at: 1000 });
 	taps.tapsLastViewed.save({ profileId: FIRST, at: 2000 });
@@ -212,6 +217,9 @@ async function assertSecondAccount(
 	expect(
 		app.preferences.preferencesSnapshot().gridSearchFilters,
 	).toBeUndefined();
+	expect(
+		app.preferences.preferencesSnapshot().rightNowFeedFilters,
+	).toBeUndefined();
 	expect(app.state.drafts.get("shared-chat")).toBe("");
 	expect(app.state.drafts.replyTo("shared-chat")).toBeNull();
 	expect(toast.dismiss).toHaveBeenCalled();
@@ -248,6 +256,7 @@ async function assertSecondAccount(
 		autoUpdateLocation: false,
 	});
 	expect(restarted.preferencesSnapshot().gridSearchFilters).toBeUndefined();
+	expect(restarted.preferencesSnapshot().rightNowFeedFilters).toBeUndefined();
 }
 
 describe("account changes through the real auth, cache and preferences flow", () => {

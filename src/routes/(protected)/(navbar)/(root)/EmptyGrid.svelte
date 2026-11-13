@@ -8,11 +8,10 @@
 	import * as Empty from "#lib/components/ui/empty/index.ts";
 	import { sentFilterKeys } from "#lib/grid/grid-query.ts";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
-	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 
 	const sentFilters = $derived(
 		sentFilterKeys({
-			filters: gridState.filters.value ?? defaultFilters,
+			filters: gridState.filters.current,
 			genderFilterFlag: genderFilterFlag(),
 		}),
 	);

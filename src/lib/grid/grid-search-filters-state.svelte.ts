@@ -1,49 +1,22 @@
-import { showErrorToast } from "#lib/api/error-toast.ts";
 import { getTags } from "#lib/api/users/tags.ts";
-import {
-	getPreferences,
-	setPreferences,
-} from "#lib/app-data/preferences.svelte.ts";
-import {
-	defaultFilters,
-	type GridSearchFilters,
-	tagCatalog,
-} from "#lib/model/browse/grid/filters.ts";
+import { PersistedFiltersState } from "#lib/app-data/persisted-filters-state.svelte.ts";
+import { defaultFilters, tagCatalog } from "#lib/model/browse/grid/filters.ts";
 import { withDeadline } from "#lib/util/deadline.ts";
 import { deepEqual } from "#lib/util/deep-equal.ts";
 
 const TAG_LOOKUP_DEADLINE_MS = 5_000;
 
-export class GridSearchFiltersState {
-	value: GridSearchFilters | null = $state(null);
-	onQueryChange: () => void;
-	ready: Promise<void>;
-
+export class GridSearchFiltersState extends PersistedFiltersState<"gridSearchFilters"> {
 	constructor({ onQueryChange }: { onQueryChange: () => void }) {
-		this.onQueryChange = onQueryChange;
-		this.ready = this.#load();
-	}
-
-	snapshot(): GridSearchFilters {
-		return { ...(this.value ?? defaultFilters) };
-	}
-
-	set(gridSearchFilters: Partial<GridSearchFilters>) {
-		const oldValue = this.value;
-		const newValue = Object.assign({}, oldValue, gridSearchFilters);
-		if (!deepEqual(oldValue, newValue)) {
-			this.value = newValue;
-			void this.#save();
-			this.onQueryChange();
-		}
-	}
-
-	resetFilters() {
-		this.set(defaultFilters);
-	}
-
-	reset() {
-		this.value = { ...defaultFilters };
+		super({
+			key: "gridSearchFilters",
+			defaults: defaultFilters,
+			labels: {
+				load: "Failed to load filters",
+				save: "Failed to update filters",
+			},
+			onQueryChange,
+		});
 	}
 
 	async resolveTagKeys(): Promise<void> {
@@ -65,27 +38,6 @@ export class GridSearchFiltersState {
 		if (!this.value || !deepEqual(this.value.tags, tags)) return;
 		if (deepEqual(keys, tags)) return;
 		this.value = { ...this.value, tags: keys };
-		void this.#save();
-	}
-
-	async #load() {
-		try {
-			const { gridSearchFilters } = await getPreferences();
-			this.value = gridSearchFilters ?? defaultFilters;
-		} catch (error) {
-			console.error(error);
-			showErrorToast({ label: "Failed to load filters", error });
-		}
-	}
-
-	async #save() {
-		try {
-			if (this.value !== null) {
-				await setPreferences({ gridSearchFilters: this.value });
-			}
-		} catch (error) {
-			console.error(error);
-			showErrorToast({ label: "Failed to update filters", error });
-		}
+		void this.save();
 	}
 }

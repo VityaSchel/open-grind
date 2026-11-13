@@ -1,6 +1,5 @@
 import { accountScoped } from "#lib/api/account-caches.ts";
-import { markBlockedProfilesUnviewable } from "#lib/api/browse/blocks.ts";
-import { markHiddenProfilesUnviewable } from "#lib/api/browse/hides.ts";
+import { markBlockedAndHiddenProfilesUnviewable } from "#lib/api/browse/unviewable-profiles.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { getViews } from "#lib/api/interest/views.ts";
 import {
@@ -122,12 +121,7 @@ export class ViewsState extends ReconcilingListState<
 	}
 
 	protected async fetch(): Promise<ViewsSnapshot> {
-		void markBlockedProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
-		void markHiddenProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
+		markBlockedAndHiddenProfilesUnviewable();
 		const views = await getViews();
 		const listed = views.profiles.length + views.previews.length;
 		return {

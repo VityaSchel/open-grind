@@ -88,10 +88,7 @@ function gridProfile({
 export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	const response = await atHomeLocation(async () => {
 		if (query.favorites && !query.pageNumber) {
-			await updateLocation({ geohash: query.nearbyGeoHash }).then(
-				() => recordStoredLocation(query.nearbyGeoHash),
-				(error: unknown) => console.error(error),
-			);
+			await storeLocation({ geohash: query.nearbyGeoHash });
 		}
 		return getCascadeV4(query);
 	});
@@ -134,6 +131,17 @@ registerAccountCache({
 		storedGeohash = null;
 	},
 });
+
+export async function storeLocation({
+	geohash,
+}: {
+	geohash: string;
+}): Promise<void> {
+	await updateLocation({ geohash }).then(
+		() => recordStoredLocation(geohash),
+		(error: unknown) => console.error(error),
+	);
+}
 
 function recordStoredLocation(geohash: string): void {
 	const coarse = coarsenGeohash(geohash);

@@ -1,20 +1,12 @@
 <script lang="ts">
-	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
+	import LocationGate from "#lib/components/location-chooser/LocationGate.svelte";
+	import RightNowFeedScreen from "./RightNowFeedScreen.svelte";
 
-	import * as Alert from "#lib/components/ui/alert/index.ts";
-	import Link from "#lib/components/ui/link/Link.svelte";
+	let { data }: import("./$types").PageProps = $props();
 </script>
 
-<main class="flex flex-1 px-8">
-	<Alert.Root class="m-auto w-full max-w-sm">
-		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
-		<Alert.Title>Unimplemented</Alert.Title>
-		<Alert.Description>
-			"Right now" tab is not implemented yet, tracking in <Link
-				href="https://git.opengrind.org/open-grind/open-grind/issues/43"
-			>
-				#43
-			</Link>.
-		</Alert.Description>
-	</Alert.Root>
-</main>
+<LocationGate>
+	{#snippet children({ geohash })}
+		<RightNowFeedScreen ourProfileId={data.ourProfileId} {geohash} />
+	{/snippet}
+</LocationGate>

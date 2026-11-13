@@ -73,6 +73,7 @@ import {
 	demoReportRightNowPost,
 	demoRightNowPostReport,
 } from "./mock/reports";
+import { demoRightNowFeed } from "./mock/right-now";
 import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
@@ -167,6 +168,14 @@ export function demoRoute({
 	}
 	if (method === "GET" && rawPath === "/v4/cascade") {
 		return ok(demoCascadeV4(params));
+	}
+	if (
+		method === "GET" &&
+		(rawPath === "/v4/rightnow/feed" ||
+			rawPath === "/v5/rightnow/feed" ||
+			rawPath === "/v6/rightnow/feed")
+	) {
+		return ok(demoRightNowFeed(params));
 	}
 	if (method === "GET" && rawPath === "/v7/search") {
 		return ok({ profiles: demoSearchProfiles(params) });

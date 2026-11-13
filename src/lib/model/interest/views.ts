@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { rightNowAttributionStatusSchema } from "#lib/model/right-now.ts";
+import { rightNowAttributionStatusSchema } from "#lib/model/right-now/index.ts";
 import {
 	profileMaskedMinSchema,
 	profileMaskedSchema,

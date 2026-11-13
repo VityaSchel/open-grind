@@ -42,67 +42,6 @@ beforeEach(() => {
 	setPreferencesMock.mockClear();
 	getTagsMock.mockReset();
 	getTagsMock.mockResolvedValue(languages);
-	getPreferencesMock.mockResolvedValue({
-		gridSearchFilters: { ...defaultFilters, genders: [1, 2] },
-	});
-});
-
-describe("snapshot", () => {
-	it("falls back to the defaults before the stored filters load", () => {
-		const state = new GridSearchFiltersState({ onQueryChange: vi.fn() });
-
-		expect(state.snapshot()).toEqual(defaultFilters);
-	});
-
-	it("detaches the copy from the stored filters", async () => {
-		const { state } = await loadedState();
-
-		const snapshot = state.snapshot();
-		state.set({ genders: [3] });
-
-		expect(snapshot.genders).toEqual([1, 2]);
-	});
-});
-
-describe("set", () => {
-	it("ignores a patch that changes nothing", async () => {
-		const { state, onQueryChange } = await loadedState();
-
-		state.set({ genders: [1, 2] });
-
-		expect(onQueryChange).not.toHaveBeenCalled();
-		expect(setPreferencesMock).not.toHaveBeenCalled();
-	});
-
-	it("applies a patch that changes a nested list", async () => {
-		const { state, onQueryChange } = await loadedState();
-
-		state.set({ genders: [2, 1] });
-
-		expect(state.value?.genders).toEqual([2, 1]);
-		expect(onQueryChange).toHaveBeenCalledOnce();
-		expect(setPreferencesMock).toHaveBeenCalledOnce();
-	});
-
-	it("applies a patch that changes a scalar", async () => {
-		const { state, onQueryChange } = await loadedState();
-
-		state.set({ isFavorite: !defaultFilters.isFavorite });
-
-		expect(onQueryChange).toHaveBeenCalledOnce();
-	});
-});
-
-describe("resetFilters", () => {
-	it("saves the defaults and queries again", async () => {
-		const { state, onQueryChange } = await loadedState();
-
-		state.resetFilters();
-
-		expect(state.value).toEqual(defaultFilters);
-		expect(setPreferencesMock).toHaveBeenCalledOnce();
-		expect(onQueryChange).toHaveBeenCalledOnce();
-	});
 });
 
 describe("resolveTagKeys", () => {
@@ -118,7 +57,13 @@ describe("resolveTagKeys", () => {
 		await state.resolveTagKeys();
 
 		expect(state.value?.tags).toEqual(["hiking", "unknown"]);
-		expect(setPreferencesMock).toHaveBeenCalledOnce();
+		expect(setPreferencesMock).toHaveBeenCalledExactlyOnceWith({
+			gridSearchFilters: {
+				...defaultFilters,
+				tagsEnabled: true,
+				tags: ["hiking", "unknown"],
+			},
+		});
 		expect(onQueryChange).not.toHaveBeenCalled();
 	});
 
