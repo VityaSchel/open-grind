@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
 	reportSignInFailure: vi.fn(),
 	goto: vi.fn(),
 	toastError: vi.fn(),
-	googleSignInMode: vi.fn(),
 	handoff: { phase: "idle" },
 	events: [] as string[],
 }));
@@ -18,10 +17,12 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: mocks.invoke }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn() }));
 vi.mock("$app/navigation", () => ({ goto: mocks.goto }));
 vi.mock("svelte-sonner", () => ({ toast: { error: mocks.toastError } }));
-vi.mock("#lib/api/google-handoff-state.svelte.ts", () => ({
+vi.mock("#lib/api/google-handoff-state.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/google-handoff-state.svelte.ts")
+	>()),
 	confirmAccountSwitch: mocks.confirmAccountSwitch,
 	googleHandoffState: mocks.handoff,
-	googleSignInMode: mocks.googleSignInMode,
 }));
 vi.mock("#lib/api/current-session.ts", () => ({
 	signedInProfileId: mocks.signedInProfileId,
@@ -38,6 +39,7 @@ import {
 	consumeGoogleHandoff,
 	startGoogleHandoffWatch,
 } from "#lib/api/google-handoff.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 
 const SIGNED_IN_AS = 42;
 const NEW_ACCOUNT = { profileId: 7, restriction: null };
@@ -185,12 +187,13 @@ describe("signing in through a Google handoff with no account", () => {
 describe("watching for a Google handoff", () => {
 	beforeEach(() => {
 		vi.mocked(listen).mockClear();
-		mocks.googleSignInMode.mockReturnValue("companion");
+		runningOn("android");
 		backend({ exchange: () => NEW_ACCOUNT, pending: () => false });
 	});
 
 	afterEach(() => {
 		vi.unstubAllGlobals();
+		resetPlatform();
 	});
 
 	it("listens for handoffs when the companion app signs in", async () => {
@@ -206,7 +209,7 @@ describe("watching for a Google handoff", () => {
 	});
 
 	it("never picks up a handoff when the sign-in is pasted", async () => {
-		mocks.googleSignInMode.mockReturnValue("paste");
+		runningOn("ios");
 
 		await startGoogleHandoffWatch();
 
