@@ -1,14 +1,14 @@
-use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_core_foundation::CGPoint;
 use objc2_ui_kit::{UIScrollView, UIView};
+
+use crate::uikit::page_scroller;
 
 pub fn child_scroller_at(
 	webview: &UIView,
 	target: CGPoint,
 ) -> Option<Retained<UIScrollView>> {
-	let page: Option<Retained<UIScrollView>> =
-		unsafe { msg_send![webview, scrollView] };
+	let page = page_scroller(webview);
 	let mut view = webview.hitTest_withEvent(target, None);
 	while let Some(current) = view {
 		match current.downcast::<UIScrollView>() {

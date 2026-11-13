@@ -15,7 +15,7 @@ use super::scroll_target::STATUS_BAR_TAP_SCRIPT;
 use crate::child_scroller::child_scroller_at;
 use crate::page_point::PagePoint;
 use crate::presenting::presenting;
-use crate::uikit::{evaluate, with_webview};
+use crate::uikit::{evaluate, page_scroller, with_webview};
 
 const MOMENTUM_STOP_SINCE: NSOperatingSystemVersion =
 	NSOperatingSystemVersion {
@@ -119,9 +119,7 @@ fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {
 		tracing::warn!("[scroll to top] the webview has no superview");
 		return;
 	};
-	let page: Option<Retained<UIScrollView>> =
-		unsafe { msg_send![&webview, scrollView] };
-	if let Some(page) = page {
+	if let Some(page) = page_scroller(&webview) {
 		page.setScrollsToTop(false);
 	}
 	let sentinel = StatusBarTap::new(mtm, &webview, host.bounds().size.width);

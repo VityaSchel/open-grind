@@ -8,7 +8,7 @@ use objc2_foundation::{
 	NSError, NSNotification, NSNotificationCenter, NSNotificationName,
 	NSOperationQueue, NSString,
 };
-use objc2_ui_kit::UIView;
+use objc2_ui_kit::{UIScrollView, UIView};
 use tauri::{AppHandle, Runtime, WebviewWindow};
 
 pub type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
@@ -24,6 +24,10 @@ pub fn evaluate(webview: &UIView, script: &str) {
 			completionHandler: completion
 		]
 	};
+}
+
+pub fn page_scroller(webview: &UIView) -> Option<Retained<UIScrollView>> {
+	unsafe { msg_send![webview, scrollView] }
 }
 
 pub fn with_webview(

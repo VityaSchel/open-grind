@@ -3,7 +3,7 @@ use std::ptr::NonNull;
 
 use block2::RcBlock;
 use objc2::rc::Retained;
-use objc2::runtime::{AnyObject, NSObject, NSObjectProtocol, ProtocolObject};
+use objc2::runtime::{NSObject, NSObjectProtocol, ProtocolObject};
 use objc2::{
 	define_class, msg_send, sel, DefinedClass, MainThreadMarker, MainThreadOnly,
 };
@@ -20,6 +20,7 @@ use tauri::{
 };
 use tokio::sync::oneshot;
 
+use crate::uikit::page_scroller;
 use crate::MAIN_WINDOW_LABEL;
 
 pub const UNAVAILABLE: &str = "Couldn't show the sign-in page";
@@ -231,20 +232,10 @@ unsafe fn show(
 }
 
 fn hide_top_edge_effect(page: &UIView) {
-	let scroll: Option<Retained<AnyObject>> =
-		unsafe { msg_send![page, scrollView] };
-	let Some(scroll) = scroll else {
-		return;
-	};
-	let supported: bool =
-		unsafe { msg_send![&*scroll, respondsToSelector: sel!(topEdgeEffect)] };
-	if !supported {
-		return;
-	}
-	let effect: Option<Retained<AnyObject>> =
-		unsafe { msg_send![&*scroll, topEdgeEffect] };
-	if let Some(effect) = effect {
-		let _: () = unsafe { msg_send![&*effect, setHidden: true] };
+	let scroller = page_scroller(page)
+		.filter(|scroller| scroller.respondsToSelector(sel!(topEdgeEffect)));
+	if let Some(scroller) = scroller {
+		scroller.topEdgeEffect().setHidden(true);
 	}
 }
 
