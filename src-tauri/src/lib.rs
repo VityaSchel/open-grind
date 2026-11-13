@@ -8,6 +8,8 @@ mod appearance;
 mod appimage;
 #[cfg(any(target_os = "ios", test))]
 mod background_task;
+#[cfg(any(target_os = "ios", test))]
+mod backup_exclusion;
 #[cfg(target_os = "ios")]
 mod child_scroller;
 mod context_menu;
@@ -339,6 +341,8 @@ pub fn run() {
             app_data::remove_app_data,
         ])
         .setup(|app| {
+            #[cfg(target_os = "ios")]
+            backup_exclusion::exclude_from_backups(app.handle());
             #[cfg(target_os = "ios")]
             background_task::install(app.handle());
             scroll_phase::install_scroll_gesture_bridge(app.handle());
