@@ -12,21 +12,15 @@ export const notificationCategories = $state<{ list: PushCategory[] }>({
 	list: [],
 });
 
-const ANDROID_OWNED: ReadonlySet<PushCategoryName> = new Set<PushCategoryName>([
-	"messages",
-]);
-
-const NONE_OWNED: ReadonlySet<PushCategoryName> = new Set<PushCategoryName>();
-
-function systemOwnedCategories(): ReadonlySet<PushCategoryName> {
+function systemOwnsCategory(category: PushCategoryName): boolean {
 	switch (currentPlatform()) {
 		case "android":
-			return ANDROID_OWNED;
+			return category === "messages";
 		case "ios":
 		case "linux":
 		case "macos":
 		case "windows":
-			return NONE_OWNED;
+			return false;
 	}
 }
 
@@ -75,7 +69,7 @@ export async function toggleNotificationCategory({
 		sentToSettings = category;
 		return;
 	}
-	if (systemOwnedCategories().has(category)) {
+	if (systemOwnsCategory(category)) {
 		if (!enabled) await openPushCategorySettings(category);
 		return;
 	}
