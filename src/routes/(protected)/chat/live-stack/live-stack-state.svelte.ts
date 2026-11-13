@@ -3,7 +3,7 @@ import type { NavigationTarget, OnNavigate } from "$app/navigation";
 
 import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
-import { BACK_WATCHDOG_MS } from "#lib/util/history.ts";
+import { BackWatchdog } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
@@ -25,7 +25,7 @@ export class LiveStackState {
 
 	#generation = new Generation();
 	#committedSlide: Promise<boolean> | null = null;
-	#watchdog: ReturnType<typeof setTimeout> | undefined;
+	readonly #backWatchdog = new BackWatchdog();
 	#prepared = $state(0);
 
 	constructor({
@@ -90,7 +90,7 @@ export class LiveStackState {
 
 		const generation = this.#generation.next();
 		this.tracking = false;
-		this.#clearWatchdog();
+		this.#backWatchdog.cancel();
 
 		const fromKey = this.#keyOf(from);
 		const toKey = this.#keyOf(to);
@@ -178,11 +178,7 @@ export class LiveStackState {
 			intent: "commit",
 			velocity: release?.velocity,
 		});
-		this.#watchdog = setTimeout(
-			() => this.#abandonBack(),
-			BACK_WATCHDOG_MS,
-		);
-		history.back();
+		this.#backWatchdog.back({ stalled: () => this.#abandonBack() });
 	}
 
 	cancelSwipeBack(release?: SwipeRelease): void {
@@ -195,7 +191,7 @@ export class LiveStackState {
 	dispose(): void {
 		this.#generation.next();
 		this.#settle.stop();
-		this.#clearWatchdog();
+		this.#backWatchdog.cancel();
 		this.#committedSlide = null;
 		this.tracking = false;
 	}
@@ -210,7 +206,6 @@ export class LiveStackState {
 	}
 
 	#abandonBack(): void {
-		this.#watchdog = undefined;
 		this.#committedSlide = null;
 		this.#returnToCovered();
 	}
@@ -236,11 +231,6 @@ export class LiveStackState {
 			return new Promise((resolve) => requestAnimationFrame(resolve));
 		if (waitForKeyboard) return this.#keyboardHidden();
 		return Promise.resolve();
-	}
-
-	#clearWatchdog(): void {
-		clearTimeout(this.#watchdog);
-		this.#watchdog = undefined;
 	}
 
 	#rest(top: string | null): void {

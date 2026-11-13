@@ -5,7 +5,7 @@ import { liveHistoryIndex } from "#lib/util/history-index.ts";
 import { historyLog } from "#lib/util/history-log.svelte.ts";
 import { entryPathname } from "#lib/util/pathname.ts";
 
-export const BACK_WATCHDOG_MS = 1000;
+const BACK_WATCHDOG_MS = 1000;
 
 function trustedNavigation():
 	| { navigation: Navigation; index: number }
@@ -80,6 +80,20 @@ export function goBack({ parent }: { parent: string }): void {
 		if (stalled) returnTo(parent);
 	}, BACK_WATCHDOG_MS);
 	history.back();
+}
+
+export class BackWatchdog {
+	#timer: ReturnType<typeof setTimeout> | undefined;
+
+	back({ stalled }: { stalled: () => void }): void {
+		clearTimeout(this.#timer);
+		this.#timer = setTimeout(stalled, BACK_WATCHDOG_MS);
+		history.back();
+	}
+
+	cancel(): void {
+		clearTimeout(this.#timer);
+	}
 }
 
 export function navigationPending({

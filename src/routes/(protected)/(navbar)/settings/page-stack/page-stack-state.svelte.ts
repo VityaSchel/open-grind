@@ -3,7 +3,7 @@ import type { OnNavigate } from "$app/navigation";
 
 import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
-import { BACK_WATCHDOG_MS, canGoBack } from "#lib/util/history.ts";
+import { BackWatchdog, canGoBack } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
@@ -33,7 +33,7 @@ export class PageStackState {
 	#generation = new Generation();
 	#backOwed = false;
 	#committedByGesture = false;
-	#watchdog: ReturnType<typeof setTimeout> | undefined;
+	readonly #backWatchdog = new BackWatchdog();
 
 	constructor({
 		surface,
@@ -73,7 +73,7 @@ export class PageStackState {
 		this.tracking = false;
 		this.committing = false;
 		this.#backOwed = false;
-		this.#clearWatchdog();
+		this.#backWatchdog.cancel();
 		const generation = this.#generation.next();
 
 		if (this.#committedByGesture) {
@@ -208,15 +208,10 @@ export class PageStackState {
 	#payBack(): void {
 		this.#backOwed = false;
 		this.#committedByGesture = true;
-		this.#watchdog = setTimeout(
-			() => this.#abandonBack(),
-			BACK_WATCHDOG_MS,
-		);
-		history.back();
+		this.#backWatchdog.back({ stalled: () => this.#abandonBack() });
 	}
 
 	#abandonBack(): void {
-		this.#watchdog = undefined;
 		this.#committedByGesture = false;
 		this.committing = false;
 		void this.#settle
@@ -224,11 +219,6 @@ export class PageStackState {
 			.then((settled) => {
 				if (settled) this.ghost = null;
 			});
-	}
-
-	#clearWatchdog(): void {
-		clearTimeout(this.#watchdog);
-		this.#watchdog = undefined;
 	}
 
 	async #adoptGhost(): Promise<void> {

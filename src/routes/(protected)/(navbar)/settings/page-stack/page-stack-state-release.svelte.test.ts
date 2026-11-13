@@ -160,6 +160,34 @@ describe("PageStackState committing a swipe", () => {
 		expect(animations).toHaveLength(settled);
 		vi.useRealTimers();
 	});
+
+	it("never slides back a page whose Back navigated after a second swipe paid another", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		const harness = makeStack();
+		const { stack, animations } = harness;
+		vi.spyOn(history, "back").mockImplementation(() => {});
+		await push(harness, { from: "/settings", to: "/settings/app" });
+		stack.beginSwipeBack();
+		stack.commitSwipeBack();
+		await settleLast(animations);
+		stack.beginSwipeBack();
+		stack.commitSwipeBack();
+		await settleLast(animations);
+		const adopt = await stack.navigate(
+			navigationEvent({
+				from: "/settings/app",
+				to: "/settings",
+				delta: -1,
+			}),
+		);
+		adopt?.();
+		const settled = animations.length;
+
+		vi.advanceTimersByTime(1000);
+
+		expect(animations).toHaveLength(settled);
+		vi.useRealTimers();
+	});
 });
 
 describe("PageStackState offering a back swipe", () => {
