@@ -6,8 +6,9 @@ use objc2::{
 use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{NSOperatingSystemVersion, NSProcessInfo};
 use objc2_ui_kit::{
-	UIResponder, UIScrollView, UIScrollViewContentInsetAdjustmentBehavior,
-	UIScrollViewDelegate, UIView, UIViewAutoresizing,
+	NSObjectUIAccessibility, UIResponder, UIScrollView,
+	UIScrollViewContentInsetAdjustmentBehavior, UIScrollViewDelegate, UIView,
+	UIViewAutoresizing,
 };
 use tauri::WebviewWindow;
 
@@ -80,10 +81,8 @@ impl StatusBarTap {
 		this.setShowsVerticalScrollIndicator(false);
 		this.setShowsHorizontalScrollIndicator(false);
 		this.setScrollsToTop(true);
-		let _: () =
-			unsafe { msg_send![&*this, setIsAccessibilityElement: false] };
-		let _: () =
-			unsafe { msg_send![&*this, setAccessibilityElementsHidden: true] };
+		this.setIsAccessibilityElement(false, mtm);
+		this.setAccessibilityElementsHidden(true, mtm);
 		unsafe { this.setDelegate(Some(ProtocolObject::from_ref(&*this))) };
 		this.hide_edge_effects();
 		this
