@@ -62,10 +62,14 @@ import {
 	BlockedProfileError,
 	HiddenProfileError,
 } from "#lib/api/users/profiles.ts";
-import { touchEvent } from "#lib/components/feedback/refresh/pull-test-helpers.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
-import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
+import {
+	flush,
+	fullProfile,
+	heldPull,
+	OUR_ID,
+} from "./profile-pager-test-helpers";
 import {
 	gridRow,
 	PROFILE_ID,
@@ -125,13 +129,6 @@ async function chooseFromProfileMenu(name: string) {
 	await fireEvent.click(
 		items.find((item) => item.textContent.trim() === name)!,
 	);
-}
-
-function heldPull(on: Element): boolean {
-	on.dispatchEvent(touchEvent("touchstart", { y: 100 }));
-	const move = touchEvent("touchmove", { y: 140 });
-	on.dispatchEvent(move);
-	return move.defaultPrevented;
 }
 
 beforeEach(() => {

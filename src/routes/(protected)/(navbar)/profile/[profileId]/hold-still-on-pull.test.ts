@@ -7,6 +7,7 @@ import {
 	touchEvent,
 } from "#lib/components/feedback/refresh/pull-test-helpers.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
 import {
 	holdsStillHere,
 	holdsStillOnPull,
@@ -101,12 +102,7 @@ function harness() {
 			return end;
 		},
 		liftPointer() {
-			const up = new MouseEvent("pointerup", {
-				bubbles: true,
-				cancelable: true,
-			});
-			Object.defineProperty(up, "pointerType", { value: "touch" });
-			photo.dispatchEvent(up);
+			photo.dispatchEvent(pointerEvent("pointerup"));
 		},
 		clickNatively({ detail = 1 } = {}) {
 			photo.dispatchEvent(

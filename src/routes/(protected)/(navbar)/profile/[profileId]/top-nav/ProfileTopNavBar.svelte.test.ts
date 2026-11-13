@@ -22,7 +22,12 @@ vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
 import { touchEvent } from "#lib/components/feedback/refresh/pull-test-helpers.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
-import { flush, fullProfile } from "../pager/profile-pager-test-helpers";
+import { pointerEvent } from "#lib/test/pointer.ts";
+import {
+	flush,
+	fullProfile,
+	heldPull,
+} from "../pager/profile-pager-test-helpers";
 import ProfileTopNavBar from "./ProfileTopNavBar.svelte";
 
 const PROFILE_ID = 100001;
@@ -51,19 +56,6 @@ function renderBar({ ourProfile = false }: { ourProfile?: boolean } = {}) {
 	return { nav, onFavorite };
 }
 
-function heldPull(on: Element): boolean {
-	on.dispatchEvent(touchEvent("touchstart", { y: 100 }));
-	const move = touchEvent("touchmove", { y: 140 });
-	on.dispatchEvent(move);
-	return move.defaultPrevented;
-}
-
-function touchPointer(type: "pointerdown" | "pointermove" | "pointerup") {
-	const event = new MouseEvent(type, { bubbles: true, cancelable: true });
-	Object.defineProperty(event, "pointerType", { value: "touch" });
-	return event;
-}
-
 async function rolledTap({
 	on,
 	rollPx,
@@ -73,11 +65,11 @@ async function rolledTap({
 }): Promise<boolean> {
 	const landing = { x: 20, y: 100 };
 	const lifted = { x: landing.x, y: landing.y + rollPx };
-	on.dispatchEvent(touchPointer("pointerdown"));
+	on.dispatchEvent(pointerEvent("pointerdown"));
 	on.dispatchEvent(touchEvent("touchstart", landing));
-	on.dispatchEvent(touchPointer("pointermove"));
+	on.dispatchEvent(pointerEvent("pointermove"));
 	on.dispatchEvent(touchEvent("touchmove", lifted));
-	on.dispatchEvent(touchPointer("pointerup"));
+	on.dispatchEvent(pointerEvent("pointerup"));
 	const end = touchEvent("touchend", lifted);
 	on.dispatchEvent(end);
 	await flush();
@@ -90,13 +82,13 @@ async function rolledTap({
 
 async function downwardDrag({ on, px }: { on: Element; px: number }) {
 	const landing = { x: 20, y: 100 };
-	on.dispatchEvent(touchPointer("pointerdown"));
+	on.dispatchEvent(pointerEvent("pointerdown"));
 	on.dispatchEvent(touchEvent("touchstart", landing));
 	for (const y of [landing.y + 6, landing.y + px]) {
-		on.dispatchEvent(touchPointer("pointermove"));
+		on.dispatchEvent(pointerEvent("pointermove"));
 		on.dispatchEvent(touchEvent("touchmove", { x: landing.x, y }));
 	}
-	on.dispatchEvent(touchPointer("pointerup"));
+	on.dispatchEvent(pointerEvent("pointerup"));
 	on.dispatchEvent(
 		touchEvent("touchend", { x: landing.x, y: landing.y + px }),
 	);
