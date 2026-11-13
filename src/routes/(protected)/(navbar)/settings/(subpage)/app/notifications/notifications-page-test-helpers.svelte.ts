@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/svelte";
 import { SvelteSet } from "svelte/reactivity";
 import { vi } from "vitest";
 
-import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type * as AccountApi from "#lib/api/settings/account.ts";
 import type * as PushApi from "#lib/push/index.ts";
@@ -13,13 +12,7 @@ type InstallListener = () => Promise<void>;
 
 const settled = () => Promise.resolve();
 
-const pushPlatforms = {
-	android: true,
-	ios: false,
-	linux: true,
-	macos: true,
-	windows: true,
-} as const satisfies Record<SupportedPlatform, boolean>;
+const actualPush = await vi.importActual<typeof PushApi>("#lib/push/index.ts");
 
 export const token: PushToken = {
 	token: "fid:APA91b",
@@ -36,7 +29,7 @@ export const push = {
 	notificationPermission: vi.fn<typeof PushApi.notificationPermission>(),
 	openNotificationSettings: vi.fn(settled),
 	openPushCategorySettings: vi.fn(settled),
-	pushAvailableHere: () => pushPlatforms[currentPlatform()],
+	pushAvailableHere: actualPush.pushAvailableHere,
 	pushCategories: vi.fn<typeof PushApi.pushCategories>(),
 	pushErrorReason: () => null,
 	requestNotificationPermission:
