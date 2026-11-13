@@ -20,6 +20,7 @@ vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import { applyBackGestureHandler } from "#lib/platform/android-system-back.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
@@ -33,7 +34,6 @@ const CONVERSATION_ID = "a:1";
 const BITS_HOLD_MS = 750;
 
 let drafts: Drafts;
-let clock = 1_700_000_000_000;
 
 beforeEach(() => {
 	runningOn("android");
@@ -298,19 +298,15 @@ describe("Conversation menu back gesture", () => {
 });
 
 describe("Conversation menu on iOS", () => {
+	useHoldClock();
+
 	beforeEach(() => {
 		runningOn("ios");
 		conversations.drafts = new Drafts();
 		playHapticMock.mockReset();
-		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
-		vi.setSystemTime((clock += 60_000));
 	});
 
-	afterEach(() => {
-		window.dispatchEvent(new Event("pointerup"));
-		vi.useRealTimers();
-		cleanup();
-	});
+	afterEach(cleanup);
 
 	it("opens once a touch is held, with one haptic tap", async () => {
 		const trigger = renderRowWithMenu();
