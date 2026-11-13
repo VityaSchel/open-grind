@@ -22,10 +22,8 @@ function contextMenu(origin?: TouchOriginHints) {
 }
 
 function pointer(type: string, pointerType: string) {
-	const event = new MouseEvent(type, { bubbles: true, clientX: 10 });
-	Object.defineProperty(event, "pointerType", { value: pointerType });
-	return event as unknown as Parameters<
-		NonNullable<ReturnType<typeof longPressHandlers>["onpointerdown"]>
+	return pointerEvent(type, { pointerType }) as unknown as Parameters<
+		NonNullable<LongPressHandlers["onpointerdown"]>
 	>[0];
 }
 

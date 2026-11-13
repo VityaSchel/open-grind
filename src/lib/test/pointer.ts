@@ -13,6 +13,7 @@ export function pointerEvent(
 		clientY: y,
 	});
 	Object.defineProperties(event, {
+		isPrimary: { value: true },
 		pointerId: { value: 1 },
 		pointerType: { value: pointerType },
 	});
