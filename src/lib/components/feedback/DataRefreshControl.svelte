@@ -51,8 +51,7 @@
 	const BUTTON_HEIGHT_PX = 32;
 	const REST_GAP_PX = 12;
 	const REST_HEIGHT_PX = BUTTON_HEIGHT_PX + REST_GAP_PX * 2;
-	const PULL_STYLE = pullStyleHere();
-	const ARM_PX = PULL_STYLE.armPx;
+	const { source: PULL_SOURCE, armPx: ARM_PX } = pullStyleHere();
 	const BOUNDARY_SETTLE_MS = 50;
 	const MOUSE_PROBE_MS = BOUNDARY_SETTLE_MS + 70;
 	const REVEAL_MS = 250;
@@ -85,7 +84,7 @@
 	model.getBaseline = () => (restingButton.shown ? REST_HEIGHT_PX : 0);
 
 	const activeFace = $derived.by((): IndicatorFace | null => {
-		if (busy) return PULL_STYLE.face;
+		if (busy) return gestureFace(PULL_SOURCE);
 		if (model.gestureActive) return gestureFace(model.source);
 		if (restingButton.shown) return "button";
 		return null;

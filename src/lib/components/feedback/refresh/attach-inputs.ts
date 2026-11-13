@@ -11,6 +11,7 @@ import {
 import { attachNativeBandPull } from "./native-band-adapter";
 import { attachOverscrollPull } from "./overscroll-adapter";
 import type { PullModel } from "./pull-model.svelte";
+import { pullStyleHere } from "./pull-style";
 import type { RestingButtonModel } from "./resting-button.svelte";
 import {
 	AT_BOUNDARY_PX,
@@ -47,18 +48,6 @@ function nativeOverscrollBandHere(): boolean {
 		case "macos":
 		case "windows":
 			return true;
-	}
-}
-
-function pullFromNativeBandHere(): boolean {
-	switch (currentPlatform()) {
-		case "ios":
-			return true;
-		case "android":
-		case "linux":
-		case "macos":
-		case "windows":
-			return false;
 	}
 }
 
@@ -152,7 +141,8 @@ export function attachPullInputs(
 		else restingButton.cancelProbe();
 	});
 
-	const detach = pullFromNativeBandHere()
+	const pullsFromNativeBand = pullStyleHere().source === "band";
+	const detach = pullsFromNativeBand
 		? [
 				attachNativeBandPull(model, {
 					scroller: target,
