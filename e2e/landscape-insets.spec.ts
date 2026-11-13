@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
+import type { NativeInsets } from "../src/lib/platform/native-insets";
 import {
 	afterTwoFrames,
 	animationsFinished,
@@ -19,24 +20,23 @@ import {
 } from "./support/chat-stack";
 import { openSheetFromComposer } from "./support/drawer";
 import { filtersScroller, openAllFilters } from "./support/grid-filters";
-import { type Keyboard, sendInsets, sendIosInsets } from "./support/keyboard";
+import { sendInsets, sendIosInsets } from "./support/keyboard";
 import { pane, stackSettled } from "./support/page-stack";
 import { LIVE_STACK } from "./support/stack-layers";
 import { showRestingToast } from "./support/toast";
 
-type Insets = Keyboard["insets"];
 type Span = { left: number; right: number };
 
 const IPHONE_PORTRAIT = { width: 402, height: 874 };
 const IPHONE_LANDSCAPE = { width: 874, height: 402 };
-const IPHONE_PORTRAIT_INSETS: Insets = {
+const IPHONE_PORTRAIT_INSETS: NativeInsets = {
 	top: 62,
 	bottom: 34,
 	left: 0,
 	right: 0,
 	ime: false,
 };
-const IPHONE_LANDSCAPE_INSETS: Insets = {
+const IPHONE_LANDSCAPE_INSETS: NativeInsets = {
 	top: 0,
 	bottom: 20,
 	left: 62,
@@ -44,7 +44,7 @@ const IPHONE_LANDSCAPE_INSETS: Insets = {
 	ime: false,
 };
 const NARROW_WINDOW = { width: 540, height: 360 };
-const NARROW_WINDOW_INSETS: Insets = {
+const NARROW_WINDOW_INSETS: NativeInsets = {
 	top: 24,
 	bottom: 0,
 	left: 48,
@@ -52,7 +52,7 @@ const NARROW_WINDOW_INSETS: Insets = {
 	ime: false,
 };
 const ANDROID_LANDSCAPE = { width: 740, height: 360 };
-const ANDROID_LANDSCAPE_INSETS: Insets = {
+const ANDROID_LANDSCAPE_INSETS: NativeInsets = {
 	top: 24,
 	bottom: 0,
 	left: 33,
@@ -60,7 +60,7 @@ const ANDROID_LANDSCAPE_INSETS: Insets = {
 	ime: false,
 };
 const ANDROID_SPLIT_WINDOW = { width: 560, height: 360 };
-const ANDROID_NAV_ON_THE_RIGHT: Insets = {
+const ANDROID_NAV_ON_THE_RIGHT: NativeInsets = {
 	top: 24,
 	bottom: 0,
 	left: 0,
@@ -86,7 +86,7 @@ test.describe.configure({ timeout: 180_000 });
 
 const safeSpan = (
 	viewport: { width: number },
-	insets: Pick<Insets, "left" | "right">,
+	insets: Pick<NativeInsets, "left" | "right">,
 	gutter = 0,
 ): Span => ({
 	left: insets.left + gutter,
@@ -117,7 +117,7 @@ async function expectEdgeToEdge(target: Locator, width: number, label: string) {
 	});
 }
 
-async function startOnIos(page: Page, insets: Insets): Promise<void> {
+async function startOnIos(page: Page, insets: NativeInsets): Promise<void> {
 	await installTauriShim(page, { platform: "ios" });
 	await page.addInitScript((preset) => {
 		window.__iosInsets = preset;

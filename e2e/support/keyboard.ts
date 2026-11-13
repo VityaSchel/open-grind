@@ -1,17 +1,13 @@
 import type { Page } from "@playwright/test";
 
+import type { NativeInsets } from "../../src/lib/platform/native-insets";
+
 export type Keyboard = {
 	viewport: { width: number; height: number };
-	insets: {
-		top: number;
-		bottom: number;
-		left: number;
-		right: number;
-		ime: boolean;
-	};
+	insets: NativeInsets;
 };
 
-export const TEST_INSETS: Keyboard["insets"] = {
+export const TEST_INSETS: NativeInsets = {
 	top: 64,
 	bottom: 64,
 	left: 0,
@@ -19,16 +15,13 @@ export const TEST_INSETS: Keyboard["insets"] = {
 	ime: false,
 };
 
-export function sendInsets(
-	page: Page,
-	insets: Keyboard["insets"],
-): Promise<unknown> {
+export function sendInsets(page: Page, insets: NativeInsets): Promise<unknown> {
 	return page.evaluate((next) => window.__reapplyInsets(next), insets);
 }
 
 export function sendIosInsets(
 	page: Page,
-	insets: Keyboard["insets"],
+	insets: NativeInsets,
 ): Promise<unknown> {
 	return page.evaluate((next) => {
 		window.__iosInsets = next;
