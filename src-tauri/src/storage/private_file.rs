@@ -4,7 +4,7 @@ use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-pub(super) fn temp_path(path: &Path) -> PathBuf {
+fn temp_path(path: &Path) -> PathBuf {
 	static NEXT: AtomicU64 = AtomicU64::new(0);
 	let mut temp = path.to_path_buf().into_os_string();
 	temp.push(format!(
@@ -15,7 +15,7 @@ pub(super) fn temp_path(path: &Path) -> PathBuf {
 	PathBuf::from(temp)
 }
 
-pub(super) fn write_private(path: &Path, secret: &[u8]) -> io::Result<()> {
+fn write_private(path: &Path, secret: &[u8]) -> io::Result<()> {
 	let mut file = fs::OpenOptions::new()
 		.write(true)
 		.create_new(true)
@@ -44,4 +44,27 @@ pub(super) fn scratch_dir() -> PathBuf {
 	));
 	fs::create_dir_all(&dir).unwrap();
 	dir
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn temp_paths_are_unique_per_write() {
+		let path = Path::new("/nonexistent/session");
+		assert_ne!(temp_path(path), temp_path(path));
+	}
+
+	#[test]
+	fn write_private_never_writes_into_an_existing_file() {
+		let base = scratch_dir();
+		let occupied = base.join("occupied");
+		fs::write(&occupied, b"original").unwrap();
+
+		assert!(write_private(&occupied, b"replacement").is_err());
+		assert_eq!(fs::read(&occupied).unwrap().as_slice(), b"original");
+
+		fs::remove_dir_all(&base).ok();
+	}
 }

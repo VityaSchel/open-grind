@@ -165,7 +165,7 @@ mod tests {
 	use std::os::unix::fs::PermissionsExt;
 
 	use super::*;
-	use crate::storage::private_file::{scratch_dir, temp_path, write_private};
+	use crate::storage::private_file::scratch_dir;
 
 	const SERVICE: &str = "open-grind";
 	const USER: &str = "session";
@@ -204,28 +204,6 @@ mod tests {
 		assert_eq!(fs::read(&path).unwrap().as_slice(), b"token");
 		assert_eq!(mode_of(&path), 0o600);
 		assert_eq!(leftover_temps(&base), 0);
-
-		fs::remove_dir_all(&base).ok();
-	}
-
-	#[test]
-	fn temp_paths_are_unique_per_write() {
-		let path = credential_path(
-			std::path::Path::new("/nonexistent"),
-			SERVICE,
-			USER,
-		);
-		assert_ne!(temp_path(&path), temp_path(&path));
-	}
-
-	#[test]
-	fn write_private_never_writes_into_an_existing_file() {
-		let base = scratch_dir();
-		let occupied = base.join("occupied");
-		fs::write(&occupied, b"original").unwrap();
-
-		assert!(write_private(&occupied, b"replacement").is_err());
-		assert_eq!(fs::read(&occupied).unwrap().as_slice(), b"original");
 
 		fs::remove_dir_all(&base).ok();
 	}
