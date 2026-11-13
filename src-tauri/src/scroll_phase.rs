@@ -17,21 +17,6 @@ pub fn set_scroll_gesture_capture(capture: bool) {
 	CAPTURE.store(capture, Ordering::Relaxed);
 }
 
-pub fn install_scroll_gesture_bridge<R: tauri::Runtime>(
-	app: &tauri::AppHandle<R>,
-) {
-	#[cfg(target_os = "macos")]
-	macos::install(app.clone());
-
-	#[cfg(any(
-		target_os = "android",
-		target_os = "ios",
-		target_os = "linux",
-		target_os = "windows"
-	))]
-	let _ = app;
-}
-
 #[cfg(target_os = "linux")]
 pub fn follow_touchpad<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
 	linux::follow(window);
@@ -278,7 +263,7 @@ mod linux {
 }
 
 #[cfg(target_os = "macos")]
-mod macos {
+pub mod macos {
 	use std::cell::{Cell, RefCell};
 	use std::ptr::NonNull;
 

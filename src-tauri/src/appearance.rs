@@ -137,38 +137,27 @@ mod compositing_tests {
 	}
 }
 
+#[cfg(all(target_os = "macos", feature = "private-api"))]
 pub fn unlock_visual_effects<R: tauri::Runtime>(
 	window: &tauri::WebviewWindow<R>,
 ) {
-	#[cfg(all(target_os = "macos", feature = "private-api"))]
-	{
-		use tauri::Manager;
+	use tauri::Manager;
 
-		if !window.config().app.macos_private_api {
-			return;
-		}
-
-		let dispatched = window.with_webview(|webview| {
-			if !macos::enable_system_appearance(webview.inner()) {
-				tracing::warn!(
-					"[appearance] useSystemAppearance is unavailable; \
-					 -apple-visual-effect will not parse"
-				);
-			}
-		});
-		if let Err(e) = dispatched {
-			tracing::warn!("[appearance] could not reach the webview: {e}");
-		}
+	if !window.config().app.macos_private_api {
+		return;
 	}
 
-	#[cfg(any(
-		all(target_os = "macos", not(feature = "private-api")),
-		target_os = "android",
-		target_os = "ios",
-		target_os = "linux",
-		target_os = "windows"
-	))]
-	let _ = window;
+	let dispatched = window.with_webview(|webview| {
+		if !macos::enable_system_appearance(webview.inner()) {
+			tracing::warn!(
+				"[appearance] useSystemAppearance is unavailable; \
+				 -apple-visual-effect will not parse"
+			);
+		}
+	});
+	if let Err(e) = dispatched {
+		tracing::warn!("[appearance] could not reach the webview: {e}");
+	}
 }
 
 #[cfg(all(target_os = "macos", feature = "private-api"))]

@@ -12,6 +12,7 @@ mod background_task;
 mod backup_exclusion;
 #[cfg(target_os = "ios")]
 mod child_scroller;
+#[cfg(target_os = "windows")]
 mod context_menu;
 #[cfg(target_os = "linux")]
 mod desktop_entry;
@@ -349,7 +350,8 @@ pub fn run() {
             backup_exclusion::exclude_from_backups(app.handle());
             #[cfg(target_os = "ios")]
             background_task::install(app.handle());
-            scroll_phase::install_scroll_gesture_bridge(app.handle());
+            #[cfg(target_os = "macos")]
+            scroll_phase::macos::install(app.handle().clone());
             #[cfg(target_os = "android")]
             app_origin::android::prepare_served_origin(app.handle());
             upload::staged::discard_all(app.handle());
@@ -387,6 +389,7 @@ pub fn run() {
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
                 );
+                #[cfg_attr(target_os = "android", allow(unused_variables))]
                 let window = builder.build()?;
                 #[cfg(target_os = "ios")]
                 soft_keyboard::install(&window);
@@ -400,7 +403,9 @@ pub fn run() {
                 media::serve_element_opens(&window);
                 #[cfg(target_os = "linux")]
                 scroll_phase::follow_touchpad(&window);
+                #[cfg(all(target_os = "macos", feature = "private-api"))]
                 appearance::unlock_visual_effects(&window);
+                #[cfg(target_os = "windows")]
                 context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]
                 quit_when_closed(&window);
