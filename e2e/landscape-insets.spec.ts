@@ -20,29 +20,20 @@ import {
 } from "./support/chat-stack";
 import { openSheetFromComposer } from "./support/drawer";
 import { filtersScroller, openAllFilters } from "./support/grid-filters";
-import { sendInsets, sendIosInsets } from "./support/keyboard";
+import {
+	IPHONE_LANDSCAPE,
+	IPHONE_LANDSCAPE_INSETS,
+	IPHONE_PORTRAIT,
+	IPHONE_PORTRAIT_INSETS,
+	sendInsets,
+	sendIosInsets,
+} from "./support/keyboard";
 import { pane, stackSettled } from "./support/page-stack";
 import { LIVE_STACK } from "./support/stack-layers";
 import { showRestingToast } from "./support/toast";
 
 type Span = { left: number; right: number };
 
-const IPHONE_PORTRAIT = { width: 402, height: 874 };
-const IPHONE_LANDSCAPE = { width: 874, height: 402 };
-const IPHONE_PORTRAIT_INSETS: NativeInsets = {
-	top: 62,
-	bottom: 34,
-	left: 0,
-	right: 0,
-	ime: false,
-};
-const IPHONE_LANDSCAPE_INSETS: NativeInsets = {
-	top: 0,
-	bottom: 20,
-	left: 62,
-	right: 62,
-	ime: false,
-};
 const NARROW_WINDOW = { width: 540, height: 360 };
 const NARROW_WINDOW_INSETS: NativeInsets = {
 	top: 24,

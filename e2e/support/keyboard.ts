@@ -15,6 +15,23 @@ export const TEST_INSETS: NativeInsets = {
 	ime: false,
 };
 
+export const IPHONE_PORTRAIT = { width: 402, height: 874 };
+export const IPHONE_LANDSCAPE = { width: 874, height: 402 };
+export const IPHONE_PORTRAIT_INSETS: NativeInsets = {
+	top: 62,
+	bottom: 34,
+	left: 0,
+	right: 0,
+	ime: false,
+};
+export const IPHONE_LANDSCAPE_INSETS: NativeInsets = {
+	top: 0,
+	bottom: 20,
+	left: 62,
+	right: 62,
+	ime: false,
+};
+
 export function sendInsets(page: Page, insets: NativeInsets): Promise<unknown> {
 	return page.evaluate((next) => window.__reapplyInsets(next), insets);
 }

@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 import { installTauriShim } from "./support/app";
-import { type Keyboard, sendInsets } from "./support/keyboard";
+import {
+	IPHONE_LANDSCAPE,
+	IPHONE_LANDSCAPE_INSETS,
+	type Keyboard,
+	sendInsets,
+} from "./support/keyboard";
 import {
 	BLUR_MODES,
 	scanLayout,
@@ -22,8 +27,8 @@ const SCREENS: {
 	{ name: "a 1280 × 800 desktop", viewport: { width: 1280, height: 800 } },
 	{
 		name: "an 874 × 402 iPhone in landscape",
-		viewport: { width: 874, height: 402 },
-		insets: { top: 0, bottom: 20, left: 62, right: 62, ime: false },
+		viewport: IPHONE_LANDSCAPE,
+		insets: IPHONE_LANDSCAPE_INSETS,
 	},
 	{
 		name: "an 800 × 360 Android phone in landscape",

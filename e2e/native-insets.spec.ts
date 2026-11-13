@@ -13,6 +13,7 @@ import {
 	sheet,
 } from "./support/chat-stack";
 import {
+	IPHONE_PORTRAIT_INSETS,
 	type Keyboard,
 	sendInsets,
 	sendIosInsets,
@@ -23,7 +24,7 @@ import { LIVE_STACK, PHONE } from "./support/stack-layers";
 const KEYBOARD_HEIGHT = 300;
 const KEYBOARD_CLOSED: Keyboard = {
 	viewport: PHONE,
-	insets: { top: 62, bottom: 34, left: 0, right: 0, ime: false },
+	insets: IPHONE_PORTRAIT_INSETS,
 };
 const KEYBOARD_OPEN: Keyboard = {
 	viewport: { ...PHONE, height: PHONE.height - KEYBOARD_HEIGHT },
