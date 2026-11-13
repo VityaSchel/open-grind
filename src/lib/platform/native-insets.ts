@@ -27,7 +27,7 @@ function readAndroidInsets(): NativeInsets | undefined {
 		bottom: bridge.bottom(),
 		left: bridge.left(),
 		right: bridge.right(),
-		ime: bridge.imeVisible?.() ?? false,
+		ime: bridge.imeVisible(),
 	};
 }
 
@@ -133,7 +133,7 @@ export function installNativeInsets({
 export function softKeyboardVisibility(): boolean | undefined {
 	switch (currentPlatform()) {
 		case "android":
-			return window.__AndroidInsets?.imeVisible?.();
+			return window.__AndroidInsets?.imeVisible();
 		case "ios":
 			return window.__iosInsets?.ime;
 		case "linux":

@@ -17,7 +17,7 @@ declare global {
 			bottom(): number;
 			left(): number;
 			right(): number;
-			imeVisible?(): boolean;
+			imeVisible(): boolean;
 		};
 		__iosInsets?: NativeInsets;
 		__iosKeyboardMotion?: (motion: KeyboardMotion) => void;

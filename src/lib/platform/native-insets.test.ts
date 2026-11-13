@@ -75,12 +75,13 @@ describe("installNativeInsets on Android", () => {
 		const { installNativeInsets } = await loadNativeInsets();
 		const appendChild = vi.spyOn(document.documentElement, "appendChild");
 		const getComputedStyle = vi.spyOn(window, "getComputedStyle");
-		window.__AndroidInsets = {
-			top: () => 64,
-			bottom: () => 47.5,
-			left: () => 0,
-			right: () => 0,
-		};
+		window.__AndroidInsets = androidBridge({
+			top: 64,
+			bottom: 47.5,
+			left: 0,
+			right: 0,
+			ime: false,
+		});
 
 		installNativeInsets();
 
