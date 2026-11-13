@@ -61,10 +61,9 @@ function easedProgress(
 }
 
 function overlapAt(journey: Travel, progress: number): number {
-	const clamped = Math.min(Math.max(progress, 0), 1);
 	return (
 		journey.start +
-		(journey.to - journey.start) * easedProgress(journey.curve, clamped)
+		(journey.to - journey.start) * easedProgress(journey.curve, progress)
 	);
 }
 
@@ -74,9 +73,13 @@ function progressAt(journey: Travel, now: number): number {
 		: 1;
 }
 
+function runningTravel(now: number): Travel | undefined {
+	return travel && progressAt(travel, now) < 1 ? travel : undefined;
+}
+
 function closingRide(): Travel | undefined {
-	if (!travel || travel.to > 0) return undefined;
-	return progressAt(travel, Date.now()) < 1 ? travel : undefined;
+	const running = runningTravel(Date.now());
+	return running && running.to <= 0 ? running : undefined;
 }
 
 function endCloseWait(wait: CloseWait) {
@@ -166,13 +169,12 @@ function ride(element: HTMLElement, follower: Follower, journey: Travel) {
 function followMotion(motion: KeyboardMotion) {
 	if (!following) return;
 	const now = Date.now();
-	const running = travel !== undefined && progressAt(travel, now) < 1;
+	const running = runningTravel(now);
 	const journey: Travel = {
 		...motion,
-		start:
-			running && travel
-				? overlapAt(travel, progressAt(travel, now))
-				: motion.from,
+		start: running
+			? overlapAt(running, progressAt(running, now))
+			: motion.from,
 	};
 	travel = journey;
 	if (journey.to <= 0) for (const wait of closeWaits) armCloseWait(wait);
@@ -249,9 +251,7 @@ export const followSoftKeyboard: Attachment<HTMLElement> = (element) => {
 };
 
 export function followedKeyboardMoving(): boolean {
-	return (
-		following && travel !== undefined && progressAt(travel, Date.now()) < 1
-	);
+	return following && runningTravel(Date.now()) !== undefined;
 }
 
 export function followedKeyboardClosed({
