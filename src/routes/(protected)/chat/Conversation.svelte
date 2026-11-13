@@ -21,10 +21,10 @@
 		type LongPressHandlers,
 		longPressHandlers,
 		menuLongPressSource,
-		type PressPoint,
 	} from "#lib/util/long-press.ts";
 	import type { Conversation } from "#lib/model/messaging/conversations.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
+	import type { PagePoint } from "#lib/util/uncovered-center.ts";
 
 	let {
 		conversation,
@@ -71,7 +71,7 @@
 		selection?.toggle(conversationId);
 	}
 
-	function openMenuAt({ x, y }: PressPoint) {
+	function openMenuAt({ x, y }: PagePoint) {
 		trigger?.dispatchEvent(
 			new MouseEvent("contextmenu", {
 				bubbles: true,

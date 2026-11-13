@@ -3,6 +3,7 @@ import type { HTMLAttributes } from "svelte/elements";
 import { playHaptic } from "#lib/haptics.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 import { firedByTouch } from "#lib/platform/touch-origin.ts";
+import type { PagePoint } from "#lib/util/uncovered-center.ts";
 
 export const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
@@ -77,8 +78,6 @@ export type LongPressHandlers = Pick<
 	| "oncontextmenu"
 >;
 
-export type PressPoint = { x: number; y: number };
-
 type MenuLongPressSource = "holdTimer" | "contextMenu";
 
 export function menuLongPressSource(): MenuLongPressSource {
@@ -94,7 +93,7 @@ export function menuLongPressSource(): MenuLongPressSource {
 }
 
 export function longPressHandlers(
-	onLongPress: (point: PressPoint) => void,
+	onLongPress: (point: PagePoint) => void,
 ): LongPressHandlers {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let originX = 0;

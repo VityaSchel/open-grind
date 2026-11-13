@@ -9,11 +9,8 @@ import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
-import {
-	type LongPressHandlers,
-	longPressHandlers,
-	type PressPoint,
-} from "./long-press";
+import type { PagePoint } from "#lib/util/uncovered-center.ts";
+import { type LongPressHandlers, longPressHandlers } from "./long-press";
 
 function contextMenu(origin?: TouchOriginHints) {
 	return contextMenuEvent(origin) as unknown as Parameters<
@@ -27,13 +24,13 @@ function pointer(type: string, pointerType: string) {
 	>[0];
 }
 
-function touchDownAt(point: PressPoint) {
+function touchDownAt(point: PagePoint) {
 	return pointerEvent("pointerdown", point) as unknown as Parameters<
 		NonNullable<LongPressHandlers["onpointerdown"]>
 	>[0];
 }
 
-function contextMenuAt(options: PressPoint & { pointerType: string }) {
+function contextMenuAt(options: PagePoint & { pointerType: string }) {
 	return pointerEvent("contextmenu", options) as unknown as Parameters<
 		NonNullable<LongPressHandlers["oncontextmenu"]>
 	>[0];
