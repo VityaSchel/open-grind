@@ -20,7 +20,6 @@ const PHOTO_ROW = '[data-slot="profile-photo-row"]';
 const SCROLLER = '[data-slot="profile-scroller"]';
 const STRIP_INSET_PX = 4;
 const PULL_PX = 200;
-const REFRESH_SETTLE_MS = 2400;
 const ROLL_PX = 5;
 const BROWSER_CLICK_SETTLE_MS = 500;
 
@@ -91,15 +90,23 @@ test("the photo row reaches across the scroller beside the photos, so a pull the
 			});
 			return seen;
 		});
+	const movesHeld = await page.evaluateHandle(() => {
+		const held = new Set<boolean>();
+		addEventListener(
+			"touchmove",
+			(event) => held.add(event.defaultPrevented),
+			{ passive: true },
+		);
+		return held;
+	});
 	const touch = await TrustedTouch.attach(page);
 	await touch.drag(page, layout.strip, {
 		x: layout.strip.x,
 		y: layout.strip.y + PULL_PX,
 	});
-	await page.waitForTimeout(REFRESH_SETTLE_MS);
 
 	expect(await phases.evaluate((seen) => [...seen])).toEqual(["idle"]);
-	expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
+	expect(await movesHeld.evaluate((held) => [...held])).toEqual([true]);
 });
 
 test("a tap on the note that rolls a few pixels down still opens the note editor, once", async ({
