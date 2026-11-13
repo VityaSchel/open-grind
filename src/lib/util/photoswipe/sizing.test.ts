@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
+import * as safeArea from "#lib/util/safe-area.ts";
 import {
 	applyPhotoSwipeLoadedSize,
 	applyPhotoSwipeThumbDimensions,
+	reservePhotoSwipeBottom,
 } from "./sizing";
 
 describe("applyPhotoSwipeThumbDimensions", () => {
@@ -116,5 +118,80 @@ describe("applyPhotoSwipeLoadedSize", () => {
 
 		expect(placeholder(0)).toBe(false);
 		expect(placeholder(300)).toBe(true);
+	});
+});
+
+describe("reservePhotoSwipeBottom", () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	function withSafeAreaBottom(bottom: number) {
+		vi.spyOn(safeArea, "safeAreaInsets").mockReturnValue({
+			top: 0,
+			right: 0,
+			bottom,
+			left: 0,
+		});
+	}
+
+	function paddingOf(lightbox: PhotoSwipeLightbox) {
+		return lightbox.options.paddingFn!({ x: 400, y: 800 }, {}, 0);
+	}
+
+	it("reserves the height only while it is known", () => {
+		withSafeAreaBottom(30);
+		const lightbox = new PhotoSwipeLightbox({
+			paddingFn: () => ({ top: 4, right: 3, bottom: 10, left: 2 }),
+		});
+		let reserved: number | null = null;
+		reservePhotoSwipeBottom(lightbox, { height: () => reserved });
+
+		expect(paddingOf(lightbox)).toEqual({
+			top: 4,
+			right: 3,
+			bottom: 10,
+			left: 2,
+		});
+
+		reserved = 80;
+
+		expect(paddingOf(lightbox)).toEqual({
+			top: 4,
+			right: 3,
+			bottom: 110,
+			left: 2,
+		});
+	});
+
+	it("stacks the height on the previous bottom padding when it exceeds the safe area", () => {
+		withSafeAreaBottom(30);
+		const lightbox = new PhotoSwipeLightbox({
+			paddingFn: () => ({ top: 0, right: 0, bottom: 50, left: 0 }),
+		});
+		reservePhotoSwipeBottom(lightbox, { height: () => 80 });
+
+		expect(paddingOf(lightbox).bottom).toBe(130);
+	});
+
+	it("falls back to the padding option, then to no padding", () => {
+		withSafeAreaBottom(30);
+		const padded = new PhotoSwipeLightbox({
+			padding: { top: 5, right: 6, bottom: 40, left: 7 },
+		});
+		const bare = new PhotoSwipeLightbox({});
+		reservePhotoSwipeBottom(padded, { height: () => 20 });
+		reservePhotoSwipeBottom(bare, { height: () => 20 });
+
+		expect(paddingOf(padded)).toEqual({
+			top: 5,
+			right: 6,
+			bottom: 60,
+			left: 7,
+		});
+		expect(paddingOf(bare)).toEqual({
+			top: 0,
+			right: 0,
+			bottom: 50,
+			left: 0,
+		});
 	});
 });

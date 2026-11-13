@@ -1,29 +1,44 @@
 <script lang="ts">
+	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import JoinButton from "./JoinButton.svelte";
 	import JoinConfirmDialog from "./JoinConfirmDialog.svelte";
 	import RightNowPostSheet from "./RightNowPostSheet.svelte";
 
 	let {
-		post,
+		ownPost,
+		compact = false,
 		sheetOpen = $bindable(false),
-	}: { post: RightNowPostState; sheetOpen?: boolean } = $props();
+	}: {
+		ownPost: RightNowPostState;
+		compact?: boolean;
+		sheetOpen?: boolean;
+	} = $props();
 
 	let confirmOpen = $state(false);
 
-	$effect(() => post.attachView());
+	$effect(() => ownPost.attachView());
 
-	$effect(() => post.onSheetRequest(() => (sheetOpen = true)));
+	$effect(() => {
+		if (!rightNowPostSheetRequest.pending || ownPost.loading) return;
+		rightNowPostSheetRequest.take();
+		if (ownPost.post !== null) sheetOpen = true;
+	});
+
+	$effect(() => () => {
+		rightNowPostSheetRequest.take();
+	});
 </script>
 
 <JoinButton
-	{post}
+	{ownPost}
+	{compact}
 	onjoin={() => (confirmOpen = true)}
 	onopen={() => (sheetOpen = true)}
 />
 <JoinConfirmDialog
 	bind:open={confirmOpen}
-	{post}
+	{ownPost}
 	onjoined={() => (sheetOpen = true)}
 />
-<RightNowPostSheet bind:open={sheetOpen} {post} />
+<RightNowPostSheet bind:open={sheetOpen} {ownPost} />

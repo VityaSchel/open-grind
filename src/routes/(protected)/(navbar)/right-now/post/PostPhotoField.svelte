@@ -7,11 +7,11 @@
 		uploadRightNowPhotoFromUrl,
 		uploadRightNowPickedPhoto,
 	} from "#lib/api/right-now/photo.ts";
+	import Field from "#lib/components/fields/Field.svelte";
 	import { drawerPhotoUploads } from "#lib/components/media-sheet/drawer-photos.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaSlot from "#lib/components/shared/MediaSlot.svelte";
-	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { type PickedMedia, pickMedia } from "#lib/platform/media-picker.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
@@ -22,12 +22,12 @@
 		photo = $bindable(),
 		uploading = $bindable(false),
 		disabled = false,
-		rejected = false,
+		rejectedMediaIds = [],
 	}: {
 		photo: PostPhoto | null;
 		uploading?: boolean;
 		disabled?: boolean;
-		rejected?: boolean;
+		rejectedMediaIds?: number[];
 	} = $props();
 
 	let sheetOpen = $state(false);
@@ -100,40 +100,41 @@
 	}
 </script>
 
-<div data-slot="post-photo-field" class="flex flex-col gap-1.5">
-	<p class="px-1 text-sm font-medium">Photo</p>
-	<fieldset {disabled} class="flex gap-2">
-		{#if shown !== null}
-			<div data-slot="post-photo" class="w-28">
-				<MediaSlot
-					{src}
-					alt={rejected ? "Post photo, rejected" : "Post photo"}
-					{removed}
-					deleteLabel="Remove photo"
-					undoLabel="Keep photo"
-					onDelete={toggleRemoved}
+<Field label="Photo">
+	{#snippet picker({ labelId })}
+		<fieldset {disabled} aria-labelledby={labelId} class="flex gap-2">
+			{#if shown !== null}
+				<div data-slot="post-photo" class="w-28">
+					<MediaSlot
+						{src}
+						alt={rejectedMediaIds.includes(shown.mediaId)
+							? "Post photo, rejected"
+							: "Post photo"}
+						{removed}
+						deleteLabel="Remove photo"
+						undoLabel="Keep photo"
+						onDelete={toggleRemoved}
+					/>
+				</div>
+			{/if}
+			{#if uploading}
+				<div
+					data-slot="post-photo-uploading"
+					role="status"
+					class="w-28"
+				>
+					<MediaSlot src={null} alt="Uploading photo" pending />
+				</div>
+			{:else if shown === null || removed}
+				<AddTile
+					label="Add photo"
+					class="aspect-square w-28 rounded-xl"
+					onclick={() => (sheetOpen = true)}
 				/>
-			</div>
-		{/if}
-		{#if uploading}
-			<div
-				data-slot="post-photo-uploading"
-				role="status"
-				class="flex aspect-square w-28 flex-col items-center justify-center gap-1 rounded-xl bg-muted text-xs text-muted-foreground"
-			>
-				<Spinner aria-hidden="true" />
-				Uploading photo
-			</div>
-		{:else if shown === null || removed}
-			<AddTile
-				label="Add photo"
-				class="aspect-square w-28 rounded-xl"
-				{disabled}
-				onclick={() => (sheetOpen = true)}
-			/>
-		{/if}
-	</fieldset>
-</div>
+			{/if}
+		</fieldset>
+	{/snippet}
+</Field>
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}

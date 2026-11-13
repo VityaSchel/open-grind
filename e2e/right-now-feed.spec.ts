@@ -8,16 +8,29 @@ import {
 	installTauriShim,
 } from "./support/app";
 import { failDemoRequests } from "./support/demo-faults";
-import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
-import { goToRightNow, RIGHT_NOW_FEED_TIMEOUT } from "./support/right-now";
+import { showsMedia } from "./support/drawer";
+import {
+	CHAT_MEDIA_HOST,
+	heightPerWidth,
+	PORTRAIT_HEIGHT_PER_WIDTH,
+	serveImages,
+	serveRightNowPortraitPhotos,
+} from "./support/media";
+import {
+	goToRightNow,
+	RIGHT_NOW_FEED_TIMEOUT,
+	scrollFeedToBottom,
+} from "./support/right-now";
 
 const POST = '[data-slot="right-now-post"]';
 const DISCREET_POST = '[data-slot="right-now-discreet-post"]';
 const POST_DISTANCE = '[data-slot="right-now-post-distance"]';
 const FEED_SCROLLER = '[data-slot="right-now-scroller"]';
 const LIGHTBOX = ".pswp";
+const LIGHTBOX_PHOTO = ".pswp__img:not(.pswp__img--placeholder)";
 const OPEN_PHOTO = "Open photo";
 const NOT_OPEN_PHOTO = /^(?!Open photo$)/;
+const NOT_REPORT_POST = /^(?!Report post$)/;
 const DEMO_DISCREET_POSTS = 2;
 const ORDERED_DISTANCES_CHECKED = 10;
 const SCROLLED_TOP = 1200;
@@ -48,12 +61,6 @@ function feedScrollTop(page: Page): Promise<number> {
 	return feedScroller(page).evaluate((scroller) => scroller.scrollTop);
 }
 
-function scrollFeedToBottom(page: Page): Promise<void> {
-	return feedScroller(page).evaluate((scroller) => {
-		scroller.scrollTop = scroller.scrollHeight;
-	});
-}
-
 function feedScrollRange(page: Page): Promise<number> {
 	return feedScroller(page).evaluate(
 		(scroller) => scroller.scrollHeight - scroller.clientHeight,
@@ -82,7 +89,7 @@ test.describe("the demo feed", () => {
 			.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 	});
 
-	test("posts show their headlines, and discreet posts offer no link or button but their photo", async ({
+	test("posts show their headlines, and discreet posts offer no link or button but their photo and Report", async ({
 		page,
 	}) => {
 		await expect(
@@ -102,7 +109,12 @@ test.describe("the demo feed", () => {
 
 		for (const card of await discreet.all()) {
 			await expect(card.getByRole("heading")).not.toBeEmpty();
-			await expect(card.getByRole("button")).toHaveCount(0);
+			await expect(
+				card.getByRole("button", { name: "Report post" }),
+			).toHaveCount(1);
+			await expect(
+				card.getByRole("button", { name: NOT_REPORT_POST }),
+			).toHaveCount(0);
 			await expect(
 				card.getByRole("link", { name: NOT_OPEN_PHOTO }),
 			).toHaveCount(0);
@@ -200,7 +212,7 @@ test.describe("the demo feed", () => {
 		await dialog.getByRole("slider", { name: "Minimum age" }).press("End");
 		await dialog.getByRole("button", { name: "Apply" }).click();
 
-		await expect(page.getByText("No posts found")).toBeVisible({
+		await expect(page.getByText("No Results")).toBeVisible({
 			timeout: RIGHT_NOW_FEED_TIMEOUT,
 		});
 		await expect(articles(page)).toHaveCount(0);
@@ -210,7 +222,7 @@ test.describe("the demo feed", () => {
 		await expect(articles(page).first()).toBeVisible({
 			timeout: RIGHT_NOW_FEED_TIMEOUT,
 		});
-		await expect(page.getByText("No posts found")).toHaveCount(0);
+		await expect(page.getByText("No Results")).toHaveCount(0);
 	});
 
 	test("returning from a profile keeps the feed's scroll offset", async ({
@@ -254,6 +266,34 @@ test.describe("the demo feed", () => {
 
 		await expect(page.locator(LIGHTBOX)).toBeHidden();
 		await expect(page).toHaveURL(/\/right-now$/);
+	});
+});
+
+test.describe("a feed whose photos are cropped to square thumbnails", () => {
+	test("a portrait post photo opens in the lightbox at its own shape", async ({
+		page,
+	}) => {
+		test.setTimeout(240_000);
+		await installTauriShim(page);
+		await serveRightNowPortraitPhotos(page);
+		await goToRightNow(page);
+		const photo = page.getByRole("link", { name: OPEN_PHOTO }).first();
+		await photo.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
+		await expect
+			.poll(() => showsMedia(photo), {
+				message: "the square thumbnail shows",
+			})
+			.toBe(true);
+
+		await photo.click();
+
+		const lightbox = page.locator(LIGHTBOX);
+		await expect(lightbox).toBeVisible({ timeout: 30_000 });
+		await expect
+			.poll(() => heightPerWidth(lightbox.locator(LIGHTBOX_PHOTO)), {
+				message: "the full photo keeps its portrait shape",
+			})
+			.toBeCloseTo(PORTRAIT_HEIGHT_PER_WIDTH, 1);
 	});
 });
 

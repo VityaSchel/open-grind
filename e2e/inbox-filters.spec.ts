@@ -82,7 +82,7 @@ async function rightEdgeOf(page: Page, name: string): Promise<number> {
 const BOOLEAN_PILLS = [
 	{ label: "Unread", matching: [THEO, JAMES, PABLO] },
 	{ label: "Online", matching: [JACK] },
-	{ label: "Right now", matching: [THEO] },
+	{ label: "Right Now", matching: [THEO] },
 ];
 
 for (const { label, matching } of BOOLEAN_PILLS) {
@@ -117,7 +117,7 @@ test("two pills filter to the intersection, not the union", async ({
 		.poll(() => listedConversations(page))
 		.toEqual([THEO, JAMES, PABLO]);
 
-	const rightNow = pill(page, "Right now");
+	const rightNow = pill(page, "Right Now");
 	await rightNow.click();
 	await expect.poll(() => listedConversations(page)).toEqual([THEO]);
 

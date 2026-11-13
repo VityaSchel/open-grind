@@ -2,7 +2,13 @@
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 
-	let { children }: { children: import("svelte").Snippet } = $props();
+	let {
+		contentClass,
+		children,
+	}: {
+		contentClass?: import("svelte/elements").ClassValue;
+		children: import("svelte").Snippet;
+	} = $props();
 </script>
 
 <ProgressiveBlur
@@ -15,7 +21,10 @@
 >
 	<div
 		data-scroll-intent="x"
-		class="scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0"
+		class={[
+			"scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0",
+			contentClass,
+		]}
 	>
 		{@render children()}
 	</div>

@@ -1,18 +1,16 @@
 <script lang="ts">
 	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
-	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 	import { untrack } from "svelte";
 
 	import MultilineField from "#lib/components/fields/MultilineField.svelte";
-	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
-	import * as Alert from "#lib/components/ui/alert/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
-	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { rejectedParts } from "../right-now-post-fields";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
+	import DiscardChangesDialog from "./DiscardChangesDialog.svelte";
 	import {
 		LEAST_PRECISE_RADIUS,
 		POST_TEXT_MAX_LENGTH,
@@ -23,12 +21,13 @@
 	} from "./post-form";
 	import PostLocationField from "./PostLocationField.svelte";
 	import PostPhotoField from "./PostPhotoField.svelte";
+	import PostRejectionAlert from "./PostRejectionAlert.svelte";
 	import { formatTimeLeft } from "./time-left";
 
 	let {
 		open = $bindable(),
-		post,
-	}: { open: boolean; post: RightNowPostState } = $props();
+		ownPost,
+	}: { open: boolean; ownPost: RightNowPostState } = $props();
 
 	const EMPTY_FORM: PostForm = {
 		text: "",
@@ -53,21 +52,17 @@
 		changes.text !== undefined && form.text.length > POST_TEXT_MAX_LENGTH,
 	);
 	const toggling = $derived(pendingVisible !== null);
-	const busy = $derived(post.saving || toggling);
-	const savingEdits = $derived(post.saving && !toggling);
-	const visible = $derived(pendingVisible ?? post.status === "active");
-	const off = $derived(post.status === "off");
-	const timeLeft = $derived(formatTimeLeft({ ms: post.timeLeftMs }));
-	const rejectionTitle = $derived.by(() => {
-		const { text: textRejected, photo: photoRejected } = post.rejected;
-		if (textRejected && photoRejected)
-			return "Your text and photo were rejected";
-		if (photoRejected) return "Your photo was rejected";
-		return "Your text was rejected";
-	});
+	const busy = $derived(ownPost.saving || toggling);
+	const savingEdits = $derived(ownPost.saving && !toggling);
+	const visible = $derived(pendingVisible ?? ownPost.status === "active");
+	const off = $derived(ownPost.status === "off");
+	const timeLeft = $derived(formatTimeLeft({ ms: ownPost.timeLeftMs }));
+	const rejectedMediaIds = $derived(
+		rejectedParts(ownPost.post).photos.map(({ mediaId }) => mediaId),
+	);
 
 	$effect(() => {
-		const details = post.post;
+		const details = ownPost.post;
 		const opening = open && !wasOpen;
 		wasOpen = open;
 		if (!open) return;
@@ -88,16 +83,11 @@
 		if (!busy && dirty) confirmingDiscard = true;
 	}
 
-	dismissOnBackGesture({
-		active: () => confirmingDiscard,
-		dismiss: () => (confirmingDiscard = false),
-	});
-
 	async function setVisible({ next }: { next: boolean }) {
 		if (busy) return;
 		pendingVisible = next;
 		try {
-			await post.setHidden({ hidden: !next });
+			await ownPost.setHidden({ hidden: !next });
 		} finally {
 			pendingVisible = null;
 		}
@@ -106,7 +96,7 @@
 	async function save() {
 		if (busy || !dirty || over || uploading) return;
 		const sent = $state.snapshot(form);
-		if (!(await post.save({ changes }))) return;
+		if (!(await ownPost.save({ changes }))) return;
 		baseline = sent;
 		open = false;
 	}
@@ -118,7 +108,7 @@
 	onDismissBlocked={askToDiscard}
 >
 	{#snippet children({ desktop })}
-		{@const twoColumns = desktop && post.mapAvailable}
+		{@const twoColumns = desktop && ownPost.mapAvailable}
 		<ResponsiveDialog.Content
 			class="flex flex-col"
 			drawerClass="mx-auto max-w-160"
@@ -135,12 +125,11 @@
 			>
 				<div class="flex min-w-0 flex-col gap-0.5">
 					<ResponsiveDialog.Title>Right Now</ResponsiveDialog.Title>
-					<p
-						data-slot="right-now-post-sheet-status"
-						class="text-sm text-muted-foreground tabular-nums"
-					>
-						{off ? "Off" : "Active"} · {timeLeft} left
-					</p>
+					<ResponsiveDialog.Description class="tabular-nums">
+						<span data-slot="right-now-post-sheet-status">
+							{off ? "Off" : "Active"} · {timeLeft} left
+						</span>
+					</ResponsiveDialog.Description>
 				</div>
 				<div class="flex shrink-0 items-center gap-2">
 					{#if toggling}
@@ -165,22 +154,8 @@
 					class="flex flex-col gap-4"
 					drawerClass="px-4 pb-2"
 				>
-					{#if post.rejected.text || post.rejected.photo}
-						<Alert.Root variant="destructive">
-							<WarningCircleIcon weight="fill" />
-							<Alert.Title>{rejectionTitle}</Alert.Title>
-							<Alert.Description>
-								{#if post.rejected.reasons.length > 0}
-									<ul class="list-disc ps-4">
-										{#each post.rejected.reasons as reason (reason)}
-											<li>{reason}</li>
-										{/each}
-									</ul>
-								{:else}
-									No reason was given.
-								{/if}
-							</Alert.Description>
-						</Alert.Root>
+					{#if ownPost.rejected.text || ownPost.rejected.photo}
+						<PostRejectionAlert rejected={ownPost.rejected} />
 					{/if}
 					<div
 						data-slot="right-now-post-sheet-columns"
@@ -206,7 +181,7 @@
 								bind:photo={form.photo}
 								bind:uploading
 								disabled={busy}
-								rejected={post.rejected.photo}
+								{rejectedMediaIds}
 							/>
 							<SwitchField
 								title="Hosting"
@@ -222,7 +197,7 @@
 								{/snippet}
 							</SwitchField>
 						</div>
-						{#if post.mapAvailable}
+						{#if ownPost.mapAvailable}
 							<PostLocationField
 								bind:shareLocation={form.shareLocation}
 								bind:locationRadius={form.locationRadius}
@@ -248,26 +223,7 @@
 	{/snippet}
 </ResponsiveDialog.Root>
 
-<AlertDialog.Root bind:open={confirmingDiscard}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Discard changes?</AlertDialog.Title>
-			<AlertDialog.Description>
-				You have unsaved changes.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Keep editing</AlertDialog.Cancel>
-			<AlertDialog.Action
-				variant="destructive"
-				size="lg"
-				onclick={() => {
-					confirmingDiscard = false;
-					open = false;
-				}}
-			>
-				Discard
-			</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<DiscardChangesDialog
+	bind:open={confirmingDiscard}
+	ondiscard={() => (open = false)}
+/>

@@ -2,14 +2,19 @@
 	import DetectiveIcon from "phosphor-svelte/lib/DetectiveIcon";
 
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
 	import { sexualPositions } from "#lib/model/users/profiles.ts";
 	import { labelFromMap } from "#lib/util/options.ts";
 	import { formatHeight, formatWeightGrams } from "#lib/util/units.ts";
 	import type { DiscreetPostData } from "#lib/model/right-now/feed.ts";
-	import RightNowPostMeta from "./RightNowPostMeta.svelte";
+	import PostHeadline from "./PostHeadline.svelte";
 	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
-	let { post }: { post: DiscreetPostData } = $props();
+	let {
+		post,
+		onreport,
+	}: { post: DiscreetPostData; onreport: (() => Promise<void>) | null } =
+		$props();
 
 	const headlineId = $props.id();
 
@@ -44,19 +49,17 @@
 	<div
 		class="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
 	>
-		<DetectiveIcon class="size-6" />
+		<DetectiveIcon weight="fill" class="size-6" />
 	</div>
 	<div class="flex min-w-0 flex-1 flex-col gap-2">
 		<div class="flex flex-col gap-1">
-			<h2
+			<PostHeadline
 				id={headlineId}
-				class={[
-					"font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
-					{ "text-muted-foreground": !post.text },
-				]}
-			>
-				{post.text || "Discreet post"}
-			</h2>
+				text={post.text}
+				placeholder="Discreet post"
+				hasPhoto={photo !== undefined}
+				{onreport}
+			/>
 			{#if fields.length > 0}
 				<p
 					data-slot="right-now-discreet-post-fields"
@@ -69,7 +72,7 @@
 		{#if photo}
 			<RightNowPostPhoto media={photo} />
 		{/if}
-		<div class="flex min-h-9 items-center">
+		<div class="flex min-h-8 items-center">
 			<RightNowPostMeta
 				posted={post.posted}
 				distance={post.distance}

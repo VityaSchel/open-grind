@@ -84,7 +84,7 @@ export async function reportProfileV5({
 	}).then((res) => res.assertOk());
 }
 
-export async function getRightNowPostReport({
+export async function getRightNowPostReportV1({
 	postId,
 }: {
 	postId: RightNowPostId;
@@ -94,7 +94,7 @@ export async function getRightNowPostReport({
 	return res.jsonParsed(rightNowPostSubmittedReportResponseSchema).flagReport;
 }
 
-export async function reportRightNowPost({
+export async function reportRightNowPostV1({
 	postId,
 	report,
 }: {
@@ -144,4 +144,35 @@ export async function reportProfile({
 		if (!refusedByServer(error)) throw error;
 		await reportProfileV31({ profileId, report });
 	}
+}
+
+export function getRightNowPostReport({
+	postId,
+	profileId,
+}: {
+	postId: RightNowPostId;
+	profileId: Profile["profileId"] | null;
+}): Promise<SubmittedReport | null> {
+	return profileId === null
+		? getRightNowPostReportV1({ postId })
+		: getProfileReport({ profileId });
+}
+
+export async function reportRightNowPost({
+	postId,
+	profileId,
+	report,
+}: {
+	postId: RightNowPostId;
+	profileId: Profile["profileId"] | null;
+	report: RightNowPostReportRequest;
+}) {
+	if (profileId === null) {
+		await reportRightNowPostV1({ postId, report });
+		return;
+	}
+	await reportProfile({
+		profileId,
+		report: { ...report, rightNowInfo: { postId } },
+	});
 }

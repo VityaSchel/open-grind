@@ -2,11 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { demoMeProfileId, HOUR, MINUTE, SECOND } from "#lib/demo/config.ts";
 import { assignmentsResponseSchema } from "#lib/model/analytics/assignments.ts";
-import { rightNowFeedResponseSchema } from "#lib/model/right-now/feed.ts";
 import {
 	freeRightNowPostsLeft,
-	type RightNowPostChanges,
 	rightNowPostEntitlementsResponseSchema,
+} from "#lib/model/browse/entitlements.ts";
+import { rightNowFeedResponseSchema } from "#lib/model/right-now/feed.ts";
+import {
+	type RightNowPostChanges,
 	type RightNowPostRequest,
 	rightNowPostResponseSchema,
 } from "#lib/model/right-now/post.ts";
@@ -35,6 +37,13 @@ function route({
 
 function activePost() {
 	const { body } = route({ path: "/v3/rightnow/active-post" });
+	return rightNowPostResponseSchema.parse(body).post;
+}
+
+function ownProfilePost() {
+	const { body } = route({
+		path: `/v3/rightnow/profiles/${demoMeProfileId}`,
+	});
 	return rightNowPostResponseSchema.parse(body).post;
 }
 
@@ -189,6 +198,15 @@ describe("demo right now own post", () => {
 		expect(ownFeedPosts().map((post) => post.id)).toEqual([id]);
 	});
 
+	it("serves the running post on our own profile, and none while it is hidden", () => {
+		const { id } = createdPost();
+		expect(ownProfilePost()?.id).toBe(id);
+
+		setHidden({ postId: id, hidden: true });
+
+		expect(ownProfilePost()).toBeNull();
+	});
+
 	it("moderates joined text for ten seconds and puts edited text live at once", () => {
 		const { id } = createdPost({
 			post: { ...joinBody, text: "Here for coffee" },
@@ -200,7 +218,9 @@ describe("demo right now own post", () => {
 				textStatus: "AWAITING_MODERATION",
 			},
 		});
-		expect(ownFeedPosts()[0]?.text).toBeUndefined();
+		const [ownCard] = ownFeedPosts();
+		expect(ownCard).toMatchObject({ id });
+		expect(ownCard?.text).toBeUndefined();
 
 		vi.advanceTimersByTime(10 * SECOND);
 		expect(activePost()).toMatchObject({
@@ -268,10 +288,14 @@ describe("demo right now own post", () => {
 
 		const unhidden = setHidden({ postId: id, hidden: false });
 		const edited = edit({ postId: id, changes: { hosting: true } });
-		expect(unhidden.body).toMatchObject({
-			type: "urn:gr:err:client_action",
+		expect(unhidden).toMatchObject({
+			status: 400,
+			body: { type: "urn:gr:err:client_action" },
 		});
-		expect(edited.body).toMatchObject({ type: "urn:gr:err:client_action" });
+		expect(edited).toMatchObject({
+			status: 400,
+			body: { type: "urn:gr:err:client_action" },
+		});
 		expect(createdPost().id).not.toBe(id);
 		expect(freePostsLeft()).toBe(1);
 	});
@@ -281,11 +305,13 @@ describe("demo right now own post", () => {
 
 		const edited = edit({ postId: id + 1, changes: { hosting: true } });
 		const hidden = setHidden({ postId: id + 1, hidden: true });
-		expect(edited.body).toMatchObject({
-			type: "urn:gr:err:resource_not_found",
+		expect(edited).toMatchObject({
+			status: 400,
+			body: { type: "urn:gr:err:resource_not_found" },
 		});
-		expect(hidden.body).toMatchObject({
-			type: "urn:gr:err:resource_not_found",
+		expect(hidden).toMatchObject({
+			status: 400,
+			body: { type: "urn:gr:err:resource_not_found" },
 		});
 		expect(activePost()).toMatchObject({ id, postStatus: "ACTIVE" });
 	});

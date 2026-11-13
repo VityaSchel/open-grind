@@ -33,13 +33,20 @@
 	padding-right: var(--safe-area-right);
 }
 
-.pswp .pswp__button--close {
+.pswp :is(.pswp__button--close, .pswp__button--zoom) {
 	@apply media-disc opacity-100;
 	margin-top: 0.75rem;
+}
+
+.pswp .pswp__button--close {
 	margin-right: 0.75rem;
 }
 
-.pswp .pswp__button--close .pswp__icn {
+.pswp .pswp__button--zoom {
+	margin-right: 0.5rem;
+}
+
+.pswp :is(.pswp__button--close, .pswp__button--zoom) .pswp__icn {
 	@apply inset-0 m-auto size-6 text-white;
 }
 

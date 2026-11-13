@@ -55,6 +55,28 @@ describe("demo reports", () => {
 	});
 
 	it.each([
+		["/v3.1/flags/100008", "/v3.1/flags/100008", {}],
+		[
+			"/v5/flags/100009",
+			"/v4/flags/100009",
+			{ captchaToken: "demo-recaptcha-token" },
+		],
+	])(
+		"records a profile report to %s that carries the reported Right Now post",
+		(submitPath, readPath, extra) => {
+			submit(submitPath, {
+				...spamReport,
+				rightNowInfo: { postId: 880_001 },
+				...extra,
+			});
+
+			expect(profileReportAt(readPath)?.createTime).toEqual(
+				expect.any(Number),
+			);
+		},
+	);
+
+	it.each([
 		[
 			"/v3.1/flags/100006",
 			"/v3.1/flags/100006",

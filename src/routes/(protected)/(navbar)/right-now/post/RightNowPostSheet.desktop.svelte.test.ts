@@ -29,35 +29,12 @@ import {
 	textField,
 } from "./sheet-test-helpers.svelte";
 
-const columns = () =>
-	document.querySelector('[data-slot="right-now-post-sheet-columns"]');
 const discardPrompt = () =>
 	screen.queryByRole("alertdialog", { name: "Discard changes?" });
 
 afterEach(cleanup);
 
 describe("the Right Now post dialog on desktop", () => {
-	it("puts the map controls in a column beside the text, photo and hosting", async () => {
-		await renderSheet(runningPost());
-
-		const [form, location] = columns()?.children ?? [];
-		expect(form?.contains(textField())).toBe(true);
-		expect(
-			location?.contains(
-				screen.getByRole("switch", { name: "Show me on map" }),
-			),
-		).toBe(true);
-	});
-
-	it("keeps one column where the Right Now map doesn't exist", async () => {
-		const fake = runningPost();
-		fake.mapAvailable = false;
-
-		await renderSheet(fake);
-
-		expect(columns()?.children).toHaveLength(1);
-	});
-
 	it("closes from its close button when nothing changed", async () => {
 		const stored = await renderSheet(runningPost());
 

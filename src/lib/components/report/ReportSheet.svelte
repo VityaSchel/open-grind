@@ -4,7 +4,10 @@
 
 	import { blockUser } from "#lib/api/browse/blocks.ts";
 	import { showErrorToast } from "#lib/api/error-toast.ts";
-	import { reportProfile } from "#lib/api/safety/reports.ts";
+	import {
+		reportProfile,
+		reportRightNowPost,
+	} from "#lib/api/safety/reports.ts";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
@@ -20,23 +23,13 @@
 	import { grindrHelpUrl } from "#lib/util/grindr-help.ts";
 	import type { Profile } from "#lib/model/users/profiles.ts";
 	import { showBlockFailure } from "./block-failure";
-	import { buildProfileReport } from "./report-request";
-
-	type ReportSubject = "profile" | "message";
+	import { buildReportRequest, type ReportTarget } from "./report-request";
 
 	let {
 		open = $bindable(),
-		profileId,
-		subject = "profile",
-		locations: presetLocations,
+		target,
 		onBlock,
-	}: {
-		open: boolean;
-		profileId: Profile["profileId"];
-		subject?: ReportSubject;
-		locations?: ReportLocation[];
-		onBlock?: () => void;
-	} = $props();
+	}: { open: boolean; target: ReportTarget; onBlock?: () => void } = $props();
 
 	const reasonLabels: Record<ReportReason, string> = {
 		SPAM: "Spam",
@@ -59,8 +52,8 @@
 		RIGHT_NOW_TEXT: "Right Now Text",
 	};
 
-	const subjectCopy: Record<
-		ReportSubject,
+	const targetCopy: Record<
+		ReportTarget["kind"],
 		{ title: string; description: string; reviewed: string }
 	> = {
 		profile: {
@@ -74,6 +67,20 @@
 				"Send a report about this person's messages to Grindr.",
 			reviewed: "Grindr will review your report.",
 		},
+		rightNowPost: {
+			title: "Report post",
+			description: "Send a report about this Right Now post to Grindr.",
+			reviewed: "Grindr will review this post.",
+		},
+	};
+
+	const presetLocations: Record<
+		ReportTarget["kind"],
+		ReportLocation[] | null
+	> = {
+		profile: null,
+		message: ["CHAT_MESSAGE"],
+		rightNowPost: ["RIGHT_NOW_PHOTO", "RIGHT_NOW_TEXT"],
 	};
 
 	const detailsLabel = "Details (optional)";
@@ -84,7 +91,7 @@
 	let submitting = $state(false);
 	let submitted = $state(false);
 
-	const copy = $derived(subjectCopy[subject]);
+	const copy = $derived(targetCopy[target.kind]);
 	const isInPersonIncident = $derived(
 		reason === "SERIOUS_IN_PERSON_INCIDENT",
 	);
@@ -92,14 +99,14 @@
 		reason !== null && reason !== "SPAM" && !isInPersonIncident,
 	);
 	const wherePickerShown = $derived(
-		detailsShown && presetLocations === undefined,
+		detailsShown && presetLocations[target.kind] === null,
 	);
 
 	$effect(() => {
 		if (!open) return;
 		untrack(() => {
 			reason = null;
-			locations = [...(presetLocations ?? [])];
+			locations = [...(presetLocations[target.kind] ?? [])];
 			comment = "";
 			submitted = false;
 		});
@@ -108,11 +115,15 @@
 	async function submit() {
 		if (submitting || reason === null) return;
 		submitting = true;
+		const report = buildReportRequest({ reason, comment, locations });
 		try {
-			await reportProfile({
-				profileId,
-				report: buildProfileReport({ reason, comment, locations }),
-			});
+			if (target.kind === "rightNowPost")
+				await reportRightNowPost({
+					postId: target.postId,
+					profileId: target.profileId,
+					report,
+				});
+			else await reportProfile({ profileId: target.profileId, report });
 			submitted = true;
 		} catch (error) {
 			console.error(error);
@@ -122,13 +133,17 @@
 		}
 	}
 
-	function block() {
+	function block({ profileId }: { profileId: Profile["profileId"] }) {
 		open = false;
 		if (onBlock) onBlock();
-		else void blockInBackground();
+		else void blockInBackground({ profileId });
 	}
 
-	async function blockInBackground() {
+	async function blockInBackground({
+		profileId,
+	}: {
+		profileId: Profile["profileId"];
+	}) {
 		try {
 			await blockUser({ profileId });
 		} catch (error) {
@@ -159,15 +174,23 @@
 					class="flex flex-col items-center gap-2 py-4 text-center"
 				>
 					<p>{copy.reviewed}</p>
-					<p class="text-sm text-muted-foreground">
-						You can block this profile so you stop seeing it.
-					</p>
+					{#if target.profileId !== null}
+						<p class="text-sm text-muted-foreground">
+							You can block this profile so you stop seeing it.
+						</p>
+					{/if}
 				</div>
 			</ResponsiveDialog.Body>
 			<ResponsiveDialog.Footer>
-				<Button variant="destructive" onclick={block}>
-					Block profile
-				</Button>
+				{#if target.profileId !== null}
+					{@const profileId = target.profileId}
+					<Button
+						variant="destructive"
+						onclick={() => block({ profileId })}
+					>
+						Block profile
+					</Button>
+				{/if}
 				<Button variant="secondary" onclick={() => (open = false)}>
 					Done
 				</Button>

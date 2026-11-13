@@ -290,3 +290,30 @@ describe("Conversation menu back gesture", () => {
 		).toBe(true);
 	});
 });
+
+describe("Conversation Right Now status", () => {
+	beforeEach(() => {
+		conversations.drafts = new Drafts();
+	});
+
+	afterEach(cleanup);
+
+	it("marks a participant on Right Now next to the name", () => {
+		const base = conversation(textPreview("hi"));
+		const { container } = render(Conversation, {
+			props: {
+				conversation: {
+					...base,
+					data: { ...base.data, rightNow: "HOSTING" },
+				},
+				onEnterSelection: () => {},
+			},
+		});
+
+		expect(
+			container.querySelector(
+				'[data-slot="item-title"] [data-slot="right-now-indicator"]',
+			),
+		).not.toBeNull();
+	});
+});

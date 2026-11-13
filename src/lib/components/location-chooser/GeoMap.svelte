@@ -18,6 +18,7 @@
 
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { locationRequest } from "#lib/location/location-request.svelte.ts";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
 	import { isMobilePlatform } from "#lib/platform/os.ts";
 	import {
 		ACCURACY_CIRCLE_COLOR,
@@ -26,7 +27,6 @@
 		PIN_ZOOM,
 	} from "./constants";
 	import LocateMeButton from "./LocateMeButton.svelte";
-	import { openMapLinksExternally } from "./map-links";
 	import PlaceSearch from "./PlaceSearch.svelte";
 
 	let {
@@ -132,7 +132,20 @@
 
 	$effect(() => {
 		const container = map?.getContainer();
-		if (container) return openMapLinksExternally(container);
+		if (!container) return;
+		const openExternally = (event: MouseEvent) => {
+			if (event.target instanceof HTMLElement) {
+				const href = event.target
+					?.closest("a[href]")
+					?.getAttribute("href");
+				if (href) {
+					event.preventDefault();
+					openExternalLink(href);
+				}
+			}
+		};
+		container.addEventListener("click", openExternally);
+		return () => container.removeEventListener("click", openExternally);
 	});
 
 	$effect(() => {

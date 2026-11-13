@@ -3,6 +3,7 @@
 	import Distance from "./Distance.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import ProfileHeading from "./ProfileHeading.svelte";
+	import RightNowBadge from "./RightNowBadge.svelte";
 
 	let { row, ourProfile }: { row: RenderedGridProfile; ourProfile: boolean } =
 		$props();
@@ -20,5 +21,6 @@
 			self={ourProfile}
 		/>
 		<Distance distance={row.distance} />
+		<RightNowBadge status={row.rightNow} />
 	</div>
 </div>

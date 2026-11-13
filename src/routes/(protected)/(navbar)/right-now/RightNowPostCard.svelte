@@ -6,22 +6,25 @@
 	import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
 	import * as Avatar from "#lib/components/ui/avatar/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import type { PostData } from "#lib/model/right-now/feed.ts";
-	import RightNowPostMeta from "./RightNowPostMeta.svelte";
+	import PostHeadline from "./PostHeadline.svelte";
 	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
 
 	let {
 		post,
 		ourProfileId,
-		underReview = false,
+		underReview,
 		onedit,
+		onreport,
 	}: {
 		post: PostData;
 		ourProfileId: number;
-		underReview?: boolean;
+		underReview: boolean;
 		onedit: (() => void) | null;
+		onreport: () => Promise<void>;
 	} = $props();
 
 	const headlineId = $props.id();
@@ -69,15 +72,13 @@
 		/>
 	</div>
 	<div class="flex min-w-0 flex-1 flex-col gap-2">
-		<h2
+		<PostHeadline
 			id={headlineId}
-			class={[
-				"font-heading text-base font-semibold wrap-break-word whitespace-pre-wrap",
-				{ "text-muted-foreground": !post.text },
-			]}
-		>
-			{post.text || joinedHeadline}
-		</h2>
+			text={post.text}
+			placeholder={joinedHeadline}
+			hasPhoto={photo !== undefined}
+			onreport={ownPost ? null : onreport}
+		/>
 		{#if ownPost && underReview}
 			<p
 				data-slot="right-now-post-review"

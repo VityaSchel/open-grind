@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -67,11 +73,17 @@ function drawerItem({
 function renderField({
 	photo = null,
 	disabled = false,
-}: { photo?: PostPhoto | null; disabled?: boolean } = {}) {
+	rejectedMediaIds = [],
+}: {
+	photo?: PostPhoto | null;
+	disabled?: boolean;
+	rejectedMediaIds?: number[];
+} = {}) {
 	const stored = $state({ photo, uploading: false });
 	render(PostPhotoField, {
 		props: {
 			disabled,
+			rejectedMediaIds,
 			get photo() {
 				return stored.photo;
 			},
@@ -100,6 +112,17 @@ afterEach(() => {
 });
 
 describe("the post photo field", () => {
+	it("names its controls after the Photo label", () => {
+		renderField();
+
+		expect(
+			within(screen.getByRole("group", { name: "Photo" })).getByRole(
+				"button",
+				{ name: "Add photo" },
+			),
+		).toBeTruthy();
+	});
+
 	it("lists only the chat drawer photos to pick from", async () => {
 		drawerApi.getAllDrawerMedia.mockResolvedValue([
 			drawerItem({ id: 301 }),
@@ -135,7 +158,9 @@ describe("the post photo field", () => {
 		expect(photoApi.uploadRightNowPhotoFromUrl).toHaveBeenCalledWith({
 			url: "https://cdns.grindr.com/chat/drawer/301",
 		});
-		expect(await screen.findByText("Uploading photo")).toBeTruthy();
+		expect(
+			await screen.findByRole("img", { name: "Uploading photo" }),
+		).toBeTruthy();
 		expect(stored.uploading).toBe(true);
 
 		upload.resolve(UPLOADED);
@@ -280,6 +305,42 @@ describe("the post photo field", () => {
 			mediaId: 88,
 			thumbnailUrl: UPLOADED.thumbnailUrl,
 		});
+	});
+
+	it("names a rejected photo as rejected", () => {
+		renderField({
+			photo: { mediaId: 51, thumbnailUrl: UPLOADED.thumbnailUrl },
+			rejectedMediaIds: [51],
+		});
+
+		expect(
+			screen.getByRole("img", { name: "Post photo, rejected" }),
+		).toBeTruthy();
+	});
+
+	it("names a replacement for a rejected photo plainly", async () => {
+		drawerApi.getAllDrawerMedia.mockResolvedValue([]);
+		pickMediaMock.mockResolvedValue(PICKED);
+		photoApi.uploadRightNowPickedPhoto.mockResolvedValue(UPLOADED);
+		renderField({
+			photo: { mediaId: 51, thumbnailUrl: UPLOADED.thumbnailUrl },
+			rejectedMediaIds: [51],
+		});
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Remove photo" }),
+		);
+
+		await openUploads();
+		await fireEvent.click(
+			await screen.findByRole("button", { name: "Upload a photo" }),
+		);
+
+		expect(
+			await screen.findByRole("img", { name: "Post photo" }),
+		).toBeTruthy();
+		expect(
+			screen.queryByRole("img", { name: "Post photo, rejected" }),
+		).toBeNull();
 	});
 
 	it("drops the undo once a new photo replaces the removed one", async () => {

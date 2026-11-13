@@ -1,5 +1,3 @@
-import type { Conversation } from "#lib/model/messaging/conversations.ts";
-
 export type DemoMessage = { fromMe: boolean; reactions?: number } & (
 	| { kind?: "text"; text: string }
 	| { kind: "image" }
@@ -30,7 +28,6 @@ export type DemoConversation = {
 	favorite: boolean;
 	muted: boolean;
 	lastActivityAgo: number;
-	rightNow?: Conversation["data"]["rightNow"];
 	chemistry?: boolean;
 	messages: DemoMessage[];
 };
@@ -70,7 +67,6 @@ export const demoConversationSeeds: DemoConversation[] = [
 		favorite: false,
 		muted: false,
 		lastActivityAgo: 1,
-		rightNow: "HOSTING",
 		messages: [
 			{ fromMe: true, text: "Hi, how are you?" },
 			{ fromMe: true, kind: "gif" },

@@ -567,7 +567,7 @@ a {
 }
 
 @utility media-pill {
-	@apply bg-popover/20 scrim;
+	@apply bg-black/50 scrim;
 }
 
 @utility media-disc {

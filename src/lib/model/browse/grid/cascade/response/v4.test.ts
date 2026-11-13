@@ -196,4 +196,24 @@ describe("cascadeV4ResponseSchema", () => {
 			).success,
 		).toBe(false);
 	});
+
+	it.each([
+		["HOSTING", "HOSTING"],
+		["NOT_HOSTING", "NOT_HOSTING"],
+		["SOME_FUTURE_STATUS", "NOT_ACTIVE"],
+	])(
+		"reads a profile item's Right Now status %s as %s",
+		(rightNow, expected) => {
+			const parsed = cascadeV4ResponseSchema.parse(
+				response([
+					{
+						type: "partial_profile_v1",
+						data: { ...profile, rightNow },
+					},
+				]),
+			);
+
+			expect(parsed.items[0]).toHaveProperty("data.rightNow", expected);
+		},
+	);
 });

@@ -4,14 +4,19 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { MINUTE } from "../right-now-post-test-helpers";
+import { MINUTE, ownPost } from "../right-now-post-test-helpers";
 import JoinButton from "./JoinButton.svelte";
 import { FakeRightNowPostState, runningPost } from "./post-test-helpers.svelte";
 
-function renderButton(fake = new FakeRightNowPostState()) {
+function renderButton(
+	fake = new FakeRightNowPostState(),
+	{ compact = false }: { compact?: boolean } = {},
+) {
 	const onjoin = vi.fn();
 	const onopen = vi.fn();
-	render(JoinButton, { props: { post: fake.state, onjoin, onopen } });
+	render(JoinButton, {
+		props: { ownPost: fake.state, compact, onjoin, onopen },
+	});
 	return { fake, onjoin, onopen };
 }
 
@@ -79,7 +84,7 @@ describe("the Right Now join pill", () => {
 		expect(screen.queryByRole("button")).toBeNull();
 
 		fake.loading = false;
-		fake.startPost();
+		fake.post = ownPost();
 		flushSync();
 
 		expect(
@@ -125,21 +130,24 @@ describe("the Right Now join pill", () => {
 		expect(ringElapsed()).toBeCloseTo(0.75);
 	});
 
-	it("says the post is off while it is hidden", () => {
+	it("says the post is off while it is hidden, with a grey ring", () => {
 		renderButton(runningPost({ postStatus: "HIDDEN" }));
 
+		const button = screen.getByRole("button", {
+			name: "Your Right Now post, off, 42m left",
+		});
+		expect(button.textContent.trim()).toBe("Off · 42m");
 		expect(
-			screen.getByRole("button", {
-				name: "Your Right Now post, off, 42m left",
-			}),
-		).toBeTruthy();
+			button
+				.querySelector("[data-slot=join-button-ring-progress]")
+				?.classList.contains("stroke-muted-foreground"),
+		).toBe(true);
 	});
 
 	it("goes back to joining once the post ends", () => {
 		const { fake } = renderButton(runningPost());
 
 		fake.post = null;
-		fake.status = "none";
 		fake.freePostsLeft = 2;
 		flushSync();
 
@@ -147,4 +155,45 @@ describe("the Right Now join pill", () => {
 			screen.getByRole("button", { name: "Join · 2 left" }),
 		).toBeTruthy();
 	});
+
+	it.each([
+		{
+			pill: "join",
+			fake: () => new FakeRightNowPostState(),
+			name: "Join · 3 left",
+			slot: "join-button-allowance",
+			compact: true,
+		},
+		{
+			pill: "join",
+			fake: () => new FakeRightNowPostState(),
+			name: "Join · 3 left",
+			slot: "join-button-allowance",
+			compact: false,
+		},
+		{
+			pill: "running",
+			fake: () => runningPost(),
+			name: "Your Right Now post, 42m left",
+			slot: "join-button-time",
+			compact: true,
+		},
+		{
+			pill: "running",
+			fake: () => runningPost(),
+			name: "Your Right Now post, 42m left",
+			slot: "join-button-time",
+			compact: false,
+		},
+	])(
+		"hides the $pill pill's text on narrow screens only while compact ($compact), keeping its name",
+		({ fake, name, slot, compact }) => {
+			renderButton(fake(), { compact });
+
+			const text = screen
+				.getByRole("button", { name })
+				.querySelector(`[data-slot="${slot}"]`);
+			expect(text?.classList.contains("max-sm:hidden")).toBe(compact);
+		},
+	);
 });

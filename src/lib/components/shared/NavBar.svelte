@@ -2,7 +2,6 @@
 	import { page } from "$app/state";
 	import ChatCircleIcon from "phosphor-svelte/lib/ChatCircleIcon";
 	import DotsNineIcon from "phosphor-svelte/lib/DotsNineIcon";
-	import DropIcon from "phosphor-svelte/lib/DropIcon";
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 	import { untrack } from "svelte";
 
@@ -10,6 +9,7 @@
 	import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
 	import BrokenUserAvatar from "#lib/components/profile/BrokenUserAvatar.svelte";
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
 	import { tabsListVariants } from "#lib/components/ui/tabs/index.ts";
@@ -99,7 +99,7 @@
 			data-active={page.route.id === "/(protected)/(navbar)/right-now"}
 			onclick={tabNavigation({ href: "/right-now" })}
 		>
-			<DropIcon weight="fill" />
+			<SplashIcon weight="fill" />
 			{@render label("Right Now")}
 		</a>
 		<a

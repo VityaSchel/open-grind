@@ -23,6 +23,7 @@ import { demoDrawerMedia } from "./drawer";
 import { demoFavoriteOf } from "./favorites";
 import { demoGiphyMessageBody } from "./giphy";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
+import { demoRightNowStatusOf } from "./right-now";
 
 const MESSAGE_GAP = 7 * MINUTE;
 const MESSAGES_PER_PAGE = 8;
@@ -324,7 +325,7 @@ export function demoConversations({
 						profileId: conv.withId,
 						seed: conv.favorite,
 					}),
-					rightNow: conv.rightNow ?? "NOT_ACTIVE",
+					rightNow: demoRightNowStatusOf(conv.withId),
 					onlineUntil: onlineUntilOf(seed),
 					hasUnreadThrob: false,
 				},

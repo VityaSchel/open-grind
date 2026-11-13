@@ -7,7 +7,7 @@ export async function renderSheet(fake: FakeRightNowPostState) {
 	const stored = $state({ open: true });
 	render(RightNowPostSheet, {
 		props: {
-			post: fake.state,
+			ownPost: fake.state,
 			get open() {
 				return stored.open;
 			},

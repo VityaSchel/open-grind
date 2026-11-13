@@ -3,8 +3,10 @@
 
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
+	import LocationChange from "#lib/components/location-chooser/LocationChange.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
+	import { TOP_SLOP_PX } from "#lib/util/scroll.ts";
 	import RightNowPostControls from "./post/RightNowPostControls.svelte";
 	import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 	import { getRightNowPostState } from "./right-now-post-state.svelte";
@@ -19,12 +21,21 @@
 
 	let container: HTMLDivElement | null = $state(null);
 	let sheetOpen = $state(false);
+	let labeledChip = $state(false);
 
 	$effect(() => feed.attachView());
 
 	$effect(() => feed.followLocation(geohash));
 
 	$effect(() => ownPost.followLocation(geohash));
+
+	$effect.pre(() => {
+		if (feed.entries.length === 0) return;
+		untrack(() => {
+			if (container !== null && container.scrollTop <= TOP_SLOP_PX)
+				container.scrollTop = 0;
+		});
+	});
 
 	restoreScrollOnce({ container: () => container, state: feed });
 
@@ -36,10 +47,11 @@
 </script>
 
 <main class="screen-nav-host">
-	<QuickFiltersBar>
+	<QuickFiltersBar contentClass="mx-auto w-full max-w-160">
+		<LocationChange />
 		<QuickFilters filters={feed.filters} />
 	</QuickFiltersBar>
-	{#if !feed.loading && !feed.error}
+	{#if !feed.loading && (feed.entries.length > 0 || !feed.error)}
 		<DataRefreshControl
 			{container}
 			updating={feed.refreshing}
@@ -50,8 +62,8 @@
 	<div
 		bind:this={container}
 		data-slot="right-now-scroller"
-		class="relative pull-scroller"
-		onscroll={() => (feed.scrollY = container?.scrollTop ?? 0)}
+		class="relative pull-scroller [scrollbar-gutter:stable_both-edges]"
+		onscroll={() => feed.followScroll(container?.scrollTop ?? 0)}
 	>
 		<div
 			data-refresh-content
@@ -60,15 +72,20 @@
 			<RightNowFeedList
 				{feed}
 				{ourProfileId}
+				ownPostId={ownPost.post?.id ?? null}
 				ownPostUnderReview={ownPost.pendingModeration}
+				joinable={ownPost.status === "none" &&
+					ownPost.freePostsLeft !== 0}
 				onedit={ownPost.post === null ? null : () => (sheetOpen = true)}
 			/>
-			<div
-				data-slot="right-now-join-clearance"
-				class="h-12 shrink-0"
-			></div>
 		</div>
 	</div>
-	<ScrollToTopButton {container} class="bottom-nav-clear" />
-	<RightNowPostControls post={ownPost} bind:sheetOpen />
+	<ScrollToTopButton
+		{container}
+		text={feed.hasNewPosts ? "New posts" : undefined}
+		onjump={feed.hasNewPosts ? () => void feed.refresh() : undefined}
+		bind:labeled={labeledChip}
+		class="bottom-nav-clear"
+	/>
+	<RightNowPostControls {ownPost} compact={labeledChip} bind:sheetOpen />
 </main>

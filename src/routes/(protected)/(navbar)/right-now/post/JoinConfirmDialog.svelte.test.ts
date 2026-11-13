@@ -4,19 +4,25 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import JoinConfirmDialog from "./JoinConfirmDialog.svelte";
 import { FakeRightNowPostState } from "./post-test-helpers.svelte";
 
 const joinNowButton = () => screen.getByRole("button", { name: "Join now" });
 const cancelButton = () => screen.getByRole("button", { name: "Cancel" });
-const dialogShown = () => screen.queryByText("Join Right Now?") !== null;
+const dialogShown = () =>
+	screen.queryByRole("alertdialog", { name: "Join Right Now?" }) !== null;
+
+const dismissals = [
+	["Escape", () => fireEvent.keyDown(document, { key: "Escape" })],
+	["the back gesture", () => runBackGestureHandlers()],
+] as const;
 
 async function renderDialog() {
 	const fake = new FakeRightNowPostState();
 	const onjoined = vi.fn();
 	render(JoinConfirmDialog, {
-		props: { open: true, post: fake.state, onjoined },
+		props: { open: true, ownPost: fake.state, onjoined },
 	});
 	await vi.waitFor(joinNowButton);
 	return { fake, onjoined };
@@ -77,41 +83,30 @@ describe("the Join Right Now confirmation", () => {
 		expect(cancelButton().matches(":disabled")).toBe(true);
 	});
 
-	it("keeps Escape from closing the dialog while joining", async () => {
+	it.each(dismissals)("closes on %s without joining", async (_, dismiss) => {
 		const { fake } = await renderDialog();
 
-		fake.joining = true;
-		flushSync();
-		await fireEvent.keyDown(document, { key: "Escape" });
-
-		expect(
-			screen
-				.getByRole("alertdialog", { name: "Join Right Now?" })
-				.getAttribute("data-state"),
-		).toBe("open");
-	});
-
-	it("swallows the back gesture while joining", async () => {
-		const { fake } = await renderDialog();
-
-		fake.joining = true;
-		flushSync();
-		for (const handler of backGestureEventHandlers.keys()) handler();
-		flushSync();
-
-		expect(
-			screen
-				.getByRole("alertdialog", { name: "Join Right Now?" })
-				.getAttribute("data-state"),
-		).toBe("open");
-	});
-
-	it("closes on the back gesture", async () => {
-		const { fake } = await renderDialog();
-
-		for (const handler of backGestureEventHandlers.keys()) handler();
+		await dismiss();
 
 		await vi.waitFor(() => expect(dialogShown()).toBe(false));
 		expect(fake.join).not.toHaveBeenCalled();
 	});
+
+	it.each(dismissals)(
+		"stays open on %s while joining",
+		async (_, dismiss) => {
+			const { fake } = await renderDialog();
+
+			fake.joining = true;
+			flushSync();
+			await dismiss();
+			flushSync();
+
+			expect(
+				screen
+					.getByRole("alertdialog", { name: "Join Right Now?" })
+					.getAttribute("data-state"),
+			).toBe("open");
+		},
+	);
 });

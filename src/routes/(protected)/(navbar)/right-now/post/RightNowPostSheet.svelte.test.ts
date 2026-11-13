@@ -23,6 +23,7 @@ import { MINUTE, ownPost } from "../right-now-post-test-helpers";
 import { runningPost } from "./post-test-helpers.svelte";
 import {
 	renderSheet,
+	saveButton,
 	sheetShown,
 	textField,
 } from "./sheet-test-helpers.svelte";
@@ -41,12 +42,21 @@ describe("the Right Now post sheet header", () => {
 	});
 
 	it("shows a hidden post as off with its time left", async () => {
-		const fake = runningPost();
-		fake.status = "off";
+		const fake = runningPost({ postStatus: "HIDDEN" });
 		await renderSheet(fake);
 
 		expect(screen.getByText("Off · 42m left")).toBeTruthy();
 		expect(visibilitySwitch().getAttribute("aria-checked")).toBe("false");
+	});
+
+	it("describes the sheet with the post's status", async () => {
+		await renderSheet(runningPost());
+
+		const sheet = screen.getByRole("dialog", { name: "Right Now" });
+		const description = document.getElementById(
+			sheet.getAttribute("aria-describedby") ?? "",
+		);
+		expect(description?.textContent.trim()).toBe("Active · 42m left");
 	});
 
 	it("counts the time left down", async () => {
@@ -62,7 +72,12 @@ describe("the Right Now post sheet header", () => {
 	it("turns the post off without asking, busy until the request ends", async () => {
 		const fake = runningPost();
 		const request = Promise.withResolvers<boolean>();
-		fake.setHidden.mockReturnValueOnce(request.promise);
+		fake.setHidden.mockImplementationOnce(() => {
+			fake.saving = true;
+			return request.promise.finally(() => {
+				fake.saving = false;
+			});
+		});
 		await renderSheet(fake);
 
 		await fireEvent.click(visibilitySwitch());
@@ -73,8 +88,9 @@ describe("the Right Now post sheet header", () => {
 		expect(visibilitySwitch().getAttribute("aria-checked")).toBe("false");
 		expect(textField().matches(":disabled")).toBe(true);
 		expect(screen.queryByRole("status", { hidden: true })).not.toBeNull();
+		expect(saveButton().getAttribute("aria-busy")).toBe("false");
 
-		fake.status = "off";
+		fake.post = ownPost({ postStatus: "HIDDEN" });
 		request.resolve(true);
 
 		await vi.waitFor(() =>
@@ -88,8 +104,7 @@ describe("the Right Now post sheet header", () => {
 	});
 
 	it("turns an off post back on", async () => {
-		const fake = runningPost();
-		fake.status = "off";
+		const fake = runningPost({ postStatus: "HIDDEN" });
 		await renderSheet(fake);
 
 		await fireEvent.click(visibilitySwitch());
@@ -116,7 +131,6 @@ describe("the Right Now post sheet header", () => {
 		const stored = await renderSheet(fake);
 
 		fake.post = null;
-		fake.status = "none";
 		flushSync();
 
 		expect(stored.open).toBe(false);

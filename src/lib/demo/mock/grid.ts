@@ -18,6 +18,7 @@ import {
 	MINUTE,
 	NOW,
 } from "../config";
+import { num } from "../routing";
 import { demoProfileResolves } from "./blocks";
 import { demoFavoriteOf } from "./favorites";
 import {
@@ -30,12 +31,7 @@ import {
 	profileSeed,
 	socialNetworksOf,
 } from "./profiles";
-
-export function num(value: string | null): number | undefined {
-	if (value === null) return undefined;
-	const n = Number(value);
-	return Number.isFinite(n) ? n : undefined;
-}
+import { demoRightNowStatusOf } from "./right-now";
 
 export type DemoShortProfile = z.infer<typeof profileShortSchema> &
 	z.infer<typeof profileRightNowSchema>;
@@ -55,7 +51,7 @@ export function buildShortProfile(seed: DemoSeed): DemoShortProfile {
 		isFavorite: demoFavoriteOf({ profileId: seed.id, seed: seed.favorite }),
 		lastViewed: null,
 		seen: lastOnlineOf(seed),
-		rightNow: "NOT_ACTIVE",
+		rightNow: demoRightNowStatusOf(seed.id),
 		sexualPosition: seed.position,
 		age: seed.age,
 		showAge: seed.showAge,
@@ -176,7 +172,7 @@ function cascadeProfileData(seed: DemoSeed) {
 		displayName: seed.name,
 		distanceMeters: seed.distanceM ?? undefined,
 		lastOnline: lastOnlineOf(seed),
-		rightNow: "NOT_ACTIVE",
+		rightNow: demoRightNowStatusOf(seed.id),
 		unreadCount: seed.unread,
 		isVisiting: false,
 		isPopular: seed.favorite || seed.unread > 0,
@@ -224,12 +220,14 @@ function isPartialId(id: number): boolean {
 function filteredGridIds(params: URLSearchParams): number[] {
 	const favorites = params.get("favorites") === "true";
 	const onlineOnly = params.get("onlineOnly") === "true";
+	const rightNow = params.get("rightNow") === "true";
 	const fresh = params.get("fresh") === "true";
 	const ageMin = num(params.get("ageMin"));
 	const ageMax = num(params.get("ageMax"));
 	if (
 		!favorites &&
 		!onlineOnly &&
+		!rightNow &&
 		!fresh &&
 		ageMin === undefined &&
 		ageMax === undefined
@@ -244,6 +242,7 @@ function filteredGridIds(params: URLSearchParams): number[] {
 		)
 			return false;
 		if (onlineOnly && !seed.online) return false;
+		if (rightNow && demoRightNowStatusOf(id) === "NOT_ACTIVE") return false;
 		if (fresh && !isNewId(id)) return false;
 		if (ageMin !== undefined && (seed.age === null || seed.age < ageMin))
 			return false;

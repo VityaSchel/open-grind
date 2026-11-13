@@ -9,6 +9,7 @@ import { atHomeLocation } from "#lib/entitlements/honduras-hold.ts";
 import { coarsenGeohash } from "#lib/model/geohash.ts";
 import { now } from "#lib/util/clock.ts";
 import type { cascadeV4ResponseFullProfileV1Schema } from "#lib/model/browse/grid/cascade/response/v4.ts";
+import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 type CascadeProfileData = z.infer<
 	typeof cascadeV4ResponseFullProfileV1Schema
@@ -32,6 +33,7 @@ export type RenderedGridProfile = {
 	isFavorite: boolean;
 	isVisiting: boolean;
 	hasChattedInLast24Hrs: boolean;
+	rightNow: RightNowStatus;
 };
 
 export type LazyGridProfile = {
@@ -82,6 +84,7 @@ function gridProfile({
 		isFavorite: favorite,
 		isVisiting: profile.isVisiting ?? false,
 		hasChattedInLast24Hrs: chatted,
+		rightNow: profile.rightNow ?? "NOT_ACTIVE",
 	};
 }
 
@@ -189,5 +192,6 @@ export async function resolveLazyProfile(
 		hasChattedInLast24Hrs:
 			resolved.lastChatTimestamp !== null &&
 			now() - resolved.lastChatTimestamp < 24 * 60 * 60 * 1000,
+		rightNow: resolved.rightNow,
 	};
 }

@@ -5,6 +5,7 @@ import type {
 } from "#lib/model/right-now/feed.ts";
 
 const POSTED = 1_710_000_000_000;
+const EXPIRES = Date.UTC(2100, 0, 1);
 
 export function postData(overrides: Partial<PostData> = {}): PostData {
 	return {
@@ -13,7 +14,7 @@ export function postData(overrides: Partial<PostData> = {}): PostData {
 		media: [],
 		hosting: false,
 		posted: POSTED,
-		expiration: POSTED + 60 * 60_000,
+		expiration: EXPIRES,
 		recentlyChatted: false,
 		favorite: false,
 		...overrides,
@@ -27,7 +28,7 @@ export function discreetPostData(
 		id: 1,
 		hosting: false,
 		posted: POSTED,
-		expiration: POSTED + 60 * 60_000,
+		expiration: EXPIRES,
 		profileFields: {
 			age: null,
 			height: null,

@@ -21,7 +21,6 @@ export class FakeRightNowPostState implements Pick<
 	| "join"
 	| "save"
 	| "setHidden"
-	| "onSheetRequest"
 	| "attachView"
 > {
 	post = $state.raw<RightNowPostState["post"]>(null);
@@ -31,27 +30,27 @@ export class FakeRightNowPostState implements Pick<
 	joining = $state(false);
 	saving = $state(false);
 	timeLeftMs = $state(42 * MINUTE);
-	status = $state<RightNowPostState["status"]>("none");
+	status: RightNowPostState["status"] = $derived.by(() => {
+		if (this.post === null) return "none";
+		return this.post.postStatus === "HIDDEN" ? "off" : "active";
+	});
 	rejected = $state.raw<RightNowPostRejection>({
 		text: false,
 		photo: false,
 		reasons: [],
 	});
-	join = vi.fn<RightNowPostState["join"]>(() => Promise.resolve(true));
+	join = vi.fn<RightNowPostState["join"]>(() => {
+		this.post = ownPost();
+		return Promise.resolve(true);
+	});
 	save = vi.fn<RightNowPostState["save"]>(() => Promise.resolve(true));
 	setHidden = vi.fn<RightNowPostState["setHidden"]>(() =>
 		Promise.resolve(true),
 	);
-	onSheetRequest = vi.fn<RightNowPostState["onSheetRequest"]>(() => () => {});
 	attachView = vi.fn<RightNowPostState["attachView"]>(() => () => {});
 
 	get state(): RightNowPostState {
 		return this as unknown as RightNowPostState;
-	}
-
-	startPost(overrides: Partial<RightNowPostDetails> = {}): void {
-		this.post = ownPost(overrides);
-		this.status = this.post.postStatus === "HIDDEN" ? "off" : "active";
 	}
 }
 
@@ -59,6 +58,6 @@ export function runningPost(
 	overrides: Partial<RightNowPostDetails> = {},
 ): FakeRightNowPostState {
 	const fake = new FakeRightNowPostState();
-	fake.startPost(overrides);
+	fake.post = ownPost(overrides);
 	return fake;
 }

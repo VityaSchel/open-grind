@@ -15,3 +15,11 @@ export async function goToRightNow(page: Page): Promise<void> {
 		.click();
 	await expect(page).toHaveURL(/\/right-now$/);
 }
+
+export function scrollFeedToBottom(page: Page): Promise<void> {
+	return page
+		.locator('[data-slot="right-now-scroller"]')
+		.evaluate((scroller) => {
+			scroller.scrollTop = scroller.scrollHeight;
+		});
+}

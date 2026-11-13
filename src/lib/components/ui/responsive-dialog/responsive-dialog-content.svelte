@@ -28,10 +28,6 @@
 	} = $props();
 
 	const context = getResponsiveDialogContext("<ResponsiveDialog.Content>");
-
-	function reportBlockedDismissal() {
-		if (!context.dismissible) context.dismissBlocked();
-	}
 </script>
 
 {#if context.desktop}
@@ -44,11 +40,11 @@
 		{...drawerProps}
 		onInteractOutside={(event) => {
 			drawerProps?.onInteractOutside?.(event);
-			reportBlockedDismissal();
+			context.dismissAttempted();
 		}}
 		onEscapeKeydown={(event) => {
 			drawerProps?.onEscapeKeydown?.(event);
-			reportBlockedDismissal();
+			context.dismissAttempted();
 		}}
 	>
 		{@render children()}

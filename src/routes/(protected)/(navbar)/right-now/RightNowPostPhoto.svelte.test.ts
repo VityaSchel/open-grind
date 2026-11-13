@@ -1,20 +1,28 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { attachGalleryLightboxMock, detachMock } = vi.hoisted(() => {
-	const detachMock = vi.fn();
-	return {
-		detachMock,
-		attachGalleryLightboxMock: vi.fn<
-			(options: { gallery: HTMLElement }) => () => void
-		>(() => detachMock),
-	};
-});
+const { attachGalleryLightboxMock, detachMock, preloadFullImageMock } =
+	vi.hoisted(() => {
+		const detachMock = vi.fn();
+		return {
+			detachMock,
+			attachGalleryLightboxMock: vi.fn<
+				(options: {
+					gallery: HTMLElement;
+					croppedThumbs?: boolean;
+				}) => () => void
+			>(() => detachMock),
+			preloadFullImageMock: vi.fn(),
+		};
+	});
 
 vi.mock("#lib/util/photoswipe/gallery-lightbox.ts", () => ({
 	attachGalleryLightbox: attachGalleryLightboxMock,
+}));
+vi.mock("#lib/util/photoswipe/full-size.ts", () => ({
+	preloadFullImage: preloadFullImageMock,
 }));
 
 import { proxyMediaUrl } from "#lib/util/media.ts";
@@ -31,6 +39,15 @@ function blurredPhoto(): RightNowPostMediaItem {
 }
 
 const openLink = () => screen.getByRole("link", { name: "Open photo" });
+
+async function showThumbnail() {
+	const thumbnail = screen.getByRole<HTMLImageElement>("img", {
+		name: "Post photo",
+	});
+	Object.defineProperty(thumbnail, "naturalWidth", { get: () => 320 });
+	Object.defineProperty(thumbnail, "naturalHeight", { get: () => 320 });
+	await fireEvent.load(thumbnail);
+}
 
 afterEach(() => {
 	cleanup();
@@ -50,6 +67,26 @@ describe("a Right Now post photo", () => {
 		expect(gallery?.contains(openLink())).toBe(true);
 	});
 
+	it("has the lightbox zoom from the square thumbnail as a crop of the full-size photo", () => {
+		render(RightNowPostPhoto, { props: { media: photo(1) } });
+
+		expect(attachGalleryLightboxMock.mock.calls[0]?.[0]).toMatchObject({
+			croppedThumbs: true,
+		});
+	});
+
+	it("starts decoding the full-size photo once its thumbnail shows", async () => {
+		const media = photo(1);
+		render(RightNowPostPhoto, { props: { media } });
+		expect(preloadFullImageMock).not.toHaveBeenCalled();
+
+		await showThumbnail();
+
+		expect(preloadFullImageMock).toHaveBeenCalledExactlyOnceWith(
+			proxyMediaUrl(media.data.fullImageUrl),
+		);
+	});
+
 	it("detaches the lightbox when the photo goes away", () => {
 		const view = render(RightNowPostPhoto, { props: { media: photo(1) } });
 
@@ -65,5 +102,13 @@ describe("a Right Now post photo", () => {
 		expect(attachGalleryLightboxMock).not.toHaveBeenCalled();
 		expect(screen.getByRole("img", { name: "Post photo" })).toBeTruthy();
 		expect(screen.getByText("May contain nudity")).toBeTruthy();
+	});
+
+	it("decodes no full-size photo behind a blurred thumbnail", async () => {
+		render(RightNowPostPhoto, { props: { media: blurredPhoto() } });
+
+		await showThumbnail();
+
+		expect(preloadFullImageMock).not.toHaveBeenCalled();
 	});
 });

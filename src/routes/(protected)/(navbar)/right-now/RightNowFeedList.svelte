@@ -1,7 +1,10 @@
 <script lang="ts">
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
+	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
+	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import type { RightNowPostId } from "#lib/model/safety/reports.ts";
 	import DiscreetPostCard from "./DiscreetPostCard.svelte";
 	import EmptyRightNowFeed from "./EmptyRightNowFeed.svelte";
 	import type { RightNowFeedState } from "./right-now-feed-state.svelte";
@@ -10,14 +13,20 @@
 	let {
 		feed,
 		ourProfileId,
+		ownPostId,
 		ownPostUnderReview,
+		joinable,
 		onedit,
 	}: {
 		feed: RightNowFeedState;
 		ourProfileId: number;
+		ownPostId: RightNowPostId | null;
 		ownPostUnderReview: boolean;
+		joinable: boolean;
 		onedit: (() => void) | null;
 	} = $props();
+
+	const report = new RightNowPostReportState();
 </script>
 
 {#if feed.loading}
@@ -27,7 +36,10 @@
 			<div class="flex min-w-0 flex-1 flex-col gap-2">
 				<Skeleton class="h-6 w-3/4" />
 				<Skeleton class="aspect-square w-full max-w-3xs rounded-xl" />
-				<Skeleton class="my-2 h-5 w-1/3" />
+				<div class="flex items-center justify-between gap-2">
+					<Skeleton class="h-5 w-1/3" />
+					<Skeleton class="h-8 w-24 rounded-4xl" />
+				</div>
 			</div>
 		</div>
 	{/each}
@@ -40,7 +52,11 @@
 		/>
 	</div>
 {:else if feed.entries.length === 0}
-	<EmptyRightNowFeed filters={feed.filters} />
+	<EmptyRightNowFeed
+		filters={feed.filters}
+		ownPostRunning={ownPostId !== null}
+		{joinable}
+	/>
 {:else}
 	<ul class="flex flex-col">
 		{#each feed.entries as item (item.data.id)}
@@ -51,9 +67,23 @@
 						{ourProfileId}
 						underReview={ownPostUnderReview}
 						{onedit}
+						onreport={() =>
+							report.request({
+								postId: item.data.id,
+								profileId: item.data.profileId,
+							})}
 					/>
 				{:else}
-					<DiscreetPostCard post={item.data} />
+					<DiscreetPostCard
+						post={item.data}
+						onreport={item.data.id === ownPostId
+							? null
+							: () =>
+									report.request({
+										postId: item.data.id,
+										profileId: null,
+									})}
+					/>
 				{/if}
 			</li>
 		{/each}
@@ -67,4 +97,7 @@
 			}}
 		></div>
 	{/if}
+	<div data-slot="right-now-join-clearance" class="h-12 shrink-0"></div>
 {/if}
+
+<RightNowPostReportSheet {report} />

@@ -75,6 +75,7 @@
 						isFavorite={item.isFavorite}
 						isVisiting={item.isVisiting}
 						hadRecentChat={item.hasChattedInLast24Hrs}
+						rightNow={item.rightNow}
 						medias={item.profilePhotosHashes?.map((mediaHash) => ({
 							mediaHash,
 						})) ?? []}

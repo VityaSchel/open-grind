@@ -3,8 +3,7 @@ import type PhotoSwipe from "photoswipe";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import ReplyComposer from "#lib/components/shared/ReplyComposer.svelte";
-import { safeAreaInsets } from "#lib/util/safe-area.ts";
-import { applyPhotoSwipeSafeAreaSync } from "./sizing";
+import { reservePhotoSwipeBottom } from "./sizing";
 
 export function applyPhotoSwipeReply(
 	lightbox: PhotoSwipeLightbox,
@@ -30,34 +29,21 @@ export function applyPhotoSwipeReply(
 	},
 ): () => void {
 	let refresh = () => {};
-	applyPhotoSwipeSafeAreaSync(lightbox);
+	reservePhotoSwipeBottom(lightbox, {
+		height: () => {
+			const composer = lightbox.pswp?.element?.querySelector<HTMLElement>(
+				".pswp__reply-composer",
+			);
+			const height = composer?.getBoundingClientRect().height ?? 0;
+			lightbox.pswp?.element?.style.setProperty(
+				"--pswp-reply-composer-height",
+				`${height}px`,
+			);
+			return composer && !composer.hidden ? height : null;
+		},
+	});
 	const imageClickAction =
 		lightbox.options.imageClickAction ?? "zoom-or-close";
-	const paddingFn = lightbox.options.paddingFn;
-	lightbox.options.paddingFn = (viewport, item, index) => {
-		const composer = lightbox.pswp?.element?.querySelector<HTMLElement>(
-			".pswp__reply-composer",
-		);
-		const padding = paddingFn?.(viewport, item, index) ??
-			lightbox.options.padding ?? {
-				top: 0,
-				right: 0,
-				bottom: 0,
-				left: 0,
-			};
-		const height = composer?.getBoundingClientRect().height ?? 0;
-		lightbox.pswp?.element?.style.setProperty(
-			"--pswp-reply-composer-height",
-			`${height}px`,
-		);
-		return {
-			...padding,
-			bottom:
-				composer && !composer.hidden
-					? Math.max(padding.bottom, safeAreaInsets().bottom) + height
-					: padding.bottom,
-		};
-	};
 	lightbox.on("uiRegister", () => {
 		lightbox.pswp?.ui?.registerElement({
 			name: "reply-composer",

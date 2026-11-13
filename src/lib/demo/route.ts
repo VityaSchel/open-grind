@@ -57,7 +57,6 @@ import {
 	demoGetProfiles,
 	demoMyUploadedPhotos,
 	demoSearchProfiles,
-	num,
 } from "./mock/grid";
 import {
 	demoHiddenUsers,
@@ -73,14 +72,13 @@ import {
 	demoReportRightNowPost,
 	demoRightNowPostReport,
 } from "./mock/reports";
-import { demoRightNowFeed } from "./mock/right-now";
+import { demoProfileRightNowPost, demoRightNowFeed } from "./mock/right-now";
 import { demoRightNowPostRoute } from "./mock/right-now-post";
 import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
 } from "./mock/settings";
-
-export type DemoResponse = { status: number; body: unknown };
+import { type DemoResponse, num } from "./routing";
 
 function ok(body: unknown): DemoResponse {
 	return { status: 200, body };
@@ -177,6 +175,9 @@ export function demoRoute({
 			rawPath === "/v6/rightnow/feed")
 	) {
 		return ok(demoRightNowFeed(params));
+	}
+	if (method === "GET" && rawPath.startsWith("/v3/rightnow/profiles/")) {
+		return ok({ post: demoProfileRightNowPost(Number(segments.at(-1))) });
 	}
 	const rightNowPost = demoRightNowPostRoute({ method, rawPath, body });
 	if (rightNowPost !== null) return rightNowPost;

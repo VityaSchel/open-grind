@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { RightNowPostStatus } from "#lib/model/right-now/post.ts";
 import {
 	isAwaitingModeration,
 	isLivePost,
@@ -42,7 +43,7 @@ describe("repostRequest", () => {
 		});
 	});
 
-	it("leaves out rejected text and photos", () => {
+	it("leaves out rejected text", () => {
 		expect(
 			repostRequest(
 				ownPost({
@@ -51,7 +52,6 @@ describe("repostRequest", () => {
 						text: "Rejected later",
 						textStatus: "MODERATION_FAILED",
 					}),
-					media: [postPhoto({ state: "REJECTED" })],
 				}),
 			),
 		).toEqual({
@@ -62,6 +62,15 @@ describe("repostRequest", () => {
 		});
 	});
 
+	it.each(["REJECTED", "DELETED"] as const)(
+		"leaves out a %s photo",
+		(state) => {
+			expect(
+				repostRequest(ownPost({ media: [postPhoto({ state })] })).media,
+			).toEqual([]);
+		},
+	);
+
 	it("repeats text still waiting for moderation", () => {
 		expect(
 			repostRequest(ownPost({ moderatedText: moderatedText() })).text,
@@ -69,24 +78,33 @@ describe("repostRequest", () => {
 	});
 });
 
-describe("own post moderation", () => {
-	it("waits while text or a photo is pending", () => {
-		expect(isAwaitingModeration(ownPost())).toBe(false);
-		expect(
-			isAwaitingModeration(ownPost({ moderatedText: moderatedText() })),
-		).toBe(true);
-		expect(
-			isAwaitingModeration(
-				ownPost({ media: [postPhoto({ state: "PENDING" })] }),
-			),
-		).toBe(true);
-		expect(
-			isAwaitingModeration(
-				ownPost({ moderatedText: moderatedText({ deleted: true }) }),
-			),
-		).toBe(false);
-	});
+describe("isAwaitingModeration", () => {
+	it.each([
+		["nothing under review", ownPost(), false],
+		[
+			"text under review",
+			ownPost({ moderatedText: moderatedText() }),
+			true,
+		],
+		[
+			"a photo under review",
+			ownPost({ media: [postPhoto({ state: "PENDING" })] }),
+			true,
+		],
+		[
+			"deleted text that was under review",
+			ownPost({ moderatedText: moderatedText({ deleted: true }) }),
+			false,
+		],
+	])(
+		"tells whether a post with %s awaits moderation",
+		(_, post, awaiting) => {
+			expect(isAwaitingModeration(post)).toBe(awaiting);
+		},
+	);
+});
 
+describe("rejectionKeys", () => {
 	it("names each rejection by its text or photo", () => {
 		expect(
 			rejectionKeys(
@@ -108,7 +126,9 @@ describe("own post moderation", () => {
 		).toEqual([]);
 		expect(rejectionKeys(null)).toEqual([]);
 	});
+});
 
+describe("textRejectReasonLabel", () => {
 	it.each([
 		["SPAM_DISRUPT", "Spam/disruption"],
 		["SOL_SEX", "Solicitation of sex"],
@@ -117,13 +137,15 @@ describe("own post moderation", () => {
 	])("names the text rejection reason %s as %s", (reason, label) => {
 		expect(textRejectReasonLabel({ reason })).toBe(label);
 	});
+});
 
-	it("treats an unpaid or expired post as no post", () => {
-		expect(isLivePost(ownPost())).toBe(true);
-		expect(isLivePost(ownPost({ postStatus: "HIDDEN" }))).toBe(true);
-		expect(isLivePost(ownPost({ postStatus: "AWAITING_PAYMENT" }))).toBe(
-			false,
-		);
-		expect(isLivePost(ownPost({ postStatus: "EXPIRED" }))).toBe(false);
+describe("isLivePost", () => {
+	it.each<[RightNowPostStatus, boolean]>([
+		["ACTIVE", true],
+		["HIDDEN", true],
+		["AWAITING_PAYMENT", false],
+		["EXPIRED", false],
+	])("reads a %s post as live: %s", (postStatus, live) => {
+		expect(isLivePost(ownPost({ postStatus }))).toBe(live);
 	});
 });

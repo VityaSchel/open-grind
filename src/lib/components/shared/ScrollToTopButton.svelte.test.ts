@@ -14,7 +14,38 @@ async function settle() {
 	await tick();
 }
 
-async function mountWithScroller({ scrollTop = 0 } = {}) {
+function holdFlights() {
+	const landings: Array<() => void> = [];
+	const spy = vi
+		.spyOn(Element.prototype, "animate")
+		.mockImplementation((_, options) => {
+			const animation = {
+				cancel: () => {},
+				currentTime: 0,
+				playState: "finished",
+				effect: null,
+				onfinish: null as (() => void) | null,
+			};
+			const land = () => animation.onfinish?.();
+			if (typeof options === "object" && options.duration)
+				landings.push(land);
+			else queueMicrotask(land);
+			return animation as unknown as Animation;
+		});
+	return {
+		async land() {
+			for (const land of landings.splice(0)) land();
+			await settle();
+		},
+		restore: () => spy.mockRestore(),
+	};
+}
+
+async function mountWithScroller({
+	scrollTop = 0,
+	text,
+	onjump,
+}: { scrollTop?: number; text?: string; onjump?: () => void } = {}) {
 	const scroller = document.createElement("div");
 	Object.defineProperty(scroller, "clientHeight", {
 		value: SCREEN_HEIGHT,
@@ -27,16 +58,32 @@ async function mountWithScroller({ scrollTop = 0 } = {}) {
 	scroller.scrollTop = scrollTop;
 	document.body.append(scroller);
 
-	const view = render(ScrollToTopButton, { props: { container: scroller } });
+	let labeled = false;
+	const view = render(ScrollToTopButton, {
+		props: {
+			container: scroller,
+			text,
+			onjump,
+			get labeled() {
+				return labeled;
+			},
+			set labeled(value) {
+				labeled = value;
+			},
+		},
+	});
 	await settle();
 
 	const button = () =>
 		view.container.querySelector<HTMLElement>(
-			'[aria-label="Scroll to top"]',
+			text === undefined
+				? '[aria-label="Scroll to top"]'
+				: `[aria-label="${text}, scroll to top"]`,
 		);
 	return {
 		scroller,
 		button,
+		labeled: () => labeled,
 		async scrollTo(top: number) {
 			scroller.scrollTop = top;
 			scroller.dispatchEvent(new Event("scroll"));
@@ -182,5 +229,47 @@ describe("the scroll-to-top button", () => {
 		expect(view.button()).toBeNull();
 		await view.glideFor(GLIDE_MS / 2);
 		expect(view.scroller.scrollTop).toBe(0);
+	});
+
+	it("carries a label that names what tapping shows, and reports the tap", async () => {
+		const onjump = vi.fn();
+		const view = await mountWithScroller({
+			scrollTop: 5000,
+			text: "New posts",
+			onjump,
+		});
+
+		expect(view.button()?.textContent.trim()).toBe("New posts");
+
+		await view.click();
+
+		expect(onjump).toHaveBeenCalledOnce();
+		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
+	});
+
+	it("holds the space for its label until the labeled chip has flown out", async () => {
+		const flights = holdFlights();
+		const view = await mountWithScroller({
+			scrollTop: 5000,
+			text: "New posts",
+		});
+		await flights.land();
+		expect(view.labeled()).toBe(true);
+
+		await view.click();
+		expect(view.button()).not.toBeNull();
+		expect(view.labeled()).toBe(true);
+
+		await flights.land();
+		expect(view.button()).toBeNull();
+		expect(view.labeled()).toBe(false);
+		flights.restore();
+	});
+
+	it("does not hold space for a chip without a label", async () => {
+		const view = await mountWithScroller({ scrollTop: 5000 });
+
+		expect(view.button()).not.toBeNull();
+		expect(view.labeled()).toBe(false);
 	});
 });

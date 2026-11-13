@@ -129,6 +129,15 @@ export async function discardStagedMedia(media: PickedMedia[]): Promise<void> {
 	);
 }
 
+export async function stageProxiedPhoto(
+	url: string,
+): Promise<MediaFileDescriptor> {
+	return {
+		source: "staged",
+		id: z.string().parse(await invoke("stage_proxied_photo", { url })),
+	};
+}
+
 export type MediaFileDescriptor = ReturnType<typeof mediaFileDescriptor>;
 
 export function mediaFileDescriptor(media: PickedMedia) {

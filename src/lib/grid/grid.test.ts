@@ -288,8 +288,23 @@ describe("getGrid", () => {
 					isFavorite: true,
 					isVisiting: false,
 					hasChattedInLast24Hrs: true,
+					rightNow: "NOT_ACTIVE",
 				},
 			]);
+		},
+	);
+
+	it.each(["HOSTING", "NOT_HOSTING", "NOT_ACTIVE"] as const)(
+		"carries a %s Right Now status onto the tile",
+		async (rightNow) => {
+			const { items } = await cascade([
+				{
+					type: "full_profile_v1",
+					data: { ...v4Profile(1), rightNow },
+				},
+			]);
+
+			expect(items[0]).toHaveProperty("rightNow", rightNow);
 		},
 	);
 
@@ -490,6 +505,7 @@ describe("resolveLazyProfile", () => {
 				seen: LAST_ONLINE,
 				isFavorite: true,
 				lastChatTimestamp: null,
+				rightNow: "HOSTING",
 			},
 		]);
 
@@ -514,6 +530,7 @@ describe("resolveLazyProfile", () => {
 			isFavorite: true,
 			isVisiting: true,
 			hasChattedInLast24Hrs: false,
+			rightNow: "HOSTING",
 		});
 	});
 });

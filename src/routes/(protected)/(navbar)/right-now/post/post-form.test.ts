@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RightNowOwnPostMedia } from "#lib/model/right-now/post.ts";
+import type { RightNowPostDetailsMedia } from "#lib/model/right-now/post.ts";
 import {
 	moderatedText,
 	ownPost,
@@ -17,7 +17,9 @@ import {
 
 const THUMB = "https://cdns.grindr.com/rightnow/thumb/51";
 
-function media(state: RightNowOwnPostMedia["state"]): RightNowOwnPostMedia {
+function media(
+	state: RightNowPostDetailsMedia["state"],
+): RightNowPostDetailsMedia {
 	return postPhoto({ mediaId: 51, thumbnailUrl: THUMB, state });
 }
 
