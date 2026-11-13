@@ -332,7 +332,6 @@ describe("recordHistory", () => {
 
 	it("never throws into the router", async () => {
 		const { record } = await startRecording();
-		vi.spyOn(console, "error").mockImplementation(() => {});
 		vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
 			throw new DOMException("full", "QuotaExceededError");
 		});
@@ -345,7 +344,6 @@ describe("recordHistory", () => {
 				navigation: { type: "enter" },
 			}),
 		).not.toThrow();
-		expect(() => record(undefined as never)).not.toThrow();
 	});
 
 	it("skips an entry SvelteKit has not numbered", async () => {

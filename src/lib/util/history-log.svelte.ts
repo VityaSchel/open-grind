@@ -110,18 +110,14 @@ export class HistoryLog {
 export const historyLog = new HistoryLog({ storage: () => sessionStorage });
 
 export function recordHistory(): void {
-	afterNavigate((navigation) => {
-		try {
-			const index = liveHistoryIndex();
-			if (index === undefined) return;
-			historyLog.record({
-				index,
-				pathname: entryPathname(location.href),
-				type: navigation.type,
-				length: history.length,
-			});
-		} catch (error) {
-			console.error("Failed to record the history entry", error);
-		}
+	afterNavigate(({ type }) => {
+		const index = liveHistoryIndex();
+		if (index === undefined) return;
+		historyLog.record({
+			index,
+			pathname: entryPathname(location.href),
+			type,
+			length: history.length,
+		});
 	});
 }
