@@ -352,6 +352,6 @@ describe("recordHistory", () => {
 
 		record({ type: "enter" } as AfterNavigate);
 
-		expect(historyLog.span(LAUNCH)).toBe(1);
+		expect(historyLog.recorded).toBe(0);
 	});
 });
