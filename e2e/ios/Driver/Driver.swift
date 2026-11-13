@@ -89,10 +89,10 @@ final class Driver: XCTestCase {
 			try element(label, in: app).tap()
 		}
 		if let label: String = try value("tapSecure", in: step) {
-			try first(label, in: app.secureTextFields).tap()
+			try element(label, in: app, of: .secureTextField).tap()
 		}
 		if let label: String = try value("tapIfPresent", in: step) {
-			let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
+			let match = labelled(label, in: app)
 			if match.waitForExistence(timeout: 3) {
 				match.tap()
 			}
@@ -147,7 +147,7 @@ final class Driver: XCTestCase {
 			_ = try element(label, in: app)
 		}
 		if let label: String = try value("expectGone", in: step) {
-			let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
+			let match = labelled(label, in: app)
 			guard disappears(match) else { throw failure("\(label) is still shown") }
 		}
 		if let visible: Bool = try value("keyboard", in: step) {
@@ -249,16 +249,14 @@ final class Driver: XCTestCase {
 		app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y))
 	}
 
-	private func labelled(_ label: String) -> NSPredicate {
-		NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", label, label, label)
+	private func labelled(_ label: String, in app: XCUIApplication, of type: XCUIElement.ElementType = .any) -> XCUIElement {
+		app.descendants(matching: type)
+			.matching(NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", label, label, label))
+			.firstMatch
 	}
 
-	private func element(_ label: String, in app: XCUIApplication) throws -> XCUIElement {
-		try first(label, in: app.descendants(matching: .any))
-	}
-
-	private func first(_ label: String, in query: XCUIElementQuery) throws -> XCUIElement {
-		let match = query.matching(labelled(label)).firstMatch
+	private func element(_ label: String, in app: XCUIApplication, of type: XCUIElement.ElementType = .any) throws -> XCUIElement {
+		let match = labelled(label, in: app, of: type)
 		guard match.waitForExistence(timeout: timeout) else {
 			throw failure("no element labelled \(label)")
 		}
