@@ -87,7 +87,7 @@ describe("traverseBackTo", () => {
 		expect(go).not.toHaveBeenCalled();
 	});
 
-	it("leaves the link alone without the Navigation API", () => {
+	it("reports no match without the Navigation API or a SvelteKit history index", () => {
 		const go = vi.fn();
 		vi.stubGlobal("navigation", undefined);
 		vi.stubGlobal("history", { go, length: 3 });
@@ -227,7 +227,7 @@ describe("earlierPathnames", () => {
 		expect(earlierPathnames()).toEqual([null, "/"]);
 	});
 
-	it("is empty on the first entry or without the Navigation API", () => {
+	it("is empty on the first entry or without the Navigation API or a SvelteKit history index", () => {
 		stubEntries(["/chat/1:2"], 0);
 		expect(earlierPathnames()).toEqual([]);
 
