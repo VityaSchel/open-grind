@@ -23,7 +23,7 @@
 	import { grindrHelpUrl } from "#lib/util/grindr-help.ts";
 	import type { Profile } from "#lib/model/users/profiles.ts";
 	import { showBlockFailure } from "./block-failure";
-	import { buildProfileReport, type ReportTarget } from "./report-request";
+	import { buildReportRequest, type ReportTarget } from "./report-request";
 
 	let {
 		open = $bindable(),
@@ -115,7 +115,7 @@
 	async function submit() {
 		if (submitting || reason === null) return;
 		submitting = true;
-		const report = buildProfileReport({ reason, comment, locations });
+		const report = buildReportRequest({ reason, comment, locations });
 		try {
 			if (target.kind === "rightNowPost")
 				await reportRightNowPost({

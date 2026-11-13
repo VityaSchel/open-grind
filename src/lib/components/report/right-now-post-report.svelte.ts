@@ -3,6 +3,7 @@ import { toast } from "svelte-sonner";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { getRightNowPostReport } from "#lib/api/safety/reports.ts";
 import { formatTimeRelativeCustom } from "#lib/util/format-time.ts";
+import { Generation } from "#lib/util/generation.ts";
 import type { RightNowPostId } from "#lib/model/safety/reports.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
 import type { ReportTarget } from "./report-request";
@@ -11,7 +12,7 @@ export class RightNowPostReport {
 	open = $state(false);
 	target: ReportTarget | null = $state(null);
 
-	#latestCheck = 0;
+	readonly #checks = new Generation();
 
 	async request({
 		postId,
@@ -22,10 +23,10 @@ export class RightNowPostReport {
 		profileId: Profile["profileId"] | null;
 		beforeOpen?: () => void;
 	}): Promise<void> {
-		const check = ++this.#latestCheck;
+		const check = this.#checks.next();
 		try {
 			const earlier = await getRightNowPostReport({ postId, profileId });
-			if (check !== this.#latestCheck) return;
+			if (this.#checks.isStale(check)) return;
 			if (earlier !== null) {
 				toast("Already reported", {
 					description:
@@ -37,7 +38,7 @@ export class RightNowPostReport {
 			}
 		} catch (error) {
 			console.error(error);
-			if (check === this.#latestCheck)
+			if (!this.#checks.isStale(check))
 				showErrorToast({
 					label: "Failed to check for an earlier report",
 					error,

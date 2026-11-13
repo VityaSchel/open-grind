@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildProfileReport } from "./report-request";
+import { buildReportRequest } from "./report-request";
 
-describe("buildProfileReport", () => {
+describe("buildReportRequest", () => {
 	it("sends the fixed spam body whatever the form holds", () => {
 		expect(
-			buildProfileReport({
+			buildReportRequest({
 				reason: "SPAM",
 				comment: "typed then switched to spam",
 				locations: ["ALBUM", "PROFILE_PHOTO"],
@@ -15,7 +15,7 @@ describe("buildProfileReport", () => {
 
 	it("keeps the chosen reason, locations and trimmed details", () => {
 		expect(
-			buildProfileReport({
+			buildReportRequest({
 				reason: "IMPERSONATION",
 				comment: "  pretending to be someone else  ",
 				locations: ["PROFILE_PHOTO", "PROFILE_INFORMATION"],
@@ -29,7 +29,7 @@ describe("buildProfileReport", () => {
 
 	it("passes a chat-message report through with its preset location", () => {
 		expect(
-			buildProfileReport({
+			buildReportRequest({
 				reason: "HARASSMENT_BULLYING",
 				comment: "abusive message",
 				locations: ["CHAT_MESSAGE"],
@@ -42,7 +42,7 @@ describe("buildProfileReport", () => {
 	});
 
 	it("sends wire enum values, not display labels", () => {
-		const report = buildProfileReport({
+		const report = buildReportRequest({
 			reason: "SERIOUS_IN_PERSON_INCIDENT",
 			comment: "details",
 			locations: ["RIGHT_NOW_TEXT"],

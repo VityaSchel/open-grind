@@ -4,8 +4,7 @@ const RESPONSIVE_DIALOG_CONTEXT = Symbol("RESPONSIVE_DIALOG_CONTEXT");
 
 export type ResponsiveDialogContext = {
 	readonly desktop: boolean;
-	readonly dismissible: boolean;
-	dismissBlocked(): void;
+	dismissAttempted(): void;
 };
 
 export function setResponsiveDialogContext(

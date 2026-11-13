@@ -15,7 +15,7 @@ export type ReportTarget =
 			profileId: Profile["profileId"] | null;
 	  };
 
-export function buildProfileReport({
+export function buildReportRequest({
 	reason,
 	comment,
 	locations,
