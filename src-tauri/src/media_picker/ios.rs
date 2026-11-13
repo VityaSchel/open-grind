@@ -23,6 +23,7 @@ use tauri::{AppHandle, Manager};
 use tokio::sync::oneshot;
 
 use crate::error::AppError;
+use crate::presenting::{present_on_top, Presentation};
 use crate::upload::staged::StagedMedia;
 use crate::MAIN_WINDOW_LABEL;
 
@@ -281,10 +282,10 @@ fn present(
 	}
 
 	PICKING.with(|current| *current.borrow_mut() = Some(delegate.clone()));
-	crate::presenting::present_on_top(
+	present_on_top(Presentation {
 		host,
-		Retained::into_super(picker),
-		move |shown| {
+		controller: Retained::into_super(picker),
+		shown: move |shown| {
 			if let Err(message) = shown {
 				let _finished = finish();
 				if let Some(answer) = delegate.ivars().answer.take() {
@@ -292,7 +293,7 @@ fn present(
 				}
 			}
 		},
-	);
+	});
 }
 
 async fn collect(loading: Vec<Loading>) -> Picked {

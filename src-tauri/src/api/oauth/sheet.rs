@@ -20,6 +20,7 @@ use tauri::{
 };
 use tokio::sync::oneshot;
 
+use crate::presenting::{present_on_top, Presentation};
 use crate::uikit::page_scroller;
 use crate::MAIN_WINDOW_LABEL;
 
@@ -209,10 +210,10 @@ unsafe fn show(
 		});
 	});
 	let sheet = navigation.clone();
-	crate::presenting::present_on_top(
+	present_on_top(Presentation {
 		host,
-		Retained::into_super(navigation),
-		move |outcome| {
+		controller: Retained::into_super(navigation),
+		shown: move |outcome| {
 			if outcome.is_err() {
 				PRESENTED.with(|presented| {
 					let mut presented = presented.borrow_mut();
@@ -226,7 +227,7 @@ unsafe fn show(
 			}
 			report(outcome);
 		},
-	);
+	});
 }
 
 fn hide_top_edge_effect(page: &UIView) {
