@@ -8,7 +8,8 @@ export const SECOND = 1_000;
 export const MINUTE = 60 * SECOND;
 export const POST_LIFETIME = 60 * MINUTE;
 export const POST_ID = 254;
-export const POSTED = Date.now() - MINUTE;
+export const PROFILE_ID = 858;
+const POSTED = Date.now() - MINUTE;
 export const EXPIRATION = POSTED + POST_LIFETIME;
 
 export function ownPost(
@@ -16,7 +17,7 @@ export function ownPost(
 ): RightNowPostDetails {
 	return {
 		id: POST_ID,
-		profileId: 858,
+		profileId: PROFILE_ID,
 		posted: POSTED,
 		expiration: EXPIRATION,
 		hosting: false,

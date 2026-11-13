@@ -48,9 +48,10 @@ vi.mock("./right-now-feed-state.svelte", () => ({
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import type { RightNowPostChanges } from "#lib/model/right-now/post.ts";
 import {
-	getRightNowPostState,
-	RightNowPostState,
-} from "./right-now-post-state.svelte";
+	destroyCreatedStates,
+	loadedState,
+} from "./right-now-post-state-test-helpers";
+import { getRightNowPostState } from "./right-now-post-state.svelte";
 import {
 	EXPIRATION,
 	MINUTE,
@@ -59,19 +60,11 @@ import {
 	POST_ID,
 	POST_LIFETIME,
 	postPhoto,
+	PROFILE_ID,
 	SECOND,
 } from "./right-now-post-test-helpers";
 
 type ToastOptions = { action: { label: string; onClick: () => void } };
-
-const createdStates: RightNowPostState[] = [];
-
-async function loadedState() {
-	const state = new RightNowPostState({ profileId: 858 });
-	createdStates.push(state);
-	await state.load();
-	return state;
-}
 
 function lastToastAction(mock: { mock: { lastCall?: unknown[] } }) {
 	return (mock.mock.lastCall?.[1] as ToastOptions).action;
@@ -97,7 +90,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	for (const state of createdStates.splice(0)) state.destroy();
+	destroyCreatedStates();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
@@ -274,10 +267,11 @@ describe("RightNowPostState moderation poll", () => {
 });
 
 describe("RightNowPostState time left", () => {
-	it("ticks every second while something reads it", async () => {
+	it("ticks every second while something reads it and stops its clock once nothing does", async () => {
 		vi.setSystemTime(EXPIRATION - 5 * MINUTE);
 		getActiveRightNowPostMock.mockResolvedValue(ownPost());
 		const state = await loadedState();
+		const idle = vi.getTimerCount();
 		const seen: number[] = [];
 		const stopReading = $effect.root(() => {
 			$effect(() => {
@@ -290,11 +284,12 @@ describe("RightNowPostState time left", () => {
 		flushSync();
 
 		expect(seen).toEqual([5 * MINUTE, 5 * MINUTE - SECOND]);
+		expect(vi.getTimerCount()).toBe(idle + 1);
 
 		stopReading();
-		await vi.advanceTimersByTimeAsync(3 * SECOND);
+		await vi.advanceTimersByTimeAsync(0);
 
-		expect(seen).toEqual([5 * MINUTE, 5 * MINUTE - SECOND]);
+		expect(vi.getTimerCount()).toBe(idle);
 	});
 });
 
@@ -477,7 +472,7 @@ describe("RightNowPostState expiry", () => {
 		getActiveRightNowPostMock
 			.mockResolvedValueOnce(ownPost())
 			.mockResolvedValue(null);
-		const state = getRightNowPostState(858);
+		const state = getRightNowPostState(PROFILE_ID);
 		await state.load();
 		state.attachView();
 

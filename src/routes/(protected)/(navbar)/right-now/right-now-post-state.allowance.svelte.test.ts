@@ -32,7 +32,10 @@ import {
 	unpaidPost,
 } from "#lib/model/right-now/post-test-helpers.ts";
 import { requestsOf, restResponse } from "#lib/test/rest-response.ts";
-import { RightNowPostState } from "./right-now-post-state.svelte";
+import {
+	destroyCreatedStates,
+	loadedState,
+} from "./right-now-post-state-test-helpers";
 
 function serve({
 	entitlements,
@@ -62,15 +65,6 @@ function creates() {
 	return requestsOf(fetchRestMock).filter(({ method }) => method === "POST");
 }
 
-const createdStates: RightNowPostState[] = [];
-
-async function loadedState() {
-	const state = new RightNowPostState({ profileId: 858 });
-	createdStates.push(state);
-	await state.load();
-	return state;
-}
-
 beforeEach(() => {
 	fetchRestMock.mockReset();
 	showErrorToastMock.mockReset();
@@ -80,7 +74,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	for (const state of createdStates.splice(0)) state.destroy();
+	destroyCreatedStates();
 	vi.restoreAllMocks();
 });
 

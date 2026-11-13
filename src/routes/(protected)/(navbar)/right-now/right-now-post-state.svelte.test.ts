@@ -73,37 +73,24 @@ vi.mock("./right-now-feed-state.svelte", () => ({
 }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import {
-	getRightNowPostState,
-	RightNowPostState,
-} from "./right-now-post-state.svelte";
+	createState,
+	destroyCreatedStates,
+	loadedState,
+} from "./right-now-post-state-test-helpers";
+import { getRightNowPostState } from "./right-now-post-state.svelte";
 import {
-	MINUTE,
 	moderatedText,
 	ownPost,
 	POST_ID,
 	postPhoto,
+	PROFILE_ID,
 } from "./right-now-post-test-helpers";
 
 const BERLIN = "u33dc0cpgp00";
 const MUNICH = "u281z7j5c0e0";
-const PROFILE_ID = 858;
 const JOIN_BODY = { shareLocation: "NONE", media: [], hosting: false };
 
 type OwnPost = ReturnType<typeof ownPost>;
-
-const createdStates: RightNowPostState[] = [];
-
-function createState() {
-	const state = new RightNowPostState({ profileId: PROFILE_ID });
-	createdStates.push(state);
-	return state;
-}
-
-async function loadedState() {
-	const state = createState();
-	await state.load();
-	return state;
-}
 
 beforeEach(() => {
 	clearAccountCaches();
@@ -129,13 +116,14 @@ beforeEach(() => {
 	setRightNowPostHiddenMock.mockReset();
 	setRightNowPostHiddenMock.mockResolvedValue(undefined);
 	refreshFeedMock.mockClear();
+	invalidateProfileMock.mockClear();
 	showErrorToastMock.mockReset();
 	toastMock.mockReset();
 	toastMock.error.mockReset();
 });
 
 afterEach(() => {
-	for (const state of createdStates.splice(0)) state.destroy();
+	destroyCreatedStates();
 	vi.restoreAllMocks();
 });
 
@@ -194,12 +182,24 @@ describe("RightNowPostState load", () => {
 		expect(state.status).toBe("off");
 	});
 
+	it.each(["EXPIRED", "AWAITING_PAYMENT"] as const)(
+		"reads a post the server lists as %s as no post",
+		async (postStatus) => {
+			getActiveRightNowPostMock.mockResolvedValue(
+				ownPost({ postStatus }),
+			);
+
+			const state = await loadedState();
+
+			expect(state.post).toBeNull();
+			expect(state.status).toBe("none");
+		},
+	);
+
 	it("loads again on the next attach after a failed read", async () => {
 		getActiveRightNowPostMock
 			.mockRejectedValueOnce(new Error("offline"))
-			.mockResolvedValueOnce(
-				ownPost({ expiration: Date.now() + 60 * MINUTE }),
-			);
+			.mockResolvedValueOnce(ownPost());
 		const state = await loadedState();
 
 		expect(state.loading).toBe(false);
@@ -260,7 +260,7 @@ describe("RightNowPostState load", () => {
 		});
 	});
 
-	it("checks for the map again when the location changes, with or without a post", async () => {
+	it("checks for the map again, but not the allowance, when the location changes under a running post", async () => {
 		getActiveRightNowPostMock.mockResolvedValue(ownPost());
 		const state = await loadedState();
 		state.followLocation(BERLIN);
@@ -270,6 +270,7 @@ describe("RightNowPostState load", () => {
 		state.followLocation(MUNICH);
 
 		await vi.waitFor(() => expect(state.mapAvailable).toBe(false));
+		expect(getRightNowPostEntitlementsMock).toHaveBeenCalledOnce();
 	});
 
 	it("lists each rejection reason once", async () => {
@@ -319,7 +320,9 @@ describe("RightNowPostState join", () => {
 		expect(state.freePostsLeft).toBe(2);
 		expect(state.joining).toBe(false);
 		expect(refreshFeedMock).toHaveBeenCalledWith({ attended: true });
-		expect(invalidateProfileMock).toHaveBeenCalledWith(PROFILE_ID);
+		expect(invalidateProfileMock).toHaveBeenCalledExactlyOnceWith(
+			PROFILE_ID,
+		);
 	});
 
 	it("shows joining while the post is created", async () => {
@@ -503,6 +506,42 @@ describe("RightNowPostState save", () => {
 		expect(state.saving).toBe(false);
 		expect(refreshFeedMock).not.toHaveBeenCalled();
 	});
+
+	it("keeps the saved hosting and location when the read-back fails", async () => {
+		getActiveRightNowPostMock.mockResolvedValue(ownPost());
+		const state = await loadedState();
+		getActiveRightNowPostMock.mockRejectedValue(new Error("offline"));
+
+		await expect(
+			state.save({
+				changes: {
+					hosting: true,
+					shareLocation: "DISTANCE_AND_MAP",
+					locationRadius: 40,
+				},
+			}),
+		).resolves.toBe(true);
+
+		expect(state.post).toMatchObject({
+			hosting: true,
+			shareLocation: "DISTANCE_AND_MAP",
+			locationRadius: 40,
+		});
+	});
+
+	it("refuses another edit while one is still sending", async () => {
+		getActiveRightNowPostMock.mockResolvedValue(ownPost());
+		const state = await loadedState();
+		const sent = Promise.withResolvers<void>();
+		updateRightNowPostMock.mockReturnValueOnce(sent.promise);
+
+		const saved = state.save({ changes: { hosting: true } });
+
+		await expect(state.setHidden({ hidden: true })).resolves.toBe(false);
+		sent.resolve();
+		await expect(saved).resolves.toBe(true);
+		expect(setRightNowPostHiddenMock).not.toHaveBeenCalled();
+	});
 });
 
 describe("RightNowPostState setHidden", () => {
@@ -561,6 +600,29 @@ describe("RightNowPostState setHidden", () => {
 		);
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
+
+	it.each<[boolean, string]>([
+		[true, "Failed to turn off Right Now"],
+		[false, "Failed to turn on Right Now"],
+	])(
+		"offers a retry when setting hidden to %s fails",
+		async (hidden, label) => {
+			getActiveRightNowPostMock.mockResolvedValue(
+				ownPost({ postStatus: hidden ? "ACTIVE" : "HIDDEN" }),
+			);
+			const state = await loadedState();
+			setRightNowPostHiddenMock.mockRejectedValueOnce(
+				new Error("offline"),
+			);
+
+			await expect(state.setHidden({ hidden })).resolves.toBe(false);
+
+			expect(showErrorToastMock).toHaveBeenCalledWith(
+				expect.objectContaining({ label }),
+			);
+			expect(state.status).toBe(hidden ? "active" : "off");
+		},
+	);
 });
 
 describe("RightNowPostState sign-out", () => {
