@@ -4,7 +4,6 @@ import type {
 	RightNowPostDetails,
 	RightNowPostRequest,
 } from "#lib/model/right-now/post.ts";
-import { liveModeratedText, submittedPostText } from "./post/post-form";
 
 const textRejectReasonLabels = new Map([
 	["BULLYING", "Bullying"],
@@ -19,6 +18,30 @@ const textRejectReasonLabels = new Map([
 
 export function textRejectReasonLabel({ reason }: { reason: string }): string {
 	return textRejectReasonLabels.get(reason) ?? "Other";
+}
+
+function liveModeratedText({
+	post,
+	status,
+}: {
+	post: RightNowPostDetails;
+	status?: RightNowModeratedText["textStatus"];
+}): RightNowModeratedText | null {
+	const { moderatedText } = post;
+	if (moderatedText === null || moderatedText.deleted) return null;
+	if (status !== undefined && moderatedText.textStatus !== status)
+		return null;
+	return moderatedText;
+}
+
+export function submittedPostText({
+	post,
+	status,
+}: {
+	post: RightNowPostDetails;
+	status?: RightNowModeratedText["textStatus"];
+}): string {
+	return liveModeratedText({ post, status })?.text ?? post.activeText ?? "";
 }
 
 export function isLivePost(post: RightNowPostDetails): boolean {

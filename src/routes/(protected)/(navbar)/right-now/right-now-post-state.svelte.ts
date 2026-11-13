@@ -113,11 +113,11 @@ export class RightNowPostState {
 	#viewLeft = false;
 	#loaded = false;
 	#destroyed = false;
+	readonly #epoch = accountEpoch();
 	#loadInFlight: Promise<void> | null = null;
 	#pendingSince: number | null = null;
 	#notifiedRejections: string[] = [];
 	#sheetListeners: (() => void)[] = [];
-	#lastPost: RightNowPostDetails | null = null;
 	#followedGeohash: string | null = null;
 	#pollTimer: ReturnType<typeof setTimeout> | null = null;
 	#expiryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -140,7 +140,6 @@ export class RightNowPostState {
 		return this.#create({
 			request: { shareLocation: "NONE", media: [], hosting: false },
 			failureLabel: "Failed to join Right Now",
-			onRetry: () => void this.join(),
 		});
 	}
 
@@ -222,50 +221,40 @@ export class RightNowPostState {
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
-		this.#postReads.next();
-		this.#allowanceReads.next();
-		this.#mapReads.next();
 		this.#sheetListeners = [];
 		this.#syncTimers();
 	}
 
 	async #load(): Promise<void> {
-		const epoch = accountEpoch();
 		if (!this.#loaded) this.loading = true;
 		this.#refreshMapAvailability();
 		try {
-			await Promise.all([
-				this.#readPost({ epoch }),
-				this.#readAllowance({ epoch }),
-			]);
-			if (this.#isGone(epoch)) return;
+			await Promise.all([this.#readPost(), this.#readAllowance()]);
+			if (this.#gone) return;
 			this.#loaded = true;
 		} catch (error) {
-			if (this.#isGone(epoch)) return;
+			if (this.#gone) return;
 			console.error(error);
 		} finally {
-			if (!this.#isGone(epoch)) this.loading = false;
+			if (!this.#gone) this.loading = false;
 		}
 	}
 
 	async #create({
 		request,
 		failureLabel,
-		onRetry,
 	}: {
 		request: RightNowPostRequest;
 		failureLabel: string;
-		onRetry: () => void;
 	}): Promise<boolean> {
 		if (this.#destroyed || this.joining || this.post !== null) return false;
-		const epoch = accountEpoch();
 		this.joining = true;
 		try {
 			const created = await atStoredLocation({
-				epoch,
+				epoch: this.#epoch,
 				request: () => createRightNowPost({ post: request }),
 			});
-			if (this.#isGone(epoch)) return false;
+			if (this.#gone) return false;
 			this.#postReads.next();
 			if (typeof this.freePostsLeft === "number")
 				this.freePostsLeft = Math.max(0, this.freePostsLeft - 1);
@@ -273,7 +262,7 @@ export class RightNowPostState {
 			this.#ownPostChanged();
 			return true;
 		} catch (error) {
-			if (this.#isGone(epoch)) return false;
+			if (this.#gone) return false;
 			if (error instanceof NoFreeRightNowPostsError) {
 				this.freePostsLeft = 0;
 				toast.error("No free posts left in this area", {
@@ -285,11 +274,15 @@ export class RightNowPostState {
 				toast("You already have a post running", {
 					id: ALREADY_RUNNING_TOAST_ID,
 				});
-				await this.#refetch({ epoch });
+				await this.#refetch();
 				return false;
 			}
 			console.error(error);
-			showErrorToast({ label: failureLabel, error, onRetry });
+			showErrorToast({
+				label: failureLabel,
+				error,
+				onRetry: () => void this.#create({ request, failureLabel }),
+			});
 			return false;
 		} finally {
 			this.joining = false;
@@ -312,19 +305,18 @@ export class RightNowPostState {
 		const post = this.post;
 		if (this.#destroyed || post === null || this.saving) return false;
 		if (unchanged(post)) return true;
-		const epoch = accountEpoch();
 		this.saving = true;
 		try {
 			await send(post.id);
-			if (this.#isGone(epoch)) return false;
+			if (this.#gone) return false;
 			this.#mergeIntoPost({ postId: post.id, merge });
 			this.#ownPostChanged();
-			await this.#refetch({ epoch });
+			await this.#refetch();
 			return true;
 		} catch (error) {
-			if (this.#isGone(epoch)) return false;
+			if (this.#gone) return false;
 			if (error instanceof RightNowSessionEndedError) {
-				await this.#refetch({ epoch });
+				await this.#refetch();
 				return false;
 			}
 			console.error(error);
@@ -335,43 +327,41 @@ export class RightNowPostState {
 		}
 	}
 
-	async #readPost({ epoch }: { epoch: number }): Promise<void> {
+	async #readPost(): Promise<void> {
 		const read = this.#postReads.next();
 		const post = await getActiveRightNowPost();
-		if (this.#isGone(epoch) || this.#postReads.isStale(read)) return;
+		if (this.#gone || this.#postReads.isStale(read)) return;
 		this.#applyPost(post);
 	}
 
-	async #readAllowance({ epoch }: { epoch: number }): Promise<void> {
+	async #readAllowance(): Promise<void> {
 		const read = this.#allowanceReads.next();
 		const entitlements = await atStoredLocation({
-			epoch,
+			epoch: this.#epoch,
 			request: getRightNowPostEntitlements,
 		});
-		if (this.#isGone(epoch) || this.#allowanceReads.isStale(read)) return;
+		if (this.#gone || this.#allowanceReads.isStale(read)) return;
 		this.freePostsLeft = freeRightNowPostsLeft(entitlements);
 	}
 
-	async #refetch({ epoch }: { epoch: number }): Promise<void> {
+	async #refetch(): Promise<void> {
 		try {
-			await this.#readPost({ epoch });
+			await this.#readPost();
 		} catch (error) {
-			if (!this.#isGone(epoch)) console.error(error);
+			if (!this.#gone) console.error(error);
 		}
 	}
 
 	#refreshAllowance(): void {
-		const epoch = accountEpoch();
-		void this.#readAllowance({ epoch }).catch((error: unknown) => {
-			if (!this.#isGone(epoch)) console.error(error);
+		void this.#readAllowance().catch((error: unknown) => {
+			if (!this.#gone) console.error(error);
 		});
 	}
 
 	#refreshMapAvailability(): void {
-		const epoch = accountEpoch();
 		const read = this.#mapReads.next();
 		void isAssignmentOn({ key: "right-now-map" }).then((available) => {
-			if (this.#isGone(epoch) || this.#mapReads.isStale(read)) return;
+			if (this.#gone || this.#mapReads.isStale(read)) return;
 			this.mapAvailable = available;
 		});
 	}
@@ -422,38 +412,31 @@ export class RightNowPostState {
 	}
 
 	#ended(previous: RightNowPostDetails): void {
-		this.#lastPost = previous;
 		toast("Your Right Now session ended", {
 			id: ENDED_TOAST_ID,
 			action: {
 				label: "Go again",
-				onClick: () => void this.#goAgainAndOpenSheet(),
+				onClick: () => void this.#goAgain({ post: previous }),
 			},
 		});
 		this.#ownPostChanged();
 		this.#refreshAllowance();
 	}
 
-	#goAgain(): Promise<boolean> {
-		const lastPost = this.#lastPost;
-		if (lastPost === null) return Promise.resolve(false);
-		return this.#create({
-			request: repostRequest(lastPost),
+	async #goAgain({ post }: { post: RightNowPostDetails }): Promise<void> {
+		const created = await this.#create({
+			request: repostRequest(post),
 			failureLabel: "Failed to start a new Right Now session",
-			onRetry: () => void this.#goAgain(),
 		});
-	}
-
-	async #goAgainAndOpenSheet(): Promise<void> {
-		if (await this.#goAgain()) this.#requestSheet();
+		if (created) this.#requestSheet();
 	}
 
 	#requestSheet(): void {
 		for (const listener of this.#sheetListeners) listener();
 	}
 
-	#isGone(epoch: number): boolean {
-		return this.#destroyed || !isAccountEpochCurrent(epoch);
+	get #gone(): boolean {
+		return this.#destroyed || !isAccountEpochCurrent(this.#epoch);
 	}
 
 	#syncTimers(): void {
@@ -486,8 +469,7 @@ export class RightNowPostState {
 
 	async #checkExpiry(): Promise<void> {
 		const expiration = this.#expiryFor;
-		if (!document.hidden && appLifecycle.active)
-			await this.#refetch({ epoch: accountEpoch() });
+		if (!document.hidden && appLifecycle.active) await this.#refetch();
 		if (
 			this.#destroyed ||
 			expiration === null ||
@@ -527,8 +509,7 @@ export class RightNowPostState {
 	}
 
 	async #pollModeration(): Promise<void> {
-		if (!document.hidden && appLifecycle.active)
-			await this.#refetch({ epoch: accountEpoch() });
+		if (!document.hidden && appLifecycle.active) await this.#refetch();
 		this.#syncTimers();
 	}
 }
