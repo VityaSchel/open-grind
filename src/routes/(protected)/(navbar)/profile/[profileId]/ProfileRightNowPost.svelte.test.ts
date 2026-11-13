@@ -58,7 +58,7 @@ vi.mock("./right-now-viewer.ts", () => ({
 	closeWhenOpen: (pswp: { close: () => void }) => pswp.close(),
 }));
 
-import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.svelte.ts";
+import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import { isPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
@@ -253,7 +253,7 @@ afterEach(() => {
 	for (const component of mounted.splice(0)) void unmount(component);
 	lightboxes.length = 0;
 	document.body.replaceChildren();
-	rightNowPostSheetRequest.settle();
+	rightNowPostSheetRequest.take();
 	vi.restoreAllMocks();
 });
 
@@ -560,7 +560,7 @@ describe("a profile's Right Now post", () => {
 		);
 
 		expect(close).toHaveBeenCalledOnce();
-		expect(rightNowPostSheetRequest.pending).toBe(true);
+		expect(rightNowPostSheetRequest.take()).toBe(true);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/right-now");
 	});
 

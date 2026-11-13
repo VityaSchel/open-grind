@@ -6,7 +6,7 @@
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { RightNowPostReport } from "#lib/components/report/right-now-post-report.svelte.ts";
 	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
-	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.svelte.ts";
+	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.ts";
 	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";

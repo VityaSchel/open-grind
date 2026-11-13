@@ -1,13 +1,12 @@
-let pending = $state(false);
+let pending = false;
 
 export const rightNowPostSheetRequest = {
-	get pending(): boolean {
-		return pending;
-	},
 	request(): void {
 		pending = true;
 	},
-	settle(): void {
+	take(): boolean {
+		const requested = pending;
 		pending = false;
+		return requested;
 	},
 };
