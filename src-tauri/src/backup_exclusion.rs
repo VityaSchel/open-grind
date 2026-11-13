@@ -12,33 +12,26 @@ const CONTAINER_DIRS: [&str; 7] = [
 	"Library/WebKit",
 ];
 
-pub struct Container<'a> {
-	pub home: &'a Path,
-	pub app_data: &'a Path,
+struct Exclusion<'a, M> {
+	home: &'a Path,
+	app_data: &'a Path,
+	mark: M,
 }
 
-pub fn backed_up_dirs(
-	Container { home, app_data }: Container<'_>,
-) -> Vec<PathBuf> {
+fn exclude_each<M: Fn(&Path) -> io::Result<()>>(
+	Exclusion {
+		home,
+		app_data,
+		mark,
+	}: Exclusion<'_, M>,
+) -> Vec<(PathBuf, io::Error)> {
 	std::iter::once(app_data.to_path_buf())
 		.chain(CONTAINER_DIRS.iter().map(|dir| home.join(dir)))
-		.collect()
-}
-
-pub struct Exclusion<'a, M> {
-	pub dirs: &'a [PathBuf],
-	pub mark: M,
-}
-
-pub fn exclude_each<M: Fn(&Path) -> io::Result<()>>(
-	Exclusion { dirs, mark }: Exclusion<'_, M>,
-) -> Vec<(PathBuf, io::Error)> {
-	dirs.iter()
 		.filter_map(|dir| {
-			fs::create_dir_all(dir)
-				.and_then(|()| mark(dir))
+			fs::create_dir_all(&dir)
+				.and_then(|()| mark(&dir))
 				.err()
-				.map(|error| (dir.clone(), error))
+				.map(|error| (dir, error))
 		})
 		.collect()
 }
@@ -58,12 +51,9 @@ pub fn exclude_from_backups<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
 			return;
 		}
 	};
-	let dirs = backed_up_dirs(Container {
+	for (dir, error) in exclude_each(Exclusion {
 		home: &home,
 		app_data: &app_data,
-	});
-	for (dir, error) in exclude_each(Exclusion {
-		dirs: &dirs,
 		mark: ios::exclude,
 	}) {
 		tracing::warn!(
@@ -104,6 +94,8 @@ mod tests {
 
 	use super::*;
 
+	const APP_DATA: &str = "Library/Application Support/org.opengrind.app";
+
 	struct ScratchHome(PathBuf);
 
 	impl ScratchHome {
@@ -128,42 +120,13 @@ mod tests {
 	}
 
 	#[test]
-	fn the_app_data_and_every_store_ios_backs_up_are_excluded() {
-		let dirs = backed_up_dirs(Container {
-			home: Path::new("/container"),
-			app_data: Path::new(
-				"/container/Library/Application Support/org.opengrind.app",
-			),
-		});
-
-		for expected in [
-			"/container/Library/Application Support/org.opengrind.app",
-			"/container/Library/WebKit",
-			"/container/Library/Cookies",
-			"/container/Library/HTTPStorages",
-			"/container/Library/Preferences",
-			"/container/Library/Saved Application State",
-			"/container/Library/SplashBoard",
-			"/container/Documents",
-		] {
-			assert!(
-				dirs.contains(&PathBuf::from(expected)),
-				"{expected} would still go into backups"
-			);
-		}
-	}
-
-	#[test]
-	fn a_store_webkit_has_not_created_yet_is_created_and_then_marked() {
+	fn the_app_data_and_every_store_ios_backs_up_are_created_and_then_marked() {
 		let home = ScratchHome::new();
-		let dirs = vec![
-			home.path().join("Library/WebKit"),
-			home.path().join("Library/HTTPStorages"),
-		];
 		let marked = RefCell::new(Vec::new());
 
 		let failures = exclude_each(Exclusion {
-			dirs: &dirs,
+			home: home.path(),
+			app_data: &home.path().join(APP_DATA),
 			mark: |dir: &Path| {
 				assert!(
 					dir.is_dir(),
@@ -176,22 +139,35 @@ mod tests {
 		});
 
 		assert!(failures.is_empty());
-		assert_eq!(marked.into_inner(), dirs);
+		let marked = marked.into_inner();
+		for expected in [
+			APP_DATA,
+			"Library/WebKit",
+			"Library/Cookies",
+			"Library/HTTPStorages",
+			"Library/Preferences",
+			"Library/Saved Application State",
+			"Library/SplashBoard",
+			"Documents",
+		] {
+			assert!(
+				marked.contains(&home.path().join(expected)),
+				"{expected} would still go into backups"
+			);
+		}
 	}
 
 	#[test]
 	fn one_refused_store_does_not_leave_the_others_in_backups() {
 		let home = ScratchHome::new();
-		let dirs = vec![
-			home.path().join("Library/Cookies"),
-			home.path().join("Library/WebKit"),
-		];
+		let refused = home.path().join("Library/Cookies");
 		let marked = RefCell::new(Vec::new());
 
 		let failures = exclude_each(Exclusion {
-			dirs: &dirs,
+			home: home.path(),
+			app_data: &home.path().join(APP_DATA),
 			mark: |dir: &Path| {
-				if dir.ends_with("Cookies") {
+				if dir == refused {
 					return Err(io::Error::other("refused"));
 				}
 				marked.borrow_mut().push(dir.to_path_buf());
@@ -200,7 +176,9 @@ mod tests {
 		});
 
 		assert_eq!(failures.len(), 1);
-		assert_eq!(failures[0].0, dirs[0]);
-		assert_eq!(marked.into_inner(), vec![dirs[1].clone()]);
+		assert_eq!(failures[0].0, refused);
+		let marked = marked.into_inner();
+		assert_eq!(marked.len(), 7);
+		assert!(!marked.contains(&refused));
 	}
 }
