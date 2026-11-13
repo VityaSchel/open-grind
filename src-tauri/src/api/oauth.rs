@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use base64::Engine;
-use tauri::Url;
+use tauri::{Url, WebviewWindow, WindowEvent};
 use tokio::sync::oneshot;
 
 use crate::app_origin::is_served_locally;
@@ -16,6 +17,8 @@ pub use user_agent::{sign_in_user_agent, SignInPage};
 
 /// Matched verbatim by the frontend, which stays silent for it.
 pub const CANCELED: &str = "Sign-in canceled";
+
+const FLOW_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
 pub const COMPANION_UNAVAILABLE: &str = "companion-unavailable";
 pub const COMPANION_UNTRUSTED: &str = "companion-untrusted";
@@ -71,6 +74,39 @@ impl<P: OauthProvider> OauthBridge<P> {
 
 	pub(crate) fn abort(&self) {
 		let _ = self.pending.lock().unwrap().take();
+	}
+}
+
+pub struct SignInWait<'a, P: OauthProvider> {
+	pub window: &'a WebviewWindow,
+	pub bridge: &'a Arc<OauthBridge<P>>,
+	pub answer: oneshot::Receiver<Result<String, String>>,
+	pub title: &'static str,
+}
+
+pub async fn await_sign_in<P: OauthProvider>(
+	wait: SignInWait<'_, P>,
+) -> Result<String, String> {
+	let bridge_for_close = wait.bridge.clone();
+	wait.window.on_window_event(move |event| {
+		if matches!(
+			event,
+			WindowEvent::CloseRequested { .. } | WindowEvent::Destroyed
+		) {
+			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
+		}
+	});
+
+	#[cfg(target_os = "ios")]
+	if let Err(e) = sheet::present(wait.window, wait.title).await {
+		wait.bridge
+			.fulfill(Err(format!("{}: {e}", sheet::UNAVAILABLE)));
+	}
+
+	match tokio::time::timeout(FLOW_TIMEOUT, wait.answer).await {
+		Ok(Ok(result)) => result,
+		Ok(Err(_)) => Err("sign-in flow ended unexpectedly".to_owned()),
+		Err(_) => Err("Sign-in timed out".to_owned()),
 	}
 }
 

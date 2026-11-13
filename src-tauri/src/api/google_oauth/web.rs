@@ -4,8 +4,8 @@ use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
 use crate::api::oauth::{
-	is_allowed_target, new_nonce, sign_in_user_agent, without_secrets,
-	SignInPage, CANCELED,
+	await_sign_in, is_allowed_target, new_nonce, sign_in_user_agent,
+	without_secrets, SignInPage, SignInWait,
 };
 use crate::error::AppError;
 
@@ -14,9 +14,7 @@ use super::GoogleOauthBridge;
 const HELPER_URL: &str = "https://web.grindr.com/";
 const HELPER_HOST: &str = "web.grindr.com";
 const WINDOW_LABEL: &str = "google-oauth";
-
-const FLOW_TIMEOUT: std::time::Duration =
-	std::time::Duration::from_secs(10 * 60);
+const WINDOW_TITLE: &str = "Sign in with Google";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
@@ -96,7 +94,7 @@ async fn run_flow(
 
 	let mut builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
-			.title("Sign in with Google")
+			.title(WINDOW_TITLE)
 			.inner_size(window_width, window_height)
 			.initialization_script(init_script(&nonce))
 			.incognito(true)
@@ -141,32 +139,13 @@ async fn run_flow(
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
-	let bridge_for_close = bridge.clone();
-	window.on_window_event(move |event| {
-		if matches!(
-			event,
-			tauri::WindowEvent::CloseRequested { .. }
-				| tauri::WindowEvent::Destroyed
-		) {
-			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
-		}
-	});
-
-	#[cfg(target_os = "ios")]
-	if let Err(e) =
-		crate::api::oauth::sheet::present(&window, "Sign in with Google").await
-	{
-		bridge.fulfill(Err(format!(
-			"{}: {e}",
-			crate::api::oauth::sheet::UNAVAILABLE
-		)));
-	}
-
-	let result = match tokio::time::timeout(FLOW_TIMEOUT, rx).await {
-		Ok(Ok(result)) => result,
-		Ok(Err(_)) => Err("sign-in flow ended unexpectedly".to_owned()),
-		Err(_) => Err("Sign-in timed out".to_owned()),
-	};
+	let result = await_sign_in(SignInWait {
+		window: &window,
+		bridge,
+		answer: rx,
+		title: WINDOW_TITLE,
+	})
+	.await;
 
 	let _ = window.clear_all_browsing_data();
 	let _ = window.close();

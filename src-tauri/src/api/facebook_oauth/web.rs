@@ -6,8 +6,8 @@ use tokio::sync::oneshot;
 use crate::error::AppError;
 
 use crate::api::oauth::{
-	is_allowed_target, new_nonce, sign_in_user_agent, without_secrets,
-	SignInPage, CANCELED,
+	await_sign_in, is_allowed_target, new_nonce, sign_in_user_agent,
+	without_secrets, SignInPage, SignInWait,
 };
 
 use super::dialog::{
@@ -16,9 +16,7 @@ use super::dialog::{
 use super::FacebookOauthBridge;
 
 const WINDOW_LABEL: &str = "facebook-oauth";
-
-const FLOW_TIMEOUT: std::time::Duration =
-	std::time::Duration::from_secs(10 * 60);
+const WINDOW_TITLE: &str = "Sign in with Facebook";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (600.0, 700.0);
@@ -54,7 +52,7 @@ async fn run_flow(
 		WINDOW_LABEL,
 		WebviewUrl::External(dialog_url(&state)?),
 	)
-	.title("Sign in with Facebook")
+	.title(WINDOW_TITLE)
 	.inner_size(window_width, window_height)
 	.incognito(true)
 	.general_autofill_enabled(false)
@@ -100,38 +98,13 @@ async fn run_flow(
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
-	let bridge_for_close = bridge.clone();
-	window.on_window_event(move |event| {
-		if matches!(
-			event,
-			tauri::WindowEvent::CloseRequested { .. }
-				| tauri::WindowEvent::Destroyed
-		) {
-			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
-		}
-	});
-
-	#[cfg(target_os = "ios")]
-	if let Err(e) =
-		crate::api::oauth::sheet::present(&window, "Sign in with Facebook")
-			.await
-	{
-		bridge.fulfill(Err(format!(
-			"{}: {e}",
-			crate::api::oauth::sheet::UNAVAILABLE
-		)));
-	}
-
-	let result = match tokio::time::timeout(FLOW_TIMEOUT, rx).await {
-		Ok(Ok(result)) => result,
-		Ok(Err(_)) => {
-			dismiss_window(app).await;
-			return Err(AppError::Auth(
-				"sign-in flow ended unexpectedly".into(),
-			));
-		}
-		Err(_) => Err("Sign-in timed out".to_owned()),
-	};
+	let result = await_sign_in(SignInWait {
+		window: &window,
+		bridge,
+		answer: rx,
+		title: WINDOW_TITLE,
+	})
+	.await;
 
 	dismiss_window(app).await;
 
