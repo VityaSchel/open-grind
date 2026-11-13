@@ -6,8 +6,7 @@ use tokio::sync::oneshot;
 use crate::error::AppError;
 
 use crate::api::oauth::{
-	await_sign_in, is_allowed_target, new_nonce, sign_in_user_agent,
-	without_secrets, SignInPage, SignInWait,
+	await_sign_in, is_allowed_target, new_nonce, without_secrets, SignInWait,
 };
 
 use super::dialog::{
@@ -72,8 +71,15 @@ async fn run_flow(
 		false
 	});
 
-	if let Some(user_agent) = sign_in_user_agent(SignInPage::Facebook) {
-		builder = builder.user_agent(&user_agent);
+	#[cfg(target_os = "ios")]
+	{
+		builder =
+			builder.user_agent(&crate::api::oauth::user_agent::iphone_safari());
+	}
+
+	#[cfg(desktop)]
+	{
+		builder = builder.user_agent(crate::api::oauth::user_agent::MAC_SAFARI);
 	}
 
 	#[cfg(target_os = "android")]

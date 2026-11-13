@@ -3,9 +3,9 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
+use crate::api::oauth::user_agent::MAC_SAFARI;
 use crate::api::oauth::{
-	await_sign_in, is_allowed_target, new_nonce, sign_in_user_agent,
-	without_secrets, SignInPage, SignInWait,
+	await_sign_in, is_allowed_target, new_nonce, without_secrets, SignInWait,
 };
 use crate::error::AppError;
 
@@ -92,10 +92,11 @@ async fn run_flow(
 	let bridge_for_nav = bridge.clone();
 	let nonce_for_nav = nonce.clone();
 
-	let mut builder =
+	let builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
 			.title(WINDOW_TITLE)
 			.inner_size(window_width, window_height)
+			.user_agent(MAC_SAFARI)
 			.initialization_script(init_script(&nonce))
 			.incognito(true)
 			.general_autofill_enabled(false)
@@ -120,20 +121,12 @@ async fn run_flow(
 				false
 			});
 
-	if let Some(user_agent) = sign_in_user_agent(SignInPage::Google) {
-		builder = builder.user_agent(&user_agent);
-	}
-
 	#[cfg(target_os = "windows")]
-	{
-		builder = builder
-			.data_directory(crate::api::oauth::oauth_data_dir(app, &nonce)?);
-	}
+	let builder =
+		builder.data_directory(crate::api::oauth::oauth_data_dir(app, &nonce)?);
 
 	#[cfg(target_os = "ios")]
-	{
-		builder = crate::api::oauth::sheet::prepare(builder);
-	}
+	let builder = crate::api::oauth::sheet::prepare(builder);
 
 	let window = builder.build().map_err(|e| {
 		AppError::Http(format!("failed to open sign-in window: {e}"))
