@@ -7,6 +7,7 @@ const {
 	getActiveRightNowPostMock,
 	getRightNowPostEntitlementsMock,
 	NoFreeRightNowPostsError,
+	reconcileHandlers,
 	refreshFeedMock,
 	toastMock,
 } = vi.hoisted(() => ({
@@ -15,6 +16,7 @@ const {
 	getActiveRightNowPostMock: vi.fn(),
 	getRightNowPostEntitlementsMock: vi.fn(),
 	NoFreeRightNowPostsError: class extends Error {},
+	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	refreshFeedMock: vi.fn(() => Promise.resolve()),
 	toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
@@ -42,6 +44,16 @@ vi.mock("#lib/api/analytics/assignments.ts", () => ({
 	isAssignmentOn: () => Promise.resolve(false),
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("#lib/util/reconcile.ts", () => ({
+	reconciler: {
+		subscribe(handler: () => void | Promise<void>) {
+			reconcileHandlers.push(handler);
+			return () => {
+				reconcileHandlers.splice(reconcileHandlers.indexOf(handler), 1);
+			};
+		},
+	},
+}));
 vi.mock("./right-now-feed-state.svelte", () => ({
 	getRightNowFeedState: () => ({ refreshOrDefer: refreshFeedMock }),
 }));
@@ -84,6 +96,7 @@ beforeEach(() => {
 		count: 2,
 	});
 	createRightNowPostMock.mockReset();
+	reconcileHandlers.length = 0;
 	refreshFeedMock.mockClear();
 	toastMock.mockReset();
 	toastMock.error.mockReset();
@@ -481,5 +494,85 @@ describe("RightNowPostState expiry", () => {
 
 		expect(getActiveRightNowPostMock).toHaveBeenCalledOnce();
 		expect(toastMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("RightNowPostState on returning to the app", () => {
+	const returnToApp = () => reconcileHandlers[0]?.();
+
+	it("finds a session that ended while the app was away as soon as it is back", async () => {
+		getActiveRightNowPostMock
+			.mockResolvedValueOnce(ownPost())
+			.mockResolvedValue(null);
+		const state = await loadedState();
+		const detach = state.attachView();
+
+		await returnToApp();
+
+		expect(state.status).toBe("none");
+		expect(toastMock).toHaveBeenCalledWith(
+			"Your Right Now session ended",
+			expect.anything(),
+		);
+		expect(getRightNowPostEntitlementsMock).toHaveBeenCalledTimes(2);
+		detach();
+	});
+
+	it("reads nothing on a reconnect while the window is hidden or the app is inactive, so nothing marks us online behind our back", async () => {
+		const state = await loadedState();
+		const detach = state.attachView();
+		getActiveRightNowPostMock.mockClear();
+		const hidden = vi
+			.spyOn(document, "hidden", "get")
+			.mockReturnValue(true);
+
+		await returnToApp();
+		expect(getActiveRightNowPostMock).not.toHaveBeenCalled();
+
+		hidden.mockRestore();
+		appLifecycle.active = false;
+		await returnToApp();
+		expect(getActiveRightNowPostMock).not.toHaveBeenCalled();
+
+		appLifecycle.active = true;
+		await returnToApp();
+		expect(getActiveRightNowPostMock).toHaveBeenCalledOnce();
+		detach();
+	});
+
+	it("reads the allowance again, so free posts that came back while away let Join through", async () => {
+		getRightNowPostEntitlementsMock
+			.mockResolvedValueOnce({ type: "GRANTED", count: 0 })
+			.mockResolvedValue({ type: "GRANTED", count: 2 });
+		const state = await loadedState();
+		const detach = state.attachView();
+		expect(state.freePostsLeft).toBe(0);
+
+		await returnToApp();
+
+		expect(state.freePostsLeft).toBe(2);
+		detach();
+	});
+
+	it("leaves catching up to the next visit while the Right Now screen is not shown", async () => {
+		const state = await loadedState();
+		state.attachView()();
+		await vi.advanceTimersByTimeAsync(0);
+		getActiveRightNowPostMock.mockClear();
+		getRightNowPostEntitlementsMock.mockClear();
+
+		await returnToApp();
+
+		expect(getActiveRightNowPostMock).not.toHaveBeenCalled();
+		expect(getRightNowPostEntitlementsMock).not.toHaveBeenCalled();
+	});
+
+	it("stops listening for returns once destroyed", async () => {
+		const state = await loadedState();
+		expect(reconcileHandlers).toHaveLength(1);
+
+		state.destroy();
+
+		expect(reconcileHandlers).toHaveLength(0);
 	});
 });

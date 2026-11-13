@@ -64,6 +64,9 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 }));
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: storeLocationMock }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("#lib/util/reconcile.ts", () => ({
+	reconciler: { subscribe: () => () => {} },
+}));
 vi.mock("#lib/api/users/profiles.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof import("#lib/api/users/profiles.ts")>()),
 	invalidateProfile: invalidateProfileMock,

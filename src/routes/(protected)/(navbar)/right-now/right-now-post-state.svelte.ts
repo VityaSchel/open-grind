@@ -30,6 +30,7 @@ import {
 } from "#lib/model/right-now/post.ts";
 import { now } from "#lib/util/clock.ts";
 import { Generation } from "#lib/util/generation.ts";
+import { reconciler } from "#lib/util/reconcile.ts";
 import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
 	isAwaitingModeration,
@@ -123,6 +124,10 @@ export class RightNowPostState {
 	#expiryTimer: ReturnType<typeof setTimeout> | null = null;
 	#expiryFor: number | null = null;
 	#expiryRechecks = 0;
+	readonly #unsubscribeReconcile = reconciler.subscribe(async () => {
+		if (this.#views > 0 && !document.hidden && appLifecycle.active)
+			await this.load();
+	});
 
 	constructor({ profileId }: { profileId: number }) {
 		this.#profileId = profileId;
@@ -221,6 +226,7 @@ export class RightNowPostState {
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
+		this.#unsubscribeReconcile();
 		this.#sheetListeners = [];
 		this.#syncTimers();
 	}
@@ -420,7 +426,7 @@ export class RightNowPostState {
 			},
 		});
 		this.#ownPostChanged();
-		this.#refreshAllowance();
+		if (this.#loadInFlight === null) this.#refreshAllowance();
 	}
 
 	async #goAgain({ post }: { post: RightNowPostDetails }): Promise<void> {
