@@ -21,6 +21,7 @@ import { now } from "#lib/util/clock.ts";
 import { Generation } from "#lib/util/generation.ts";
 import { getNow } from "#lib/util/now.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
+import { TOP_SLOP_PX } from "#lib/util/scroll.ts";
 import type {
 	RightNowFeedResponse,
 	RightNowFeedResponseItem,
@@ -113,6 +114,10 @@ export class RightNowFeedState extends ReconcilingListState<
 		return this.#unexpired.slice(0, this.visibleCount);
 	}
 
+	get #atTop(): boolean {
+		return this.scrollY <= TOP_SLOP_PX;
+	}
+
 	get #unexpired(): RightNowFeedPost[] {
 		const current = getNow();
 		return this.#entries.filter((post) => post.data.expiration > current);
@@ -137,6 +142,19 @@ export class RightNowFeedState extends ReconcilingListState<
 			return;
 		this.#fetchedGeohash = geohash;
 		untrack(() => this.#startOver());
+	}
+
+	followScroll(scrollY: number): void {
+		const wasAtTop = this.#atTop;
+		this.scrollY = scrollY;
+		const arrivedAtTop = !wasAtTop && this.#atTop;
+		if (
+			arrivedAtTop &&
+			this.hasNewPosts &&
+			!this.loading &&
+			!this.refreshing
+		)
+			void this.refreshOrDefer({ attended: false });
 	}
 
 	onStartOver(listener: () => void): () => void {
@@ -213,7 +231,7 @@ export class RightNowFeedState extends ReconcilingListState<
 	#pollTick(): void {
 		if (document.hidden || !appLifecycle.active) return;
 		if (this.loading || this.refreshing || !this.#pollDue()) return;
-		if (!staysOnline() || this.length === 0) {
+		if (!staysOnline() || this.length === 0 || this.#atTop) {
 			void this.refreshOrDefer({ attended: false });
 			return;
 		}
@@ -242,8 +260,10 @@ export class RightNowFeedState extends ReconcilingListState<
 		)
 			return;
 		const shown = keysOf(this.#entries);
-		if (shownPostsOf(latest).some((post) => !shown.has(post.data.id)))
-			this.hasNewPosts = true;
+		if (!shownPostsOf(latest).some((post) => !shown.has(post.data.id)))
+			return;
+		if (this.#atTop) void this.refreshOrDefer({ attended: false });
+		else this.hasNewPosts = true;
 	}
 
 	#show(posts: RightNowFeedPost[]): void {

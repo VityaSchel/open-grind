@@ -7,6 +7,7 @@
 	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.ts";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
+	import { TOP_SLOP_PX } from "#lib/util/scroll.ts";
 	import RightNowPostControls from "./post/RightNowPostControls.svelte";
 	import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 	import { getRightNowPostState } from "./right-now-post-state.svelte";
@@ -36,6 +37,14 @@
 		if (ownPost.post !== null) sheetOpen = true;
 	});
 
+	$effect.pre(() => {
+		if (feed.entries.length === 0) return;
+		untrack(() => {
+			if (container !== null && container.scrollTop <= TOP_SLOP_PX)
+				container.scrollTop = 0;
+		});
+	});
+
 	restoreScrollOnce({ container: () => container, state: feed });
 
 	$effect(() =>
@@ -62,7 +71,7 @@
 		bind:this={container}
 		data-slot="right-now-scroller"
 		class="relative pull-scroller [scrollbar-gutter:stable_both-edges]"
-		onscroll={() => (feed.scrollY = container?.scrollTop ?? 0)}
+		onscroll={() => feed.followScroll(container?.scrollTop ?? 0)}
 	>
 		<div
 			data-refresh-content

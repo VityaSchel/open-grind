@@ -2,7 +2,7 @@
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
-	import { glideScrollTop } from "#lib/util/scroll.ts";
+	import { glideScrollTop, TOP_SLOP_PX } from "#lib/util/scroll.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
 
@@ -20,7 +20,6 @@
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
-	const TOP_SLOP_PX = 16;
 	const GLIDE_MS = 400;
 
 	let atTop = $state(true);
