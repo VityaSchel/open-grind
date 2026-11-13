@@ -9,6 +9,7 @@ const {
 	NoFreeRightNowPostsError,
 	reconcileHandlers,
 	refreshFeedMock,
+	requestSheetMock,
 	toastMock,
 } = vi.hoisted(() => ({
 	appLifecycle: { active: true },
@@ -18,6 +19,7 @@ const {
 	NoFreeRightNowPostsError: class extends Error {},
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	refreshFeedMock: vi.fn(() => Promise.resolve()),
+	requestSheetMock: vi.fn(),
 	toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
 
@@ -44,6 +46,9 @@ vi.mock("#lib/api/analytics/assignments.ts", () => ({
 	isAssignmentOn: () => Promise.resolve(false),
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("#lib/components/right-now/post-sheet-request-state.svelte.ts", () => ({
+	rightNowPostSheetRequest: { request: requestSheetMock },
+}));
 vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
@@ -98,6 +103,7 @@ beforeEach(() => {
 	createRightNowPostMock.mockReset();
 	reconcileHandlers.length = 0;
 	refreshFeedMock.mockClear();
+	requestSheetMock.mockClear();
 	toastMock.mockReset();
 	toastMock.error.mockReset();
 });
@@ -240,8 +246,6 @@ describe("RightNowPostState moderation poll", () => {
 				}),
 			);
 		const state = await loadedState();
-		const sheetRequested = vi.fn();
-		state.onSheetRequest(sheetRequested);
 		const detach = state.attachView();
 
 		await vi.advanceTimersByTimeAsync(10 * SECOND);
@@ -263,7 +267,7 @@ describe("RightNowPostState moderation poll", () => {
 		const action = lastToastAction(toastMock.error);
 		expect(action.label).toBe("Why?");
 		action.onClick();
-		expect(sheetRequested).toHaveBeenCalledOnce();
+		expect(requestSheetMock).toHaveBeenCalledOnce();
 
 		getActiveRightNowPostMock.mockResolvedValue(
 			ownPost({
@@ -276,6 +280,31 @@ describe("RightNowPostState moderation poll", () => {
 		await state.load();
 		expect(toastMock.error).toHaveBeenCalledTimes(2);
 		detach();
+	});
+
+	it("still asks for the sheet when Why? is tapped after leaving the Right Now screen", async () => {
+		getActiveRightNowPostMock.mockResolvedValue(
+			ownPost({ media: [postPhoto({ state: "REJECTED" })] }),
+		);
+		const state = await loadedState();
+		state.attachView()();
+
+		lastToastAction(toastMock.error).onClick();
+
+		expect(requestSheetMock).toHaveBeenCalledOnce();
+	});
+
+	it("leaves the sheet alone when Why? is tapped after sign-out", async () => {
+		getActiveRightNowPostMock.mockResolvedValue(
+			ownPost({ media: [postPhoto({ state: "REJECTED" })] }),
+		);
+		await getRightNowPostState(PROFILE_ID).load();
+		const why = lastToastAction(toastMock.error);
+		clearAccountCaches();
+
+		why.onClick();
+
+		expect(requestSheetMock).not.toHaveBeenCalled();
 	});
 });
 
@@ -336,11 +365,9 @@ describe("RightNowPostState expiry", () => {
 			.mockResolvedValueOnce(running)
 			.mockResolvedValue(null);
 		const state = await loadedState();
-		const sheetRequested = vi.fn();
-		state.onSheetRequest(sheetRequested);
 		const detach = state.attachView();
 		await vi.advanceTimersByTimeAsync(MINUTE);
-		return { state, sheetRequested, detach };
+		return { state, sheetRequested: requestSheetMock, detach };
 	}
 
 	it("toasts that the session ended once the post expires", async () => {

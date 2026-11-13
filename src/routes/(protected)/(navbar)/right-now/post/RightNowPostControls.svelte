@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import JoinButton from "./JoinButton.svelte";
 	import JoinConfirmDialog from "./JoinConfirmDialog.svelte";
@@ -18,7 +19,15 @@
 
 	$effect(() => ownPost.attachView());
 
-	$effect(() => ownPost.onSheetRequest(() => (sheetOpen = true)));
+	$effect(() => {
+		if (!rightNowPostSheetRequest.pending || ownPost.loading) return;
+		rightNowPostSheetRequest.take();
+		if (ownPost.post !== null) sheetOpen = true;
+	});
+
+	$effect(() => () => {
+		rightNowPostSheetRequest.take();
+	});
 </script>
 
 <JoinButton

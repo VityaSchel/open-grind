@@ -64,6 +64,9 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 }));
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: storeLocationMock }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("#lib/components/right-now/post-sheet-request-state.svelte.ts", () => ({
+	rightNowPostSheetRequest: { request: vi.fn() },
+}));
 vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => () => {} },
 }));

@@ -21,7 +21,6 @@ export class FakeRightNowPostState implements Pick<
 	| "join"
 	| "save"
 	| "setHidden"
-	| "onSheetRequest"
 	| "attachView"
 > {
 	post = $state.raw<RightNowPostState["post"]>(null);
@@ -50,23 +49,8 @@ export class FakeRightNowPostState implements Pick<
 	);
 	attachView = vi.fn<RightNowPostState["attachView"]>(() => () => {});
 
-	#sheetListeners: (() => void)[] = [];
-
 	get state(): RightNowPostState {
 		return this as unknown as RightNowPostState;
-	}
-
-	onSheetRequest(listener: () => void): () => void {
-		this.#sheetListeners = [...this.#sheetListeners, listener];
-		return () => {
-			this.#sheetListeners = this.#sheetListeners.filter(
-				(existing) => existing !== listener,
-			);
-		};
-	}
-
-	requestSheet(): void {
-		for (const listener of this.#sheetListeners) listener();
 	}
 }
 

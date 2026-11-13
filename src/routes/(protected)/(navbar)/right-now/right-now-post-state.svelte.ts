@@ -21,6 +21,7 @@ import {
 	updateRightNowPost,
 } from "#lib/api/right-now/post.ts";
 import { invalidateProfile } from "#lib/api/users/profiles.ts";
+import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 import {
 	type FreeRightNowPosts,
 	freeRightNowPostsLeft,
@@ -118,7 +119,6 @@ export class RightNowPostState {
 	#loadInFlight: Promise<void> | null = null;
 	#pendingSince: number | null = null;
 	#notifiedRejections: string[] = [];
-	#sheetListeners: (() => void)[] = [];
 	#followedGeohash: string | null = null;
 	#pollTimer: ReturnType<typeof setTimeout> | null = null;
 	#expiryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -184,15 +184,6 @@ export class RightNowPostState {
 		});
 	}
 
-	onSheetRequest(listener: () => void): () => void {
-		this.#sheetListeners = [...this.#sheetListeners, listener];
-		return () => {
-			this.#sheetListeners = this.#sheetListeners.filter(
-				(existing) => existing !== listener,
-			);
-		};
-	}
-
 	attachView(): () => void {
 		untrack(() => {
 			this.#views += 1;
@@ -226,7 +217,6 @@ export class RightNowPostState {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
 		this.#unsubscribeReconcile();
-		this.#sheetListeners = [];
 		this.#syncTimers();
 	}
 
@@ -412,7 +402,7 @@ export class RightNowPostState {
 		this.#notifiedRejections = [...this.#notifiedRejections, ...fresh];
 		toast.error("Your post was rejected", {
 			id: REJECTED_TOAST_ID,
-			action: { label: "Why?", onClick: () => this.#requestSheet() },
+			action: { label: "Why?", onClick: () => this.#openSheet() },
 		});
 	}
 
@@ -433,11 +423,11 @@ export class RightNowPostState {
 			request: repostRequest(post),
 			failureLabel: "Failed to start a new Right Now session",
 		});
-		if (created) this.#requestSheet();
+		if (created) this.#openSheet();
 	}
 
-	#requestSheet(): void {
-		for (const listener of this.#sheetListeners) listener();
+	#openSheet(): void {
+		if (!this.#gone) rightNowPostSheetRequest.request();
 	}
 
 	get #gone(): boolean {

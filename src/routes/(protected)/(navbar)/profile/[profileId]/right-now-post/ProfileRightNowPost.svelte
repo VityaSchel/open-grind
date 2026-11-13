@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
 	import { mount, untrack } from "svelte";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
 	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
-	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.ts";
+	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
@@ -155,7 +154,7 @@
 										}),
 									onedit: () => {
 										closeWhenOpen(pswp);
-										edit();
+										rightNowPostSheetRequest.request();
 									},
 								},
 							}),
@@ -175,11 +174,6 @@
 		} finally {
 			release();
 		}
-	}
-
-	function edit() {
-		rightNowPostSheetRequest.request();
-		void goto("/right-now");
 	}
 </script>
 

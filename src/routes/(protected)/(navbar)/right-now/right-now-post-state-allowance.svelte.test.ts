@@ -24,6 +24,9 @@ vi.mock("#lib/api/analytics/assignments.ts", () => ({
 	isAssignmentOn: () => Promise.resolve(false),
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("#lib/components/right-now/post-sheet-request-state.svelte.ts", () => ({
+	rightNowPostSheetRequest: { request: vi.fn() },
+}));
 vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => () => {} },
 }));

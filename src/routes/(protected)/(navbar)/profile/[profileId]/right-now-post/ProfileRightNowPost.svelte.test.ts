@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	gotoMock,
+	page,
 	getRightNowPostReportMock,
 	reportSheetMock,
 	openLightboxMock,
@@ -22,7 +23,8 @@ const {
 	preloadFullImageMock,
 	fullImageSizeInTimeMock,
 } = vi.hoisted(() => ({
-	gotoMock: vi.fn(),
+	gotoMock: vi.fn<(path: string) => Promise<void>>(),
+	page: { url: new URL("http://localhost/profile/100006") },
 	getRightNowPostReportMock: vi.fn(),
 	reportSheetMock: vi.fn(),
 	openLightboxMock: vi.fn(),
@@ -35,6 +37,7 @@ const {
 }));
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
+vi.mock("$app/state", () => ({ page }));
 vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
 }));
@@ -58,7 +61,7 @@ vi.mock("./right-now-viewer.ts", () => ({
 	closeWhenOpen: (pswp: { close: () => void }) => pswp.close(),
 }));
 
-import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.ts";
+import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import { isPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
@@ -239,6 +242,11 @@ const photoPost = () => post({ media: [media("APPROVED", 2)] });
 beforeEach(() => {
 	vi.clearAllMocks();
 	getRightNowPostReportMock.mockResolvedValue(null);
+	page.url = new URL("http://localhost/profile/100006");
+	gotoMock.mockImplementation((path) => {
+		page.url = new URL(path, page.url);
+		return Promise.resolve();
+	});
 	fullImageSizeInTimeMock.mockResolvedValue(null);
 	openLightboxMock.mockImplementation(
 		({ configure }: { configure: (lightbox: unknown) => void }) => {

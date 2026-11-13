@@ -18,7 +18,12 @@ vi.mock("#lib/api/right-now/photo.ts", () => ({
 }));
 vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: vi.fn() }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
+vi.mock("$app/state", () => ({
+	page: { url: new URL("http://localhost/right-now") },
+}));
 
+import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 import { FakeRightNowPostState, runningPost } from "./post-test-helpers.svelte";
 import RightNowPostControls from "./RightNowPostControls.svelte";
 
@@ -33,7 +38,10 @@ function renderControls(fake = new FakeRightNowPostState()) {
 	return { fake, detach, view };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	rightNowPostSheetRequest.take();
+});
 
 describe("the Right Now post controls", () => {
 	it("attaches the post view while shown", () => {
@@ -73,12 +81,60 @@ describe("the Right Now post controls", () => {
 		expect(await sheet()).toBeTruthy();
 	});
 
-	it("opens the post sheet when the state asks for it", async () => {
-		const { fake } = renderControls(runningPost());
+	it("opens the post sheet when it is asked for while the controls are shown", async () => {
+		renderControls(runningPost());
 
-		fake.requestSheet();
+		rightNowPostSheetRequest.request();
 		flushSync();
 
 		expect(await sheet()).toBeTruthy();
+		expect(rightNowPostSheetRequest.pending).toBe(false);
+	});
+
+	it("opens the post sheet that was asked for before the controls showed", async () => {
+		rightNowPostSheetRequest.request();
+
+		renderControls(runningPost());
+
+		expect(await sheet()).toBeTruthy();
+	});
+
+	it("waits for the post to load before opening the sheet that was asked for", async () => {
+		const fake = runningPost();
+		fake.loading = true;
+		renderControls(fake);
+
+		rightNowPostSheetRequest.request();
+		flushSync();
+
+		expect(rightNowPostSheetRequest.pending).toBe(true);
+		expect(screen.queryByRole("dialog", { name: "Right Now" })).toBeNull();
+
+		fake.loading = false;
+		flushSync();
+
+		expect(await sheet()).toBeTruthy();
+	});
+
+	it("drops a request for the sheet when there is no post to show in it", () => {
+		renderControls();
+
+		rightNowPostSheetRequest.request();
+		flushSync();
+
+		expect(rightNowPostSheetRequest.pending).toBe(false);
+		expect(screen.queryByRole("dialog", { name: "Right Now" })).toBeNull();
+	});
+
+	it("drops a request that is still waiting when the controls go away", () => {
+		const fake = runningPost();
+		fake.loading = true;
+		const { view } = renderControls(fake);
+		rightNowPostSheetRequest.request();
+		flushSync();
+
+		view.unmount();
+
+		expect(rightNowPostSheetRequest.pending).toBe(false);
 	});
 });
