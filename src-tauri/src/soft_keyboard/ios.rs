@@ -26,14 +26,14 @@ use objc2_ui_kit::{
 	UIScrollViewKeyboardDismissMode, UIView, UIViewAutoresizing,
 };
 use tauri::webview::{PageLoadEvent, PageLoadPayload};
-use tauri::WebviewWindow;
+use tauri::{Manager, WebviewWindow};
 
 use super::geometry::{
 	self, Edges, KeyboardMotion, NativeInsets, PagePoint, Rect,
 };
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
-use crate::uikit::{evaluate, with_webview};
+use crate::uikit::{evaluate, on_main_thread, with_webview};
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
@@ -456,18 +456,22 @@ pub fn install(window: &WebviewWindow) {
 	with_webview(window, "keyboard", drive);
 }
 
-#[tauri::command]
-pub fn set_keyboard_follow(window: WebviewWindow, follow: bool) {
-	let dispatched = window.run_on_main_thread(move || {
+fn with_frame(
+	window: &WebviewWindow,
+	work: impl FnOnce(&KeyboardFrame) + Send + 'static,
+) {
+	on_main_thread(window.app_handle(), "keyboard", move |_| {
 		DRIVER.with_borrow(|driver| {
 			if let Some(driver) = driver {
-				driver.frame.let_page_follow(follow);
+				work(&driver.frame);
 			}
 		});
 	});
-	if let Err(error) = dispatched {
-		tracing::warn!("[keyboard] could not reach the main thread: {error}");
-	}
+}
+
+#[tauri::command]
+pub fn set_keyboard_follow(window: WebviewWindow, follow: bool) {
+	with_frame(&window, move |frame| frame.let_page_follow(follow));
 }
 
 #[tauri::command]
@@ -479,16 +483,7 @@ pub fn set_keyboard_drag_dismiss(
 		x: point.x,
 		y: point.y,
 	});
-	let dispatched = window.run_on_main_thread(move || {
-		DRIVER.with_borrow(|driver| {
-			if let Some(driver) = driver {
-				driver.frame.let_drag_dismiss(target);
-			}
-		});
-	});
-	if let Err(error) = dispatched {
-		tracing::warn!("[keyboard] could not reach the main thread: {error}");
-	}
+	with_frame(&window, move |frame| frame.let_drag_dismiss(target));
 }
 
 pub fn reseed(window: WebviewWindow, payload: PageLoadPayload<'_>) {
@@ -496,14 +491,5 @@ pub fn reseed(window: WebviewWindow, payload: PageLoadPayload<'_>) {
 		PageLoadEvent::Started => true,
 		PageLoadEvent::Finished => false,
 	};
-	let dispatched = window.run_on_main_thread(move || {
-		DRIVER.with_borrow(|driver| {
-			if let Some(driver) = driver {
-				driver.frame.reseed(document_replaced);
-			}
-		});
-	});
-	if let Err(error) = dispatched {
-		tracing::warn!("[keyboard] could not reach the main thread: {error}");
-	}
+	with_frame(&window, move |frame| frame.reseed(document_replaced));
 }

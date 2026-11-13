@@ -13,12 +13,12 @@ use objc2_ui_kit::{
 	UIRectEdge, UIScreenEdgePanGestureRecognizer, UISwipeGestureRecognizer,
 	UITouch, UIView,
 };
-use tauri::WebviewWindow;
+use tauri::{Manager, WebviewWindow};
 
 use super::edge_pan::{self, EdgePoint, Release};
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
-use crate::uikit::{evaluate, with_webview};
+use crate::uikit::{evaluate, on_main_thread, with_webview};
 
 thread_local! {
 	static BACK_SWIPE: RefCell<Option<Retained<BackSwipe>>> =
@@ -270,29 +270,24 @@ pub fn install(window: &WebviewWindow) {
 	with_webview(window, "back swipe", attach);
 }
 
-#[tauri::command]
-pub fn set_back_swipe_armed(window: WebviewWindow, armed: bool, order: u64) {
-	let dispatched = window.run_on_main_thread(move || {
+fn with_swipe(
+	window: &WebviewWindow,
+	work: impl FnOnce(&BackSwipe) + Send + 'static,
+) {
+	on_main_thread(window.app_handle(), "back swipe", move |_| {
 		BACK_SWIPE.with_borrow(|swipe| {
 			if let Some(swipe) = swipe {
-				swipe.arm(armed, order);
+				work(swipe);
 			}
 		});
 	});
-	if let Err(error) = dispatched {
-		tracing::warn!("[back swipe] could not reach the main thread: {error}");
-	}
+}
+
+#[tauri::command]
+pub fn set_back_swipe_armed(window: WebviewWindow, armed: bool, order: u64) {
+	with_swipe(&window, move |swipe| swipe.arm(armed, order));
 }
 
 pub fn disarm(window: &WebviewWindow) {
-	let dispatched = window.run_on_main_thread(|| {
-		BACK_SWIPE.with_borrow(|swipe| {
-			if let Some(swipe) = swipe {
-				swipe.disarm();
-			}
-		});
-	});
-	if let Err(error) = dispatched {
-		tracing::warn!("[back swipe] could not reach the main thread: {error}");
-	}
+	with_swipe(window, BackSwipe::disarm);
 }

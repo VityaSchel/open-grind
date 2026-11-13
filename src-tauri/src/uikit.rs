@@ -4,7 +4,7 @@ use objc2::runtime::AnyObject;
 use objc2::{msg_send, MainThreadMarker};
 use objc2_foundation::{NSError, NSString};
 use objc2_ui_kit::UIView;
-use tauri::WebviewWindow;
+use tauri::{AppHandle, Runtime, WebviewWindow};
 
 pub fn evaluate(webview: &UIView, script: &str) {
 	let script = NSString::from_str(script);
@@ -36,5 +36,20 @@ pub fn with_webview(
 	});
 	if let Err(error) = reached {
 		tracing::warn!("[{tag}] could not reach the webview: {error}");
+	}
+}
+
+pub fn on_main_thread<R: Runtime>(
+	app: &AppHandle<R>,
+	tag: &'static str,
+	run: impl FnOnce(MainThreadMarker) + Send + 'static,
+) {
+	let dispatched =
+		app.run_on_main_thread(move || match MainThreadMarker::new() {
+			Some(mtm) => run(mtm),
+			None => tracing::warn!("[{tag}] the task left the main thread"),
+		});
+	if let Err(error) = dispatched {
+		tracing::warn!("[{tag}] could not reach the main thread: {error}");
 	}
 }

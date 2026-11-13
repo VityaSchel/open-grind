@@ -17,6 +17,7 @@ use objc2_ui_kit::{
 use tauri::{AppHandle, Runtime};
 
 use super::ledger::{Ledger, Purpose, Task};
+use crate::uikit::on_main_thread;
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
@@ -31,7 +32,7 @@ struct Reaction {
 }
 
 pub fn install<R: Runtime>(app: &AppHandle<R>) {
-	on_main_thread(app, |_| {
+	on_main_thread(app, "background", |_| {
 		OBSERVERS.with(|observers| {
 			observers.get_or_init(|| unsafe {
 				[
@@ -52,7 +53,7 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) {
 }
 
 pub fn deactivated<R: Runtime>(app: &AppHandle<R>) {
-	on_main_thread(app, |mtm| {
+	on_main_thread(app, "background", |mtm| {
 		let idle = LEDGER.with_borrow_mut(Ledger::deactivated);
 		end(mtm, idle);
 	});
@@ -60,14 +61,14 @@ pub fn deactivated<R: Runtime>(app: &AppHandle<R>) {
 
 impl Purpose {
 	pub fn hold<R: Runtime>(self, app: &AppHandle<R>) {
-		on_main_thread(app, move |mtm| {
+		on_main_thread(app, "background", move |mtm| {
 			LEDGER.with_borrow_mut(|ledger| ledger.slot(self).hold());
 			protect(mtm);
 		});
 	}
 
 	pub fn release<R: Runtime>(self, app: &AppHandle<R>) {
-		on_main_thread(app, move |mtm| {
+		on_main_thread(app, "background", move |mtm| {
 			let idle =
 				LEDGER.with_borrow_mut(|ledger| ledger.slot(self).release());
 			end(mtm, idle);
@@ -99,22 +100,6 @@ impl Purpose {
 		let expired =
 			LEDGER.with_borrow_mut(|ledger| ledger.slot(self).expired(task));
 		end(mtm, expired);
-	}
-}
-
-fn on_main_thread<R: Runtime>(
-	app: &AppHandle<R>,
-	work: impl FnOnce(MainThreadMarker) + Send + 'static,
-) {
-	let dispatched =
-		app.run_on_main_thread(move || match MainThreadMarker::new() {
-			Some(mtm) => work(mtm),
-			None => tracing::warn!(
-				"[background] background task left the main thread"
-			),
-		});
-	if let Err(error) = dispatched {
-		tracing::warn!("[background] could not reach the main thread: {error}");
 	}
 }
 
