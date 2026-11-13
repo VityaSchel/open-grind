@@ -9,7 +9,6 @@ import {
 	createRightNowPost,
 	getActiveRightNowPost,
 	getProfileRightNowPost,
-	getRightNowPostEntitlements,
 	NoFreeRightNowPostsError,
 	RightNowPostAlreadyRunningError,
 	RightNowSessionEndedError,
@@ -43,24 +42,6 @@ function errorBody(type: string) {
 
 beforeEach(() => {
 	fetchRestMock.mockReset();
-});
-
-describe("getRightNowPostEntitlements", () => {
-	it("reads the post allowance", async () => {
-		respondInTurn({ body: { type: "GRANTED", count: 2 } });
-
-		await expect(getRightNowPostEntitlements()).resolves.toEqual({
-			type: "GRANTED",
-			count: 2,
-		});
-		expect(requestsOf(fetchRestMock)).toEqual([
-			{
-				path: "/v1/rightnow/entitlements/posts",
-				method: "GET",
-				body: undefined,
-			},
-		]);
-	});
 });
 
 describe("getActiveRightNowPost", () => {

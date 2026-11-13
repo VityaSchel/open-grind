@@ -39,10 +39,12 @@ const {
 	updateRightNowPostMock: vi.fn(),
 }));
 
+vi.mock("#lib/api/browse/entitlements.ts", () => ({
+	getRightNowPostEntitlements: getRightNowPostEntitlementsMock,
+}));
 vi.mock("#lib/api/right-now/post.ts", () => ({
 	createRightNowPost: createRightNowPostMock,
 	getActiveRightNowPost: getActiveRightNowPostMock,
-	getRightNowPostEntitlements: getRightNowPostEntitlementsMock,
 	NoFreeRightNowPostsError,
 	RightNowPostAlreadyRunningError,
 	RightNowSessionEndedError,

@@ -25,10 +25,12 @@ const {
 	toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
 
+vi.mock("#lib/api/browse/entitlements.ts", () => ({
+	getRightNowPostEntitlements: getRightNowPostEntitlementsMock,
+}));
 vi.mock("#lib/api/right-now/post.ts", () => ({
 	createRightNowPost: createRightNowPostMock,
 	getActiveRightNowPost: getActiveRightNowPostMock,
-	getRightNowPostEntitlements: getRightNowPostEntitlementsMock,
 	NoFreeRightNowPostsError,
 	RightNowPostAlreadyRunningError: class extends Error {},
 	RightNowSessionEndedError: class extends Error {},

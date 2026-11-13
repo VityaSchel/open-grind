@@ -9,11 +9,11 @@ import {
 } from "#lib/api/account-caches.ts";
 import { isAssignmentOn } from "#lib/api/analytics/assignments.ts";
 import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
+import { getRightNowPostEntitlements } from "#lib/api/browse/entitlements.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	createRightNowPost,
 	getActiveRightNowPost,
-	getRightNowPostEntitlements,
 	NoFreeRightNowPostsError,
 	RightNowPostAlreadyRunningError,
 	RightNowSessionEndedError,
@@ -25,13 +25,15 @@ import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-r
 import {
 	type FreeRightNowPosts,
 	freeRightNowPostsLeft,
-	type RightNowPostChanges,
-	type RightNowPostDetails,
-	type RightNowPostRequest,
-} from "#lib/model/right-now/post.ts";
+} from "#lib/model/browse/entitlements.ts";
 import { now } from "#lib/util/clock.ts";
 import { Generation } from "#lib/util/generation.ts";
 import { reconciler } from "#lib/util/reconcile.ts";
+import type {
+	RightNowPostChanges,
+	RightNowPostDetails,
+	RightNowPostRequest,
+} from "#lib/model/right-now/post.ts";
 import { getRightNowFeedState } from "./right-now-feed-state.svelte";
 import {
 	isAwaitingModeration,

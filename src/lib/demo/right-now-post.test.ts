@@ -2,11 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { demoMeProfileId, HOUR, MINUTE, SECOND } from "#lib/demo/config.ts";
 import { assignmentsResponseSchema } from "#lib/model/analytics/assignments.ts";
-import { rightNowFeedResponseSchema } from "#lib/model/right-now/feed.ts";
 import {
 	freeRightNowPostsLeft,
-	type RightNowPostChanges,
 	rightNowPostEntitlementsResponseSchema,
+} from "#lib/model/browse/entitlements.ts";
+import { rightNowFeedResponseSchema } from "#lib/model/right-now/feed.ts";
+import {
+	type RightNowPostChanges,
 	type RightNowPostRequest,
 	rightNowPostResponseSchema,
 } from "#lib/model/right-now/post.ts";

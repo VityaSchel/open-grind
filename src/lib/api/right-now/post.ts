@@ -1,14 +1,14 @@
 import z from "zod";
 
+import { getRightNowPostEntitlements } from "#lib/api/browse/entitlements.ts";
 import { errorUrnFromBody } from "#lib/api/error-urn.ts";
 import { fetchRest } from "#lib/api/transport.ts";
+import { freeRightNowPostsLeft } from "#lib/model/browse/entitlements.ts";
 import {
-	freeRightNowPostsLeft,
 	type RightNowPostChanges,
 	rightNowPostChangesSchema,
 	type RightNowPostDetails,
 	rightNowPostDetailsSchema,
-	rightNowPostEntitlementsResponseSchema,
 	type RightNowPostRequest,
 	rightNowPostRequestSchema,
 	rightNowPostResponseSchema,
@@ -41,12 +41,6 @@ const sessionEndedUrns = new Set([
 	"urn:gr:err:client_action",
 	"urn:gr:err:resource_not_found",
 ]);
-
-export async function getRightNowPostEntitlements() {
-	return await fetchRest("/v1/rightnow/entitlements/posts").then((res) =>
-		res.jsonParsed(rightNowPostEntitlementsResponseSchema),
-	);
-}
 
 export async function getActiveRightNowPost() {
 	const { post } = await fetchRest("/v3/rightnow/active-post").then((res) =>
