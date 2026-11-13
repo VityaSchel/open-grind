@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
 import {
@@ -40,18 +41,10 @@ function contextMenuAt(options: PressPoint & { pointerType: string }) {
 	>[0];
 }
 
-let clock = 1_700_000_000_000;
+useHoldClock();
 
 beforeEach(() => {
-	vi.useFakeTimers();
-	clock += 60_000;
-	vi.setSystemTime(clock);
 	playHapticMock.mockReset();
-});
-
-afterEach(() => {
-	window.dispatchEvent(new Event("pointerup"));
-	vi.useRealTimers();
 });
 
 describe("longPressHandlers", () => {

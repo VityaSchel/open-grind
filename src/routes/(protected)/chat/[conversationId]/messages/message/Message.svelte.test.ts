@@ -12,6 +12,7 @@ vi.mock("#lib/haptics.ts", () => ({
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import Message from "./Message.svelte";
@@ -76,13 +77,6 @@ function menuDialog(): HTMLDialogElement {
 	const dialog = document.querySelector("dialog");
 	if (dialog === null) throw new Error("Missing message menu");
 	return dialog;
-}
-
-let clock = 1_700_000_000_000;
-
-function useHoldClock() {
-	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
-	vi.setSystemTime((clock += 60_000));
 }
 
 beforeEach(() => {
@@ -191,8 +185,7 @@ describe("message actions button", () => {
 		button.focus();
 		button.click();
 		await tick();
-		const dialog = document.querySelector("dialog");
-		if (dialog === null) throw new Error("Missing message menu");
+		const dialog = menuDialog();
 		within(dialog).getByRole("button", { name: "Copy message" }).focus();
 
 		dialog.close();
@@ -208,8 +201,7 @@ describe("message actions button", () => {
 		composer.focus();
 		row.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
 		await tick();
-		const dialog = document.querySelector("dialog");
-		if (dialog === null) throw new Error("Missing message menu");
+		const dialog = menuDialog();
 		within(dialog).getByRole("button", { name: "Copy message" }).focus();
 
 		dialog.close();
@@ -222,14 +214,10 @@ describe("message actions button", () => {
 });
 
 describe("message menu on iOS", () => {
+	useHoldClock();
+
 	beforeEach(() => {
 		runningOn("ios");
-		useHoldClock();
-	});
-
-	afterEach(() => {
-		window.dispatchEvent(new Event("pointerup"));
-		vi.useRealTimers();
 	});
 
 	it("opens once a touch is held still, with one haptic tap", async () => {
@@ -325,13 +313,10 @@ describe("message menu on iOS", () => {
 });
 
 describe("message menu on Android", () => {
+	useHoldClock();
+
 	beforeEach(() => {
 		runningOn("android");
-		useHoldClock();
-	});
-
-	afterEach(() => {
-		vi.useRealTimers();
 	});
 
 	it("leaves a touch hold to the system's own long press", async () => {

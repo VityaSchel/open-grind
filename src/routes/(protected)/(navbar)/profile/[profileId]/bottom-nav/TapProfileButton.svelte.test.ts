@@ -12,6 +12,7 @@ vi.mock("#lib/api/interest/taps.ts", () => ({ sendTap: sendTapMock }));
 
 import { TapType } from "#lib/model/interest/taps.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import TapProfileButton from "./TapProfileButton.svelte";
@@ -28,8 +29,6 @@ function renderButton() {
 function pointerClick() {
 	return new MouseEvent("click", { bubbles: true, detail: 1 });
 }
-
-let clock = 1_700_000_000_000;
 
 afterEach(() => {
 	cleanup();
@@ -80,15 +79,10 @@ describe("tap picker on Android", () => {
 });
 
 describe("tap picker on iOS", () => {
+	useHoldClock();
+
 	beforeEach(() => {
 		runningOn("ios");
-		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
-		vi.setSystemTime((clock += 60_000));
-	});
-
-	afterEach(() => {
-		window.dispatchEvent(new Event("pointerup"));
-		vi.useRealTimers();
 	});
 
 	it("opens the picker once a touch is held, with one haptic tap", async () => {
