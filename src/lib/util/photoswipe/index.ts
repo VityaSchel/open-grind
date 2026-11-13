@@ -71,67 +71,66 @@ export async function openLightbox({
 	onClosed: () => void;
 }): Promise<void> {
 	const release = trackPhotoSwipeBusy();
-	const { default: Lightbox } = await import("photoswipe/lightbox").catch(
-		(error: unknown) => {
-			release();
-			throw error;
-		},
-	);
-	if (signal.aborted) {
-		release();
-		return;
-	}
-	const lightbox = new Lightbox({
-		showHideAnimationType: animation,
-		...(animation === "zoom" && {
-			showAnimationDuration: ZOOM_ANIMATION_MS,
-			hideAnimationDuration: ZOOM_ANIMATION_MS,
-		}),
-		pswpModule: () =>
-			import("photoswipe").catch((error: unknown) => {
-				release();
-				throw error;
-			}),
-		mainClass: "pswp--buttons-visible",
-		closeSVG: CLOSE_SVG,
-		zoomSVG: ZOOM_SVG,
-	});
-	applyPhotoSwipeErrorUi(lightbox);
-	applyPhotoSwipeViewportSync(lightbox);
-	lightbox.addFilter("numItems", () => items.length);
-	lightbox.addFilter("itemData", (itemData, index) => {
-		const item = items[index];
-		if (item === undefined) return itemData;
-		return {
-			...itemData,
-			src: item.src,
-			width: item.width ?? 0,
-			height: item.height ?? 0,
-			element: item.element,
-			msrc: item.msrc,
-			thumbCropped: item.thumbCropped,
-		};
-	});
-	applyPhotoSwipeLoadedSize(lightbox);
-	applyPhotoSwipeBackGesture(lightbox);
-	if (animation === "zoom") applyPhotoSwipeRoundedCrops(lightbox);
-	if (videoAt !== undefined) applyPhotoSwipeVideo(lightbox, videoAt);
 	try {
+		const [{ default: Lightbox }, { default: PhotoSwipe }] =
+			await Promise.all([
+				import("photoswipe/lightbox"),
+				import("photoswipe"),
+			]);
+		if (signal.aborted) {
+			release();
+			return;
+		}
+		const lightbox = new Lightbox({
+			showHideAnimationType: animation,
+			...(animation === "zoom" && {
+				showAnimationDuration: ZOOM_ANIMATION_MS,
+				hideAnimationDuration: ZOOM_ANIMATION_MS,
+			}),
+			pswpModule: PhotoSwipe,
+			mainClass: "pswp--buttons-visible",
+			closeSVG: CLOSE_SVG,
+			zoomSVG: ZOOM_SVG,
+		});
+		applyPhotoSwipeErrorUi(lightbox);
+		applyPhotoSwipeViewportSync(lightbox);
+		lightbox.addFilter("numItems", () => items.length);
+		lightbox.addFilter("itemData", (itemData, index) => {
+			const item = items[index];
+			if (item === undefined) return itemData;
+			return {
+				...itemData,
+				src: item.src,
+				width: item.width ?? 0,
+				height: item.height ?? 0,
+				element: item.element,
+				msrc: item.msrc,
+				thumbCropped: item.thumbCropped,
+			};
+		});
+		applyPhotoSwipeLoadedSize(lightbox);
+		applyPhotoSwipeBackGesture(lightbox);
+		if (animation === "zoom") applyPhotoSwipeRoundedCrops(lightbox);
+		if (videoAt !== undefined) applyPhotoSwipeVideo(lightbox, videoAt);
 		configure?.(lightbox);
+		lightbox.on("closingAnimationEnd", onClosed);
+		lightbox.on("destroy", release);
+		signal.addEventListener(
+			"abort",
+			() => {
+				release();
+				lightbox.destroy();
+			},
+			{ once: true },
+		);
+		lightbox.init();
+		if (!lightbox.loadAndOpen(index)) {
+			release();
+			lightbox.destroy();
+			onClosed();
+		}
 	} catch (error) {
 		release();
 		throw error;
 	}
-	lightbox.on("closingAnimationEnd", onClosed);
-	lightbox.on("destroy", release);
-	signal.addEventListener(
-		"abort",
-		() => {
-			release();
-			lightbox.destroy();
-		},
-		{ once: true },
-	);
-	lightbox.init();
-	lightbox.loadAndOpen(index);
 }
