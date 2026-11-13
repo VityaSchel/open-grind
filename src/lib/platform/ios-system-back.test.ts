@@ -40,12 +40,6 @@ function makeGesture({ starts = true }: { starts?: boolean } = {}) {
 	return { gesture, undo };
 }
 
-function touchDown(target: Element) {
-	const event = pointerEvent("pointerdown");
-	Object.defineProperty(event, "isPrimary", { value: true });
-	target.dispatchEvent(event);
-}
-
 function sentArms() {
 	vi.runOnlyPendingTimers();
 	return invoke.mock.calls.map(
@@ -166,7 +160,7 @@ describe("IosSystemBack start", () => {
 		systemBack.expose(gesture);
 		const cancelled = vi.fn();
 		row.addEventListener("pointercancel", cancelled);
-		touchDown(row);
+		row.dispatchEvent(pointerEvent("pointerdown"));
 
 		expect(start()).toBe(true);
 
@@ -184,7 +178,7 @@ describe("IosSystemBack start", () => {
 		systemBack.expose(gesture);
 		const cancelled = vi.fn();
 		row.addEventListener("pointercancel", cancelled);
-		touchDown(row);
+		row.dispatchEvent(pointerEvent("pointerdown"));
 
 		expect(start()).toBe(false);
 		expect(cancelled).not.toHaveBeenCalled();
@@ -201,7 +195,7 @@ describe("IosSystemBack start", () => {
 				? ({ touchAction: "none" } as CSSStyleDeclaration)
 				: style(element),
 		);
-		touchDown(thumb);
+		thumb.dispatchEvent(pointerEvent("pointerdown"));
 
 		expect(start()).toBe(false);
 		expect(gesture.start).not.toHaveBeenCalled();
@@ -232,7 +226,7 @@ describe("IosSystemBack start", () => {
 		systemBack.expose(gesture);
 		const cancelled = vi.fn();
 		row.addEventListener("pointercancel", cancelled);
-		touchDown(row);
+		row.dispatchEvent(pointerEvent("pointerdown"));
 		row.dispatchEvent(pointerEvent("pointerup"));
 
 		expect(start()).toBe(true);

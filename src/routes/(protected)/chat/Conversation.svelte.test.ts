@@ -210,12 +210,6 @@ function renderRowWithMenu(): HTMLElement {
 	return trigger;
 }
 
-function pointerDown(pointerType: string): MouseEvent {
-	return Object.assign(new MouseEvent("pointerdown", { bubbles: true }), {
-		pointerType,
-	});
-}
-
 async function menuOpened(trigger: HTMLElement): Promise<boolean> {
 	await tick();
 	return trigger.getAttribute("data-state") === "open";
@@ -232,7 +226,7 @@ describe("Conversation menu haptics", () => {
 	it("taps once when a touch long press opens the menu", async () => {
 		const trigger = renderRowWithMenu();
 
-		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
 		trigger.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
 
 		expect(await menuOpened(trigger)).toBe(true);
@@ -242,7 +236,7 @@ describe("Conversation menu haptics", () => {
 	it("taps when the menu's own hold timer opens it for a touch", async () => {
 		const trigger = renderRowWithMenu();
 
-		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
 		await new Promise((resolve) => setTimeout(resolve, BITS_HOLD_MS));
 
 		expect(await menuOpened(trigger)).toBe(true);
@@ -252,7 +246,9 @@ describe("Conversation menu haptics", () => {
 	it("stays quiet when a right-click opens the menu", async () => {
 		const trigger = renderRowWithMenu();
 
-		trigger.dispatchEvent(pointerDown("mouse"));
+		trigger.dispatchEvent(
+			pointerEvent("pointerdown", { pointerType: "mouse" }),
+		);
 		trigger.dispatchEvent(contextMenuEvent({ pointerType: "mouse" }));
 
 		expect(await menuOpened(trigger)).toBe(true);
@@ -262,7 +258,7 @@ describe("Conversation menu haptics", () => {
 	it("stays quiet when the menu key opens the menu after a touch", async () => {
 		const trigger = renderRowWithMenu();
 
-		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
 		trigger.dispatchEvent(contextMenuEvent({ pointerType: "" }));
 
 		expect(await menuOpened(trigger)).toBe(true);
@@ -285,7 +281,7 @@ describe("Conversation menu back gesture", () => {
 			"a closed menu leaves Back alone",
 		).toBe(true);
 
-		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(pointerEvent("pointerdown"));
 		trigger.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
 		expect(await menuOpened(trigger)).toBe(true);
 
