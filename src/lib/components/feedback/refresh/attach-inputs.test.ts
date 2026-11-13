@@ -19,12 +19,7 @@ const TRACKPAD_TAIL_MS = 100;
 function harness({
 	position = "bottom",
 	fingerPhase = null,
-	pullFromNativeBand = false,
-}: {
-	position?: PullPosition;
-	fingerPhase?: ScrollGestureState | null;
-	pullFromNativeBand?: boolean;
-} = {}) {
+}: { position?: PullPosition; fingerPhase?: ScrollGestureState | null } = {}) {
 	const target = document.createElement("div");
 	const row = document.createElement("a");
 	const field = document.createElement("input");
@@ -48,8 +43,6 @@ function harness({
 		shouldReveal: () => false,
 		shouldConceal: () => false,
 		fingerPhase,
-		nativeBand: true,
-		pullFromNativeBand,
 	});
 	const wheel = (deltaX: number, deltaY: number) =>
 		target.dispatchEvent(new WheelEvent("wheel", { deltaX, deltaY }));
@@ -496,7 +489,7 @@ describe("the pull inputs on iOS", () => {
 	});
 
 	it("reads a pull from the rubber band under a finger and refreshes on lift", () => {
-		const h = harness({ position: "top", pullFromNativeBand: true });
+		const h = harness({ position: "top" });
 		const refreshed = vi.fn();
 		h.model.space = BAND_PX;
 		h.model.onTrigger = refreshed;
@@ -512,7 +505,7 @@ describe("the pull inputs on iOS", () => {
 	});
 
 	it("leaves a band without a finger alone, even when it ends with scrollend", () => {
-		const h = harness({ position: "top", pullFromNativeBand: true });
+		const h = harness({ position: "top" });
 
 		h.band({ pulledByWheel: false });
 		h.endBand();
@@ -523,15 +516,18 @@ describe("the pull inputs on iOS", () => {
 	});
 
 	it("never starts a pull from the finger's own travel at the boundary", () => {
-		const h = harness({ position: "top", pullFromNativeBand: true });
+		const h = harness({ position: "top" });
 
 		h.dragFinger(120);
 
 		expect(h.model.phase).toBe("idle");
 		h.detach();
 	});
+});
 
-	it("elsewhere still starts a touch pull from the finger's travel at the boundary", () => {
+describe("the pull inputs on Android", () => {
+	it("start a touch pull from the finger's travel at the boundary", () => {
+		runningOn("android");
 		const h = harness({ position: "top" });
 
 		h.dragFinger(120);
@@ -555,7 +551,7 @@ describe("a pull from a no-pull area", () => {
 
 	it("is refused from the rubber band on ios", () => {
 		runningOn("ios");
-		const h = harness({ position: "top", pullFromNativeBand: true });
+		const h = harness({ position: "top" });
 		h.model.space = BAND_PX;
 		h.row.setAttribute("data-refresh-no-pull", "");
 

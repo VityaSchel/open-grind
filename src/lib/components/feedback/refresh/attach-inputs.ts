@@ -36,8 +36,6 @@ export type PullInputsOptions = {
 	shouldReveal: () => boolean;
 	shouldConceal: () => boolean;
 	fingerPhase?: ScrollGestureState | null;
-	nativeBand?: boolean;
-	pullFromNativeBand?: boolean;
 };
 
 function nativeOverscrollBandHere(): boolean {
@@ -79,8 +77,6 @@ export function attachPullInputs(
 		shouldReveal,
 		shouldConceal,
 		fingerPhase = scrollGestureHere(),
-		nativeBand = nativeOverscrollBandHere(),
-		pullFromNativeBand = pullFromNativeBandHere(),
 	}: PullInputsOptions,
 ): () => void {
 	let trackpadEndedAt = -Infinity;
@@ -156,7 +152,7 @@ export function attachPullInputs(
 		else restingButton.cancelProbe();
 	});
 
-	const detach = pullFromNativeBand
+	const detach = pullFromNativeBandHere()
 		? [
 				attachNativeBandPull(model, {
 					scroller: target,
@@ -181,7 +177,7 @@ export function attachPullInputs(
 					onKeyBand: () => restingButton.offerWithoutPull(),
 				}),
 			];
-	if (fingerPhase && !nativeBand)
+	if (fingerPhase && !nativeOverscrollBandHere())
 		detach.push(
 			attachTouchpadPull(model, {
 				listenTarget: target,
