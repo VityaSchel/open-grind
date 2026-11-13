@@ -1,6 +1,7 @@
 import { currentPlatform } from "#lib/platform/os.ts";
 import { topChromeClearance } from "#lib/util/screen-chrome.svelte.ts";
 import { nearestScrollableAncestor } from "#lib/util/scroll.ts";
+import { typesText } from "#lib/util/text-entry.ts";
 
 const BOTTOM_CHROME = '[data-screen-chrome="bottom"]';
 
@@ -70,11 +71,7 @@ function revealFocusedField() {
 	focusedFieldRevealFrame = undefined;
 	if (!keyboardOpen) return;
 	const field = document.activeElement;
-	const editable =
-		field instanceof HTMLInputElement ||
-		field instanceof HTMLTextAreaElement ||
-		(field instanceof HTMLElement && field.isContentEditable);
-	if (!editable) return;
+	if (!typesText(field)) return;
 	const container = nearestScrollableAncestor(field);
 	watchRevealContainer(container);
 	const box = field.getBoundingClientRect();

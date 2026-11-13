@@ -4,6 +4,7 @@ import type { Attachment } from "svelte/attachments";
 import { currentPlatform } from "#lib/platform/os.ts";
 import { notePageFollowsSoftKeyboard } from "#lib/platform/soft-keyboard.svelte.ts";
 import { remeasureScreenChrome } from "#lib/util/screen-chrome.svelte.ts";
+import { typesText } from "#lib/util/text-entry.ts";
 
 const KEYFRAMES = 32;
 const SETTLED_PX = 0.5;
@@ -191,14 +192,6 @@ function letPageFollow(follow: boolean) {
 	invoke("set_keyboard_follow", { follow }).catch((error: unknown) => {
 		console.error("Failed to hand the keyboard to the page", error);
 	});
-}
-
-function typesText(target: EventTarget | null): target is HTMLElement {
-	return (
-		target instanceof HTMLInputElement ||
-		target instanceof HTMLTextAreaElement ||
-		(target instanceof HTMLElement && target.isContentEditable)
-	);
 }
 
 function insideFollower(target: Node): boolean {
