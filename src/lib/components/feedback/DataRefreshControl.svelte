@@ -125,25 +125,23 @@
 	const discSpinning = $derived(
 		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
 	);
+	const touchProgress = $derived(
+		model.gestureActive && model.source === "touch"
+			? model.displayPx / ARM_PX
+			: undefined,
+	);
 	let lastDragProgress = $state(0);
 	$effect(() => {
-		if (model.gestureActive && model.source === "touch")
-			lastDragProgress = model.displayPx / ARM_PX;
+		if (touchProgress !== undefined) lastDragProgress = touchProgress;
 	});
 	$effect(() => {
 		if (busy && model.settledFrom !== "touch") lastDragProgress = 0;
 	});
-	const discProgress = $derived(
-		model.gestureActive && model.source === "touch"
-			? model.displayPx / ARM_PX
-			: lastDragProgress,
-	);
+	const discProgress = $derived(touchProgress ?? lastDragProgress);
 
 	$effect(() => {
-		if (model.gestureActive && model.source === "touch") {
-			void discTop.set(discDragTop(model.displayPx / ARM_PX), {
-				duration: 0,
-			});
+		if (touchProgress !== undefined) {
+			void discTop.set(discDragTop(touchProgress), { duration: 0 });
 		} else if (busy) {
 			void discTop.set(DISC_REST, settleMotion());
 		} else if (discShown) {
