@@ -15,10 +15,10 @@ import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
+import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';
-const LONG_PRESS_MS = 450;
 
 type MessageActions = Pick<
 	ComponentProps<typeof Message>,
@@ -224,7 +224,7 @@ describe("message menu on iOS", () => {
 		const row = renderTextMessage();
 
 		row.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 
 		expect(await menuOpened(row)).toBe(true);
 		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
@@ -261,7 +261,7 @@ describe("message menu on iOS", () => {
 			const row = renderMessage(message);
 
 			row.dispatchEvent(pointerEvent("pointerdown"));
-			vi.advanceTimersByTime(LONG_PRESS_MS);
+			vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 			expect(await menuOpened(row)).toBe(true);
 			row.dispatchEvent(pointerEvent("pointerup"));
 			const dialog = menuDialog();
@@ -278,7 +278,7 @@ describe("message menu on iOS", () => {
 		const row = renderMessage({ type: "SomethingNew", body: {} });
 
 		row.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 
 		expect(await menuOpened(row)).toBe(false);
 		expect(playHapticMock).not.toHaveBeenCalled();
@@ -302,7 +302,7 @@ describe("message menu on iOS", () => {
 		const row = renderTextMessage({ onReply });
 
 		row.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		expect(await menuOpened(row)).toBe(true);
 		row.dispatchEvent(pointerEvent("pointermove", { x: 90 }));
 		row.dispatchEvent(pointerEvent("pointerup", { x: 90 }));

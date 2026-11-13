@@ -22,6 +22,7 @@ import { applyBackGestureHandler } from "#lib/platform/android-system-back.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
+import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import type { Conversation as ConversationType } from "#lib/model/messaging/conversations.ts";
 import Conversation from "./Conversation.svelte";
 
@@ -30,7 +31,6 @@ const DRAFT_PREFIX = '[data-slot="conversation-draft-prefix"]';
 const MENU_TRIGGER = '[data-slot="context-menu-trigger"]';
 const CONVERSATION_ID = "a:1";
 const BITS_HOLD_MS = 750;
-const LONG_PRESS_MS = 450;
 
 let drafts: Drafts;
 let clock = 1_700_000_000_000;
@@ -320,7 +320,7 @@ describe("Conversation menu on iOS", () => {
 		const trigger = renderRowWithMenu();
 
 		trigger.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		vi.useRealTimers();
 
 		expect(await menuOpened(trigger)).toBe(true);
@@ -333,7 +333,7 @@ describe("Conversation menu on iOS", () => {
 		trigger.dispatchEvent(pointerEvent("pointerdown"));
 		vi.advanceTimersByTime(100);
 		trigger.dispatchEvent(pointerEvent("pointermove", { x: 15 }));
-		vi.advanceTimersByTime(LONG_PRESS_MS - 100);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS - 100);
 		vi.useRealTimers();
 
 		expect(await menuOpened(trigger)).toBe(true);

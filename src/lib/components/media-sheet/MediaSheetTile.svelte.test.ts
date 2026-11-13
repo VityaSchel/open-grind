@@ -9,9 +9,8 @@ vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
+import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import MediaSheetTile from "./MediaSheetTile.svelte";
-
-const LONG_PRESS_MS = 450;
 
 function renderTile({ busy }: { busy: boolean }) {
 	const onMenu = vi.fn();
@@ -45,7 +44,7 @@ describe("media tile long press", () => {
 		const { tile, onMenu } = renderTile({ busy: false });
 
 		tile.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 
 		expect(onMenu).toHaveBeenCalledOnce();
 		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
@@ -55,7 +54,7 @@ describe("media tile long press", () => {
 		const { tile, onMenu } = renderTile({ busy: true });
 
 		tile.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		const menuEvent = contextMenuEvent({ pointerType: "touch" });
 		tile.dispatchEvent(menuEvent);
 

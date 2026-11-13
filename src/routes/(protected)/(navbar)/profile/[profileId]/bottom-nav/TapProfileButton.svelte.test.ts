@@ -15,9 +15,8 @@ import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
+import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import TapProfileButton from "./TapProfileButton.svelte";
-
-const LONG_PRESS_MS = 450;
 
 function renderButton() {
 	const { getByRole } = render(TapProfileButton, {
@@ -89,7 +88,7 @@ describe("tap picker on iOS", () => {
 		const button = renderButton();
 
 		button.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		vi.useRealTimers();
 
 		expect(
@@ -105,7 +104,7 @@ describe("tap picker on iOS", () => {
 		const button = renderButton();
 
 		button.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		button.dispatchEvent(pointerEvent("pointerup"));
 		button.dispatchEvent(pointerClick());
 
@@ -116,7 +115,7 @@ describe("tap picker on iOS", () => {
 		const button = renderButton();
 
 		button.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		button.dispatchEvent(pointerEvent("pointerup"));
 		vi.advanceTimersByTime(1000);
 		button.dispatchEvent(pointerClick());
@@ -128,7 +127,7 @@ describe("tap picker on iOS", () => {
 		const button = renderButton();
 
 		button.dispatchEvent(pointerEvent("pointerdown"));
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		button.dispatchEvent(pointerEvent("pointerup"));
 		button.dispatchEvent(pointerClick());
 		vi.advanceTimersByTime(1000);

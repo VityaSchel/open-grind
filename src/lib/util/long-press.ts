@@ -4,7 +4,7 @@ import { playHaptic } from "#lib/haptics.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 import { firedByTouch } from "#lib/platform/touch-origin.ts";
 
-const LONG_PRESS_DURATION_MS = 450;
+export const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
 // A layout shift can land the contextmenu or the click on another element.
 const NATIVE_CONTEXTMENU_DELAY_MS = 500;
