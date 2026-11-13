@@ -26,8 +26,8 @@ function animateCrop(
 	for (const target of targets) {
 		if (!(target instanceof HTMLElement)) continue;
 		const animation = target.animate(
-			[{ clipPath: from }, { clipPath: to }],
-			{ duration, easing: pswp.options.easing, fill: "both" },
+			[{ clipPath: from, easing: pswp.options.easing }, { clipPath: to }],
+			{ duration, fill: "both" },
 		);
 		if (!keep)
 			void animation.finished.then(

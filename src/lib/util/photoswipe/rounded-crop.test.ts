@@ -1,22 +1,16 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from "vitest";
+import type { Bounds, PhotoSwipeFiltersMap } from "photoswipe";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { applyPhotoSwipeRoundedCrops } from "./rounded-crop";
 
-type Bounds = {
-	x: number;
-	y: number;
-	w: number;
-	innerRect?: { x: number; y: number; w: number; h: number };
-};
-type ItemData = { width?: number; height?: number; element?: HTMLElement };
-type ThumbBoundsFilter = (
-	bounds: Bounds | undefined,
-	itemData: ItemData,
-) => Bounds | undefined;
+type ThumbBoundsFilter = PhotoSwipeFiltersMap["thumbBounds"];
 
+const UNCROPPED = "inset(0% 0% 0% 0% round 0% / 0%)";
+const PORTRAIT_CROP =
+	"inset(12.5000% 0.0000% 12.5000% 0.0000% round 20.0000% / 15.0000%)";
 const PORTRAIT = { width: 600, height: 800 };
 const SQUARE_THUMB_BOUNDS: Bounds = {
 	x: 240,
@@ -69,23 +63,58 @@ function thumbFrame(radius: string) {
 }
 
 describe("applyPhotoSwipeRoundedCrops", () => {
-	it("zooms from the whole photo's bounds instead of PhotoSwipe's two-container crop", () => {
-		const { filters } = fakeLightbox();
+	it.each([
+		{
+			name: "a portrait photo",
+			photo: PORTRAIT,
+			bounds: SQUARE_THUMB_BOUNDS,
+			crop: PORTRAIT_CROP,
+		},
+		{
+			name: "a landscape photo",
+			photo: { width: 800, height: 600 },
+			bounds: {
+				x: 240,
+				y: 340,
+				w: 320 / 3,
+				innerRect: { x: -40 / 3, y: 0, w: 80, h: 80 },
+			},
+			crop: "inset(0.0000% 12.5000% 0.0000% 12.5000% round 15.0000% / 20.0000%)",
+		},
+	])(
+		"zooms $name from its whole bounds, clipped to the thumbnail's crop and corners",
+		({ photo, bounds, crop }) => {
+			const { filters, handlers, placeholder } = fakeLightbox();
 
-		const bounds = filters.thumbBounds!(SQUARE_THUMB_BOUNDS, {
-			...PORTRAIT,
-			element: thumbFrame("16px"),
-		});
+			const returned = filters.thumbBounds!(
+				bounds,
+				{ ...photo, element: thumbFrame("16px") },
+				0,
+			);
+			handlers.openingAnimationStart!();
 
-		expect(bounds).toStrictEqual({ x: 240, y: 340, w: 80 });
-	});
+			expect(returned).toStrictEqual({
+				x: bounds.x,
+				y: bounds.y,
+				w: bounds.w,
+			});
+			expect(placeholder.animate).toHaveBeenCalledExactlyOnceWith(
+				[
+					expect.objectContaining({ clipPath: crop }),
+					{ clipPath: UNCROPPED },
+				],
+				expect.objectContaining({ duration: 500 }),
+			);
+		},
+	);
 
-	it("opens from the thumbnail's crop and corners, then drops the clip", async () => {
+	it("opens from the thumbnail's crop and corners, then drops the clip, easing on the first keyframe since WebKitGTK plays an effect-level easing as linear", async () => {
 		const { filters, handlers, placeholder, image } = fakeLightbox();
-		filters.thumbBounds!(SQUARE_THUMB_BOUNDS, {
-			...PORTRAIT,
-			element: thumbFrame("16px"),
-		});
+		filters.thumbBounds!(
+			SQUARE_THUMB_BOUNDS,
+			{ ...PORTRAIT, element: thumbFrame("16px") },
+			0,
+		);
 
 		handlers.openingAnimationStart!();
 
@@ -93,16 +122,12 @@ describe("applyPhotoSwipeRoundedCrops", () => {
 			expect(target.animate).toHaveBeenCalledExactlyOnceWith(
 				[
 					{
-						clipPath:
-							"inset(12.5000% 0.0000% 12.5000% 0.0000% round 20.0000% / 15.0000%)",
+						clipPath: PORTRAIT_CROP,
+						easing: "cubic-bezier(.4,0,.22,1)",
 					},
-					{ clipPath: "inset(0% 0% 0% 0% round 0% / 0%)" },
+					{ clipPath: UNCROPPED },
 				],
-				{
-					duration: 500,
-					easing: "cubic-bezier(.4,0,.22,1)",
-					fill: "both",
-				},
+				{ duration: 500, fill: "both" },
 			);
 		}
 		placeholder.finish();
@@ -113,10 +138,11 @@ describe("applyPhotoSwipeRoundedCrops", () => {
 
 	it("closes into the thumbnail's crop and corners and keeps them until the viewer goes", async () => {
 		const { filters, handlers, image } = fakeLightbox();
-		filters.thumbBounds!(SQUARE_THUMB_BOUNDS, {
-			...PORTRAIT,
-			element: thumbFrame("16px"),
-		});
+		filters.thumbBounds!(
+			SQUARE_THUMB_BOUNDS,
+			{ ...PORTRAIT, element: thumbFrame("16px") },
+			0,
+		);
 
 		handlers.closingAnimationStart!();
 		image.finish();
@@ -124,11 +150,8 @@ describe("applyPhotoSwipeRoundedCrops", () => {
 
 		expect(image.animate).toHaveBeenCalledWith(
 			[
-				{ clipPath: "inset(0% 0% 0% 0% round 0% / 0%)" },
-				{
-					clipPath:
-						"inset(12.5000% 0.0000% 12.5000% 0.0000% round 20.0000% / 15.0000%)",
-				},
+				{ clipPath: UNCROPPED, easing: "cubic-bezier(.4,0,.22,1)" },
+				{ clipPath: PORTRAIT_CROP },
 			],
 			expect.objectContaining({ fill: "both" }),
 		);
@@ -145,7 +168,7 @@ describe("applyPhotoSwipeRoundedCrops", () => {
 	])("leaves the bounds and the photo alone when %s", (_, bounds, size) => {
 		const { filters, handlers, placeholder } = fakeLightbox();
 
-		expect(filters.thumbBounds!(bounds, size)).toBe(bounds);
+		expect(filters.thumbBounds!(bounds, size, 0)).toBe(bounds);
 		handlers.openingAnimationStart!();
 
 		expect(placeholder.animate).not.toHaveBeenCalled();
@@ -155,7 +178,7 @@ describe("applyPhotoSwipeRoundedCrops", () => {
 		const { filters, handlers, placeholder } = fakeLightbox({
 			duration: "0ms",
 		});
-		filters.thumbBounds!(SQUARE_THUMB_BOUNDS, { ...PORTRAIT });
+		filters.thumbBounds!(SQUARE_THUMB_BOUNDS, { ...PORTRAIT }, 0);
 
 		handlers.openingAnimationStart!();
 
