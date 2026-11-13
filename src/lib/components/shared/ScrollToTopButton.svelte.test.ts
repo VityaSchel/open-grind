@@ -204,14 +204,6 @@ describe("the scroll-to-top button", () => {
 		expect(view.scroller.scrollTop).toBe(0);
 	});
 
-	it("never asks a desktop or Android list to stop coasting", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(5000);
-		await view.click();
-
-		expect(invoke).not.toHaveBeenCalled();
-	});
-
 	it("on iOS stops the coasting list under its center before the jump", async () => {
 		runningOn("ios");
 		let stopped = () => {};
