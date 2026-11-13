@@ -1,15 +1,9 @@
 use std::cell::{Cell, OnceCell, RefCell};
-use std::ptr::NonNull;
 use std::rc::Rc;
 
 use block2::RcBlock;
-use objc2::rc::Retained;
-use objc2::runtime::{NSObjectProtocol, ProtocolObject};
 use objc2::MainThreadMarker;
-use objc2_foundation::{
-	NSNotification, NSNotificationCenter, NSNotificationName, NSOperationQueue,
-	NSString,
-};
+use objc2_foundation::NSString;
 use objc2_ui_kit::{
 	UIApplication, UIApplicationDidEnterBackgroundNotification,
 	UIApplicationWillEnterForegroundNotification, UIBackgroundTaskInvalid,
@@ -17,18 +11,11 @@ use objc2_ui_kit::{
 use tauri::{AppHandle, Runtime};
 
 use super::ledger::{Ledger, Purpose, Task};
-use crate::uikit::on_main_thread;
-
-type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
+use crate::uikit::{observe, on_main_thread, Observer};
 
 thread_local! {
 	static LEDGER: RefCell<Ledger> = const { RefCell::new(Ledger::new()) };
 	static OBSERVERS: OnceCell<[Observer; 2]> = const { OnceCell::new() };
-}
-
-struct Reaction {
-	notification: &'static NSNotificationName,
-	run: fn(MainThreadMarker),
 }
 
 pub fn install<R: Runtime>(app: &AppHandle<R>) {
@@ -36,16 +23,14 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) {
 		OBSERVERS.with(|observers| {
 			observers.get_or_init(|| unsafe {
 				[
-					observe(Reaction {
-						notification:
-							UIApplicationDidEnterBackgroundNotification,
-						run: backgrounded,
-					}),
-					observe(Reaction {
-						notification:
-							UIApplicationWillEnterForegroundNotification,
-						run: foregrounded,
-					}),
+					observe(
+						UIApplicationDidEnterBackgroundNotification,
+						|mtm, _| backgrounded(mtm),
+					),
+					observe(
+						UIApplicationWillEnterForegroundNotification,
+						|mtm, _| foregrounded(mtm),
+					),
 				]
 			});
 		});
@@ -100,24 +85,6 @@ impl Purpose {
 		let expired =
 			LEDGER.with_borrow_mut(|ledger| ledger.slot(self).expired(task));
 		end(mtm, expired);
-	}
-}
-
-fn observe(Reaction { notification, run }: Reaction) -> Observer {
-	let reacted =
-		RcBlock::new(move |_notification: NonNull<NSNotification>| {
-			if let Some(mtm) = MainThreadMarker::new() {
-				run(mtm);
-			}
-		});
-	unsafe {
-		NSNotificationCenter::defaultCenter()
-			.addObserverForName_object_queue_usingBlock(
-				Some(notification),
-				None,
-				Some(&NSOperationQueue::mainQueue()),
-				&reacted,
-			)
 	}
 }
 

@@ -1,10 +1,17 @@
-use block2::DynBlock;
+use std::ptr::NonNull;
+
+use block2::{DynBlock, RcBlock};
 use objc2::rc::Retained;
-use objc2::runtime::AnyObject;
+use objc2::runtime::{AnyObject, NSObjectProtocol, ProtocolObject};
 use objc2::{msg_send, MainThreadMarker};
-use objc2_foundation::{NSError, NSString};
+use objc2_foundation::{
+	NSError, NSNotification, NSNotificationCenter, NSNotificationName,
+	NSOperationQueue, NSString,
+};
 use objc2_ui_kit::UIView;
 use tauri::{AppHandle, Runtime, WebviewWindow};
+
+pub type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
 pub fn evaluate(webview: &UIView, script: &str) {
 	let script = NSString::from_str(script);
@@ -51,5 +58,25 @@ pub fn on_main_thread<R: Runtime>(
 		});
 	if let Err(error) = dispatched {
 		tracing::warn!("[{tag}] could not reach the main thread: {error}");
+	}
+}
+
+pub fn observe(
+	name: &NSNotificationName,
+	react: impl Fn(MainThreadMarker, &NSNotification) + 'static,
+) -> Observer {
+	let block = RcBlock::new(move |notification: NonNull<NSNotification>| {
+		if let Some(mtm) = MainThreadMarker::new() {
+			react(mtm, unsafe { notification.as_ref() });
+		}
+	});
+	unsafe {
+		NSNotificationCenter::defaultCenter()
+			.addObserverForName_object_queue_usingBlock(
+				Some(name),
+				None,
+				Some(&NSOperationQueue::mainQueue()),
+				&block,
+			)
 	}
 }

@@ -1,12 +1,6 @@
 use std::cell::RefCell;
-use std::ptr::NonNull;
 
-use block2::RcBlock;
-use objc2::rc::{Retained, Weak};
-use objc2::runtime::{NSObjectProtocol, ProtocolObject};
-use objc2_foundation::{
-	NSNotification, NSNotificationCenter, NSOperationQueue,
-};
+use objc2::rc::Weak;
 use objc2_ui_kit::{
 	UIAccessibilityIsVoiceOverRunning,
 	UIAccessibilityVoiceOverStatusDidChangeNotification, UIView,
@@ -14,9 +8,7 @@ use objc2_ui_kit::{
 use tauri::WebviewWindow;
 
 use super::status_script;
-use crate::uikit::{evaluate, with_webview};
-
-type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
+use crate::uikit::{evaluate, observe, with_webview, Observer};
 
 thread_local! {
 	static WATCH: RefCell<Option<Observer>> = const { RefCell::new(None) };
@@ -24,23 +16,17 @@ thread_local! {
 
 fn watch(webview: &UIView) {
 	let webview = Weak::new(webview);
-	let changed = RcBlock::new(move |_: NonNull<NSNotification>| {
-		if let Some(webview) = webview.load() {
-			evaluate(
-				&webview,
-				&status_script(UIAccessibilityIsVoiceOverRunning()),
-			);
-		}
-	});
-	let observer = unsafe {
-		NSNotificationCenter::defaultCenter()
-			.addObserverForName_object_queue_usingBlock(
-				Some(UIAccessibilityVoiceOverStatusDidChangeNotification),
-				None,
-				Some(&NSOperationQueue::mainQueue()),
-				&changed,
-			)
-	};
+	let observer = observe(
+		unsafe { UIAccessibilityVoiceOverStatusDidChangeNotification },
+		move |_, _| {
+			if let Some(webview) = webview.load() {
+				evaluate(
+					&webview,
+					&status_script(UIAccessibilityIsVoiceOverRunning()),
+				);
+			}
+		},
+	);
 	WATCH.with_borrow_mut(|slot| *slot = Some(observer));
 }
 

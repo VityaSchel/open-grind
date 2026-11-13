@@ -1,19 +1,15 @@
 use std::cell::{Cell, RefCell};
-use std::ptr::NonNull;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use block2::RcBlock;
 use objc2::rc::{Retained, Weak};
-use objc2::runtime::{
-	AnyObject, NSObject, NSObjectProtocol, ProtocolObject, Sel,
-};
+use objc2::runtime::{AnyObject, NSObject, Sel};
 use objc2::{
 	define_class, msg_send, sel, DefinedClass, MainThreadMarker, MainThreadOnly,
 };
 use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{
 	NSArray, NSNotification, NSNotificationCenter, NSNotificationName,
-	NSNumber, NSOperationQueue, NSString, NSValue,
+	NSNumber, NSString, NSValue,
 };
 use objc2_ui_kit::{
 	NSValueUIGeometryExtensions, UICoordinateSpace,
@@ -33,9 +29,7 @@ use super::geometry::{
 };
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
-use crate::uikit::{evaluate, on_main_thread, with_webview};
-
-type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
+use crate::uikit::{self, evaluate, on_main_thread, with_webview, Observer};
 
 const OPEN_LEAD_MS: f64 = 20.0;
 const CLOSE_LEAD_MS: f64 = 3.0;
@@ -373,23 +367,13 @@ fn observe(
 	name: &NSNotificationName,
 	handle: impl Fn(&KeyboardFrame, &NSNotification) + 'static,
 ) -> Observer {
-	let block = RcBlock::new(move |notification: NonNull<NSNotification>| {
-		let notification = unsafe { notification.as_ref() };
+	uikit::observe(name, move |_, notification| {
 		DRIVER.with_borrow(|driver| {
 			if let Some(driver) = driver {
 				handle(&driver.frame, notification);
 			}
 		});
-	});
-	unsafe {
-		NSNotificationCenter::defaultCenter()
-			.addObserverForName_object_queue_usingBlock(
-				Some(name),
-				None,
-				Some(&NSOperationQueue::mainQueue()),
-				&block,
-			)
-	}
+	})
 }
 
 fn drive(mtm: MainThreadMarker, webview: Retained<UIView>) {
