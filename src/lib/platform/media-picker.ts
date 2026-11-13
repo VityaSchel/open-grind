@@ -102,9 +102,10 @@ async function pick({
 		case "ios":
 			return pickIosMedia({ kind, multiple });
 		case "linux":
-		case "macos":
 		case "windows":
-			return pickWithDialog({ kind, multiple });
+			return pickWithDialog({ kind, multiple, decodesHeif: false });
+		case "macos":
+			return pickWithDialog({ kind, multiple, decodesHeif: true });
 	}
 }
 
@@ -132,13 +133,18 @@ async function pickIosMedia({
 async function pickWithDialog({
 	kind,
 	multiple,
+	decodesHeif,
 }: {
 	kind: MediaKind;
 	multiple: boolean;
+	decodesHeif: boolean;
 }): Promise<PickedMedia[]> {
-	const filters = [
-		{ name: filtersByKind[kind].name, extensions: dialogExtensions(kind) },
-	];
+	const { name, extensions } = filtersByKind[kind];
+	const offered =
+		decodesHeif && kind !== "video"
+			? [...extensions, ...heifExtensions]
+			: extensions;
+	const filters = [{ name, extensions: offered }];
 	const selection = multiple
 		? await open({ filters, multiple: true })
 		: await open({ filters, multiple: false });
@@ -156,21 +162,6 @@ async function pickWithDialog({
 			path,
 		}),
 	);
-}
-
-function dialogExtensions(kind: MediaKind): string[] {
-	const { extensions } = filtersByKind[kind];
-	switch (currentPlatform()) {
-		case "macos":
-			return kind === "video"
-				? extensions
-				: [...extensions, ...heifExtensions];
-		case "android":
-		case "ios":
-		case "linux":
-		case "windows":
-			return extensions;
-	}
 }
 
 async function pickAndroidUris({
