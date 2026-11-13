@@ -1,6 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
-import z from "zod";
-
 import { invokeRest } from "#lib/api/transport.ts";
 import { demoUploadRightNowPhoto } from "#lib/demo/index.ts";
 import {
@@ -11,8 +8,8 @@ import {
 	demoPickedFile,
 	type MediaFileDescriptor,
 	mediaFileDescriptor,
+	stageProxiedPhoto,
 } from "#lib/platform/media-file.ts";
-import { stageFile } from "#lib/platform/media-intake.svelte.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const UPLOAD_PATH = "/v2/media/upload";
@@ -53,20 +50,11 @@ export async function uploadRightNowPickedPhoto({
 	return uploadPhoto({ file: mediaFileDescriptor(media) });
 }
 
-export async function uploadRightNowPhoto({
-	file,
-}: {
-	file: File;
-}): Promise<RightNowMediaUploadResponse> {
-	return uploadRightNowPickedPhoto({ media: await stageFile(file) });
-}
-
 export async function uploadRightNowPhotoFromUrl({
 	url,
 }: {
 	url: string;
 }): Promise<RightNowMediaUploadResponse> {
 	if (__DEMO__) return demoUploadRightNowPhoto({ url });
-	const id = z.string().parse(await invoke("stage_proxied_photo", { url }));
-	return uploadPhoto({ file: { source: "staged", id } });
+	return uploadPhoto({ file: await stageProxiedPhoto(url) });
 }

@@ -11,7 +11,6 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 import { ApiError } from "#lib/api/api-error.ts";
 import {
 	RightNowPhotoTooSmallError,
-	uploadRightNowPhoto,
 	uploadRightNowPhotoFromUrl,
 	uploadRightNowPickedPhoto,
 } from "#lib/api/right-now/photo.ts";
@@ -53,10 +52,6 @@ function backend({
 		switch (command) {
 			case "upload_media":
 				return Promise.resolve(encoded({ status, body }));
-			case "stage_media":
-				return Promise.resolve("staged-file");
-			case "append_staged_media":
-				return Promise.resolve(undefined);
 			case "stage_proxied_photo":
 				return Promise.resolve("staged-drawer-photo");
 		}
@@ -150,23 +145,6 @@ describe("uploadRightNowPickedPhoto", () => {
 	});
 });
 
-describe("uploadRightNowPhoto", () => {
-	it("stages the file and uploads the staged copy", async () => {
-		backend();
-		const file = new File([new Uint8Array(5)], "photo.jpg", {
-			type: "image/jpeg",
-		});
-
-		await expect(uploadRightNowPhoto({ file })).resolves.toEqual(uploaded);
-
-		expect(uploadArgs()).toMatchObject({
-			path: UPLOAD_PATH,
-			file: { source: "staged", id: "staged-file" },
-			crop: "cropAndThumb",
-		});
-	});
-});
-
 describe("uploadRightNowPhotoFromUrl", () => {
 	it("reads the drawer photo through the media proxy and uploads it again", async () => {
 		backend();
@@ -226,7 +204,14 @@ describe("in the demo", () => {
 			type: "image/jpeg",
 		});
 
-		const first = await uploadRightNowPhoto({ file });
+		const first = await uploadRightNowPickedPhoto({
+			media: {
+				source: "web",
+				key: "pick-4",
+				mimeType: "image/jpeg",
+				file,
+			},
+		});
 		const second = await uploadRightNowPickedPhoto({
 			media: {
 				source: "web",
