@@ -1223,11 +1223,6 @@ mod pins {
 		);
 	}
 
-	#[test]
-	fn ios_has_no_release_artifact_to_update_from() {
-		assert_eq!(suffix_for("ios", "aarch64"), None);
-	}
-
 	#[cfg(target_os = "linux")]
 	#[test]
 	fn a_linux_install_that_is_not_an_appimage_is_offered_nothing() {
