@@ -1,13 +1,8 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
-	});
-});
 const lightbox = vi.hoisted(() => ({
 	openLightbox: vi.fn(() => Promise.resolve()),
 }));
@@ -27,6 +22,7 @@ vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { openLightbox } from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
@@ -101,6 +97,10 @@ function openedLightbox() {
 function closeLightbox() {
 	openedLightbox().onClosed();
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();

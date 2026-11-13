@@ -2,15 +2,10 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
-	});
-});
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
@@ -69,6 +64,10 @@ function loaded(img: HTMLImageElement) {
 	Object.defineProperty(img, "naturalHeight", { get: () => 400 });
 	return fireEvent.load(img);
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();

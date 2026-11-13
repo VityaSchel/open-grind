@@ -4,11 +4,6 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
-	});
-});
 const preferences = vi.hoisted(() => ({
 	values: new Map<string, boolean>(),
 	setPreferences:
@@ -38,6 +33,7 @@ import PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
@@ -100,6 +96,7 @@ async function tapAndChoose(choice: "Continue" | "Cancel") {
 }
 
 beforeEach(() => {
+	runningOn("windows");
 	preferences.values.clear();
 	preferences.setPreferences.mockReset();
 	toast.mockReset();

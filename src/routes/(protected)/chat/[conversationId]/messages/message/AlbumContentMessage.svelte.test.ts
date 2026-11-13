@@ -6,15 +6,10 @@ import {
 	within,
 } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AlbumSlide } from "#lib/components/album/album-lightbox.ts";
 
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
-	});
-});
 const NOW = 1_700_000_000_000;
 const lightbox = vi.hoisted(() => ({
 	loadAlbumSlides: vi.fn(),
@@ -44,6 +39,7 @@ import {
 	type AlbumContentReplyMessage,
 	apiResponseMessageSchema,
 } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
@@ -78,6 +74,10 @@ function renderReply({
 		},
 	});
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();

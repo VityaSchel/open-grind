@@ -4,11 +4,6 @@ import { cleanup, render, within } from "@testing-library/svelte";
 import { type ComponentProps, tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
-	});
-});
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("#lib/haptics.ts", () => ({
 	hapticsAvailable: () => true,
@@ -89,6 +84,10 @@ function useHoldClock() {
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
 	vi.setSystemTime((clock += 60_000));
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();
@@ -231,7 +230,6 @@ describe("message menu on iOS", () => {
 	afterEach(() => {
 		window.dispatchEvent(new Event("pointerup"));
 		vi.useRealTimers();
-		runningOn("windows");
 	});
 
 	it("opens once a touch is held still, with one haptic tap", async () => {
@@ -334,7 +332,6 @@ describe("message menu on Android", () => {
 
 	afterEach(() => {
 		vi.useRealTimers();
-		runningOn("windows");
 	});
 
 	it("leaves a touch hold to the system's own long press", async () => {

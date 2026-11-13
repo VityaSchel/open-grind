@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
-	});
-});
 const { getConversationMock } = vi.hoisted(() => ({
 	getConversationMock: vi.fn(),
 }));
@@ -26,10 +21,15 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 }));
 
 import { Drafts } from "#lib/chat/drafts.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CONVERSATION_ID = "1:2";
 const OUR_ID = 1;
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 const profile = {
 	distance: null,

@@ -9,11 +9,6 @@ import {
 	vi,
 } from "vitest";
 
-vi.hoisted(() => {
-	Object.assign(globalThis, {
-		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "android" },
-	});
-});
 const {
 	invokeMock,
 	listeners,
@@ -81,6 +76,7 @@ import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
 } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { setVisibility } from "#lib/test/visibility.ts";
 import { ws } from "#lib/ws.svelte.ts";
 import { ConversationState } from "./conversation-state.svelte";
@@ -183,6 +179,7 @@ async function consumeFirstConnectSkip() {
 beforeAll(consumeFirstConnectSkip);
 
 beforeEach(async () => {
+	runningOn("android");
 	vi.clearAllMocks();
 	localStorage.clear();
 	clock += PAST_RECONCILE_THROTTLE_MS;
