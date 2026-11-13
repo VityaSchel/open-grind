@@ -7,8 +7,10 @@ final class Driver: XCTestCase {
 		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "touchPath", "edgeSwipe", "type", "swipe",
 		"on", "wait", "expect", "expectGone", "keyboard", "screenshot", "tree",
 	]
-	private static let dragHoldKeys: Set<String> = ["path", "hold", "velocity", "screenshot", "tree"]
-	private static let edgeSwipeKeys: Set<String> = ["from", "y", "to", "seconds", "press", "hold"]
+	private static let optionKeys: KeyValuePairs<String, Set<String>> = [
+		"dragHold": ["path", "hold", "velocity", "screenshot", "tree"],
+		"edgeSwipe": ["from", "y", "to", "seconds", "press", "hold"],
+	]
 	private static let edgeSwipeStepsPerSecond = 30.0
 	private let timeout: TimeInterval = 15
 	private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -40,11 +42,10 @@ final class Driver: XCTestCase {
 		let steps = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
 		for (index, step) in steps.enumerated() {
 			try rejectUnknownKeys(in: step, known: Self.stepKeys, of: "step \(index + 1)")
-			if let options: [String: Any] = try value("dragHold", in: step) {
-				try rejectUnknownKeys(in: options, known: Self.dragHoldKeys, of: "step \(index + 1) dragHold")
-			}
-			if let options: [String: Any] = try value("edgeSwipe", in: step) {
-				try rejectUnknownKeys(in: options, known: Self.edgeSwipeKeys, of: "step \(index + 1) edgeSwipe")
+			for (key, known) in Self.optionKeys {
+				if let options: [String: Any] = try value(key, in: step) {
+					try rejectUnknownKeys(in: options, known: known, of: "step \(index + 1) \(key)")
+				}
 			}
 		}
 		if steps.contains(where: { $0["pasteboardText"] != nil }) {
