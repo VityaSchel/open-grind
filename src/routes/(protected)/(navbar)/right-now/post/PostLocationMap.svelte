@@ -9,7 +9,7 @@
 		OSM_TILE_OPTIONS,
 		OSM_TILE_URL,
 	} from "#lib/components/location-chooser/constants.ts";
-	import { openMapLinksExternally } from "#lib/components/location-chooser/map-links.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
 	import { accuracyMapView } from "./accuracy-map";
 
 	let {
@@ -53,7 +53,6 @@
 <div
 	data-slot="post-location-map"
 	class="leaflet-container relative isolate h-40 overflow-hidden rounded-sm md:h-60"
-	{@attach openMapLinksExternally}
 >
 	<div
 		class="absolute -inset-1/2"
@@ -90,10 +89,11 @@
 	></div>
 	<div class="leaflet-bottom leaflet-right">
 		<div class="leaflet-control-attribution leaflet-control">
-			&copy; <a
+			&copy; <Link
 				href={OSM_COPYRIGHT_URL}
 				target="_blank"
-				rel="noreferrer nofollow noopener">OpenStreetMap contributors</a
+				rel="noreferrer nofollow noopener"
+				>OpenStreetMap contributors</Link
 			> &nbsp;
 		</div>
 	</div>

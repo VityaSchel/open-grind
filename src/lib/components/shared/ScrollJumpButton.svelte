@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { sineOut } from "svelte/easing";
-
+	import { FLOATING_CHIP_FLY } from "#lib/components/shared/floating-chip.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { fly } from "#lib/util/reduced-motion.ts";
 
@@ -25,7 +24,7 @@
 
 <div
 	class={["floating-chip", className]}
-	transition:fly={{ y: 48, opacity: 0, duration: 200, easing: sineOut }}
+	transition:fly={FLOATING_CHIP_FLY}
 	{onoutroend}
 >
 	<Button

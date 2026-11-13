@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { sineOut } from "svelte/easing";
-
+	import { FLOATING_CHIP_FLY } from "#lib/components/shared/floating-chip.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { fly } from "#lib/util/reduced-motion.ts";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
@@ -62,7 +61,7 @@
 			"absolute end-[max(var(--spacing)*4,calc(50%-var(--spacing)*80+var(--spacing)*4))] bottom-nav-clear z-10 max-w-[min(calc(50%-var(--spacing)*11),var(--spacing)*69)]",
 			{ "floating-chip": running },
 		]}
-		transition:fly={{ y: 48, opacity: 0, duration: 200, easing: sineOut }}
+		transition:fly={FLOATING_CHIP_FLY}
 	>
 		{#if running}
 			<Button
@@ -106,6 +105,7 @@
 					/>
 				</svg>
 				<span
+					data-slot="join-button-time"
 					class={[
 						"truncate tabular-nums",
 						{ "max-sm:hidden": compact },
@@ -125,7 +125,9 @@
 				onclick={onjoin}
 			>
 				<span class="truncate"
-					>Join<span class={{ "max-sm:hidden": compact }}
+					>Join<span
+						data-slot="join-button-allowance"
+						class={{ "max-sm:hidden": compact }}
 						>{allowanceText}</span
 					></span
 				>

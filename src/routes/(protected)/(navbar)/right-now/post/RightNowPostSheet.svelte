@@ -1,19 +1,16 @@
 <script lang="ts">
 	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
-	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 	import { untrack } from "svelte";
 
 	import MultilineField from "#lib/components/fields/MultilineField.svelte";
-	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
-	import * as Alert from "#lib/components/ui/alert/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
-	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { rejectedParts } from "../right-now-post-fields";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
+	import DiscardChangesDialog from "./DiscardChangesDialog.svelte";
 	import {
 		LEAST_PRECISE_RADIUS,
 		POST_TEXT_MAX_LENGTH,
@@ -24,6 +21,7 @@
 	} from "./post-form";
 	import PostLocationField from "./PostLocationField.svelte";
 	import PostPhotoField from "./PostPhotoField.svelte";
+	import PostRejectionAlert from "./PostRejectionAlert.svelte";
 	import { formatTimeLeft } from "./time-left";
 
 	let {
@@ -62,13 +60,6 @@
 	const rejectedMediaIds = $derived(
 		rejectedParts(post.post).photos.map(({ mediaId }) => mediaId),
 	);
-	const rejectionTitle = $derived.by(() => {
-		const { text: textRejected, photo: photoRejected } = post.rejected;
-		if (textRejected && photoRejected)
-			return "Your text and photo were rejected";
-		if (photoRejected) return "Your photo was rejected";
-		return "Your text was rejected";
-	});
 
 	$effect(() => {
 		const details = post.post;
@@ -91,11 +82,6 @@
 	function askToDiscard() {
 		if (!busy && dirty) confirmingDiscard = true;
 	}
-
-	dismissOnBackGesture({
-		active: () => confirmingDiscard,
-		dismiss: () => (confirmingDiscard = false),
-	});
 
 	async function setVisible({ next }: { next: boolean }) {
 		if (busy) return;
@@ -169,21 +155,7 @@
 					drawerClass="px-4 pb-2"
 				>
 					{#if post.rejected.text || post.rejected.photo}
-						<Alert.Root variant="destructive">
-							<WarningCircleIcon weight="fill" />
-							<Alert.Title>{rejectionTitle}</Alert.Title>
-							<Alert.Description>
-								{#if post.rejected.reasons.length > 0}
-									<ul class="list-disc ps-4">
-										{#each post.rejected.reasons as reason (reason)}
-											<li>{reason}</li>
-										{/each}
-									</ul>
-								{:else}
-									No reason was given.
-								{/if}
-							</Alert.Description>
-						</Alert.Root>
+						<PostRejectionAlert rejected={post.rejected} />
 					{/if}
 					<div
 						data-slot="right-now-post-sheet-columns"
@@ -251,26 +223,7 @@
 	{/snippet}
 </ResponsiveDialog.Root>
 
-<AlertDialog.Root bind:open={confirmingDiscard}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Discard changes?</AlertDialog.Title>
-			<AlertDialog.Description>
-				You have unsaved changes.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Keep editing</AlertDialog.Cancel>
-			<AlertDialog.Action
-				variant="destructive"
-				size="lg"
-				onclick={() => {
-					confirmingDiscard = false;
-					open = false;
-				}}
-			>
-				Discard
-			</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<DiscardChangesDialog
+	bind:open={confirmingDiscard}
+	ondiscard={() => (open = false)}
+/>
