@@ -5,12 +5,7 @@ const mediaFile = vi.hoisted(() => ({ inspectMediaFile: vi.fn() }));
 const api = vi.hoisted(() => ({ getAlbumStorageLimits: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
-const core = vi.hoisted(() => ({ invoke: vi.fn() }));
 
-vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
-	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
-	invoke: core.invoke,
-}));
 vi.mock("#lib/api/error-toast.ts", () => errorToast);
 vi.mock("#lib/api/messaging/albums.ts", () => api);
 vi.mock("#lib/platform/media-file.ts", async (importOriginal) => ({
@@ -22,7 +17,7 @@ vi.mock("svelte-sonner", () => sonner);
 
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
-import { addAlbumMedia, pickInspectedAlbumMedia } from "./add-album-media";
+import { addAlbumMedia, pickOrScreenAlbumMedia } from "./add-album-media";
 import type { AlbumUploads } from "./album-uploads-state.svelte";
 
 const limits = {
@@ -81,13 +76,9 @@ beforeEach(() => {
 
 describe("picking media for an album", () => {
 	it("offers only the kinds the album has room for", async () => {
-		await pickInspectedAlbumMedia({ room: { photos: true, videos: true } });
-		await pickInspectedAlbumMedia({
-			room: { photos: true, videos: false },
-		});
-		await pickInspectedAlbumMedia({
-			room: { photos: false, videos: true },
-		});
+		await pickOrScreenAlbumMedia({ room: { photos: true, videos: true } });
+		await pickOrScreenAlbumMedia({ room: { photos: true, videos: false } });
+		await pickOrScreenAlbumMedia({ room: { photos: false, videos: true } });
 
 		expect(picker.pickMultipleMedia.mock.calls).toEqual([
 			["media"],
@@ -98,7 +89,7 @@ describe("picking media for an album", () => {
 
 	it("opens no picker when the album has room for nothing", async () => {
 		expect(
-			await pickInspectedAlbumMedia({
+			await pickOrScreenAlbumMedia({
 				room: { photos: false, videos: false },
 			}),
 		).toEqual([]);
@@ -112,7 +103,7 @@ describe("picking media for an album", () => {
 		]);
 
 		expect(
-			await pickInspectedAlbumMedia({
+			await pickOrScreenAlbumMedia({
 				room: { photos: true, videos: true },
 			}),
 		).toEqual([
@@ -126,44 +117,11 @@ describe("picking media for an album", () => {
 		);
 	});
 
-	it("gives one toast however many picks it refuses for the same reason", async () => {
-		picker.pickMultipleMedia.mockResolvedValue([
-			desktopPick("a", "application/pdf"),
-			desktopPick("b", "text/plain"),
-		]);
-
-		expect(
-			await pickInspectedAlbumMedia({
-				room: { photos: true, videos: true },
-			}),
-		).toEqual([]);
-		expect(sonner.toast.error).toHaveBeenCalledExactlyOnceWith(
-			"That file isn't a photo or video",
-		);
-	});
-
-	it("discards a staged pick it refuses", async () => {
-		picker.pickMultipleMedia.mockResolvedValue([
-			{ source: "staged", key: "s", mimeType: null, id: "staged-1" },
-		]);
-		mediaFile.inspectMediaFile.mockRejectedValue(new Error("gone"));
-
-		expect(
-			await pickInspectedAlbumMedia({
-				room: { photos: true, videos: true },
-			}),
-		).toEqual([]);
-		expect(core.invoke).toHaveBeenCalledExactlyOnceWith(
-			"discard_staged_media",
-			{ id: "staged-1" },
-		);
-	});
-
 	it("refuses a file it cannot inspect at all", async () => {
 		mediaFile.inspectMediaFile.mockRejectedValue(new Error("gone"));
 
 		expect(
-			await pickInspectedAlbumMedia({
+			await pickOrScreenAlbumMedia({
 				room: { photos: true, videos: true },
 			}),
 		).toEqual([]);

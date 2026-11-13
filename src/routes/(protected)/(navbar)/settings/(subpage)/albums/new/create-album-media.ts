@@ -8,16 +8,15 @@ import {
 } from "#lib/api/messaging/albums.ts";
 import { albumRoom } from "#lib/components/album/album.ts";
 import { discardStagedMedia } from "#lib/platform/media-file.ts";
-import { screenMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { MyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+import type { ScreenedMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import {
 	enqueueAlbumMedia,
-	pickInspectedAlbumMedia,
+	pickOrScreenAlbumMedia,
 } from "../album-uploads/add-album-media";
 import {
 	type AlbumUploads,
-	type InspectedPick,
 	isPlanLimitReached,
 } from "../album-uploads/album-uploads-state.svelte";
 
@@ -34,15 +33,13 @@ export async function createAlbumFromMedia({
 	albumName: string | null;
 	media?: PickedMedia[];
 }): Promise<void> {
-	let inspected: InspectedPick[] = [];
+	let inspected: ScreenedMedia[] = [];
 	try {
 		const limits = await getAlbumStorageLimits();
-		inspected =
-			media === undefined
-				? await pickInspectedAlbumMedia({
-						room: albumRoom({ content: [], pending: [], limits }),
-					})
-				: await screenMedia({ media, videos: true });
+		inspected = await pickOrScreenAlbumMedia({
+			room: albumRoom({ content: [], pending: [], limits }),
+			media,
+		});
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });
 		void myAlbums.reload();

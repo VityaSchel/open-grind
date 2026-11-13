@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { ApiError } from "#lib/api/api-error.ts";
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
+import type { ScreenedMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import {
 	type AlbumUploads,
 	getAlbumUploads,
-	type InspectedPick,
 	type UploadLimits,
 } from "./album-uploads-state.svelte";
 
@@ -64,7 +64,7 @@ function media(key: string, mimeType: string): PickedMedia {
 	return { key, mimeType, source: "desktop", path: `/tmp/${key}` };
 }
 
-function pick(key: string, mimeType: string): InspectedPick {
+function pick(key: string, mimeType: string): ScreenedMedia {
 	const kind = mimeType.startsWith("video/") ? "video" : "photo";
 	return { media: media(key, mimeType), inspection: { kind, size: 1024 } };
 }
@@ -106,7 +106,7 @@ function httpError(status: number): ApiError {
 	});
 }
 
-function enqueue(uploads: AlbumUploads, ...inspected: InspectedPick[]) {
+function enqueue(uploads: AlbumUploads, ...inspected: ScreenedMedia[]) {
 	uploads.enqueue({ albumId: ALBUM_ID, inspected, limits, content: [] });
 }
 

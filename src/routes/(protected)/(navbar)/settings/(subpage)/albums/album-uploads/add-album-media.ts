@@ -4,7 +4,10 @@ import { showErrorToast } from "#lib/api/error-toast.ts";
 import { getAlbumStorageLimits } from "#lib/api/messaging/albums.ts";
 import { type AlbumRoom, albumRoom } from "#lib/components/album/album.ts";
 import { discardStagedMedia } from "#lib/platform/media-file.ts";
-import { screenMedia } from "#lib/platform/media-intake.svelte.ts";
+import {
+	type ScreenedMedia,
+	screenMedia,
+} from "#lib/platform/media-intake.svelte.ts";
 import {
 	type MediaKind,
 	type PickedMedia,
@@ -13,7 +16,6 @@ import {
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import {
 	type AlbumUploads,
-	type InspectedPick,
 	isPlanLimitReached,
 	type UploadLimits,
 } from "./album-uploads-state.svelte";
@@ -27,11 +29,14 @@ function pickerKind(room: AlbumRoom): MediaKind | null {
 	return null;
 }
 
-export async function pickInspectedAlbumMedia({
+export async function pickOrScreenAlbumMedia({
 	room,
+	media,
 }: {
 	room: AlbumRoom;
-}): Promise<InspectedPick[]> {
+	media?: PickedMedia[];
+}): Promise<ScreenedMedia[]> {
+	if (media !== undefined) return await screenMedia({ media, videos: true });
 	const kind = pickerKind(room);
 	if (kind === null) return [];
 	return await screenMedia({
@@ -54,7 +59,7 @@ export function enqueueAlbumMedia({
 }: {
 	uploads: AlbumUploads;
 	albumId: number;
-	inspected: InspectedPick[];
+	inspected: ScreenedMedia[];
 	limits: UploadLimits;
 	content: AlbumContent[];
 }): void {
@@ -93,10 +98,7 @@ export async function addAlbumMedia({
 			await discardStagedMedia(media ?? []);
 			return;
 		}
-		const inspected =
-			media === undefined
-				? await pickInspectedAlbumMedia({ room })
-				: await screenMedia({ media, videos: true });
+		const inspected = await pickOrScreenAlbumMedia({ room, media });
 		if (inspected.length === 0) return;
 		enqueueAlbumMedia({
 			uploads,

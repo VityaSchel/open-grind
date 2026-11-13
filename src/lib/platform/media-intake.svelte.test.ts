@@ -669,4 +669,29 @@ describe("screenMedia", () => {
 		expect(accepted.map(({ media }) => media.key)).toEqual(["photo"]);
 		expect(toastError).toHaveBeenCalledWith("Videos can't be added here");
 	});
+
+	it("discards a staged file it cannot inspect", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		invokeMock.mockImplementation(
+			(command: string, args: { file?: { id: string } }) => {
+				if (command !== "inspect_media_file") {
+					return Promise.resolve(undefined);
+				}
+				if (args.file?.id === "gone") {
+					return Promise.reject(new Error("gone"));
+				}
+				return Promise.resolve({ kind: "photo", size: 1 });
+			},
+		);
+
+		const accepted = await screenMedia({
+			media: ["photo", "gone"].map(staged),
+			videos: true,
+		});
+
+		expect(accepted.map(({ media }) => media.key)).toEqual(["photo"]);
+		expect(invokeMock).toHaveBeenCalledWith("discard_staged_media", {
+			id: "gone",
+		});
+	});
 });

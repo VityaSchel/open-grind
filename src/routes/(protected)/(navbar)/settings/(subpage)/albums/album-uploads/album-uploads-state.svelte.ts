@@ -15,7 +15,6 @@ import { forgetAlbumSlides } from "#lib/components/album/album-lightbox.ts";
 import { albumMediaCounts } from "#lib/components/album/album.ts";
 import {
 	discardStagedMedia,
-	type MediaFileInspection,
 	type MediaFileKind,
 } from "#lib/platform/media-file.ts";
 import { delay } from "#lib/util/delay.ts";
@@ -24,14 +23,10 @@ import type {
 	AlbumContent,
 	AlbumStorageLimits,
 } from "#lib/model/messaging/albums.ts";
+import type { ScreenedMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 type UploadKind = Exclude<MediaFileKind, "unsupported">;
-
-export type InspectedPick = {
-	media: PickedMedia;
-	inspection: MediaFileInspection & { kind: UploadKind };
-};
 
 export type PendingUpload = { key: string; kind: UploadKind };
 
@@ -49,7 +44,7 @@ export type UploadLimits = Pick<
 	| "maxVideosPerAlbum"
 >;
 
-type QueuedUpload = InspectedPick & { albumId: number; limits: UploadLimits };
+type QueuedUpload = ScreenedMedia & { albumId: number; limits: UploadLimits };
 
 const RECONCILE_INTERVAL_MS = 5_000;
 
@@ -151,7 +146,7 @@ class AlbumUploadsState {
 		content,
 	}: {
 		albumId: number;
-		inspected: InspectedPick[];
+		inspected: ScreenedMedia[];
 		limits: UploadLimits;
 		content: AlbumContent[];
 	}): { leftOutFull: number; leftOutVideoSlot: number } {
