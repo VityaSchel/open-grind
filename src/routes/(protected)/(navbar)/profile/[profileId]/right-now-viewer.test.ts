@@ -66,13 +66,11 @@ function captionRender() {
 }
 
 function captionPanelOf(pswp: PhotoSwipe) {
-	return pswp.element!.querySelector<HTMLElement>(
-		".pswp__caption-panel[data-pswp-interactive]",
-	)!;
+	return pswp.element!.querySelector<HTMLElement>(".pswp__caption-panel")!;
 }
 
 describe("applyPhotoSwipeCaption", () => {
-	it("mounts the caption in an interactive panel and unmounts it when the viewer closes", async () => {
+	it("mounts the caption in a panel on the viewer and unmounts it when the viewer closes", async () => {
 		const lightbox = viewer();
 		const render = captionRender();
 		applyPhotoSwipeCaption(lightbox, { render });

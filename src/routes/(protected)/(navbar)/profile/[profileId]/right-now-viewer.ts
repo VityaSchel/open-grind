@@ -25,7 +25,6 @@ export function applyPhotoSwipeCaption(
 			appendTo: "root",
 			onInit: (element, pswp) => {
 				caption = element;
-				element.setAttribute("data-pswp-interactive", "");
 				const component = render({ target: element, pswp });
 				const resize = new ResizeObserver(() => pswp.updateSize(true));
 				resize.observe(element);
