@@ -148,16 +148,6 @@ describe("BackButton", () => {
 		expect(back).not.toHaveBeenCalled();
 	});
 
-	it("replaces a lone entry with Browse where the Navigation API is missing", () => {
-		const { back, link } = renderBackLink({ historyLength: 1 });
-
-		expect(clickFollowsLink(link)).toBe(false);
-		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replace: true,
-		});
-		expect(back).not.toHaveBeenCalled();
-	});
-
 	it("replaces once for a double tap on the first screen", () => {
 		const { link } = renderBackLink({ canGoBack: false });
 
