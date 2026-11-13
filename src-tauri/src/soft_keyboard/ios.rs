@@ -2,7 +2,7 @@ use std::cell::{Cell, RefCell};
 use std::ptr::NonNull;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use block2::{DynBlock, RcBlock};
+use block2::RcBlock;
 use objc2::rc::{Retained, Weak};
 use objc2::runtime::{
 	AnyObject, NSObject, NSObjectProtocol, ProtocolObject, Sel,
@@ -12,7 +12,7 @@ use objc2::{
 };
 use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{
-	NSArray, NSError, NSNotification, NSNotificationCenter, NSNotificationName,
+	NSArray, NSNotification, NSNotificationCenter, NSNotificationName,
 	NSNumber, NSOperationQueue, NSString, NSValue,
 };
 use objc2_ui_kit::{
@@ -33,6 +33,7 @@ use super::geometry::{
 };
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
+use crate::uikit::evaluate;
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
@@ -338,19 +339,6 @@ fn rect(rect: CGRect) -> Rect {
 		width: rect.size.width,
 		height: rect.size.height,
 	}
-}
-
-fn evaluate(webview: &UIView, script: &str) {
-	let script = NSString::from_str(script);
-	let completion: Option<&DynBlock<dyn Fn(*mut AnyObject, *mut NSError)>> =
-		None;
-	let _: () = unsafe {
-		msg_send![
-			webview,
-			evaluateJavaScript: &*script,
-			completionHandler: completion
-		]
-	};
 }
 
 fn keyboard_change(notification: &NSNotification) -> Option<KeyboardChange> {

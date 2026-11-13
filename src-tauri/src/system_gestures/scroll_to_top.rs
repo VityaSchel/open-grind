@@ -11,10 +11,10 @@ use objc2_ui_kit::{
 };
 use tauri::WebviewWindow;
 
-use super::page_script::evaluate;
 use super::scroll_target::{ScrollerPoint, STATUS_BAR_TAP_SCRIPT};
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
+use crate::uikit::evaluate;
 
 const MOMENTUM_STOP_SINCE: NSOperatingSystemVersion =
 	NSOperatingSystemVersion {

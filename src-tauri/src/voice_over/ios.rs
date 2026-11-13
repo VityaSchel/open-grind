@@ -14,7 +14,7 @@ use objc2_ui_kit::{
 use tauri::WebviewWindow;
 
 use super::status_script;
-use crate::system_gestures::page_script::evaluate;
+use crate::uikit::evaluate;
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 

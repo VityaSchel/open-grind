@@ -43,6 +43,8 @@ mod storage;
 #[cfg(any(target_os = "ios", test))]
 mod system_gestures;
 mod transfer;
+#[cfg(target_os = "ios")]
+mod uikit;
 mod upload;
 mod video;
 #[cfg(any(target_os = "ios", test))]

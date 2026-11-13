@@ -16,9 +16,9 @@ use objc2_ui_kit::{
 use tauri::WebviewWindow;
 
 use super::edge_pan::{self, EdgePoint, Release};
-use super::page_script::evaluate;
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
+use crate::uikit::evaluate;
 
 thread_local! {
 	static BACK_SWIPE: RefCell<Option<Retained<BackSwipe>>> =
