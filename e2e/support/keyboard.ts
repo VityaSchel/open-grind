@@ -48,8 +48,12 @@ export function sendIosInsets(
 
 export async function switchKeyboardAtOnce(
 	page: Page,
-	{ viewport, insets }: Keyboard,
+	{
+		viewport,
+		insets,
+		send = sendInsets,
+	}: Keyboard & { send?: typeof sendInsets },
 ): Promise<void> {
-	await sendInsets(page, insets);
+	await send(page, insets);
 	await page.setViewportSize(viewport);
 }

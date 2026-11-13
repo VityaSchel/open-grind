@@ -17,6 +17,7 @@ import {
 	type Keyboard,
 	sendInsets,
 	sendIosInsets,
+	switchKeyboardAtOnce,
 	TEST_INSETS,
 } from "./support/keyboard";
 import { LIVE_STACK, PHONE } from "./support/stack-layers";
@@ -36,6 +37,10 @@ const CLOSE_HOLD_MS = 400;
 const LINEAR = [0, 0, 1, 1] as const;
 const SAFE_AREA_STRIP = '[data-slot="safe-area-strip"]';
 const SAVE_CHANGES_BAR = '[data-slot="save-changes-bar"]';
+const NATIVE_SENDERS = [
+	{ platform: "ios", send: sendIosInsets, revealed: true },
+	{ platform: "android", send: sendInsets, revealed: false },
+] as const;
 
 test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
@@ -63,11 +68,12 @@ const safeAreaBottom = (page: Page) =>
 
 async function switchIosKeyboard(
 	page: Page,
-	{ viewport, insets }: Keyboard,
+	keyboard: Keyboard,
 ): Promise<void> {
-	await sendIosInsets(page, insets);
-	await page.setViewportSize(viewport);
-	await expect.poll(() => safeAreaBottom(page)).toBe(`${insets.bottom}px`);
+	await switchKeyboardAtOnce(page, { ...keyboard, send: sendIosInsets });
+	await expect
+		.poll(() => safeAreaBottom(page))
+		.toBe(`${keyboard.insets.bottom}px`);
 }
 
 async function rideIosKeyboard(
@@ -227,10 +233,7 @@ for (const { keyboard, text, focused } of [
 	});
 }
 
-for (const { platform, send, revealed } of [
-	{ platform: "ios", send: sendIosInsets, revealed: true },
-	{ platform: "android", send: sendInsets, revealed: false },
-] as const) {
+for (const { platform, send, revealed } of NATIVE_SENDERS) {
 	test(`a field the keyboard covers on ${platform} ${revealed ? "scrolls into view" : "is left to the WebView"}`, async ({
 		page,
 	}) => {
@@ -248,8 +251,7 @@ for (const { platform, send, revealed } of [
 			KEYBOARD_OPEN.viewport.height,
 		);
 
-		await send(page, KEYBOARD_OPEN.insets);
-		await page.setViewportSize(KEYBOARD_OPEN.viewport);
+		await switchKeyboardAtOnce(page, { ...KEYBOARD_OPEN, send });
 		await expect.poll(() => safeAreaBottom(page)).toBe("0px");
 		await afterTwoFrames(page);
 
@@ -260,10 +262,7 @@ for (const { platform, send, revealed } of [
 	});
 }
 
-for (const { platform, send, revealed } of [
-	{ platform: "ios", send: sendIosInsets, revealed: true },
-	{ platform: "android", send: sendInsets, revealed: false },
-] as const) {
+for (const { platform, send, revealed } of NATIVE_SENDERS) {
 	test(`a field the save bar lands on while typing on ${platform} ${revealed ? "scrolls above it" : "is left to the WebView"}`, async ({
 		page,
 	}) => {
@@ -277,8 +276,7 @@ for (const { platform, send, revealed } of [
 		await instagram.evaluate((field) =>
 			field.focus({ preventScroll: true }),
 		);
-		await send(page, KEYBOARD_OPEN.insets);
-		await page.setViewportSize(KEYBOARD_OPEN.viewport);
+		await switchKeyboardAtOnce(page, { ...KEYBOARD_OPEN, send });
 		await expect(mainNav(page)).toBeHidden();
 		await instagram.evaluate((field) =>
 			field.scrollIntoView({ block: "end" }),
@@ -318,10 +316,7 @@ for (const { platform, send, revealed } of [
 	});
 }
 
-for (const { platform, send } of [
-	{ platform: "ios", send: sendIosInsets },
-	{ platform: "android", send: sendInsets },
-] as const) {
+for (const { platform, send } of NATIVE_SENDERS) {
 	test(`the nav bar on ${platform} steps aside while the keyboard is up so a field can sit right on it, and comes back once it closes`, async ({
 		page,
 	}) => {
@@ -332,8 +327,7 @@ for (const { platform, send } of [
 		await expect(mainNav(page)).toBeVisible();
 		await about.evaluate((field) => field.focus({ preventScroll: true }));
 
-		await send(page, KEYBOARD_OPEN.insets);
-		await page.setViewportSize(KEYBOARD_OPEN.viewport);
+		await switchKeyboardAtOnce(page, { ...KEYBOARD_OPEN, send });
 		await expect(mainNav(page)).toBeHidden();
 		await about.evaluate((field) => field.scrollIntoView({ block: "end" }));
 		await afterTwoFrames(page);
@@ -352,8 +346,7 @@ for (const { platform, send } of [
 			}),
 		).toEqual({ bottom: KEYBOARD_OPEN.viewport.height, uncovered: true });
 
-		await send(page, KEYBOARD_CLOSED.insets);
-		await page.setViewportSize(KEYBOARD_CLOSED.viewport);
+		await switchKeyboardAtOnce(page, { ...KEYBOARD_CLOSED, send });
 		await expect(mainNav(page)).toBeVisible();
 	});
 }
@@ -365,8 +358,7 @@ test("the nav bar on macOS stays whatever the insets say about a keyboard", asyn
 	await page.goto("/settings/profile");
 	await mainNav(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
-	await sendInsets(page, KEYBOARD_OPEN.insets);
-	await page.setViewportSize(KEYBOARD_OPEN.viewport);
+	await switchKeyboardAtOnce(page, KEYBOARD_OPEN);
 	await afterTwoFrames(page);
 
 	await expect(mainNav(page)).toBeVisible();
