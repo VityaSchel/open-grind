@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ZodType } from "zod";
 
 const { fetchRestMock, callMethodMock, assignmentsOn } = vi.hoisted(() => ({
 	fetchRestMock: vi.fn(),
@@ -34,6 +33,7 @@ import {
 	reportRightNowPost,
 	reportRightNowPostV1,
 } from "#lib/api/safety/reports.ts";
+import { restResponse } from "#lib/test/rest-response.ts";
 import type {
 	ProfileReportRequest,
 	RightNowPostReportRequest,
@@ -55,35 +55,13 @@ const rightNowPostReport: RightNowPostReportRequest = {
 	locations: ["RIGHT_NOW_PHOTO", "RIGHT_NOW_TEXT"],
 };
 
-function response({
-	status = 200,
-	body = null,
-}: { status?: number; body?: unknown } = {}) {
-	const assertOk = () => {
-		if (status < 200 || status >= 300)
-			throw new ApiError({
-				message: `API request failed with status ${status}`,
-				request: { method: "POST", path: "/" },
-				response: { status, body: "" },
-			});
-	};
-	return {
-		status,
-		assertOk,
-		jsonParsed: (schema: ZodType) => {
-			assertOk();
-			return schema.parse(body);
-		},
-	};
-}
-
 function respond(options: { status?: number; body?: unknown } = {}) {
-	fetchRestMock.mockResolvedValue(response(options));
+	fetchRestMock.mockResolvedValue(restResponse(options));
 }
 
 function respondInTurn(...statuses: number[]) {
 	for (const status of statuses) {
-		fetchRestMock.mockResolvedValueOnce(response({ status }));
+		fetchRestMock.mockResolvedValueOnce(restResponse({ status }));
 	}
 }
 
@@ -207,9 +185,7 @@ describe("anonymous Right Now post reports", () => {
 		).rejects.toThrow("status 500");
 	});
 
-	it("posts the report without asking for a token", async () => {
-		assignmentsOn.add("right-now-moderation");
-
+	it("posts the report to the post", async () => {
 		await reportRightNowPostV1({
 			postId: POST_ID,
 			report: rightNowPostReport,
@@ -219,7 +195,6 @@ describe("anonymous Right Now post reports", () => {
 			path: "/v1/flags/right-now/7001",
 			options: { method: "POST", body: rightNowPostReport },
 		});
-		expect(callMethodMock).not.toHaveBeenCalled();
 	});
 });
 

@@ -266,8 +266,8 @@ describe("updateRightNowPost", () => {
 
 	it("passes other edit failures through", async () => {
 		respondInTurn({
-			status: 500,
-			body: errorBody("urn:gr:err:internal_error"),
+			status: 400,
+			body: errorBody("urn:gr:err:bad_request"),
 		});
 
 		await expect(
@@ -304,8 +304,8 @@ describe("setRightNowPostHidden", () => {
 
 	it("passes other failures through", async () => {
 		respondInTurn({
-			status: 500,
-			body: errorBody("urn:gr:err:internal_error"),
+			status: 400,
+			body: errorBody("urn:gr:err:bad_request"),
 		});
 
 		await expect(
