@@ -10,6 +10,10 @@ import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
 } from "#lib/platform/back-gesture-event.svelte.ts";
+import {
+	IOS_INSETS,
+	IOS_KEYBOARD_SHOWN,
+} from "#lib/platform/native-insets-test-helpers.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import { ComposerSheetsState } from "./composer-sheets-state.svelte";
 
@@ -482,13 +486,7 @@ describe("MessageComposer send button on ios", () => {
 		{ ime: false, held: false },
 	]) {
 		it(`${held ? "holds" : "lets go of"} the composer focus on the tap's mouse press while the keyboard is ${ime ? "up" : "down"}`, async () => {
-			window.__iosInsets = {
-				top: 62,
-				bottom: ime ? 0 : 34,
-				left: 0,
-				right: 0,
-				ime,
-			};
+			window.__iosInsets = ime ? IOS_KEYBOARD_SHOWN : IOS_INSETS;
 			const { textarea, getByRole } = renderComposer();
 			await type(textarea, "see you soon");
 			const press = new MouseEvent("mousedown", {

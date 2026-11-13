@@ -25,6 +25,12 @@ export const IOS_INSETS: NativeInsets = {
 	ime: false,
 };
 
+export const IOS_KEYBOARD_SHOWN: NativeInsets = {
+	...IOS_INSETS,
+	bottom: 0,
+	ime: true,
+};
+
 export const FALLBACK_INSETS: NativeInsets = {
 	top: 64,
 	bottom: 64,
@@ -47,6 +53,11 @@ export function androidBridge({
 		right: () => right,
 		imeVisible: () => ime,
 	};
+}
+
+export function resizeViewport(height: number): void {
+	vi.stubGlobal("innerHeight", height);
+	window.dispatchEvent(new Event("resize"));
 }
 
 let uninstallNativeInsets: (() => void) | undefined;

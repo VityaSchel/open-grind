@@ -1,8 +1,18 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { NativeInsets } from "./native-insets";
+import {
+	androidBridge,
+	IOS_INSETS,
+	IOS_KEYBOARD_SHOWN,
+	KEYBOARD_HIDDEN,
+	KEYBOARD_SHOWN,
+	loadNativeInsets,
+	resetNativeInsets,
+	resizeViewport,
+} from "./native-insets-test-helpers";
 import type { SupportedPlatform } from "./os";
 import * as softKeyboardOnTestRuntime from "./soft-keyboard.svelte";
 
@@ -12,24 +22,8 @@ vi.mock("#lib/util/screen-chrome.svelte.ts", () => ({ remeasureScreenChrome }));
 
 const ROOT_ATTRIBUTE = "data-keyboard-shrinks-page";
 
-const KEYBOARD_HIDDEN: NativeInsets = {
-	top: 62,
-	bottom: 34,
-	left: 0,
-	right: 0,
-	ime: false,
-};
-
-const KEYBOARD_SHOWN: NativeInsets = {
-	...KEYBOARD_HIDDEN,
-	bottom: 0,
-	ime: true,
-};
-
 const SCREEN_HEIGHT = 874;
 const KEYBOARD_HEIGHT = 328;
-
-let uninstallNativeInsets: (() => void) | undefined;
 
 async function loadSoftKeyboard() {
 	vi.resetModules();
@@ -37,10 +31,9 @@ async function loadSoftKeyboard() {
 }
 
 async function loadFedByNativeInsets() {
-	const softKeyboard = await loadSoftKeyboard();
-	const { installNativeInsets } = await import("./native-insets");
-	uninstallNativeInsets = installNativeInsets();
-	return softKeyboard;
+	const { installNativeInsets } = await loadNativeInsets();
+	installNativeInsets();
+	return await import("./soft-keyboard.svelte");
 }
 
 function shrunk(): boolean {
@@ -53,40 +46,38 @@ function safeAreaBottom(): string {
 	);
 }
 
-function resizeWindow(height: number) {
-	vi.stubGlobal("innerHeight", height);
-	window.dispatchEvent(new Event("resize"));
-}
-
 afterEach(() => {
-	uninstallNativeInsets?.();
-	uninstallNativeInsets = undefined;
-	vi.unstubAllGlobals();
-	delete window.__AndroidInsets;
-	delete window.__iosInsets;
+	resetNativeInsets();
 	remeasureScreenChrome.mockClear();
-	resetPlatform();
 	document.documentElement.removeAttribute(ROOT_ATTRIBUTE);
-	document.documentElement.style.removeProperty("--safe-area-bottom");
 });
 
 describe.each([
-	{ platform: "android", shrinksAtPush: false },
-	{ platform: "ios", shrinksAtPush: true },
-] satisfies { platform: SupportedPlatform; shrinksAtPush: boolean }[])(
+	{
+		platform: "android",
+		closed: KEYBOARD_HIDDEN,
+		open: KEYBOARD_SHOWN,
+		shrinksAtPush: false,
+	},
+	{
+		platform: "ios",
+		closed: IOS_INSETS,
+		open: IOS_KEYBOARD_SHOWN,
+		shrinksAtPush: true,
+	},
+] satisfies {
+	platform: SupportedPlatform;
+	closed: NativeInsets;
+	open: NativeInsets;
+	shrinksAtPush: boolean;
+}[])(
 	"fed by the native insets on $platform",
-	({ platform, shrinksAtPush }) => {
+	({ platform, closed, open, shrinksAtPush }) => {
 		beforeEach(() => {
 			runningOn(platform);
 			vi.stubGlobal("innerHeight", SCREEN_HEIGHT);
-			window.__AndroidInsets = {
-				top: () => KEYBOARD_HIDDEN.top,
-				bottom: () => KEYBOARD_HIDDEN.bottom,
-				left: () => KEYBOARD_HIDDEN.left,
-				right: () => KEYBOARD_HIDDEN.right,
-				imeVisible: () => KEYBOARD_HIDDEN.ime,
-			};
-			window.__iosInsets = KEYBOARD_HIDDEN;
+			window.__AndroidInsets = androidBridge(closed);
+			window.__iosInsets = closed;
 		});
 
 		it(
@@ -97,11 +88,11 @@ describe.each([
 				const { softKeyboardShrinksPage } =
 					await loadFedByNativeInsets();
 
-				window.__reapplyInsets(KEYBOARD_SHOWN);
+				window.__reapplyInsets(open);
 				expect(softKeyboardShrinksPage()).toBe(shrinksAtPush);
-				expect(safeAreaBottom()).toBe("34px");
+				expect(safeAreaBottom()).toBe(`${closed.bottom}px`);
 
-				resizeWindow(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
+				resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
 				expect(softKeyboardShrinksPage()).toBe(true);
 				expect(safeAreaBottom()).toBe("0px");
 			},
@@ -109,33 +100,33 @@ describe.each([
 
 		it("grows the page back only once the window resizes after the keyboard closes", async () => {
 			const { softKeyboardShrinksPage } = await loadFedByNativeInsets();
-			window.__reapplyInsets(KEYBOARD_SHOWN);
-			resizeWindow(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
+			window.__reapplyInsets(open);
+			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
 
-			window.__reapplyInsets(KEYBOARD_HIDDEN);
+			window.__reapplyInsets(closed);
 			expect(softKeyboardShrinksPage()).toBe(true);
 
-			resizeWindow(SCREEN_HEIGHT);
+			resizeViewport(SCREEN_HEIGHT);
 			expect(softKeyboardShrinksPage()).toBe(false);
 		});
 
 		it("grows the page back when the keyboard closes again before the window resized", async () => {
 			const { softKeyboardShrinksPage } = await loadFedByNativeInsets();
 
-			window.__reapplyInsets(KEYBOARD_SHOWN);
-			window.__reapplyInsets(KEYBOARD_HIDDEN);
-			resizeWindow(SCREEN_HEIGHT);
+			window.__reapplyInsets(open);
+			window.__reapplyInsets(closed);
+			resizeViewport(SCREEN_HEIGHT);
 
 			expect(softKeyboardShrinksPage()).toBe(false);
 		});
 
 		it("keeps the page shrunk while focus moves to another field under the same keyboard", async () => {
 			const { softKeyboardShrinksPage } = await loadFedByNativeInsets();
-			window.__reapplyInsets(KEYBOARD_SHOWN);
-			resizeWindow(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
+			window.__reapplyInsets(open);
+			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
 
-			window.__reapplyInsets({ ...KEYBOARD_SHOWN });
-			resizeWindow(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
+			window.__reapplyInsets({ ...open });
+			resizeViewport(SCREEN_HEIGHT - KEYBOARD_HEIGHT);
 
 			expect(softKeyboardShrinksPage()).toBe(true);
 		});

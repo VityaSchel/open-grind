@@ -14,10 +14,12 @@ import {
 	androidBridge,
 	FALLBACK_INSETS,
 	IOS_INSETS,
+	IOS_KEYBOARD_SHOWN,
 	KEYBOARD_HIDDEN,
 	KEYBOARD_SHOWN,
 	loadNativeInsets,
 	resetNativeInsets,
+	resizeViewport,
 } from "./native-insets-test-helpers";
 
 const topChromeClearance = vi.hoisted(() => vi.fn(() => 0));
@@ -38,11 +40,6 @@ describe("revealing the focused field under the keyboard", () => {
 	const KEYBOARD_HEIGHT = 328;
 	const ABOVE_KEYBOARD = SCREEN_HEIGHT - KEYBOARD_HEIGHT;
 	const SAVE_BAR_HEIGHT = 60;
-	const IOS_KEYBOARD_SHOWN: NativeInsets = {
-		...IOS_INSETS,
-		bottom: 0,
-		ime: true,
-	};
 
 	let field: HTMLTextAreaElement;
 	let scrollIntoView: Mock<HTMLElement["scrollIntoView"]>;
@@ -98,11 +95,6 @@ describe("revealing the focused field under the keyboard", () => {
 		} as DOMRect);
 		inside.append(chrome);
 		return chrome;
-	}
-
-	function resizeViewport(height: number) {
-		vi.stubGlobal("innerHeight", height);
-		window.dispatchEvent(new Event("resize"));
 	}
 
 	function openKeyboard(insets: NativeInsets = IOS_KEYBOARD_SHOWN) {
