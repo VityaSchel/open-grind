@@ -79,6 +79,35 @@ pub struct KeyboardMotion {
 	pub curve: [f64; 4],
 }
 
+#[derive(Clone, Copy)]
+pub struct Timing {
+	pub seconds: f64,
+	pub curve: usize,
+}
+
+impl Timing {
+	pub const INSTANT: Self = Self {
+		seconds: 0.0,
+		curve: 0,
+	};
+
+	pub fn motion(self, span: MotionSpan) -> KeyboardMotion {
+		KeyboardMotion {
+			from: span.from,
+			to: span.to,
+			duration: self.seconds * 1000.0,
+			started_at: span.started_at,
+			curve: timing_curve(self.curve),
+		}
+	}
+}
+
+pub struct MotionSpan {
+	pub from: f64,
+	pub to: f64,
+	pub started_at: f64,
+}
+
 pub fn keyboard_overlap(bounds: Rect, keyboard: Rect) -> f64 {
 	let undocked = (keyboard.max_y() - bounds.max_y()).abs() > DOCKED_TOLERANCE;
 	if keyboard.is_empty() || keyboard.y >= bounds.max_y() || undocked {
@@ -95,7 +124,7 @@ pub fn push_script(insets: &NativeInsets) -> String {
 	)
 }
 
-pub fn timing_curve(curve: usize) -> [f64; 4] {
+fn timing_curve(curve: usize) -> [f64; 4] {
 	match curve {
 		0 => EASE_IN_OUT,
 		1 => EASE_IN,
@@ -346,13 +375,11 @@ mod tests {
 			.map(|(field, _)| field)
 			.collect();
 		read.sort_unstable();
-		let motion = serde_json::to_value(KeyboardMotion {
+		let motion = serde_json::to_value(Timing::INSTANT.motion(MotionSpan {
 			from: 0.0,
 			to: 0.0,
-			duration: 0.0,
 			started_at: 0.0,
-			curve: timing_curve(7),
-		})
+		}))
 		.unwrap();
 		let mut fields: Vec<&str> = motion
 			.as_object()
@@ -388,13 +415,15 @@ mod tests {
 
 	#[test]
 	fn the_motion_reaches_the_page_in_milliseconds_and_camel_case() {
-		let script = motion_script(&KeyboardMotion {
+		let timing = Timing {
+			seconds: 0.5,
+			curve: 7,
+		};
+		let script = motion_script(&timing.motion(MotionSpan {
 			from: 0.0,
 			to: 328.0,
-			duration: 383.3,
 			started_at: 1_800_000_000_020.0,
-			curve: timing_curve(7),
-		});
+		}));
 		let json = script
 			.strip_prefix("window.__iosKeyboardMotion?.(")
 			.and_then(|rest| rest.strip_suffix(')'))
@@ -404,7 +433,7 @@ mod tests {
 			serde_json::json!({
 				"from": 0.0,
 				"to": 328.0,
-				"duration": 383.3,
+				"duration": 500.0,
 				"startedAt": 1_800_000_000_020.0,
 				"curve": [0.296, 0.93, 0.287, 1.0],
 			})

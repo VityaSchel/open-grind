@@ -25,7 +25,8 @@ use tauri::webview::{PageLoadEvent, PageLoadPayload};
 use tauri::{Manager, WebviewWindow};
 
 use super::geometry::{
-	self, Edges, KeyboardLayout, KeyboardMotion, NativeInsets, Rect,
+	self, Edges, KeyboardLayout, KeyboardMotion, MotionSpan, NativeInsets,
+	Rect, Timing,
 };
 use crate::child_scroller::child_scroller_at;
 use crate::page_point::PagePoint;
@@ -54,12 +55,6 @@ struct Placement {
 	sent: Cell<Option<NativeInsets>>,
 	drag_target: Cell<Option<CGPoint>>,
 	drag_scroller: RefCell<Option<Weak<UIScrollView>>>,
-}
-
-#[derive(Clone, Copy)]
-struct Timing {
-	duration: f64,
-	curve: usize,
 }
 
 struct KeyboardChange {
@@ -180,8 +175,8 @@ impl KeyboardFrame {
 		if overlap < travelled {
 			self.ivars().opening.set(None);
 			let mut timing = change.timing;
-			if overlap == 0.0 && timing.duration > 0.0 {
-				timing.duration = timing.duration.max(SHORTEST_CLOSE_SECONDS);
+			if overlap == 0.0 && timing.seconds > 0.0 {
+				timing.seconds = timing.seconds.max(SHORTEST_CLOSE_SECONDS);
 			}
 			self.ride(timing, CLOSE_LEAD_MS);
 		} else if overlap > travelled
@@ -196,31 +191,31 @@ impl KeyboardFrame {
 		let to = self.keyboard_overlap();
 		self.ivars().travelled.set(to);
 		if from != to {
-			self.push_motion(KeyboardMotion {
+			self.push_motion(timing.motion(MotionSpan {
 				from,
 				to,
-				duration: timing.duration * 1000.0,
 				started_at: epoch_milliseconds() + lead_ms,
-				curve: geometry::timing_curve(timing.curve),
-			});
+			}));
 		}
 		self.setNeedsLayout();
 		self.layoutIfNeeded();
 	}
 
 	fn catch_up(&self, overlap: f64) {
-		let travelled = self.ivars().travelled.get();
-		if self.ivars().opening.get().is_some() || overlap == travelled {
-			return;
+		if self.ivars().opening.get().is_none()
+			&& overlap != self.ivars().travelled.get()
+		{
+			self.jump(overlap);
 		}
-		self.ivars().travelled.set(overlap);
-		self.push_motion(KeyboardMotion {
-			from: travelled,
-			to: overlap,
-			duration: 0.0,
+	}
+
+	fn jump(&self, to: f64) {
+		let from = self.ivars().travelled.replace(to);
+		self.push_motion(Timing::INSTANT.motion(MotionSpan {
+			from,
+			to,
 			started_at: epoch_milliseconds(),
-			curve: geometry::timing_curve(0),
-		});
+		}));
 	}
 
 	fn push_motion(&self, motion: KeyboardMotion) {
@@ -239,13 +234,7 @@ impl KeyboardFrame {
 		self.setNeedsLayout();
 		self.layoutIfNeeded();
 		if page_follows && overlap > 0.0 {
-			self.push_motion(KeyboardMotion {
-				from: overlap,
-				to: overlap,
-				duration: 0.0,
-				started_at: epoch_milliseconds(),
-				curve: geometry::timing_curve(0),
-			});
+			self.jump(overlap);
 		}
 		if !page_follows {
 			self.aim_drag_dismiss();
@@ -355,7 +344,7 @@ fn keyboard_change(notification: &NSNotification) -> Option<KeyboardChange> {
 	Some(KeyboardChange {
 		end: unsafe { end.CGRectValue() },
 		timing: Timing {
-			duration: number(unsafe { UIKeyboardAnimationDurationUserInfoKey })
+			seconds: number(unsafe { UIKeyboardAnimationDurationUserInfoKey })
 				.map_or(0.0, |duration| duration.doubleValue()),
 			curve: number(unsafe { UIKeyboardAnimationCurveUserInfoKey })
 				.map_or(0, |curve| curve.unsignedIntegerValue()),
