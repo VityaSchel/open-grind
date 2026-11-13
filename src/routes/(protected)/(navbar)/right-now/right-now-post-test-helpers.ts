@@ -1,7 +1,7 @@
 import type {
 	RightNowModeratedText,
-	RightNowOwnPostMedia,
 	RightNowPostDetails,
+	RightNowPostDetailsMedia,
 } from "#lib/model/right-now/post.ts";
 
 export const SECOND = 1_000;
@@ -50,8 +50,8 @@ export function moderatedText(
 }
 
 export function postPhoto(
-	overrides: Partial<RightNowOwnPostMedia> = {},
-): RightNowOwnPostMedia {
+	overrides: Partial<RightNowPostDetailsMedia> = {},
+): RightNowPostDetailsMedia {
 	return {
 		mediaId: 316,
 		thumbnailUrl: "https://cdns.grindr.com/images/thumb/480x480/a2bae94c",

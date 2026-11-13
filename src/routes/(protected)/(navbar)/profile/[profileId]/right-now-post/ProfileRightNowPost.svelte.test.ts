@@ -63,8 +63,8 @@ import { proxyMediaUrl } from "#lib/util/media.ts";
 import { isPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
 import type {
-	RightNowOwnPostMedia,
 	RightNowPostDetails,
+	RightNowPostDetailsMedia,
 } from "#lib/model/right-now/post.ts";
 import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import type { LightboxItem } from "#lib/util/photoswipe/index.ts";
@@ -117,9 +117,9 @@ function fakeLightbox(): FakeLightbox {
 }
 
 function media(
-	state: RightNowOwnPostMedia["state"],
+	state: RightNowPostDetailsMedia["state"],
 	mediaId = 1,
-): RightNowOwnPostMedia {
+): RightNowPostDetailsMedia {
 	return {
 		mediaId,
 		thumbnailUrl: `https://cdns.grindr.com/rightnow/thumb/${mediaId}`,

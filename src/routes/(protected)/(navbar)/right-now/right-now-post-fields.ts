@@ -1,7 +1,7 @@
 import type {
 	RightNowModeratedText,
-	RightNowOwnPostMedia,
 	RightNowPostDetails,
+	RightNowPostDetailsMedia,
 	RightNowPostRequest,
 } from "#lib/model/right-now/post.ts";
 
@@ -59,7 +59,7 @@ export function isAwaitingModeration(post: RightNowPostDetails): boolean {
 
 export function rejectedParts(post: RightNowPostDetails | null): {
 	text: RightNowModeratedText | null;
-	photos: RightNowOwnPostMedia[];
+	photos: RightNowPostDetailsMedia[];
 } {
 	return {
 		text:

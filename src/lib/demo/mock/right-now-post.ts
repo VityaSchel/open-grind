@@ -1,9 +1,9 @@
 import {
 	type RightNowMediaUploadResponse,
-	type RightNowOwnPostMedia,
 	type RightNowPostChanges,
 	rightNowPostChangesSchema,
 	type RightNowPostDetails,
+	type RightNowPostDetailsMedia,
 	type RightNowPostRequest,
 	rightNowPostRequestSchema,
 } from "#lib/model/right-now/post.ts";
@@ -12,7 +12,7 @@ import { demoMeProfileId, HOUR, SECOND } from "../config";
 import type { DemoResponse } from "../routing";
 import { picsum } from "./avatars";
 
-export type DemoRightNowPostMedia = RightNowOwnPostMedia & {
+export type DemoRightNowPostMedia = RightNowPostDetailsMedia & {
 	contentType: "image/jpeg";
 	isRejectAutomated: true;
 	source: "RIGHT_NOW";

@@ -55,14 +55,14 @@ const moderatedTextSchema = z.object({
 });
 export type RightNowModeratedText = z.infer<typeof moderatedTextSchema>;
 
-const ownPostMediaSchema = rightNowPostMediaDataSchema.extend({
+const postDetailsMediaSchema = rightNowPostMediaDataSchema.extend({
 	state: knownValueOrNull({
 		value: z.enum(["PENDING", "APPROVED", "REJECTED", "DELETED"]),
 		label: "right now post media state",
 	}),
 	reason: z.string().nullable().default(null),
 });
-export type RightNowOwnPostMedia = z.infer<typeof ownPostMediaSchema>;
+export type RightNowPostDetailsMedia = z.infer<typeof postDetailsMediaSchema>;
 
 export const rightNowPostDetailsSchema = z.object({
 	id: z.int(),
@@ -74,8 +74,8 @@ export const rightNowPostDetailsSchema = z.object({
 	moderatedText: moderatedTextSchema.nullable(),
 	media: serverDefault({
 		value: arrayOfParsableEntries({
-			entries: ownPostMediaSchema,
-			label: "right now own post media",
+			entries: postDetailsMediaSchema,
+			label: "right now post details media",
 		}),
 		fallback: [],
 	}),
