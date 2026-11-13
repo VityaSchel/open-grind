@@ -1,5 +1,6 @@
 import { currentPlatform } from "#lib/platform/os.ts";
 import { topChromeClearance } from "#lib/util/screen-chrome.svelte.ts";
+import { nearestScrollableAncestor } from "#lib/util/scroll.ts";
 
 const BOTTOM_CHROME = '[data-screen-chrome="bottom"]';
 
@@ -19,15 +20,7 @@ function keyboardCoversFocusedField(): boolean {
 	}
 }
 
-function scrollContainerOf(field: Element): Element | undefined {
-	for (let node = field.parentElement; node; node = node.parentElement) {
-		const { overflowY } = getComputedStyle(node);
-		if (overflowY === "auto" || overflowY === "scroll") return node;
-	}
-	return undefined;
-}
-
-function watchRevealContainer(element: Element | undefined) {
+function watchRevealContainer(element: Element | null) {
 	if (revealContainer?.element === element) return;
 	revealContainer?.observer.disconnect();
 	revealContainer = undefined;
@@ -82,7 +75,7 @@ function revealFocusedField() {
 		field instanceof HTMLTextAreaElement ||
 		(field instanceof HTMLElement && field.isContentEditable);
 	if (!editable) return;
-	const container = scrollContainerOf(field);
+	const container = nearestScrollableAncestor(field);
 	watchRevealContainer(container);
 	const box = field.getBoundingClientRect();
 	if (!container) {
@@ -102,7 +95,7 @@ function revealFocusedFieldUnderKeyboard() {
 }
 
 export function noteKeyboardOpenForReveal({ open }: { open: boolean }): void {
-	if (!open) watchRevealContainer(undefined);
+	if (!open) watchRevealContainer(null);
 	keyboardOpen = open;
 	revealFocusedFieldUnderKeyboard();
 }
@@ -124,6 +117,6 @@ export function installFocusedFieldReveal(): () => void {
 		if (focusedFieldRevealFrame !== undefined)
 			cancelAnimationFrame(focusedFieldRevealFrame);
 		focusedFieldRevealFrame = undefined;
-		watchRevealContainer(undefined);
+		watchRevealContainer(null);
 	};
 }
