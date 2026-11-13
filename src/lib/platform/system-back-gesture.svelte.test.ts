@@ -106,6 +106,7 @@ afterEach(() => {
 	addPluginListener.mockClear();
 	invoke.mockClear();
 	vi.restoreAllMocks();
+	vi.useRealTimers();
 	backGestureEventHandlers.clear();
 });
 
@@ -218,11 +219,9 @@ describe("attachSystemBackGesture", () => {
 	});
 
 	it("feeds the stack the native progress once a frame until the swipe ends", () => {
-		const frames: FrameRequestCallback[] = [];
-		vi.spyOn(window, "requestAnimationFrame").mockImplementation(
-			(callback) => frames.push(callback),
-		);
-		const runFrame = () => frames.shift()?.(performance.now());
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+		});
 		const { stack, tracked } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 		let progress = 0;
@@ -233,14 +232,38 @@ describe("attachSystemBackGesture", () => {
 
 		window.__AndroidOnBackGestureStart?.();
 		progress = 0.25;
-		runFrame();
+		vi.advanceTimersToNextFrame();
 		progress = 0.5;
-		runFrame();
+		vi.advanceTimersToNextFrame();
 		window.__AndroidOnBackGestureCancel?.();
-		runFrame();
+		vi.advanceTimersToNextFrame();
 
 		expect(tracked).toEqual([0.25, 0.5]);
-		expect(frames, "no frame may stay queued").toHaveLength(0);
+		expect(vi.getTimerCount(), "no frame may stay queued").toBe(0);
+
+		detach();
+	});
+
+	it("stops reading progress once the stack stops tracking on its own", () => {
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+		});
+		const { stack, tracked } = makeStack();
+		const detach = attachSystemBackGesture(stack);
+		let progress = 0;
+		window.__AndroidBack = {
+			moveTaskToBack: () => {},
+			gestureProgress: () => progress,
+		};
+
+		window.__AndroidOnBackGestureStart?.();
+		progress = 0.25;
+		vi.advanceTimersToNextFrame();
+		stack.cancelSwipeBack();
+		vi.advanceTimersToNextFrame();
+
+		expect(tracked).toEqual([0.25]);
+		expect(vi.getTimerCount(), "no frame may stay queued").toBe(0);
 
 		detach();
 	});
@@ -269,7 +292,14 @@ describe("on iOS", () => {
 	const start = () => window.__iosBack?.start({ x: 2, y: 400 }) ?? false;
 
 	beforeEach(() => {
-		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		vi.useFakeTimers({
+			toFake: [
+				"setTimeout",
+				"clearTimeout",
+				"requestAnimationFrame",
+				"cancelAnimationFrame",
+			],
+		});
 		runningOn("ios");
 		document.elementFromPoint = () => document.body;
 		installSystemBack();
@@ -277,7 +307,6 @@ describe("on iOS", () => {
 
 	afterEach(() => {
 		vi.runOnlyPendingTimers();
-		vi.useRealTimers();
 	});
 
 	it("installs the edge swipe hooks and no Android Back hooks", () => {
@@ -357,29 +386,24 @@ describe("on iOS", () => {
 	});
 
 	it("feeds the stack native progress once a frame and settles on the release", () => {
-		const frames: FrameRequestCallback[] = [];
-		vi.spyOn(window, "requestAnimationFrame").mockImplementation(
-			(callback) => frames.push(callback),
-		);
-		const runFrame = () => frames.shift()?.(performance.now());
 		const { stack, calls, tracked, releases } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 		flushSync();
 
 		start();
 		window.__iosBack?.progress(0.25);
-		runFrame();
+		vi.advanceTimersToNextFrame();
 		window.__iosBack?.progress(0.5);
-		runFrame();
+		vi.advanceTimersToNextFrame();
 		window.__iosBack?.finish({ commit: false, velocity: -0.4 });
-		runFrame();
+		vi.advanceTimersToNextFrame();
 		window.__iosBack?.finish({ commit: true, velocity: 2 });
 
 		expect(tracked).toEqual([0.25, 0.5]);
 		expect(calls.cancel).toBe(1);
 		expect(releases).toEqual([{ velocity: -0.4 }]);
 		expect(calls.commit, "a finish after the swipe ended is stale").toBe(0);
-		expect(frames).toHaveLength(0);
+		expect(vi.getTimerCount()).toBe(0);
 		detach();
 	});
 
