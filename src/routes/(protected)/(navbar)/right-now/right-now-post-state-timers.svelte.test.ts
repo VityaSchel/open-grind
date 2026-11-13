@@ -10,6 +10,7 @@ const {
 	reconcileHandlers,
 	refreshFeedMock,
 	requestSheetMock,
+	showErrorToastMock,
 	toastMock,
 } = vi.hoisted(() => ({
 	appLifecycle: { active: true },
@@ -20,6 +21,7 @@ const {
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	refreshFeedMock: vi.fn(() => Promise.resolve()),
 	requestSheetMock: vi.fn(),
+	showErrorToastMock: vi.fn(),
 	toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
 
@@ -33,7 +35,9 @@ vi.mock("#lib/api/right-now/post.ts", () => ({
 	setRightNowPostHidden: vi.fn(),
 	updateRightNowPost: vi.fn(),
 }));
-vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
+vi.mock("#lib/api/error-toast.ts", () => ({
+	showErrorToast: showErrorToastMock,
+}));
 vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({ appLifecycle }));
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: () => Promise.resolve({ geohash: null }),
@@ -104,6 +108,7 @@ beforeEach(() => {
 	reconcileHandlers.length = 0;
 	refreshFeedMock.mockClear();
 	requestSheetMock.mockClear();
+	showErrorToastMock.mockReset();
 	toastMock.mockReset();
 	toastMock.error.mockReset();
 });
@@ -432,6 +437,27 @@ describe("RightNowPostState expiry", () => {
 			[{ post: repost }],
 			[{ post: repost }],
 		]);
+		detach();
+	});
+
+	it("opens the post sheet when a Go again that failed gets through on its toast's Retry", async () => {
+		const { state, sheetRequested, detach } = await endedState();
+		createRightNowPostMock
+			.mockRejectedValueOnce(new Error("offline"))
+			.mockResolvedValue(nextPost());
+		lastToastAction(toastMock).onClick();
+		await vi.waitFor(() =>
+			expect(showErrorToastMock).toHaveBeenCalledOnce(),
+		);
+		expect(sheetRequested).not.toHaveBeenCalled();
+		const [{ onRetry }] = showErrorToastMock.mock.lastCall as [
+			{ onRetry: () => void },
+		];
+
+		onRetry();
+		await vi.waitFor(() => expect(sheetRequested).toHaveBeenCalledOnce());
+
+		expect(state.post?.id).toBe(POST_ID + 1);
 		detach();
 	});
 

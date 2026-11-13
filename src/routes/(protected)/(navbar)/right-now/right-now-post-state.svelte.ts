@@ -276,7 +276,8 @@ export class RightNowPostState {
 			showErrorToast({
 				label: failureLabel,
 				error,
-				onRetry: () => void this.#create({ request, failureLabel }),
+				onRetry: () =>
+					void this.#createAndOpenSheet({ request, failureLabel }),
 			});
 			return false;
 		} finally {
@@ -411,19 +412,25 @@ export class RightNowPostState {
 			id: ENDED_TOAST_ID,
 			action: {
 				label: "Go again",
-				onClick: () => void this.#goAgain({ post: previous }),
+				onClick: () =>
+					void this.#createAndOpenSheet({
+						request: repostRequest(previous),
+						failureLabel: "Failed to start a new Right Now session",
+					}),
 			},
 		});
 		this.#ownPostChanged();
 		if (this.#loadInFlight === null) this.#refreshAllowance();
 	}
 
-	async #goAgain({ post }: { post: RightNowPostDetails }): Promise<void> {
-		const created = await this.#create({
-			request: repostRequest(post),
-			failureLabel: "Failed to start a new Right Now session",
-		});
-		if (created) this.#openSheet();
+	async #createAndOpenSheet({
+		request,
+		failureLabel,
+	}: {
+		request: RightNowPostRequest;
+		failureLabel: string;
+	}): Promise<void> {
+		if (await this.#create({ request, failureLabel })) this.#openSheet();
 	}
 
 	#openSheet(): void {

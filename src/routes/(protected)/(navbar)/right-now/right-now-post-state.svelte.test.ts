@@ -10,6 +10,7 @@ const {
 	isAssignmentOnMock,
 	NoFreeRightNowPostsError,
 	refreshFeedMock,
+	requestSheetMock,
 	RightNowPostAlreadyRunningError,
 	RightNowSessionEndedError,
 	setRightNowPostHiddenMock,
@@ -28,6 +29,7 @@ const {
 	isAssignmentOnMock: vi.fn<(flag: { key: string }) => Promise<boolean>>(),
 	NoFreeRightNowPostsError: class extends Error {},
 	refreshFeedMock: vi.fn(() => Promise.resolve()),
+	requestSheetMock: vi.fn(),
 	RightNowPostAlreadyRunningError: class extends Error {},
 	RightNowSessionEndedError: class extends Error {},
 	setRightNowPostHiddenMock: vi.fn(),
@@ -65,7 +67,7 @@ vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 vi.mock("#lib/grid/grid.ts", () => ({ storeLocation: storeLocationMock }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("#lib/components/right-now/post-sheet-request-state.svelte.ts", () => ({
-	rightNowPostSheetRequest: { request: vi.fn() },
+	rightNowPostSheetRequest: { request: requestSheetMock },
 }));
 vi.mock("#lib/util/reconcile.ts", () => ({
 	reconciler: { subscribe: () => () => {} },
@@ -122,6 +124,7 @@ beforeEach(() => {
 	setRightNowPostHiddenMock.mockReset();
 	setRightNowPostHiddenMock.mockResolvedValue(undefined);
 	refreshFeedMock.mockClear();
+	requestSheetMock.mockClear();
 	invalidateProfileMock.mockClear();
 	showErrorToastMock.mockReset();
 	toastMock.mockReset();
@@ -408,12 +411,13 @@ describe("RightNowPostState join", () => {
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
-	it("offers a retry for any other failure", async () => {
+	it("offers a retry for any other failure, which opens the post sheet like a first join once it gets through", async () => {
 		const state = await loadedState();
 		const failure = new Error("offline");
 		createRightNowPostMock.mockRejectedValueOnce(failure);
 
 		await expect(state.join()).resolves.toBe(false);
+		expect(requestSheetMock).not.toHaveBeenCalled();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -427,6 +431,15 @@ describe("RightNowPostState join", () => {
 		onRetry();
 		await vi.waitFor(() => expect(state.post?.id).toBe(POST_ID));
 		expect(createRightNowPostMock).toHaveBeenCalledTimes(2);
+		expect(requestSheetMock).toHaveBeenCalledOnce();
+	});
+
+	it("leaves opening the post sheet after a first join to whoever asked for the join", async () => {
+		const state = await loadedState();
+
+		await expect(state.join()).resolves.toBe(true);
+
+		expect(requestSheetMock).not.toHaveBeenCalled();
 	});
 });
 
