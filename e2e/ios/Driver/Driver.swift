@@ -9,7 +9,7 @@ final class Driver: XCTestCase {
 	]
 	private static let optionKeys: KeyValuePairs<String, Set<String>> = [
 		"dragHold": ["path", "hold", "velocity", "screenshot", "tree"],
-		"edgeSwipe": ["from", "y", "to", "seconds", "press", "hold"],
+		"edgeSwipe": ["inset", "y", "to", "seconds", "press", "hold"],
 	]
 	private static let edgeSwipeStepsPerSecond = 30.0
 	private let timeout: TimeInterval = 15
@@ -198,15 +198,15 @@ final class Driver: XCTestCase {
 		else {
 			throw failure("edgeSwipe needs y, to and seconds above 0")
 		}
-		let from = (try value("from", in: options) ?? 2.0) / Double(app.frame.width)
+		let startX = (try value("inset", in: options) ?? 2.0) / Double(app.frame.width)
 		let press: Double = try value("press", in: options) ?? 0
 		let hold: Double = try value("hold", in: options) ?? 0
 		let steps = max(1, Int((seconds * Self.edgeSwipeStepsPerSecond).rounded(.up)))
-		var points: [[Double]] = [[from, y, 0]]
-		if press > 0 { points.append([from, y, press]) }
+		var points: [[Double]] = [[startX, y, 0]]
+		if press > 0 { points.append([startX, y, press]) }
 		for step in 1...steps {
 			let share = Double(step) / Double(steps)
-			points.append([from + (to - from) * share, y, press + seconds * share])
+			points.append([startX + (to - startX) * share, y, press + seconds * share])
 		}
 		if hold > 0 { points.append([to, y, press + seconds + hold]) }
 		try touchPath(points, in: app)
