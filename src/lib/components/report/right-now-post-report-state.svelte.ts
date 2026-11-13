@@ -8,7 +8,7 @@ import type { RightNowPostId } from "#lib/model/safety/reports.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
 import type { ReportTarget } from "./report-request";
 
-export class RightNowPostReport {
+export class RightNowPostReportState {
 	open = $state(false);
 	target: ReportTarget | null = $state(null);
 

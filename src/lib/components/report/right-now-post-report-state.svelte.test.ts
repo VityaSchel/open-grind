@@ -23,7 +23,7 @@ vi.mock("#lib/api/error-toast.ts", () => ({
 }));
 
 import type { SubmittedReport } from "#lib/model/safety/reports.ts";
-import { RightNowPostReport } from "./right-now-post-report.svelte";
+import { RightNowPostReportState } from "./right-now-post-report-state.svelte";
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -35,9 +35,9 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-describe("RightNowPostReport", () => {
+describe("RightNowPostReportState", () => {
 	it("opens the report about the post once no earlier report turns up, running beforeOpen first", async () => {
-		const report = new RightNowPostReport();
+		const report = new RightNowPostReportState();
 		const seen: boolean[] = [];
 
 		await report.request({
@@ -70,7 +70,7 @@ describe("RightNowPostReport", () => {
 		"says an earlier report awaits moderation instead of opening: $description",
 		async ({ status, createTime, description }) => {
 			getRightNowPostReportMock.mockResolvedValue({ status, createTime });
-			const report = new RightNowPostReport();
+			const report = new RightNowPostReportState();
 			const beforeOpen = vi.fn();
 
 			await report.request({ postId: 1, profileId: 201, beforeOpen });
@@ -88,7 +88,7 @@ describe("RightNowPostReport", () => {
 	it("reports a failed check and stays closed", async () => {
 		const error = new Error("offline");
 		getRightNowPostReportMock.mockRejectedValue(error);
-		const report = new RightNowPostReport();
+		const report = new RightNowPostReportState();
 		const beforeOpen = vi.fn();
 
 		await report.request({ postId: 1, profileId: 201, beforeOpen });
@@ -116,7 +116,7 @@ describe("RightNowPostReport", () => {
 			getRightNowPostReportMock
 				.mockReturnValueOnce(first.promise)
 				.mockReturnValueOnce(second.promise);
-			const report = new RightNowPostReport();
+			const report = new RightNowPostReportState();
 			const beforeOpen = vi.fn();
 			const firstRequest = report.request({
 				postId: 1,
@@ -153,7 +153,7 @@ describe("RightNowPostReport", () => {
 		getRightNowPostReportMock
 			.mockReturnValueOnce(first.promise)
 			.mockResolvedValueOnce(null);
-		const report = new RightNowPostReport();
+		const report = new RightNowPostReportState();
 		const firstRequest = report.request({ postId: 1, profileId: 201 });
 		await report.request({ postId: 3, profileId: null });
 

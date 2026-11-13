@@ -4,7 +4,7 @@
 	import { mount, untrack } from "svelte";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
-	import { RightNowPostReport } from "#lib/components/report/right-now-post-report.svelte.ts";
+	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
 	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
 	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request.ts";
 	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
@@ -46,7 +46,7 @@
 	} = $props();
 
 	const titleId = $props.id();
-	const report = new RightNowPostReport();
+	const report = new RightNowPostReportState();
 
 	const text = $derived(post.activeText?.trim() || null);
 	const photo = $derived(

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ReportSheet from "./ReportSheet.svelte";
-	import type { RightNowPostReport } from "./right-now-post-report.svelte";
+	import type { RightNowPostReportState } from "./right-now-post-report-state.svelte";
 
-	let { report }: { report: RightNowPostReport } = $props();
+	let { report }: { report: RightNowPostReportState } = $props();
 </script>
 
 {#if report.target !== null}

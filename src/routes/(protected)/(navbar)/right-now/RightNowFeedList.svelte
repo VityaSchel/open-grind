@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
-	import { RightNowPostReport } from "#lib/components/report/right-now-post-report.svelte.ts";
+	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
 	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
@@ -26,7 +26,7 @@
 		onedit: (() => void) | null;
 	} = $props();
 
-	const report = new RightNowPostReport();
+	const report = new RightNowPostReportState();
 </script>
 
 {#if feed.loading}
