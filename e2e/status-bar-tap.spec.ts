@@ -111,7 +111,7 @@ test("a status-bar tap glides a settings subpage to the top", async ({
 	page,
 }) => {
 	await openDeepLink(page, CREDITS, { platform: "ios" });
-	const scroller = page.locator('[data-slot="subpage-scroller"]');
+	const scroller = page.locator(SUBPAGE_SCROLLER);
 	await scrollDown(scroller);
 
 	await tapStatusBar(page);
@@ -150,10 +150,8 @@ test("a status-bar tap in a conversation lands on the oldest loaded message whil
 	const loaded = await backlogLoaded(page);
 	const oldest = await page.locator(MESSAGE).first().elementHandle();
 	const offsetInThread = () =>
-		oldest!.evaluate((message) => {
-			const scroller = message.closest<HTMLElement>(
-				'[data-slot="messages-scroller"]',
-			)!;
+		oldest!.evaluate((message, scrollerSelector) => {
+			const scroller = message.closest<HTMLElement>(scrollerSelector)!;
 			return {
 				fromTop:
 					message.getBoundingClientRect().top -
@@ -163,7 +161,7 @@ test("a status-bar tap in a conversation lands on the oldest loaded message whil
 					scroller.getBoundingClientRect().top +
 					scroller.scrollTop,
 			};
-		});
+		}, MESSAGES);
 	const { inContent: topOfThread } = await offsetInThread();
 
 	await tapStatusBar(page);
