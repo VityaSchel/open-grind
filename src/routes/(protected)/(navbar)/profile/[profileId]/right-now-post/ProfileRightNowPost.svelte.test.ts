@@ -7,33 +7,27 @@ import {
 	screen,
 	within,
 } from "@testing-library/svelte";
-import { tick, unmount } from "svelte";
+import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { openRightNowPostViewer } from "./right-now-viewer.ts";
 
 const {
 	gotoMock,
 	page,
 	getRightNowPostReportMock,
 	reportSheetMock,
-	openLightboxMock,
-	captionMock,
-	barActionMock,
-	componentSlideMock,
+	openViewerMock,
 	showErrorToastMock,
 	preloadFullImageMock,
-	fullImageSizeInTimeMock,
 } = vi.hoisted(() => ({
 	gotoMock: vi.fn<(path: string) => Promise<void>>(),
 	page: { url: new URL("http://localhost/profile/100006") },
 	getRightNowPostReportMock: vi.fn(),
 	reportSheetMock: vi.fn(),
-	openLightboxMock: vi.fn(),
-	captionMock: vi.fn(),
-	barActionMock: vi.fn(),
-	componentSlideMock: vi.fn(),
+	openViewerMock: vi.fn<typeof openRightNowPostViewer>(),
 	showErrorToastMock: vi.fn(),
 	preloadFullImageMock: vi.fn(),
-	fullImageSizeInTimeMock: vi.fn(),
 }));
 
 vi.mock("$app/navigation", () => ({ goto: gotoMock }));
@@ -47,30 +41,20 @@ vi.mock("#lib/api/safety/reports.ts", () => ({
 vi.mock("#lib/components/report/ReportSheet.svelte", () => ({
 	default: reportSheetMock,
 }));
-vi.mock("#lib/util/photoswipe/index.ts", () => ({
-	openLightbox: openLightboxMock,
-	applyPhotoSwipeComponent: componentSlideMock,
-}));
 vi.mock("#lib/util/photoswipe/full-size.ts", () => ({
 	preloadFullImage: preloadFullImageMock,
-	fullImageSizeInTime: fullImageSizeInTimeMock,
 }));
 vi.mock("./right-now-viewer.ts", () => ({
-	applyPhotoSwipeCaption: captionMock,
-	applyPhotoSwipeBarAction: barActionMock,
-	closeWhenOpen: (pswp: { close: () => void }) => pswp.close(),
+	openRightNowPostViewer: openViewerMock,
 }));
 
 import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
-import { isPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
 import type {
 	RightNowPostDetails,
 	RightNowPostDetailsMedia,
 } from "#lib/model/right-now/post.ts";
-import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
-import type { LightboxItem } from "#lib/util/photoswipe/index.ts";
 import ProfileRightNowPost from "./ProfileRightNowPost.svelte";
 
 const AUTHOR_ID = 100006;
@@ -78,46 +62,6 @@ const POST_ID = 880_000;
 const MINUTE = 60_000;
 const NAME = "theo";
 const FULL_PHOTO = proxyMediaUrl("https://cdns.grindr.com/rightnow/full/2");
-const FULL_SIZE = { width: 1200, height: 1600 };
-
-type ViewerPart = {
-	render: (mount: {
-		target: HTMLElement;
-		pswp: { close: () => void };
-	}) => Record<string, unknown>;
-};
-
-type OpenOptions = {
-	items: LightboxItem[];
-	animation?: "fade" | "zoom";
-	signal: AbortSignal;
-	onClosed: () => void;
-};
-
-type FakeLightbox = {
-	options: Record<string, unknown>;
-	on: (name: string, handler: () => void) => void;
-	emit: (name: string) => void;
-};
-
-const mounted: Record<string, unknown>[] = [];
-const lightboxes: FakeLightbox[] = [];
-
-function fakeLightbox(): FakeLightbox {
-	const handlers: { name: string; handler: () => void }[] = [];
-	const lightbox = {
-		options: {},
-		on: (name: string, handler: () => void) => {
-			handlers.push({ name, handler });
-		},
-		emit: (name: string) => {
-			for (const entry of handlers)
-				if (entry.name === name) entry.handler();
-		},
-	};
-	lightboxes.push(lightbox);
-	return lightbox;
-}
 
 function media(
 	state: RightNowPostDetailsMedia["state"],
@@ -181,85 +125,36 @@ function photoSlot() {
 	return slot;
 }
 
-function mountViewerPart(mock: typeof captionMock, close: () => void) {
-	const [, part] = mock.mock.lastCall as [unknown, ViewerPart];
-	const target = document.createElement("div");
-	document.body.append(target);
-	mounted.push(part.render({ target, pswp: { close } }));
-	return target;
-}
-
-type SlidePart = {
-	render: (mount: {
-		target: HTMLElement;
-		slide: Record<string, unknown>;
-		content: { onLoaded: () => void };
-	}) => Record<string, unknown>;
-	slideAt: (index: number) => Record<string, unknown> | null;
-};
-
-function mountTextSlide() {
-	const [, { render: renderSlide, slideAt }] = componentSlideMock.mock
-		.lastCall as [unknown, SlidePart];
-	const slide = slideAt(0);
-	if (slide === null) throw new Error("no text slide");
-	const target = document.createElement("div");
-	document.body.append(target);
-	const content = { onLoaded: vi.fn() };
-	mounted.push(renderSlide({ target, slide, content }));
-	return { target, content };
-}
-
 async function tapCard() {
-	const opened = openLightboxMock.mock.calls.length;
+	const opened = openViewerMock.mock.calls.length;
 	await fireEvent.click(openButton());
 	await vi.waitFor(() =>
-		expect(openLightboxMock).toHaveBeenCalledTimes(opened + 1),
+		expect(openViewerMock).toHaveBeenCalledTimes(opened + 1),
 	);
-}
-
-async function openViewer() {
-	await tapCard();
-	const close = vi.fn();
-	return { close, bar: mountViewerPart(barActionMock, close) };
-}
-
-function lastOpen() {
-	const [options] = openLightboxMock.mock.lastCall as [OpenOptions];
+	const [options] = openViewerMock.mock.lastCall!;
 	return options;
 }
 
-const openedItems = () => lastOpen().items;
-
-function lastLightbox() {
-	const lightbox = lightboxes.at(-1);
-	if (lightbox === undefined) throw new Error("no lightbox configured");
-	return lightbox;
+function focusOutsideCard() {
+	const button = document.createElement("button");
+	document.body.append(button);
+	button.focus();
+	return button;
 }
 
-const photoPost = () => post({ media: [media("APPROVED", 2)] });
-
 beforeEach(() => {
-	vi.clearAllMocks();
+	vi.resetAllMocks();
 	getRightNowPostReportMock.mockResolvedValue(null);
 	page.url = new URL("http://localhost/profile/100006");
 	gotoMock.mockImplementation((path) => {
 		page.url = new URL(path, page.url);
 		return Promise.resolve();
 	});
-	fullImageSizeInTimeMock.mockResolvedValue(null);
-	openLightboxMock.mockImplementation(
-		({ configure }: { configure: (lightbox: unknown) => void }) => {
-			configure(fakeLightbox());
-			return Promise.resolve();
-		},
-	);
+	openViewerMock.mockResolvedValue();
 });
 
 afterEach(() => {
 	cleanup();
-	for (const component of mounted.splice(0)) void unmount(component);
-	lightboxes.length = 0;
 	document.body.replaceChildren();
 	rightNowPostSheetRequest.take();
 	vi.restoreAllMocks();
@@ -303,71 +198,55 @@ describe("a profile's Right Now post", () => {
 		expect(card()).toBeNull();
 	});
 
-	it("opens the post full screen with the full-size photo, its text, author and details", async () => {
+	it("opens the viewer on the full-size photo out of the card's photo frame, captioned with the post's text, author and details", async () => {
 		const posted = Date.now() - 5 * MINUTE;
 		renderCard({ value: post({ posted, media: [media("APPROVED", 2)] }) });
 
-		await openViewer();
-		const caption = mountViewerPart(captionMock, vi.fn());
+		const options = await tapCard();
 
-		expect(openedItems()).toMatchObject([{ src: FULL_PHOTO }]);
-		expect(componentSlideMock).not.toHaveBeenCalled();
-		expect(caption.textContent).toContain("Door's open, come over");
-		expect(caption.textContent).toContain(NAME);
-		expect(caption.querySelector("time")?.getAttribute("datetime")).toBe(
-			new Date(posted).toISOString(),
-		);
-		expect(
-			caption.querySelector('[data-slot="right-now-post-distance"]'),
-		).not.toBeNull();
-		expect(within(caption).getByText("Hosting")).toBeTruthy();
+		expect(options).toMatchObject({
+			src: FULL_PHOTO,
+			frame: photoSlot(),
+			own: false,
+		});
+		expect(options.caption).toStrictEqual({
+			text: "Door's open, come over",
+			displayName: NAME,
+			onlineUntil: null,
+			posted,
+			distance: 650,
+			hosting: true,
+		});
 	});
 
-	it("opens a text-only post as its card centered on a slide that lets taps through around it, with no bottom caption", async () => {
+	it("opens a text-only post in the viewer with no photo to show or zoom from", async () => {
 		renderCard();
 
-		await openViewer();
-		const { target, content } = mountTextSlide();
+		const options = await tapCard();
 
-		expect(openedItems()).toStrictEqual([{ src: "" }]);
-		expect(lastOpen().animation).toBe("fade");
-		expect(fullImageSizeInTimeMock).not.toHaveBeenCalled();
-		expect(captionMock).not.toHaveBeenCalled();
-		const slide = target.querySelector<HTMLElement>(
-			'[data-slot="right-now-post-caption-slide"]',
-		);
-		expect(slide?.textContent).toContain("Door's open, come over");
-		expect(slide?.textContent).toContain(NAME);
-		expect(target.classList.contains("pointer-events-none")).toBe(true);
-		expect(content.onLoaded).toHaveBeenCalledOnce();
+		expect(options).toMatchObject({ src: null, frame: null });
+		expect(options.caption.text).toBe("Door's open, come over");
 	});
 
-	it("opens someone else's blurred photo as the centered text slide, never loading the full-size photo", async () => {
+	it("opens someone else's blurred photo in the viewer as its text alone, never loading the full-size photo", async () => {
 		const flagged = { ...media("APPROVED", 2), shouldBlur: true };
 		renderCard({ value: post({ media: [flagged] }) });
 
-		await openViewer();
-		const { target } = mountTextSlide();
+		const options = await tapCard();
 
-		expect(openedItems()).toStrictEqual([{ src: "" }]);
-		expect(lastOpen().animation).toBe("fade");
+		expect(options).toMatchObject({ src: null, frame: photoSlot() });
+		expect(options.caption.text).toBe("Door's open, come over");
 		expect(preloadFullImageMock).not.toHaveBeenCalled();
-		expect(fullImageSizeInTimeMock).not.toHaveBeenCalled();
-		expect(captionMock).not.toHaveBeenCalled();
-		const slide = target.querySelector<HTMLElement>(
-			'[data-slot="right-now-post-caption-slide"]',
-		);
-		expect(slide?.textContent).toContain("Door's open, come over");
 	});
 
 	it("starts decoding the full-size photo as soon as the card shows", async () => {
-		renderCard({ value: photoPost() });
+		renderCard({ value: post({ media: [media("APPROVED", 2)] }) });
 		await tick();
 
 		expect(preloadFullImageMock).toHaveBeenCalledExactlyOnceWith(
 			FULL_PHOTO,
 		);
-		expect(openLightboxMock).not.toHaveBeenCalled();
+		expect(openViewerMock).not.toHaveBeenCalled();
 	});
 
 	it("decodes no full-size photo for a text-only post", async () => {
@@ -377,96 +256,21 @@ describe("a profile's Right Now post", () => {
 		expect(preloadFullImageMock).not.toHaveBeenCalled();
 	});
 
-	it("zooms the photo open out of the card's photo frame once its full size is known", async () => {
-		fullImageSizeInTimeMock.mockResolvedValue(FULL_SIZE);
-		renderCard({ value: photoPost() });
-
-		await tapCard();
-
-		expect(fullImageSizeInTimeMock).toHaveBeenCalledExactlyOnceWith(
-			FULL_PHOTO,
-		);
-		expect(lastOpen().animation).toBe("zoom");
-		expect(isPhotoSwipeBusy()).toBe(false);
-		expect(openedItems()).toStrictEqual([
-			{
-				src: FULL_PHOTO,
-				...FULL_SIZE,
-				element: photoSlot(),
-				msrc: FULL_PHOTO,
-				thumbCropped: true,
-			},
-		]);
-	});
-
-	it("fades the photo open, unsized, when its full size does not arrive in time", async () => {
-		renderCard({ value: photoPost() });
-
-		await tapCard();
-
-		expect(fullImageSizeInTimeMock).toHaveBeenCalledExactlyOnceWith(
-			FULL_PHOTO,
-		);
-		expect(lastOpen().animation).toBe("fade");
-		const [item] = openedItems();
-		expect(item?.src).toBe(FULL_PHOTO);
-		expect(item?.width).toBeUndefined();
-		expect(item?.height).toBeUndefined();
-		expect(item?.msrc).toBeUndefined();
-	});
-
-	it("waits for the photo's full size before opening, holding PhotoSwipe busy meanwhile, and opens nothing once the card has gone away", async () => {
-		const size = Promise.withResolvers<MediaDimensions | null>();
-		fullImageSizeInTimeMock.mockReturnValue(size.promise);
-		const { unmount: unmountCard } = renderCard({ value: photoPost() });
-
-		await fireEvent.click(openButton());
-		await vi.waitFor(() =>
-			expect(fullImageSizeInTimeMock).toHaveBeenCalledOnce(),
-		);
-		expect(openLightboxMock).not.toHaveBeenCalled();
-		expect(isPhotoSwipeBusy()).toBe(true);
-		unmountCard();
-		expect(isPhotoSwipeBusy()).toBe(false);
-		size.resolve(FULL_SIZE);
-		await new Promise((resolve) => setTimeout(resolve, 0));
-
-		expect(openLightboxMock).not.toHaveBeenCalled();
-		expect(isPhotoSwipeBusy()).toBe(false);
-	});
-
-	it.each(["openingAnimationStart", "closingAnimationStart"])(
-		"hides the card's photo frame from %s until the viewer is gone, so the photo seems to leave and return to it",
-		async (animationStart) => {
-			fullImageSizeInTimeMock.mockResolvedValue(FULL_SIZE);
-			renderCard({ value: photoPost() });
-			await tapCard();
-			const lightbox = lastLightbox();
-
-			expect(photoSlot().style.visibility).toBe("");
-			lightbox.emit(animationStart);
-			expect(photoSlot().style.visibility).toBe("hidden");
-			lightbox.emit("destroy");
-
-			expect(photoSlot().style.visibility).toBe("");
-		},
-	);
-
 	it("opens the viewer again after it closes", async () => {
 		renderCard();
-		await tapCard();
+		const { onClosed } = await tapCard();
 
-		lastOpen().onClosed();
+		onClosed();
 		await tick();
 		await tapCard();
 
-		expect(openLightboxMock).toHaveBeenCalledTimes(2);
+		expect(openViewerMock).toHaveBeenCalledTimes(2);
 	});
 
 	it("closes the viewer when the card goes away", async () => {
 		const { unmount: unmountCard } = renderCard();
-		await tapCard();
-		const { signal } = lastOpen();
+		const { signal } = await tapCard();
+		expect(signal.aborted).toBe(false);
 
 		unmountCard();
 
@@ -476,7 +280,7 @@ describe("a profile's Right Now post", () => {
 	it("shows an error when the viewer fails to open and lets the card open it again", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		const error = new Error("photoswipe failed to load");
-		openLightboxMock.mockRejectedValueOnce(error);
+		openViewerMock.mockRejectedValueOnce(error);
 		renderCard();
 
 		await tapCard();
@@ -488,13 +292,13 @@ describe("a profile's Right Now post", () => {
 		);
 		await tapCard();
 
-		expect(openLightboxMock).toHaveBeenCalledTimes(2);
+		expect(openViewerMock).toHaveBeenCalledTimes(2);
 	});
 
 	it("shows no error when the viewer fails after the card went away", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		const failure = Promise.withResolvers<void>();
-		openLightboxMock.mockReturnValueOnce(failure.promise);
+		openViewerMock.mockReturnValueOnce(failure.promise);
 		const { unmount: unmountCard } = renderCard();
 		await tapCard();
 
@@ -509,17 +313,15 @@ describe("a profile's Right Now post", () => {
 		let focusedAtOpen: Element | null = null;
 		let closedAtOpen = false;
 		renderCard();
-		const { bar, close } = await openViewer();
-		reportSheetMock.mockImplementation(() => {
+		const { onreport } = await tapCard();
+		const closeViewer = vi.fn();
+		reportSheetMock.mockImplementationOnce(() => {
 			focusedAtOpen = document.activeElement;
-			closedAtOpen = close.mock.calls.length === 1;
+			closedAtOpen = closeViewer.mock.calls.length === 1;
 		});
-		const reportButton = within(bar).getByRole("button", {
-			name: "Report post",
-		});
-		reportButton.focus();
+		focusOutsideCard();
 
-		await fireEvent.click(reportButton);
+		await onreport({ closeViewer });
 
 		expect(getRightNowPostReportMock).toHaveBeenCalledExactlyOnceWith({
 			postId: POST_ID,
@@ -537,45 +339,30 @@ describe("a profile's Right Now post", () => {
 			postId: POST_ID,
 			profileId: AUTHOR_ID,
 		});
-		expect(
-			within(bar).queryByRole("button", { name: "Edit post" }),
-		).toBeNull();
 	});
 
 	it("keeps the viewer open and focused when the post was already reported", async () => {
-		const earlier = Promise.resolve({ createTime: null });
-		getRightNowPostReportMock.mockReturnValue(earlier);
+		getRightNowPostReportMock.mockResolvedValueOnce({ createTime: null });
 		renderCard();
-		const { bar, close } = await openViewer();
-		const reportButton = within(bar).getByRole("button", {
-			name: "Report post",
-		});
-		reportButton.focus();
+		const { onreport } = await tapCard();
+		const closeViewer = vi.fn();
+		const reportButton = focusOutsideCard();
 
-		await fireEvent.click(reportButton);
-		await earlier;
-		await vi.waitFor(() =>
-			expect(reportButton.getAttribute("aria-busy")).toBe("false"),
-		);
+		await onreport({ closeViewer });
 
 		expect(getRightNowPostReportMock).toHaveBeenCalledOnce();
-		expect(close).not.toHaveBeenCalled();
+		expect(closeViewer).not.toHaveBeenCalled();
 		expect(reportSheetMock).not.toHaveBeenCalled();
 		expect(document.activeElement).toBe(reportButton);
 	});
 
-	it("offers Edit post instead of Report in the viewer of our own post, closing it and asking Right Now to open the post sheet", async () => {
+	it("offers Edit post in the viewer of our own post, asking Right Now to open the post sheet", async () => {
 		renderCard({ own: true });
-		const { bar, close } = await openViewer();
+		const { own, onedit } = await tapCard();
 
-		expect(
-			within(bar).queryByRole("button", { name: "Report post" }),
-		).toBeNull();
-		await fireEvent.click(
-			within(bar).getByRole("button", { name: "Edit post" }),
-		);
+		expect(own).toBe(true);
+		onedit();
 
-		expect(close).toHaveBeenCalledOnce();
 		expect(rightNowPostSheetRequest.take()).toBe(true);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/right-now");
 	});
@@ -597,9 +384,9 @@ describe("a profile's Right Now post", () => {
 			FULL_PHOTO,
 		);
 
-		await openViewer();
+		const options = await tapCard();
 
-		expect(openedItems()).toMatchObject([{ src: FULL_PHOTO }]);
+		expect(options.src).toBe(FULL_PHOTO);
 	});
 
 	it("blurs someone else's photo the server asks to blur", () => {

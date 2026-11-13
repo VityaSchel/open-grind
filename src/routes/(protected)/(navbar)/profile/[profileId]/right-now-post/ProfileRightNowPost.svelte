@@ -1,6 +1,6 @@
 <script lang="ts">
 	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
-	import { mount, untrack } from "svelte";
+	import { untrack } from "svelte";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
@@ -12,23 +12,9 @@
 	import * as Card from "#lib/components/ui/card/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { getNow } from "#lib/util/now.ts";
-	import {
-		fullImageSizeInTime,
-		preloadFullImage,
-	} from "#lib/util/photoswipe/full-size.ts";
-	import {
-		applyPhotoSwipeComponent,
-		openLightbox,
-	} from "#lib/util/photoswipe/index.ts";
-	import { trackPhotoSwipeBusy } from "#lib/util/photoswipe/open-tracking.ts";
+	import { preloadFullImage } from "#lib/util/photoswipe/full-size.ts";
 	import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
-	import {
-		applyPhotoSwipeBarAction,
-		applyPhotoSwipeCaption,
-		closeWhenOpen,
-	} from "./right-now-viewer.ts";
-	import RightNowPostCaption from "./RightNowPostCaption.svelte";
-	import RightNowPostViewerAction from "./RightNowPostViewerAction.svelte";
+	import { openRightNowPostViewer } from "./right-now-viewer.ts";
 
 	let {
 		post,
@@ -71,99 +57,33 @@
 	$effect(() => {
 		if (!viewing) return;
 		const controller = new AbortController();
-		untrack(() => void openViewer(controller.signal));
-		return () => controller.abort();
-	});
-
-	async function openViewer(signal: AbortSignal) {
-		const release = trackPhotoSwipeBusy();
-		signal.addEventListener("abort", release, { once: true });
-		try {
-			const src = viewerSrc;
-			const size = src === null ? null : await fullImageSizeInTime(src);
-			if (signal.aborted) return;
-			const frame = photoFrame;
-			const caption = {
-				text,
-				displayName,
-				onlineUntil,
-				posted: post.posted,
-				distance,
-				hosting: post.hosting,
-			};
-			openLightbox({
-				items: [
-					src === null
-						? { src: "" }
-						: {
-								src,
-								...size,
-								element: frame ?? undefined,
-								msrc: size === null ? undefined : src,
-								thumbCropped: true,
-							},
-				],
-				animation: size === null || frame === null ? "fade" : "zoom",
-				configure: (lightbox) => {
-					lightbox.options.bgOpacity = 1;
-					if (frame !== null && src !== null) {
-						const hideFrame = () =>
-							(frame.style.visibility = "hidden");
-						lightbox.on("openingAnimationStart", hideFrame);
-						lightbox.on("closingAnimationStart", hideFrame);
-						lightbox.on(
-							"destroy",
-							() => (frame.style.visibility = ""),
-						);
-					}
-					if (src === null)
-						applyPhotoSwipeComponent(lightbox, {
-							slideAt: () => caption,
-							render: ({ target, slide, content }) => {
-								target.classList.add("pointer-events-none");
-								const component = mount(RightNowPostCaption, {
-									target,
-									props: { ...slide, centered: true },
-								});
-								content.onLoaded();
-								return component;
-							},
-						});
-					else
-						applyPhotoSwipeCaption(lightbox, {
-							render: ({ target }) =>
-								mount(RightNowPostCaption, {
-									target,
-									props: caption,
-								}),
-						});
-					applyPhotoSwipeBarAction(lightbox, {
-						render: ({ target, pswp }) =>
-							mount(RightNowPostViewerAction, {
-								target,
-								props: {
-									own,
-									onreport: () =>
-										report.request({
-											postId: post.id,
-											profileId: post.profileId,
-											beforeOpen: () => {
-												closeWhenOpen(pswp);
-												openButton?.focus();
-											},
-										}),
-									onedit: () => {
-										closeWhenOpen(pswp);
-										rightNowPostSheetRequest.request();
-									},
-								},
-							}),
-					});
+		untrack(() => {
+			openRightNowPostViewer({
+				src: viewerSrc,
+				frame: photoFrame,
+				caption: {
+					text,
+					displayName,
+					onlineUntil,
+					posted: post.posted,
+					distance,
+					hosting: post.hosting,
 				},
-				signal,
+				own,
+				onreport: ({ closeViewer }) =>
+					report.request({
+						postId: post.id,
+						profileId: post.profileId,
+						beforeOpen: () => {
+							closeViewer();
+							openButton?.focus();
+						},
+					}),
+				onedit: () => rightNowPostSheetRequest.request(),
+				signal: controller.signal,
 				onClosed: () => (viewing = false),
 			}).catch((error: unknown) => {
-				if (signal.aborted) return;
+				if (controller.signal.aborted) return;
 				console.error(error);
 				showErrorToast({
 					label: "Failed to open Right Now post",
@@ -171,10 +91,9 @@
 				});
 				viewing = false;
 			});
-		} finally {
-			release();
-		}
-	}
+		});
+		return () => controller.abort();
+	});
 </script>
 
 {#if shown}
