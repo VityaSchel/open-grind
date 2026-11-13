@@ -21,12 +21,12 @@
 		photo = $bindable(),
 		uploading = $bindable(false),
 		disabled = false,
-		rejected = false,
+		rejectedMediaIds = [],
 	}: {
 		photo: PostPhoto | null;
 		uploading?: boolean;
 		disabled?: boolean;
-		rejected?: boolean;
+		rejectedMediaIds?: number[];
 	} = $props();
 
 	const labelId = $props.id();
@@ -108,7 +108,9 @@
 			<div data-slot="post-photo" class="w-28">
 				<MediaSlot
 					{src}
-					alt={rejected ? "Post photo, rejected" : "Post photo"}
+					alt={rejectedMediaIds.includes(shown.mediaId)
+						? "Post photo, rejected"
+						: "Post photo"}
 					{removed}
 					deleteLabel="Remove photo"
 					undoLabel="Keep photo"

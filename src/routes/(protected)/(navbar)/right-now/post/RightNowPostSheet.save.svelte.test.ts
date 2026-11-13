@@ -26,6 +26,7 @@ vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
 import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import type { RightNowMediaUploadResponse } from "#lib/model/right-now/post.ts";
+import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { ownPost, postPhoto } from "../right-now-post-test-helpers";
 import { runningPost } from "./post-test-helpers.svelte";
 import {
@@ -34,6 +35,18 @@ import {
 	sheetShown,
 	textField,
 } from "./sheet-test-helpers.svelte";
+
+const PICKED: PickedMedia = {
+	key: "picked",
+	mimeType: "image/jpeg",
+	source: "desktop",
+	path: "/tmp/photo.jpg",
+};
+const UPLOADED: RightNowMediaUploadResponse = {
+	mediaId: 88,
+	url: "https://cdns.grindr.com/rightnow/full/88",
+	thumbnailUrl: "https://cdns.grindr.com/rightnow/thumb/88",
+};
 
 async function type(value: string) {
 	await fireEvent.input(textField(), { target: { value } });
@@ -198,16 +211,54 @@ describe("saving the Right Now post", () => {
 		expect(textField().value).toBe("Mine");
 	});
 
+	it("names a photo rejected under unsaved edits as rejected", async () => {
+		const fake = runningPost({ media: [postPhoto({ state: "PENDING" })] });
+		await renderSheet(fake);
+
+		await type("Mine");
+		fake.post = ownPost({ media: [postPhoto({ state: "REJECTED" })] });
+		flushSync();
+
+		expect(textField().value).toBe("Mine");
+		expect(
+			screen.getByRole("img", { name: "Post photo, rejected" }),
+		).toBeTruthy();
+	});
+
+	it("names the photo that replaces a rejected one plainly", async () => {
+		const fake = runningPost({ media: [postPhoto({ state: "REJECTED" })] });
+		fake.rejected = { text: false, photo: true, reasons: [] };
+		await renderSheet(fake);
+		pickMediaMock.mockResolvedValueOnce(PICKED);
+		photoApi.uploadRightNowPickedPhoto.mockResolvedValueOnce(UPLOADED);
+
+		expect(
+			screen.getByRole("img", { name: "Post photo, rejected" }),
+		).toBeTruthy();
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Remove photo" }),
+		);
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Add photo" }),
+		);
+		await fireEvent.click(
+			await screen.findByRole("button", { name: "Upload a photo" }),
+		);
+
+		expect(
+			await screen.findByRole("img", { name: "Post photo" }),
+		).toBeTruthy();
+		expect(
+			screen.queryByRole("img", { name: "Post photo, rejected" }),
+		).toBeNull();
+	});
+
 	it("keeps Save locked while the photo uploads and then sends it as media", async () => {
 		const fake = runningPost();
 		await renderSheet(fake);
 		await type("Coffee?");
-		pickMediaMock.mockResolvedValueOnce({
-			key: "picked",
-			mimeType: "image/jpeg",
-			source: "desktop",
-			path: "/tmp/photo.jpg",
-		});
+		pickMediaMock.mockResolvedValueOnce(PICKED);
 		const upload = Promise.withResolvers<RightNowMediaUploadResponse>();
 		photoApi.uploadRightNowPickedPhoto.mockReturnValueOnce(upload.promise);
 
@@ -223,11 +274,7 @@ describe("saving the Right Now post", () => {
 		).toBeTruthy();
 		expect(saveButton().matches(":disabled")).toBe(true);
 
-		upload.resolve({
-			mediaId: 88,
-			url: "https://cdns.grindr.com/rightnow/full/88",
-			thumbnailUrl: "https://cdns.grindr.com/rightnow/thumb/88",
-		});
+		upload.resolve(UPLOADED);
 		await vi.waitFor(() =>
 			expect(saveButton().matches(":disabled")).toBe(false),
 		);

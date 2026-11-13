@@ -73,11 +73,17 @@ function drawerItem({
 function renderField({
 	photo = null,
 	disabled = false,
-}: { photo?: PostPhoto | null; disabled?: boolean } = {}) {
+	rejectedMediaIds = [],
+}: {
+	photo?: PostPhoto | null;
+	disabled?: boolean;
+	rejectedMediaIds?: number[];
+} = {}) {
 	const stored = $state({ photo, uploading: false });
 	render(PostPhotoField, {
 		props: {
 			disabled,
+			rejectedMediaIds,
 			get photo() {
 				return stored.photo;
 			},
@@ -299,6 +305,42 @@ describe("the post photo field", () => {
 			mediaId: 88,
 			thumbnailUrl: UPLOADED.thumbnailUrl,
 		});
+	});
+
+	it("names a rejected photo as rejected", () => {
+		renderField({
+			photo: { mediaId: 51, thumbnailUrl: UPLOADED.thumbnailUrl },
+			rejectedMediaIds: [51],
+		});
+
+		expect(
+			screen.getByRole("img", { name: "Post photo, rejected" }),
+		).toBeTruthy();
+	});
+
+	it("names a replacement for a rejected photo plainly", async () => {
+		drawerApi.getAllDrawerMedia.mockResolvedValue([]);
+		pickMediaMock.mockResolvedValue(PICKED);
+		photoApi.uploadRightNowPickedPhoto.mockResolvedValue(UPLOADED);
+		renderField({
+			photo: { mediaId: 51, thumbnailUrl: UPLOADED.thumbnailUrl },
+			rejectedMediaIds: [51],
+		});
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Remove photo" }),
+		);
+
+		await openUploads();
+		await fireEvent.click(
+			await screen.findByRole("button", { name: "Upload a photo" }),
+		);
+
+		expect(
+			await screen.findByRole("img", { name: "Post photo" }),
+		).toBeTruthy();
+		expect(
+			screen.queryByRole("img", { name: "Post photo, rejected" }),
+		).toBeNull();
 	});
 
 	it("drops the undo once a new photo replaces the removed one", async () => {

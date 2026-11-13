@@ -12,6 +12,7 @@
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { rejectedParts } from "../right-now-post-fields";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import {
 		LEAST_PRECISE_RADIUS,
@@ -58,6 +59,9 @@
 	const visible = $derived(pendingVisible ?? post.status === "active");
 	const off = $derived(post.status === "off");
 	const timeLeft = $derived(formatTimeLeft({ ms: post.timeLeftMs }));
+	const rejectedMediaIds = $derived(
+		rejectedParts(post.post).photos.map(({ mediaId }) => mediaId),
+	);
 	const rejectionTitle = $derived.by(() => {
 		const { text: textRejected, photo: photoRejected } = post.rejected;
 		if (textRejected && photoRejected)
@@ -205,7 +209,7 @@
 								bind:photo={form.photo}
 								bind:uploading
 								disabled={busy}
-								rejected={post.rejected.photo}
+								{rejectedMediaIds}
 							/>
 							<SwitchField
 								title="Hosting"
