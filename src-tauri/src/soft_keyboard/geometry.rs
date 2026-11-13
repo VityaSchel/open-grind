@@ -110,7 +110,7 @@ pub struct MotionSpan {
 
 pub fn keyboard_overlap(bounds: Rect, keyboard: Rect) -> f64 {
 	let undocked = (keyboard.max_y() - bounds.max_y()).abs() > DOCKED_TOLERANCE;
-	if keyboard.is_empty() || keyboard.y >= bounds.max_y() || undocked {
+	if keyboard.is_empty() || undocked {
 		return 0.0;
 	}
 	(bounds.max_y() - keyboard.y).clamp(0.0, bounds.height)
