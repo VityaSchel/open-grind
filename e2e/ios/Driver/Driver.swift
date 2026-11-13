@@ -182,10 +182,11 @@ final class Driver: XCTestCase {
 		let offsets = points.map { NSNumber(value: $0[2]) }
 		let done = XCTestExpectation(description: "touchPath synthesized")
 		var outcome: Error?
-		try OGTouchPath.synthesizePoints(screen, offsets: offsets) { failure in
-			outcome = failure
+		let started = OGTouchPath.synthesizePoints(screen, offsets: offsets) { synthesized, error in
+			outcome = synthesized ? nil : error ?? self.failure("touchPath was not synthesized")
 			done.fulfill()
 		}
+		guard started else { throw failure("this XCTest has no event synthesizer") }
 		guard XCTWaiter().wait(for: [done], timeout: timeout + points[points.count - 1][2]) == .completed else {
 			throw failure("touchPath timed out")
 		}

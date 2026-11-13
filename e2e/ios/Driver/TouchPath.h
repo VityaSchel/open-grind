@@ -6,8 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BOOL)synthesizePoints:(NSArray<NSValue *> *)points
 	offsets:(NSArray<NSNumber *> *)offsets
-	completion:(void (^)(NSError *_Nullable failure))completion
-	error:(NSError **)error;
+	completion:(void (^)(BOOL synthesized, NSError *_Nullable failure))completion;
 
 @end
 

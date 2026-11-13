@@ -24,31 +24,17 @@
 - (id<OGEventSynthesizer>)eventSynthesizer;
 @end
 
-static NSError *touchPathFailure(NSString *message) {
-	return [NSError errorWithDomain:@"Driver"
-		code:1
-		userInfo:@{NSLocalizedDescriptionKey: message}];
-}
-
 @implementation OGTouchPath
 
 + (BOOL)synthesizePoints:(NSArray<NSValue *> *)points
 	offsets:(NSArray<NSNumber *> *)offsets
-	completion:(void (^)(NSError *_Nullable failure))completion
-	error:(NSError **)error {
+	completion:(void (^)(BOOL synthesized, NSError *_Nullable failure))completion {
 	Class pathClass = NSClassFromString(@"XCPointerEventPath");
 	Class recordClass = NSClassFromString(@"XCSynthesizedEventRecord");
 	id<OGEventSynthesizerOwner> device =
 		(id<OGEventSynthesizerOwner>)XCUIDevice.sharedDevice;
 	if (!pathClass || !recordClass ||
 		![device respondsToSelector:@selector(eventSynthesizer)]) {
-		if (error) *error = touchPathFailure(@"this XCTest has no event synthesizer");
-		return NO;
-	}
-	if (points.count < 2 || points.count != offsets.count) {
-		if (error) {
-			*error = touchPathFailure(@"touchPath needs at least two points, each with an offset");
-		}
 		return NO;
 	}
 	id<OGPointerEventPath> path = [(id<OGPointerEventPath>)[pathClass alloc]
@@ -64,12 +50,7 @@ static NSError *touchPathFailure(NSString *message) {
 			initWithName:@"touchPath"
 			interfaceOrientation:UIInterfaceOrientationPortrait];
 	[record addPointerEventPath:path];
-	[device.eventSynthesizer synthesizeEvent:record
-		completion:^(BOOL synthesized, NSError *_Nullable failure) {
-			completion(synthesized
-				? nil
-				: (failure ?: touchPathFailure(@"touchPath was not synthesized")));
-		}];
+	[device.eventSynthesizer synthesizeEvent:record completion:completion];
 	return YES;
 }
 
