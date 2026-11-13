@@ -15,8 +15,10 @@ mod user_agent;
 
 pub use user_agent::{sign_in_user_agent, SignInPage};
 
-/// Matched verbatim by the frontend, which stays silent for it.
 pub const CANCELED: &str = "Sign-in canceled";
+
+#[cfg(any(target_os = "ios", test))]
+const SHEET_UNAVAILABLE: &str = "Couldn't show the sign-in page";
 
 const FLOW_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
@@ -100,7 +102,7 @@ pub async fn await_sign_in<P: OauthProvider>(
 	#[cfg(target_os = "ios")]
 	if let Err(e) = sheet::present(wait.window, wait.title).await {
 		wait.bridge
-			.fulfill(Err(format!("{}: {e}", sheet::UNAVAILABLE)));
+			.fulfill(Err(format!("{SHEET_UNAVAILABLE}: {e}")));
 	}
 
 	match tokio::time::timeout(FLOW_TIMEOUT, wait.answer).await {
@@ -293,6 +295,21 @@ mod tests {
 				"ERROR_CANCELLED = \"{COMPANION_CANCELLED}\""
 			)),
 			"GoogleOauthPlugin.kt ERROR_CANCELLED is not {COMPANION_CANCELLED}"
+		);
+	}
+
+	#[test]
+	fn the_cancel_and_sheet_failure_messages_match_the_frontend() {
+		let frontend = include_str!("../../../src/lib/api/sign-in.ts");
+		assert!(
+			frontend.contains(&format!("appError.message === \"{CANCELED}\"")),
+			"sign-in.ts no longer stays silent for {CANCELED}"
+		);
+		assert!(
+			frontend.contains(&format!(
+				"unavailablePageMessage = \"{SHEET_UNAVAILABLE}\""
+			)),
+			"sign-in.ts unavailablePageMessage is not {SHEET_UNAVAILABLE}"
 		);
 	}
 

@@ -23,8 +23,6 @@ use tokio::sync::oneshot;
 use crate::uikit::page_scroller;
 use crate::MAIN_WINDOW_LABEL;
 
-pub const UNAVAILABLE: &str = "Couldn't show the sign-in page";
-
 const BACKGROUND: (u8, u8, u8) = (10, 10, 10);
 
 thread_local! {
