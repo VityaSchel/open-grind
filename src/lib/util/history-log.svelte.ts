@@ -5,7 +5,7 @@ import z from "zod";
 import { liveHistoryIndex } from "#lib/util/history-index.ts";
 import { entryPathname } from "#lib/util/pathname.ts";
 
-const STORAGE_KEY = "open-grind:history-log";
+export const HISTORY_LOG_KEY = "open-grind:history-log";
 
 const savedLogSchema = z.object({
 	current: z.number().nullable(),
@@ -18,10 +18,8 @@ export class HistoryLog {
 	readonly #entries = new SvelteMap<number, string>();
 	#current: number | undefined;
 	#recorded = $state(0);
-	readonly #storage: () => Storage;
 
-	constructor({ storage }: { storage: () => Storage }) {
-		this.#storage = storage;
+	constructor() {
 		const saved = this.#load();
 		if (!saved) return;
 		for (const [index, pathname] of saved.entries)
@@ -86,7 +84,7 @@ export class HistoryLog {
 
 	#load(): SavedLog | undefined {
 		try {
-			const saved = this.#storage().getItem(STORAGE_KEY);
+			const saved = sessionStorage.getItem(HISTORY_LOG_KEY);
 			if (saved === null) return undefined;
 			return savedLogSchema.safeParse(JSON.parse(saved)).data;
 		} catch {
@@ -100,14 +98,14 @@ export class HistoryLog {
 			entries: [...this.#entries],
 		};
 		try {
-			this.#storage().setItem(STORAGE_KEY, JSON.stringify(saved));
+			sessionStorage.setItem(HISTORY_LOG_KEY, JSON.stringify(saved));
 		} catch {
 			return;
 		}
 	}
 }
 
-export const historyLog = new HistoryLog({ storage: () => sessionStorage });
+export const historyLog = new HistoryLog();
 
 export function recordHistory(): void {
 	afterNavigate(({ type }) => {
