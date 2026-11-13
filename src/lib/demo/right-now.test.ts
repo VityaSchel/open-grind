@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { HOUR } from "#lib/demo/config.ts";
 import { demoRoute } from "#lib/demo/index.ts";
 import { profileSeed } from "#lib/demo/mock/profiles.ts";
 import { cascadeV4ResponseSchema } from "#lib/model/browse/grid/cascade/response/v4.ts";
@@ -88,5 +89,78 @@ describe("demo right now status", () => {
 		);
 
 		expect(new Set(statuses)).toEqual(new Set(["HOSTING", "NOT_HOSTING"]));
+	});
+});
+
+describe("demo right now posts in a long session", () => {
+	const START = Date.parse("2026-11-03T12:00:00Z");
+
+	let demo: typeof import("#lib/demo/index.ts");
+
+	const seededPosts = () =>
+		rightNowFeedResponseSchema
+			.parse(
+				demo.demoRoute({
+					path: "/v6/rightnow/feed",
+					method: "GET",
+					body: undefined,
+				}).body,
+			)
+			.items.flatMap((item) =>
+				"expiration" in item.data ? [item.data] : [],
+			);
+
+	const profilePost = (profileId: number) =>
+		rightNowPostResponseSchema.parse(
+			demo.demoRoute({
+				path: `/v3/rightnow/profiles/${profileId}`,
+				method: "GET",
+				body: undefined,
+			}).body,
+		).post;
+
+	beforeEach(async () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(START);
+		vi.resetModules();
+		demo = await import("#lib/demo/index.ts");
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it("renews every seeded post as it expires, so the feed and a profile's post stay as live as the tiles that mark them", () => {
+		const first = seededPosts();
+		const author = first.flatMap((post) =>
+			"profileId" in post ? [post.profileId] : [],
+		)[0];
+		if (author === undefined) throw new Error("no authored demo post");
+		const firstOnProfile = profilePost(author);
+
+		vi.setSystemTime(START + HOUR + 1);
+		const later = seededPosts();
+		const laterOnProfile = profilePost(author);
+
+		expect(later).toHaveLength(first.length);
+		for (const post of later) {
+			expect(post.posted).toBeLessThanOrEqual(START + HOUR + 1);
+			expect(post.expiration).toBeGreaterThan(START + HOUR + 1);
+		}
+		const firstIds = new Set(first.map(({ id }) => id));
+		expect(later.filter(({ id }) => firstIds.has(id))).toEqual([]);
+		expect(new Set(later.map(({ id }) => id)).size).toBe(later.length);
+		expect(laterOnProfile?.expiration).toBeGreaterThan(START + HOUR + 1);
+		expect(laterOnProfile?.id).not.toBe(firstOnProfile?.id);
+		expect(later.map(({ id }) => id)).toContain(laterOnProfile?.id);
+	});
+
+	it("keeps a seeded post as it is until it expires", () => {
+		const first = seededPosts();
+		const soonest = Math.min(...first.map(({ expiration }) => expiration));
+
+		vi.setSystemTime(soonest - 1);
+
+		expect(seededPosts()).toEqual(first);
 	});
 });

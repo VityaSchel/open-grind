@@ -1,5 +1,6 @@
 import { FilterPosition } from "#lib/model/browse/grid/filters.ts";
 import { HivStatus } from "#lib/model/users/profiles.ts";
+import { now } from "#lib/util/clock.ts";
 import {
 	chance,
 	hashString,
@@ -121,9 +122,14 @@ function feedPost({
 		media.length === 0 || chance({ rng, probability: 0.6 })
 			? pick({ rng, items: POST_TEXTS })
 			: undefined;
-	const posted = NOW - Math.floor(rng() * POST_WINDOW);
+	const ageAtStart = Math.floor(rng() * POST_WINDOW);
+	const renewals = Math.max(
+		0,
+		Math.floor((now() - NOW + ageAtStart) / POST_LIFETIME),
+	);
+	const posted = NOW - ageAtStart + renewals * POST_LIFETIME;
 	const post = {
-		id: POST_ID_START + index,
+		id: POST_ID_START + index + renewals * AUTHOR_COUNT,
 		media,
 		text,
 		hosting:
