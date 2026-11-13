@@ -8,15 +8,11 @@ import type { LayoutLoad } from "./$types";
 export const ssr = false;
 export const csr = true;
 
-function onboardingAvailableHere(): boolean {
-	return !__DEMO__;
-}
-
 export const load: LayoutLoad = async ({ url }) => {
 	await hydrateUpdateCapability();
 	await hydrateDesktopEntryState();
 	const onboardingComplete =
-		!onboardingAvailableHere() ||
+		__DEMO__ ||
 		(await getPreferences()
 			.then((preferences) => preferences.onboardingComplete)
 			.catch(() => true));
