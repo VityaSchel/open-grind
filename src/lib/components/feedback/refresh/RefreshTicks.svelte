@@ -23,7 +23,7 @@
 <div
 	data-refresh-ticks
 	data-spinning={spinning || undefined}
-	class={["plate grid size-9 place-items-center rounded-full", { spinning }]}
+	class="grid size-9 place-items-center rounded-full transition-[background-color,box-shadow] duration-150 ease-[ease-out] data-spinning:bg-card data-spinning:shadow-refresh-disc"
 >
 	<svg viewBox="0 0 24 24" class="size-6 text-muted-foreground">
 		<g class="turn">
@@ -44,27 +44,12 @@
 	</svg>
 </div>
 
-<style lang="postcss">
-	@reference "$layout";
-
-	.plate {
-		transition-property: background-color, box-shadow;
-		transition-duration: 150ms;
-		transition-timing-function: ease-out;
-	}
-
-	.plate.spinning {
-		@apply bg-card;
-		box-shadow:
-			0 1.75px 3.5px rgb(0 0 0 / 0.12),
-			0 1px 4px rgb(0 0 0 / 0.24);
-	}
-
+<style>
 	.turn {
 		transform-origin: 12px 12px;
 	}
 
-	.spinning .turn {
+	[data-spinning] .turn {
 		animation: ticks-turn 800ms steps(8) infinite;
 	}
 
