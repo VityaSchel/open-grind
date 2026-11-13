@@ -212,9 +212,6 @@ pub async fn set_app_active(
 }
 
 #[cfg(target_os = "ios")]
-const SOCKET_CLOSE_WAIT: Duration = Duration::from_secs(3);
-
-#[cfg(target_os = "ios")]
 #[tauri::command]
 pub async fn allow_suspension(
 	app: AppHandle,
@@ -222,12 +219,8 @@ pub async fn allow_suspension(
 ) -> Result<(), AppError> {
 	if let Ok(client) = state.client() {
 		if !client.is_active() {
-			let mut states = client.connection_state();
-			let _ = tokio::time::timeout(
-				SOCKET_CLOSE_WAIT,
-				states.wait_for(|state| {
-					*state == grindr::WsConnectionState::Disconnected
-				}),
+			crate::api::ws::wait_until_disconnected(
+				&mut client.connection_state(),
 			)
 			.await;
 		}
