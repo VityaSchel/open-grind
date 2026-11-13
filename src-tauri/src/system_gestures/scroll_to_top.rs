@@ -14,7 +14,7 @@ use tauri::WebviewWindow;
 use super::scroll_target::{ScrollerPoint, STATUS_BAR_TAP_SCRIPT};
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
-use crate::uikit::evaluate;
+use crate::uikit::{evaluate, with_webview};
 
 const MOMENTUM_STOP_SINCE: NSOperatingSystemVersion =
 	NSOperatingSystemVersion {
@@ -128,19 +128,7 @@ fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {
 }
 
 pub fn install(window: &WebviewWindow) {
-	let reached = window.with_webview(|webview| {
-		let Some(mtm) = MainThreadMarker::new() else {
-			tracing::warn!("[scroll to top] the webview left the main thread");
-			return;
-		};
-		match unsafe { Retained::retain(webview.inner().cast::<UIView>()) } {
-			Some(webview) => attach(mtm, webview),
-			None => tracing::warn!("[scroll to top] the webview is gone"),
-		}
-	});
-	if let Err(error) = reached {
-		tracing::warn!("[scroll to top] could not reach the webview: {error}");
-	}
+	with_webview(window, "scroll to top", attach);
 }
 
 fn stop_momentum(webview: &UIView, at: ScrollerPoint) {
@@ -158,13 +146,7 @@ pub fn stop_scroll_momentum(window: WebviewWindow, at: ScrollerPoint) {
 	{
 		return;
 	}
-	let reached = window.with_webview(move |webview| {
-		match unsafe { Retained::retain(webview.inner().cast::<UIView>()) } {
-			Some(webview) => stop_momentum(&webview, at),
-			None => tracing::warn!("[scroll to top] the webview is gone"),
-		}
+	with_webview(&window, "scroll to top", move |_, webview| {
+		stop_momentum(&webview, at);
 	});
-	if let Err(error) = reached {
-		tracing::warn!("[scroll to top] could not reach the webview: {error}");
-	}
 }

@@ -18,7 +18,7 @@ use tauri::WebviewWindow;
 use super::edge_pan::{self, EdgePoint, Release};
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
-use crate::uikit::evaluate;
+use crate::uikit::{evaluate, with_webview};
 
 thread_local! {
 	static BACK_SWIPE: RefCell<Option<Retained<BackSwipe>>> =
@@ -267,19 +267,7 @@ fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {
 }
 
 pub fn install(window: &WebviewWindow) {
-	let reached = window.with_webview(|webview| {
-		let Some(mtm) = MainThreadMarker::new() else {
-			tracing::warn!("[back swipe] the webview left the main thread");
-			return;
-		};
-		match unsafe { Retained::retain(webview.inner().cast::<UIView>()) } {
-			Some(webview) => attach(mtm, webview),
-			None => tracing::warn!("[back swipe] the webview is gone"),
-		}
-	});
-	if let Err(error) = reached {
-		tracing::warn!("[back swipe] could not reach the webview: {error}");
-	}
+	with_webview(window, "back swipe", attach);
 }
 
 #[tauri::command]

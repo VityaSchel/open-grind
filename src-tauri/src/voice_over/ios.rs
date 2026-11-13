@@ -14,7 +14,7 @@ use objc2_ui_kit::{
 use tauri::WebviewWindow;
 
 use super::status_script;
-use crate::uikit::evaluate;
+use crate::uikit::{evaluate, with_webview};
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
@@ -45,15 +45,7 @@ fn watch(webview: &UIView) {
 }
 
 pub fn install(window: &WebviewWindow) {
-	let reached = window.with_webview(|webview| {
-		match unsafe { Retained::retain(webview.inner().cast::<UIView>()) } {
-			Some(webview) => watch(&webview),
-			None => tracing::warn!("[voice over] the webview is gone"),
-		}
-	});
-	if let Err(error) = reached {
-		tracing::warn!("[voice over] could not reach the webview: {error}");
-	}
+	with_webview(window, "voice over", |_, webview| watch(&webview));
 }
 
 #[tauri::command]

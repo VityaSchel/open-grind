@@ -33,7 +33,7 @@ use super::geometry::{
 };
 use crate::child_scroller::child_scroller_at;
 use crate::presenting::presenting;
-use crate::uikit::evaluate;
+use crate::uikit::{evaluate, with_webview};
 
 type Observer = Retained<ProtocolObject<dyn NSObjectProtocol>>;
 
@@ -453,19 +453,7 @@ fn drive(mtm: MainThreadMarker, webview: Retained<UIView>) {
 }
 
 pub fn install(window: &WebviewWindow) {
-	let reached = window.with_webview(|webview| {
-		let Some(mtm) = MainThreadMarker::new() else {
-			tracing::warn!("[keyboard] the webview left the main thread");
-			return;
-		};
-		match unsafe { Retained::retain(webview.inner().cast::<UIView>()) } {
-			Some(webview) => drive(mtm, webview),
-			None => tracing::warn!("[keyboard] the webview is gone"),
-		}
-	});
-	if let Err(error) = reached {
-		tracing::warn!("[keyboard] could not reach the webview: {error}");
-	}
+	with_webview(window, "keyboard", drive);
 }
 
 #[tauri::command]
