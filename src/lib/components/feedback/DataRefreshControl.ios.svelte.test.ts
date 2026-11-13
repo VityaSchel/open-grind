@@ -220,38 +220,6 @@ describe("the refresh control on iOS", () => {
 		expect(view.status()!.textContent).toBe("Refreshing");
 	});
 
-	it("keeps keyboard focus on a Refresh button a key brought, hidden under the spinner and busy, through a refresh it starts without VoiceOver", async () => {
-		const view = await mountAtRest("top");
-		await view.pressInsideList("ArrowUp");
-		await view.wait(TWEEN_MS);
-		const button = view.button()!;
-		button.focus();
-		expect(view.status()!.textContent).toBe("");
-
-		button.click();
-		await view.setUpdating(true);
-
-		expect(view.ticks()!.hasAttribute("data-spinning")).toBe(true);
-		expect(view.button()).toBe(button);
-		expect(document.activeElement).toBe(button);
-		expect(button.parentElement!.style.opacity).toBe("0");
-		expect(button.style.pointerEvents).toBe("none");
-		expect(button.getAttribute("tabindex")).toBe("-1");
-		expect(button.getAttribute("aria-busy")).toBe("true");
-		expect(button.getAttribute("aria-disabled")).toBe("true");
-		expect(view.status()!.textContent).toBe("Refreshing");
-
-		await view.wait(MIN_REFRESHING_MS);
-		await view.setUpdating(false);
-
-		expect(view.button()).toBe(button);
-		expect(document.activeElement).toBe(button);
-		expect(button.parentElement!.style.opacity).toBe("");
-		expect(button.hasAttribute("tabindex")).toBe(false);
-		expect(button.hasAttribute("aria-busy")).toBe(false);
-		expect(view.status()!.textContent).toBe("Refreshed");
-	});
-
 	it("brings the Refresh button in when VoiceOver starts over a list at rest", async () => {
 		const view = await mountAtRest("top");
 
