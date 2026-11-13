@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import java.lang.ref.WeakReference
 import org.opengrind.R
 import org.opengrind.addon.AddonNames
+import org.opengrind.disguise.Disguise
 
 // Prevent Android from freezing the process and dropping its sockets
 class TransferService : Service() {
@@ -163,6 +164,7 @@ class TransferService : Service() {
 					},
 				)
 				.setPriority(NotificationCompat.PRIORITY_LOW)
+				.addExtras(Disguise.notificationExtras(context))
 				.setOngoing(true)
 				.setSilent(true)
 				.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_DEFERRED)

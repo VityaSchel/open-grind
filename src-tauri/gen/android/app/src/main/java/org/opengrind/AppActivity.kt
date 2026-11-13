@@ -19,10 +19,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.opengrind.disguise.Disguise
 import org.opengrind.push.AppForeground
 import org.opengrind.push.PushNotifier
 
-class MainActivity : TauriActivity() {
+class AppActivity : TauriActivity() {
 	private data class WebInsets(
 		val top: Double,
 		val bottom: Double,
@@ -100,7 +101,7 @@ class MainActivity : TauriActivity() {
 		@JavascriptInterface fun gestureProgress() = backGestureProgress
 
 		@JavascriptInterface fun moveTaskToBack() {
-			runOnUiThread { this@MainActivity.moveTaskToBack(true) }
+			runOnUiThread { this@AppActivity.moveTaskToBack(true) }
 		}
 	}
 	
@@ -112,6 +113,7 @@ class MainActivity : TauriActivity() {
 		).takeIf { it.disposition == WebViewSupport.Disposition.WARNING }
 		if (isRelaunch(savedInstanceState)) intent.removeExtra(PushNotifier.EXTRA_DEEPLINK)
 		super.onCreate(savedInstanceState)
+		Disguise.ensureLauncherEntry(this)
 		AppForeground.catchUpPollingOnLeave(this)
 
 		onBackPressedDispatcher.addCallback(this, backGestureCallback)
