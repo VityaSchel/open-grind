@@ -77,20 +77,6 @@ impl Progress {
 	}
 }
 
-impl<'a, R: Runtime> TransferHold<'a, R> {
-	fn update(app: &'a AppHandle<R>, candidate: &Candidate) -> Self {
-		let package_name = component::by_key(&candidate.component)
-			.map_or(component::SELF_PACKAGE, Component::install_target);
-		Self::begin(
-			app,
-			TransferPurpose::Update {
-				package_name,
-				kind: candidate.kind,
-			},
-		)
-	}
-}
-
 pub(super) struct ProgressFeed<'a, R: Runtime> {
 	app: &'a AppHandle<R>,
 	sender: &'a watch::Sender<Progress>,
@@ -103,10 +89,18 @@ impl<'a, R: Runtime> ProgressFeed<'a, R> {
 		sender: &'a watch::Sender<Progress>,
 		candidate: &Candidate,
 	) -> Self {
+		let package_name = component::by_key(&candidate.component)
+			.map_or(component::SELF_PACKAGE, Component::install_target);
 		Self {
 			app,
 			sender,
-			hold: TransferHold::update(app, candidate),
+			hold: TransferHold::begin(
+				app,
+				TransferPurpose::Update {
+					package_name,
+					kind: candidate.kind,
+				},
+			),
 		}
 	}
 

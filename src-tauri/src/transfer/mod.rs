@@ -42,10 +42,6 @@ pub struct TransferHold<'a, R: Runtime> {
 }
 
 impl<'a, R: Runtime> TransferHold<'a, R> {
-	pub fn media_upload(app: &'a AppHandle<R>) -> Self {
-		Self::begin(app, TransferPurpose::MediaUpload)
-	}
-
 	pub(crate) fn begin(
 		app: &'a AppHandle<R>,
 		purpose: TransferPurpose,
