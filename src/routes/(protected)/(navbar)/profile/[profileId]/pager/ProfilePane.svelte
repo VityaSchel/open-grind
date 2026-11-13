@@ -41,6 +41,8 @@
 		heroHash: string | null;
 	} = $props();
 
+	const holdsStill = holdsStillHere();
+
 	let scroller = $state<HTMLElement | null>(null);
 
 	const profile = $derived(profileState.profile);
@@ -115,7 +117,7 @@
 			{...scrollerHooks}
 			class={[
 				"@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto",
-				{ "[scrollbar-gutter:stable]": holdsStillHere() },
+				{ "[scrollbar-gutter:stable]": holdsStill },
 			]}
 			{@attach active && scrollsToTopOnStatusBarTap}
 		>
@@ -130,7 +132,7 @@
 						"relative",
 						{
 							"before:absolute before:inset-x-[calc(50%-50cqw)] before:inset-y-0":
-								holdsStillHere(),
+								holdsStill,
 						},
 					]}
 					{@attach holdsStillOnPull}
