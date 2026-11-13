@@ -5,8 +5,8 @@ import {
 	albumTileNamed,
 	back,
 	MEDIA_SLOT,
+	openAlbum,
 	openAlbums,
-	openSharedAlbum,
 	SHARED_ALBUM,
 	SHARED_ALBUM_ID,
 } from "./support/albums";
@@ -89,7 +89,7 @@ test.describe("my albums", () => {
 	test("Back returns to My Albums as it was, not a loading grid", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		const loadingShown = await watchRendered(page, {
 			selector: LOADING_TILE,
 		});
@@ -220,7 +220,7 @@ test.describe("my albums", () => {
 	test("a removal is marked, undoable, and only lands on save", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 
 		const save = page.getByRole("button", { name: "Save changes" });
@@ -258,7 +258,7 @@ test.describe("my albums", () => {
 	});
 
 	test("leaving the editor abandons pending edits", async ({ page }) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await page
 			.getByRole("button", { name: /^Remove album photo in slot 1$/ })
 			.click();

@@ -4,8 +4,9 @@ import {
 	albumTileNamed,
 	back,
 	MEDIA_SLOT,
+	openAlbum,
 	openAlbums,
-	openSharedAlbum,
+	SHARED_ALBUM,
 } from "./support/albums";
 
 const PENDING_TILE = `${MEDIA_SLOT} [data-slot="media-image-pending"]`;
@@ -104,7 +105,7 @@ test.describe("album uploads", () => {
 	test("two photos upload as pending tiles, then lead the album", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 		await expect(page.getByText("3/10 photos, 0/1 videos")).toBeVisible();
 
@@ -133,7 +134,7 @@ test.describe("album uploads", () => {
 	test("a video stays pending until the server finishes processing it", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 
 		await addMedia(page, [videoFile("clip.mp4")]);
 		await expect(
@@ -157,7 +158,7 @@ test.describe("album uploads", () => {
 	});
 
 	test("saving waits for the uploads in flight", async ({ page }) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await page
 			.getByRole("textbox", { name: "Album name" })
 			.fill("Darkroom");
@@ -186,7 +187,7 @@ test.describe("album uploads", () => {
 	test("a pick past the album's video limit is left out with a toast", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 
 		await addMedia(page, [videoFile("one.mp4"), videoFile("two.mp4")]);
 
@@ -202,7 +203,7 @@ test.describe("album uploads", () => {
 	});
 
 	test("previous uploads join the album from the sheet", async ({ page }) => {
-		await openSharedAlbum(page, { platform: "macos" });
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 
 		await page

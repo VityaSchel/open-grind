@@ -4,7 +4,6 @@ import {
 	back,
 	MEDIA_SLOT_CELL as CELL,
 	openAlbum,
-	openSharedAlbum,
 	SHARED_ALBUM,
 	TWO_ROW_ALBUM,
 } from "./support/albums";
@@ -28,12 +27,12 @@ async function revealGrid(page: Page) {
 }
 
 async function openAlbumGrid(page: Page) {
-	await openSharedAlbum(page, { platform: "macos" });
+	await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 	await revealGrid(page);
 }
 
 async function openTwoRowAlbumGrid(page: Page) {
-	await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
+	await openAlbum(page, { tile: TWO_ROW_ALBUM, platform: "macos" });
 	await revealGrid(page);
 }
 
@@ -250,7 +249,7 @@ test.describe("media reorder in a desktop window", () => {
 	test("photos pushed aside by a held one sit on whole device pixels", async ({
 		page,
 	}) => {
-		await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
+		await openAlbum(page, { tile: TWO_ROW_ALBUM, platform: "macos" });
 		await expectPreviewOnDevicePixels({ page, from: 0, to: 4 });
 	});
 });
@@ -293,7 +292,7 @@ test.describe("media reorder while the page scrolls under a held photo", () => {
 	test("a wheel turn drops the album photo in the slot that scrolled under the pointer", async ({
 		page,
 	}) => {
-		await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
+		await openAlbum(page, { tile: TWO_ROW_ALBUM, platform: "macos" });
 		const before = await mediaOrder(page);
 		const { centers, corner, at } = await measureGrid(page);
 
@@ -321,7 +320,7 @@ test.describe("media reorder while the page scrolls under a held photo", () => {
 	test("PageDown keeps the slot the album photo is released over", async ({
 		page,
 	}) => {
-		await openAlbum(page, TWO_ROW_ALBUM, { platform: "macos" });
+		await openAlbum(page, { tile: TWO_ROW_ALBUM, platform: "macos" });
 		const before = await mediaOrder(page);
 		const { corner, at } = await measureGrid(page);
 

@@ -30,21 +30,13 @@ export async function openAlbums(
 
 export async function openAlbum(
 	page: Page,
-	tile: string,
-	{ platform }: { platform: SupportedPlatform },
+	{ tile, platform }: { tile: string; platform: SupportedPlatform },
 ): Promise<void> {
 	await openAlbums(page, { platform });
 	await page.locator(tile).click();
 	await page.locator(MEDIA_SLOT).first().waitFor({ timeout: 30_000 });
 	await stackSettled(page);
 	await page.waitForTimeout(500);
-}
-
-export function openSharedAlbum(
-	page: Page,
-	{ platform }: { platform: SupportedPlatform },
-): Promise<void> {
-	return openAlbum(page, SHARED_ALBUM, { platform });
 }
 
 export function back(page: Page): Promise<void> {

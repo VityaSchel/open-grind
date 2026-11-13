@@ -191,7 +191,7 @@ for (const { viewport, twoColumns } of LAYOUTS) {
 		test("a new album lays out its header like the editor", async ({
 			page,
 		}) => {
-			await openAlbum(page, SHARED_ALBUM, { platform: "macos" });
+			await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 			const editor = await measureHeader(page);
 
 			await back(page);

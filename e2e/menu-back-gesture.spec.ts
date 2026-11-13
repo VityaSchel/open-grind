@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { openSharedAlbum, SHARED_ALBUM_ID } from "./support/albums";
+import { openAlbum, SHARED_ALBUM, SHARED_ALBUM_ID } from "./support/albums";
 import { installTauriShim, openGrid } from "./support/app";
 import { stackSettled, systemBack } from "./support/page-stack";
 import { activeProfilePane } from "./support/profile-pager";
@@ -74,7 +74,7 @@ test("Back closes the profile menu and stays, the next Back leaves", async ({
 test("an open menu keeps the back gesture from sliding the settings page", async ({
 	page,
 }) => {
-	await openSharedAlbum(page, { platform: "android" });
+	await openAlbum(page, { tile: SHARED_ALBUM, platform: "android" });
 	expect(await startSystemBack(page), "the page slides with no menu").toBe(
 		true,
 	);
