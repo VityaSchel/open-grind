@@ -33,6 +33,33 @@ pub struct Edges {
 	pub right: f64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct KeyboardLayout {
+	pub safe: Edges,
+	pub overlap: f64,
+	pub page_follows: bool,
+}
+
+impl KeyboardLayout {
+	pub fn covered(&self) -> f64 {
+		if self.page_follows {
+			0.0
+		} else {
+			self.overlap
+		}
+	}
+
+	pub fn insets(&self) -> NativeInsets {
+		NativeInsets {
+			top: self.safe.top,
+			bottom: (self.safe.bottom - self.covered()).max(0.0),
+			left: self.safe.left,
+			right: self.safe.right,
+			ime: self.overlap > 0.0,
+		}
+	}
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub struct NativeInsets {
 	pub top: f64,
@@ -58,23 +85,6 @@ pub fn keyboard_overlap(bounds: Rect, keyboard: Rect) -> f64 {
 		return 0.0;
 	}
 	(bounds.max_y() - keyboard.y).clamp(0.0, bounds.height)
-}
-
-pub fn insets(safe: Edges, overlap: f64) -> NativeInsets {
-	NativeInsets {
-		top: safe.top,
-		bottom: (safe.bottom - overlap).max(0.0),
-		left: safe.left,
-		right: safe.right,
-		ime: overlap > 0.0,
-	}
-}
-
-pub fn followed_insets(safe: Edges, overlap: f64) -> NativeInsets {
-	NativeInsets {
-		ime: overlap > 0.0,
-		..insets(safe, 0.0)
-	}
 }
 
 pub fn push_script(insets: &NativeInsets) -> String {
@@ -136,6 +146,11 @@ mod tests {
 		bottom: 34.0,
 		left: 0.0,
 		right: 0.0,
+	};
+	const DOCKED: KeyboardLayout = KeyboardLayout {
+		safe: SAFE,
+		overlap: 328.0,
+		page_follows: false,
 	};
 
 	fn pushed_json(script: &str) -> serde_json::Value {
@@ -203,7 +218,7 @@ mod tests {
 	#[test]
 	fn the_bottom_inset_is_zero_under_the_keyboard() {
 		assert_eq!(
-			insets(SAFE, 328.0),
+			DOCKED.insets(),
 			NativeInsets {
 				top: 62.0,
 				bottom: 0.0,
@@ -212,9 +227,21 @@ mod tests {
 				ime: true,
 			}
 		);
-		assert_eq!(insets(SAFE, 20.0).bottom, 14.0);
 		assert_eq!(
-			insets(SAFE, 0.0),
+			KeyboardLayout {
+				overlap: 20.0,
+				..DOCKED
+			}
+			.insets()
+			.bottom,
+			14.0
+		);
+		assert_eq!(
+			KeyboardLayout {
+				overlap: 0.0,
+				..DOCKED
+			}
+			.insets(),
 			NativeInsets {
 				top: 62.0,
 				bottom: 34.0,
@@ -227,8 +254,12 @@ mod tests {
 
 	#[test]
 	fn a_followed_keyboard_keeps_the_bottom_inset_and_reports_itself() {
+		let followed = KeyboardLayout {
+			page_follows: true,
+			..DOCKED
+		};
 		assert_eq!(
-			followed_insets(SAFE, 328.0),
+			followed.insets(),
 			NativeInsets {
 				top: 62.0,
 				bottom: 34.0,
@@ -237,12 +268,36 @@ mod tests {
 				ime: true,
 			}
 		);
-		assert_eq!(followed_insets(SAFE, 0.0), insets(SAFE, 0.0));
+		assert_eq!(
+			KeyboardLayout {
+				overlap: 0.0,
+				..followed
+			}
+			.insets(),
+			KeyboardLayout {
+				overlap: 0.0,
+				..DOCKED
+			}
+			.insets()
+		);
+	}
+
+	#[test]
+	fn the_webview_gives_up_the_overlap_only_when_the_page_does_not_follow() {
+		assert_eq!(DOCKED.covered(), 328.0);
+		assert_eq!(
+			KeyboardLayout {
+				page_follows: true,
+				..DOCKED
+			}
+			.covered(),
+			0.0
+		);
 	}
 
 	#[test]
 	fn the_push_sets_ios_insets_before_reapplying_them() {
-		let pushed = insets(SAFE, 328.0);
+		let pushed = DOCKED.insets();
 		assert_eq!(
 			pushed_json(&push_script(&pushed)),
 			serde_json::to_value(pushed).unwrap()
@@ -267,7 +322,7 @@ mod tests {
 		read.push("ime");
 		read.sort_unstable();
 
-		let pushed = pushed_json(&push_script(&insets(SAFE, 0.0)));
+		let pushed = pushed_json(&push_script(&DOCKED.insets()));
 		let mut fields: Vec<&str> = pushed
 			.as_object()
 			.unwrap()

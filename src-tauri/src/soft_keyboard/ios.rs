@@ -24,7 +24,9 @@ use objc2_ui_kit::{
 use tauri::webview::{PageLoadEvent, PageLoadPayload};
 use tauri::{Manager, WebviewWindow};
 
-use super::geometry::{self, Edges, KeyboardMotion, NativeInsets, Rect};
+use super::geometry::{
+	self, Edges, KeyboardLayout, KeyboardMotion, NativeInsets, Rect,
+};
 use crate::child_scroller::child_scroller_at;
 use crate::page_point::PagePoint;
 use crate::presenting::presenting;
@@ -124,28 +126,27 @@ impl KeyboardFrame {
 			self.catch_up(overlap);
 		}
 		let safe = self.safeAreaInsets();
-		let safe = Edges {
-			top: safe.top,
-			bottom: safe.bottom,
-			left: safe.left,
-			right: safe.right,
+		let layout = KeyboardLayout {
+			safe: Edges {
+				top: safe.top,
+				bottom: safe.bottom,
+				left: safe.left,
+				right: safe.right,
+			},
+			overlap,
+			page_follows,
 		};
-		let insets = if page_follows {
-			geometry::followed_insets(safe, overlap)
-		} else {
-			geometry::insets(safe, overlap)
-		};
+		let insets = layout.insets();
 		if self.ivars().sent.get() != Some(insets) {
 			self.ivars().sent.set(Some(insets));
 			evaluate(&webview, &geometry::push_script(&insets));
 		}
-		let covered = if page_follows { 0.0 } else { overlap };
 		let frame = self.frame();
 		webview.setFrame(CGRect {
 			origin: frame.origin,
 			size: CGSize {
 				width: frame.size.width,
-				height: frame.size.height - covered,
+				height: frame.size.height - layout.covered(),
 			},
 		});
 		if page_follows && overlap > 0.0 {
