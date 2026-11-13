@@ -31,9 +31,9 @@
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import type { ProfileState } from "./profile-state.svelte";
 	import ProfileHeading from "./ProfileHeading.svelte";
-	import ProfileRightNowPost from "./ProfileRightNowPost.svelte";
 	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
+	import ProfileRightNowPost from "./right-now-post/ProfileRightNowPost.svelte";
 	import RightNowBadge from "./RightNowBadge.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
 
