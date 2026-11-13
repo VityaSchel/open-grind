@@ -368,14 +368,7 @@ describe("holdInHonduras", () => {
 		const [work] = mocks.finishBeforeSuspending.mock.lastCall ?? [];
 		if (!work) throw new Error("the hold asked the app to finish nothing");
 		const homecoming = Promise.withResolvers<void>();
-		mocks.updateLocation.mockImplementation(({ geohash }) => {
-			mocks.journal.push(
-				geohash === mocks.HONDURAS ? "move:hn" : "move:home",
-			);
-			return geohash === mocks.HOME
-				? homecoming.promise
-				: Promise.resolve();
-		});
+		mocks.updateLocation.mockImplementationOnce(() => homecoming.promise);
 		let finished = false;
 		void work.then(() => {
 			finished = true;
@@ -384,12 +377,13 @@ describe("holdInHonduras", () => {
 		setVisibility("hidden");
 		await taken.ended;
 		await settle();
-		expect(mocks.journal).toContain("move:home");
+		expect(movesHome()).toBe(1);
+		expect(mocks.journal).not.toContain("unmark");
 		expect(finished).toBe(false);
 
 		homecoming.resolve();
 		await work;
-		expect(mocks.journal.slice(-2)).toEqual(["move:home", "unmark"]);
+		expect(mocks.journal.at(-1)).toBe("unmark");
 	});
 
 	it("keeps the hold while a desktop window is hidden", async () => {
