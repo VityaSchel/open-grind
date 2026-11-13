@@ -46,10 +46,10 @@ pub const SCHEME: &str = "ogmedia";
 
 const MAX_MEDIA_BYTES: usize = 16 * 1024 * 1024;
 const OFFICIAL_APP_REQUESTS_PER_HOST: usize = 20;
-#[cfg(target_os = "android")]
-const STREAMING_PLATFORM: bool = true;
-#[cfg(any(target_os = "ios", desktop))]
-const STREAMING_PLATFORM: bool = false;
+const STREAMING_PLATFORM: bool = match HOST {
+	Host::AndroidWebView => true,
+	Host::WkWebView | Host::WholeBodies => false,
+};
 const ANDROID_ANSWER_DEADLINE: Duration = Duration::from_secs(25);
 const RETRIED_HEADERS_DEADLINE: Duration = Duration::from_secs(45);
 

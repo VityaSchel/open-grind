@@ -5,12 +5,13 @@ use super::super::requested::Requested;
 use super::super::response::{refused, Freshness};
 use super::super::target::host_of;
 use super::super::upstream::GatewayFailure;
+use super::super::{Host, HOST};
 use super::adapter::WebViewStream;
 
-#[cfg(any(target_os = "ios", target_os = "macos"))]
-pub const TELLS_THE_LENGTH: bool = true;
-#[cfg(any(target_os = "android", target_os = "linux", target_os = "windows"))]
-pub const TELLS_THE_LENGTH: bool = false;
+pub const TELLS_THE_LENGTH: bool = match HOST {
+	Host::WkWebView => true,
+	Host::AndroidWebView | Host::WholeBodies => false,
+};
 
 pub struct Streamed {
 	pub id: u64,
