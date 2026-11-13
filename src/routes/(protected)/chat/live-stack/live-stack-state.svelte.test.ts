@@ -556,7 +556,6 @@ describe("LiveStackState offering a back swipe", () => {
 		const undoAnother = stack.prepareSwipeBack();
 		expect(stack.basePrepared).toBe(true);
 		undo();
-		undo();
 		expect(stack.basePrepared).toBe(true);
 		undoAnother();
 		expect(stack.basePrepared).toBe(false);

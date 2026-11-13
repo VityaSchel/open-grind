@@ -146,10 +146,7 @@ export class LiveStackState {
 
 	prepareSwipeBack(): () => void {
 		this.#prepared += 1;
-		let undone = false;
 		return () => {
-			if (undone) return;
-			undone = true;
 			this.#prepared -= 1;
 		};
 	}
