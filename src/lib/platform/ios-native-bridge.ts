@@ -2,9 +2,11 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { touchHeld } from "#lib/platform/held-touch.ts";
 import type {
+	SwipeBackRelease,
 	SystemBackAdapter,
 	SystemBackGesture,
 } from "#lib/platform/system-back-gesture.svelte.ts";
+import type { PagePoint } from "#lib/util/uncovered-center.ts";
 
 const PREPARED_MS = 1000;
 const ARM_ORDERS_PER_MS = 1000;
@@ -81,7 +83,7 @@ export class IosSystemBack implements SystemBackAdapter {
 		);
 	}
 
-	#start({ x, y }: { x: number; y: number }): boolean {
+	#start({ x, y }: PagePoint): boolean {
 		const gesture = this.#gesture;
 		const touch = this.#touch;
 		const origin =
@@ -105,7 +107,7 @@ export class IosSystemBack implements SystemBackAdapter {
 		return true;
 	}
 
-	#finish(release: { commit: boolean; velocity: number }): void {
+	#finish(release: SwipeBackRelease): void {
 		this.#progress = undefined;
 		this.#gesture?.finish(release);
 	}
