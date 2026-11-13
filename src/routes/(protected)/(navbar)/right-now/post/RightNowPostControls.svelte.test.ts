@@ -46,12 +46,7 @@ describe("the Right Now post controls", () => {
 	});
 
 	it("confirms the join and then opens the post sheet", async () => {
-		const fake = new FakeRightNowPostState();
-		fake.join.mockImplementationOnce(() => {
-			fake.startPost();
-			return Promise.resolve(true);
-		});
-		renderControls(fake);
+		const { fake } = renderControls();
 
 		await fireEvent.click(
 			screen.getByRole("button", { name: "Join · 3 left" }),
@@ -78,10 +73,8 @@ describe("the Right Now post controls", () => {
 
 	it("opens the post sheet when the state asks for it", async () => {
 		const { fake } = renderControls(runningPost());
-		const listener = fake.onSheetRequest.mock.lastCall?.[0];
 
-		expect(listener).toBeTypeOf("function");
-		listener?.();
+		fake.requestSheet();
 		flushSync();
 
 		expect(await sheet()).toBeTruthy();

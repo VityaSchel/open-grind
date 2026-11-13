@@ -22,9 +22,11 @@ const accuracy = () =>
 function renderField({
 	shareLocation = "NONE",
 	locationRadius = 0,
+	disabled = false,
 }: {
 	shareLocation?: PostForm["shareLocation"];
 	locationRadius?: number;
+	disabled?: boolean;
 } = {}) {
 	const stored = $state({ shareLocation, locationRadius });
 	render(PostLocationField, {
@@ -41,6 +43,7 @@ function renderField({
 			set locationRadius(next: number) {
 				stored.locationRadius = next;
 			},
+			disabled,
 		},
 	});
 	return stored;
@@ -79,7 +82,7 @@ describe("the post location field", () => {
 		expect(screen.getByText("Within about 2.0 km")).toBeTruthy();
 	});
 
-	it("narrows the radius as the slider moves toward More", async () => {
+	it("narrows the radius as the slider moves to its end", async () => {
 		const stored = renderField({
 			shareLocation: "DISTANCE_AND_MAP",
 			locationRadius: 100,
@@ -92,6 +95,20 @@ describe("the post location field", () => {
 		expect(accuracy()?.getAttribute("aria-valuetext")).toBe(
 			"Within about 100 m",
 		);
+	});
+
+	it("locks the map switch and the accuracy slider while disabled", async () => {
+		const stored = renderField({
+			shareLocation: "DISTANCE_AND_MAP",
+			locationRadius: 100,
+			disabled: true,
+		});
+
+		await fireEvent.keyDown(accuracy() as HTMLElement, { key: "End" });
+
+		expect(stored.locationRadius).toBe(100);
+		expect(accuracy()?.getAttribute("aria-disabled")).toBe("true");
+		expect(mapSwitch().matches(":disabled")).toBe(true);
 	});
 
 	it("previews the shared area on a map around the stored location", () => {
@@ -115,16 +132,6 @@ describe("the post location field", () => {
 			props: { shareLocation: "NONE", locationRadius: 50 },
 		});
 		expect(mapPreview(off.container)).toBeNull();
-	});
-
-	it("keeps the map switch and the accuracy in one group", () => {
-		const { container } = render(PostLocationField, {
-			props: { shareLocation: "DISTANCE_AND_MAP", locationRadius: 50 },
-		});
-
-		const group = container.querySelector('[data-slot="post-location"]');
-		expect(group?.contains(mapSwitch())).toBe(true);
-		expect(group?.contains(accuracy())).toBe(true);
 	});
 
 	it("labels the radius in the user's units", () => {

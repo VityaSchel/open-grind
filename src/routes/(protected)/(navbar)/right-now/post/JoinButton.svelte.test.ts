@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { MINUTE } from "../right-now-post-test-helpers";
+import { MINUTE, ownPost } from "../right-now-post-test-helpers";
 import JoinButton from "./JoinButton.svelte";
 import { FakeRightNowPostState, runningPost } from "./post-test-helpers.svelte";
 
@@ -84,7 +84,7 @@ describe("the Right Now join pill", () => {
 		expect(screen.queryByRole("button")).toBeNull();
 
 		fake.loading = false;
-		fake.startPost();
+		fake.post = ownPost();
 		flushSync();
 
 		expect(
@@ -148,7 +148,6 @@ describe("the Right Now join pill", () => {
 		const { fake } = renderButton(runningPost());
 
 		fake.post = null;
-		fake.status = "none";
 		fake.freePostsLeft = 2;
 		flushSync();
 
@@ -157,36 +156,44 @@ describe("the Right Now join pill", () => {
 		).toBeTruthy();
 	});
 
-	it("drops the count on narrow screens while compact, keeping it in the name", () => {
-		renderButton(new FakeRightNowPostState(), { compact: true });
-
-		const button = screen.getByRole("button", { name: "Join · 3 left" });
-		const count = [...button.querySelectorAll("span")].find(
-			(span) => span.textContent === " · 3 left",
-		);
-		expect(count?.classList.contains("max-sm:hidden")).toBe(true);
-	});
-
-	it("shrinks to its ring on narrow screens while compact, keeping the time in the name", () => {
-		renderButton(runningPost(), { compact: true });
-
-		const button = screen.getByRole("button", {
-			name: "Your Right Now post, 42m left",
-		});
-		const time = [...button.querySelectorAll("span")].find(
-			(span) => span.textContent.trim() === "42m left",
-		);
-		expect(time?.classList.contains("max-sm:hidden")).toBe(true);
-	});
-
 	it.each([
-		["the join pill", () => new FakeRightNowPostState()],
-		["the running pill", () => runningPost()],
-	])("keeps %s's full label while not compact", (_, fake) => {
-		renderButton(fake());
+		{
+			pill: "join",
+			fake: () => new FakeRightNowPostState(),
+			name: "Join · 3 left",
+			slot: "join-button-allowance",
+			compact: true,
+		},
+		{
+			pill: "join",
+			fake: () => new FakeRightNowPostState(),
+			name: "Join · 3 left",
+			slot: "join-button-allowance",
+			compact: false,
+		},
+		{
+			pill: "running",
+			fake: () => runningPost(),
+			name: "Your Right Now post, 42m left",
+			slot: "join-button-time",
+			compact: true,
+		},
+		{
+			pill: "running",
+			fake: () => runningPost(),
+			name: "Your Right Now post, 42m left",
+			slot: "join-button-time",
+			compact: false,
+		},
+	])(
+		"hides the $pill pill's text on narrow screens only while compact ($compact), keeping its name",
+		({ fake, name, slot, compact }) => {
+			renderButton(fake(), { compact });
 
-		expect(
-			screen.getByRole("button").querySelector(".max-sm\\:hidden"),
-		).toBeNull();
-	});
+			const text = screen
+				.getByRole("button", { name })
+				.querySelector(`[data-slot="${slot}"]`);
+			expect(text?.classList.contains("max-sm:hidden")).toBe(compact);
+		},
+	);
 });
