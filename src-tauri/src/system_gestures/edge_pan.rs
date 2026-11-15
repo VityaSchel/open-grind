@@ -42,7 +42,7 @@ pub fn prepares_for(x: f64) -> bool {
 	x < PREPARE_ZONE_POINTS
 }
 
-pub fn commits(progress: f64, velocity: f64) -> bool {
+fn commits(progress: f64, velocity: f64) -> bool {
 	progress + RELEASE_PROJECTION_SECONDS * velocity > COMMIT_PAST
 }
 
