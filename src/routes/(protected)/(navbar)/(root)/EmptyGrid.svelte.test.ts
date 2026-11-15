@@ -14,7 +14,7 @@ import EmptyGrid from "./EmptyGrid.svelte";
 
 const fakeGrid = vi.hoisted(() => ({
 	filters: {
-		value: null as GridSearchFilters | null,
+		current: null as GridSearchFilters | null,
 		resetFilters: () => {},
 	},
 }));
@@ -44,13 +44,13 @@ const variants = [
 }[];
 
 function renderWith(filters: Partial<GridSearchFilters>) {
-	fakeGrid.filters.value = { ...defaultFilters, ...filters };
+	fakeGrid.filters.current = { ...defaultFilters, ...filters };
 	return render(EmptyGrid);
 }
 
 afterEach(async () => {
 	cleanup();
-	fakeGrid.filters.value = null;
+	fakeGrid.filters.current = null;
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 

@@ -45,6 +45,7 @@ const PROFILE_NAVIGATIONS = 4;
 const REPORT_MENU_ITEM = 1;
 const PHOTO_CONVERSATION = "/chat/100002:123456000";
 const DRAWER_PILL = "button:not([aria-label], [aria-pressed])";
+const QUICK_FILTER_PILL = '[data-slot="button"]';
 const MENU_TRIGGER = '[aria-haspopup="menu"]';
 const ADD_TILE = '[data-slot="add-tile"]';
 const SHARED_WITH_BUTTON =
@@ -155,6 +156,54 @@ test("the browse grid top bar and its quick-filter drawers render only pseudo-tr
 		await page.keyboard.press("Escape");
 		await expect(drawer).toBeHidden();
 	}
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+});
+
+test("the Right Now feed, its quick-filter drawers, the Join confirmation and the post sheet render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page, { platform: "android" });
+	await page.goto("/right-now?locale=en-XA");
+	await page
+		.locator(EMPTY_TITLE)
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await runPaletteCommand(page, `@${DEMO_GEOHASH}`);
+	await page.waitForURL(({ pathname }) => pathname === "/");
+	await page.locator('nav a[href="/right-now"]').click();
+	const topBar = page.locator("[data-fixed-header]");
+	const posts = page.locator('[data-slot="right-now-post"]');
+	await posts.first().waitFor({ timeout: 60_000 });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const scans = [
+		await readPseudoText(topBar),
+		await readPseudoText(page.locator('[data-slot="right-now-scroller"]')),
+	];
+	const drawerPills = topBar
+		.locator(QUICK_FILTER_PILL)
+		.filter({ hasText: PSEUDO_MESSAGE });
+	await expect(drawerPills).toHaveCount(4);
+	for (const pill of (await drawerPills.all()).slice(1)) {
+		await pill.click();
+		const drawer = page.getByRole("dialog");
+		await drawer.waitFor();
+		scans.push(await readPseudoText(drawer));
+		await page.keyboard.press("Escape");
+		await expect(drawer).toBeHidden();
+	}
+	const joinPill = page.locator('[data-slot="join-button"] button');
+	scans.push(await readPseudoText(joinPill));
+	await joinPill.click();
+	const confirm = page.getByRole("alertdialog");
+	await confirm.waitFor();
+	scans.push(await readPseudoText(confirm));
+	await confirm.locator('[data-slot="alert-dialog-action"]').click();
+	const sheet = page.getByRole("dialog");
+	await sheet.locator('[role="switch"]:not([disabled])').waitFor();
+	scans.push(await readPseudoText(sheet));
+
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);

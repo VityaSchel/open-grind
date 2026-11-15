@@ -6,6 +6,7 @@
 
 	import DisplayName from "#lib/components/profile/DisplayName.svelte";
 	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import ProfileRightNowIndicator from "#lib/components/profile/ProfileRightNowIndicator.svelte";
 	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
 	import Frost from "#lib/components/shared/Frost.svelte";
@@ -13,6 +14,7 @@
 	import { t } from "#lib/i18n/index.ts";
 	import Rich from "#lib/i18n/Rich.svelte";
 	import { profileMediaUrl } from "#lib/util/media.ts";
+	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 	const UNREAD_COUNT_CAP = 99;
 
@@ -26,6 +28,7 @@
 		isFavorite = false,
 		isVisiting = false,
 		hadRecentChat = false,
+		rightNow = "NOT_ACTIVE",
 		anonymous = false,
 		href = null,
 		onclick,
@@ -41,6 +44,7 @@
 		isFavorite?: boolean;
 		isVisiting?: boolean;
 		hadRecentChat?: boolean;
+		rightNow?: RightNowStatus;
 		anonymous?: boolean;
 		href?: string | null;
 		onclick?: (event: MouseEvent) => void;
@@ -143,6 +147,7 @@
 					{isVisiting}
 					class="me-1"
 				/>
+				<ProfileRightNowIndicator status={rightNow} class="me-1" />
 
 				<span
 					class={[

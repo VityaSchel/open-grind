@@ -1,0 +1,17 @@
+.pswp .pswp__caption-panel {
+	position: absolute;
+	bottom: var(--safe-area-bottom);
+	left: var(--safe-area-left);
+	right: var(--safe-area-right);
+	pointer-events: none;
+}
+
+.pswp--ui-visible .pswp__caption-panel > * {
+	pointer-events: auto;
+}
+
+.pswp .pswp__bar-action {
+	display: flex;
+	margin-top: 0.75rem;
+	margin-right: 0.5rem;
+}

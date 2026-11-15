@@ -23,7 +23,13 @@
 	import { locationRequest } from "#lib/location/location-request.svelte.ts";
 	import { openExternalLink } from "#lib/platform/link-opener.ts";
 	import { isMobilePlatform } from "#lib/platform/os.ts";
-	import { PIN_ZOOM } from "./constants";
+	import {
+		ACCURACY_CIRCLE_COLOR,
+		OSM_COPYRIGHT_URL,
+		OSM_TILE_OPTIONS,
+		OSM_TILE_URL,
+		PIN_ZOOM,
+	} from "./constants";
 	import LocateMeButton from "./LocateMeButton.svelte";
 	import PlaceSearch from "./PlaceSearch.svelte";
 
@@ -46,7 +52,6 @@
 	const LOCATE_MIN_ZOOM = 16;
 	const DEFAULT_CENTER: LatLngTuple = [40.42267869390329, -3.697633348267032];
 	const OPEN_OCEAN: LatLngTuple = [10, -35];
-	const OSM_COPYRIGHT = "https://www.openstreetmap.org/copyright";
 
 	const locating = $derived(locationRequest.pending);
 	const covering = $derived(locked && locating);
@@ -165,7 +170,7 @@
 		const control = attributionControl;
 		if (!control) return;
 		const link = document.createElement("a");
-		link.href = OSM_COPYRIGHT;
+		link.href = OSM_COPYRIGHT_URL;
 		link.target = "_blank";
 		link.rel = "noreferrer nofollow noopener";
 		link.textContent = t("browse.locationChooser.map.attribution");
@@ -237,15 +242,7 @@
 		}}
 		bind:instance={map}
 	>
-		<TileLayer
-			url={"https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
-			options={{
-				maxZoom: 19,
-				referrerPolicy: "strict-origin-when-cross-origin",
-				// do not enable: https://github.com/Leaflet/Leaflet/issues/6195
-				// detectRetina: true,
-			}}
-		/>
+		<TileLayer url={OSM_TILE_URL} options={OSM_TILE_OPTIONS} />
 		<ControlAttribution
 			bind:instance={attributionControl}
 			options={{ prefix: undefined }}
@@ -256,10 +253,10 @@
 				latLng={[fix.lat, fix.lon]}
 				options={{
 					radius: fix.accuracyMeters,
-					color: "#3b82f6",
+					color: ACCURACY_CIRCLE_COLOR,
 					weight: 0.5,
 					opacity: 0.5,
-					fillColor: "#3b82f6",
+					fillColor: ACCURACY_CIRCLE_COLOR,
 					fillOpacity: 0.15,
 				}}
 			/>

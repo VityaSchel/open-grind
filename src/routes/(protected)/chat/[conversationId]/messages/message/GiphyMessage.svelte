@@ -6,11 +6,11 @@
 	import { giphyOriginalUrl } from "#lib/api/messaging/giphy-link.ts";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
+	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import type { GiphyMessage } from "#lib/model/messaging/messages.ts";
 	import GifBadge from "../../giphy/GifBadge.svelte";
 	import { giphyConsented } from "../../giphy/giphy-consent";
 	import GiphyConsentDialog from "../../giphy/GiphyConsentDialog.svelte";
-	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MeasuredSize, MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: GiphyMessage["body"] } = $props();

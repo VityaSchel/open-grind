@@ -121,4 +121,29 @@ describe("ProfileMiniCard", () => {
 			PSEUDO_MESSAGE,
 		);
 	});
+
+	it("marks a Right Now profile inside the name pill", () => {
+		const { container } = render(ProfileMiniCard, {
+			displayName: "Simon",
+			rightNow: "HOSTING",
+			href: "/profile/1",
+		});
+
+		expect(
+			container.querySelector(
+				'[data-slot="badge"] [data-slot="right-now-indicator"]',
+			),
+		).not.toBeNull();
+	});
+
+	it("marks no Right Now status by default", () => {
+		const { container } = render(ProfileMiniCard, {
+			displayName: "Simon",
+			href: "/profile/1",
+		});
+
+		expect(
+			container.querySelector('[data-slot="right-now-indicator"]'),
+		).toBeNull();
+	});
 });

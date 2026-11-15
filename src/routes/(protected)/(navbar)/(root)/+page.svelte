@@ -1,10 +1,6 @@
 <script lang="ts">
-	import {
-		hydratePreferences,
-		preferencesSnapshot,
-	} from "#lib/app-data/preferences.svelte.ts";
-	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
+	import LocationGate from "#lib/components/location-chooser/LocationGate.svelte";
 	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
@@ -12,11 +8,7 @@
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { revealedGridScrollTop } from "./grid-reveal";
 	import Grid from "./Grid.svelte";
-	import LocationChooser from "./LocationEmpty.svelte";
 	import TopBar from "./top-bar/TopBar.svelte";
-
-	let preferencesHydrated = $state(hydratePreferences());
-	const geohash = $derived(preferencesSnapshot().geohash);
 
 	let gridContainer: HTMLElement | null = $state(null);
 
@@ -42,12 +34,8 @@
 </script>
 
 <PageTitle page={t("shell.navBar.tabs.browse")} />
-{#await preferencesHydrated then}
-	{#if geohash === null}
-		<main class="m-auto flex max-w-full flex-1">
-			<LocationChooser />
-		</main>
-	{:else}
+<LocationGate>
+	{#snippet children({ geohash })}
 		<main class="screen-nav-host">
 			<TopBar />
 			{#if !gridState.loading && !gridState.error}
@@ -78,13 +66,5 @@
 				class="bottom-nav-clear"
 			/>
 		</main>
-	{/if}
-{:catch error}
-	<main class="m-auto flex max-w-full flex-1">
-		<ApiErrorDisplay
-			{error}
-			onRetry={() => (preferencesHydrated = hydratePreferences())}
-			class="m-auto"
-		/>
-	</main>
-{/await}
+	{/snippet}
+</LocationGate>

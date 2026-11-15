@@ -7,6 +7,7 @@ import { backdropBlurQualitySchema } from "#lib/blur/quality.ts";
 import { getRegionalSettings, t } from "#lib/i18n/index.ts";
 import { gridSearchFiltersSchema } from "#lib/model/browse/grid/filters.ts";
 import { geohashSchema } from "#lib/model/geohash.ts";
+import { rightNowFeedFiltersSchema } from "#lib/model/right-now/filters.ts";
 import {
 	languageSyncSchema,
 	languageTagSchema,
@@ -39,12 +40,13 @@ const preferencesSchema = z.object({
 	notificationsEnabled: z.boolean().default(false),
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
+	rightNowFeedFilters: rightNowFeedFiltersSchema.optional(),
 	stayOnline: z.boolean().default(true),
 	systemUnitsPending: z.boolean().default(false),
 	units: unitSystemSchema.default("metric"),
 });
 
-type Preferences = z.infer<typeof preferencesSchema>;
+export type Preferences = z.infer<typeof preferencesSchema>;
 
 export type BooleanPreference = {
 	[Key in keyof Preferences]-?: Preferences[Key] extends boolean
@@ -198,6 +200,7 @@ const accountPreferenceKeys = [
 	"geohash",
 	"gridSearchFilters",
 	"notificationsEnabled",
+	"rightNowFeedFilters",
 ] as const;
 
 export async function clearAccountPreferences(): Promise<void> {

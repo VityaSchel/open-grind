@@ -39,6 +39,7 @@ export function fullProfile({
 		onlineUntil: null,
 		seen: null,
 		distance: null,
+		rightNow: "NOT_ACTIVE",
 		isNew: false,
 		isFavorite: false,
 		tapType: null,

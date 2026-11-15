@@ -42,6 +42,7 @@ const SETTINGS = "/settings";
 const ACCOUNT = `${SETTINGS}/account`;
 const APP = `${SETTINGS}/app`;
 const ALBUMS = `${SETTINGS}/albums`;
+const RIGHT_NOW = "/right-now";
 const SWITCH = '[role="switch"]';
 const ALERT = '[data-slot="alert"]';
 const EMPTY_TITLE = '[data-slot="empty-title"]';
@@ -88,8 +89,19 @@ const routes: readonly RouteCase[] = [
 	},
 	{
 		route: "/(protected)/(navbar)/right-now",
-		path: "/right-now",
-		shows: ALERT,
+		path: RIGHT_NOW,
+		shows: EMPTY_TITLE,
+	},
+	{
+		route: "/(protected)/(navbar)/right-now",
+		state: "with a location",
+		path: RIGHT_NOW,
+		shows: '[data-slot="right-now-post"]',
+		prepare: async (page) => {
+			await chooseDemoLocation(page);
+			await page.waitForURL(({ pathname }) => pathname === "/");
+			await page.locator(`nav a[href="${RIGHT_NOW}"]`).click();
+		},
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(me)",

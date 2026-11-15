@@ -297,6 +297,38 @@
 		"submit": "Submit report",
 		"errors": {
 			"sendFailed": "Couldn’t send report"
+		},
+		"rightNowPost": {
+			"title": "Report Post",
+			"a11y": {
+				"description": "Send a report about this Right Now post to Grindr."
+			},
+			"reviewed": "Grindr will review this post.",
+			"alreadyReported": "Already reported",
+			"awaitingModeration": "Awaiting moderation",
+			"awaitingModerationSince": "{{time}} · Awaiting moderation",
+			"errors": {
+				"checkFailed": "Couldn’t check for an earlier report"
+			}
+		}
+	},
+	"rightNow": {
+		"badge": {
+			"hosting": "Hosting",
+			"rightNow": "Right Now"
+		},
+		"indicator": {
+			"hosting": "Right Now · Hosting",
+			"active": "Right Now"
+		},
+		"post": {
+			"open": "Right Now",
+			"errors": {
+				"openFailed": "Couldn’t open Right Now post"
+			}
+		},
+		"viewer": {
+			"edit": "Edit post"
 		}
 	}
 }

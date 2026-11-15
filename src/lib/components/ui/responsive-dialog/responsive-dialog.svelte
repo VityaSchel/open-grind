@@ -9,11 +9,13 @@
 
 	let {
 		open = $bindable(false),
-		onOpenChange,
+		dismissible = true,
+		onDismissBlocked,
 		children,
 	}: {
 		open?: boolean;
-		onOpenChange?: (open: boolean) => void;
+		dismissible?: boolean;
+		onDismissBlocked?: () => void;
 		children?: Snippet<[{ desktop: boolean }]>;
 	} = $props();
 
@@ -22,22 +24,28 @@
 		get desktop() {
 			return isDesktop.current;
 		},
+		dismissAttempted: () => {
+			if (!dismissible) onDismissBlocked?.();
+		},
 	});
+
+	function requestOpen(next: boolean) {
+		if (next || dismissible) open = next;
+		else onDismissBlocked?.();
+	}
 
 	dismissOnBackGesture({
 		active: () => open,
-		dismiss: () => {
-			open = false;
-		},
+		dismiss: () => requestOpen(false),
 	});
 </script>
 
 {#if isDesktop.current}
-	<Dialog.Root bind:open {onOpenChange}>
+	<Dialog.Root bind:open={() => open, requestOpen}>
 		{@render children?.({ desktop: true })}
 	</Dialog.Root>
 {:else}
-	<Drawer.Root bind:open {onOpenChange}>
+	<Drawer.Root bind:open {dismissible}>
 		{@render children?.({ desktop: false })}
 	</Drawer.Root>
 {/if}

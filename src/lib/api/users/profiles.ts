@@ -18,7 +18,7 @@ import {
 	onProfileViewabilityChange,
 } from "#lib/api/users/profile-viewability.ts";
 import { mediaHashPublicSchema } from "#lib/model/media.ts";
-import { rightNowAttributionStatusSchema } from "#lib/model/right-now.ts";
+import { rightNowAttributionStatusSchema } from "#lib/model/right-now/index.ts";
 import { arrayOfParsableEntries } from "#lib/model/tolerance.ts";
 import {
 	type Profile,
@@ -373,7 +373,7 @@ export async function uploadProfilePhoto(
 					path,
 					signed: false,
 					file: mediaFileDescriptor(media),
-					squareThumb: true,
+					crop: "thumbCoords",
 				},
 				requestInfo: { method: "POST", path },
 			});

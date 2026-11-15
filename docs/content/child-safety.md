@@ -21,7 +21,7 @@ Open Grind is only for adults 18 and older. Minors must not use Open Grind.
 
 ## Report abuse
 
-- Report a profile or message to Grindr with Report in Open Grind, and choose Underage for anything involving a minor.
+- Report a profile, message or Right Now post to Grindr with Report in Open Grind, and choose Underage for anything involving a minor.
 - Report anything on git.opengrind.org or in the Open Grind Matrix rooms to [admin@opengrind.org](mailto:admin@opengrind.org). Never send images of abuse to anyone, including us. Describe where you saw them instead.
 
 ## Profiles, photos and messages

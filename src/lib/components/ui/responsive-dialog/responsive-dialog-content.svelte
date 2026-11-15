@@ -35,7 +35,18 @@
 		{@render children()}
 	</Dialog.Content>
 {:else}
-	<Drawer.Content class={cn(className, drawerClass)} {...drawerProps}>
+	<Drawer.Content
+		class={cn(className, drawerClass)}
+		{...drawerProps}
+		onInteractOutside={(event) => {
+			drawerProps?.onInteractOutside?.(event);
+			context.dismissAttempted();
+		}}
+		onEscapeKeydown={(event) => {
+			drawerProps?.onEscapeKeydown?.(event);
+			context.dismissAttempted();
+		}}
+	>
 		{@render children()}
 	</Drawer.Content>
 {/if}

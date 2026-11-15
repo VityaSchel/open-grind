@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { expectEveryControlNamed } from "./support/a11y";
 import {
@@ -8,6 +8,11 @@ import {
 	MESSAGE_ROW,
 } from "./support/app";
 import { ALBUM_TILE } from "./support/drawer";
+import {
+	goToRightNow,
+	RIGHT_NOW_FEED_TIMEOUT,
+	rightNowJoinPill,
+} from "./support/right-now";
 
 const DEMO_PROFILE = "/profile/100001";
 
@@ -81,5 +86,38 @@ test.describe("every control has an accessible name", () => {
 			.getByRole("button", { name: "Selected location" })
 			.waitFor({ timeout: 60_000 });
 		await expectEveryControlNamed(page, "location picker");
+	});
+
+	test("Right Now, its filter sheets, the Join confirmation and the post sheet", async ({
+		page,
+	}) => {
+		test.setTimeout(240_000);
+		await goToRightNow(page);
+		await page.getByRole("article").first().waitFor({ timeout: 60_000 });
+		await expectEveryControlNamed(page, "Right Now");
+
+		for (const filter of ["Age", "Position", "Hosting"]) {
+			await page
+				.getByRole("button", { name: filter, exact: true })
+				.click();
+			const sheet = page.getByRole("dialog");
+			await sheet.getByRole("button", { name: "Apply" }).waitFor();
+			await expectEveryControlNamed(page, `${filter} filter`);
+			await page.keyboard.press("Escape");
+			await expect(sheet).toBeHidden();
+		}
+
+		await rightNowJoinPill(page).click({ timeout: RIGHT_NOW_FEED_TIMEOUT });
+		const joinNow = page
+			.getByRole("alertdialog", { name: "Join Right Now?" })
+			.getByRole("button", { name: "Join now" });
+		await joinNow.waitFor();
+		await expectEveryControlNamed(page, "Join Right Now confirmation");
+		await joinNow.click();
+		await page
+			.getByRole("dialog", { name: "Right Now" })
+			.getByRole("switch", { name: "Show my post" })
+			.waitFor();
+		await expectEveryControlNamed(page, "Right Now post sheet");
 	});
 });

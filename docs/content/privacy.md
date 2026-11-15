@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-11-03
+Effective date: 2026-11-13
 
 Open Grind Governance, an unregistered project represented by Viktor Shchelochkov, makes the Open Grind app and runs the servers below. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
@@ -28,6 +28,8 @@ For the features you use, the app sends data straight to these services over enc
   - **Grindr**: that push token, so it can send your notifications.
 
 To stop sending data, turn the feature off or sign out. To delete data a service holds, ask that service; for Grindr, delete your Grindr account.
+
+On iOS, a reinstall erases your session, and app data stays out of backups.
 
 ## Open Grind servers and websites
 

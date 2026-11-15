@@ -17,10 +17,15 @@ import { isTribeOffered } from "#lib/model/users/profiles.ts";
 import { isTagKeyOffered } from "#lib/model/users/tags.ts";
 import type { cascadeV4QuerySchema } from "#lib/model/browse/grid/cascade/query/v4.ts";
 
-const sendable = <T>({ enabled, values }: { enabled: boolean; values: T[] }) =>
-	enabled && values.length > 0 ? values : undefined;
+export const sendable = <T>({
+	enabled,
+	values,
+}: {
+	enabled: boolean;
+	values: T[];
+}) => (enabled && values.length > 0 ? values : undefined);
 
-const sendableRange = ({
+export const sendableRange = ({
 	enabled,
 	range,
 	min,

@@ -95,7 +95,171 @@
 		}
 	},
 	"rightNow": {
-		"unimplemented": "The Right Now tab isn’t implemented yet. Follow the progress in {{issueLink}}."
+		"unimplemented": "The Right Now tab isn’t implemented yet. Follow the progress in {{issueLink}}.",
+		"filters": {
+			"errors": {
+				"loadFailed": "Couldn’t load Right Now filters",
+				"updateFailed": "Couldn’t update Right Now filters"
+			},
+			"sort": {
+				"newest": "Newest",
+				"distance": "Distance"
+			},
+			"a11y": {
+				"sort": "Sort: {{sort}}"
+			},
+			"hosting": {
+				"label": "Hosting",
+				"hosting": "Hosting",
+				"notHosting": "Not Hosting",
+				"a11y": {
+					"toggle": "Filter by Hosting"
+				}
+			}
+		},
+		"feed": {
+			"newPosts": "New posts",
+			"errors": {
+				"refreshFailed": "Couldn’t refresh Right Now"
+			}
+		},
+		"empty": {
+			"noResults": {
+				"description": "No posts match these filters."
+			},
+			"noPosts": {
+				"title": "No Posts Yet",
+				"description": "No one nearby is on Right Now.",
+				"noOneElse": "No one else nearby is on Right Now.",
+				"joinFirst": "No one nearby is on Right Now. Join to be the first."
+			}
+		},
+		"post": {
+			"joined": "{{name}} joined",
+			"joinedAnonymous": "Joined",
+			"discreet": "Discreet post",
+			"age_one": "{{count}} year old",
+			"age_other": "{{count}} years old",
+			"underReview": "Under review",
+			"edit": "Edit",
+			"message": "Message",
+			"hosting": "Hosting",
+			"a11y": {
+				"viewProfile": "View {{name}}’s profile",
+				"viewProfileAnonymous": "View profile",
+				"message": "Message {{name}}",
+				"edit": "Edit your post",
+				"report": "Report post"
+			}
+		},
+		"photo": {
+			"alt": "Post photo",
+			"mayContainNudity": "May contain nudity",
+			"a11y": {
+				"open": "Open photo"
+			}
+		},
+		"timeLeft": {
+			"seconds": "{{seconds}}s",
+			"minutes": "{{minutes}}m",
+			"hours": "{{hours}}h",
+			"hoursMinutes": "{{hours}}h {{minutes}}m"
+		},
+		"join": {
+			"label": "Join",
+			"allowance_one": "{{count}} left",
+			"allowance_other": "{{count}} left",
+			"allowanceNone": "0 left",
+			"a11y": {
+				"withAllowance": "Join · {{allowance}}",
+				"exhausted": "Join · {{allowance}}. No free posts left in this area"
+			},
+			"running": {
+				"active": "{{time}} left",
+				"off": "Off · {{time}}",
+				"a11y": {
+					"active": "Your Right Now post, {{time}} left",
+					"off": "Your Right Now post, off, {{time}} left"
+				}
+			},
+			"confirm": {
+				"title": "Join Right Now?",
+				"description": "You’ll show as “Joined” until you add a post.",
+				"join": "Join now"
+			}
+		},
+		"sheet": {
+			"title": "Right Now",
+			"status": {
+				"active": "Active · {{time}} left",
+				"off": "Off · {{time}} left"
+			},
+			"a11y": {
+				"visible": "Show my post"
+			},
+			"text": {
+				"label": "Text",
+				"placeholder": "What are you looking for?"
+			},
+			"hosting": "Hosting",
+			"rejected": {
+				"textAndPhoto": "Your text and photo were rejected",
+				"photo": "Your photo was rejected",
+				"text": "Your text was rejected",
+				"noReason": "No reason was given."
+			},
+			"rejectReason": {
+				"bullying": "Bullying",
+				"selfHarm": "Self harm",
+				"drugPatterns": "Drug patterns",
+				"hateSpeech": "Hate speech",
+				"sexSolicitation": "Solicitation of sex",
+				"spamDisruption": "Spam/disruption",
+				"underage": "Content with minors",
+				"other": "Other"
+			},
+			"discard": {
+				"title": "Discard changes?",
+				"description": "You have unsaved changes.",
+				"keepEditing": "Keep editing",
+				"discard": "Discard"
+			},
+			"location": {
+				"showOnMap": "Show me on map",
+				"accuracy": "Location accuracy",
+				"radius": "Within about {{distance}}"
+			},
+			"photo": {
+				"label": "Photo",
+				"altRejected": "Post photo, rejected",
+				"remove": "Remove photo",
+				"keep": "Keep photo",
+				"uploading": "Uploading photo",
+				"add": "Add photo",
+				"upload": "Upload a photo",
+				"addToPost": "Add to post",
+				"errors": {
+					"uploadFailed": "Couldn’t upload photo",
+					"pickerFailed": "Couldn’t open the photo picker",
+					"tooSmall": "This photo is too small"
+				}
+			}
+		},
+		"ownPost": {
+			"errors": {
+				"joinFailed": "Couldn’t join Right Now",
+				"saveFailed": "Couldn’t save your post",
+				"turnOffFailed": "Couldn’t turn off Right Now",
+				"turnOnFailed": "Couldn’t turn on Right Now",
+				"restartFailed": "Couldn’t start a new Right Now session"
+			},
+			"noFreePosts": "No free posts left in this area",
+			"alreadyRunning": "You already have a post running",
+			"rejected": "Your post was rejected",
+			"why": "Why?",
+			"ended": "Your Right Now session ended",
+			"goAgain": "Go again"
+		}
 	},
 	"locationChooser": {
 		"map": {

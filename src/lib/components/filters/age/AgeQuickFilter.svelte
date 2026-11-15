@@ -3,21 +3,29 @@
 
 	import AgeFilterSlider from "#lib/components/filters/age/AgeFilterSlider.svelte";
 	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
-	import { gridState } from "#lib/grid/grid-state.svelte.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import {
+		AGE_MAX,
+		AGE_MIN,
 		ageRangeLabel,
-		defaultFilters,
 	} from "#lib/model/browse/grid/filters.ts";
 
-	let { open = $bindable() }: { open: boolean } = $props();
+	type AgeFilters = { ageEnabled: boolean; age: number[] };
 
-	let filters = $state(gridState.filters.snapshot());
-	let { ageEnabled: enabled, age: value } = $derived(filters);
+	let {
+		open = $bindable(),
+		filters,
+	}: {
+		open: boolean;
+		filters: { snapshot(): AgeFilters; set(patch: AgeFilters): void };
+	} = $props();
+
+	let draft = $state(untrack(() => filters.snapshot()));
+	let { ageEnabled: enabled, age: value } = $derived(draft);
 
 	$effect(() => {
 		if (open) {
-			filters = untrack(() => gridState.filters.snapshot());
+			draft = untrack(() => filters.snapshot());
 		}
 	});
 
@@ -30,9 +38,9 @@
 	title={t("common.filters.age.label")}
 	switchLabel={t("browse.filters.age.a11y.toggle")}
 	onreset={() => {
-		value = defaultFilters.age;
+		value = [AGE_MIN, AGE_MAX];
 	}}
-	onapply={() => gridState.filters.set({ ageEnabled: enabled, age: value })}
+	onapply={() => filters.set({ ageEnabled: enabled, age: value })}
 >
 	<div class="mb-2 w-full text-center">{label}</div>
 	<AgeFilterSlider

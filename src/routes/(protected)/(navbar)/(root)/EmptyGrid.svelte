@@ -9,11 +9,10 @@
 	import { sentFilterKeys } from "#lib/grid/grid-query.ts";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
 	import { t } from "#lib/i18n/index.ts";
-	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 
 	const sentFilters = $derived(
 		sentFilterKeys({
-			filters: gridState.filters.value ?? defaultFilters,
+			filters: gridState.filters.current,
 			genderFilterFlag: genderFilterFlag(),
 		}),
 	);

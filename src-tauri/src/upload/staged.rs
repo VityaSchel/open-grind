@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use super::media_error;
 use crate::error::{AppError, MediaError};
+use crate::media::read_photo;
 use crate::photo;
 
 const DIRECTORY: &str = "staged-media";
@@ -54,6 +55,15 @@ impl StagedMedia {
 
 	pub fn append(&self, id: &str, bytes: &[u8]) -> io::Result<()> {
 		self.appender(id)?.write_all(bytes)
+	}
+
+	pub fn create_with(&self, bytes: &[u8]) -> io::Result<String> {
+		let id = self.create()?;
+		if let Err(error) = self.append(&id, bytes) {
+			let _ = self.discard(&id);
+			return Err(error);
+		}
+		Ok(id)
 	}
 
 	pub fn discard(&self, id: &str) -> io::Result<()> {
@@ -113,6 +123,19 @@ pub async fn discard_staged_media(
 		.map_err(media_error)
 }
 
+#[tauri::command]
+pub async fn stage_proxied_photo(
+	app: AppHandle,
+	url: String,
+) -> Result<String, AppError> {
+	let bytes = read_photo(&app, &url)
+		.await
+		.ok_or(MediaError::PhotoUnloadable)?;
+	photo::off_thread(move || StagedMedia::of(&app)?.create_with(&bytes))
+		.await?
+		.map_err(media_error)
+}
+
 #[cfg(test)]
 mod tests {
 	use std::sync::atomic::{AtomicUsize, Ordering};
@@ -150,6 +173,18 @@ mod tests {
 		assert_eq!(
 			fs::read(stage.0.path(&id).expect("path")).expect("read"),
 			b"first second"
+		);
+	}
+
+	#[test]
+	fn a_file_staged_with_bytes_holds_them() {
+		let stage = TempStage::new();
+
+		let id = stage.0.create_with(b"jpeg bytes").expect("create");
+
+		assert_eq!(
+			fs::read(stage.0.path(&id).expect("path")).expect("read"),
+			b"jpeg bytes"
 		);
 	}
 
