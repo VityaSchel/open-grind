@@ -122,7 +122,7 @@
 		hintShown ? reveal.current : buttonSpace.current,
 	);
 
-	const discSpinning = $derived(
+	const spinning = $derived(
 		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
 	);
 	const touchProgress = $derived(
@@ -365,7 +365,7 @@
 					progress={model.source === "band"
 						? model.displayPx / ARM_PX
 						: 1}
-					spinning={discSpinning}
+					{spinning}
 				/>
 			</div>
 		{/if}
@@ -384,10 +384,7 @@
 					onoutroend={() =>
 						void discTop.set(DISC_START, { duration: 0 })}
 				>
-					<RefreshDisc
-						progress={discProgress}
-						spinning={discSpinning}
-					/>
+					<RefreshDisc progress={discProgress} {spinning} />
 				</div>
 			{/if}
 		</div>
