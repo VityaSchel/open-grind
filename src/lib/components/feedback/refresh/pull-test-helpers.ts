@@ -28,14 +28,26 @@ export function makeScrollable(
 
 export function touchEvent(
 	type: "touchstart" | "touchmove" | "touchend" | "touchcancel",
-	{ id = 0, x = 0, y = 0 } = {},
+	{
+		id = 0,
+		x = 0,
+		y = 0,
+		target,
+		alsoDown = [],
+	}: {
+		id?: number;
+		x?: number;
+		y?: number;
+		target?: EventTarget;
+		alsoDown?: { identifier: number; target?: EventTarget }[];
+	} = {},
 ) {
 	const event = new Event(type, { bubbles: true, cancelable: true });
-	const touch = { identifier: id, clientX: x, clientY: y };
-	const active = type === "touchstart" || type === "touchmove" ? [touch] : [];
+	const touch = { identifier: id, clientX: x, clientY: y, target };
+	const lifted = type === "touchend" || type === "touchcancel";
 	Object.defineProperties(event, {
-		touches: { value: active, configurable: true },
-		changedTouches: { value: [touch], configurable: true },
+		touches: { value: lifted ? alsoDown : [...alsoDown, touch] },
+		changedTouches: { value: [touch] },
 	});
 	return event as unknown as TouchEvent;
 }

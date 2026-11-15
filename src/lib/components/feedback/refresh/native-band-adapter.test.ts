@@ -53,18 +53,20 @@ function harness({
 			on.dispatchEvent(touchEvent("touchstart", { id }));
 		},
 		secondFinger(on: Element = row) {
-			const event = touchEvent("touchstart", { id: 1 });
-			Object.defineProperty(event, "touches", {
-				value: [{ identifier: 0 }, { identifier: 1 }],
-			});
-			on.dispatchEvent(event);
+			on.dispatchEvent(
+				touchEvent("touchstart", {
+					id: 1,
+					alsoDown: [{ identifier: 0 }],
+				}),
+			);
 		},
 		liftOneOfTwo({ lifted = 1 }: { lifted?: 0 | 1 } = {}) {
-			const event = touchEvent("touchend", { id: lifted });
-			Object.defineProperty(event, "touches", {
-				value: [{ identifier: 1 - lifted }],
-			});
-			row.dispatchEvent(event);
+			row.dispatchEvent(
+				touchEvent("touchend", {
+					id: lifted,
+					alsoDown: [{ identifier: 1 - lifted }],
+				}),
+			);
 		},
 		lift() {
 			row.dispatchEvent(touchEvent("touchend"));

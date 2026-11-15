@@ -61,21 +61,19 @@ function harness() {
 			);
 		},
 		joinFinger({ alreadyDown }: { alreadyDown: "photo" | "about" }) {
-			const event = touchEvent("touchstart", { id: 1, ...LANDING });
-			const joining = { identifier: 1, target: photo };
-			Object.defineProperties(event, {
-				touches: {
-					value: [
+			photo.dispatchEvent(
+				touchEvent("touchstart", {
+					id: 1,
+					...LANDING,
+					target: photo,
+					alsoDown: [
 						{
 							identifier: 0,
 							target: alreadyDown === "photo" ? photo : about,
 						},
-						joining,
 					],
-				},
-				changedTouches: { value: [joining] },
-			});
-			photo.dispatchEvent(event);
+				}),
+			);
 		},
 		held({
 			id = 0,
