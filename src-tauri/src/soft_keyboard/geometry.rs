@@ -116,7 +116,7 @@ pub fn keyboard_overlap(bounds: Rect, keyboard: Rect) -> f64 {
 	(bounds.max_y() - keyboard.y).clamp(0.0, bounds.height)
 }
 
-pub fn push_script(insets: &NativeInsets) -> String {
+pub fn insets_script(insets: &NativeInsets) -> String {
 	let insets =
 		serde_json::to_string(insets).expect("plain numbers always serialize");
 	format!(
@@ -328,7 +328,7 @@ mod tests {
 	fn the_push_sets_ios_insets_before_reapplying_them() {
 		let pushed = DOCKED.insets();
 		assert_eq!(
-			pushed_json(&push_script(&pushed)),
+			pushed_json(&insets_script(&pushed)),
 			serde_json::to_value(pushed).unwrap()
 		);
 		assert!(NATIVE_INSETS.contains("return window.__iosInsets;"));
@@ -351,7 +351,7 @@ mod tests {
 		read.push("ime");
 		read.sort_unstable();
 
-		let pushed = pushed_json(&push_script(&DOCKED.insets()));
+		let pushed = pushed_json(&insets_script(&DOCKED.insets()));
 		let mut fields: Vec<&str> = pushed
 			.as_object()
 			.unwrap()

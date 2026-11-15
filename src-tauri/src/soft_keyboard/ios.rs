@@ -134,7 +134,7 @@ impl KeyboardFrame {
 		let insets = layout.insets();
 		if self.ivars().sent.get() != Some(insets) {
 			self.ivars().sent.set(Some(insets));
-			evaluate(&webview, &geometry::push_script(&insets));
+			evaluate(&webview, &geometry::insets_script(&insets));
 		}
 		let frame = self.frame();
 		webview.setFrame(CGRect {
