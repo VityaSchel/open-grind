@@ -31,11 +31,13 @@ function scrollTappedScreenToTop(): void {
 }
 
 function answerIosStatusBarTaps(target: StatusBarTapTarget): () => void {
-	window.__iosStatusBarTap = scrollTappedScreenToTop;
 	targets.push(target);
+	if (targets.length === 1)
+		window.__iosStatusBarTap = scrollTappedScreenToTop;
 	return () => {
 		const index = targets.indexOf(target);
 		if (index !== -1) targets.splice(index, 1);
+		if (targets.length === 0) delete window.__iosStatusBarTap;
 	};
 }
 

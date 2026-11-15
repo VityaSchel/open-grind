@@ -52,7 +52,6 @@ beforeEach(() => {
 afterEach(() => {
 	for (const detach of detachers) detach();
 	detachers = [];
-	delete window.__iosStatusBarTap;
 	backGestureEventHandlers.clear();
 	stacks.moving = false;
 	jumpThenGlideToTop.mockClear();
@@ -148,6 +147,7 @@ describe("status-bar taps on iOS", () => {
 		tapStatusBar();
 
 		expect(jumpThenGlideToTop).not.toHaveBeenCalled();
+		expect(window.__iosStatusBarTap).toBeUndefined();
 	});
 
 	it("reach a list through the attachment", () => {
