@@ -205,7 +205,7 @@ test("the Me tab collapses every entry between here and the Me screen", async ({
 test("the Me tab still navigates from a deep-linked subpage", async ({
 	page,
 }) => {
-	await openDeepLink(page, APP_SETTINGS, { platform: "android" });
+	await openDeepLink(page, { path: APP_SETTINGS, platform: "android" });
 
 	await clickMeTab(page);
 
@@ -239,7 +239,7 @@ test("the navbar Back pops two levels opened in the app", async ({ page }) => {
 test("the navbar Back walks up from a deep-linked subpage instead of looping", async ({
 	page,
 }) => {
-	await openDeepLink(page, CREDITS, { platform: "android" });
+	await openDeepLink(page, { path: CREDITS, platform: "android" });
 
 	await clickNavBarBack(page);
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

@@ -95,7 +95,7 @@ test("a status-bar tap stops the browse grid, glides it to the top and hides its
 test("a status-bar tap glides a settings subpage to the top", async ({
 	page,
 }) => {
-	await openDeepLink(page, CREDITS, { platform: "ios" });
+	await openDeepLink(page, { path: CREDITS, platform: "ios" });
 	const scroller = page.locator(SUBPAGE_SCROLLER);
 	await scrollDown(scroller);
 
@@ -229,7 +229,7 @@ test("a status-bar tap does nothing while a drawer is open over the grid", async
 test("a status-bar tap does nothing while a popup is open, even one that leaves the list in view", async ({
 	page,
 }) => {
-	await openDeepLink(page, PROFILE_EDITOR, { platform: "ios" });
+	await openDeepLink(page, { path: PROFILE_EDITOR, platform: "ios" });
 	const scroller = page.locator(SUBPAGE_SCROLLER);
 	const tags = page.getByRole("combobox", { name: "Tags", exact: true });
 	await tags.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

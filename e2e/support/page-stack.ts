@@ -49,8 +49,7 @@ export async function openSettings(
 
 export async function openDeepLink(
 	page: Page,
-	path: string,
-	{ platform }: { platform: SupportedPlatform },
+	{ path, platform }: { path: string; platform: SupportedPlatform },
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);

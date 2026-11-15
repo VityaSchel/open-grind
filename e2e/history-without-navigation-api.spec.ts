@@ -163,7 +163,7 @@ test.describe("without the Navigation API", () => {
 	test("Back takes a deep-linked subpage's place with its parent", async ({
 		page,
 	}) => {
-		await openDeepLink(page, CREDITS, { platform: "ios" });
+		await openDeepLink(page, { path: CREDITS, platform: "ios" });
 		const atCredits = await historyAt(page);
 
 		await backLink(page).click();

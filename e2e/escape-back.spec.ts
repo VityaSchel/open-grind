@@ -125,7 +125,7 @@ test("Escape closes a settings page", async ({ page }) => {
 test("Escape walks up a deep-linked settings page in place", async ({
 	page,
 }) => {
-	await openDeepLink(page, CREDITS, { platform: "macos" });
+	await openDeepLink(page, { path: CREDITS, platform: "macos" });
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
