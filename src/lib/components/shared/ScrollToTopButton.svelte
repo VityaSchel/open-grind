@@ -3,19 +3,24 @@
 	import { prefersReducedMotion } from "svelte/motion";
 
 	import { t } from "#lib/i18n/index.ts";
-	import { glideScrollTop } from "#lib/util/scroll.ts";
+	import { glideScrollTop, TOP_SLOP_PX } from "#lib/util/scroll.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
 
 	let {
 		container,
+		text,
+		onjump,
+		labeled = $bindable(false),
 		class: className,
 	}: {
 		container: HTMLElement | null;
+		text?: string;
+		onjump?: () => void;
+		labeled?: boolean;
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
-	const TOP_SLOP_PX = 16;
 	const GLIDE_MS = 400;
 
 	let atTop = $state(true);
@@ -53,11 +58,16 @@
 		};
 	});
 
+	$effect.pre(() => {
+		if (!atTop) labeled = text !== undefined;
+	});
+
 	function scrollToTop() {
 		const el = container;
 		if (!el) return;
 		releaseGlide();
 		atTop = true;
+		onjump?.();
 		if (prefersReducedMotion.current) {
 			el.scrollTop = 0;
 			return;
@@ -73,10 +83,17 @@
 
 {#if !atTop}
 	<ScrollJumpButton
-		label={t("shell.scrollToTopButton.a11y.label")}
+		label={text === undefined
+			? t("shell.scrollToTopButton.a11y.label")
+			: t("shell.scrollToTopButton.a11y.labelWithText", { text })}
+		size={labeled ? "lg" : "icon-lg"}
 		class={cn("absolute inset-x-0 z-10 mx-auto w-fit", className)}
 		onclick={scrollToTop}
+		onoutroend={() => (labeled = false)}
 	>
 		<CaretUpIcon />
+		{#if text !== undefined}
+			{text}
+		{/if}
 	</ScrollJumpButton>
 {/if}

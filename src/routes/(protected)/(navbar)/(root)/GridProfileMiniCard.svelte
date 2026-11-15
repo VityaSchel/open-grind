@@ -3,6 +3,7 @@
 
 	import ProfileMiniCard from "#lib/components/profile/ProfileMiniCard.svelte";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
+	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 	let {
 		id,
@@ -15,6 +16,7 @@
 		isFavorite = false,
 		isVisiting = false,
 		hadRecentChat = false,
+		rightNow = "NOT_ACTIVE",
 	}: {
 		id: number;
 		displayName?: string | null;
@@ -26,6 +28,7 @@
 		isFavorite?: boolean;
 		isVisiting?: boolean;
 		hadRecentChat?: boolean;
+		rightNow?: RightNowStatus;
 	} = $props();
 
 	function openInPager(event: MouseEvent) {
@@ -45,6 +48,7 @@
 	{isFavorite}
 	{isVisiting}
 	{hadRecentChat}
+	{rightNow}
 	href="/profile/{id}"
 	onclick={openInPager}
 />

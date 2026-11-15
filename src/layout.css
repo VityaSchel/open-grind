@@ -567,7 +567,7 @@ a {
 }
 
 @utility media-pill {
-	@apply bg-popover/20 scrim;
+	@apply bg-black/50 scrim;
 }
 
 @utility media-disc {
@@ -575,6 +575,14 @@ a {
 
 	@variant hover {
 		@apply bg-black/75;
+	}
+}
+
+@utility floating-chip {
+	@apply rounded-4xl scrim backdrop-filter-(--bd-chip);
+
+	@variant dark {
+		@apply bg-background/60;
 	}
 }
 

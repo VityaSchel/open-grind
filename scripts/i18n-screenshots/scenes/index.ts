@@ -57,7 +57,6 @@ import {
 	gridPreferencesUnreadable,
 	gridProfileFailure,
 	gridRefreshFailures,
-	rightNow,
 } from "./browse-states";
 import { attachments, conversation, inbox, inboxPinFailure } from "./chat";
 import {
@@ -184,6 +183,12 @@ import {
 	viewabilityFailures,
 } from "./profile-viewability";
 import {
+	profileRightNow,
+	rightNow,
+	rightNowJoin,
+	rightNowReport,
+} from "./right-now";
+import {
 	accountStatus,
 	sessionAlerts,
 	sessionTryAgain,
@@ -228,6 +233,13 @@ import {
 	settingSaveFailed,
 } from "./settings-app";
 import { credits, creditsLoadFailed } from "./settings-credits";
+import {
+	discreetIcon,
+	linuxDiscreetIcon,
+	macosDiscreetIcon,
+	macosDiscreetIconAdmin,
+	windowsDiscreetIcon,
+} from "./settings-discreet";
 import {
 	androidNotifications,
 	iosNotifications,
@@ -452,6 +464,11 @@ export const scenes: Scene[] = [
 	blurTrial,
 	appsMenuEntry,
 	appUnimplemented,
+	discreetIcon,
+	macosDiscreetIcon,
+	macosDiscreetIconAdmin,
+	windowsDiscreetIcon,
+	linuxDiscreetIcon,
 	settingSaveFailed,
 	preferencesLoadFailed,
 	androidNotifications,
@@ -499,6 +516,9 @@ export const scenes: Scene[] = [
 	autoLocationFailure,
 	locationChange,
 	rightNow,
+	rightNowReport,
+	rightNowJoin,
+	profileRightNow,
 	viewsGrid,
 	emptyViews,
 	untrackedViews,

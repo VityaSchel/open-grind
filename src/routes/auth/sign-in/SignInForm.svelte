@@ -25,6 +25,18 @@
 	import { Label } from "#lib/components/ui/label/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+	import { openExternalLink } from "#lib/platform/link-opener.ts";
+	import {
+		addonInstallerAvailable,
+		addonPublishedHere,
+		recaptchaUpdates,
+	} from "#lib/updates/addon.svelte.ts";
+	import { RECAPTCHA_COMPONENT } from "#lib/updates/components.ts";
+	import {
+		manualInstallHref,
+		RECAPTCHA_HELPER_GUIDE,
+	} from "#lib/updates/manual-install.ts";
+	import RecaptchaHelperDialog from "./RecaptchaHelperDialog.svelte";
 
 	type OauthProvider = "google" | "facebook";
 
@@ -83,12 +95,20 @@
 	let password = $state("");
 	let submitting: false | "password" | OauthProvider = $state(false);
 
-	const invalidCredentialsSchema = z.object({
-		kind: z.literal("Api"),
-		message: z.object({
-			code: z.literal(4),
-			message: z.literal("Invalid input parameters"),
+	const refusedCredentialsSchema = z.union([
+		z.object({ kind: z.literal("Unauthorized") }),
+		z.object({
+			kind: z.literal("Api"),
+			message: z.object({
+				code: z.literal(4),
+				message: z.literal("Invalid input parameters"),
+			}),
 		}),
+	]);
+
+	const rejectedCaptchaSchema = z.object({
+		kind: z.literal("Api"),
+		message: z.object({ code: z.literal(18) }),
 	});
 
 	const recaptchaErrorSchema = z.object({
@@ -96,38 +116,55 @@
 		message: z.object({ reason: z.string() }),
 	});
 
-	const captchaSignInMessageKeys = {
-		unsupportedPlatform: "auth.signIn.captcha.errors.unsupportedPlatform",
-		addonUnavailable: "auth.signIn.captcha.errors.addonUnavailable",
-		addonDisabled: "auth.signIn.captcha.errors.addonDisabled",
-		addonUntrusted: "auth.signIn.captcha.errors.addonUntrusted",
+	const captchaGuideMessageKeys = {
+		unsupportedPlatform:
+			"auth.signIn.captcha.errors.credentialsOrUnsupportedPlatform",
 		grindrMissing: "auth.signIn.captcha.errors.grindrMissing",
 	} as const satisfies Record<string, PlainMessageKey>;
 
-	type ExplainedCaptchaReason = keyof typeof captchaSignInMessageKeys;
+	const captchaSignInMessageKeys = {
+		addonDisabled: "auth.signIn.captcha.errors.addonDisabled",
+		addonUntrusted: "auth.signIn.captcha.errors.addonUntrusted",
+	} as const satisfies Record<string, PlainMessageKey>;
 
-	function isExplainedCaptchaReason(
+	function captchaMessageKey(
+		keys: Readonly<Record<string, PlainMessageKey>>,
 		reason: string | undefined,
-	): reason is ExplainedCaptchaReason {
-		return (
-			reason !== undefined &&
-			Object.hasOwn(captchaSignInMessageKeys, reason)
-		);
+	): PlainMessageKey | undefined {
+		return reason !== undefined && Object.hasOwn(keys, reason)
+			? keys[reason]
+			: undefined;
 	}
+
+	let helperDialog: "install" | "manual" | null = $state(null);
 
 	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
 		if (submitting) return;
 		submitting = "password";
 		try {
-			if (await trySignIn()) return;
-			await trySignInWithCaptcha();
+			const refusal = await trySignIn();
+			if (refusal) await trySignInWithCaptcha(refusal);
 		} finally {
 			submitting = false;
 		}
 	}
 
-	async function trySignIn(captchaToken?: string): Promise<boolean> {
+	type Refusal = "credentials" | "captcha";
+
+	const refusalAfterCaptchaMessageKeys = {
+		captcha: "auth.signIn.captcha.errors.rejected",
+		credentials: "auth.signIn.captcha.errors.credentialsOrRejected",
+	} as const satisfies Record<Refusal, PlainMessageKey>;
+
+	function refusalOf(error: unknown): Refusal | null {
+		if (rejectedCaptchaSchema.safeParse(error).success) return "captcha";
+		if (refusedCredentialsSchema.safeParse(error).success)
+			return "credentials";
+		return null;
+	}
+
+	async function trySignIn(captchaToken?: string): Promise<Refusal | null> {
 		try {
 			finishSignIn(
 				await callMethod("sign_in_with_email", {
@@ -136,41 +173,30 @@
 					captchaToken,
 				}),
 			);
-			return true;
+			return null;
 		} catch (error) {
-			let invalidCredentials = false;
-			reportSignInFailure({
-				error,
-				onFailure: (appError) => {
-					if (
-						appError.kind !== "Unauthorized" &&
-						!invalidCredentialsSchema.safeParse(appError).success
-					) {
-						return false;
-					}
-					invalidCredentials = true;
-					return true;
-				},
-			});
-			if (invalidCredentials && captchaToken === undefined) return false;
-			if (invalidCredentials) {
-				toast.error(t("auth.signIn.errors.invalidCredentials"));
-			}
-			return true;
+			const refusal = refusalOf(error);
+			reportSignInFailure({ error, onFailure: () => refusal !== null });
+			if (refusal === null || captchaToken === undefined) return refusal;
+			showCaptchaGuideToast(refusalAfterCaptchaMessageKeys[refusal]);
+			return null;
 		}
 	}
 
-	async function trySignInWithCaptcha() {
-		let required = false;
+	async function captchaAssigned(): Promise<boolean> {
 		try {
-			required = await callMethod("recaptcha_first_party_enabled");
+			return await callMethod("recaptcha_first_party_enabled");
 		} catch (error) {
 			console.error(
 				"[sign-in] failed to check recaptcha_first_party assignment",
 				error,
 			);
+			return false;
 		}
-		if (!required) {
+	}
+
+	async function trySignInWithCaptcha(refusal: Refusal) {
+		if (refusal === "credentials" && !(await captchaAssigned())) {
 			toast.error(t("auth.signIn.errors.invalidCredentials"));
 			return;
 		}
@@ -188,13 +214,40 @@
 		const parsed = recaptchaErrorSchema.safeParse(error);
 		const reason = parsed.success ? parsed.data.message.reason : undefined;
 		if (reason === "cancelled") return;
+		if (reason === "addonUnavailable") {
+			helperDialog = addonInstallerAvailable() ? "install" : "manual";
+			return;
+		}
+		const guided = captchaMessageKey(captchaGuideMessageKeys, reason);
+		if (guided) {
+			showCaptchaGuideToast(guided);
+			return;
+		}
 		toast.error(
 			t(
-				isExplainedCaptchaReason(reason)
-					? captchaSignInMessageKeys[reason]
-					: "auth.signIn.captcha.errors.verifyFailed",
+				captchaMessageKey(captchaSignInMessageKeys, reason) ??
+					"auth.signIn.captcha.errors.verifyFailed",
 			),
 		);
+	}
+
+	function showCaptchaGuideToast(message: PlainMessageKey) {
+		toast.error(t(message), {
+			action: {
+				label: t("common.actions.learnMore"),
+				onClick: () => openExternalLink(RECAPTCHA_HELPER_GUIDE),
+			},
+		});
+	}
+
+	async function continueToHelper() {
+		const installable = helperDialog === "install";
+		helperDialog = null;
+		if (installable && (await addonPublishedHere(RECAPTCHA_COMPONENT))) {
+			await recaptchaUpdates.installNow();
+			return;
+		}
+		openExternalLink(manualInstallHref(RECAPTCHA_COMPONENT));
 	}
 
 	async function signInWith(provider: OauthProvider) {
@@ -316,3 +369,12 @@
 		</Card.Footer>
 	</Card.Root>
 </form>
+<RecaptchaHelperDialog
+	bind:open={
+		() => helperDialog !== null,
+		(next) => {
+			if (!next) helperDialog = null;
+		}
+	}
+	onContinue={() => void continueToHelper()}
+/>

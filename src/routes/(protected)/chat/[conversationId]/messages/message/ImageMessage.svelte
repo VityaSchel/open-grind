@@ -2,10 +2,10 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
+	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import { stableSignedUrl } from "#lib/util/signed-url.ts";
 	import type { ImageMessage } from "#lib/model/messaging/messages.ts";
 	import { mediaRenewal } from "./media-renewal";
-	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MeasuredSize, MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: ImageMessage["body"] } = $props();

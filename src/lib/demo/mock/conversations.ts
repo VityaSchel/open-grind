@@ -20,6 +20,7 @@ import { demoFavoriteOf } from "./favorites";
 import { demoGiphyMessageBody } from "./giphy";
 import { neutralText } from "./neutral";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
+import { demoRightNowStatusOf } from "./right-now";
 import {
 	conversationSeed,
 	conversationSeeds,
@@ -348,7 +349,7 @@ export function demoConversations({
 						profileId: conv.withId,
 						seed: conv.favorite,
 					}),
-					rightNow: conv.rightNow ?? "NOT_ACTIVE",
+					rightNow: demoRightNowStatusOf(conv.withId),
 					onlineUntil: onlineUntilOf(seed),
 					hasUnreadThrob: false,
 				},

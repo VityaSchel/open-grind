@@ -123,6 +123,7 @@
 			"photoTooLarge": "Photos over {{megabytes}} MB can’t be uploaded",
 			"notAPhoto": "Only photos can be sent here",
 			"photoSizeUnreadable": "That photo’s size can’t be read",
+			"photoUnloadable": "That photo couldn’t be loaded",
 			"photoDamaged": "Unreadable or damaged photo",
 			"heicUnsupported": "HEIC photos aren’t supported on this platform yet",
 			"photoUndecodable": "Undecodable photo",

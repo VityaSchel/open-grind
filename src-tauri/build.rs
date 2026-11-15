@@ -1,4 +1,8 @@
+use std::path::Path;
 use std::process::Command;
+
+#[path = "build_disguise.rs"]
+mod disguise;
 
 const EXTENSION_SOURCE: &str = "webkit-extension/ogmedia.c";
 const EXTENSION_OUTPUT: &str = "gen/webkit-extensions/libogmedia.so";
@@ -11,7 +15,16 @@ const EXTENSION_LIBRARIES: [&str; 4] = [
 
 fn main() {
 	declare_demo_build();
-	if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
+	let target_os =
+		std::env::var("CARGO_CFG_TARGET_OS").expect("cargo sets the target OS");
+	disguise::generate(
+		Path::new(
+			&std::env::var("CARGO_MANIFEST_DIR").expect("a manifest dir"),
+		),
+		Path::new(&std::env::var("OUT_DIR").expect("an output dir")),
+		&target_os,
+	);
+	if target_os == "linux" {
 		build_webkit_extension();
 	}
 	tauri_build::build()

@@ -27,7 +27,8 @@
 	},
 	"scrollToTopButton": {
 		"a11y": {
-			"label": "Scroll to top"
+			"label": "Scroll to top",
+			"labelWithText": "{{text}}, scroll to top"
 		}
 	},
 	"toaster": {

@@ -100,4 +100,8 @@
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<ReportSheet bind:open={reportOpen} {profileId} onBlock={block} />
+<ReportSheet
+	bind:open={reportOpen}
+	target={{ kind: "profile", profileId }}
+	onBlock={block}
+/>

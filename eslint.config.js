@@ -22,6 +22,7 @@ const testFiles = [
 
 const untranslatedData = [
 	"src/lib/chat/gaymoji-ids.ts",
+	"src/lib/components/right-now/SplashIcon.svelte",
 	"src/lib/demo/mock/**",
 	"src/lib/i18n/language-names.ts",
 	"src/lib/i18n/matcher.ts",

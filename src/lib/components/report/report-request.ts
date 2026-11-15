@@ -2,9 +2,20 @@ import type {
 	ProfileReportRequest,
 	ReportLocation,
 	ReportReason,
+	RightNowPostId,
 } from "#lib/model/safety/reports.ts";
+import type { Profile } from "#lib/model/users/profiles.ts";
 
-export function buildProfileReport({
+export type ReportTarget =
+	| { kind: "profile"; profileId: Profile["profileId"] }
+	| { kind: "message"; profileId: Profile["profileId"] }
+	| {
+			kind: "rightNowPost";
+			postId: RightNowPostId;
+			profileId: Profile["profileId"] | null;
+	  };
+
+export function buildReportRequest({
 	reason,
 	comment,
 	locations,

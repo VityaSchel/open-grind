@@ -69,7 +69,7 @@ mod pins {
 
 	#[test]
 	fn a_system_language_change_reaches_the_running_activities() {
-		for activity in [".MainActivity", ".FacebookOauthActivity"] {
+		for activity in [".AppActivity", ".FacebookOauthActivity"] {
 			let handled: Vec<&str> = xml_attribute(
 				manifest_element("activity", activity),
 				"android:configChanges",

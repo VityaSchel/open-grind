@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import org.opengrind.addon.AddonGate
 import org.opengrind.addon.signingCertificates
+import org.opengrind.disguise.Disguise
 import org.opengrind.googleoauth.HandoffEvents
 import org.opengrind.googleoauth.TokenHandoff
 
@@ -32,9 +33,7 @@ class TokenHandoffActivity : Activity() {
 		TokenHandoff.offer(token, SystemClock.elapsedRealtime())
 		HandoffEvents.notifyPending()
 		setResult(RESULT_OK)
-		startActivity(
-			Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-		)
+		startActivity(Disguise.launchIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 		finish()
 	}
 

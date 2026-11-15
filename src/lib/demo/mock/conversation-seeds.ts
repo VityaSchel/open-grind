@@ -1,5 +1,3 @@
-export type DemoRightNow = "NOT_ACTIVE" | "HOSTING" | "NOT_HOSTING";
-
 export type DemoMessage = {
 	fromMe: boolean;
 	reactions?: number;
@@ -38,7 +36,6 @@ export type DemoConversation = {
 	favorite: boolean;
 	muted: boolean;
 	lastActivityAgo: number;
-	rightNow?: DemoRightNow;
 	chemistry?: boolean;
 	hidesDistance?: boolean;
 	preview?: DemoPreview;
@@ -88,7 +85,6 @@ export function demoConversationSeeds(): DemoConversation[] {
 			favorite: false,
 			muted: false,
 			lastActivityAgo: 1,
-			rightNow: "HOSTING",
 			messages: [
 				{ fromMe: true, text: "Hi, how are you?" },
 				{ fromMe: true, kind: "gif" },

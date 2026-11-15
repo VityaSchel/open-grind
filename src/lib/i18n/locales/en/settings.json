@@ -137,7 +137,26 @@
 		},
 		"discreetAppIcon": {
 			"title": "Discreet App Icon",
-			"unimplemented": "Discreet App Icon isn’t implemented yet. Follow the progress in {{issueLink}}."
+			"description": "Change how Open Grind looks on your home screen and in your app list.",
+			"unimplemented": "Discreet App Icon isn’t implemented yet. Follow the progress in {{issueLink}}.",
+			"stillShown": {
+				"android": "The app’s name still shows in notifications and system settings.",
+				"macos": "The app’s name still shows in the menu bar, notifications and system settings. If the Dock keeps the old icon or name, Command-click it there.",
+				"windows": "The app’s name still shows in Task Manager.",
+				"linux": "The app’s name still shows in task managers."
+			},
+			"renameNeedsAdmin": "Renaming the app needs an administrator account.",
+			"restart": {
+				"android": "Open Grind restarts as {{appName}}. Its home screen shortcut is removed, so add it again from the app drawer.",
+				"macos": "Open Grind restarts to rename itself to {{appName}}."
+			},
+			"confirm": {
+				"title": "Change the app icon?",
+				"change": "Change"
+			},
+			"errors": {
+				"changeFailed": "Couldn’t change the app icon"
+			}
 		},
 		"pin": {
 			"title": "PIN",

@@ -4,14 +4,16 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
+use tauri::AppHandle;
 
 use crate::appimage;
 
 pub(crate) const ENTRY_FILE: &str = "open-grind.desktop";
+pub(crate) const ORIGINAL_ICON_KEY: &str = "X-OpenGrind-Icon=";
 const WM_CLASS: &str = "open-grind";
 
 #[derive(Debug, Serialize)]
-pub struct DesktopEntryError(String);
+pub struct DesktopEntryError(pub(crate) String);
 
 impl From<std::io::Error> for DesktopEntryError {
 	fn from(error: std::io::Error) -> Self {
@@ -23,7 +25,7 @@ fn appdir() -> Option<PathBuf> {
 	std::env::var_os("APPDIR").map(PathBuf::from)
 }
 
-fn data_home() -> Option<PathBuf> {
+pub(crate) fn data_home() -> Option<PathBuf> {
 	std::env::var_os("XDG_DATA_HOME")
 		.map(PathBuf::from)
 		.filter(|path| path.is_absolute())
@@ -69,10 +71,13 @@ fn bundled_entry(appdir: &Path) -> Option<PathBuf> {
 		.find(|path| path.extension().is_some_and(|ext| ext == "desktop"))
 }
 
+fn value<'a>(entry: &'a str, key: &str) -> Option<&'a str> {
+	entry.lines().find_map(|line| line.strip_prefix(key))
+}
+
 fn icon_name(entry: &str) -> Option<&str> {
-	entry
-		.lines()
-		.find_map(|line| line.strip_prefix("Icon="))
+	value(entry, ORIGINAL_ICON_KEY)
+		.or_else(|| value(entry, "Icon="))
 		.map(str::trim)
 		.filter(|name| !name.is_empty())
 }
@@ -131,16 +136,24 @@ pub struct DesktopEntryState {
 	pub installed: bool,
 }
 
+pub(crate) fn installed() -> bool {
+	entry_path().is_some_and(|entry| entry.exists())
+}
+
 #[tauri::command]
 pub fn desktop_entry_state() -> DesktopEntryState {
 	DesktopEntryState {
 		available: appimage::path().is_some() && !integration_suppressed(),
-		installed: entry_path().is_some_and(|entry| entry.exists()),
+		installed: installed(),
 	}
 }
 
 #[tauri::command]
-pub fn desktop_entry_install() -> Result<(), DesktopEntryError> {
+pub fn desktop_entry_install(app: AppHandle) -> Result<(), DesktopEntryError> {
+	install(&app)
+}
+
+pub(crate) fn install(_app: &AppHandle) -> Result<(), DesktopEntryError> {
 	let appimage = appimage::path()
 		.ok_or_else(|| DesktopEntryError("not an AppImage".into()))?;
 	let appdir =
@@ -156,10 +169,11 @@ pub fn desktop_entry_install() -> Result<(), DesktopEntryError> {
 	if let Some(parent) = entry.parent() {
 		fs::create_dir_all(parent)?;
 	}
-	fs::write(
-		&entry,
-		rewrite_entry(&fs::read_to_string(source)?, &appimage),
-	)?;
+	let text = rewrite_entry(&fs::read_to_string(source)?, &appimage);
+	#[cfg(target_os = "linux")]
+	let text = crate::disguise::linux::disguised_entry(_app, text)
+		.map_err(|error| DesktopEntryError(error.0))?;
+	fs::write(&entry, text)?;
 	Ok(())
 }
 
@@ -247,6 +261,12 @@ mod tests {
 	#[test]
 	fn the_icon_to_clean_up_comes_from_the_entry_being_removed() {
 		assert_eq!(icon_name(ENTRY), Some("open-grind"));
+	}
+
+	#[test]
+	fn a_disguised_entry_still_names_the_original_icon_to_clean_up() {
+		let disguised = "[Desktop Entry]\nX-OpenGrind-Icon=open-grind\nIcon=/data/hook-app.png";
+		assert_eq!(icon_name(disguised), Some("open-grind"));
 	}
 
 	#[test]

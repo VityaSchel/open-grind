@@ -13,12 +13,14 @@ import type { ComponentProps } from "svelte";
 const {
 	blockUserMock,
 	reportProfileMock,
+	reportRightNowPostMock,
 	showErrorToastMock,
 	showBlockFailureMock,
 	openExternalLinkMock,
 } = vi.hoisted(() => ({
 	blockUserMock: vi.fn<() => Promise<void>>(),
 	reportProfileMock: vi.fn(),
+	reportRightNowPostMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	showBlockFailureMock: vi.fn(),
 	openExternalLinkMock: vi.fn(),
@@ -27,6 +29,7 @@ const {
 vi.mock("#lib/api/browse/blocks.ts", () => ({ blockUser: blockUserMock }));
 vi.mock("#lib/api/safety/reports.ts", () => ({
 	reportProfile: reportProfileMock,
+	reportRightNowPost: reportRightNowPostMock,
 }));
 vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
@@ -45,14 +48,16 @@ import {
 	type ReportReason,
 	reportReasonSchema,
 } from "#lib/model/safety/reports.ts";
+import type { ReportTarget } from "./report-request";
 import ReportSheet from "./ReportSheet.svelte";
 
-type SheetProps = Pick<
-	ComponentProps<typeof ReportSheet>,
-	"subject" | "locations" | "onBlock"
+type SheetProps = Partial<
+	Pick<ComponentProps<typeof ReportSheet>, "target" | "onBlock">
 >;
 
 const PROFILE_ID = 7;
+const POST_ID = 880_009;
+const profileTarget: ReportTarget = { kind: "profile", profileId: PROFILE_ID };
 const DETAILS = "Details (optional)";
 const WHERE = "Where it happened";
 const BLOCK_HINT = "You can block this user so you no longer see each other.";
@@ -80,16 +85,28 @@ const locationLabels: Record<ReportLocation, string> = {
 
 const subjects = [
 	{
-		props: { subject: "profile" },
+		props: { target: profileTarget },
 		title: "Report User",
 		description: "Send a report about this user to Grindr.",
 		reviewed: "Grindr will review your report.",
 	},
 	{
-		props: { subject: "message", locations: ["CHAT_MESSAGE"] },
+		props: { target: { kind: "message", profileId: PROFILE_ID } },
 		title: "Report Messages",
 		description: "Send a report about this user’s messages to Grindr.",
 		reviewed: "Grindr will review your report.",
+	},
+	{
+		props: {
+			target: {
+				kind: "rightNowPost",
+				postId: POST_ID,
+				profileId: PROFILE_ID,
+			},
+		},
+		title: "Report Post",
+		description: "Send a report about this Right Now post to Grindr.",
+		reviewed: "Grindr will review this post.",
 	},
 ] satisfies {
 	props: SheetProps;
@@ -100,7 +117,7 @@ const subjects = [
 
 function renderSheet(props: SheetProps = {}) {
 	render(ReportSheet, {
-		props: { open: true, profileId: PROFILE_ID, ...props },
+		props: { open: true, target: profileTarget, ...props },
 	});
 }
 
@@ -161,6 +178,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	reportProfileMock.mockResolvedValue(undefined);
+	reportRightNowPostMock.mockResolvedValue(undefined);
 	blockUserMock.mockResolvedValue(undefined);
 });
 
@@ -238,7 +256,7 @@ describe("ReportSheet", () => {
 	});
 
 	it.each(subjects)(
-		"titles and describes the $props.subject report",
+		"titles and describes the $props.target.kind report",
 		async ({ props, title, description, reviewed }) => {
 			renderSheet(props);
 
@@ -258,7 +276,7 @@ describe("ReportSheet", () => {
 	);
 
 	it("keeps the chat location of a message report without asking", async () => {
-		renderSheet({ subject: "message", locations: ["CHAT_MESSAGE"] });
+		renderSheet({ target: { kind: "message", profileId: PROFILE_ID } });
 
 		await fireEvent.click(reasonToggle("HARASSMENT_BULLYING"));
 
@@ -334,9 +352,9 @@ describe("ReportSheet", () => {
 	});
 
 	it.each(subjects)(
-		"words the $props.subject report form in the active locale",
+		"words the $props.target.kind report form in the active locale",
 		async ({ props }) => {
-			renderSheet({ subject: props.subject });
+			renderSheet(props);
 			await fireEvent.click(reasonToggle("IMPERSONATION"));
 
 			await setLocale({ locale: "en-XA" });
@@ -348,25 +366,33 @@ describe("ReportSheet", () => {
 			const details = screen.getByRole("textbox");
 			const labels = [
 				...texts(reasonToggles()),
-				...texts(locationToggles()),
-				slot("report-locations").querySelector("span")?.textContent,
 				toggleGroupLabel("report-reasons"),
-				toggleGroupLabel("report-locations"),
 				details.getAttribute("aria-label"),
 				details.getAttribute("placeholder"),
 				submitButton().textContent.trim(),
 			];
-			expect(labels).toHaveLength(
-				reportReasonSchema.options.length +
-					reportLocationSchema.options.length +
-					6,
-			);
+			expect(labels).toHaveLength(reportReasonSchema.options.length + 4);
 			for (const label of labels) expect(label).toMatch(PSEUDO_MESSAGE);
 		},
 	);
 
+	it("words where it happened in the active locale", async () => {
+		renderSheet();
+		await fireEvent.click(reasonToggle("IMPERSONATION"));
+
+		await setLocale({ locale: "en-XA" });
+
+		const labels = [
+			...texts(locationToggles()),
+			slot("report-locations").querySelector("span")?.textContent,
+			toggleGroupLabel("report-locations"),
+		];
+		expect(labels).toHaveLength(reportLocationSchema.options.length + 2);
+		for (const label of labels) expect(label).toMatch(PSEUDO_MESSAGE);
+	});
+
 	it.each(subjects)(
-		"words the submitted $props.subject report in the active locale",
+		"words the submitted $props.target.kind report in the active locale",
 		async ({ props }) => {
 			renderSheet(props);
 			await submitAndWait("SPAM");
@@ -395,6 +421,54 @@ describe("ReportSheet", () => {
 		expect(showErrorToastMock.mock.lastCall?.[0].label).toMatch(
 			PSEUDO_MESSAGE,
 		);
+	});
+});
+
+describe("reported Right Now posts", () => {
+	const postTarget = (profileId: number | null): ReportTarget => ({
+		kind: "rightNowPost",
+		postId: POST_ID,
+		profileId,
+	});
+
+	it("files a known author's post report about the post without asking where, then offers to block them", async () => {
+		renderSheet({ target: postTarget(PROFILE_ID) });
+		await fireEvent.click(reasonToggle("HARASSMENT_BULLYING"));
+		expect(document.querySelector('[data-slot="report-locations"]')).toBe(
+			null,
+		);
+
+		await fireEvent.click(submitButton());
+		await vi.waitFor(() => {
+			expect(slot("report-submitted")).not.toBe(null);
+		});
+
+		expect(reportRightNowPostMock).toHaveBeenCalledExactlyOnceWith({
+			postId: POST_ID,
+			profileId: PROFILE_ID,
+			report: {
+				reason: "HARASSMENT_BULLYING",
+				comment: "",
+				locations: ["RIGHT_NOW_PHOTO", "RIGHT_NOW_TEXT"],
+			},
+		});
+		expect(reportProfileMock).not.toHaveBeenCalled();
+		expect(slot("report-submitted").textContent).toContain(BLOCK_HINT);
+		expect(texts(footerButtons())).toEqual(["Block user", "Done"]);
+	});
+
+	it("offers only Done after reporting an anonymous post", async () => {
+		renderSheet({ target: postTarget(null) });
+
+		await submitAndWait("SPAM");
+
+		expect(reportRightNowPostMock).toHaveBeenCalledWith(
+			expect.objectContaining({ postId: POST_ID, profileId: null }),
+		);
+		expect(
+			texts([...slot("report-submitted").querySelectorAll("p")]),
+		).toEqual(["Grindr will review this post."]);
+		expect(texts(footerButtons())).toEqual(["Done"]);
 	});
 });
 

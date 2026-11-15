@@ -4,7 +4,10 @@
 
 	import { blockUser } from "#lib/api/browse/blocks.ts";
 	import { showErrorToast } from "#lib/api/error-toast.ts";
-	import { reportProfile } from "#lib/api/safety/reports.ts";
+	import {
+		reportProfile,
+		reportRightNowPost,
+	} from "#lib/api/safety/reports.ts";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
@@ -21,23 +24,13 @@
 	import { grindrHelpUrl } from "#lib/util/grindr-help.ts";
 	import type { Profile } from "#lib/model/users/profiles.ts";
 	import { showBlockFailure } from "./block-failure";
-	import { buildProfileReport } from "./report-request";
-
-	type ReportSubject = "profile" | "message";
+	import { buildReportRequest, type ReportTarget } from "./report-request";
 
 	let {
 		open = $bindable(),
-		profileId,
-		subject = "profile",
-		locations: presetLocations,
+		target,
 		onBlock,
-	}: {
-		open: boolean;
-		profileId: Profile["profileId"];
-		subject?: ReportSubject;
-		locations?: ReportLocation[];
-		onBlock?: () => void;
-	} = $props();
+	}: { open: boolean; target: ReportTarget; onBlock?: () => void } = $props();
 
 	const reasonKeys = {
 		SPAM: "profile.report.reason.spam",
@@ -61,19 +54,35 @@
 		RIGHT_NOW_TEXT: "profile.report.location.rightNowText",
 	} as const satisfies Record<ReportLocation, MessageKey>;
 
-	const subjectKeys = {
+	const targetKeys = {
 		profile: {
 			title: "profile.report.profile.title",
 			description: "profile.report.profile.a11y.description",
+			reviewed: "profile.report.reviewed",
 		},
 		message: {
 			title: "profile.report.message.title",
 			description: "profile.report.message.a11y.description",
+			reviewed: "profile.report.reviewed",
+		},
+		rightNowPost: {
+			title: "profile.report.rightNowPost.title",
+			description: "profile.report.rightNowPost.a11y.description",
+			reviewed: "profile.report.rightNowPost.reviewed",
 		},
 	} as const satisfies Record<
-		ReportSubject,
-		Record<"title" | "description", MessageKey>
+		ReportTarget["kind"],
+		Record<"title" | "description" | "reviewed", MessageKey>
 	>;
+
+	const presetLocations: Record<
+		ReportTarget["kind"],
+		ReportLocation[] | null
+	> = {
+		profile: null,
+		message: ["CHAT_MESSAGE"],
+		rightNowPost: ["RIGHT_NOW_PHOTO", "RIGHT_NOW_TEXT"],
+	};
 
 	let reason = $state<ReportReason | null>(null);
 	let locations = $state<ReportLocation[]>([]);
@@ -81,7 +90,7 @@
 	let submitting = $state(false);
 	let submitted = $state(false);
 
-	const subjectKey = $derived(subjectKeys[subject]);
+	const copy = $derived(targetKeys[target.kind]);
 	const isInPersonIncident = $derived(
 		reason === "SERIOUS_IN_PERSON_INCIDENT",
 	);
@@ -89,14 +98,14 @@
 		reason !== null && reason !== "SPAM" && !isInPersonIncident,
 	);
 	const wherePickerShown = $derived(
-		detailsShown && presetLocations === undefined,
+		detailsShown && presetLocations[target.kind] === null,
 	);
 
 	$effect(() => {
 		if (!open) return;
 		untrack(() => {
 			reason = null;
-			locations = [...(presetLocations ?? [])];
+			locations = [...(presetLocations[target.kind] ?? [])];
 			comment = "";
 			submitted = false;
 		});
@@ -105,11 +114,15 @@
 	async function submit() {
 		if (submitting || reason === null) return;
 		submitting = true;
+		const report = buildReportRequest({ reason, comment, locations });
 		try {
-			await reportProfile({
-				profileId,
-				report: buildProfileReport({ reason, comment, locations }),
-			});
+			if (target.kind === "rightNowPost")
+				await reportRightNowPost({
+					postId: target.postId,
+					profileId: target.profileId,
+					report,
+				});
+			else await reportProfile({ profileId: target.profileId, report });
 			submitted = true;
 		} catch (error) {
 			console.error(error);
@@ -122,13 +135,17 @@
 		}
 	}
 
-	function block() {
+	function block({ profileId }: { profileId: Profile["profileId"] }) {
 		open = false;
 		if (onBlock) onBlock();
-		else void blockInBackground();
+		else void blockInBackground({ profileId });
 	}
 
-	async function blockInBackground() {
+	async function blockInBackground({
+		profileId,
+	}: {
+		profileId: Profile["profileId"];
+	}) {
 		try {
 			await blockUser({ profileId });
 		} catch (error) {
@@ -146,12 +163,10 @@
 	>
 		<ResponsiveDialog.Header>
 			<ResponsiveDialog.Title>
-				{submitted
-					? t("profile.report.submitted")
-					: t(subjectKey.title)}
+				{submitted ? t("profile.report.submitted") : t(copy.title)}
 			</ResponsiveDialog.Title>
 			<ResponsiveDialog.Description class="sr-only">
-				{t(subjectKey.description)}
+				{t(copy.description)}
 			</ResponsiveDialog.Description>
 		</ResponsiveDialog.Header>
 		{#if submitted}
@@ -160,16 +175,24 @@
 					data-slot="report-submitted"
 					class="flex flex-col items-center gap-2 py-4 text-center"
 				>
-					<p>{t("profile.report.reviewed")}</p>
-					<p class="text-sm text-muted-foreground">
-						{t("profile.report.blockHint")}
-					</p>
+					<p>{t(copy.reviewed)}</p>
+					{#if target.profileId !== null}
+						<p class="text-sm text-muted-foreground">
+							{t("profile.report.blockHint")}
+						</p>
+					{/if}
 				</div>
 			</ResponsiveDialog.Body>
 			<ResponsiveDialog.Footer>
-				<Button variant="destructive" onclick={block}>
-					{t("profile.topNav.actionsMenu.block")}
-				</Button>
+				{#if target.profileId !== null}
+					{@const profileId = target.profileId}
+					<Button
+						variant="destructive"
+						onclick={() => block({ profileId })}
+					>
+						{t("profile.topNav.actionsMenu.block")}
+					</Button>
+				{/if}
 				<Button variant="secondary" onclick={() => (open = false)}>
 					{t("profile.report.done")}
 				</Button>

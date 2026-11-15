@@ -33,13 +33,8 @@ In scope:
 Out of scope:
 
 - Vulnerabilities in Grindr's own service, apps, or API — Open Grind is not affiliated with Grindr
-- Copies of Open Grind obtained anywhere other than the official releases page
+- Copies of Open Grind obtained anywhere other than the official releases page or our F-Droid listing; builds from any other channel are unsupported
 - Reports with no demonstrated attack path: scanner output, missing hardening flags, and similar
-
-<!-- TODO: when the F-Droid listing is live:
-- copies of Open Grind obtained anywhere other than the official releases page or
-  our F-Droid listing; builds from any other channel are unsupported
--->
 
 ## Safe harbor
 

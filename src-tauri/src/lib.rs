@@ -7,6 +7,7 @@ mod appearance;
 mod appimage;
 mod context_menu;
 mod desktop_entry;
+mod disguise;
 mod error;
 mod haptics;
 mod hex;
@@ -179,6 +180,7 @@ pub fn run() {
         .plugin(api::facebook_oauth::plugin())
         .plugin(api::update::plugin())
         .plugin(app_settings::plugin())
+        .plugin(disguise::plugin())
         .plugin(media_picker::plugin())
         .plugin(regional::plugin())
         .plugin(app_language::plugin())
@@ -234,6 +236,7 @@ pub fn run() {
             upload::staged::stage_media,
             upload::staged::append_staged_media,
             upload::staged::discard_staged_media,
+            upload::staged::stage_proxied_photo,
             upload::linked::stage_linked_media,
             api::ws::ws_connect,
             api::ws::ws_reconnect,
@@ -246,6 +249,10 @@ pub fn run() {
             desktop_entry::desktop_entry_state,
             desktop_entry::desktop_entry_install,
             desktop_entry::desktop_entry_remove,
+            disguise::disguise_state,
+            disguise::disguise_select,
+            disguise::disguise_take_resume,
+            disguise::disguise_previews,
             api::update::commands::updater_capability,
             api::update::commands::updater_settings,
             api::update::commands::updater_set_auto_check,
@@ -315,6 +322,8 @@ pub fn run() {
                 regional::refresh_on_focus(&window);
                 #[cfg(desktop)]
                 app_language::refresh_on_focus(&window);
+                #[cfg(desktop)]
+                disguise::desktop::restore(app.handle(), &window);
             }
 
             #[cfg(desktop)]

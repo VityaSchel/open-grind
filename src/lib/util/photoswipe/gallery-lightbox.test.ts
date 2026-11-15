@@ -1,0 +1,179 @@
+// @vitest-environment jsdom
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type PhotoSwipeLightbox from "photoswipe/lightbox";
+
+import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
+import type { fullImageSizeInTime, knownFullImageSize } from "./full-size";
+
+const { lightboxes, fullImageSizeInTimeMock, knownFullImageSizeMock } =
+	vi.hoisted(() => ({
+		lightboxes: [] as PhotoSwipeLightbox[],
+		fullImageSizeInTimeMock: vi.fn<typeof fullImageSizeInTime>(),
+		knownFullImageSizeMock: vi.fn<typeof knownFullImageSize>(),
+	}));
+
+vi.mock("photoswipe/lightbox", async (importOriginal) => {
+	const { default: Lightbox } =
+		await importOriginal<typeof import("photoswipe/lightbox")>();
+	class RecordedLightbox extends Lightbox {
+		constructor(options?: ConstructorParameters<typeof Lightbox>[0]) {
+			super(options);
+			lightboxes.push(this);
+		}
+	}
+	return { default: RecordedLightbox };
+});
+vi.mock("./full-size", () => ({
+	fullImageSizeInTime: fullImageSizeInTimeMock,
+	knownFullImageSize: knownFullImageSizeMock,
+}));
+
+import { attachGalleryLightbox } from "./gallery-lightbox";
+
+const FULL = "https://cdns.grindr.com/rightnow/full/1";
+const THUMB = "https://cdns.grindr.com/rightnow/thumb/1";
+const THUMB_SIDE = 320;
+const SIZE = { width: 1200, height: 1600 };
+
+const detachers: (() => void)[] = [];
+
+function galleryOfOnePhoto() {
+	const gallery = document.createElement("div");
+	const link = document.createElement("a");
+	link.href = FULL;
+	const thumbnail = document.createElement("img");
+	thumbnail.src = THUMB;
+	thumbnail.alt = "Post photo";
+	Object.defineProperty(thumbnail, "naturalWidth", { get: () => THUMB_SIDE });
+	Object.defineProperty(thumbnail, "naturalHeight", {
+		get: () => THUMB_SIDE,
+	});
+	link.append(thumbnail);
+	gallery.append(link);
+	document.body.append(gallery);
+	return { gallery, link, thumbnail };
+}
+
+async function attach({ croppedThumbs }: { croppedThumbs?: boolean }) {
+	const { gallery, link, thumbnail } = galleryOfOnePhoto();
+	const detach = attachGalleryLightbox({ gallery, croppedThumbs });
+	detachers.push(detach);
+	await vi.waitFor(() => expect(lightboxes).toHaveLength(1));
+	const [lightbox] = lightboxes;
+	if (lightbox === undefined) throw new Error("no lightbox");
+	return { lightbox, link, thumbnail, detach };
+}
+
+const domItem = (link: HTMLAnchorElement) => ({
+	element: link,
+	src: FULL,
+	msrc: THUMB,
+	width: 0,
+	height: 0,
+});
+
+const stayOnPage = (event: Event) => event.preventDefault();
+
+afterEach(async () => {
+	for (const detach of detachers.splice(0)) detach();
+	await vi.waitFor(() => expect(window.pswp).toBeUndefined());
+	lightboxes.length = 0;
+	window.removeEventListener("click", stayOnPage);
+	document.body.replaceChildren();
+	vi.clearAllMocks();
+});
+
+describe("a gallery lightbox over cropped thumbnails", () => {
+	it("waits for the tapped photo's full size before opening, never preloading the cropped thumbnail as the first slide", async () => {
+		const size = Promise.withResolvers<MediaDimensions | null>();
+		fullImageSizeInTimeMock.mockReturnValue(size.promise);
+		const { lightbox, thumbnail } = await attach({ croppedThumbs: true });
+
+		thumbnail.click();
+		await import("photoswipe");
+		await new Promise((resolve) => setTimeout(resolve));
+
+		expect(fullImageSizeInTimeMock).toHaveBeenCalledExactlyOnceWith(FULL);
+		expect(knownFullImageSizeMock).toHaveBeenCalledOnce();
+		expect(lightbox.pswp).toBeUndefined();
+
+		knownFullImageSizeMock.mockReturnValue(SIZE);
+		size.resolve(SIZE);
+
+		await vi.waitFor(() =>
+			expect(lightbox.pswp?.currSlide?.width).toBe(SIZE.width),
+		);
+		await vi.waitFor(
+			() => expect(lightbox.pswp?.opener.isOpen).toBe(true),
+			{ timeout: 3000 },
+		);
+	});
+
+	it("sizes a slide from its decoded full-size photo and zooms from the thumbnail as a crop of it", async () => {
+		knownFullImageSizeMock.mockReturnValue(SIZE);
+		const { lightbox, link } = await attach({ croppedThumbs: true });
+
+		const item = lightbox.applyFilters("itemData", domItem(link), 0);
+
+		expect(knownFullImageSizeMock).toHaveBeenCalledWith(FULL);
+		expect(item).toMatchObject({
+			...SIZE,
+			src: FULL,
+			msrc: FULL,
+			thumbCropped: true,
+		});
+	});
+
+	it("leaves a slide unsized while its full-size photo is unknown, instead of taking the square thumbnail's size", async () => {
+		knownFullImageSizeMock.mockReturnValue(null);
+		const { lightbox, link } = await attach({ croppedThumbs: true });
+
+		const item = lightbox.applyFilters("itemData", domItem(link), 0);
+
+		expect(item).toMatchObject({ width: 0, height: 0, src: FULL });
+		expect(item.thumbCropped).toBeUndefined();
+	});
+
+	it("stops opening on taps once detached", async () => {
+		window.addEventListener("click", stayOnPage);
+		const { lightbox, thumbnail, detach } = await attach({
+			croppedThumbs: true,
+		});
+
+		detach();
+		thumbnail.click();
+
+		expect(lightbox.shouldOpen).toBe(false);
+		expect(fullImageSizeInTimeMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("a gallery lightbox over whole thumbnails", () => {
+	it("opens without waiting and sizes slides from their thumbnails, as chat images do", async () => {
+		knownFullImageSizeMock.mockReturnValue(SIZE);
+		const { lightbox, link } = await attach({});
+
+		const item = lightbox.applyFilters("itemData", domItem(link), 0);
+
+		expect(lightbox.options.preloadFirstSlide).toBeUndefined();
+		expect(lightbox.options.openPromise).toBeUndefined();
+		expect(item).toStrictEqual({
+			...domItem(link),
+			width: THUMB_SIDE,
+			height: THUMB_SIDE,
+		});
+		expect(knownFullImageSizeMock).not.toHaveBeenCalled();
+	});
+
+	it("hands the thumbnails' visibility back to the page once the viewer is gone", async () => {
+		const { lightbox, link } = await attach({});
+		link.classList.add("item");
+
+		lightbox.dispatch("openingAnimationStart");
+		expect(link.style.visibility).toBe("hidden");
+		lightbox.dispatch("destroy");
+
+		expect(link.style.visibility).toBe("");
+	});
+});

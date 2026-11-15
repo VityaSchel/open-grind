@@ -50,6 +50,7 @@ pub enum MediaError {
 	PhotoTooLarge { max_bytes: u64 },
 	NotAPhoto,
 	PhotoSizeUnreadable,
+	PhotoUnloadable,
 	PhotoDamaged,
 	HeicUnsupported,
 	PhotoUndecodable { detail: String },
@@ -75,6 +76,9 @@ impl fmt::Display for MediaError {
 			Self::NotAPhoto => write!(f, "Only photos can be sent here"),
 			Self::PhotoSizeUnreadable => {
 				write!(f, "That photo's size can't be read")
+			}
+			Self::PhotoUnloadable => {
+				write!(f, "That photo couldn't be loaded")
 			}
 			Self::PhotoDamaged => write!(f, "Unreadable or damaged photo"),
 			Self::HeicUnsupported => {

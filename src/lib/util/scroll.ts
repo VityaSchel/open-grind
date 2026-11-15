@@ -1,5 +1,7 @@
 import { cubicOut } from "svelte/easing";
 
+export const TOP_SLOP_PX = 16;
+
 export function hasScrollableOverflowY(el: Element): boolean {
 	const { overflowY } = getComputedStyle(el);
 	return overflowY === "auto" || overflowY === "scroll";

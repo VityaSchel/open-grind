@@ -250,6 +250,7 @@ describe("uploadRefusalMessage", () => {
 		[photoTooLarge, "Photos over 64 MB can’t be uploaded"],
 		[{ reason: "notAPhoto" }, "Only photos can be sent here"],
 		[{ reason: "photoSizeUnreadable" }, "That photo’s size can’t be read"],
+		[{ reason: "photoUnloadable" }, "That photo couldn’t be loaded"],
 		[{ reason: "photoDamaged" }, "Unreadable or damaged photo"],
 		[
 			{ reason: "heicUnsupported" },
