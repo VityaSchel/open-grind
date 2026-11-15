@@ -444,9 +444,6 @@ describe("dragging", () => {
 	});
 
 	it("judges by the types Android reports when the webview hides them", () => {
-		stopListening();
-		runningOn("android");
-		stopListening = listenForMedia();
 		register(target("Drop to send"));
 		const hidden = [file("shared", "")];
 
