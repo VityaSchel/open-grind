@@ -182,7 +182,7 @@ export async function mountAtRest(
 		scrollWrites: () => scrollWrites,
 		unmount: view.unmount,
 		disc: () => discWindow().querySelector("[data-refresh-disc]"),
-		ticks: () => anchor().querySelector("[data-refresh-ticks]"),
+		ticks: () => anchor().querySelector('[data-slot="refresh-ticks"]'),
 		button: () => band().querySelector("button"),
 		status: () => document.querySelector('[role="status"]'),
 		discClipBoxes: () =>

@@ -353,7 +353,6 @@
 		</div>
 		{#if activeFace === "ticks"}
 			<div
-				data-slot="refresh-ticks"
 				class={[
 					"absolute inset-x-0 grid place-items-center",
 					anchorEdge,

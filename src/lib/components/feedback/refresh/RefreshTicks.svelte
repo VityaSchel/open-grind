@@ -21,7 +21,7 @@
 </script>
 
 <div
-	data-refresh-ticks
+	data-slot="refresh-ticks"
 	data-spinning={spinning || undefined}
 	class="grid size-9 place-items-center rounded-full transition-[background-color,box-shadow] duration-150 ease-[ease-out] data-spinning:bg-card data-spinning:shadow-refresh-disc"
 >
