@@ -217,7 +217,8 @@ pub(crate) mod test_support {
 	use keyring_core::api::CredentialStoreApi;
 	use keyring_core::mock;
 
-	use super::{init_file_store, keyring, private_file};
+	use super::{init_file_store, keyring};
+	use crate::scratch_dir::ScratchDir;
 
 	static DEFAULT_STORE: Mutex<()> = Mutex::new(());
 
@@ -227,7 +228,7 @@ pub(crate) mod test_support {
 
 	pub(crate) fn with_file_store(test: impl FnOnce(&Path)) {
 		let _guard = lock();
-		let base = private_file::ScratchDir::new();
+		let base = ScratchDir::new();
 		init_file_store(base.to_path_buf());
 		test(&base);
 	}

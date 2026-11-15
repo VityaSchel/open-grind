@@ -165,7 +165,7 @@ mod tests {
 	use std::os::unix::fs::PermissionsExt;
 
 	use super::*;
-	use crate::storage::private_file::ScratchDir;
+	use crate::scratch_dir::ScratchDir;
 
 	const SERVICE: &str = "open-grind";
 	const USER: &str = "session";

@@ -73,8 +73,8 @@ mod tests {
 	use keyring_core::mock;
 
 	use super::*;
+	use crate::scratch_dir::ScratchDir;
 	use crate::storage::keyring::SERVICE;
-	use crate::storage::private_file::ScratchDir;
 
 	fn store(keychain: &mock::Store, accounts: &[&str]) {
 		for account in accounts {

@@ -38,6 +38,8 @@ mod predecessor;
 mod presenting;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
+#[cfg(test)]
+mod scratch_dir;
 mod scroll_phase;
 #[cfg(any(target_os = "ios", test))]
 mod soft_keyboard;

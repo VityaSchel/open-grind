@@ -90,43 +90,20 @@ mod ios {
 #[cfg(test)]
 mod tests {
 	use std::cell::RefCell;
-	use std::sync::atomic::{AtomicUsize, Ordering};
 
 	use super::*;
+	use crate::scratch_dir::ScratchDir;
 
 	const APP_DATA: &str = "Library/Application Support/org.opengrind.app";
 
-	struct ScratchHome(PathBuf);
-
-	impl ScratchHome {
-		fn new() -> Self {
-			static NEXT: AtomicUsize = AtomicUsize::new(0);
-			Self(std::env::temp_dir().join(format!(
-				"open-grind-backup-{}-{}",
-				std::process::id(),
-				NEXT.fetch_add(1, Ordering::Relaxed)
-			)))
-		}
-
-		fn path(&self) -> &Path {
-			&self.0
-		}
-	}
-
-	impl Drop for ScratchHome {
-		fn drop(&mut self) {
-			fs::remove_dir_all(&self.0).ok();
-		}
-	}
-
 	#[test]
 	fn the_app_data_and_every_store_ios_backs_up_are_created_and_then_marked() {
-		let home = ScratchHome::new();
+		let home = ScratchDir::new();
 		let marked = RefCell::new(Vec::new());
 
 		let failures = exclude_each(Exclusion {
-			home: home.path(),
-			app_data: &home.path().join(APP_DATA),
+			home: &home,
+			app_data: &home.join(APP_DATA),
 			mark: |dir: &Path| {
 				assert!(
 					dir.is_dir(),
@@ -151,7 +128,7 @@ mod tests {
 			"Documents",
 		] {
 			assert!(
-				marked.contains(&home.path().join(expected)),
+				marked.contains(&home.join(expected)),
 				"{expected} would still go into backups"
 			);
 		}
@@ -159,13 +136,13 @@ mod tests {
 
 	#[test]
 	fn one_refused_store_does_not_leave_the_others_in_backups() {
-		let home = ScratchHome::new();
-		let refused = home.path().join("Library/Cookies");
+		let home = ScratchDir::new();
+		let refused = home.join("Library/Cookies");
 		let marked = RefCell::new(Vec::new());
 
 		let failures = exclude_each(Exclusion {
-			home: home.path(),
-			app_data: &home.path().join(APP_DATA),
+			home: &home,
+			app_data: &home.join(APP_DATA),
 			mark: |dir: &Path| {
 				if dir == refused {
 					return Err(io::Error::other("refused"));

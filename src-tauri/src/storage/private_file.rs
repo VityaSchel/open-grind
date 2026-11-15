@@ -35,41 +35,9 @@ pub(super) fn replace_private(path: &Path, secret: &[u8]) -> io::Result<()> {
 }
 
 #[cfg(test)]
-pub(super) struct ScratchDir(PathBuf);
-
-#[cfg(test)]
-impl ScratchDir {
-	pub(super) fn new() -> Self {
-		static NEXT: AtomicU64 = AtomicU64::new(0);
-		let dir = std::env::temp_dir().join(format!(
-			"open-grind-file-store-{}-{}",
-			std::process::id(),
-			NEXT.fetch_add(1, Ordering::Relaxed)
-		));
-		fs::create_dir_all(&dir).unwrap();
-		Self(dir)
-	}
-}
-
-#[cfg(test)]
-impl std::ops::Deref for ScratchDir {
-	type Target = Path;
-
-	fn deref(&self) -> &Path {
-		&self.0
-	}
-}
-
-#[cfg(test)]
-impl Drop for ScratchDir {
-	fn drop(&mut self) {
-		fs::remove_dir_all(&self.0).ok();
-	}
-}
-
-#[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::scratch_dir::ScratchDir;
 
 	#[test]
 	fn temp_paths_are_unique_per_write() {
