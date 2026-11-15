@@ -42,6 +42,16 @@ impl Unsupported {
 			_ => None,
 		}
 	}
+
+	fn no_release_artifacts() -> Self {
+		Self::NoReleaseArtifacts {
+			target: format!(
+				"{}-{}",
+				std::env::consts::OS,
+				std::env::consts::ARCH
+			),
+		}
+	}
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -105,10 +115,6 @@ pub fn release_asset_suffix() -> Option<String> {
 	suffix_for(std::env::consts::OS, std::env::consts::ARCH)
 }
 
-fn target() -> String {
-	format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH)
-}
-
 pub fn capability_for(
 	app: &tauri::AppHandle,
 	component: &Component,
@@ -122,9 +128,7 @@ pub fn capability_for(
 			payload_suffix,
 			can_install_now,
 		},
-		None => Capability::Unsupported(Unsupported::NoReleaseArtifacts {
-			target: target(),
-		}),
+		None => Capability::Unsupported(Unsupported::no_release_artifacts()),
 	}
 }
 

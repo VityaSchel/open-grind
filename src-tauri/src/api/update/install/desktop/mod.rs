@@ -40,19 +40,13 @@ pub fn reason() -> Unsupported {
 				path: path.display().to_string(),
 			}
 		}
-		_ => no_release_artifacts(),
+		_ => Unsupported::no_release_artifacts(),
 	}
 }
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn reason() -> Unsupported {
-	no_release_artifacts()
-}
-
-fn no_release_artifacts() -> Unsupported {
-	Unsupported::NoReleaseArtifacts {
-		target: super::target(),
-	}
+	Unsupported::no_release_artifacts()
 }
 
 pub fn verdict(
