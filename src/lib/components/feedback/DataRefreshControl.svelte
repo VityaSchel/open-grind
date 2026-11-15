@@ -6,6 +6,7 @@
 
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
+	import AnnouncedRefresh from "./refresh/AnnouncedRefresh.svelte";
 	import { attachPullInputs } from "./refresh/attach-inputs";
 	import { contentSlide, PacingTween } from "./refresh/content-slide";
 	import {
@@ -22,7 +23,6 @@
 		pullStyleHere,
 	} from "./refresh/pull-style";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
-	import RefreshStatus from "./refresh/RefreshStatus.svelte";
 	import RefreshTicks from "./refresh/RefreshTicks.svelte";
 	import { RestingButtonModel } from "./refresh/resting-button.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
@@ -387,7 +387,7 @@
 				</div>
 			{/if}
 		</div>
-		<RefreshStatus {busy} {updating} {failed} list={container} />
+		<AnnouncedRefresh {busy} {updating} {failed} list={container} />
 	</div>
 {/if}
 
