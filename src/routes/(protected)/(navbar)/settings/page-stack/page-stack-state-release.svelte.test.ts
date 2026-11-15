@@ -9,7 +9,7 @@ import {
 	navigationEvent,
 	settleLast,
 } from "#lib/components/navigation/stack/stack-test-helpers.ts";
-import { makeStack, motion, push } from "./page-stack-test-helpers";
+import { androidMotion, makeStack, push } from "./page-stack-test-helpers";
 
 afterEach(() => {
 	document.body.innerHTML = "";
@@ -21,7 +21,7 @@ afterEach(() => {
 describe("PageStackState releasing a swipe", () => {
 	it("finishes a released swipe at the finger's speed where the platform matches it", async () => {
 		const ios = stackMotion({ platform: "ios" });
-		const harness = makeStack({ stackedMotion: ios });
+		const harness = makeStack({ motion: ios });
 		const { stack, animations } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
 
@@ -118,7 +118,7 @@ describe("PageStackState committing a swipe", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		expect(stack.committing).toBe(false);
 		await settleLast(animations);

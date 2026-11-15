@@ -18,14 +18,14 @@ const LIST = "/chat";
 const FIRST = "/chat/1:2";
 const SECOND = "/chat/3:4";
 
-const motion = stackMotion({ platform: "android" });
+const androidMotion = stackMotion({ platform: "android" });
 
 function makeStack({
 	reducedMotion = false,
 	backLandsOnBase = true,
 	keyboardVisible = false,
 	startAt = LIST,
-	stackedMotion = motion,
+	motion = androidMotion,
 } = {}) {
 	let top = $state<string | null>(keyOf(startAt));
 	let landsOnBase = $state(backLandsOnBase);
@@ -34,7 +34,7 @@ function makeStack({
 
 	const stack = new LiveStackState({
 		surface,
-		motion: stackedMotion,
+		motion,
 		top: () => top,
 		keyOf: (target: NavigationTarget) => keyOf(target.url.pathname),
 		scope: LIST,
@@ -141,7 +141,7 @@ describe("LiveStackState opening a sheet", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 
 		await settleLast(animations);
@@ -336,7 +336,7 @@ describe("LiveStackState back gesture", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 0.3,
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
@@ -448,7 +448,7 @@ describe("LiveStackState back gesture", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
@@ -461,11 +461,11 @@ describe("LiveStackState back gesture", () => {
 		vi.stubGlobal("history", { back: vi.fn() });
 		const ios = stackMotion({ platform: "ios" });
 		const spring = ios.release!;
-		const committed = makeStack({ startAt: FIRST, stackedMotion: ios });
+		const committed = makeStack({ startAt: FIRST, motion: ios });
 		committed.stack.beginSwipeBack();
 		committed.stack.trackSwipeBack(0.6);
 		committed.stack.commitSwipeBack({ velocity: 1.5 });
-		const cancelled = makeStack({ startAt: FIRST, stackedMotion: ios });
+		const cancelled = makeStack({ startAt: FIRST, motion: ios });
 		cancelled.stack.beginSwipeBack();
 		cancelled.stack.trackSwipeBack(0.3);
 		cancelled.stack.cancelSwipeBack({ velocity: -1 });
@@ -584,7 +584,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.85),
 			to: 1,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 
 		const count = animations.length;
@@ -608,7 +608,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.85),
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);

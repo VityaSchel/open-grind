@@ -6,7 +6,7 @@ import {
 	navigationEvent,
 	settleLast,
 } from "#lib/components/navigation/stack/stack-test-helpers.ts";
-import { makeStack, motion, push } from "./page-stack-test-helpers";
+import { androidMotion, makeStack, push } from "./page-stack-test-helpers";
 
 afterEach(() => {
 	document.body.innerHTML = "";
@@ -29,7 +29,7 @@ describe("PageStackState navigation", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 
 		await settleLast(animations);
@@ -271,7 +271,7 @@ describe("PageStackState swipe back", () => {
 
 		expect(animations.at(-1)).toMatchObject({
 			to: 1,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 		expect(back).not.toHaveBeenCalled();
 
@@ -353,7 +353,7 @@ describe("PageStackState swipe back", () => {
 
 		expect(animations.at(-1)).toMatchObject({
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 
@@ -491,7 +491,7 @@ describe("PageStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.8),
 			to: 1,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 		await settleLast(animations);
 		expect(back).toHaveBeenCalledTimes(1);
@@ -508,7 +508,7 @@ describe("PageStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.8),
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(back).not.toHaveBeenCalled();

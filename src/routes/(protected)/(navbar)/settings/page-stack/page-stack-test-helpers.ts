@@ -11,18 +11,18 @@ import {
 } from "#lib/components/navigation/stack/stack-test-helpers.ts";
 import { PageStackState } from "./page-stack-state.svelte";
 
-export const motion = stackMotion({ platform: "android" });
+export const androidMotion = stackMotion({ platform: "android" });
 
 export function makeStack({
 	reducedMotion = false,
 	canGoBack = true,
 	pushedFrom = [],
-	stackedMotion = motion,
+	motion = androidMotion,
 }: {
 	reducedMotion?: boolean;
 	canGoBack?: boolean;
 	pushedFrom?: { path: string }[];
-	stackedMotion?: StackMotion;
+	motion?: StackMotion;
 } = {}) {
 	const index = canGoBack ? 1 : 0;
 	vi.stubGlobal("navigation", {
@@ -39,7 +39,7 @@ export function makeStack({
 
 	const stack = new PageStackState({
 		surface,
-		motion: stackedMotion,
+		motion,
 		livePane: () => pane,
 		reducedMotion: () => reducedMotion,
 		scope: "/settings",
