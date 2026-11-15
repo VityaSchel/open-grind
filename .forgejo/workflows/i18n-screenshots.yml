@@ -2,7 +2,7 @@ name: i18n-screenshots
 
 on:
   push:
-    branches: [i18n]
+    branches: [main]
     paths:
       - src/lib/i18n/locales/en/**
       - scripts/i18n-screenshots/**
