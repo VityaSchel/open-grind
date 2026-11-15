@@ -2,10 +2,10 @@ import type { PullModel } from "./pull-model.svelte";
 import {
 	AT_BOUNDARY_PX,
 	chainAllowsPull,
+	PAST_EDGE_PX,
 	type PullPosition,
 } from "./scroll-chain";
 
-const PAST_EDGE_PX = 0.5;
 const FINGER_PHASE = { capture: true, passive: true } as const;
 
 export interface NativeBandPullOptions {

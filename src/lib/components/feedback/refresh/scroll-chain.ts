@@ -3,6 +3,7 @@ import { hasScrollableOverflowY } from "#lib/util/scroll.ts";
 export type PullPosition = "top" | "bottom";
 
 export const AT_BOUNDARY_PX = 1;
+export const PAST_EDGE_PX = 0.5;
 
 export const NO_PULL_ATTRIBUTE = "data-refresh-no-pull";
 
