@@ -162,7 +162,7 @@ fn reseed_ios_page(
 		}
 		tauri::webview::PageLoadEvent::Finished => {}
 	}
-	soft_keyboard::reseed(window, payload);
+	soft_keyboard::ios::reseed(window, payload);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -392,7 +392,7 @@ pub fn run() {
                 #[cfg_attr(target_os = "android", allow(unused_variables))]
                 let window = builder.build()?;
                 #[cfg(target_os = "ios")]
-                soft_keyboard::install(&window);
+                soft_keyboard::ios::install(&window);
                 #[cfg(target_os = "ios")]
                 system_gestures::back_swipe::install(&window);
                 #[cfg(target_os = "ios")]
