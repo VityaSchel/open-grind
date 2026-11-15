@@ -229,6 +229,13 @@ import {
 } from "./settings-app";
 import { credits, creditsLoadFailed } from "./settings-credits";
 import {
+	discreetIcon,
+	linuxDiscreetIcon,
+	macosDiscreetIcon,
+	macosDiscreetIconAdmin,
+	windowsDiscreetIcon,
+} from "./settings-discreet";
+import {
 	androidNotifications,
 	iosNotifications,
 	macosNotifications,
@@ -452,6 +459,11 @@ export const scenes: Scene[] = [
 	blurTrial,
 	appsMenuEntry,
 	appUnimplemented,
+	discreetIcon,
+	macosDiscreetIcon,
+	macosDiscreetIconAdmin,
+	windowsDiscreetIcon,
+	linuxDiscreetIcon,
 	settingSaveFailed,
 	preferencesLoadFailed,
 	androidNotifications,

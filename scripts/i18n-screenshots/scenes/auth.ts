@@ -22,9 +22,12 @@ const SIGN_IN_COMMANDS = {
 } as const satisfies Record<SignInButton, string>;
 
 const UNAUTHORIZED: NativeError = { kind: "Unauthorized" };
+const CAPTCHA_REJECTED: NativeError = {
+	kind: "Api",
+	message: { code: 18, message: "Invalid captcha token" },
+};
 const CAPTCHA_REASONS = [
 	"unsupportedPlatform",
-	"addonUnavailable",
 	"addonDisabled",
 	"addonUntrusted",
 	"grindrMissing",
@@ -191,7 +194,10 @@ export const captchaRefusals: Scene = {
 	platform: "phone",
 	demo: {
 		signedOut: true,
-		methodAnswers: { recaptcha_first_party_enabled: true },
+		methodAnswers: {
+			recaptcha_first_party_enabled: true,
+			mint_recaptcha_token: "captcha-token",
+		},
 	},
 	views: [
 		failingView({
@@ -203,6 +209,24 @@ export const captchaRefusals: Scene = {
 			id: "auth/sign-in/captcha-checks",
 			attempts: CAPTCHA_REASONS.slice(3).map(captchaFailing),
 		}),
+		failingView({
+			id: "auth/sign-in/captcha-rejected",
+			attempts: [
+				failing({ button: "email", error: UNAUTHORIZED }),
+				failing({ button: "email", error: CAPTCHA_REJECTED }),
+			],
+		}),
+		{
+			id: "auth/sign-in/captcha-helper-install",
+			screen: "auth/sign-in",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				const { faults } = captchaFailing("addonUnavailable");
+				await changeScene({ page, scene: { methodFaults: faults } });
+				await press(signInButton({ page, button: "email" }));
+				await page.getByRole("alertdialog").waitFor();
+			},
+		},
 	],
 };
 
