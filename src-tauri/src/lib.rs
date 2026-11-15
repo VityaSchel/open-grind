@@ -159,10 +159,12 @@ fn reseed_ios_page(
 	match payload.event() {
 		tauri::webview::PageLoadEvent::Started => {
 			system_gestures::back_swipe::disarm(&window);
+			soft_keyboard::ios::forget_page(&window);
 		}
-		tauri::webview::PageLoadEvent::Finished => {}
+		tauri::webview::PageLoadEvent::Finished => {
+			soft_keyboard::ios::resend_insets(&window);
+		}
 	}
-	soft_keyboard::ios::reseed(window, payload);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

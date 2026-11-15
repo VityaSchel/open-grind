@@ -22,7 +22,6 @@ use objc2_ui_kit::{
 	UIKeyboardWillShowNotification, UIResponder, UIScrollView,
 	UIScrollViewKeyboardDismissMode, UIView, UIViewAutoresizing,
 };
-use tauri::webview::{PageLoadEvent, PageLoadPayload};
 use tauri::{Manager, WebviewWindow};
 
 use super::geometry::{
@@ -282,13 +281,15 @@ impl KeyboardFrame {
 		}
 	}
 
-	fn reseed(&self, document_replaced: bool) {
-		if document_replaced {
-			self.ivars().page_follows.set(false);
-			self.ivars().opening.set(None);
-			self.ivars().drag_target.set(None);
-			self.aim_drag_dismiss();
-		}
+	fn forget_page(&self) {
+		self.ivars().page_follows.set(false);
+		self.ivars().opening.set(None);
+		self.ivars().drag_target.set(None);
+		self.aim_drag_dismiss();
+		self.resend_insets();
+	}
+
+	fn resend_insets(&self) {
 		self.ivars().sent.set(None);
 		self.setNeedsLayout();
 	}
@@ -453,10 +454,10 @@ pub fn set_keyboard_drag_dismiss(
 	with_frame(&window, move |frame| frame.let_drag_dismiss(target));
 }
 
-pub fn reseed(window: WebviewWindow, payload: PageLoadPayload<'_>) {
-	let document_replaced = match payload.event() {
-		PageLoadEvent::Started => true,
-		PageLoadEvent::Finished => false,
-	};
-	with_frame(&window, move |frame| frame.reseed(document_replaced));
+pub fn forget_page(window: &WebviewWindow) {
+	with_frame(window, KeyboardFrame::forget_page);
+}
+
+pub fn resend_insets(window: &WebviewWindow) {
+	with_frame(window, KeyboardFrame::resend_insets);
 }
