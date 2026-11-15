@@ -1,12 +1,9 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
-import {
-	SwipeToReply,
-	wheelInputMode,
-} from "#lib/util/swipe-to-reply.svelte.ts";
+import { wheelInputMode } from "#lib/util/swipe-to-reply.svelte.ts";
 import {
 	drag,
 	pointer,
@@ -110,18 +107,9 @@ describe("SwipeToReply", () => {
 	});
 
 	it("drags in the opposite direction for an outgoing message", () => {
-		const onReply = vi.fn();
-		const swipe = new SwipeToReply({
-			direction: "left",
-			onReply,
-			wheelMode: "rail",
-			onArm: vi.fn(),
-		});
+		const { swipe, onReply } = swipeToReply({ direction: "left" });
 
-		swipe.handlers.onpointerdown?.(pointer() as never);
-		swipe.handlers.onpointermove?.(
-			pointer({ clientX: -(TRIGGER_DISTANCE_PX + 20) }) as never,
-		);
+		drag(swipe, { x: -(TRIGGER_DISTANCE_PX + 20) });
 		swipe.handlers.onpointerup?.(pointer() as never);
 
 		expect(onReply).toHaveBeenCalledOnce();

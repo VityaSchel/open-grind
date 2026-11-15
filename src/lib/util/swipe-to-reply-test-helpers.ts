@@ -19,12 +19,13 @@ export function pointer(overrides: Partial<PointerEvent> = {}) {
 }
 
 export function swipeToReply({
+	direction = "right",
 	reducedMotion = false,
-}: { reducedMotion?: boolean } = {}) {
+}: { direction?: "left" | "right"; reducedMotion?: boolean } = {}) {
 	const onReply = vi.fn();
 	const onArm = vi.fn();
 	const swipe = new SwipeToReply({
-		direction: "right",
+		direction,
 		onReply,
 		onArm,
 		wheelMode: "rail",
