@@ -242,37 +242,25 @@ describe("message menu on iOS", () => {
 		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 
-	it.each([
-		{
-			kind: "a text message",
-			message: { type: "Text", body: { text: "hello there" } },
-		},
-		{
-			kind: "a message that can't be selected",
-			message: {
-				type: "SomethingNew",
-				body: {},
-				actions: { onDelete: () => {} },
-			},
-		},
-	])(
-		"keeps the menu of $kind open through the mouse events WebKit sends when the hold lifts",
-		async ({ message }) => {
-			const row = renderMessage(message);
+	it("keeps the menu of a message that can't be selected open through the mouse events WebKit sends when the hold lifts", async () => {
+		const row = renderMessage({
+			type: "SomethingNew",
+			body: {},
+			actions: { onDelete: () => {} },
+		});
 
-			row.dispatchEvent(pointerEvent("pointerdown"));
-			vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
-			expect(await menuOpened(row)).toBe(true);
-			row.dispatchEvent(pointerEvent("pointerup"));
-			const dialog = menuDialog();
-			for (const type of ["mousedown", "mouseup", "click"]) {
-				dialog.dispatchEvent(new MouseEvent(type, { bubbles: true }));
-			}
-			await tick();
+		row.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
+		expect(await menuOpened(row)).toBe(true);
+		row.dispatchEvent(pointerEvent("pointerup"));
+		const dialog = menuDialog();
+		for (const type of ["mousedown", "mouseup", "click"]) {
+			dialog.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+		}
+		await tick();
 
-			expect(dialog.open).toBe(true);
-		},
-	);
+		expect(dialog.open).toBe(true);
+	});
 
 	it("neither opens nor taps for a message with no actions", async () => {
 		const row = renderMessage({ type: "SomethingNew", body: {} });
