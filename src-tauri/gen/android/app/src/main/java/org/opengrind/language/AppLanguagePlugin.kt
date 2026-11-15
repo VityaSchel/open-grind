@@ -34,17 +34,10 @@ class AppLanguagePlugin(private val activity: Activity) : Plugin(activity) {
 	private val context = activity.applicationContext
 	private var watcher: Channel? = null
 	private var lastSent: String? = null
-	private var namedFor: LocaleList = activity.resources.configuration.locales
 
 	override fun onResume() = publish()
 
-	override fun onConfigurationChanged(newConfig: Configuration) {
-		if (newConfig.locales != namedFor) {
-			namedFor = newConfig.locales
-			runCatching { renameChannels(activity) }
-		}
-		publish()
-	}
+	override fun onConfigurationChanged(newConfig: Configuration) = publish()
 
 	@Command
 	fun getAppLanguages(invoke: Invoke) {

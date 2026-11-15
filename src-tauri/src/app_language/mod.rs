@@ -191,12 +191,12 @@ mod pins {
 	}
 
 	#[test]
-	fn the_channels_take_the_names_of_a_new_android_language() {
+	fn a_new_android_language_reaches_the_web_so_it_sends_the_tag_again() {
 		assert!(
 			squashed(PLUGIN).contains(
-				"overridefunonConfigurationChanged(newConfig:Configuration){if(newConfig.locales!=namedFor){namedFor=newConfig.localesrunCatching{renameChannels(activity)}}publish()}"
+				"overridefunonConfigurationChanged(newConfig:Configuration)=publish()"
 			),
-			"AppLanguagePlugin must rename the channels when Android's language changes, since the web sends no new tag for a per-app or system language"
+			"AppLanguagePlugin must report Android's new languages to the web, which sends the tag again for them, or native text falls back to Android's own pick"
 		);
 	}
 

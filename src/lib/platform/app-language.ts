@@ -22,10 +22,7 @@ import {
 	planLanguageChoice,
 	reconcileLanguage,
 } from "./language-sync";
-import {
-	publishNativeLanguage,
-	publishPinnedNativeLanguage,
-} from "./native-language";
+import { publishNativeLanguage } from "./native-language";
 import { NATIVE_READ_TIMEOUT_MS } from "./regional-settings";
 
 const READ_COMMAND = "app_languages";
@@ -112,9 +109,9 @@ function sameSettings(a: LanguageSettings, b: LanguageSettings): boolean {
 	);
 }
 
-function followNativeText(choice: string | null): void {
+function followNativeText(): void {
 	if (!current.fromNative) return;
-	void publishNativeLanguage({ choice, tier: current.tier });
+	void publishNativeLanguage();
 }
 
 async function showLanguage(choice: string | null): Promise<void> {
@@ -153,7 +150,7 @@ async function sync(languages: AppLanguages): Promise<void> {
 		await setPreferences(settled).catch(console.error);
 	}
 	await showLanguage(settled.language);
-	followNativeText(settled.language);
+	followNativeText();
 }
 
 function followBrowserChange(): void {
@@ -228,7 +225,7 @@ export async function startLanguage(): Promise<void> {
 		const pinned = pinnedLanguage();
 		if (pinned !== undefined) {
 			await setLocale({ locale: pinned });
-			void publishPinnedNativeLanguage();
+			void publishNativeLanguage();
 			return;
 		}
 		window.addEventListener("languagechange", followBrowserChange);
@@ -249,7 +246,7 @@ export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 		if (!offersLanguage(tag)) {
 			throw new RangeError(`No translations for language "${tag}"`);
 		}
-		const { language, languageSync } = await getPreferences();
+		const { languageSync } = await getPreferences();
 		const plan = planLanguageChoice({
 			tier: current.tier,
 			tag,
@@ -264,7 +261,7 @@ export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 			});
 		} catch (error) {
 			await setLocale({ locale: shown }).catch(console.error);
-			followNativeText(language);
+			followNativeText();
 			throw error;
 		}
 		if (!(await writeNative(plan))) {
@@ -272,6 +269,6 @@ export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 				languageSync: { native: current.app },
 			}).catch(console.error);
 		}
-		followNativeText(plan.language);
+		followNativeText();
 	});
 }
