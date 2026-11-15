@@ -57,7 +57,6 @@ import {
 	gridPreferencesUnreadable,
 	gridProfileFailure,
 	gridRefreshFailures,
-	rightNow,
 } from "./browse-states";
 import { attachments, conversation, inbox, inboxPinFailure } from "./chat";
 import {
@@ -183,6 +182,12 @@ import {
 	hiddenProfile,
 	viewabilityFailures,
 } from "./profile-viewability";
+import {
+	profileRightNow,
+	rightNow,
+	rightNowJoin,
+	rightNowReport,
+} from "./right-now";
 import {
 	accountStatus,
 	sessionAlerts,
@@ -511,6 +516,9 @@ export const scenes: Scene[] = [
 	autoLocationFailure,
 	locationChange,
 	rightNow,
+	rightNowReport,
+	rightNowJoin,
+	profileRightNow,
 	viewsGrid,
 	emptyViews,
 	untrackedViews,

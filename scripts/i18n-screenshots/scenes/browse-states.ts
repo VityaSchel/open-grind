@@ -13,7 +13,6 @@ import { CONNECT_FAILED, STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
 import { press } from "./press";
 import { fillSignIn } from "./session";
 import { addingToast, toastsShown } from "./toast";
-import { visit } from "./visit";
 
 export const GRID_READY = '[aria-label*="All filters"]';
 const CASCADE = { pattern: "^/v4/cascade" };
@@ -213,21 +212,6 @@ export const gridPreferencesUnreadable: Scene = {
 				await page.getByRole("button", { name: "Try again" }).waitFor();
 				await toastsShown({ page, count: 2 });
 			},
-		},
-	],
-};
-
-export const rightNow: Scene = {
-	platform: "phone",
-	views: [
-		{
-			id: "browse/right-now",
-			drive: (page) =>
-				visit({
-					page,
-					path: "/right-now",
-					ready: page.getByText("Unimplemented"),
-				}),
 		},
 	],
 };
