@@ -136,6 +136,11 @@ import {
 	keyboardMediaOutsideChat,
 } from "./keyboard-media";
 import {
+	matureContentCovers,
+	matureContentReplies,
+	matureContentSetting,
+} from "./mature-content";
+import {
 	albumDropTarget,
 	chatDropFailures,
 	chatDropTarget,
@@ -444,6 +449,9 @@ export const scenes: Scene[] = [
 	profilePhotoReply,
 	albumVideoPlayer,
 	albumPreviewFailures,
+	matureContentSetting,
+	matureContentCovers,
+	matureContentReplies,
 	videoPlayFailed,
 	videoDecoderMissing,
 	newAlbum,
