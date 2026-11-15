@@ -4,8 +4,6 @@ import { prefersReducedMotion } from "svelte/motion";
 import { stopScrollMomentum } from "#lib/platform/scroll-momentum.ts";
 
 const TOP_GLIDE_MS = 400;
-const TAKEOVER_LISTENER = { passive: true } as const;
-const theTop = () => 0;
 
 const glidesToTop = new WeakMap<HTMLElement, () => void>();
 
@@ -73,7 +71,7 @@ export function stopGlidingToTop(element: HTMLElement): void {
 
 export function jumpThenGlideToTop({
 	element,
-	landing = theTop,
+	landing = () => 0,
 }: {
 	element: HTMLElement;
 	landing?: () => number;
@@ -101,7 +99,7 @@ export function jumpThenGlideToTop({
 	};
 
 	glidesToTop.set(element, end);
-	const takeover = { ...TAKEOVER_LISTENER, signal: ending.signal };
+	const takeover = { passive: true, signal: ending.signal };
 	element.addEventListener("touchstart", end, takeover);
 	element.addEventListener("wheel", end, takeover);
 	const stopping = stopScrollMomentum(element);
