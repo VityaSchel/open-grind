@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { METRES_PER_KILOMETRE } from "../src/lib/util/units";
 import {
 	afterTwoFrames,
 	FIRST_ROUTE_COMPILE_MS,
@@ -34,10 +33,7 @@ const NOT_REPORT_POST = /^(?!Report post$)/;
 const DEMO_DISCREET_POSTS = 2;
 const ORDERED_DISTANCES_CHECKED = 10;
 const SCROLLED_TOP = 1200;
-const METRES_PER_UNIT: Record<string, number> = {
-	m: 1,
-	km: METRES_PER_KILOMETRE,
-};
+const METRES_PER_UNIT: Record<string, number> = { m: 1, km: 1000 };
 
 const articles = (page: Page) => page.getByRole("article");
 const feedScroller = (page: Page) => page.locator(FEED_SCROLLER);

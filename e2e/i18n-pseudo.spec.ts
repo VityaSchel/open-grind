@@ -45,7 +45,7 @@ const PROFILE_NAVIGATIONS = 4;
 const REPORT_MENU_ITEM = 1;
 const PHOTO_CONVERSATION = "/chat/100002:123456000";
 const DRAWER_PILL = "button:not([aria-label], [aria-pressed])";
-const QUICK_FILTER_PILL = '[data-slot="button"]';
+const QUICK_FILTER_PILL = '[data-slot="button"]:not([aria-label])';
 const MENU_TRIGGER = '[aria-haspopup="menu"]';
 const ADD_TILE = '[data-slot="add-tile"]';
 const SHARED_WITH_BUTTON =
@@ -181,11 +181,9 @@ test("the Right Now feed, its quick-filter drawers, the Join confirmation and th
 		await readPseudoText(topBar),
 		await readPseudoText(page.locator('[data-slot="right-now-scroller"]')),
 	];
-	const drawerPills = topBar
-		.locator(QUICK_FILTER_PILL)
-		.filter({ hasText: PSEUDO_MESSAGE });
-	await expect(drawerPills).toHaveCount(4);
-	for (const pill of (await drawerPills.all()).slice(1)) {
+	const drawerPills = topBar.locator(QUICK_FILTER_PILL);
+	await expect(drawerPills).toHaveCount(3);
+	for (const pill of await drawerPills.all()) {
 		await pill.click();
 		const drawer = page.getByRole("dialog");
 		await drawer.waitFor();
@@ -201,7 +199,7 @@ test("the Right Now feed, its quick-filter drawers, the Join confirmation and th
 	scans.push(await readPseudoText(confirm));
 	await confirm.locator('[data-slot="alert-dialog-action"]').click();
 	const sheet = page.getByRole("dialog");
-	await sheet.locator('[role="switch"]:not([disabled])').waitFor();
+	await sheet.locator('[role="switch"]:not([disabled])').first().waitFor();
 	scans.push(await readPseudoText(sheet));
 
 	for (const { messages, leaks } of scans) {
