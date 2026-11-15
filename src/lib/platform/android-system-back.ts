@@ -7,23 +7,19 @@ export function applyBackGestureHandler() {
 	window.__AndroidOnBackGesture = () => !runBackGestureHandlers();
 }
 
-async function registerAndroidBackButtonListener() {
-	await addPluginListener(
-		"app",
-		"back-button",
-		({ canGoBack }: { canGoBack: boolean }) => {
-			if (runBackGestureHandlers()) return;
-			if (window.navigation?.canGoBack ?? canGoBack) history.back();
-			else window.__AndroidBack?.moveTaskToBack();
-		},
-	);
-}
-
 export const androidSystemBack: SystemBackAdapter = {
 	passesOver: [],
 	install: () => {
 		applyBackGestureHandler();
-		void registerAndroidBackButtonListener().catch((error) => {
+		addPluginListener(
+			"app",
+			"back-button",
+			({ canGoBack }: { canGoBack: boolean }) => {
+				if (runBackGestureHandlers()) return;
+				if (window.navigation?.canGoBack ?? canGoBack) history.back();
+				else window.__AndroidBack?.moveTaskToBack();
+			},
+		).catch((error: unknown) => {
 			console.error("Failed to register back button listener", error);
 		});
 	},
