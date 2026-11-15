@@ -430,8 +430,7 @@ pub(super) fn apply(
 		let aumid = app.config().identifier.clone();
 		if let Err(error) = refresh_taskbar_button(&window, aumid, &look.name) {
 			tracing::warn!(
-				"[disguise] could not refresh the taskbar button: {}",
-				error.0
+				"[disguise] could not refresh the taskbar button: {error}"
 			);
 		}
 	}
@@ -457,8 +456,7 @@ pub(super) fn reapply(
 			.map(|_| ());
 		if let Err(error) = restored {
 			tracing::warn!(
-				"[disguise] could not restore the shortcuts: {}",
-				error.0
+				"[disguise] could not restore the shortcuts: {error}"
 			);
 		}
 	});
