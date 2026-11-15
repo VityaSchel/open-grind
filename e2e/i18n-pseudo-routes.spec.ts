@@ -154,6 +154,11 @@ const routes: readonly RouteCase[] = [
 		shows: 'a[href$="/issues/new"]',
 	},
 	{
+		route: "/(protected)/(navbar)/settings/(subpage)/app/discreet-icon",
+		path: `${APP}/discreet-icon`,
+		shows: '[data-slot="disguise-choices"] button',
+	},
+	{
 		route: "/(protected)/(navbar)/settings/(subpage)/app/display",
 		path: `${APP}/display`,
 		shows: '[role="slider"]',
@@ -177,11 +182,6 @@ const routes: readonly RouteCase[] = [
 		route: "/(protected)/(navbar)/settings/(subpage)/app/security",
 		path: `${APP}/security`,
 		shows: 'main a[href="#/"]',
-	},
-	{
-		route: "/(protected)/(navbar)/settings/(subpage)/app/security/discreet-icon",
-		path: `${APP}/security/discreet-icon`,
-		shows: '[data-slot="disguise-choices"] button',
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/app/updates",

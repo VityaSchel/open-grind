@@ -71,19 +71,16 @@ export async function selectDisguise(
 	state = await read();
 }
 
-function settingsTrail(path: string): string[] {
-	const segments = path.split("/").filter(Boolean);
-	return segments.map(
-		(_, index) => `/${segments.slice(0, index + 1).join("/")}`,
-	);
-}
-
 const resumeSchema = z.string().startsWith("/settings/");
 
-export async function reopenAfterDisguiseRestart(): Promise<void> {
+export async function reopenAfterDisguiseRestart({
+	trail,
+}: {
+	trail: (path: string) => string[];
+}): Promise<void> {
 	if (!isTauri()) return;
 	const answer = await invoke("disguise_take_resume").catch(() => null);
 	const path = resumeSchema.safeParse(answer).data;
 	if (!path) return;
-	for (const step of settingsTrail(path)) await goto(step);
+	for (const step of trail(path)) await goto(step);
 }

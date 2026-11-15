@@ -43,7 +43,7 @@ function disguiseNative({
 function openDiscreetIcon(page: Page): Promise<void> {
 	return visit({
 		page,
-		path: "/settings/app/security/discreet-icon",
+		path: "/settings/app/discreet-icon",
 		ready: page.locator('[data-slot="disguise-choices"] button img[src]'),
 	});
 }

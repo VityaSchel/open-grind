@@ -10,6 +10,7 @@
 	import { startOnlineHeartbeat } from "#lib/presence/online-heartbeat.ts";
 	import { guardDeletedPages } from "#lib/util/deleted-pages.ts";
 	import { retryBrokenMediaWhenOnline } from "#lib/util/media-retry-signals.ts";
+	import { settingsTrail } from "./(navbar)/settings/(subpage)/subpage-routes";
 
 	let { children }: { children: import("svelte").Snippet } = $props();
 
@@ -24,9 +25,14 @@
 		restoreStrandedLocation().catch((error: unknown) => {
 			console.error("Could not move back from Honduras", error);
 		});
-		reopenAfterDisguiseRestart().catch((error: unknown) => {
-			console.error("Could not reopen the discreet icon settings", error);
-		});
+		reopenAfterDisguiseRestart({ trail: settingsTrail }).catch(
+			(error: unknown) => {
+				console.error(
+					"Could not reopen the discreet icon settings",
+					error,
+				);
+			},
+		);
 	});
 </script>
 

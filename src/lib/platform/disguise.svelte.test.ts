@@ -124,12 +124,12 @@ describe("the disguise state", () => {
 		backendReports("papizza");
 
 		await selectDisguise("papizza", {
-			resume: "/settings/app/security/discreet-icon",
+			resume: "/settings/app/discreet-icon",
 		});
 
 		expect(tauri.invoke).toHaveBeenCalledWith("disguise_select", {
 			id: "papizza",
-			resume: "/settings/app/security/discreet-icon",
+			resume: "/settings/app/discreet-icon",
 		});
 		expect(currentDisguise()).toBe("papizza");
 	});
@@ -147,6 +147,8 @@ describe("the disguise state", () => {
 });
 
 describe("reopening after a disguise restart", () => {
+	const SETTINGS_TRAIL = (path: string) => ["/settings", path];
+
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
@@ -161,18 +163,19 @@ describe("reopening after a disguise restart", () => {
 		);
 	}
 
-	it("walks back down to the screen the restart left, so Back retraces it", async () => {
-		backendResumes("/settings/app/security/discreet-icon");
+	it("walks the trail down to the screen the restart left, so Back retraces it", async () => {
+		backendResumes("/settings/app/discreet-icon");
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 
-		await reopenAfterDisguiseRestart();
+		await reopenAfterDisguiseRestart({
+			trail: (path) => ["/settings", "/settings/app/security", path],
+		});
 
 		expect(goto.mock.calls.map(([path]) => path)).toEqual([
 			"/settings",
-			"/settings/app",
 			"/settings/app/security",
-			"/settings/app/security/discreet-icon",
+			"/settings/app/discreet-icon",
 		]);
 	});
 
@@ -181,7 +184,7 @@ describe("reopening after a disguise restart", () => {
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 
-		await reopenAfterDisguiseRestart();
+		await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
 
 		expect(goto).not.toHaveBeenCalled();
 	});
@@ -198,7 +201,7 @@ describe("reopening after a disguise restart", () => {
 			const { reopenAfterDisguiseRestart } =
 				await import("./disguise.svelte");
 
-			await reopenAfterDisguiseRestart();
+			await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
 
 			expect(goto).not.toHaveBeenCalled();
 		}
@@ -209,7 +212,7 @@ describe("reopening after a disguise restart", () => {
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 
-		await reopenAfterDisguiseRestart();
+		await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
 
 		expect(tauri.invoke).not.toHaveBeenCalled();
 		expect(goto).not.toHaveBeenCalled();

@@ -46,7 +46,7 @@
 {#if disguiseAvailable()}
 	<Item.Root variant="outline">
 		{#snippet child({ props })}
-			<a href="/settings/app/security/discreet-icon" {...props}>
+			<a href="/settings/app/discreet-icon" {...props}>
 				{@render rowContent({
 					title: t("settings.app.discreetAppIcon.title"),
 				})}
