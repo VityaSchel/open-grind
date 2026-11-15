@@ -46,7 +46,7 @@ const filtersByKind = {
 export type MediaKind = keyof typeof filtersByKind;
 
 const iosPicksSchema = z.object({
-	picks: z.array(z.object({ id: z.string() })),
+	ids: z.array(z.string()),
 	failed: z.number().int().nonnegative(),
 });
 
@@ -95,12 +95,12 @@ async function pickIosMedia({
 	kind: MediaKind;
 	multiple: boolean;
 }): Promise<PickedMedia[]> {
-	const { picks, failed } = iosPicksSchema.parse(
+	const { ids, failed } = iosPicksSchema.parse(
 		await invoke("pick_ios_media", { kind, multiple }),
 	);
 	if (failed > 0) toast.error(`Couldn't load ${failed} of the picked items`);
-	return picks.map(
-		({ id }): PickedMedia => ({
+	return ids.map(
+		(id): PickedMedia => ({
 			source: "staged",
 			key: crypto.randomUUID(),
 			mimeType: null,

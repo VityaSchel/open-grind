@@ -80,18 +80,12 @@ impl MediaKind {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StagedPick {
-	id: String,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Picked {
-	picks: Vec<StagedPick>,
+	ids: Vec<String>,
 	failed: usize,
 }
 
-type Loading = oneshot::Receiver<Result<StagedPick, String>>;
+type Loading = oneshot::Receiver<Result<String, String>>;
 
 type Answer = Result<Vec<Loading>, &'static str>;
 
@@ -231,10 +225,9 @@ impl Picking {
 	}
 }
 
-fn stage(staged: &StagedMedia, url: &NSURL) -> Result<StagedPick, String> {
+fn stage(staged: &StagedMedia, url: &NSURL) -> Result<String, String> {
 	let path = url.to_file_path().ok_or_else(|| NOT_MEDIA.to_owned())?;
-	let id = staged.adopt(&path).map_err(|error| error.to_string())?;
-	Ok(StagedPick { id })
+	staged.adopt(&path).map_err(|error| error.to_string())
 }
 
 fn present(
@@ -297,11 +290,11 @@ fn present(
 }
 
 async fn collect(loading: Vec<Loading>) -> Picked {
-	let mut picks = Vec::with_capacity(loading.len());
+	let mut ids = Vec::with_capacity(loading.len());
 	let mut failed = 0;
 	for load in loading {
 		match load.await.unwrap_or_else(|_| Err(NEVER_LOADED.to_owned())) {
-			Ok(pick) => picks.push(pick),
+			Ok(id) => ids.push(id),
 			Err(message) => {
 				tracing::warn!(
 					"[picker] a pick could not be loaded: {message}"
@@ -310,7 +303,7 @@ async fn collect(loading: Vec<Loading>) -> Picked {
 			}
 		}
 	}
-	Picked { picks, failed }
+	Picked { ids, failed }
 }
 
 #[tauri::command]

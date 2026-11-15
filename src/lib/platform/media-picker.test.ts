@@ -96,7 +96,7 @@ describe("pickMedia", () => {
 
 	it("returns null without the dialog when the iOS picker is cancelled", async () => {
 		runningOn("ios");
-		invokeMock.mockResolvedValue({ picks: [], failed: 0 });
+		invokeMock.mockResolvedValue({ ids: [], failed: 0 });
 
 		await expect(pickMedia("video")).resolves.toBeNull();
 
@@ -280,7 +280,7 @@ describe("pickMultipleMedia", () => {
 			.mockReturnValueOnce(firstKey)
 			.mockReturnValueOnce(secondKey);
 		invokeMock.mockResolvedValue({
-			picks: [{ id: "staged-2" }, { id: "staged-1" }],
+			ids: ["staged-2", "staged-1"],
 			failed: 0,
 		});
 
@@ -305,10 +305,7 @@ describe("pickMultipleMedia", () => {
 	it("keeps the iOS picks that loaded and says how many did not", async () => {
 		runningOn("ios");
 		vi.spyOn(crypto, "randomUUID").mockReturnValueOnce(firstKey);
-		invokeMock.mockResolvedValue({
-			picks: [{ id: "staged-1" }],
-			failed: 2,
-		});
+		invokeMock.mockResolvedValue({ ids: ["staged-1"], failed: 2 });
 
 		await expect(pickMultipleMedia("image")).resolves.toEqual([
 			{ source: "staged", key: firstKey, mimeType: null, id: "staged-1" },
