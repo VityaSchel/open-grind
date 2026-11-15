@@ -23,7 +23,6 @@ import { PHONE } from "./support/stack-layers";
 test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
 
-const SCROLL_TO_TOP = '[aria-label="Scroll to top"]';
 const LONG_CONVERSATION = "/chat/100333:123456000";
 const SHORT_CONVERSATION = "/chat/100777:123456000";
 const FEATURED_PROFILE = "/profile/100001";
@@ -77,13 +76,14 @@ test("a status-bar tap stops the browse grid, glides it to the top and hides its
 	await installTauriShim(page, { platform: "ios" });
 	await openGrid(page);
 	const grid = page.locator(GRID_SCROLLER);
+	const button = page.getByRole("button", { name: "Scroll to top" });
 	const stops = await captureInvokes(page, "stop_scroll_momentum");
 	await scrollDown(grid);
-	await expect(page.locator(SCROLL_TO_TOP)).toBeVisible();
+	await expect(button).toBeVisible();
 
 	await tapStatusBar(page);
 
-	await expect(page.locator(SCROLL_TO_TOP)).toHaveCount(0);
+	await expect(button).toHaveCount(0);
 	await expect.poll(() => scrollTop(grid)).toBe(0);
 	const box = (await grid.boundingBox())!;
 	const sent = (await stops()) as { at: { x: number; y: number } }[];
