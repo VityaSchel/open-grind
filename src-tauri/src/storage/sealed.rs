@@ -162,13 +162,6 @@ mod tests {
 
 	const ACCOUNT: &str = "session";
 
-	fn sealed_store(
-		inner: &Arc<keyring_core::mock::Store>,
-		key: SealingKey,
-	) -> SealedStore {
-		SealedStore::new(inner.clone(), key)
-	}
-
 	fn twin(key: &SealingKey) -> SealingKey {
 		SealingKey::from_bytes(key.as_bytes()).unwrap()
 	}
@@ -289,7 +282,7 @@ mod tests {
 	#[test]
 	fn the_store_writes_only_ciphertext_to_the_keychain() {
 		let keychain = keyring_core::mock::Store::new().unwrap();
-		let store = sealed_store(&keychain, SealingKey::generate());
+		let store = SealedStore::new(keychain.clone(), SealingKey::generate());
 
 		store
 			.build("svc", ACCOUNT, None)
@@ -319,13 +312,14 @@ mod tests {
 	#[test]
 	fn a_secret_sealed_by_a_previous_install_reads_as_no_entry() {
 		let keychain = keyring_core::mock::Store::new().unwrap();
-		sealed_store(&keychain, SealingKey::generate())
+		SealedStore::new(keychain.clone(), SealingKey::generate())
 			.build("svc", ACCOUNT, None)
 			.unwrap()
 			.set_secret(b"auth-token")
 			.unwrap();
 
-		let reinstalled = sealed_store(&keychain, SealingKey::generate());
+		let reinstalled =
+			SealedStore::new(keychain.clone(), SealingKey::generate());
 
 		assert!(matches!(
 			reinstalled
@@ -341,14 +335,14 @@ mod tests {
 		let keychain = keyring_core::mock::Store::new().unwrap();
 		let key = SealingKey::generate();
 		let relaunched = twin(&key);
-		sealed_store(&keychain, key)
+		SealedStore::new(keychain.clone(), key)
 			.build("svc", ACCOUNT, None)
 			.unwrap()
 			.set_secret(b"auth-token")
 			.unwrap();
 
 		assert_eq!(
-			sealed_store(&keychain, relaunched)
+			SealedStore::new(keychain.clone(), relaunched)
 				.build("svc", ACCOUNT, None)
 				.unwrap()
 				.get_secret()
@@ -360,7 +354,7 @@ mod tests {
 	#[test]
 	fn deleting_through_the_store_removes_the_keychain_item() {
 		let keychain = keyring_core::mock::Store::new().unwrap();
-		let store = sealed_store(&keychain, SealingKey::generate());
+		let store = SealedStore::new(keychain.clone(), SealingKey::generate());
 		let entry = store.build("svc", ACCOUNT, None).unwrap();
 		entry.set_secret(b"auth-token").unwrap();
 
