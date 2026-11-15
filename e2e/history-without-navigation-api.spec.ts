@@ -5,6 +5,7 @@ import {
 	afterTwoFrames,
 	backLink,
 	FIRST_ROUTE_COMPILE_MS,
+	historyEntries,
 	installTauriShim,
 	MESSAGE_ROW,
 	meTab,
@@ -89,19 +90,10 @@ function recordStackFrames(page: Page): Promise<StackFrame[]> {
 test("SvelteKit numbers each history entry where the history log reads it", async ({
 	page,
 }) => {
-	const entry = () =>
-		page.evaluate(
-			(key) => ({
-				kit: (
-					history.state as Record<
-						string,
-						{ historyIndex?: number }
-					> | null
-				)?.[key]?.historyIndex,
-				navigation: navigation.currentEntry!.index,
-			}),
-			HISTORY_METADATA_KEY,
-		);
+	const entry = async () => ({
+		kit: (await historyAt(page)).index,
+		navigation: (await historyEntries(page)).index,
+	});
 	await installTauriShim(page, { platform: "ios" });
 	await page.goto("/interest/taps");
 	await page
