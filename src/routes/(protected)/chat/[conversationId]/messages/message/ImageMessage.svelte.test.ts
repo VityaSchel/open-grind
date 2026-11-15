@@ -4,6 +4,11 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
+
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import Message from "./Message.svelte";
 

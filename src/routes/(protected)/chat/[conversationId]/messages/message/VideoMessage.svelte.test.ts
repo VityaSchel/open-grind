@@ -20,6 +20,10 @@ vi.mock("#lib/api/messaging/messages.ts", async (importOriginal) => ({
 	>()),
 	...messagesApi,
 }));
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import type { openLightbox } from "#lib/util/photoswipe/index.ts";

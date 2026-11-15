@@ -13,6 +13,10 @@ const sonner = vi.hoisted(() => ({
 
 vi.mock("./album-lightbox", () => lightbox);
 vi.mock("svelte-sonner", () => sonner);
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";

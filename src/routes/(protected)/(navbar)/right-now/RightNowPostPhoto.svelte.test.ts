@@ -24,6 +24,10 @@ vi.mock("#lib/util/photoswipe/gallery-lightbox.ts", () => ({
 vi.mock("#lib/util/photoswipe/full-size.ts", () => ({
 	preloadFullImage: preloadFullImageMock,
 }));
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";

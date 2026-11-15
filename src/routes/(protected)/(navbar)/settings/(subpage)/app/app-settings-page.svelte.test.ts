@@ -50,6 +50,10 @@ vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
 	...platform,
 }));
 vi.mock("#lib/platform/link-opener.ts", () => linkOpener);
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 let testing: typeof import("@testing-library/svelte");
 
@@ -173,7 +177,7 @@ describe("the mature content switch of the app settings", () => {
 
 	afterEach(() => vi.unstubAllEnvs());
 
-	it("shows on the Google Play build and goes away for good once flipped", async () => {
+	it("shows on the Google Play build for the gated account and goes away for good once flipped", async () => {
 		vi.stubEnv("OPEN_GRIND_STORE", "play");
 		const preferences = await import("#lib/app-data/preferences.svelte.ts");
 		await preferences.hydratePreferences();

@@ -3,6 +3,11 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
+
 import UserAvatar from "./UserAvatar.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';

@@ -12,6 +12,10 @@ const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }));
 vi.mock("../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ send: sendMock }),
 }));
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { profileMediaUrl } from "#lib/util/media.ts";
