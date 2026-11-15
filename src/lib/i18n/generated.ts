@@ -916,6 +916,8 @@ export interface Messages {
 	"settings.app.discreetAppIcon.confirm.title": undefined;
 	"settings.app.discreetAppIcon.description": undefined;
 	"settings.app.discreetAppIcon.errors.changeFailed": undefined;
+	"settings.app.discreetAppIcon.errors.nameTaken": { appName: string };
+	"settings.app.discreetAppIcon.errors.renameNeedsAdmin": undefined;
 	"settings.app.discreetAppIcon.renameNeedsAdmin": undefined;
 	"settings.app.discreetAppIcon.restart.android": { appName: string };
 	"settings.app.discreetAppIcon.restart.macos": { appName: string };
@@ -1395,6 +1397,7 @@ export interface RichMessages {
 	"profile.onlineStatus.lastOnline": { ago: "placeholder" };
 	"profile.report.rightNowPost.awaitingModerationSince": { time: "placeholder" };
 	"settings.account.unimplemented": { issueLink: "placeholder" };
+	"settings.app.discreetAppIcon.errors.nameTaken": { appName: "placeholder" };
 	"settings.app.discreetAppIcon.restart.android": { appName: "placeholder" };
 	"settings.app.discreetAppIcon.restart.macos": { appName: "placeholder" };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: "placeholder" };

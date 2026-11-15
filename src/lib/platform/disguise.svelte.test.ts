@@ -135,14 +135,41 @@ describe("the disguise state", () => {
 	});
 
 	it("surfaces a failure to the caller", async () => {
-		tauri.invoke.mockRejectedValue(
-			"The icon changed, but renaming the app needs an administrator",
-		);
+		const refused = { reason: "failed", detail: "macOS refused" };
+		tauri.invoke.mockRejectedValue(refused);
 		const { selectDisguise } = await import("./disguise.svelte");
 
 		await expect(selectDisguise("papizza", { resume: null })).rejects.toBe(
-			"The icon changed, but renaming the app needs an administrator",
+			refused,
 		);
+	});
+
+	it("re-reads the state after a failure, so the picker shows an icon that changed anyway", async () => {
+		backendReports("original");
+		const { hydrateDisguiseState, selectDisguise, currentDisguise } =
+			await import("./disguise.svelte");
+		await hydrateDisguiseState();
+		backendReports("papizza");
+		tauri.invoke.mockRejectedValueOnce({ reason: "renameNeedsAdmin" });
+
+		await expect(
+			selectDisguise("papizza", { resume: null }),
+		).rejects.toEqual({ reason: "renameNeedsAdmin" });
+
+		expect(currentDisguise()).toBe("papizza");
+	});
+
+	it.each([
+		[{ reason: "nameTaken" }, "nameTaken"],
+		[{ reason: "renameNeedsAdmin" }, "renameNeedsAdmin"],
+		[{ reason: "failed", detail: "macOS refused" }, "failed"],
+		[{ reason: "somethingNew" }, "failed"],
+		["unknown disguise papizza", "failed"],
+		[new Error("ipc down"), "failed"],
+	])("reads the failure %j as %s", async (error, failure) => {
+		const { disguiseFailure } = await import("./disguise.svelte");
+
+		expect(disguiseFailure(error)).toBe(failure);
 	});
 });
 

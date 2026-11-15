@@ -55,6 +55,16 @@ export function disguiseRenameNeedsAdmin(): boolean {
 	return state.renameNeedsAdmin;
 }
 
+const DISGUISE_FAILURES = ["nameTaken", "renameNeedsAdmin", "failed"] as const;
+
+export type DisguiseFailure = (typeof DISGUISE_FAILURES)[number];
+
+const disguiseErrorSchema = z.object({ reason: z.enum(DISGUISE_FAILURES) });
+
+export function disguiseFailure(error: unknown): DisguiseFailure {
+	return disguiseErrorSchema.safeParse(error).data?.reason ?? "failed";
+}
+
 const previewsSchema = z.record(z.string(), z.string());
 
 export async function loadDisguisePreviews(): Promise<Record<string, string>> {
@@ -67,8 +77,11 @@ export async function selectDisguise(
 	id: string,
 	{ resume }: { resume: string | null },
 ): Promise<void> {
-	await invoke("disguise_select", { id, resume });
-	state = await read();
+	try {
+		await invoke("disguise_select", { id, resume });
+	} finally {
+		state = await read();
+	}
 }
 
 const resumeSchema = z.string().startsWith("/settings/");

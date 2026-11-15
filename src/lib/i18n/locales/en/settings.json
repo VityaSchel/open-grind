@@ -155,7 +155,9 @@
 				"change": "Change"
 			},
 			"errors": {
-				"changeFailed": "Couldn’t change the app icon"
+				"changeFailed": "Couldn’t change the app icon",
+				"nameTaken": "An app named {{appName}} is already in this folder",
+				"renameNeedsAdmin": "The icon changed, but renaming the app needs an administrator account"
 			}
 		},
 		"pin": {

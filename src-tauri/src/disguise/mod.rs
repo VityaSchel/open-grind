@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::LazyLock;
@@ -62,24 +63,38 @@ pub fn disguise_previews() -> HashMap<&'static str, String> {
 		.collect()
 }
 
-#[derive(Debug, Serialize)]
-pub struct DisguiseError(pub(crate) String);
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", tag = "reason", content = "detail")]
+pub enum DisguiseError {
+	NameTaken,
+	RenameNeedsAdmin,
+	Failed(String),
+}
 
 impl DisguiseError {
 	pub(crate) fn new(message: impl Into<String>) -> Self {
-		Self(message.into())
+		Self::Failed(message.into())
+	}
+}
+
+impl fmt::Display for DisguiseError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Self::Failed(message) => f.write_str(message),
+			other => fmt::Debug::fmt(other, f),
+		}
 	}
 }
 
 impl From<std::io::Error> for DisguiseError {
 	fn from(error: std::io::Error) -> Self {
-		Self(error.to_string())
+		Self::Failed(error.to_string())
 	}
 }
 
 impl From<tauri::Error> for DisguiseError {
 	fn from(error: tauri::Error) -> Self {
-		Self(error.to_string())
+		Self::Failed(error.to_string())
 	}
 }
 
@@ -248,6 +263,22 @@ mod tests {
 			saved_at,
 		})
 		.unwrap()
+	}
+
+	#[test]
+	fn the_web_tells_the_failures_it_explains_by_their_reason() {
+		assert_eq!(
+			serde_json::to_value(DisguiseError::NameTaken).unwrap(),
+			serde_json::json!({ "reason": "nameTaken" })
+		);
+		assert_eq!(
+			serde_json::to_value(DisguiseError::RenameNeedsAdmin).unwrap(),
+			serde_json::json!({ "reason": "renameNeedsAdmin" })
+		);
+		assert_eq!(
+			serde_json::to_value(DisguiseError::new("macOS refused")).unwrap(),
+			serde_json::json!({ "reason": "failed", "detail": "macOS refused" })
+		);
 	}
 
 	#[test]
