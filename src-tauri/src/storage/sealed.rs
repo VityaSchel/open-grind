@@ -47,13 +47,7 @@ impl SealingKey {
 			secret,
 			&mut tag,
 		)?;
-		let mut sealed =
-			Vec::with_capacity(1 + NONCE_LEN + TAG_LEN + ciphertext.len());
-		sealed.push(FORMAT);
-		sealed.extend_from_slice(&nonce);
-		sealed.extend_from_slice(&tag);
-		sealed.extend_from_slice(&ciphertext);
-		Ok(sealed)
+		Ok([&[FORMAT][..], &nonce, &tag, &ciphertext].concat())
 	}
 
 	fn open(&self, account: &str, sealed: &[u8]) -> Option<Vec<u8>> {
@@ -76,9 +70,7 @@ impl SealingKey {
 }
 
 fn associated_data(account: &str) -> Vec<u8> {
-	let mut data = vec![FORMAT];
-	data.extend_from_slice(account.as_bytes());
-	data
+	[&[FORMAT][..], account.as_bytes()].concat()
 }
 
 pub(super) struct SealedStore {
