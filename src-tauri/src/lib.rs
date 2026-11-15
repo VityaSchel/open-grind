@@ -373,6 +373,7 @@ pub fn run() {
                 #[cfg(target_os = "ios")]
                 let window = tauri::utils::config::WindowConfig {
                     allow_link_preview: false,
+                    disable_input_accessory_view: true,
                     ..window
                 };
                 let builder =
@@ -384,9 +385,7 @@ pub fn run() {
                 #[cfg(any(target_os = "macos", target_os = "windows"))]
                 let builder = builder.disable_drag_drop_handler();
                 #[cfg(target_os = "ios")]
-                let builder = builder
-                    .with_input_accessory_view_builder(|_| None)
-                    .on_page_load(reseed_ios_page);
+                let builder = builder.on_page_load(reseed_ios_page);
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
