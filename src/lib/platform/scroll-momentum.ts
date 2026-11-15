@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
 import { currentPlatform } from "#lib/platform/os.ts";
-import type { PagePoint } from "#lib/util/uncovered-center.ts";
+import type { PagePoint } from "#lib/util/page-point.ts";
 
 const PROBED_HEIGHTS = [1 / 2, 3 / 4, 7 / 8];
 

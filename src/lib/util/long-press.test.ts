@@ -9,7 +9,7 @@ import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
-import type { PagePoint } from "#lib/util/uncovered-center.ts";
+import type { PagePoint } from "#lib/util/page-point.ts";
 import { type LongPressHandlers, longPressHandlers } from "./long-press";
 
 function contextMenu(origin?: TouchOriginHints) {

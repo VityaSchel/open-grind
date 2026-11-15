@@ -1,4 +1,4 @@
-export type PagePoint = { x: number; y: number };
+import type { PagePoint } from "#lib/util/page-point.ts";
 
 export function uncoveredCenter(element: HTMLElement): PagePoint | null {
 	const box = element.getBoundingClientRect();

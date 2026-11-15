@@ -2,7 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import type { Attachment } from "svelte/attachments";
 
 import { currentPlatform } from "#lib/platform/os.ts";
-import { type PagePoint, uncoveredCenter } from "#lib/util/uncovered-center.ts";
+import { uncoveredCenter } from "#lib/util/uncovered-center.ts";
+import type { PagePoint } from "#lib/util/page-point.ts";
 
 function letDragDismiss(target: PagePoint | null) {
 	invoke("set_keyboard_drag_dismiss", { target }).catch((error: unknown) => {

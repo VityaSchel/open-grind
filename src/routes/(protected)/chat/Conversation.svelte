@@ -23,8 +23,8 @@
 		menuLongPressSource,
 	} from "#lib/util/long-press.ts";
 	import type { Conversation } from "#lib/model/messaging/conversations.ts";
+	import type { PagePoint } from "#lib/util/page-point.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
-	import type { PagePoint } from "#lib/util/uncovered-center.ts";
 
 	let {
 		conversation,

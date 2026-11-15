@@ -6,7 +6,7 @@ import type {
 	SystemBackAdapter,
 	SystemBackGesture,
 } from "#lib/platform/system-back-gesture.svelte.ts";
-import type { PagePoint } from "#lib/util/uncovered-center.ts";
+import type { PagePoint } from "#lib/util/page-point.ts";
 
 const PREPARED_MS = 1000;
 const ARM_ORDERS_PER_MS = 1000;

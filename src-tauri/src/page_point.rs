@@ -10,12 +10,11 @@ pub struct PagePoint {
 mod tests {
 	use super::*;
 
-	const UNCOVERED_CENTER: &str =
-		include_str!("../../src/lib/util/uncovered-center.ts");
+	const PAGE_POINT: &str = include_str!("../../src/lib/util/page-point.ts");
 
 	#[test]
 	fn the_point_reads_the_shape_the_page_declares() {
-		assert!(UNCOVERED_CENTER
+		assert!(PAGE_POINT
 			.contains("export type PagePoint = { x: number; y: number };"));
 		assert_eq!(
 			serde_json::from_str::<Option<PagePoint>>(r#"{"x":201,"y":451}"#)
