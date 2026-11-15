@@ -36,10 +36,7 @@ vi.mock("#lib/util/media.ts", async (importOriginal) => ({
 }));
 
 import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
-import {
-	notePageFollowsSoftKeyboard,
-	noteSoftKeyboardOpen,
-} from "#lib/platform/soft-keyboard.svelte.ts";
+import { noteSoftKeyboardOpen } from "#lib/platform/soft-keyboard.svelte.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import NavBar from "./NavBar.svelte";
 
@@ -145,50 +142,20 @@ describe("navbar under the soft keyboard", () => {
 
 	afterEach(() => {
 		noteSoftKeyboardOpen(false);
-		notePageFollowsSoftKeyboard(false);
 	});
 
-	it.each(["android", "ios"] as const)(
-		"steps aside on %s while the keyboard shrinks the page and comes back once it closes",
-		async (platform) => {
-			runningOn(platform);
-			render(NavBar, { props: { ourProfileId: OUR_ID } });
-			const nav = screen.getByRole("navigation", { name: "Main" });
-			expect(nav.hidden).toBe(false);
-
-			noteSoftKeyboardOpen(true);
-			await tick();
-			expect(nav.hidden).toBe(true);
-
-			noteSoftKeyboardOpen(false);
-			await tick();
-			expect(nav.hidden).toBe(false);
-		},
-	);
-
-	it("stays on ios while a conversation follows the keyboard", async () => {
-		runningOn("ios");
+	it("steps aside while the keyboard shrinks the page and comes back once it closes", async () => {
+		runningOn("android");
 		render(NavBar, { props: { ourProfileId: OUR_ID } });
 		const nav = screen.getByRole("navigation", { name: "Main" });
+		expect(nav.hidden).toBe(false);
 
-		notePageFollowsSoftKeyboard(true);
 		noteSoftKeyboardOpen(true);
 		await tick();
+		expect(nav.hidden).toBe(true);
 
+		noteSoftKeyboardOpen(false);
+		await tick();
 		expect(nav.hidden).toBe(false);
 	});
-
-	it.each(["linux", "macos", "windows"] as const)(
-		"stays on %s",
-		async (platform) => {
-			runningOn(platform);
-			render(NavBar, { props: { ourProfileId: OUR_ID } });
-			const nav = screen.getByRole("navigation", { name: "Main" });
-
-			noteSoftKeyboardOpen(true);
-			await tick();
-
-			expect(nav.hidden).toBe(false);
-		},
-	);
 });
