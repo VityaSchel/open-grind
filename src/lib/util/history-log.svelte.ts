@@ -16,7 +16,7 @@ type SavedLog = z.infer<typeof savedLogSchema>;
 
 export class HistoryLog {
 	readonly #entries = new SvelteMap<number, string>();
-	#current: number | undefined;
+	#current: number | null = null;
 	#recorded = $state(0);
 
 	constructor() {
@@ -24,7 +24,7 @@ export class HistoryLog {
 		if (!saved) return;
 		for (const [index, pathname] of saved.entries)
 			this.#entries.set(index, pathname);
-		this.#current = saved.current ?? undefined;
+		this.#current = saved.current;
 	}
 
 	record({
@@ -42,7 +42,7 @@ export class HistoryLog {
 		const traverses =
 			type === "popstate" || (type === "enter" && entries.has(index));
 		const previous = this.#current;
-		if (!traverses && previous !== undefined && index !== previous)
+		if (!traverses && previous !== null && index !== previous)
 			for (const key of [...entries.keys()])
 				if (key > previous) entries.delete(key);
 		entries.set(index, pathname);
@@ -94,7 +94,7 @@ export class HistoryLog {
 
 	#save(): void {
 		const saved: SavedLog = {
-			current: this.#current ?? null,
+			current: this.#current,
 			entries: [...this.#entries],
 		};
 		try {
