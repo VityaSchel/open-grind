@@ -172,7 +172,7 @@ define_class!(
 			if let Some(answer) = self.ivars().answer.take() {
 				let _ = answer.send(Ok(Vec::new()));
 			}
-			let _finished = finish();
+			drop(finish());
 		}
 	}
 );
@@ -287,7 +287,7 @@ fn present(
 		controller: Retained::into_super(picker),
 		shown: move |shown| {
 			if let Err(message) = shown {
-				let _finished = finish();
+				drop(finish());
 				if let Some(answer) = delegate.ivars().answer.take() {
 					let _ = answer.send(Err(message));
 				}
