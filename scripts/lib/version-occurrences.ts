@@ -1,12 +1,6 @@
-import { parseVersion } from "./semver";
+import { requireVersion } from "./semver";
 
 export type Occurrence = { file: string; literal: string };
-
-function bundleShortVersion(version: string): string {
-	const parsed = parseVersion(version);
-	if (!parsed) throw new Error(`${version} is not a valid semver version`);
-	return `${parsed.major}.${parsed.minor}.${parsed.patch}`;
-}
 
 export function versionOccurrences({
 	version,
@@ -15,7 +9,8 @@ export function versionOccurrences({
 	version: string;
 	code: number;
 }): Occurrence[] {
-	const shortVersion = bundleShortVersion(version);
+	const { major, minor, patch } = requireVersion(version);
+	const shortVersion = `${major}.${minor}.${patch}`;
 	return [
 		{ file: "package.json", literal: `"version": "${version}"` },
 		{ file: "src-tauri/Cargo.toml", literal: `\nversion = "${version}"\n` },

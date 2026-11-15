@@ -1,14 +1,12 @@
 import path from "path";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
-import { parseVersion } from "./lib/semver";
+import { requireVersion } from "./lib/semver";
 import { versionOccurrences } from "./lib/version-occurrences";
 
 const root = path.join(import.meta.dir, "..");
 const configVersion = tauriConfJson.version;
 
-const parsed = parseVersion(configVersion);
-if (!parsed) throw new Error(`${configVersion} is not a valid semver version`);
-const { prerelease } = parsed;
+const { prerelease } = requireVersion(configVersion);
 
 const versionCode = tauriConfJson.bundle?.android?.versionCode;
 if (!Number.isInteger(versionCode)) {

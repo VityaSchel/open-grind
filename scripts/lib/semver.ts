@@ -19,3 +19,9 @@ export function parseVersion(version: string): Version | null {
 		prerelease,
 	};
 }
+
+export function requireVersion(version: string): Version {
+	const parsed = parseVersion(version);
+	if (!parsed) throw new Error(`${version} is not a valid semver version`);
+	return parsed;
+}
