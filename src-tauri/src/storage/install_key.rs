@@ -8,7 +8,7 @@ use std::sync::{Arc, OnceLock};
 
 use keyring_core::CredentialStore;
 
-use super::keyring::{exclusive, SERVICE};
+use super::keyring::{delete_each, exclusive};
 use super::private_file::replace_private;
 #[cfg(target_os = "ios")]
 use super::sealed::SealedStore;
@@ -61,13 +61,7 @@ fn load_or_erase(
 
 fn erase(keychain: &CredentialStore) -> keyring_core::Result<()> {
 	let _exclusive = exclusive();
-	for account in ACCOUNTS {
-		match keychain.build(SERVICE, account, None)?.delete_credential() {
-			Ok(()) | Err(keyring_core::Error::NoEntry) => {}
-			Err(e) => return Err(e),
-		}
-	}
-	Ok(())
+	delete_each(keychain, &ACCOUNTS)
 }
 
 #[cfg(test)]
@@ -79,6 +73,7 @@ mod tests {
 	use keyring_core::mock;
 
 	use super::*;
+	use crate::storage::keyring::SERVICE;
 	use crate::storage::private_file::ScratchDir;
 
 	fn store(keychain: &mock::Store, accounts: &[&str]) {

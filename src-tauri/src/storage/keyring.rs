@@ -1,5 +1,7 @@
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
+use keyring_core::CredentialStore;
+
 use crate::error::AppError;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
@@ -49,6 +51,18 @@ impl Entry {
 
 pub(super) fn exclusive() -> MutexGuard<'static, ()> {
 	KEYRING_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+pub(super) fn delete_each(
+	store: &CredentialStore,
+	names: &[&str],
+) -> keyring_core::Result<()> {
+	names.iter().try_for_each(|name| {
+		match store.build(SERVICE, name, None)?.delete_credential() {
+			Ok(()) | Err(keyring_core::Error::NoEntry) => Ok(()),
+			Err(e) => Err(e),
+		}
+	})
 }
 
 #[cfg(test)]
