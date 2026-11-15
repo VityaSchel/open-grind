@@ -6,13 +6,11 @@ export interface Messages {
 	"auth.passwordReset.title": undefined;
 	"auth.passwordReset.unimplemented": { issueLink: string };
 	"auth.signIn.captcha.errors.addonDisabled": undefined;
-	"auth.signIn.captcha.errors.addonUnavailable": undefined;
 	"auth.signIn.captcha.errors.addonUntrusted": undefined;
 	"auth.signIn.captcha.errors.credentialsOrRejected": undefined;
 	"auth.signIn.captcha.errors.credentialsOrUnsupportedPlatform": undefined;
 	"auth.signIn.captcha.errors.grindrMissing": undefined;
 	"auth.signIn.captcha.errors.rejected": undefined;
-	"auth.signIn.captcha.errors.unsupportedPlatform": undefined;
 	"auth.signIn.captcha.errors.verifyFailed": undefined;
 	"auth.signIn.captcha.helper.description": undefined;
 	"auth.signIn.captcha.helper.title": undefined;
@@ -205,7 +203,6 @@ export interface Messages {
 	"browse.rightNow.timeLeft.hoursMinutes": { hours: string; minutes: string };
 	"browse.rightNow.timeLeft.minutes": { minutes: string };
 	"browse.rightNow.timeLeft.seconds": { seconds: string };
-	"browse.rightNow.unimplemented": { issueLink: string };
 	"chat.composer.a11y.send": undefined;
 	"chat.composer.attachments.a11y.add": undefined;
 	"chat.composer.attachments.a11y.title": undefined;
@@ -1336,7 +1333,6 @@ export interface RichMessages {
 	"browse.rightNow.timeLeft.hoursMinutes": { hours: "placeholder"; minutes: "placeholder" };
 	"browse.rightNow.timeLeft.minutes": { minutes: "placeholder" };
 	"browse.rightNow.timeLeft.seconds": { seconds: "placeholder" };
-	"browse.rightNow.unimplemented": { issueLink: "placeholder" };
 	"chat.composer.voiceMessage.unimplemented": { issueLink: "placeholder" };
 	"chat.conversations.empty.description": { gridLink: "tag" };
 	"chat.conversations.row.draft": { draft: "placeholder"; draftPrefix: "tag" };
