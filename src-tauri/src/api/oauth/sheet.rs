@@ -35,23 +35,10 @@ struct Presented {
 	_delegate: Retained<SheetDelegate>,
 }
 
-struct SignInWindow {
-	app: AppHandle,
-	label: String,
-}
-
-impl SignInWindow {
-	fn close(&self) {
-		if let Some(window) = self.app.get_webview_window(&self.label) {
-			let _ = window.close();
-		}
-	}
-}
-
 define_class!(
 	#[unsafe(super(NSObject))]
 	#[thread_kind = MainThreadOnly]
-	#[ivars = SignInWindow]
+	#[ivars = WebviewWindow]
 	struct SheetDelegate;
 
 	unsafe impl NSObjectProtocol for SheetDelegate {}
@@ -62,13 +49,13 @@ define_class!(
 			&self,
 			_controller: &UIPresentationController,
 		) {
-			self.ivars().close();
+			let _ = self.ivars().close();
 		}
 	}
 );
 
 impl SheetDelegate {
-	fn new(mtm: MainThreadMarker, sign_in: SignInWindow) -> Retained<Self> {
+	fn new(mtm: MainThreadMarker, sign_in: WebviewWindow) -> Retained<Self> {
 		let this = Self::alloc(mtm).set_ivars(sign_in);
 		unsafe { msg_send![super(this), init] }
 	}
@@ -87,18 +74,16 @@ pub async fn present(
 	window: &WebviewWindow,
 	title: &'static str,
 ) -> Result<(), String> {
-	let app = window.app_handle().clone();
-	let main = app
+	let main = window
 		.get_webview_window(MAIN_WINDOW_LABEL)
 		.ok_or("the main window is gone")?;
 	let (shown_tx, shown) = oneshot::channel();
 	let page_window = window.clone();
-	let label = window.label().to_owned();
+	let sign_in = window.clone();
 	main.with_webview(move |main_webview| {
 		let host = main_webview.view_controller() as usize;
 		let _ = page_window.with_webview(move |page_webview| {
 			let page = page_webview.inner() as usize;
-			let sign_in = SignInWindow { app, label };
 			let report = move |outcome| {
 				let _ = shown_tx.send(outcome);
 			};
@@ -137,7 +122,7 @@ unsafe fn show(
 	host: *mut UIViewController,
 	page: *mut UIView,
 	title: &str,
-	sign_in: SignInWindow,
+	sign_in: WebviewWindow,
 	report: impl FnOnce(Result<(), &'static str>) + 'static,
 ) {
 	let (Some(host), Some(page)) =
@@ -176,7 +161,7 @@ unsafe fn show(
 	let delegate = SheetDelegate::new(mtm, sign_in);
 	let canceling = delegate.clone();
 	let handler = RcBlock::new(move |_action: NonNull<UIAction>| {
-		canceling.ivars().close();
+		let _ = canceling.ivars().close();
 	});
 	let action =
 		unsafe { UIAction::actionWithHandler(RcBlock::as_ptr(&handler), mtm) };
