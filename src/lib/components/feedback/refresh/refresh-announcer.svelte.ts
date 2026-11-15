@@ -18,7 +18,7 @@ export type TrackedRefresh = {
 type TrackedList = {
 	list: HTMLElement;
 	onScreen: boolean;
-	phase: "unseen" | "idle" | "refreshing";
+	phase: "joining" | "idle" | "refreshing";
 	ran: boolean;
 	spoken: boolean;
 };
@@ -35,7 +35,7 @@ export class RefreshAnnouncer {
 		const tracked: TrackedList = {
 			list,
 			onScreen: false,
-			phase: "unseen",
+			phase: "joining",
 			ran: false,
 			spoken: false,
 		};
