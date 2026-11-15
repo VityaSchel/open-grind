@@ -360,7 +360,7 @@ fn observe(
 	})
 }
 
-fn drive(mtm: MainThreadMarker, webview: Retained<UIView>) {
+fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {
 	let Some(host) = webview.superview() else {
 		tracing::warn!("[keyboard] the webview has no superview");
 		return;
@@ -421,7 +421,7 @@ fn drive(mtm: MainThreadMarker, webview: Retained<UIView>) {
 }
 
 pub fn install(window: &WebviewWindow) {
-	with_webview(window, "keyboard", drive);
+	with_webview(window, "keyboard", attach);
 }
 
 fn with_frame(
