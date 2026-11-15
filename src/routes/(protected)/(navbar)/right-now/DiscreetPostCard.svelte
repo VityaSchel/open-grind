@@ -12,9 +12,13 @@
 
 	let {
 		post,
+		own,
 		onreport,
-	}: { post: DiscreetPostData; onreport: (() => Promise<void>) | null } =
-		$props();
+	}: {
+		post: DiscreetPostData;
+		own: boolean;
+		onreport: (() => Promise<void>) | null;
+	} = $props();
 
 	const headlineId = $props.id();
 
@@ -70,7 +74,7 @@
 			{/if}
 		</div>
 		{#if photo}
-			<RightNowPostPhoto media={photo} />
+			<RightNowPostPhoto media={photo} {own} />
 		{/if}
 		<div class="flex min-h-8 items-center">
 			<RightNowPostMeta

@@ -27,6 +27,12 @@ export class AlbumMessageState {
 		this.#message = message;
 	}
 
+	get isOurAlbum() {
+		return (
+			this.#message().ownerProfileId === this.#conversation.ourProfileId
+		);
+	}
+
 	get canReply() {
 		return (
 			this.#peerProfileId !== null &&

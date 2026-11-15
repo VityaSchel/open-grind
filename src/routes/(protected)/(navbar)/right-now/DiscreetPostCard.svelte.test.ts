@@ -17,11 +17,12 @@ import { discreetPostData, photo } from "./feed-post-test-helpers";
 function renderCard(
 	overrides: Partial<DiscreetPostData> = {},
 	{
+		own = false,
 		onreport = vi.fn(() => Promise.resolve()),
-	}: { onreport?: (() => Promise<void>) | null } = {},
+	}: { own?: boolean; onreport?: (() => Promise<void>) | null } = {},
 ) {
 	return render(DiscreetPostCard, {
-		props: { post: discreetPostData(overrides), onreport },
+		props: { post: discreetPostData(overrides), own, onreport },
 	});
 }
 
@@ -64,7 +65,7 @@ describe("a discreet Right Now post card", () => {
 	});
 
 	it("offers no report on our own discreet post", () => {
-		renderCard({ text: "Hosting tonight" }, { onreport: null });
+		renderCard({ text: "Hosting tonight" }, { own: true, onreport: null });
 
 		expect(
 			screen.queryByRole("button", { name: "Report post" }),

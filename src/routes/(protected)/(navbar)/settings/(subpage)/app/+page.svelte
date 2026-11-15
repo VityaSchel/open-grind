@@ -5,6 +5,10 @@
 	import type { IconComponentProps } from "phosphor-svelte";
 
 	import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
+	import {
+		MATURE_CONTENT_SETTING_ID,
+		matureContentCovered,
+	} from "#lib/components/mature-content/mature-content.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import { hapticsAvailable } from "#lib/haptics.ts";
@@ -63,6 +67,14 @@
 	</Item.Root>
 {/snippet}
 <h2>Display</h2>
+{#if matureContentCovered()}
+	<PreferenceSwitchSetting
+		id={MATURE_CONTENT_SETTING_ID}
+		preference="showMatureContent"
+		title="Show mature content"
+		description="I'm 18+ and want to see nudity."
+	/>
+{/if}
 <UnitsSetting />
 <BackdropBlurSetting />
 {#if hapticsAvailable()}

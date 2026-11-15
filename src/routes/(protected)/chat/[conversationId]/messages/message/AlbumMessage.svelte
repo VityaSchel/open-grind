@@ -34,6 +34,7 @@
 		coverUrl={message.coverUrl}
 		hasPhoto={message.hasPhoto}
 		hasVideo={message.hasVideo}
+		ourAlbum={album.isOurAlbum}
 		class={className}
 		{contentClass}
 		attach={(element) => {

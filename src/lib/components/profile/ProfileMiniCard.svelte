@@ -4,6 +4,7 @@
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 	import type { Snippet } from "svelte";
 
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import DisplayName from "#lib/components/profile/DisplayName.svelte";
 	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
 	import ProfileRightNowIndicator from "#lib/components/profile/ProfileRightNowIndicator.svelte";
@@ -51,6 +52,7 @@
 	let loadedMediaHash = $state<string | null>(null);
 	const photo = $derived(
 		!PUBLIC_ENABLE_BLUR_EFFECTS &&
+			!matureContentCovered() &&
 			mediaHash !== null &&
 			loadedMediaHash === mediaHash
 			? profileMediaUrl({ mediaHash, size: "thumb" })

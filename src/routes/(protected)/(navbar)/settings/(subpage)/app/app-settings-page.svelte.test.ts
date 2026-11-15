@@ -167,3 +167,37 @@ describe("the About section of the app settings", () => {
 		);
 	}, 60_000);
 });
+
+describe("the mature content switch of the app settings", () => {
+	const MATURE_CONTENT = { name: /^Show mature content/ };
+
+	afterEach(() => vi.unstubAllEnvs());
+
+	it("shows on the Google Play build and goes away for good once flipped", async () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		const preferences = await import("#lib/app-data/preferences.svelte.ts");
+		await preferences.hydratePreferences();
+		const screen = await opened({
+			state: "unsupported",
+			detail: { reason: "foreignSigner" },
+		});
+		const matureContent = screen.getByRole("switch", MATURE_CONTENT);
+		expect(matureContent.closest("#show-mature-content")).not.toBeNull();
+
+		await testing.fireEvent.click(matureContent);
+
+		await testing.waitFor(() =>
+			expect(screen.queryByRole("switch", MATURE_CONTENT)).toBeNull(),
+		);
+		expect(preferences.preferencesSnapshot().showMatureContent).toBe(true);
+	}, 60_000);
+
+	it("never shows on any other build", async () => {
+		const screen = await opened({
+			state: "unsupported",
+			detail: { reason: "foreignSigner" },
+		});
+
+		expect(screen.queryByRole("switch", MATURE_CONTENT)).toBeNull();
+	}, 60_000);
+});

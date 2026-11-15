@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { mediaHashPublicSchema } from "#lib/model/media.ts";
 	import {
@@ -19,6 +21,7 @@
 	}: { message: ProfilePhotoReplyMessage["body"]; isOut: boolean } = $props();
 
 	const conversationState = getConversationState();
+	const covered = $derived(isOut && matureContentCovered());
 	const src = $derived.by(() => {
 		const hash = mediaHashPublicSchema.safeParse(message.imageHash);
 		return hash.success
@@ -76,26 +79,41 @@
 	});
 </script>
 
+{#snippet photo()}
+	<MediaImage
+		{src}
+		class="size-full"
+		imgClass="bg-card-foreground/10"
+		onload={(loaded) => (image = loaded)}
+	/>
+{/snippet}
+
 <MessageQuote>
-	<button
-		aria-label="Open replied profile photo"
-		class={[
-			"block aspect-3/4 w-32 overflow-hidden rounded-lg",
-			{ "opacity-50": loading },
-		]}
-		onclick={() => {
-			loading = true;
-			open = true;
-		}}
-		disabled={src === null || open}
-	>
-		<MediaImage
-			{src}
-			class="size-full"
-			imgClass="bg-card-foreground/10"
-			onload={(loaded) => (image = loaded)}
-		/>
-	</button>
+	{#if covered}
+		<div
+			role="group"
+			aria-label="Replied profile photo"
+			class="relative block aspect-3/4 w-32 overflow-hidden rounded-lg"
+		>
+			{@render photo()}
+			<MatureContentCover />
+		</div>
+	{:else}
+		<button
+			aria-label="Open replied profile photo"
+			class={[
+				"block aspect-3/4 w-32 overflow-hidden rounded-lg",
+				{ "opacity-50": loading },
+			]}
+			onclick={() => {
+				loading = true;
+				open = true;
+			}}
+			disabled={src === null || open}
+		>
+			{@render photo()}
+		</button>
+	{/if}
 </MessageQuote>
 <MessageBubble tone="sent">
 	<span class="wrap-anywhere whitespace-pre-wrap"

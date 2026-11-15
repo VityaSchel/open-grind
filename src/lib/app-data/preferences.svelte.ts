@@ -34,6 +34,7 @@ const preferencesSchema = z.object({
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
 	rightNowFeedFilters: rightNowFeedFiltersSchema.optional(),
+	showMatureContent: z.boolean().default(false),
 	stayOnline: z.boolean().default(true),
 	units: unitSystemSchema.default("metric"),
 });

@@ -275,7 +275,7 @@
 		{#if message.type === "Text"}
 			<TextMessage message={message.body} />
 		{:else if message.type === "Image"}
-			<ImageMessage message={message.body} />
+			<ImageMessage message={message.body} {isOut} />
 		{:else if message.type === "Location"}
 			<LocationMessage message={message.body} />
 		{:else if message.type === "ExpiringImage"}
@@ -297,6 +297,7 @@
 				conversationId={message.conversationId}
 				messageId={message.messageId}
 				delivered={status !== "pending" && status !== "error"}
+				{isOut}
 			/>
 		{:else if message.type === "Gaymoji"}
 			<GaymojiMessage message={message.body} />

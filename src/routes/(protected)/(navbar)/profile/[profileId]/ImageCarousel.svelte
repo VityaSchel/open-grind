@@ -4,6 +4,7 @@
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
 	import { profileMediaUrl } from "#lib/util/media.ts";
 	import {
@@ -21,6 +22,7 @@
 
 	let {
 		medias,
+		own = false,
 		onreply,
 	}: {
 		medias: {
@@ -28,11 +30,14 @@
 			takenOnGrindr: boolean | null;
 			createdAt: number | null;
 		}[];
+		own?: boolean;
 		onreply?: (reply: { imageHash: string; text: string }) => void;
 	} = $props();
 
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
+
+	const covered = $derived(!own && matureContentCovered());
 
 	let gallery: HTMLDivElement | null = $state(null);
 	let viewer = $state.raw<PhotoSwipeLightbox>();
@@ -202,6 +207,7 @@
 					{mediaHash}
 					eager={index <= reach}
 					{createdAt}
+					{covered}
 					label="Profile photo {index + 1} of {medias.length}"
 				/>
 			{/each}

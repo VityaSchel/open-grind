@@ -92,6 +92,46 @@ describe("album preview", () => {
 	});
 });
 
+describe("album preview on Google Play", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	function renderOnPlay({ ourAlbum }: { ourAlbum: boolean }) {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		return render(AlbumPreview, {
+			props: {
+				albumId: 900,
+				coverUrl: "https://example.invalid/cover",
+				hasPhoto: true,
+				hasVideo: false,
+				ourAlbum,
+			},
+		});
+	}
+
+	it("covers someone else's album and offers only the mature content setting", () => {
+		const { getByRole, queryByRole } = renderOnPlay({ ourAlbum: false });
+
+		expect(queryByRole("button", { name: "Open album" })).toBeNull();
+		const album = getByRole("group", { name: "Open album" });
+		expect(
+			album.contains(getByRole("link", { name: "Show mature content" })),
+		).toBe(true);
+		expect(album.querySelector("img")?.getAttribute("src")).toBe(
+			"https://example.invalid/cover",
+		);
+		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
+	});
+
+	it("opens our own album", async () => {
+		lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
+		const { getByRole } = renderOnPlay({ ourAlbum: true });
+
+		await fireEvent.click(getByRole("button", { name: "Open album" }));
+
+		expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900);
+	});
+});
+
 describe("album preview cover renewal", () => {
 	const OLD =
 		"https://d3.cloudfront.net/albums/c.jpg?Expires=1700000900&Signature=OLD&Key-Pair-Id=K";

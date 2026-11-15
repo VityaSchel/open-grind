@@ -152,6 +152,7 @@
 			{@const mainPhoto = photos[0] as { mediaHash: string } | undefined}
 			<UserAvatar
 				mediaHash={mainPhoto?.mediaHash ?? null}
+				own
 				class="size-full *:rounded-full"
 				size="lg"
 			/>

@@ -6,6 +6,8 @@
 	import type { ClassValue } from "svelte/elements";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { stableSignedUrl } from "#lib/util/signed-url.ts";
@@ -21,6 +23,7 @@
 		coverUrl,
 		hasPhoto,
 		hasVideo,
+		ourAlbum = false,
 		label = "Open album",
 		class: className,
 		contentClass,
@@ -35,6 +38,7 @@
 		coverUrl: string | null;
 		hasPhoto: boolean;
 		hasVideo: boolean;
+		ourAlbum?: boolean;
 		label?: string;
 		class?: ClassValue;
 		contentClass?: ClassValue;
@@ -51,6 +55,7 @@
 		| { status: "open"; slides: AlbumSlide[] };
 
 	let preview = $state<PreviewState>({ status: "idle" });
+	const covered = $derived(!ourAlbum && matureContentCovered());
 
 	let loadedCoverUrl = $state<string | null>(null);
 	const shownCoverUrl = $derived(
@@ -106,22 +111,7 @@
 	});
 </script>
 
-<button
-	data-slot="album-preview"
-	class={[
-		"relative",
-		className,
-		contentClass,
-		{
-			"cursor-pointer": preview.status === "idle",
-			"opacity-50": preview.status === "loading",
-		},
-	]}
-	aria-label={label}
-	onclick={open}
-	disabled={preview.status !== "idle"}
-	{@attach attach}
->
+{#snippet content()}
 	<MediaImage
 		src={proxyMediaUrl(shownCoverUrl)}
 		onload={() => (loadedCoverUrl = shownCoverUrl)}
@@ -155,8 +145,41 @@
 			{/if}
 		</div>
 	</div>
-	{@render children?.()}
-</button>
+{/snippet}
+
+{#if covered}
+	<div
+		data-slot="album-preview"
+		role="group"
+		aria-label={label}
+		class={["relative", className, contentClass]}
+		{@attach attach}
+	>
+		{@render content()}
+		<MatureContentCover class="rounded-[inherit]" />
+		{@render children?.()}
+	</div>
+{:else}
+	<button
+		data-slot="album-preview"
+		class={[
+			"relative",
+			className,
+			contentClass,
+			{
+				"cursor-pointer": preview.status === "idle",
+				"opacity-50": preview.status === "loading",
+			},
+		]}
+		aria-label={label}
+		onclick={open}
+		disabled={preview.status !== "idle"}
+		{@attach attach}
+	>
+		{@render content()}
+		{@render children?.()}
+	</button>
+{/if}
 
 <style>
 	:global(.pswp__img) {

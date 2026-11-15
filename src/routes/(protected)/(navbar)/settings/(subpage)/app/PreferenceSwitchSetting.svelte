@@ -9,17 +9,23 @@
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 
 	let {
+		id,
 		preference,
 		title,
 		description,
-	}: { preference: BooleanPreference; title: string; description: string } =
-		$props();
+	}: {
+		id?: string;
+		preference: BooleanPreference;
+		title: string;
+		description: string;
+	} = $props();
 
 	let pending = $state<boolean | null>(null);
 	const value = $derived(pending ?? preferencesSnapshot()[preference]);
 </script>
 
 <SwitchField
+	{id}
 	{title}
 	{description}
 	disabled={!preferencesLoaded()}

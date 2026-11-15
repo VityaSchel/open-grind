@@ -36,6 +36,7 @@
 			coverUrl={message.previewUrl}
 			hasPhoto={false}
 			hasVideo={false}
+			ourAlbum={album.isOurAlbum}
 			label={isReply
 				? "Open replied album content"
 				: "Open reacted album content"}

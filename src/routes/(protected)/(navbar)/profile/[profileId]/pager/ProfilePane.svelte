@@ -120,6 +120,7 @@
 				{#if profile || medias.length > 0}
 					<ImageCarousel
 						{medias}
+						own={ourProfile}
 						onreply={profile && !ourProfile && active
 							? (reply) => {
 									if (active && !leaving)

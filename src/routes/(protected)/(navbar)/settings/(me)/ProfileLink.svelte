@@ -29,6 +29,7 @@
 				{#await myProfilePhotos then photos}
 					<UserAvatar
 						mediaHash={photos[0]?.mediaHash ?? null}
+						own
 						class="size-full *:rounded-full"
 						size="lg"
 					/>

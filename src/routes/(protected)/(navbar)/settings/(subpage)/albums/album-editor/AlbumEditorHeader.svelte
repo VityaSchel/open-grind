@@ -61,6 +61,7 @@
 				coverUrl={cover.thumbUrl}
 				hasPhoto={readyMedia.hasPhoto}
 				hasVideo={readyMedia.hasVideo}
+				ourAlbum
 				label="Preview album"
 				class="aspect-3/4 w-full"
 				contentClass="rounded-xl"

@@ -3,6 +3,8 @@
 	import { untrack } from "svelte";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
 	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
 	import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
@@ -38,9 +40,11 @@
 		post.media.find((media) => media.state === "APPROVED") ?? null,
 	);
 	const blurred = $derived(photo !== null && !own && photo.shouldBlur);
-	const viewerSrc = $derived(
+	const covered = $derived(!own && matureContentCovered());
+	const fullSrc = $derived(
 		photo === null || blurred ? null : proxyMediaUrl(photo.fullImageUrl),
 	);
+	const viewerSrc = $derived(covered ? null : fullSrc);
 	const expired = $derived(
 		post.expiration !== null && post.expiration <= getNow(),
 	);
@@ -51,7 +55,7 @@
 	let photoFrame: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
-		if (viewerSrc !== null) void preloadFullImage(viewerSrc);
+		if (fullSrc !== null) void preloadFullImage(fullSrc);
 	});
 
 	$effect(() => {
@@ -155,7 +159,9 @@
 							loading="lazy"
 							skeleton
 						/>
-						{#if blurred}
+						{#if covered}
+							<MatureContentCover compact class="rounded-lg" />
+						{:else if blurred}
 							<p
 								class="absolute inset-0 grid place-items-center text-muted-foreground"
 							>

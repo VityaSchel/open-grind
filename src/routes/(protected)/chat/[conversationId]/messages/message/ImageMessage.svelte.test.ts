@@ -115,3 +115,44 @@ describe("photo message", () => {
 		expect(init).not.toHaveBeenCalled();
 	});
 });
+
+describe("photo message on Google Play", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	function renderOnPlay({ isOut }: { isOut: boolean }) {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		return render(Message, {
+			props: {
+				message: photoMessage(OLD),
+				isOut,
+				isRead: null,
+				indexInStack: 0,
+				stackLength: 1,
+			},
+		});
+	}
+
+	it("covers a received photo and links to the mature content setting instead of the lightbox", () => {
+		const { container, getByRole } = renderOnPlay({ isOut: false });
+
+		expect(container.querySelector('a[aria-label="Photo"]')).toBeNull();
+		const photo = getByRole("group", { name: "Photo" });
+		expect(
+			photo.contains(getByRole("link", { name: "Show mature content" })),
+		).toBe(true);
+		expect(photo.querySelector("img")?.getAttribute("src")).toBe(OLD);
+	});
+
+	it("shows a photo we sent", () => {
+		const { container } = renderOnPlay({ isOut: true });
+
+		expect(
+			container
+				.querySelector('a[aria-label="Photo"]')
+				?.getAttribute("href"),
+		).toBe(OLD);
+		expect(
+			container.querySelector('[data-slot="mature-content-cover"]'),
+		).toBeNull();
+	});
+});

@@ -40,6 +40,7 @@ describe.each<BooleanPreference>([
 	"stayOnline",
 	"revealMessageRead",
 	"revealProfileViews",
+	"showMatureContent",
 ])("PreferenceSwitchSetting for %s", (preference) => {
 	async function storedPreference(value: boolean) {
 		await setPreferences({ [preference]: value });

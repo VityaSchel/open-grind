@@ -274,3 +274,31 @@ describe("video message", () => {
 		}
 	});
 });
+
+describe("video message on Google Play", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	it("turns a received video into a link to the mature content setting without fetching it", () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		const { getByRole, queryByRole } = renderVideo({ body: {} });
+
+		expect(queryByRole("button", PLAY)).toBeNull();
+		expect(
+			getByRole("link", { name: /^Expiring video 18\+/ }).getAttribute(
+				"href",
+			),
+		).toBe("/settings/app#show-mature-content");
+		expect(messagesApi.getSingleMessage).not.toHaveBeenCalled();
+	});
+
+	it("keeps a video we sent playable", () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		const { getByRole, queryByText } = renderVideo({
+			body: {},
+			isOut: true,
+		});
+
+		expect(getByRole("button", PLAY)).toBeTruthy();
+		expect(queryByText("18+")).toBeNull();
+	});
+});
