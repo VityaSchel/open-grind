@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 
 import { fromBase64 } from "#lib/util/base64.ts";
 
@@ -51,54 +51,52 @@ beforeEach(() => {
 	invokeMock.mockReset();
 });
 
-describe("in the native app", () => {
-	it("reads back every byte it wrote", async () => {
-		nativeBackend();
+it("reads back every byte it wrote", async () => {
+	nativeBackend();
 
-		await writeAppDataFileAtomic({ path: "preferences.data", content });
+	await writeAppDataFileAtomic({ path: "preferences.data", content });
 
-		expect(await existsAppDataFile("preferences.data")).toBe(true);
-		expect(await readAppDataFile("preferences.data")).toEqual(content);
+	expect(await existsAppDataFile("preferences.data")).toBe(true);
+	expect(await readAppDataFile("preferences.data")).toEqual(content);
+});
+
+it("reads the plain byte array a bridge may deliver instead of a buffer", async () => {
+	nativeBackend({ deliver: (bytes) => Array.from(bytes) });
+
+	await writeAppDataFileAtomic({ path: "preferences.data", content });
+
+	expect(await readAppDataFile("preferences.data")).toEqual(content);
+});
+
+it("reports a file that was never written as missing", async () => {
+	nativeBackend();
+
+	expect(await existsAppDataFile("preferences.data")).toBe(false);
+	await expect(readAppDataFile("preferences.data")).rejects.toThrow(
+		"No app data file at preferences.data",
+	);
+});
+
+it("removes a file and tolerates removing it again", async () => {
+	nativeBackend();
+	await writeAppDataFileAtomic({ path: "preferences.data", content });
+
+	await removeAppDataFile("preferences.data");
+	await removeAppDataFile("preferences.data");
+
+	expect(await existsAppDataFile("preferences.data")).toBe(false);
+});
+
+it("names the file by its identifier and sends the content as base64", async () => {
+	nativeBackend();
+
+	await writeAppDataFileAtomic({
+		path: "preferences.data",
+		content: new TextEncoder().encode("hello"),
 	});
 
-	it("reads the plain byte array a bridge may deliver instead of a buffer", async () => {
-		nativeBackend({ deliver: (bytes) => Array.from(bytes) });
-
-		await writeAppDataFileAtomic({ path: "preferences.data", content });
-
-		expect(await readAppDataFile("preferences.data")).toEqual(content);
-	});
-
-	it("reports a file that was never written as missing", async () => {
-		nativeBackend();
-
-		expect(await existsAppDataFile("preferences.data")).toBe(false);
-		await expect(readAppDataFile("preferences.data")).rejects.toThrow(
-			"No app data file at preferences.data",
-		);
-	});
-
-	it("removes a file and tolerates removing it again", async () => {
-		nativeBackend();
-		await writeAppDataFileAtomic({ path: "preferences.data", content });
-
-		await removeAppDataFile("preferences.data");
-		await removeAppDataFile("preferences.data");
-
-		expect(await existsAppDataFile("preferences.data")).toBe(false);
-	});
-
-	it("names the file by its identifier and sends the content as base64", async () => {
-		nativeBackend();
-
-		await writeAppDataFileAtomic({
-			path: "preferences.data",
-			content: new TextEncoder().encode("hello"),
-		});
-
-		expect(invokeMock).toHaveBeenCalledWith("write_app_data", {
-			file: "preferences",
-			content: "aGVsbG8=",
-		});
+	expect(invokeMock).toHaveBeenCalledWith("write_app_data", {
+		file: "preferences",
+		content: "aGVsbG8=",
 	});
 });
