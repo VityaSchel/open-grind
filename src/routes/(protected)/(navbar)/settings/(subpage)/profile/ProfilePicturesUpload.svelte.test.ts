@@ -64,9 +64,8 @@ async function uploadFromSheet(
 
 beforeEach(() => {
 	runningOn("windows");
+	previousUploads();
 });
-
-beforeEach(() => previousUploads());
 
 afterEach(() => {
 	cleanup();
