@@ -192,12 +192,12 @@ function scanInPage({
 		});
 
 	const root = getComputedStyle(document.documentElement);
-	const safeTop = parseFloat(root.getPropertyValue("--safe-area-top")) || 0;
-	const safeBottom =
-		parseFloat(root.getPropertyValue("--safe-area-bottom")) || 0;
-	const safeLeft = parseFloat(root.getPropertyValue("--safe-area-left")) || 0;
-	const safeRight =
-		parseFloat(root.getPropertyValue("--safe-area-right")) || 0;
+	const inset = (side: string) =>
+		parseFloat(root.getPropertyValue(`--safe-area-${side}`)) || 0;
+	const safeTop = inset("top");
+	const safeBottom = inset("bottom");
+	const safeLeft = inset("left");
+	const safeRight = inset("right");
 
 	const showsContent = (element: Element) =>
 		element.matches(sideBandContent) ||
