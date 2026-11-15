@@ -227,10 +227,9 @@ pub(crate) mod test_support {
 
 	pub(crate) fn with_file_store(test: impl FnOnce(&Path)) {
 		let _guard = lock();
-		let base = private_file::scratch_dir();
-		init_file_store(base.clone());
+		let base = private_file::ScratchDir::new();
+		init_file_store(base.to_path_buf());
 		test(&base);
-		std::fs::remove_dir_all(&base).ok();
 	}
 
 	pub(crate) fn install_mock(

@@ -165,7 +165,7 @@ mod tests {
 	use std::os::unix::fs::PermissionsExt;
 
 	use super::*;
-	use crate::storage::private_file::scratch_dir;
+	use crate::storage::private_file::ScratchDir;
 
 	const SERVICE: &str = "open-grind";
 	const USER: &str = "session";
@@ -197,70 +197,60 @@ mod tests {
 
 	#[test]
 	fn set_secret_writes_a_private_file_and_leaves_no_temp_behind() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		credential(&base).set_secret(b"token").unwrap();
 
 		let path = credential_path(&base, SERVICE, USER);
 		assert_eq!(fs::read(&path).unwrap().as_slice(), b"token");
 		assert_eq!(mode_of(&path), 0o600);
 		assert_eq!(leftover_temps(&base), 0);
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn set_secret_replaces_an_existing_secret() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let cred = credential(&base);
 		cred.set_secret(b"first").unwrap();
 		cred.set_secret(b"second").unwrap();
 
 		assert_eq!(cred.get_secret().unwrap().as_slice(), b"second");
 		assert_eq!(mode_of(&credential_path(&base, SERVICE, USER)), 0o600);
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn a_failed_rename_reports_the_error_and_removes_the_temp() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let path = credential_path(&base, SERVICE, USER);
 		fs::create_dir_all(&path).unwrap();
 
 		assert!(credential(&base).set_secret(b"token").is_err());
 		assert_eq!(leftover_temps(&base), 0);
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn a_secret_that_was_never_written_reads_as_no_entry() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 
 		assert!(matches!(
 			credential(&base).get_secret(),
 			Err(Error::NoEntry)
 		));
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn arbitrary_bytes_survive_a_write_and_read() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let secret: Vec<u8> = (0u8..=255).collect();
 		let cred = credential(&base);
 
 		cred.set_secret(&secret).unwrap();
 
 		assert_eq!(cred.get_secret().unwrap(), secret);
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn deleting_removes_the_file_and_a_second_delete_reports_no_entry() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let cred = credential(&base);
 		cred.set_secret(b"token").unwrap();
 
@@ -269,8 +259,6 @@ mod tests {
 		assert!(!credential_path(&base, SERVICE, USER).exists());
 		assert!(matches!(cred.get_secret(), Err(Error::NoEntry)));
 		assert!(matches!(cred.delete_credential(), Err(Error::NoEntry)));
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
@@ -293,11 +281,11 @@ mod tests {
 
 	#[test]
 	fn a_traversing_user_name_writes_inside_the_credentials_directory() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let cred = FileCredential {
 			service: SERVICE.to_owned(),
 			user: "../../escaped".to_owned(),
-			base: base.clone(),
+			base: base.to_path_buf(),
 		};
 
 		cred.set_secret(b"token").unwrap();
@@ -308,8 +296,6 @@ mod tests {
 			.collect();
 		assert_eq!(written, [".._.._escaped"]);
 		assert_eq!(cred.get_secret().unwrap().as_slice(), b"token");
-
-		fs::remove_dir_all(&base).ok();
 	}
 
 	fn store(base: &std::path::Path) -> FileStore {
@@ -320,7 +306,7 @@ mod tests {
 
 	#[test]
 	fn discarding_removes_every_secret_and_unfinished_write() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		credential(&base).set_secret(b"token").unwrap();
 		fs::write(base.join(CREDENTIALS).join("session.1.0.tmp"), b"half")
 			.unwrap();
@@ -333,20 +319,18 @@ mod tests {
 			credential(&base).get_secret(),
 			Err(Error::NoEntry)
 		));
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn discarding_a_store_that_never_wrote_anything_succeeds() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 
 		assert!(store(&base).discard().is_ok());
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn a_blocked_discard_reports_the_error_and_keeps_every_secret() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		credential(&base).set_secret(b"token").unwrap();
 		fs::write(base.join(DISCARDED), b"").unwrap();
 
@@ -355,25 +339,23 @@ mod tests {
 			credential(&base).get_secret().unwrap().as_slice(),
 			b"token"
 		);
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn a_half_removed_discard_is_cleared_at_the_next_start() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		fs::create_dir_all(base.join(DISCARDED)).unwrap();
 		fs::write(base.join(DISCARDED).join(USER), b"token").unwrap();
 
 		let _guard = crate::storage::test_support::lock();
-		init(base.clone());
+		init(base.to_path_buf());
 
 		assert!(!base.join(DISCARDED).exists());
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn discarding_replaces_a_leftover_discard() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		credential(&base).set_secret(b"token").unwrap();
 		fs::create_dir_all(base.join(DISCARDED)).unwrap();
 		fs::write(base.join(DISCARDED).join(USER), b"older token").unwrap();
@@ -382,19 +364,18 @@ mod tests {
 
 		assert!(!base.join(CREDENTIALS).exists());
 		assert!(!base.join(DISCARDED).exists());
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn a_store_that_cannot_be_moved_aside_reports_the_error_and_keeps_every_secret(
 	) {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		credential(&base).set_secret(b"token").unwrap();
-		fs::set_permissions(&base, fs::Permissions::from_mode(0o500)).unwrap();
+		fs::set_permissions(&*base, fs::Permissions::from_mode(0o500)).unwrap();
 		let denied = fs::create_dir(base.join(DISCARDED)).is_err();
 
 		let discarded = store(&base).discard();
-		fs::set_permissions(&base, fs::Permissions::from_mode(0o700)).unwrap();
+		fs::set_permissions(&*base, fs::Permissions::from_mode(0o700)).unwrap();
 
 		if denied {
 			assert!(discarded.is_err());
@@ -403,6 +384,5 @@ mod tests {
 				b"token"
 			);
 		}
-		fs::remove_dir_all(&base).ok();
 	}
 }

@@ -35,15 +35,36 @@ pub(super) fn replace_private(path: &Path, secret: &[u8]) -> io::Result<()> {
 }
 
 #[cfg(test)]
-pub(super) fn scratch_dir() -> PathBuf {
-	static NEXT: AtomicU64 = AtomicU64::new(0);
-	let dir = std::env::temp_dir().join(format!(
-		"open-grind-file-store-{}-{}",
-		std::process::id(),
-		NEXT.fetch_add(1, Ordering::Relaxed)
-	));
-	fs::create_dir_all(&dir).unwrap();
-	dir
+pub(super) struct ScratchDir(PathBuf);
+
+#[cfg(test)]
+impl ScratchDir {
+	pub(super) fn new() -> Self {
+		static NEXT: AtomicU64 = AtomicU64::new(0);
+		let dir = std::env::temp_dir().join(format!(
+			"open-grind-file-store-{}-{}",
+			std::process::id(),
+			NEXT.fetch_add(1, Ordering::Relaxed)
+		));
+		fs::create_dir_all(&dir).unwrap();
+		Self(dir)
+	}
+}
+
+#[cfg(test)]
+impl std::ops::Deref for ScratchDir {
+	type Target = Path;
+
+	fn deref(&self) -> &Path {
+		&self.0
+	}
+}
+
+#[cfg(test)]
+impl Drop for ScratchDir {
+	fn drop(&mut self) {
+		fs::remove_dir_all(&self.0).ok();
+	}
 }
 
 #[cfg(test)]
@@ -58,13 +79,11 @@ mod tests {
 
 	#[test]
 	fn write_private_never_writes_into_an_existing_file() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let occupied = base.join("occupied");
 		fs::write(&occupied, b"original").unwrap();
 
 		assert!(write_private(&occupied, b"replacement").is_err());
 		assert_eq!(fs::read(&occupied).unwrap().as_slice(), b"original");
-
-		fs::remove_dir_all(&base).ok();
 	}
 }

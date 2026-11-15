@@ -79,7 +79,7 @@ mod tests {
 	use keyring_core::mock;
 
 	use super::*;
-	use crate::storage::private_file::scratch_dir;
+	use crate::storage::private_file::ScratchDir;
 
 	fn store(keychain: &mock::Store, accounts: &[&str]) {
 		for account in accounts {
@@ -112,18 +112,17 @@ mod tests {
 
 	#[test]
 	fn a_fresh_install_erases_every_known_secret() {
-		let dir = scratch_dir();
+		let dir = ScratchDir::new();
 		let keychain = keychain_holding(&ACCOUNTS);
 
 		load_or_erase(&dir, &*keychain).unwrap();
 
 		assert!(kept(&keychain).is_empty());
-		fs::remove_dir_all(&dir).ok();
 	}
 
 	#[test]
 	fn the_key_is_a_private_32_byte_file_and_no_temp_is_left_behind() {
-		let base = scratch_dir();
+		let base = ScratchDir::new();
 		let dir = base.join("Library/Application Support/org.opengrind.app");
 
 		let key = load_or_erase(&dir, &*mock::Store::new().unwrap()).unwrap();
@@ -136,12 +135,11 @@ mod tests {
 			0o600
 		);
 		assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
-		fs::remove_dir_all(&base).ok();
 	}
 
 	#[test]
 	fn a_relaunch_keeps_the_key_and_every_secret() {
-		let dir = scratch_dir();
+		let dir = ScratchDir::new();
 		let keychain = mock::Store::new().unwrap();
 		let first = load_or_erase(&dir, &*keychain).unwrap();
 		store(&keychain, &ACCOUNTS);
@@ -150,12 +148,11 @@ mod tests {
 
 		assert_eq!(first.as_bytes(), second.as_bytes());
 		assert_eq!(kept(&keychain), ACCOUNTS);
-		fs::remove_dir_all(&dir).ok();
 	}
 
 	#[test]
 	fn a_reinstall_erases_the_previous_install_and_draws_a_new_key() {
-		let dir = scratch_dir();
+		let dir = ScratchDir::new();
 		let previous =
 			load_or_erase(&dir, &*mock::Store::new().unwrap()).unwrap();
 		let keychain = keychain_holding(&ACCOUNTS);
@@ -165,12 +162,11 @@ mod tests {
 
 		assert!(kept(&keychain).is_empty());
 		assert_ne!(previous.as_bytes(), reinstalled.as_bytes());
-		fs::remove_dir_all(&dir).ok();
 	}
 
 	#[test]
 	fn a_malformed_key_is_replaced_and_the_secrets_erased() {
-		let dir = scratch_dir();
+		let dir = ScratchDir::new();
 		fs::write(dir.join(KEY_FILE), b"too short").unwrap();
 		let keychain = keychain_holding(&ACCOUNTS);
 
@@ -178,12 +174,11 @@ mod tests {
 
 		assert!(kept(&keychain).is_empty());
 		assert_eq!(fs::read(dir.join(KEY_FILE)).unwrap(), key.as_bytes());
-		fs::remove_dir_all(&dir).ok();
 	}
 
 	#[test]
 	fn a_failed_erase_writes_no_key_so_the_next_launch_erases_again() {
-		let dir = scratch_dir();
+		let dir = ScratchDir::new();
 		let keychain = keychain_holding(&ACCOUNTS);
 		let locked = keychain.build(SERVICE, ACCOUNTS[1], None).unwrap();
 		locked
@@ -200,18 +195,16 @@ mod tests {
 		load_or_erase(&dir, &*keychain).unwrap();
 		assert!(kept(&keychain).is_empty());
 		assert!(dir.join(KEY_FILE).exists());
-		fs::remove_dir_all(&dir).ok();
 	}
 
 	#[test]
 	fn an_unreadable_key_erases_nothing() {
-		let dir = scratch_dir();
+		let dir = ScratchDir::new();
 		fs::create_dir(dir.join(KEY_FILE)).unwrap();
 		let keychain = keychain_holding(&ACCOUNTS);
 
 		assert!(load_or_erase(&dir, &*keychain).is_err());
 
 		assert_eq!(kept(&keychain), ACCOUNTS);
-		fs::remove_dir_all(&dir).ok();
 	}
 }
