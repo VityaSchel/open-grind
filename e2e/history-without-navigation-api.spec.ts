@@ -30,6 +30,8 @@ import {
 	openSettings,
 	pane,
 	SETTINGS,
+	STACK_GHOST,
+	STACK_PANE,
 	stackSettled,
 } from "./support/page-stack";
 import { PHONE } from "./support/stack-layers";
@@ -63,27 +65,24 @@ type StackFrame = { live: number; ghost: number | null };
 
 function recordStackFrames(page: Page): Promise<StackFrame[]> {
 	return page.evaluate(
-		() =>
+		({ live, ghost }) =>
 			new Promise<StackFrame[]>((resolve) => {
 				const frames: StackFrame[] = [];
-				const x = (slot: string) =>
-					document
-						.querySelector(`[data-slot="page-stack-${slot}"]`)
-						?.getBoundingClientRect().x ?? null;
+				const x = (selector: string) =>
+					document.querySelector(selector)?.getBoundingClientRect()
+						.x ?? null;
 				const started = performance.now();
 				const frame = (now: number) => {
 					const last = now - started >= 1500;
 					setTimeout(() => {
-						frames.push({
-							live: x("pane") ?? 0,
-							ghost: x("ghost"),
-						});
+						frames.push({ live: x(live) ?? 0, ghost: x(ghost) });
 						if (last) resolve(frames);
 					});
 					if (!last) requestAnimationFrame(frame);
 				};
 				requestAnimationFrame(frame);
 			}),
+		{ live: STACK_PANE, ghost: STACK_GHOST },
 	);
 }
 
