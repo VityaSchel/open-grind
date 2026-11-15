@@ -234,7 +234,7 @@
 	const rowPress = menuPressHandlers({
 		openMenu: ({ byTouch }) => {
 			const opened = openContextMenu();
-			if (opened && byTouch) swipe?.cancel();
+			if (opened && byTouch) swipe?.resetTouch();
 			return opened;
 		},
 	});
