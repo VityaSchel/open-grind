@@ -7,7 +7,6 @@
 	const TICKS = 8;
 	const TURN_DEGREES = 360;
 	const DIMMEST_SPINNING_OPACITY = 0.25;
-	const ticks = Array.from({ length: TICKS }, (_, index) => index);
 
 	const filled = $derived(Math.min(1, Math.max(0, progress)) * TICKS);
 
@@ -28,7 +27,7 @@
 >
 	<svg viewBox="0 0 24 24" class="size-6 text-muted-foreground">
 		<g class="turn">
-			{#each ticks as index (index)}
+			{#each { length: TICKS }, index (index)}
 				<line
 					x1="12"
 					y1="3"
