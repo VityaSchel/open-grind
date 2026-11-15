@@ -41,6 +41,8 @@
 	--sidebar-ring: oklch(0.556 0 0);
 	--message-bubble-in: oklch(0.7882 0.1455 228.36);
 	--message-bubble-out: oklch(0.8618 0.1973 89.76);
+	--mature-cover: oklch(0.36 0.12 295);
+	--mature-cover-foreground: oklch(0.95 0.03 295);
 	--stack-scrim: 0.8;
 	--stack-edge: -1px 0 0 oklch(1 0 0 / 10%);
 	--list-rail: 117px;
@@ -86,6 +88,8 @@
 	--color-background: var(--background);
 	--color-message-bubble-in: var(--message-bubble-in);
 	--color-message-bubble-out: var(--message-bubble-out);
+	--color-mature-cover: var(--mature-cover);
+	--color-mature-cover-foreground: var(--mature-cover-foreground);
 	--radius-sm: calc(var(--radius) * 0.6);
 	--radius-md: calc(var(--radius) * 0.8);
 	--radius-lg: var(--radius);

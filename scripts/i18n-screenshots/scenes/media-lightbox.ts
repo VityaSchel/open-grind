@@ -10,7 +10,7 @@ import {
 	VIDEO_ALBUM_ID,
 } from "./album-fixtures";
 import { openConversation } from "./chat-drive";
-import { ALERT, changeScene } from "./drive";
+import { changeScene } from "./drive";
 import { CONNECT_FAILED, failChunks } from "./faults";
 import { press } from "./press";
 import { openProfile } from "./profile-drive";
@@ -209,22 +209,6 @@ export const albumPreviewFailures: Scene = {
 					page,
 					action: () => press(albumPreview({ page })),
 				});
-			},
-		},
-	],
-};
-
-export const albumWarning: Scene = {
-	platform: "phone",
-	demo: { playBuild: true, inbox: ALBUMS_INBOX },
-	views: [
-		{
-			id: "chat/album/warning",
-			screen: "chat/conversation",
-			drive: async (page) => {
-				await openAlbumConversation(page);
-				await albumPreview({ page }).dispatchEvent("click");
-				await page.locator(ALERT).waitFor();
 			},
 		},
 	],

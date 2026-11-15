@@ -81,6 +81,10 @@
 		}
 	},
 	"app": {
+		"showMatureContent": {
+			"title": "Show mature content",
+			"description": "I’m 18+ and want to see nudity."
+		},
 		"sections": {
 			"display": "Display",
 			"privacy": "Privacy",

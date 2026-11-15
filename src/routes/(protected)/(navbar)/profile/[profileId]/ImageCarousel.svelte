@@ -3,6 +3,7 @@
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
 	import { formatDate, formatInteger } from "#lib/i18n/format.ts";
 	import { followLocale, t } from "#lib/i18n/index.ts";
@@ -23,6 +24,7 @@
 
 	let {
 		medias,
+		own = false,
 		onreply,
 	}: {
 		medias: {
@@ -30,11 +32,14 @@
 			takenOnGrindr: boolean | null;
 			createdAt: number | null;
 		}[];
+		own?: boolean;
 		onreply?: (reply: { imageHash: string; text: string }) => void;
 	} = $props();
 
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
+
+	const covered = $derived(!own && matureContentCovered());
 
 	let gallery: HTMLDivElement | null = $state(null);
 	let viewer = $state.raw<PhotoSwipeLightbox>();
@@ -214,6 +219,7 @@
 					{mediaHash}
 					eager={index <= reach}
 					{createdAt}
+					{covered}
 					label={t("profile.imageCarousel.a11y.photo", {
 						position: formatInteger(index + 1),
 						total: formatInteger(medias.length),

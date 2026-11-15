@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
@@ -7,7 +9,8 @@
 	import { cn } from "#lib/util/utils.ts";
 	import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
 
-	let { media }: { media: RightNowPostMediaItem } = $props();
+	let { media, own }: { media: RightNowPostMediaItem; own: boolean } =
+		$props();
 
 	const frameClass = cn(
 		"relative block aspect-square w-full max-w-3xs overflow-hidden rounded-xl bg-muted",
@@ -16,6 +19,7 @@
 	const src = $derived(proxyMediaUrl(media.data.thumbnailUrl));
 	const fullSrc = $derived(proxyMediaUrl(media.data.fullImageUrl));
 	const blurred = $derived(media.data.isNsfw && media.data.shouldBlur);
+	const covered = $derived(!own && matureContentCovered());
 
 	const attachLightbox = (gallery: HTMLElement) =>
 		attachGalleryLightbox({ gallery, croppedThumbs: true });
@@ -36,7 +40,12 @@
 	/>
 {/snippet}
 
-{#if blurred}
+{#if covered}
+	<div data-slot="right-now-post-photo" class={frameClass}>
+		{@render photo()}
+		<MatureContentCover class="rounded-xl" />
+	</div>
+{:else if blurred}
 	<div data-slot="right-now-post-photo" class={frameClass}>
 		{@render photo()}
 		<p

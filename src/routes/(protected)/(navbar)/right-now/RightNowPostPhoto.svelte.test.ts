@@ -24,6 +24,10 @@ vi.mock("#lib/util/photoswipe/gallery-lightbox.ts", () => ({
 vi.mock("#lib/util/photoswipe/full-size.ts", () => ({
 	preloadFullImage: preloadFullImageMock,
 }));
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
@@ -52,12 +56,13 @@ async function showThumbnail() {
 afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
+	vi.unstubAllEnvs();
 });
 
 describe("a Right Now post photo", () => {
 	it("links the full-size photo for the gallery lightbox that chat images use", () => {
 		const media = photo(1);
-		render(RightNowPostPhoto, { props: { media } });
+		render(RightNowPostPhoto, { props: { media, own: false } });
 
 		expect(openLink().getAttribute("href")).toBe(
 			proxyMediaUrl(media.data.fullImageUrl),
@@ -68,7 +73,7 @@ describe("a Right Now post photo", () => {
 	});
 
 	it("has the lightbox zoom from the square thumbnail as a crop of the full-size photo", () => {
-		render(RightNowPostPhoto, { props: { media: photo(1) } });
+		render(RightNowPostPhoto, { props: { media: photo(1), own: false } });
 
 		expect(attachGalleryLightboxMock.mock.calls[0]?.[0]).toMatchObject({
 			croppedThumbs: true,
@@ -77,7 +82,7 @@ describe("a Right Now post photo", () => {
 
 	it("starts decoding the full-size photo once its thumbnail shows", async () => {
 		const media = photo(1);
-		render(RightNowPostPhoto, { props: { media } });
+		render(RightNowPostPhoto, { props: { media, own: false } });
 		expect(preloadFullImageMock).not.toHaveBeenCalled();
 
 		await showThumbnail();
@@ -88,7 +93,9 @@ describe("a Right Now post photo", () => {
 	});
 
 	it("detaches the lightbox when the photo goes away", () => {
-		const view = render(RightNowPostPhoto, { props: { media: photo(1) } });
+		const view = render(RightNowPostPhoto, {
+			props: { media: photo(1), own: false },
+		});
 
 		view.unmount();
 
@@ -96,7 +103,9 @@ describe("a Right Now post photo", () => {
 	});
 
 	it("keeps a blurred photo closed behind its nudity caption", () => {
-		render(RightNowPostPhoto, { props: { media: blurredPhoto() } });
+		render(RightNowPostPhoto, {
+			props: { media: blurredPhoto(), own: false },
+		});
 
 		expect(screen.queryByRole("link", { name: "Open photo" })).toBeNull();
 		expect(attachGalleryLightboxMock).not.toHaveBeenCalled();
@@ -105,10 +114,42 @@ describe("a Right Now post photo", () => {
 	});
 
 	it("decodes no full-size photo behind a blurred thumbnail", async () => {
-		render(RightNowPostPhoto, { props: { media: blurredPhoto() } });
+		render(RightNowPostPhoto, {
+			props: { media: blurredPhoto(), own: false },
+		});
 
 		await showThumbnail();
 
 		expect(preloadFullImageMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("a Right Now post photo on Google Play", () => {
+	it("covers someone else's photo with a link to the mature content setting instead of the lightbox", async () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		const media = photo(1);
+		render(RightNowPostPhoto, { props: { media, own: false } });
+
+		expect(
+			screen
+				.getByRole("link", { name: "Show mature content" })
+				.getAttribute("href"),
+		).toBe("/settings/app/display#show-mature-content");
+		expect(screen.queryByRole("link", { name: "Open photo" })).toBeNull();
+		expect(attachGalleryLightboxMock).not.toHaveBeenCalled();
+		await showThumbnail();
+		expect(preloadFullImageMock).toHaveBeenCalledExactlyOnceWith(
+			proxyMediaUrl(media.data.fullImageUrl),
+		);
+	});
+
+	it("shows our own photo", () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		render(RightNowPostPhoto, { props: { media: photo(1), own: true } });
+
+		expect(openLink()).toBeTruthy();
+		expect(
+			screen.queryByRole("link", { name: "Show mature content" }),
+		).toBeNull();
 	});
 });

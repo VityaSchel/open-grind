@@ -100,7 +100,8 @@
 		},
 		"profilePhotoReply": {
 			"a11y": {
-				"open": "Open replied profile photo"
+				"open": "Open replied profile photo",
+				"photo": "Replied profile photo"
 			},
 			"errors": {
 				"openFailed": "Couldn’t open profile photo"

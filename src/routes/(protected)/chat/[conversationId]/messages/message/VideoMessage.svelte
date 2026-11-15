@@ -4,6 +4,11 @@
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { getSingleMessage } from "#lib/api/messaging/messages.ts";
+	import {
+		MATURE_CONTENT_SETTING_HREF,
+		matureContentCovered,
+	} from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentBadge from "#lib/components/mature-content/MatureContentBadge.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { openLightbox } from "#lib/util/photoswipe/index.ts";
@@ -19,14 +24,17 @@
 		messageId,
 		message,
 		delivered,
+		isOut,
 	}: {
 		conversationId: string;
 		messageId: string;
 		message: VideoBody;
 		delivered: boolean;
+		isOut: boolean;
 	} = $props();
 
 	const media = new MessageMediaState();
+	const covered = $derived(!isOut && matureContentCovered());
 
 	let viewsRemaining = $derived(message.viewsRemaining ?? 0);
 
@@ -121,10 +129,22 @@
 {#snippet bubbleContent()}
 	<VideoCameraIcon size={24} weight="fill" class="shrink-0" />
 	<span>{t("chat.messagePreview.expiringVideo")}</span>
+	{#if playable && covered}
+		<MatureContentBadge />
+	{/if}
 	{@render media.adornments?.()}
 {/snippet}
 
-{#if playable}
+{#if playable && covered}
+	<a
+		data-slot="video-message-covered"
+		href={MATURE_CONTENT_SETTING_HREF}
+		class={bubbleClass}
+		{@attach media.attach}
+	>
+		{@render bubbleContent()}
+	</a>
+{:else if playable}
 	<button
 		type="button"
 		data-slot="video-message"

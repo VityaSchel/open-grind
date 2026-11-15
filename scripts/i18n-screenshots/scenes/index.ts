@@ -149,7 +149,6 @@ import {
 import {
 	albumPreviewFailures,
 	albumVideoPlayer,
-	albumWarning,
 	profileLightbox,
 	videoDecoderMissing,
 	videoPlayFailed,
@@ -445,7 +444,6 @@ export const scenes: Scene[] = [
 	profilePhotoReply,
 	albumVideoPlayer,
 	albumPreviewFailures,
-	albumWarning,
 	videoPlayFailed,
 	videoDecoderMissing,
 	newAlbum,

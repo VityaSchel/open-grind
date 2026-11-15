@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import { encode } from "@msgpack/msgpack";
-import { cleanup, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { platform, desktopEntry } = vi.hoisted(() => ({
@@ -28,7 +34,15 @@ vi.mock("#lib/platform/desktop-entry.svelte.ts", () => ({
 	desktopEntryInstalled: () => false,
 	setDesktopEntryInstalled: vi.fn(),
 }));
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
+import {
+	hydratePreferences,
+	preferencesSnapshot,
+} from "#lib/app-data/preferences.svelte.ts";
 import DisplayPage from "./+page.svelte";
 
 const units = () => screen.getByRole("radio", { name: "Metric" });
@@ -37,6 +51,8 @@ const haptics = () =>
 	screen.queryByRole("switch", { name: /^Haptic feedback/ });
 const appsMenu = () =>
 	screen.queryByRole("switch", { name: /^Show in apps menu/ });
+const matureContent = () =>
+	screen.queryByRole("switch", { name: /^Show mature content/ });
 
 function inDocumentOrder(elements: (HTMLElement | null)[]): boolean {
 	return elements.every(
@@ -93,5 +109,31 @@ describe("the Display settings", () => {
 		expect(inDocumentOrder([units(), blur(), haptics(), appsMenu()])).toBe(
 			true,
 		);
+	});
+});
+
+describe("the mature content switch of the Display settings", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	it("comes first on the Google Play build for the gated account and goes away for good once flipped", async () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		await hydratePreferences();
+		render(DisplayPage);
+		const matureContentSwitch = matureContent();
+		expect(
+			matureContentSwitch?.closest("#show-mature-content"),
+		).not.toBeNull();
+		expect(inDocumentOrder([matureContentSwitch, units()])).toBe(true);
+
+		await fireEvent.click(matureContentSwitch!);
+
+		await waitFor(() => expect(matureContent()).toBeNull());
+		expect(preferencesSnapshot().showMatureContent).toBe(true);
+	});
+
+	it("never shows on any other build", () => {
+		render(DisplayPage);
+
+		expect(matureContent()).toBeNull();
 	});
 });
