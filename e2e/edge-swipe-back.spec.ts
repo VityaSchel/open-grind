@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import {
 	afterTwoFrames,
@@ -40,8 +40,8 @@ test.use({ viewport: PHONE });
 
 const REPLIABLE = "consectetur adipiscing elit";
 
-const paneX = (page: Page) =>
-	pane(page).evaluate((element) => element.getBoundingClientRect().x);
+const leftEdge = (locator: Locator) =>
+	locator.evaluate((element) => element.getBoundingClientRect().x);
 
 const expectArmed = (page: Page, armed: boolean) =>
 	expect.poll(() => edgeSwipeArmed(page)).toBe(armed);
@@ -90,7 +90,7 @@ test.describe("the iOS edge swipe in settings", () => {
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.5);
-		expect(await paneX(page)).toBeCloseTo(PHONE.width / 2, 0);
+		expect(await leftEdge(pane(page))).toBeCloseTo(PHONE.width / 2, 0);
 
 		const easings = await releaseReadingEasing(page, {
 			selector: STACK_PANE,
@@ -116,7 +116,7 @@ test.describe("the iOS edge swipe in settings", () => {
 		await releaseEdgeSwipe(page, { commit: false, velocity: -0.5 });
 
 		await stackSettled(page);
-		expect(await paneX(page)).toBe(0);
+		expect(await leftEdge(pane(page))).toBe(0);
 		await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
 		await expectArmed(page, true);
 	});
@@ -170,6 +170,7 @@ test.describe("the iOS edge swipe in chats", () => {
 		await releaseEdgeSwipe(page, { commit: false, velocity: 0 });
 
 		await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
+		expect(await leftEdge(sheet(page))).toBe(0);
 		await expect(page).toHaveURL(new RegExp(`${href}$`));
 	});
 
