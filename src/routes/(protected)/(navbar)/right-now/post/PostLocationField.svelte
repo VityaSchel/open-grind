@@ -4,6 +4,7 @@
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 	import { Slider } from "#lib/components/ui/slider/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { decodeGeohash } from "#lib/model/geohash.ts";
 	import { slide } from "#lib/util/reduced-motion.ts";
 	import { formatDistance } from "#lib/util/units.ts";
@@ -32,7 +33,12 @@
 		storedGeohash ? decodeGeohash(storedGeohash) : null,
 	);
 	const radiusLabel = $derived(
-		`Within about ${formatDistance(approximateRadiusMeters({ locationRadius }), units)}`,
+		t("browse.rightNow.sheet.location.radius", {
+			distance: formatDistance(
+				approximateRadiusMeters({ locationRadius }),
+				units,
+			),
+		}),
 	);
 </script>
 
@@ -41,7 +47,7 @@
 	class="shrink-0 overflow-hidden rounded-xl border"
 >
 	<SwitchField
-		title="Show me on map"
+		title={t("browse.rightNow.sheet.location.showOnMap")}
 		class="rounded-none border-0"
 		{disabled}
 		bind:checked={
@@ -59,7 +65,9 @@
 		>
 			<div class="flex flex-col gap-3 border-t p-4">
 				<div class="flex items-baseline justify-between gap-2 text-sm">
-					<p class="font-medium">Location accuracy</p>
+					<p class="font-medium">
+						{t("browse.rightNow.sheet.location.accuracy")}
+					</p>
 					<p
 						data-slot="post-location-radius"
 						class="text-end text-muted-foreground tabular-nums"
@@ -74,7 +82,7 @@
 					max={LEAST_PRECISE_RADIUS}
 					step={1}
 					{disabled}
-					thumbLabels={["Location accuracy"]}
+					thumbLabels={[t("browse.rightNow.sheet.location.accuracy")]}
 					thumbValueTexts={[radiusLabel]}
 					bind:value={
 						() => LEAST_PRECISE_RADIUS - locationRadius,

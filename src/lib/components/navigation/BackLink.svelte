@@ -4,6 +4,7 @@
 	import { tinykeys } from "tinykeys";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 
+	import { t } from "#lib/i18n/index.ts";
 	import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { canGoBack, returnTo } from "#lib/util/history.ts";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
@@ -11,7 +12,7 @@
 
 	let {
 		href,
-		label = "Back",
+		label,
 		children,
 		...rest
 	}: Omit<HTMLAnchorAttributes, "href" | "onclick"> & {
@@ -41,7 +42,7 @@
 	{...rest}
 	bind:this={anchor}
 	{href}
-	aria-label={label}
+	aria-label={label ?? t("shell.backLink.a11y.label")}
 	aria-keyshortcuts="Escape"
 	onclick={(event) => {
 		if (!isPlainClick(event)) return;

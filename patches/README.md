@@ -22,6 +22,8 @@ See [huntabyte/vaul-svelte#139](https://github.com/huntabyte/vaul-svelte/issues/
 
 A press on a toast that can't be dismissed still set `swiping`, and `pointerup` returns early for such a toast, so it stayed in the swiping state. A pointer the browser cancelled, for example when a touch turned into a scroll, never ended the drag either. The patch skips the swipe start for a toast that can't be dismissed and ends the drag on `pointercancel`.
 
+The toast region's accessible name was `containerAriaLabel` followed by the hotkey in sonner's own spelling ("Notifications alt+T"), so a translated name still ended in English. The patch makes `containerAriaLabel` the whole name and moves the hotkey to `aria-keyshortcuts` in ARIA's spelling ("Alt+T"), built from the `hotkey` prop.
+
 Per-position stacking, which this patch used to carry, is upstream since 1.2.0.
 
 ## `bits-ui`

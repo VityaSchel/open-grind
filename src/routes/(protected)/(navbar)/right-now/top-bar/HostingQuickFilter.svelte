@@ -8,6 +8,7 @@
 	import RadioListItem from "#lib/components/shared/RadioListItem.svelte";
 	import RadioMark from "#lib/components/shared/RadioMark.svelte";
 	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { defaultRightNowFeedFilters } from "#lib/model/right-now/filters.ts";
 	import type { RightNowFeedFiltersState } from "../right-now-feed-filters-state.svelte";
 
@@ -17,9 +18,17 @@
 	}: { open: boolean; filters: RightNowFeedFiltersState } = $props();
 
 	const options = [
-		{ value: "true", label: "Hosting", icon: HouseIcon },
-		{ value: "false", label: "Not hosting", icon: PersonSimpleWalkIcon },
-	];
+		{
+			value: "true",
+			label: "browse.rightNow.filters.hosting.hosting",
+			icon: HouseIcon,
+		},
+		{
+			value: "false",
+			label: "browse.rightNow.filters.hosting.notHosting",
+			icon: PersonSimpleWalkIcon,
+		},
+	] as const;
 
 	let draft = $state(untrack(() => filters.snapshot()));
 	let { hostingEnabled: enabled, hosting: value } = $derived(draft);
@@ -34,15 +43,15 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title="Hosting"
-	switchLabel="Filter by hosting"
+	title={t("browse.rightNow.filters.hosting.label")}
+	switchLabel={t("browse.rightNow.filters.hosting.a11y.toggle")}
 	onreset={() => {
 		value = defaultRightNowFeedFilters.hosting;
 	}}
 	onapply={() => filters.set({ hostingEnabled: enabled, hosting: value })}
 >
 	<RadioList
-		aria-label="Hosting"
+		aria-label={t("browse.rightNow.filters.hosting.label")}
 		bind:value={
 			() => String(value),
 			(next: string) => {
@@ -58,7 +67,7 @@
 						<Icon weight="fill" class="size-5" />
 					</Item.Media>
 					<Item.Content>
-						<Item.Title>{label}</Item.Title>
+						<Item.Title>{t(label)}</Item.Title>
 					</Item.Content>
 					<Item.Actions>
 						<RadioMark {checked} />

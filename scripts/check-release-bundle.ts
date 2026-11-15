@@ -3,10 +3,14 @@ import { join, relative } from "node:path";
 
 import ts from "typescript";
 
+import { SOURCE_LOCALE } from "../src/lib/i18n/syntax";
+import { LOCALES, readLocaleFiles, SHIPPED } from "./i18n/locale-files";
+import { catalogTexts } from "./i18n/source-messages";
+
 const REPO_ROOT = Bun.fileURLToPath(new URL("..", import.meta.url));
 const SOURCE_DIR = join(REPO_ROOT, "src");
 const DEMO_DIR = join(SOURCE_DIR, "lib", "demo");
-const FIXTURE_DIR = join(DEMO_DIR, "mock");
+const DEMO_ONLY = ["mock/**/*.ts", "screenshot-*.ts"];
 const BUILD_DIR = join(REPO_ROOT, "build");
 const APP_SOURCES = "**/*.{ts,js,svelte,json,css,html}";
 const TEST_ONLY = /\.test\.ts$|^test-setup\.ts$/;
@@ -75,23 +79,52 @@ async function appSourceText(): Promise<string> {
 async function demoFixtures(): Promise<Fixture[]> {
 	const appText = await appSourceText();
 	const fixtures = new Map<string, Fixture>();
-	for await (const path of new Bun.Glob("**/*.ts").scan(FIXTURE_DIR)) {
-		if (TEST_ONLY.test(path)) continue;
-		const file = ts.createSourceFile(
-			path,
-			await Bun.file(join(FIXTURE_DIR, path)).text(),
-			ts.ScriptTarget.Latest,
-		);
-		for (const text of literalTexts(file)) {
-			if (distinctive(text) && !appText.includes(text)) {
-				fixtures.set(text, {
-					text,
-					source: relative(REPO_ROOT, join(FIXTURE_DIR, path)),
-				});
+	for (const pattern of DEMO_ONLY) {
+		for await (const path of new Bun.Glob(pattern).scan(DEMO_DIR)) {
+			if (TEST_ONLY.test(path)) continue;
+			const file = ts.createSourceFile(
+				path,
+				await Bun.file(join(DEMO_DIR, path)).text(),
+				ts.ScriptTarget.Latest,
+			);
+			for (const text of literalTexts(file)) {
+				if (distinctive(text) && !appText.includes(text)) {
+					fixtures.set(text, {
+						text,
+						source: relative(REPO_ROOT, join(DEMO_DIR, path)),
+					});
+				}
 			}
 		}
 	}
 	return [...fixtures.values()];
+}
+
+async function unshippedCatalogTexts(): Promise<Fixture[]> {
+	const shipped = new Set<string>([
+		SOURCE_LOCALE,
+		...((await Bun.file(SHIPPED).json()) as string[]),
+	]);
+	const catalogs = readLocaleFiles(LOCALES);
+	const shippedTexts = new Set(
+		[...catalogs]
+			.filter(([locale]) => shipped.has(locale))
+			.flatMap(([, files]) => [...catalogTexts(files).values()]),
+	);
+	const texts = new Map<string, Fixture>();
+	for (const [locale, files] of catalogs) {
+		if (shipped.has(locale)) continue;
+		for (const [key, text] of catalogTexts(files)) {
+			if (
+				text.length >= MIN_FIXTURE_LENGTH &&
+				!ESCAPED_IN_BUNDLE.test(text) &&
+				!shippedTexts.has(text)
+			) {
+				texts.set(text, { text, source: `${locale} ${key}` });
+			}
+		}
+	}
+	return [...texts.values()];
 }
 
 function unicodeEscaped(text: string): string {
@@ -126,7 +159,7 @@ if (Bun.env.OPEN_GRIND_DEMO === "1") {
 const fixtures = await demoFixtures();
 if (fixtures.length === 0) {
 	console.error(
-		`error: found no fixture text in ${relative(REPO_ROOT, FIXTURE_DIR)}`,
+		`error: found no fixture text in ${relative(REPO_ROOT, DEMO_DIR)}`,
 	);
 	process.exit(1);
 }
@@ -136,16 +169,27 @@ if (files.length === 0) {
 	process.exit(1);
 }
 
-const leaks = fixtures.flatMap(({ text, source }) =>
-	files
-		.filter((file) => shipsIn(file, text))
-		.map((file) => `build/${file.path}: "${text}" from ${source}`),
-);
-if (leaks.length > 0) {
-	console.error("error: demo fixture text ships in the release build");
-	for (const leak of leaks) console.error(`  ${leak}`);
-	process.exit(1);
+const catalogs = await unshippedCatalogTexts();
+
+function leaksOf(texts: Fixture[]): string[] {
+	return texts.flatMap(({ text, source }) =>
+		files
+			.filter((file) => shipsIn(file, text))
+			.map((file) => `build/${file.path}: "${text}" from ${source}`),
+	);
 }
+
+const fixtureLeaks = leaksOf(fixtures);
+const catalogLeaks = leaksOf(catalogs);
+if (fixtureLeaks.length > 0) {
+	console.error("error: demo fixture text ships in the release build");
+	for (const leak of fixtureLeaks) console.error(`  ${leak}`);
+}
+if (catalogLeaks.length > 0) {
+	console.error("error: unshipped catalog text ships in the release build");
+	for (const leak of catalogLeaks) console.error(`  ${leak}`);
+}
+if (fixtureLeaks.length > 0 || catalogLeaks.length > 0) process.exit(1);
 console.log(
-	`build/: none of ${fixtures.length} demo fixture strings in ${files.length} files`,
+	`build/: none of ${fixtures.length} demo fixture strings or ${catalogs.length} unshipped catalog strings in ${files.length} files`,
 );

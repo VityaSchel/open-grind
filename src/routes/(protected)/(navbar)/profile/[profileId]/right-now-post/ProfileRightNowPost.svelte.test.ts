@@ -286,7 +286,7 @@ describe("a profile's Right Now post", () => {
 		await tapCard();
 		await vi.waitFor(() =>
 			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-				label: "Failed to open Right Now post",
+				label: "Couldn’t open Right Now post",
 				error,
 			}),
 		);

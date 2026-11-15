@@ -22,7 +22,7 @@ const DROPPED_KEYS: [&str; 5] = [
 
 impl From<DesktopEntryError> for DisguiseError {
 	fn from(error: DesktopEntryError) -> Self {
-		Self(error.0)
+		Self::Failed(error.0)
 	}
 }
 

@@ -2,6 +2,8 @@
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 	import FilterDropdown from "#lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "#lib/components/ui/slider/index.ts";
+	import { formatRange } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		rangeBoundTexts,
 		WEIGHT_KG_MAX,
@@ -33,9 +35,9 @@
 <div class="block w-full space-y-3">
 	<FilterDropdown
 		id="weight"
-		label="Weight"
+		label={t("common.filters.weight.label")}
 		bind:checked
-		endLabel={`${minText} - ${maxText}`}
+		endLabel={formatRange({ min: minText, max: maxText })}
 		contentClass="ps-7 h-6"
 	>
 		<Slider
@@ -49,7 +51,10 @@
 			}
 			scale={WEIGHT_SLIDER_SCALES[units]}
 			thumbValueTexts={[minText, maxText]}
-			thumbLabels={["Minimum weight", "Maximum weight"]}
+			thumbLabels={[
+				t("browse.filters.weight.a11y.minimum"),
+				t("browse.filters.weight.a11y.maximum"),
+			]}
 		/>
 	</FilterDropdown>
 </div>

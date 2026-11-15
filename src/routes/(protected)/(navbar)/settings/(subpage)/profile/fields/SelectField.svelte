@@ -7,14 +7,15 @@
 	import Field from "#lib/components/fields/Field.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { Option } from "#lib/util/options.ts";
 
 	let {
 		label,
 		value = $bindable(),
 		options,
-		placeholder = "Not set",
-		clearLabel = "Not set",
+		placeholder,
+		clearLabel,
 		nullable = true,
 	}: {
 		label: string;
@@ -63,7 +64,9 @@
 							{#if SelectedIcon}
 								<SelectedIcon data-slot="select-field-icon" />
 							{/if}
-							{selected?.label ?? placeholder}
+							{selected?.label ??
+								placeholder ??
+								t("settings.profile.notSet")}
 						</span>
 						<CaretUpDownIcon class="size-4 shrink-0 opacity-60" />
 					</Button>
@@ -89,7 +92,7 @@
 							value=""
 							data-inset={hasIcons || undefined}
 						>
-							{clearLabel}
+							{clearLabel ?? t("settings.profile.notSet")}
 						</DropdownMenu.RadioItem>
 					{/if}
 					{#each options as option (option.value)}

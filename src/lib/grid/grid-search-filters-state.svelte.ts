@@ -12,8 +12,8 @@ export class GridSearchFiltersState extends PersistedFiltersState<"gridSearchFil
 			key: "gridSearchFilters",
 			defaults: defaultFilters,
 			labels: {
-				load: "Failed to load filters",
-				save: "Failed to update filters",
+				load: "browse.grid.searchFilters.errors.loadFailed",
+				save: "browse.grid.searchFilters.errors.updateFailed",
 			},
 			onQueryChange,
 		});

@@ -1,17 +1,22 @@
 import { readFileSync } from "node:fs";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "#lib/api/api-error.ts";
 import {
 	asAppError,
 	asBanned,
 	banInfoSchema,
 	callMethod,
+	diagnosticMessage,
 	markRequestBlocked,
 	methods,
 	restrictionSchema,
+	uploadRefusalMessage,
 } from "#lib/api/methods.ts";
 import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import { demoCallMethod } from "#lib/demo/index.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 
@@ -37,7 +42,7 @@ describe("asAppError", () => {
 				"error sending request for url (https://grindr.mobi/v4/cascade): client error (Connect)",
 		});
 		expect(appError?.prettyMessage).toBe(
-			"Couldn't connect to Grindr. Check your internet connection and try again.",
+			"Couldn’t connect to Grindr. Check your internet connection and try again.",
 		);
 		expect(appError?.message).toContain("client error (Connect)");
 	});
@@ -71,20 +76,17 @@ describe("asAppError", () => {
 
 	it.each([
 		["RequestBlocked", "Grindr is blocking your requests"],
-		[
-			"NetworkBlocked",
-			"Something blocked the request before it reached Grindr",
-		],
-		["RateLimited", "Grindr is rate limiting us"],
-		["NotSignedIn", "You're signed out"],
-		["SessionStale", "Couldn't refresh your session"],
+		["NetworkBlocked", "Something is blocking your requests to Grindr"],
+		["RateLimited", "Too many requests. Wait a moment and try again."],
+		["NotSignedIn", "You’re signed out"],
+		["SessionStale", "Couldn’t refresh your session"],
 	])("says what %s means without a message to quote", (kind, expected) => {
 		expect(asAppError({ kind })?.prettyMessage).toBe(expected);
 	});
 
 	it("falls back to the unknown-error wording for a bare tag it has no copy for", () => {
 		expect(asAppError({ kind: "NotInitialized" })?.prettyMessage).toBe(
-			"An unknown error occurred",
+			"Something went wrong",
 		);
 	});
 
@@ -97,7 +99,7 @@ describe("asAppError", () => {
 
 		expect(appError?.kind).toBe("Recaptcha");
 		expect(appError?.message).toEqual(message);
-		expect(appError?.prettyMessage).toBe("An unknown error occurred");
+		expect(appError?.prettyMessage).toBe("Something went wrong");
 	});
 
 	it("ignores unknown errors", () => {
@@ -115,7 +117,7 @@ describe("asAppError", () => {
 
 		expect(appError?.prettyMessage).toBe(
 			"Error 403: The server returned a web page: " +
-				'"Attention Required! | Cloudflare"',
+				"“Attention Required! | Cloudflare”",
 		);
 		expect(appError?.prettyMessage).not.toContain("203.0.113.7");
 	});
@@ -133,7 +135,7 @@ describe("asAppError", () => {
 				?.prettyMessage,
 		).toBe(
 			"Error 403: The server returned a web page: " +
-				'"Attention Required! | Cloudflare"',
+				"“Attention Required! | Cloudflare”",
 		);
 	});
 
@@ -144,7 +146,7 @@ describe("asAppError", () => {
 				message: `upstream proxy error: ${cloudflareBlockPage}`,
 			})?.prettyMessage,
 		).toBe(
-			'The server returned a web page: "Attention Required! | Cloudflare"',
+			"The server returned a web page: “Attention Required! | Cloudflare”",
 		);
 	});
 
@@ -178,6 +180,164 @@ describe("asAppError", () => {
 				message: { code: 403, message: cloudflareBlockPage },
 			})?.message,
 		).toEqual({ code: 403, message: cloudflareBlockPage });
+	});
+});
+
+describe("diagnosticMessage", () => {
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it("keeps a bare tag's wording English while the interface is not", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(asAppError({ kind: "RateLimited" })?.prettyMessage).not.toBe(
+			"Too many requests. Wait a moment and try again.",
+		);
+		expect(diagnosticMessage({ kind: "RateLimited" })).toBe(
+			"Too many requests. Wait a moment and try again.",
+		);
+	});
+
+	it("frames server text in English while the interface is not", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(
+			diagnosticMessage({
+				kind: "Api",
+				message: { code: 403, message: cloudflareBlockPage },
+			}),
+		).toBe(
+			"Error 403: The server returned a web page: " +
+				"“Attention Required! | Cloudflare”",
+		);
+	});
+
+	it("passes through what is not an app error", () => {
+		expect(diagnosticMessage(new Error("socket hang up"))).toBe(
+			"socket hang up",
+		);
+		expect(diagnosticMessage("offline")).toBe("offline");
+	});
+});
+
+describe("uploadRefusalMessage", () => {
+	const limitLabel = "120.00 MB";
+	const photoTooLarge = { reason: "photoTooLarge", maxBytes: 64 * 2 ** 20 };
+	const missingFile = {
+		reason: "io",
+		detail: "No such file or directory (os error 2)",
+	};
+
+	function mediaError(message: Record<string, unknown>) {
+		return { kind: "Media", message };
+	}
+
+	function uploadError(cause: unknown): ApiError {
+		return new ApiError({
+			message: diagnosticMessage(cause),
+			request: { method: "POST", path: "/v5/chat/media/upload" },
+			kind: "Media",
+			cause,
+		});
+	}
+
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it.each([
+		[{ reason: "notMedia" }, "That file isn’t a photo or video"],
+		[{ reason: "linkNotMedia" }, "That link isn’t a photo or video"],
+		[{ reason: "linkTooLarge" }, "That file is too large to add"],
+		[{ reason: "videoUnreadable" }, "That video’s format can’t be read"],
+		[photoTooLarge, "Photos over 64 MB can’t be uploaded"],
+		[{ reason: "notAPhoto" }, "Only photos can be sent here"],
+		[{ reason: "photoSizeUnreadable" }, "That photo’s size can’t be read"],
+		[{ reason: "photoUnloadable" }, "That photo couldn’t be loaded"],
+		[{ reason: "photoDamaged" }, "Unreadable or damaged photo"],
+		[
+			{ reason: "heicUnsupported" },
+			"HEIC photos aren’t supported on this platform yet",
+		],
+		[
+			{
+				reason: "photoUndecodable",
+				detail: "BitmapFactory returned null",
+			},
+			"Undecodable photo",
+		],
+		[
+			{ reason: "outsideReadableFolders" },
+			"That file is outside the folders this app may read",
+		],
+	])("says why the backend refused %o", (refusal, expected) => {
+		expect(
+			uploadRefusalMessage({ error: mediaError(refusal), limitLabel }),
+		).toBe(expected);
+		expect(
+			uploadRefusalMessage({
+				error: uploadError(mediaError(refusal)),
+				limitLabel,
+			}),
+		).toBe(expected);
+	});
+
+	it.each([
+		missingFile,
+		{ reason: "pickerFailed", detail: "Activity not found" },
+		{ reason: "photoTooLarge" },
+		{ reason: "unknownReason" },
+	])("leaves %o to the caller's fallback", (failure) => {
+		expect(
+			uploadRefusalMessage({ error: mediaError(failure), limitLabel }),
+		).toBeNull();
+		expect(
+			uploadRefusalMessage({
+				error: uploadError(mediaError(failure)),
+				limitLabel,
+			}),
+		).toBeNull();
+	});
+
+	it("leaves an error that is not a media refusal to the caller's fallback", () => {
+		expect(
+			uploadRefusalMessage({
+				error: { kind: "Http", message: "photoDamaged" },
+				limitLabel,
+			}),
+		).toBeNull();
+		expect(
+			uploadRefusalMessage({ error: new Error("offline"), limitLabel }),
+		).toBeNull();
+	});
+
+	it("names the limit the caller formatted when the body is too large", () => {
+		expect(
+			uploadRefusalMessage({
+				error: { kind: "ContentTooLarge" },
+				limitLabel,
+			}),
+		).toBe("Larger than the 120.00 MB limit");
+	});
+
+	it("shows a refusal in the app language but keeps its diagnostic English", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(
+			uploadRefusalMessage({
+				error: mediaError(photoTooLarge),
+				limitLabel,
+			}),
+		).toMatch(PSEUDO_MESSAGE);
+		expect(diagnosticMessage(mediaError(photoTooLarge))).toBe(
+			"Photos over 64 MB can’t be uploaded",
+		);
+	});
+
+	it("keeps the detail of a failure without a reason worth showing for diagnostics", () => {
+		expect(diagnosticMessage(mediaError(missingFile))).toBe(
+			missingFile.detail,
+		);
+		expect(asAppError(mediaError(missingFile))?.message).toEqual(
+			missingFile,
+		);
 	});
 });
 

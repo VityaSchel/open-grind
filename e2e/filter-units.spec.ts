@@ -53,14 +53,14 @@ async function pickInImperial(page: Page) {
 	await page.getByRole("checkbox", { name: "Height" }).click();
 	await stepThumb({
 		page,
-		thumb: "Minimum height",
+		thumb: "Minimum Height",
 		key: "ArrowRight",
-		labels: ["4'1\"", "4'2\"", "4'3\""],
+		labels: ["4′1″", "4′2″", "4′3″"],
 	});
 	await page.getByRole("checkbox", { name: "Weight" }).click();
 	await stepThumb({
 		page,
-		thumb: "Minimum weight",
+		thumb: "Minimum Weight",
 		key: "ArrowRight",
 		labels: ["91 lb", "92 lb", "93 lb"],
 	});
@@ -100,19 +100,19 @@ test("a filter picked in inches and pounds stays as saved in metric units until 
 	await chooseUnits(page, { units: "Metric" });
 	const apply = await openAllFilters(page);
 
-	await expect(page.getByText("130 cm - No max")).toBeVisible();
-	await expect(page.getByText("42 kg - No max")).toBeVisible();
+	await expect(page.getByText("130 cm–No max")).toBeVisible();
+	await expect(page.getByText("42 kg–No max")).toBeVisible();
 	expect(await savedRanges(page)).toEqual(PICKED_IN_IMPERIAL);
 
 	await stepThumb({
 		page,
-		thumb: "Maximum height",
+		thumb: "Maximum Height",
 		key: "ArrowLeft",
 		labels: ["240 cm"],
 	});
 	await stepThumb({
 		page,
-		thumb: "Maximum weight",
+		thumb: "Maximum Weight",
 		key: "ArrowLeft",
 		labels: ["271 kg"],
 	});

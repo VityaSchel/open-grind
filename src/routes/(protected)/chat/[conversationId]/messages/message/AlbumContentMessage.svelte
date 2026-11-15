@@ -1,6 +1,7 @@
 <script lang="ts">
 	import fireEmoji from "#lib/assets/emojis/fire/72px.png";
 	import AlbumPreview from "#lib/components/album/AlbumPreview.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import type {
 		AlbumContentReactionMessage,
 		AlbumContentReplyMessage,
@@ -38,8 +39,8 @@
 			hasVideo={false}
 			ourAlbum={album.isOurAlbum}
 			label={isReply
-				? "Open replied album content"
-				: "Open reacted album content"}
+				? t("chat.message.albumContent.a11y.openReplied")
+				: t("chat.message.albumContent.a11y.openReacted")}
 			class="block aspect-3/4 w-32 rounded-lg"
 			onexpired={renewMedia}
 			attach={singleClick}
@@ -50,7 +51,7 @@
 		<div
 			class="aspect-3/4 w-32"
 			role="img"
-			aria-label="Album content unavailable"
+			aria-label={t("chat.message.albumContent.a11y.unavailable")}
 		>
 			<LockedMedia class="rounded-lg" />
 		</div>
@@ -59,7 +60,7 @@
 
 {#if "albumContentReply" in message}
 	<MessageBubble tone="sent">
-		<span class="wrap-anywhere whitespace-pre-wrap"
+		<span class="wrap-anywhere whitespace-pre-wrap" translate="no"
 			>{message.albumContentReply}</span
 		>
 	</MessageBubble>
@@ -67,7 +68,7 @@
 	<div class="relative w-fit p-2" {@attach ref}>
 		<img
 			src={fireEmoji}
-			alt="Fire reaction"
+			alt={t("chat.message.reaction.a11y.fire")}
 			width="48"
 			height="48"
 			draggable="false"

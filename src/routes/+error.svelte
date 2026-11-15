@@ -1,29 +1,27 @@
 <script lang="ts">
-	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 	import { page } from "$app/state";
 	import ArrowUpRightIcon from "phosphor-svelte/lib/ArrowUpRightIcon";
 	import ExclamationMarkIcon from "phosphor-svelte/lib/ExclamationMarkIcon";
-	import { toast } from "svelte-sonner";
 
+	import { promptCopyError } from "#lib/api/error-copy.ts";
 	import NotFound from "#lib/components/feedback/NotFound.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { cn } from "#lib/util/utils.ts";
 
-	const title = $derived.by(() => {
-		switch (page.status) {
-			case 404:
-				return "Page not found";
-			default:
-				return "Unexpected Error";
-		}
-	});
+	const title = $derived(
+		t(
+			page.status === 404
+				? "shell.error.pageNotFound"
+				: "shell.error.title",
+		),
+	);
 </script>
 
-<svelte:head>
-	<title>{title}</title>
-</svelte:head>
+<PageTitle page={title} />
 <main class="flex min-h-dvh w-full p-8">
 	{#if page.status === 404}
 		<NotFound />
@@ -33,31 +31,29 @@
 				<Empty.Media variant="icon" class="mb-0">
 					<ExclamationMarkIcon />
 				</Empty.Media>
-				<Empty.Title>Unexpected Error</Empty.Title>
+				<Empty.Title>{t("shell.error.title")}</Empty.Title>
 				<Empty.Description
-					>An unexpected error has occurred.</Empty.Description
+					>{t("shell.error.description")}</Empty.Description
 				>
 			</Empty.Header>
 			<Empty.Content>
 				<div class="flex gap-2">
 					<Button href="/">
 						{#if page.url.pathname === "/"}
-							Refresh
+							{t("common.actions.retry")}
 						{:else}
-							Go to home page
+							{t("shell.error.goHome")}
 						{/if}
 					</Button>
 					<Button
 						variant="outline"
-						onclick={() => {
-							writeText(
-								page.error?.message ||
-									"No error message available",
-							).catch((error) => console.error(error));
-							toast.success("Error message copied to clipboard");
-						}}
+						onclick={() =>
+							void promptCopyError({
+								...page.error,
+								status: page.status,
+							}).catch(() => {})}
 					>
-						Copy error
+						{t("common.actions.copyError")}
 					</Button>
 				</div>
 			</Empty.Content>
@@ -68,7 +64,8 @@
 					"text-muted-foreground",
 				)}
 			>
-				Report an issue <ArrowUpRightIcon class="inline" />
+				{t("shell.error.reportIssue")}
+				<ArrowUpRightIcon class="inline" />
 			</Link>
 		</Empty.Root>
 	{/if}

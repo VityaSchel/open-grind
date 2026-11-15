@@ -19,7 +19,7 @@ const UNSUPPORTED = { platform: "ios", named: "this platform" };
 test.describe.configure({ timeout: 180_000 });
 
 const unsupported = (page: Page, { named }: { named: string }) =>
-	page.getByText(`Notifications are not supported on ${named} yet.`);
+	page.getByText(`Notifications aren’t supported on ${named} yet.`);
 
 const textCenter = (page: Page, { named }: { named: string }) =>
 	unsupported(page, { named }).evaluate((message) => {

@@ -23,6 +23,7 @@
 			"min-w-0 flex-1 font-heading text-base font-medium wrap-break-word whitespace-pre-wrap",
 			{ "text-muted-foreground": !text },
 		]}
+		translate={text ? "no" : undefined}
 	>
 		{text || placeholder}
 	</h2>

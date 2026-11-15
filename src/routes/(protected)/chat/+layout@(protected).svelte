@@ -7,8 +7,10 @@
 		setConversations,
 	} from "#lib/chat/conversations-context.svelte.ts";
 	import NavBar from "#lib/components/shared/NavBar.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import * as Card from "#lib/components/ui/card/index.ts";
 	import * as Resizable from "#lib/components/ui/resizable/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { defaultConversationFilters } from "#lib/model/messaging/conversation-filters.ts";
 	import { below } from "#lib/util/breakpoints.svelte.ts";
 	import ConversationScreen from "./[conversationId]/ConversationScreen.svelte";
@@ -73,6 +75,9 @@
 	/>
 {/snippet}
 
+{#if conversationId === null}
+	<PageTitle page={t("shell.navBar.tabs.inbox")} />
+{/if}
 {#if mobile.current}
 	<LiveStack
 		basePath="/chat"
@@ -127,7 +132,7 @@
 						{#if conversationId === null}
 							<Card.Content class="m-auto flex p-6">
 								<span class="text-center text-xl text-muted">
-									Select a conversation to start chatting
+									{t("chat.layout.selectConversation")}
 								</span>
 							</Card.Content>
 						{:else}

@@ -423,7 +423,7 @@ describe("RightNowPostState join", () => {
 
 		expect(showErrorToastMock).toHaveBeenCalledWith(
 			expect.objectContaining({
-				label: "Failed to join Right Now",
+				label: "Couldn’t join Right Now",
 				error: failure,
 			}),
 		);
@@ -522,7 +522,7 @@ describe("RightNowPostState save", () => {
 		);
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to save your post",
+			label: "Couldn’t save your post",
 			error,
 		});
 		expect(state.post?.hosting).toBe(false);
@@ -625,8 +625,8 @@ describe("RightNowPostState setHidden", () => {
 	});
 
 	it.each<[boolean, string]>([
-		[true, "Failed to turn off Right Now"],
-		[false, "Failed to turn on Right Now"],
+		[true, "Couldn’t turn off Right Now"],
+		[false, "Couldn’t turn on Right Now"],
 	])(
 		"offers a retry when setting hidden to %s fails",
 		async (hidden, label) => {

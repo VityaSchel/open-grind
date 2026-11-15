@@ -3,6 +3,7 @@
 	import GearIcon from "phosphor-svelte/lib/GearIcon";
 
 	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 </script>
 
 <Item.Root variant="outline">
@@ -15,7 +16,7 @@
 				<Item.Title
 					class="inline-block w-full min-w-0 truncate text-left"
 				>
-					App Settings
+					{t("settings.subpage.titles.app")}
 				</Item.Title>
 			</Item.Content>
 			<Item.Actions>

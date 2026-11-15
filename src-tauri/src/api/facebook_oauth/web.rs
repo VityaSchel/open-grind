@@ -10,7 +10,8 @@ use crate::api::oauth::{
 };
 
 use super::dialog::{
-	dialog_url, is_redirect_url, result_from_redirect, HANDOFF_REFUSED,
+	dialog_url, is_redirect_url, result_from_redirect, wait_for_result,
+	HANDOFF_REFUSED,
 };
 use super::FacebookOauthBridge;
 
@@ -59,7 +60,7 @@ async fn run_flow(
 		WINDOW_LABEL,
 		WebviewUrl::External(dialog_url(&state)?),
 	)
-	.title("Sign in with Facebook")
+	.title("Sign In with Facebook")
 	.inner_size(window_width, window_height)
 	.incognito(true)
 	.general_autofill_enabled(false)
@@ -116,16 +117,7 @@ async fn run_flow(
 		}
 	});
 
-	let result = match tokio::time::timeout(FLOW_TIMEOUT, rx).await {
-		Ok(Ok(result)) => result,
-		Ok(Err(_)) => {
-			dismiss_window(app).await;
-			return Err(AppError::Auth(
-				"sign-in flow ended unexpectedly".into(),
-			));
-		}
-		Err(_) => Err("Sign-in timed out".to_owned()),
-	};
+	let result = wait_for_result(rx, FLOW_TIMEOUT).await;
 
 	dismiss_window(app).await;
 

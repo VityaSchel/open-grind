@@ -12,16 +12,20 @@
 	import { prefersReducedMotion } from "svelte/motion";
 	import { fade } from "svelte/transition";
 	import type {
+		Control,
+		LatLngTuple,
 		Map as LeafletMap,
 		LeafletMouseEventHandlerFn,
 	} from "leaflet";
 
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { locationRequest } from "#lib/location/location-request.svelte.ts";
 	import { openExternalLink } from "#lib/platform/link-opener.ts";
 	import { isMobilePlatform } from "#lib/platform/os.ts";
 	import {
 		ACCURACY_CIRCLE_COLOR,
+		OSM_COPYRIGHT_URL,
 		OSM_TILE_OPTIONS,
 		OSM_TILE_URL,
 		PIN_ZOOM,
@@ -46,6 +50,8 @@
 	const ACCURACY_VIEWPORT_FACTOR = 4;
 	const MAX_ZOOM = 18;
 	const LOCATE_MIN_ZOOM = 16;
+	const DEFAULT_CENTER: LatLngTuple = [40.42267869390329, -3.697633348267032];
+	const OPEN_OCEAN: LatLngTuple = [10, -35];
 
 	const locating = $derived(locationRequest.pending);
 	const covering = $derived(locked && locating);
@@ -62,7 +68,25 @@
 		"tapHold",
 	] as const;
 
+	const zoomButtons = [
+		{
+			option: "zoomInTitle",
+			selector: ".leaflet-control-zoom-in",
+			key: "browse.locationChooser.map.zoomIn",
+		},
+		{
+			option: "zoomOutTitle",
+			selector: ".leaflet-control-zoom-out",
+			key: "browse.locationChooser.map.zoomOut",
+		},
+	] as const;
+
 	let map: LeafletMap | undefined = $state();
+	let attributionControl: Control.Attribution | undefined = $state();
+
+	const markerTitle = $derived(
+		t("browse.locationChooser.map.selectedLocation"),
+	);
 	let centerLongitude = $state(0);
 	let resizing = false;
 	let movingToSelection = false;
@@ -131,6 +155,31 @@
 	});
 
 	$effect(() => {
+		const control = map?.zoomControl;
+		if (!control) return;
+		for (const { option, selector, key } of zoomButtons) {
+			const title = t(key);
+			control.options[option] = title;
+			const button = control.getContainer()?.querySelector(selector);
+			button?.setAttribute("title", title);
+			button?.setAttribute("aria-label", title);
+		}
+	});
+
+	$effect(() => {
+		const control = attributionControl;
+		if (!control) return;
+		const link = document.createElement("a");
+		link.href = OSM_COPYRIGHT_URL;
+		link.target = "_blank";
+		link.rel = "noreferrer nofollow noopener";
+		link.textContent = t("browse.locationChooser.map.attribution");
+		const attribution = `&copy; ${link.outerHTML} &nbsp;`;
+		control.addAttribution(attribution);
+		return () => control.removeAttribution(attribution);
+	});
+
+	$effect(() => {
 		const container = map?.getContainer();
 		if (!container) return;
 		const openExternally = (event: MouseEvent) => {
@@ -183,7 +232,9 @@
 		options={{
 			center: initial
 				? [initial.lat, initial.lon]
-				: [40.42267869390329, -3.697633348267032],
+				: __SCREENSHOTS__
+					? OPEN_OCEAN
+					: DEFAULT_CENTER,
 			zoom: initial?.zoom ?? 2,
 			trackResize: false,
 			attributionControl: false,
@@ -192,7 +243,10 @@
 		bind:instance={map}
 	>
 		<TileLayer url={OSM_TILE_URL} options={OSM_TILE_OPTIONS} />
-		<ControlAttribution options={{ prefix: undefined }} />
+		<ControlAttribution
+			bind:instance={attributionControl}
+			options={{ prefix: undefined }}
+		/>
 
 		{#if showAccuracy && fix}
 			<Circle
@@ -207,22 +261,27 @@
 				}}
 			/>
 		{:else if pinPos && !covering}
-			<Marker
-				latLng={[
-					pinPos.lat,
-					pinPos.lon +
-						360 * Math.round((centerLongitude - pinPos.lon) / 360),
-				]}
-				options={{
-					title: "Selected location",
-					icon: divIcon({
-						html: '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="40" height="40" fill="#ffba20" stroke="#000000" stroke-width="8px" viewBox="0 0 256 256"><path d="M128,16a88.1,88.1,0,0,0-88,88c0,75.3,80,132.17,83.41,134.55a8,8,0,0,0,9.18,0C136,236.17,216,179.3,216,104A88.1,88.1,0,0,0,128,16Zm0,56a32,32,0,1,1-32,32A32,32,0,0,1,128,72Z"></path></svg>',
-						iconAnchor: [20, 40],
-						iconSize: [40, 40],
-						className: "",
-					}),
-				}}
-			/>
+			{#key markerTitle}
+				<Marker
+					latLng={[
+						pinPos.lat,
+						pinPos.lon +
+							360 *
+								Math.round(
+									(centerLongitude - pinPos.lon) / 360,
+								),
+					]}
+					options={{
+						title: markerTitle,
+						icon: divIcon({
+							html: '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="40" height="40" fill="#ffba20" stroke="#000000" stroke-width="8px" viewBox="0 0 256 256"><path d="M128,16a88.1,88.1,0,0,0-88,88c0,75.3,80,132.17,83.41,134.55a8,8,0,0,0,9.18,0C136,236.17,216,179.3,216,104A88.1,88.1,0,0,0,128,16Zm0,56a32,32,0,1,1-32,32A32,32,0,0,1,128,72Z"></path></svg>',
+							iconAnchor: [20, 40],
+							iconSize: [40, 40],
+							className: "",
+						}),
+					}}
+				/>
+			{/key}
 		{/if}
 	</Map>
 	{#if covering}

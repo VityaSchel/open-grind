@@ -18,10 +18,13 @@ vi.mock("#lib/api/current-session.ts", () => ({
 	signedInProfileId: () => Promise.resolve(858049792),
 }));
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
+const PREVIEW = '[data-slot="album-preview"]';
 
 function previewWithCover(
 	coverUrl: string | null,
@@ -36,14 +39,42 @@ function previewWithCover(
 			attach: chat ? singleClick : undefined,
 		},
 	});
-	const preview = container.querySelector('[data-slot="album-preview"]');
+	const preview = container.querySelector(PREVIEW);
 	if (preview === null) throw new Error("no album preview");
 	return preview;
 }
 
-afterEach(() => {
+function renderPreview(label?: string): HTMLButtonElement {
+	const { container } = render(AlbumPreview, {
+		props: {
+			albumId: 900,
+			coverUrl: null,
+			hasPhoto: true,
+			hasVideo: false,
+			label,
+		},
+	});
+	const preview = container.querySelector<HTMLButtonElement>(PREVIEW);
+	if (preview === null) throw new Error("no album preview");
+	return preview;
+}
+
+async function failedToastLabel(preview: HTMLButtonElement): Promise<unknown> {
+	const consoleError = vi
+		.spyOn(console, "error")
+		.mockImplementation(() => {});
+	await fireEvent.click(preview);
+	await vi.waitFor(() => expect(sonner.toast.error).toHaveBeenCalledOnce());
+	await vi.waitFor(() => expect(preview.disabled).toBe(false));
+	expect(consoleError).toHaveBeenCalledOnce();
+	return sonner.toast.error.mock.calls[0]?.[0];
+}
+
+afterEach(async () => {
 	cleanup();
 	vi.clearAllMocks();
+	vi.restoreAllMocks();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("album preview", () => {
@@ -93,6 +124,44 @@ describe("album preview", () => {
 		expect(sonner.toast.info).not.toHaveBeenCalled();
 		expect(sonner.toast.error).not.toHaveBeenCalled();
 		expect(sonner.toast.message).not.toHaveBeenCalled();
+	});
+
+	it("says when the album fails to load", async () => {
+		lightbox.loadAlbumSlides.mockRejectedValue(new Error("offline"));
+
+		expect(await failedToastLabel(renderPreview())).toBe(
+			"Couldn’t load album",
+		);
+		expect(lightbox.openAlbumLightbox).not.toHaveBeenCalled();
+	});
+
+	it("says when the loaded album fails to open", async () => {
+		lightbox.loadAlbumSlides.mockResolvedValue([{ contentId: 1 }]);
+		lightbox.openAlbumLightbox.mockRejectedValue(new Error("no viewer"));
+
+		expect(await failedToastLabel(renderPreview())).toBe(
+			"Couldn’t open album",
+		);
+	});
+
+	it("words its failure toasts in the locale active when they show", async () => {
+		lightbox.loadAlbumSlides.mockRejectedValue(new Error("offline"));
+		const preview = renderPreview();
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(await failedToastLabel(preview)).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("names itself in the active locale unless the caller names it", async () => {
+		const named = renderPreview();
+		const custom = renderPreview("Studio");
+		expect(named.getAttribute("aria-label")).toBe("Open album");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(named.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(custom.getAttribute("aria-label")).toBe("Studio");
 	});
 });
 

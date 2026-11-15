@@ -74,16 +74,12 @@ fn rename_bundle(
 		return Ok(None);
 	}
 	if target.exists() {
-		return Err(DisguiseError::new(format!(
-			"An app named {name} is already in this folder"
-		)));
+		return Err(DisguiseError::NameTaken);
 	}
 	match std::fs::rename(bundle, &target) {
 		Ok(()) => Ok(Some(target)),
 		Err(error) if error.kind() == ErrorKind::PermissionDenied => {
-			Err(DisguiseError::new(
-				"The icon changed, but renaming the app needs an administrator",
-			))
+			Err(DisguiseError::RenameNeedsAdmin)
 		}
 		Err(error) => Err(error.into()),
 	}
@@ -156,9 +152,61 @@ pub(super) fn decorate(
 mod tests {
 	use super::*;
 
+	struct Folder(PathBuf);
+
+	impl Folder {
+		fn with_apps(test: &str, apps: &[&str]) -> Self {
+			let path = std::env::temp_dir()
+				.join(format!("open-grind-{test}-{}", std::process::id()));
+			for app in apps {
+				std::fs::create_dir_all(path.join(app)).unwrap();
+			}
+			Self(path)
+		}
+
+		fn set_mode(&self, mode: u32) {
+			use std::os::unix::fs::PermissionsExt;
+			std::fs::set_permissions(
+				&self.0,
+				std::fs::Permissions::from_mode(mode),
+			)
+			.unwrap();
+		}
+	}
+
+	impl Drop for Folder {
+		fn drop(&mut self) {
+			self.set_mode(0o755);
+			let _ = std::fs::remove_dir_all(&self.0);
+		}
+	}
+
 	#[test]
 	fn only_a_writable_folder_lets_the_app_rename_itself() {
 		assert!(!renamable(Path::new("/System/Applications/Calculator.app")));
 		assert!(renamable(&std::env::temp_dir().join("Open Grind.app")));
+	}
+
+	#[test]
+	fn renaming_onto_another_app_reports_the_name_as_taken() {
+		let folder =
+			Folder::with_apps("name-taken", &["Open Grind.app", "Papizza.app"]);
+
+		assert_eq!(
+			rename_bundle(&folder.0.join("Open Grind.app"), "Papizza.app"),
+			Err(DisguiseError::NameTaken)
+		);
+		assert!(folder.0.join("Open Grind.app").exists());
+	}
+
+	#[test]
+	fn renaming_in_a_folder_the_user_cannot_write_needs_an_administrator() {
+		let folder = Folder::with_apps("needs-admin", &["Open Grind.app"]);
+		folder.set_mode(0o555);
+
+		assert_eq!(
+			rename_bundle(&folder.0.join("Open Grind.app"), "Papizza.app"),
+			Err(DisguiseError::RenameNeedsAdmin)
+		);
 	}
 }

@@ -125,7 +125,7 @@ describe("composer GIF tab", () => {
 		await mount();
 
 		expect(
-			screen.getByText(/GIFs in your chats will load on their own/),
+			screen.getByText(/which GIFs load and that you use a Grindr app/),
 		).toBeTruthy();
 		expect(screen.queryByRole("searchbox")).toBeNull();
 		expect(api.getTrendingGifs).not.toHaveBeenCalled();
@@ -151,7 +151,7 @@ describe("composer GIF tab", () => {
 		await settle();
 
 		expect(toast.error).toHaveBeenCalledWith(
-			"Failed to save preferences",
+			"Couldn’t enable GIPHY",
 			expect.anything(),
 		);
 		expect(api.getTrendingGifs).not.toHaveBeenCalled();
@@ -179,7 +179,27 @@ describe("composer GIF tab", () => {
 		reducedMotion.current = true;
 		await mount();
 
-		expect(screen.getAllByText("GIF")).toHaveLength(2);
+		const badges = screen.getAllByText("GIF");
+		expect(badges).toHaveLength(2);
+		for (const badge of badges) {
+			expect(
+				badge.closest("[translate]")?.getAttribute("translate"),
+			).toBe("yes");
+		}
+	});
+
+	it("keeps GIPHY's titles out of page translation and names an untitled GIF itself", async () => {
+		api.getTrendingGifs.mockResolvedValue({
+			gifs: [
+				gifTile("a", { alt: "Trending a" }),
+				{ ...gifTile("b"), alt: { kind: "untitled" } },
+			],
+			nextOffset: null,
+		});
+		await mount();
+
+		expect(tile("Trending a").getAttribute("translate")).toBe("no");
+		expect(tile("GIF").hasAttribute("translate")).toBe(false);
 	});
 
 	it("presses only the GIF its menu has picked", async () => {
@@ -242,7 +262,7 @@ describe("composer GIF tab", () => {
 			query: "cat",
 			offset: 0,
 		});
-		expect(screen.getByText("No GIFs found")).toBeTruthy();
+		expect(screen.getByText("No GIFs Found")).toBeTruthy();
 	});
 
 	it("searches pasted text right away", async () => {
@@ -316,10 +336,12 @@ describe("composer GIF tab", () => {
 		);
 		await mount();
 
-		expect(screen.getByText("Couldn't load GIFs")).toBeTruthy();
+		expect(screen.getByText("Couldn’t load GIFs")).toBeTruthy();
 		expect(screen.queryByText(/Grindr/)).toBeNull();
 
-		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 		await settle();
 
 		expect(tile("Trending a")).toBeTruthy();

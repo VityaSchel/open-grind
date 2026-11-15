@@ -5,6 +5,8 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Drafts } from "#lib/chat/drafts.svelte.ts";
+import { restoreCountFormatter } from "#lib/i18n/fixtures/count-formatter.ts";
+import { setCountFormatter } from "#lib/i18n/index.ts";
 
 const { conversations, currentPage, playHapticMock } = vi.hoisted(() => ({
 	conversations: { drafts: null as Drafts | null },
@@ -20,11 +22,13 @@ vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import type { Conversation as ConversationType } from "#lib/model/messaging/conversations.ts";
 import Conversation from "./Conversation.svelte";
 
 const DESCRIPTION = '[data-slot="item-description"]';
 const DRAFT_PREFIX = '[data-slot="conversation-draft-prefix"]';
+const UNREAD_BADGE = '[data-slot="badge"]';
 const MENU_TRIGGER = '[data-slot="context-menu-trigger"]';
 const CONVERSATION_ID = "a:1";
 const BITS_HOLD_MS = 750;
@@ -92,6 +96,12 @@ function renderRow(
 
 function descriptionClass(container: HTMLElement): string {
 	return container.querySelector(DESCRIPTION)?.className ?? "";
+}
+
+function untranslatablePreview(container: HTMLElement): string[] {
+	const description = container.querySelector(DESCRIPTION);
+	if (description === null) throw new Error("Missing preview line");
+	return untranslatableTexts(description);
 }
 
 function previewLine(container: HTMLElement): string {
@@ -183,11 +193,61 @@ describe("Conversation preview line", () => {
 		expect(descriptionClass(drafted)).not.toContain("text-white");
 	});
 
+	it("keeps message words out of page translation but not a type label", () => {
+		const { container: text } = renderRow(textPreview("hello there"));
+
+		expect(untranslatablePreview(text)).toEqual(["hello there"]);
+		cleanup();
+
+		const { container: photo } = renderRow({
+			...textPreview("hello there"),
+			type: "Image",
+			text: null,
+			imageHash: "abc",
+		});
+
+		expect(previewLine(photo)).toBe("Photo");
+		expect(untranslatablePreview(photo)).toEqual([]);
+		cleanup();
+
+		const { container: missing } = renderRow(null);
+
+		expect(untranslatablePreview(missing)).toEqual([]);
+	});
+
+	it("keeps the draft out of page translation but not its prefix", () => {
+		drafts.save({ conversationId: CONVERSATION_ID, text: "see you at" });
+		const { container } = renderRow(textPreview("hello there"));
+
+		expect(untranslatablePreview(container)).toEqual(["see you at"]);
+	});
+
 	it("ignores a draft belonging to another conversation", () => {
 		drafts.save({ conversationId: "b:2", text: "not mine" });
 		const { container } = renderRow(textPreview("hello there"));
 
 		expect(previewLine(container)).toBe("hello there");
+	});
+});
+
+describe("Conversation unread badge", () => {
+	beforeEach(() => {
+		conversations.drafts = new Drafts();
+	});
+
+	afterEach(() => {
+		cleanup();
+		restoreCountFormatter();
+	});
+
+	it("prints the unread count with the count formatter", () => {
+		const bracketed = (value: number) => `[${value}]`;
+		setCountFormatter(({ count }) => bracketed(count));
+		const { container } = renderRow(textPreview("hello there"), 12);
+
+		expect(container.querySelector(UNREAD_BADGE)?.textContent?.trim()).toBe(
+			bracketed(12),
+		);
 	});
 });
 

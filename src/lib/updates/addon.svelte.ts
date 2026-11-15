@@ -6,9 +6,9 @@ import {
 	GOOGLE_OAUTH_COMPONENT,
 	RECAPTCHA_COMPONENT,
 } from "./components";
-import { type StagePresenter, UpdateFlow } from "./flow";
+import { UpdateFlow } from "./flow";
 import { getUpdateReadiness, updatesAvailableHere } from "./index";
-import type { UpdateStage } from "./stage";
+import type { StagePresenter, UpdateStage } from "./stage";
 import { toastPresenter } from "./toast-presenter";
 
 type Activity = { stage: UpdateStage | null; installs: number };

@@ -43,7 +43,7 @@ function checkedOption() {
 
 function switchChecked() {
 	return screen
-		.getByRole("switch", { name: "Filter by hosting" })
+		.getByRole("switch", { name: "Filter by Hosting" })
 		.getAttribute("aria-checked");
 }
 
@@ -62,7 +62,7 @@ describe("HostingQuickFilter", () => {
 		const options = screen.getAllByRole("radio");
 		expect(options.map((option) => option.textContent.trim())).toEqual([
 			"Hosting",
-			"Not hosting",
+			"Not Hosting",
 		]);
 		const drawings = options.map(
 			(option) => option.querySelector("svg")?.innerHTML,
@@ -78,7 +78,7 @@ describe("HostingQuickFilter", () => {
 		expect(checkedOption()).toEqual(["Hosting"]);
 
 		await fireEvent.click(
-			screen.getByRole("radio", { name: "Not hosting" }),
+			screen.getByRole("radio", { name: "Not Hosting" }),
 		);
 
 		expect(switchChecked()).toBe("true");
@@ -100,7 +100,7 @@ describe("HostingQuickFilter", () => {
 			hosting: false,
 		});
 
-		expect(checkedOption()).toEqual(["Not hosting"]);
+		expect(checkedOption()).toEqual(["Not Hosting"]);
 
 		await fireEvent.click(screen.getByRole("button", { name: "Reset" }));
 
@@ -124,7 +124,7 @@ describe("HostingQuickFilter", () => {
 		});
 
 		await fireEvent.click(
-			screen.getByRole("switch", { name: "Filter by hosting" }),
+			screen.getByRole("switch", { name: "Filter by Hosting" }),
 		);
 		await fireEvent.click(screen.getByRole("button", { name: "Apply" }));
 
@@ -139,7 +139,7 @@ describe("HostingQuickFilter", () => {
 		const { filters, rerender } = await openHostingFilter();
 
 		await fireEvent.click(
-			screen.getByRole("radio", { name: "Not hosting" }),
+			screen.getByRole("radio", { name: "Not Hosting" }),
 		);
 		expect(switchChecked()).toBe("true");
 

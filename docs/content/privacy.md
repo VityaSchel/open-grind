@@ -23,7 +23,7 @@ For the features you use, the app sends data straight to these services over enc
   - **GIPHY**: your GIF searches and language, the GIFs you load, and that you use Grindr. [Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy)
 - Only when using the **reCAPTCHA helper add-on**:
   - **Google**: device information, whenever Grindr asks for a captcha. [Policy](https://policies.google.com/privacy)
-- Only in **Fast mode** for notifications (the **FCM service add-on**):
+- Only in **Fast Mode** for notifications (the **FCM service add-on**):
   - **Google**: this device's Firebase installation ID and push token, and every notification Grindr sends through Firebase, including sender names and message text. [Policy](https://policies.google.com/privacy)
   - **Grindr**: that push token, so it can send your notifications.
 

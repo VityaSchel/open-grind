@@ -3,6 +3,7 @@
 
 	import AgeFilterSlider from "#lib/components/filters/age/AgeFilterSlider.svelte";
 	import FilterDrawer from "#lib/components/filters/FilterDrawer.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		AGE_MAX,
 		AGE_MIN,
@@ -34,8 +35,8 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title="Age"
-	switchLabel="Filter by age"
+	title={t("common.filters.age.label")}
+	switchLabel={t("browse.filters.age.a11y.toggle")}
 	onreset={() => {
 		value = [AGE_MIN, AGE_MAX];
 	}}

@@ -1,44 +1,53 @@
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 import {
 	type BanSubReason,
 	banSubReasonSchema,
 } from "#lib/model/authentication.ts";
 
-const labels: Record<BanSubReason, string | null> = {
-	UNDERAGE_ACCESS: "Underage access",
-	UNDERAGE_IMPERSONATION: "Underage impersonation",
-	CHILD_ENDANGERMENT: "Child protection and endangerment",
-	UNWANTED_MESSAGING: "Repeated or unwanted messaging",
-	PROFILE_SPAM: "Profile spam and advertising",
-	PHISHING_AND_FRAUD: "Phishing, fraud, and harmful links",
-	BOT_ACTIVITY: "Automated/bot activity",
-	DRUG_SALES: "Drug sale and distribution",
-	FREQUENT_DRUG_SOLICITATION: "Frequent drug solicitation",
-	OCCASIONAL_DRUG_SOLICITATION: "Occasional drug solicitation",
-	DRUG_PROMOTION: "Drug promotion or glorification drug solicitation",
+const labelKeys = {
+	UNDERAGE_ACCESS: "feedback.accountStatus.banReason.underageAccess",
+	UNDERAGE_IMPERSONATION:
+		"feedback.accountStatus.banReason.underageImpersonation",
+	CHILD_ENDANGERMENT: "feedback.accountStatus.banReason.childEndangerment",
+	UNWANTED_MESSAGING: "feedback.accountStatus.banReason.unwantedMessaging",
+	PROFILE_SPAM: "feedback.accountStatus.banReason.profileSpam",
+	PHISHING_AND_FRAUD: "feedback.accountStatus.banReason.phishingAndFraud",
+	BOT_ACTIVITY: "feedback.accountStatus.banReason.botActivity",
+	DRUG_SALES: "feedback.accountStatus.banReason.drugSales",
+	FREQUENT_DRUG_SOLICITATION:
+		"feedback.accountStatus.banReason.frequentDrugSolicitation",
+	OCCASIONAL_DRUG_SOLICITATION:
+		"feedback.accountStatus.banReason.occasionalDrugSolicitation",
+	DRUG_PROMOTION: "feedback.accountStatus.banReason.drugPromotion",
 	NON_ILLICIT_SUBSTANCES:
-		"Casual mentions of legal or non-illicit substances and symbols",
-	PAID_SEXUAL_SERVICES: "Paid sexual services",
-	MILD_SOLICITATION: "Mild solicitation and casual offers",
-	SALE_OF_SEXUAL_CONTENT: "Sale of sexually explicit content",
-	MILD_INSULTS: "Mild insults and disrespect",
-	BULLYING: "Targeted bullying and repeated abuse",
-	HATE_SPEECH: "Hate speech and offensive content",
-	BLACKMAIL_AND_THREATS: "Blackmail, extortion, and direct threats",
-	PRIVACY_VIOLATIONS: "Privacy violations and doxxing",
-	IMPERSONATION: "Impersonation and identity misuse",
-	CONSENT_VIOLATIONS: "Consent violations",
-	OFFLINE_INCIDENTS: "Serious offline incidents",
-	GENERAL_ADVERTISING: "General advertising and solicitation",
-	BUSINESS_SOLICITATION: "Business solicitation",
-	TRANSACTIONAL_SERVICES: "Transactional services",
-	SCAMS_AND_PROMOTIONS: "Scam and fraudulent promotions",
-	DRUG_SEEKING: "Drug seeking",
-	DRUG_FACILITATION: "Drug facilitation",
-	NON_CONSENSUAL_INTIMATE_IMAGERY: "Non-consensual intimate imagery",
-	SEXTORTION: "Sextortion",
+		"feedback.accountStatus.banReason.nonIllicitSubstances",
+	PAID_SEXUAL_SERVICES: "feedback.accountStatus.banReason.paidSexualServices",
+	MILD_SOLICITATION: "feedback.accountStatus.banReason.mildSolicitation",
+	SALE_OF_SEXUAL_CONTENT:
+		"feedback.accountStatus.banReason.saleOfSexualContent",
+	MILD_INSULTS: "feedback.accountStatus.banReason.mildInsults",
+	BULLYING: "feedback.accountStatus.banReason.bullying",
+	HATE_SPEECH: "feedback.accountStatus.banReason.hateSpeech",
+	BLACKMAIL_AND_THREATS:
+		"feedback.accountStatus.banReason.blackmailAndThreats",
+	PRIVACY_VIOLATIONS: "feedback.accountStatus.banReason.privacyViolations",
+	IMPERSONATION: "feedback.accountStatus.banReason.impersonation",
+	CONSENT_VIOLATIONS: "feedback.accountStatus.banReason.consentViolations",
+	OFFLINE_INCIDENTS: "feedback.accountStatus.banReason.offlineIncidents",
+	GENERAL_ADVERTISING: "feedback.accountStatus.banReason.generalAdvertising",
+	BUSINESS_SOLICITATION:
+		"feedback.accountStatus.banReason.businessSolicitation",
+	TRANSACTIONAL_SERVICES:
+		"feedback.accountStatus.banReason.transactionalServices",
+	SCAMS_AND_PROMOTIONS: "feedback.accountStatus.banReason.scamsAndPromotions",
+	DRUG_SEEKING: "feedback.accountStatus.banReason.drugSeeking",
+	DRUG_FACILITATION: "feedback.accountStatus.banReason.drugFacilitation",
+	NON_CONSENSUAL_INTIMATE_IMAGERY:
+		"feedback.accountStatus.banReason.nonConsensualIntimateImagery",
+	SEXTORTION: "feedback.accountStatus.banReason.sextortion",
 	BLOCK_DECISION: null,
 	Other: null,
-};
+} as const satisfies Record<BanSubReason, MessageKey | null>;
 
 const appealableTimedBans = new Set<BanSubReason>([
 	"UNDERAGE_ACCESS",
@@ -64,7 +73,8 @@ export function banSubReasonLabel(
 	subReason: string | null | undefined,
 ): string | null {
 	const known = parse(subReason);
-	return known && labels[known];
+	const key = known && labelKeys[known];
+	return key ? t(key) : null;
 }
 
 export function banOffersAppeal(subReason: string | null | undefined): boolean {

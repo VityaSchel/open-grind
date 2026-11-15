@@ -1,8 +1,10 @@
 <script lang="ts">
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import LocationGate from "#lib/components/location-chooser/LocationGate.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { revealedGridScrollTop } from "./grid-reveal";
 	import Grid from "./Grid.svelte";
@@ -31,9 +33,7 @@
 	);
 </script>
 
-<svelte:head>
-	<title>Open Grind</title>
-</svelte:head>
+<PageTitle page={t("shell.navBar.tabs.browse")} />
 <LocationGate>
 	{#snippet children({ geohash })}
 		<main class="screen-nav-host">

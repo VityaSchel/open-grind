@@ -37,7 +37,7 @@ async function pickIntoAlbum(page: Page) {
 		.first()
 		.click();
 	const previousUploads = page.getByRole("dialog", {
-		name: "Previous uploads",
+		name: "Previous Uploads",
 	});
 	const offersPreviousUploads = await previousUploads
 		.waitFor({ timeout: 5000 })

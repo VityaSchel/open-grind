@@ -8,6 +8,7 @@
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { rejectedParts } from "../right-now-post-fields";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import DiscardChangesDialog from "./DiscardChangesDialog.svelte";
@@ -124,10 +125,18 @@
 				dialogClass="pe-12"
 			>
 				<div class="flex min-w-0 flex-col gap-0.5">
-					<ResponsiveDialog.Title>Right Now</ResponsiveDialog.Title>
+					<ResponsiveDialog.Title>
+						{t("browse.rightNow.sheet.title")}
+					</ResponsiveDialog.Title>
 					<ResponsiveDialog.Description class="tabular-nums">
 						<span data-slot="right-now-post-sheet-status">
-							{off ? "Off" : "Active"} · {timeLeft} left
+							{off
+								? t("browse.rightNow.sheet.status.off", {
+										time: timeLeft,
+									})
+								: t("browse.rightNow.sheet.status.active", {
+										time: timeLeft,
+									})}
 						</span>
 					</ResponsiveDialog.Description>
 				</div>
@@ -139,7 +148,7 @@
 						/>
 					{/if}
 					<Switch
-						aria-label="Show my post"
+						aria-label={t("browse.rightNow.sheet.a11y.visible")}
 						aria-busy={toggling}
 						disabled={busy}
 						bind:checked={
@@ -166,8 +175,10 @@
 					>
 						<div class="flex flex-col gap-4">
 							<MultilineField
-								label="Text"
-								placeholder="What are you looking for?"
+								label={t("browse.rightNow.sheet.text.label")}
+								placeholder={t(
+									"browse.rightNow.sheet.text.placeholder",
+								)}
 								maxLength={POST_TEXT_MAX_LENGTH}
 								bind:value={
 									() => form.text,
@@ -184,7 +195,7 @@
 								{rejectedMediaIds}
 							/>
 							<SwitchField
-								title="Hosting"
+								title={t("browse.rightNow.sheet.hosting")}
 								bind:checked={form.hosting}
 								disabled={busy}
 							>
@@ -215,7 +226,7 @@
 						{#if savingEdits}
 							<Spinner aria-hidden="true" />
 						{/if}
-						Save
+						{t("common.actions.save")}
 					</Button>
 				</ResponsiveDialog.Footer>
 			</fieldset>

@@ -26,7 +26,10 @@ import { PersistedFiltersState } from "./persisted-filters-state.svelte";
 const options = {
 	key: "rightNowFeedFilters",
 	defaults: defaultRightNowFeedFilters,
-	labels: { load: "Failed to load", save: "Failed to save" },
+	labels: {
+		load: "browse.rightNow.filters.errors.loadFailed",
+		save: "browse.rightNow.filters.errors.updateFailed",
+	},
 } as const;
 
 const saved: RightNowFeedFilters = {
@@ -93,7 +96,7 @@ describe("loading", () => {
 		await loadedState();
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to load",
+			label: "Couldn’t load Right Now filters",
 			error: expect.any(Error),
 		});
 	});
@@ -172,7 +175,7 @@ describe("set", () => {
 
 		await vi.waitFor(() => {
 			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-				label: "Failed to save",
+				label: "Couldn’t update Right Now filters",
 				error: expect.any(Error),
 			});
 		});

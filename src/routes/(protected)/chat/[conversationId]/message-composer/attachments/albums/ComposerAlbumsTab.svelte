@@ -7,6 +7,7 @@
 	import AlbumTile from "#lib/components/album/AlbumTile.svelte";
 	import MediaGrid from "#lib/components/shared/MediaGrid.svelte";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 	import { getConversationState } from "../../../conversation-state.svelte";
@@ -45,12 +46,12 @@
 			return "unsharing";
 		else return "sharing";
 	});
-	const label = $derived.by(() => {
+	const action = $derived.by(() => {
 		switch (mode) {
 			case "sharing":
-				return "Share";
+				return "share";
 			case "unsharing":
-				return "Unshare";
+				return "unshare";
 		}
 	});
 
@@ -84,7 +85,7 @@
 
 	function toggleSelected(albumId: number) {
 		selected.toggle(albumId);
-		onSelectionChange({ count: selected.size, label });
+		onSelectionChange({ count: selected.size, action });
 	}
 
 	function share({
@@ -98,7 +99,7 @@
 			.update({ albumId, profileId, shared: true })
 			.catch((err: unknown) => {
 				console.error(err);
-				toast.error("Couldn't share album");
+				toast.error(t("common.albumShare.errors.shareFailed"));
 			});
 	}
 
@@ -114,9 +115,9 @@
 			await shareActions.update({ albumId, profileId, shared: false });
 		} catch (err) {
 			console.error(err);
-			toast.error("Couldn't unshare album");
+			toast.error(t("common.albumShare.errors.unshareFailed"));
 			selected.add(albumId);
-			onSelectionChange({ count: selected.size, label });
+			onSelectionChange({ count: selected.size, action });
 		} finally {
 			pendingUnshares--;
 		}
@@ -128,7 +129,7 @@
 		const albumIds = selected.values();
 		const submitted = mode;
 		selected.clear();
-		onSelectionChange({ count: 0, label });
+		onSelectionChange({ count: 0, action });
 		if (submitted === "unsharing") {
 			for (const albumId of albumIds)
 				void unshare({ albumId, profileId: target });
@@ -155,9 +156,11 @@
 				<Empty.Media variant="icon">
 					<FolderOpenIcon weight="fill" />
 				</Empty.Media>
-				<Empty.Title>No albums yet</Empty.Title>
+				<Empty.Title>
+					{t("chat.composer.attachments.albums.empty.title")}
+				</Empty.Title>
 				<Empty.Description>
-					Albums you create appear here, ready to share.
+					{t("chat.composer.attachments.albums.empty.description")}
 				</Empty.Description>
 			</Empty.Header>
 		</Empty.Root>

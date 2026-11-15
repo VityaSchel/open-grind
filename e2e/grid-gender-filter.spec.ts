@@ -19,13 +19,13 @@ const PRIMARY_CHIPS = [
 	"Trans Women",
 	"Non-Binary",
 ];
-const COLLAPSED_CHIPS = [...PRIMARY_CHIPS, "Not specified"];
+const COLLAPSED_CHIPS = [...PRIMARY_CHIPS, "Not Specified"];
 const EXPANDED_CHIPS = [
 	...PRIMARY_CHIPS,
 	"Agender",
 	"Androgynous",
 	"Bigender",
-	"Not specified",
+	"Not Specified",
 ];
 
 const genderFilter = (page: Page) =>
@@ -88,7 +88,7 @@ test("a saved Men selection shows its chip and can be swapped for Trans Women", 
 		"Cis Woman",
 		"Trans Women",
 		"Non-Binary",
-		"Not specified",
+		"Not Specified",
 	]);
 
 	await genderChip(page, "Men").click();

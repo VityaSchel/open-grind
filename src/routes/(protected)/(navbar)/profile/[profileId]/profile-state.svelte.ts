@@ -23,6 +23,7 @@ import {
 } from "#lib/api/users/profiles.ts";
 import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 import { Generation } from "#lib/util/generation.ts";
 import type { TapType } from "#lib/model/interest/taps.ts";
 import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
@@ -130,11 +131,11 @@ export class ProfileState {
 				);
 				conversations.invalidateConversation(conversationId);
 				void conversations.ensureLoaded(conversationId);
-				toast.success("Message sent");
+				toast.success(t("profile.imageCarousel.reply.sent"));
 			} catch (error) {
 				if (this.#current)
 					showErrorToast({
-						label: "Failed to send message",
+						label: t("chat.composer.errors.sendFailed"),
 						error,
 						onRetry: () => void send(),
 					});
@@ -281,7 +282,7 @@ export class ProfileState {
 			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
 				showErrorToast({
-					label: "Failed to refresh profile",
+					label: t("profile.page.errors.refreshFailed"),
 					error,
 					onRetry: () => void this.refresh(),
 				});

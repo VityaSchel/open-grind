@@ -34,6 +34,7 @@ import {
 	demoConversationMessages,
 	demoConversations,
 	demoDeleteConversation,
+	demoEmptyInbox,
 	demoMessagesById,
 	demoSentMessage,
 	demoSetConversationMuted,
@@ -79,9 +80,32 @@ import {
 	demoSetAccountPreferences,
 } from "./mock/settings";
 import { type DemoResponse, num } from "./routing";
+import {
+	type DemoList,
+	type DemoProfilePatch,
+	sceneMasksProfile,
+	sceneProfile,
+	screenshotScene,
+} from "./screenshot-scene";
 
 function ok(body: unknown): DemoResponse {
 	return { status: 200, body };
+}
+
+function emptied(list: DemoList): boolean {
+	return __SCREENSHOTS__ && screenshotScene.emptyLists.includes(list);
+}
+
+function signedOut(): boolean {
+	return __SCREENSHOTS__ && screenshotScene.signedOut;
+}
+
+function masked(profileId: number): boolean {
+	return __SCREENSHOTS__ && sceneMasksProfile(profileId);
+}
+
+function patchOf(profileId: number): DemoProfilePatch {
+	return __SCREENSHOTS__ ? sceneProfile(profileId) : {};
 }
 
 export function demoCallMethod(method: string): unknown {
@@ -100,10 +124,12 @@ export function demoCallMethod(method: string): unknown {
 			return "demo-recaptcha-token";
 		case "current_session":
 			return {
-				profileId: demoMeProfileId,
+				profileId: signedOut() ? null : demoMeProfileId,
 				expiresAt: null,
 				stale: false,
 			};
+		case "account_restriction":
+			return __SCREENSHOTS__ ? screenshotScene.restriction : null;
 		case "storage_backend":
 			return "keyring";
 		case "session_feature_flags":
@@ -166,7 +192,12 @@ export function demoRoute({
 		return demoExternalRoute({ path: rawPath, method, params });
 	}
 	if (method === "GET" && rawPath === "/v4/cascade") {
-		return ok(demoCascadeV4(params));
+		const cascade = demoCascadeV4(params);
+		return ok(
+			emptied("grid")
+				? { ...cascade, items: [], nextPage: null }
+				: cascade,
+		);
 	}
 	if (
 		method === "GET" &&
@@ -182,16 +213,18 @@ export function demoRoute({
 	const rightNowPost = demoRightNowPostRoute({ method, rawPath, body });
 	if (rightNowPost !== null) return rightNowPost;
 	if (method === "GET" && rawPath === "/v7/search") {
-		return ok({ profiles: demoSearchProfiles(params) });
+		return ok({
+			profiles: emptied("grid") ? [] : demoSearchProfiles(params),
+		});
 	}
 	if (method === "GET" && rawPath.startsWith("/v7/profiles/")) {
 		const id = Number(segments.at(-1));
 		const seed = profileSeed(id);
 		return ok({
 			profiles: [
-				demoProfileHidden(id)
+				demoProfileHidden(id) || masked(id)
 					? buildMaskedProfile(seed)
-					: buildFullProfile(seed),
+					: { ...buildFullProfile(seed), ...patchOf(id) },
 			],
 		});
 	}
@@ -201,17 +234,20 @@ export function demoRoute({
 		return ok({ profiles: demoGetProfiles(ids) });
 	}
 	if (rawPath === "/v3.1/me/profile/images" && method === "GET") {
-		return ok(demoMyUploadedPhotos());
+		return ok(emptied("photos") ? { medias: [] } : demoMyUploadedPhotos());
 	}
 	if (rawPath === "/public/v2/genders") return ok(demoGenders);
 	if (rawPath === "/v1/pronouns") return ok(demoPronouns);
 	if (rawPath === "/v1/tags") return ok(demoTags);
 	if (rawPath === "/v2/taps/received")
-		return ok({ profiles: demoReceivedTaps() });
+		return ok({ profiles: emptied("taps") ? [] : demoReceivedTaps() });
 	if (rawPath === "/v2/taps/add") return ok({ isMutual: false });
-	if (rawPath === "/v7/views/list") return ok(demoViews());
+	if (rawPath === "/v7/views/list")
+		return ok(
+			emptied("views") ? { profiles: [], previews: [] } : demoViews(),
+		);
 	if (rawPath === "/v3.1/me/blocks")
-		return ok({ blocking: demoBlockedUsers() });
+		return ok({ blocking: emptied("blocks") ? [] : demoBlockedUsers() });
 	if (
 		(method === "POST" || method === "DELETE") &&
 		segments[0] === "v3" &&
@@ -285,6 +321,7 @@ export function demoRoute({
 		}
 	}
 	if (method === "POST" && rawPath === "/v4/inbox") {
+		if (emptied("inbox")) return ok(demoEmptyInbox);
 		return ok(
 			demoConversations({
 				page: num(params.get("page")) ?? 1,
@@ -323,7 +360,7 @@ export function demoRoute({
 		return ok(demoMessagesById({ conversationId, messageIds }));
 	}
 	if (method === "GET" && rawPath === "/v1/albums") {
-		return ok(demoMyAlbums());
+		return ok(emptied("albums") ? { albums: [] } : demoMyAlbums());
 	}
 	if (method === "GET" && rawPath === "/v1/albums/storage") {
 		return ok(demoAlbumStorageLimits);
@@ -494,7 +531,7 @@ export function demoRoute({
 		return ok({});
 	}
 	if (method === "GET" && rawPath.startsWith("/v4/chat/media/drawer")) {
-		return ok(demoDrawerMedia());
+		return ok(emptied("drawer") ? [] : demoDrawerMedia());
 	}
 	if (method === "DELETE" && rawPath.startsWith("/v4/chat/media/drawer/")) {
 		demoDeleteDrawerMedia(Number(segments.at(-1)));

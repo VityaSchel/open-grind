@@ -3,6 +3,7 @@
 	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { mediaHashPublicSchema } from "#lib/model/media.ts";
 	import {
 		draftFromMessage,
@@ -71,7 +72,10 @@
 			},
 		}).catch((error: unknown) => {
 			if (controller.signal.aborted) return;
-			showErrorToast({ label: "Failed to open profile photo", error });
+			showErrorToast({
+				label: t("chat.message.profilePhotoReply.errors.openFailed"),
+				error,
+			});
 			open = false;
 			loading = false;
 		});
@@ -92,7 +96,7 @@
 	{#if covered}
 		<div
 			role="group"
-			aria-label="Replied profile photo"
+			aria-label={t("chat.message.profilePhotoReply.a11y.photo")}
 			class="relative block aspect-3/4 w-32 overflow-hidden rounded-lg"
 		>
 			{@render photo()}
@@ -100,7 +104,7 @@
 		</div>
 	{:else}
 		<button
-			aria-label="Open replied profile photo"
+			aria-label={t("chat.message.profilePhotoReply.a11y.open")}
 			class={[
 				"block aspect-3/4 w-32 overflow-hidden rounded-lg",
 				{ "opacity-50": loading },
@@ -116,7 +120,7 @@
 	{/if}
 </MessageQuote>
 <MessageBubble tone="sent">
-	<span class="wrap-anywhere whitespace-pre-wrap"
+	<span class="wrap-anywhere whitespace-pre-wrap" translate="no"
 		>{message.photoContentReply}</span
 	>
 </MessageBubble>

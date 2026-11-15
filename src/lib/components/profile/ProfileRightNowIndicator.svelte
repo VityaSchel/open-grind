@@ -2,6 +2,7 @@
 	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
 
 	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 	let {
@@ -15,7 +16,9 @@
 	} = $props();
 
 	const title = $derived(
-		status === "HOSTING" ? "Right Now · Hosting" : "Right Now",
+		status === "HOSTING"
+			? t("profile.rightNow.indicator.hosting")
+			: t("profile.rightNow.indicator.active"),
 	);
 </script>
 

@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import BackButton from "./BackButton.svelte";
 
@@ -87,12 +89,30 @@ function completeNavigation() {
 }
 
 describe("BackButton", () => {
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		document.body.replaceChildren();
 		vi.unstubAllGlobals();
 		afterNavigateCallbacks.length = 0;
 		gotoMock.mockReset();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("puts the link in a Back navigation landmark", () => {
+		const { link } = renderBackLink({ canGoBack: true });
+
+		const navigation = screen.getByRole("navigation", { name: "Back" });
+		expect(navigation.contains(link)).toBe(true);
+	});
+
+	it("words the landmark and the link in the active locale", async () => {
+		const { link } = renderBackLink({ canGoBack: true });
+		const navigation = link.closest("nav")!;
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(navigation.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(link.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
 	});
 
 	it("goes back through history when there is a previous screen", () => {

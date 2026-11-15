@@ -5,6 +5,8 @@
 	import { Input } from "#lib/components/ui/input/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { formatInteger, formatList } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { tagCatalog } from "#lib/model/browse/grid/filters.ts";
 	import { deepEqual } from "#lib/util/deep-equal.ts";
 	import FilterDropdown from "./FilterDropdown.svelte";
@@ -45,15 +47,15 @@
 		tag.textsLower.some((text) => text.startsWith(query));
 
 	const valueLabel = $derived(
-		value.map((key) => catalog?.textOf(key) ?? key).join(", "),
+		formatList(value.map((key) => catalog?.textOf(key) ?? key)),
 	);
 </script>
 
 <FilterDropdown
 	id="tags"
-	label="Tags"
+	label={t("common.filters.tags.label")}
 	endLabel={value.length > 5 || valueLabel.length > 20
-		? `${value.length} selected`
+		? t("browse.filters.tags.selected", { count: value.length })
 		: valueLabel}
 	bind:checked={
 		() => checked,
@@ -70,7 +72,7 @@
 			<Input
 				id="search-tags"
 				type="search"
-				placeholder="Search tags..."
+				placeholder={t("common.tags.searchPlaceholder")}
 				bind:value={searchQuery}
 				class="mb-2 text-sm"
 			/>
@@ -117,15 +119,19 @@
 							<div
 								class="w-full py-2 text-center text-xs text-muted-foreground"
 							>
-								Showing first {shown.length} of {filtered.length}
-								matches, keep typing to narrow down
+								{t("browse.filters.tags.truncated", {
+									count: filtered.length,
+									shown: formatInteger(shown.length),
+								})}
 							</div>
 						{/if}
 					{:else}
 						<div
 							class="w-full py-2 text-center text-xs text-muted-foreground"
 						>
-							No tags match "{searchQuery}"
+							{t("browse.filters.tags.noMatches", {
+								query: searchQuery,
+							})}
 						</div>
 					{/if}
 				{:else}
@@ -153,14 +159,16 @@
 					onclick={() => (expanded = !expanded)}
 				>
 					{#if expanded}
-						Less
+						{t("browse.filters.less")}
 					{:else}
-						More
+						{t("browse.filters.more")}
 					{/if}
 				</Button>
 			{/if}
 		{:catch}
-			<div class="text-sm text-destructive">Failed to load tags</div>
+			<div class="text-sm text-destructive">
+				{t("browse.filters.tags.errors.loadFailed")}
+			</div>
 		{/await}
 	</div>
 </FilterDropdown>

@@ -1,26 +1,26 @@
 <script lang="ts">
 	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
 
+	import IssueLink from "#lib/components/feedback/IssueLink.svelte";
 	import * as Alert from "#lib/components/ui/alert/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
-	import Link from "#lib/components/ui/link/Link.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 </script>
 
 <Alert.Root class="m-auto w-full max-w-sm">
 	<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
-	<Alert.Title>Unimplemented</Alert.Title>
+	<Alert.Title>{t("common.unimplemented.title")}</Alert.Title>
 	<Alert.Description>
-		Registration is not implemented yet, track <Link
-			href="https://git.opengrind.org/open-grind/open-grind/issues/21"
-		>
-			#21
-		</Link>.
+		<Rich key="auth.signUp.unimplemented">
+			{#snippet issueLink()}<IssueLink issue={21} />{/snippet}
+		</Rich>
 		<Button
 			variant="link"
 			href="/auth/sign-in"
 			class="mbs-1 block size-fit px-0"
 		>
-			Sign In
+			{t("auth.signUp.signIn")}
 		</Button>
 	</Alert.Description>
 </Alert.Root>

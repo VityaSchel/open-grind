@@ -11,11 +11,8 @@
 		unblockUser,
 	} from "#lib/api/browse/blocks.ts";
 	import ProfileList from "#lib/components/profile-list/ProfileList.svelte";
+	import { t } from "#lib/i18n/index.ts";
 </script>
-
-<svelte:head>
-	<title>Blocked users</title>
-</svelte:head>
 
 {#snippet icon(on: boolean)}
 	<ProhibitIcon weight={on ? "fill" : "regular"} class="size-6" />
@@ -28,13 +25,13 @@
 		on ? blockUser({ profileId }) : unblockUser({ profileId })}
 	{icon}
 	{scroll}
-	label="Blocked"
+	label={t("settings.blocked.a11y.toggle")}
 	errorLabel={{
-		turningOn: "Failed to block",
-		turningOff: "Failed to unblock",
+		turningOn: t("common.viewability.errors.blockFailed"),
+		turningOff: t("common.viewability.errors.unblockFailed"),
 	}}
 	empty={{
-		title: "No Blocked Users",
-		description: "People you block will appear here.",
+		title: t("settings.blocked.empty.title"),
+		description: t("settings.blocked.empty.description"),
 	}}
 />

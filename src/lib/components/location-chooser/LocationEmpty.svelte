@@ -10,6 +10,7 @@
 	import LocationChooser from "#lib/components/location-chooser/LocationChooser.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { reportLocationFailure } from "#lib/location/location-feedback.ts";
 	import { locationRequest } from "#lib/location/location-request.svelte.ts";
 	import { encodeGeohash } from "#lib/model/geohash.ts";
@@ -40,7 +41,10 @@
 			});
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to save location", error });
+			showErrorToast({
+				label: t("common.location.errors.saveFailed"),
+				error,
+			});
 			return;
 		}
 		toast(AutoLocationToast);
@@ -54,7 +58,10 @@
 			await setPreferences(submission);
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to save location", error });
+			showErrorToast({
+				label: t("common.location.errors.saveFailed"),
+				error,
+			});
 		}
 	}
 </script>
@@ -64,10 +71,9 @@
 		<Empty.Media variant="icon">
 			<NavigationArrowIcon weight="fill" color="var(--primary)" />
 		</Empty.Media>
-		<Empty.Title>Choose location</Empty.Title>
+		<Empty.Title>{t("browse.locationEmpty.title")}</Empty.Title>
 		<Empty.Description>
-			Pick a location on the map or select from the list to find nearby
-			profiles.
+			{t("browse.locationEmpty.description")}
 		</Empty.Description>
 	</Empty.Header>
 	<Empty.Content>
@@ -79,7 +85,7 @@
 					{disabled}
 				>
 					<GpsFixIcon color="currentColor" weight="fill" />
-					Use current location
+					{t("browse.locationEmpty.useCurrentLocation")}
 				</Button>
 			{/if}
 			<Button
@@ -87,7 +93,7 @@
 				onclick={() => (geoMapPickerOpen = true)}
 			>
 				<MagnifyingGlassIcon color="currentColor" weight="fill" />
-				Pick manually
+				{t("browse.locationEmpty.pickManually")}
 			</Button>
 		</div>
 	</Empty.Content>

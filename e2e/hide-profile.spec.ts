@@ -22,8 +22,8 @@ async function openFirstGridProfile(page: Page): Promise<string> {
 
 async function hideActiveProfile(page: Page) {
 	await activeProfilePane(page).getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Hide profile" }).click();
-	await expect(page.getByText("You hid this profile.")).toBeVisible();
+	await page.getByRole("menuitem", { name: "Hide user" }).click();
+	await expect(page.getByText("You have hidden this user")).toBeVisible();
 }
 
 test("hiding a profile takes it off the grid and offers an undo", async ({
@@ -33,10 +33,8 @@ test("hiding a profile takes it off the grid and offers an undo", async ({
 	const href = await openFirstGridProfile(page);
 
 	await hideActiveProfile(page);
-	await expect(page.getByText("You have blocked this profile.")).toHaveCount(
-		0,
-	);
-	await expect(page.getByText("This person has blocked you.")).toHaveCount(0);
+	await expect(page.getByText("You have blocked this user")).toHaveCount(0);
+	await expect(page.getByText("This user has blocked you")).toHaveCount(0);
 
 	await page.goBack();
 	await expect(page).toHaveURL(/\/$/);
@@ -53,7 +51,7 @@ test("unhiding from the profile brings the profile back", async ({ page }) => {
 		.getByRole("button", { name: "Unhide" })
 		.click();
 
-	await expect(page.getByText("You hid this profile.")).toHaveCount(0);
+	await expect(page.getByText("You have hidden this user")).toHaveCount(0);
 	await expect(
 		activeProfilePane(page).getByLabel("Profile menu"),
 	).toBeVisible();
@@ -100,7 +98,7 @@ test("the hidden list shows the most recently hidden first", async ({
 
 	await clickMeTab(page);
 	await page.getByRole("link", { name: "Account Settings" }).click();
-	await page.getByRole("link", { name: "Hidden users" }).click();
+	await page.getByRole("link", { name: "Hidden Users" }).click();
 
 	await expectHiddenList({ page, hrefs: [hiddenLast, hiddenFirst] });
 });
@@ -112,7 +110,7 @@ test("hiding again from the hidden list moves the profile to the top", async ({
 	const { hiddenFirst, hiddenLast } = await hideTwoFromGrid(page);
 	await clickMeTab(page);
 	await page.getByRole("link", { name: "Account Settings" }).click();
-	await page.getByRole("link", { name: "Hidden users" }).click();
+	await page.getByRole("link", { name: "Hidden Users" }).click();
 	await expectHiddenList({ page, hrefs: [hiddenLast, hiddenFirst] });
 
 	const toggle = page
@@ -125,7 +123,7 @@ test("hiding again from the hidden list moves the profile to the top", async ({
 	await expect(toggle).toHaveAttribute("aria-checked", "true");
 
 	await page.goBack();
-	await page.getByRole("link", { name: "Hidden users" }).click();
+	await page.getByRole("link", { name: "Hidden Users" }).click();
 
 	await expectHiddenList({ page, hrefs: [hiddenFirst, hiddenLast] });
 });

@@ -123,7 +123,7 @@ describe("QuickFilters", () => {
 
 	it.each([
 		["Age", "Age"],
-		["Position", "Positions"],
+		["Position", "Position"],
 		["Hosting", "Hosting"],
 	])("opens only the %s drawer from its button", async (button, title) => {
 		await renderQuickFilters();

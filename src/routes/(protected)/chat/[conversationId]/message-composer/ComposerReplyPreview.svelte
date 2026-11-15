@@ -4,8 +4,10 @@
 	import { expoOut } from "svelte/easing";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		previewFromMessage,
+		quoteIsUserText,
 		quoteLabel,
 	} from "#lib/model/messaging/message-preview.ts";
 	import { slide } from "#lib/util/reduced-motion.ts";
@@ -16,7 +18,9 @@
 		onCancel,
 	}: { message: ApiResponseMessage; onCancel?: () => void } = $props();
 
-	const label = $derived(quoteLabel(previewFromMessage(message)));
+	const preview = $derived(previewFromMessage(message));
+	const label = $derived(quoteLabel(preview));
+	const userText = $derived(quoteIsUserText(preview));
 </script>
 
 <div
@@ -24,14 +28,17 @@
 	transition:slide={{ duration: 200, easing: expoOut }}
 >
 	<ArrowBendUpLeftIcon class="shrink-0 text-muted-foreground" size={16} />
-	<span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+	<span
+		class="min-w-0 flex-1 truncate text-sm text-muted-foreground"
+		translate={userText ? "no" : undefined}
+	>
 		{label}
 	</span>
 	<Button
 		variant="ghost"
 		size="icon-xs"
 		class="rounded-full text-muted-foreground"
-		aria-label="Cancel reply"
+		aria-label={t("chat.composer.replyPreview.a11y.cancel")}
 		onclick={onCancel}
 	>
 		<XIcon />

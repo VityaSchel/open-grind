@@ -2,6 +2,7 @@
 	import type { ClassValue } from "svelte/elements";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { MATURE_CONTENT_SETTING_HREF } from "./mature-content.ts";
 
 	let {
@@ -18,16 +19,16 @@
 	]}
 >
 	<span class="text-[clamp(0.5rem,24cqw,1.5rem)] leading-none font-semibold">
-		18+
+		{t("media.matureContent.label")}
 	</span>
 	{#if !compact}
 		<Button
 			href={MATURE_CONTENT_SETTING_HREF}
 			variant="secondary"
 			size="sm"
-			aria-label="Show mature content"
+			aria-label={t("media.matureContent.a11y.show")}
 		>
-			Show
+			{t("media.matureContent.show")}
 		</Button>
 	{/if}
 </div>

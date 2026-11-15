@@ -3,6 +3,7 @@
 
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let { onreport }: { onreport: () => Promise<void> } = $props();
 
@@ -23,7 +24,7 @@
 	variant="ghost"
 	size="icon-sm"
 	class="-my-1 -me-2 shrink-0 text-muted-foreground"
-	aria-label="Report post"
+	aria-label={t("browse.rightNow.post.a11y.report")}
 	aria-busy={checking}
 	onclick={() => void report()}
 >

@@ -56,7 +56,7 @@ test("the Tribes They're Into filter asks the grid for the tribes picked in it",
 	await page.getByRole("button", { name: "All filters" }).click();
 	const filters = page.getByRole("dialog");
 	await filters
-		.getByRole("checkbox", { name: "Tribes They're Into" })
+		.getByRole("checkbox", { name: "Tribes They’re Into" })
 		.click();
 	await filters.getByRole("button", { name: "Otter", exact: true }).click();
 	await filters.getByRole("button", { name: "Apply" }).click();

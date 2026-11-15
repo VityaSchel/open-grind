@@ -1,3 +1,13 @@
+<script lang="ts" module>
+	import type { PlainMessageKey } from "#lib/i18n/index.ts";
+
+	export type SubpageRoute = {
+		title: PlainMessageKey;
+		back: string;
+		wide?: boolean;
+	};
+</script>
+
 <script lang="ts">
 	import { afterNavigate, beforeNavigate } from "$app/navigation";
 	import { page } from "$app/state";
@@ -5,7 +15,9 @@
 	import type { Snippet } from "svelte";
 
 	import BackLink from "#lib/components/navigation/BackLink.svelte";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { provideSubpageActions } from "./subpage-actions-context.svelte";
 
@@ -14,16 +26,18 @@
 		parent,
 		children,
 	}: {
-		routes: Record<string, { title: string; back: string; wide?: boolean }>;
+		routes: Readonly<Record<string, SubpageRoute>>;
 		parent: string;
 		children?: Snippet;
 	} = $props();
 
 	const actions = provideSubpageActions();
 
-	const current = $derived(
-		(page.route.id && routes[page.route.id]) ?? { title: "", back: parent },
+	const current: Partial<SubpageRoute> & { back: string } = $derived(
+		(page.route.id && routes[page.route.id]) ?? { back: parent },
 	);
+
+	const title = $derived(current.title === undefined ? "" : t(current.title));
 
 	let scroller: HTMLDivElement | null = $state(null);
 	const offsets: Record<string, number> = {};
@@ -44,13 +58,17 @@
 	});
 </script>
 
+{#if current.title !== undefined}
+	<PageTitle page={title} />
+{/if}
+
 <ProgressiveBlur
 	direction="topToBottom"
 	class="fixed top-0 left-0 z-20 h-[calc(4.75rem+var(--safe-area-top))] w-full shrink-0"
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
-	aria-label="Page"
+	aria-label={t("shell.subpageScreen.a11y.navigation")}
 	{@attach topChrome}
 >
 	<BackLink
@@ -59,9 +77,7 @@
 	>
 		<ArrowLeftIcon size={32} />
 	</BackLink>
-	<span class="min-w-0 flex-1 truncate">
-		{current.title}
-	</span>
+	<span class="min-w-0 flex-1 truncate">{title}</span>
 	{@render actions.snippet?.()}
 </ProgressiveBlur>
 <main class="screen-nav-host">

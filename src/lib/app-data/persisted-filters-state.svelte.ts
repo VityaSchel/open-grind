@@ -3,6 +3,7 @@ import {
 	isAccountEpochCurrent,
 } from "#lib/api/account-caches.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import { deepEqual } from "#lib/util/deep-equal.ts";
 import {
 	getPreferences,
@@ -20,7 +21,7 @@ export class PersistedFiltersState<Key extends FiltersKey> {
 
 	readonly #key: Key;
 	readonly #defaults: Filters<Key>;
-	readonly #labels: { load: string; save: string };
+	readonly #labels: { load: PlainMessageKey; save: PlainMessageKey };
 	readonly #onQueryChange: () => void;
 	#epoch = accountEpoch();
 
@@ -32,7 +33,7 @@ export class PersistedFiltersState<Key extends FiltersKey> {
 	}: {
 		key: Key;
 		defaults: Filters<Key>;
-		labels: { load: string; save: string };
+		labels: { load: PlainMessageKey; save: PlainMessageKey };
 		onQueryChange: () => void;
 	}) {
 		this.#key = key;
@@ -76,7 +77,7 @@ export class PersistedFiltersState<Key extends FiltersKey> {
 			await setPreferences(preferences);
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: this.#labels.save, error });
+			showErrorToast({ label: t(this.#labels.save), error });
 		}
 	}
 
@@ -86,7 +87,7 @@ export class PersistedFiltersState<Key extends FiltersKey> {
 			if (this.value === null) this.value = stored ?? this.#defaults;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: this.#labels.load, error });
+			showErrorToast({ label: t(this.#labels.load), error });
 		}
 	}
 }

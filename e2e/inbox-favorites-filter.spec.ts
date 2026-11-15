@@ -3,6 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 
 const CONVERSATION_LINK = 'a[href^="/chat/1"]';
+const FAVORITES_ONLY = "Favorites Only";
 
 const scrollerPaddingTop = (page: Page) => () =>
 	page
@@ -29,7 +30,7 @@ test("the inbox star filter narrows the list to favorites and back", async ({
 	expect(unfiltered.length).toBeGreaterThan(1);
 	expect(unfiltered).toContain(DEMO_CONVERSATION);
 
-	const star = page.getByRole("button", { name: "Favorites only" });
+	const star = page.getByRole("button", { name: FAVORITES_ONLY });
 	await star.click();
 
 	await expect
@@ -60,7 +61,7 @@ test("unstarring the last favorite leaves the filter with no results", async ({
 
 	await page.locator('nav a[href="/chat"]').first().click();
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
-	await page.getByRole("button", { name: "Favorites only" }).click();
+	await page.getByRole("button", { name: FAVORITES_ONLY }).click();
 
 	await expect(page.getByText("No Results")).toBeVisible();
 	await expect(
@@ -74,7 +75,7 @@ test("leaving the chat section clears the filter", async ({ page }) => {
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
-	const star = page.getByRole("button", { name: "Favorites only" });
+	const star = page.getByRole("button", { name: FAVORITES_ONLY });
 	await star.click();
 	await expect(star).toHaveAttribute("aria-pressed", "true");
 
@@ -85,7 +86,7 @@ test("leaving the chat section clears the filter", async ({ page }) => {
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
 	await expect(
-		page.getByRole("button", { name: "Favorites only" }),
+		page.getByRole("button", { name: FAVORITES_ONLY }),
 	).toHaveAttribute("aria-pressed", "false");
 	await expect
 		.poll(async () => (await listedConversations(page)).length)
@@ -99,7 +100,7 @@ test("the filter is session-only and its bar stays pinned while scrolling", asyn
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
-	const star = page.getByRole("button", { name: "Favorites only" });
+	const star = page.getByRole("button", { name: FAVORITES_ONLY });
 	const barTop = async () => (await star.boundingBox())?.y;
 	const restingTop = await barTop();
 
@@ -114,7 +115,7 @@ test("the filter is session-only and its bar stays pinned while scrolling", asyn
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
 	await expect(
-		page.getByRole("button", { name: "Favorites only" }),
+		page.getByRole("button", { name: FAVORITES_ONLY }),
 	).toHaveAttribute("aria-pressed", "false");
 });
 
@@ -145,7 +146,7 @@ test("selection mode takes the filters bar away and gives it back", async ({
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
-	const star = page.getByRole("button", { name: "Favorites only" });
+	const star = page.getByRole("button", { name: FAVORITES_ONLY });
 	const unreachable = () =>
 		star.evaluate((node) => node.closest("[inert]") !== null);
 	await expect(star).toBeVisible();

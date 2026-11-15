@@ -11,6 +11,7 @@
 		offerEntitlementBypass,
 		reportRefusedDespiteBypass,
 	} from "#lib/entitlements/bypass.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		type ConversationState,
 		getConversationState,
@@ -64,7 +65,7 @@
 			console.error(error);
 			if (tieredFeature(error) === "UnsentMessage") {
 				const lease = await offerEntitlementBypass({
-					reason: "Unsending a message requires a Grindr subscription.",
+					reason: "chat.conversation.bypassReason.unsend",
 				});
 				if (lease === null) return;
 				await unsend({ state, messageId })
@@ -72,7 +73,10 @@
 					.finally(lease.release);
 				return;
 			}
-			showErrorToast({ label: "Failed to unsend message", error });
+			showErrorToast({
+				label: t("chat.messages.errors.unsendFailed"),
+				error,
+			});
 		}
 	}
 
@@ -87,7 +91,10 @@
 			});
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to delete message", error });
+			showErrorToast({
+				label: t("chat.messages.errors.deleteFailed"),
+				error,
+			});
 			revert();
 		}
 	}
@@ -139,7 +146,10 @@
 				});
 			} catch (error) {
 				console.error(error);
-				showErrorToast({ label: "Failed to react to message", error });
+				showErrorToast({
+					label: t("chat.messages.errors.reactFailed"),
+					error,
+				});
 			}
 		}}
 		onUnsend={isOut && delivered && !message.unsent

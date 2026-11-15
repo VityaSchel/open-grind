@@ -253,7 +253,7 @@ describe("pasting", () => {
 		paste([png()]);
 
 		await vi.waitFor(() =>
-			expect(toastError).toHaveBeenCalledWith("Couldn't read that file"),
+			expect(toastError).toHaveBeenCalledWith("Couldn’t read that file"),
 		);
 		expect(invokeMock).toHaveBeenCalledWith("discard_staged_media", {
 			id: "staged-1",
@@ -357,7 +357,7 @@ describe("dragging", () => {
 		);
 
 		expect(event.defaultPrevented).toBe(true);
-		expect(toastError).toHaveBeenCalledWith("Couldn't download that image");
+		expect(toastError).toHaveBeenCalledWith("Couldn’t download that image");
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 
@@ -586,7 +586,7 @@ describe("dragging", () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		invokeMock.mockRejectedValue({
 			kind: "Media",
-			message: "That link isn't a photo or video",
+			message: { reason: "linkNotMedia" },
 		});
 		const chat = target();
 		register(chat);
@@ -597,7 +597,7 @@ describe("dragging", () => {
 
 		await vi.waitFor(() =>
 			expect(toastError).toHaveBeenCalledWith(
-				"That link isn't a photo or video",
+				"That link isn’t a photo or video",
 			),
 		);
 		expect(chat.receive).not.toHaveBeenCalled();
@@ -655,7 +655,7 @@ describe("screenMedia", () => {
 			"video",
 		]);
 		expect(toastError.mock.calls).toEqual([
-			["That file isn't a photo or video"],
+			["That file isn’t a photo or video"],
 		]);
 		for (const id of ["pdf", "zip"]) {
 			expect(invokeMock).toHaveBeenCalledWith("discard_staged_media", {
@@ -676,6 +676,6 @@ describe("screenMedia", () => {
 		});
 
 		expect(accepted.map(({ media }) => media.key)).toEqual(["photo"]);
-		expect(toastError).toHaveBeenCalledWith("Videos can't be added here");
+		expect(toastError).toHaveBeenCalledWith("Videos can’t be added here");
 	});
 });

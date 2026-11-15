@@ -9,6 +9,7 @@
 	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
 	import * as Avatar from "#lib/components/ui/avatar/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { PostData } from "#lib/model/right-now/feed.ts";
 	import PostHeadline from "./PostHeadline.svelte";
 	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
@@ -35,15 +36,21 @@
 		conversationIdFor({ profileId: post.profileId, ourProfileId }),
 	);
 	const joinedHeadline = $derived(
-		post.displayName ? `${post.displayName} joined` : "Joined",
+		post.displayName
+			? t("browse.rightNow.post.joined", { name: post.displayName })
+			: t("browse.rightNow.post.joinedAnonymous"),
 	);
 	const profileLabel = $derived(
 		post.displayName
-			? `View ${post.displayName}'s profile`
-			: "View profile",
+			? t("browse.rightNow.post.a11y.viewProfile", {
+					name: post.displayName,
+				})
+			: t("browse.rightNow.post.a11y.viewProfileAnonymous"),
 	);
 	const messageLabel = $derived(
-		post.displayName ? `Message ${post.displayName}` : "Message",
+		post.displayName
+			? t("browse.rightNow.post.a11y.message", { name: post.displayName })
+			: t("browse.rightNow.post.message"),
 	);
 </script>
 
@@ -86,7 +93,7 @@
 				class="flex items-center gap-1 text-sm text-muted-foreground"
 			>
 				<HourglassMediumIcon class="size-4" />
-				Under review
+				{t("browse.rightNow.post.underReview")}
 			</p>
 		{/if}
 		{#if photo}
@@ -103,11 +110,11 @@
 					<Button
 						variant="secondary"
 						size="sm"
-						aria-label="Edit your post"
+						aria-label={t("browse.rightNow.post.a11y.edit")}
 						onclick={onedit}
 					>
 						<PencilIcon weight="fill" class="size-4" />
-						Edit
+						{t("browse.rightNow.post.edit")}
 					</Button>
 				{/if}
 			{:else}
@@ -118,7 +125,7 @@
 					aria-label={messageLabel}
 				>
 					<ChatIcon weight="fill" class="size-4" />
-					Message
+					{t("browse.rightNow.post.message")}
 				</Button>
 			{/if}
 		</div>

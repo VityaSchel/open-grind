@@ -5,11 +5,12 @@
 		hydratePreferences,
 		preferencesSnapshot,
 	} from "#lib/app-data/preferences.svelte.ts";
+	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import LocationEmpty from "#lib/components/location-chooser/LocationEmpty.svelte";
 
 	let { children }: { children: Snippet<[{ geohash: string }]> } = $props();
 
-	const preferencesHydrated = hydratePreferences();
+	let preferencesHydrated = $state(hydratePreferences());
 	const geohash = $derived(preferencesSnapshot().geohash);
 </script>
 
@@ -21,4 +22,12 @@
 	{:else}
 		{@render children({ geohash })}
 	{/if}
+{:catch error}
+	<main class="m-auto flex max-w-full flex-1">
+		<ApiErrorDisplay
+			{error}
+			onRetry={() => (preferencesHydrated = hydratePreferences())}
+			class="m-auto"
+		/>
+	</main>
 {/await}

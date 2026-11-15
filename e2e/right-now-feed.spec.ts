@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { METRES_PER_KILOMETRE } from "../src/lib/util/units";
 import {
 	afterTwoFrames,
 	FIRST_ROUTE_COMPILE_MS,
@@ -34,10 +33,7 @@ const NOT_REPORT_POST = /^(?!Report post$)/;
 const DEMO_DISCREET_POSTS = 2;
 const ORDERED_DISTANCES_CHECKED = 10;
 const SCROLLED_TOP = 1200;
-const METRES_PER_UNIT: Record<string, number> = {
-	m: 1,
-	km: METRES_PER_KILOMETRE,
-};
+const METRES_PER_UNIT: Record<string, number> = { m: 1, km: 1000 };
 
 const articles = (page: Page) => page.getByRole("article");
 const feedScroller = (page: Page) => page.locator(FEED_SCROLLER);
@@ -188,7 +184,7 @@ test.describe("the demo feed", () => {
 		await expect(unmarked.first()).toBeAttached();
 
 		const dialog = await openFilter(page, "Hosting");
-		await dialog.getByRole("switch", { name: "Filter by hosting" }).check();
+		await dialog.getByRole("switch", { name: "Filter by Hosting" }).check();
 		await dialog
 			.getByRole("radio", { name: "Hosting", exact: true })
 			.check();
@@ -209,7 +205,7 @@ test.describe("the demo feed", () => {
 		page,
 	}) => {
 		const dialog = await openFilter(page, "Age");
-		await dialog.getByRole("slider", { name: "Minimum age" }).press("End");
+		await dialog.getByRole("slider", { name: "Minimum Age" }).press("End");
 		await dialog.getByRole("button", { name: "Apply" }).click();
 
 		await expect(page.getByText("No Results")).toBeVisible({
@@ -310,7 +306,7 @@ test.describe("a feed whose first load fails", () => {
 		});
 		await goToRightNow(page);
 
-		const retry = page.getByRole("button", { name: "Retry" });
+		const retry = page.getByRole("button", { name: "Try again" });
 		await expect(retry).toBeVisible({ timeout: FIRST_ROUTE_COMPILE_MS });
 		expect(await articles(page).count()).toBe(0);
 

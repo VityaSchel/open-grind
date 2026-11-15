@@ -1,0 +1,286 @@
+{
+	"grid": {
+		"a11y": {
+			"loadingMore": "Loading more profiles"
+		},
+		"empty": {
+			"noProfiles": {
+				"title": "No Profiles Found",
+				"description": "Try changing or resetting your filters."
+			},
+			"noMatchingFavorites": {
+				"description": "No favorites match these filters."
+			},
+			"noFavorites": {
+				"title": "No Favorites Yet",
+				"description": "Select the star on someone’s profile to save them here."
+			},
+			"resetFilters": "Reset filters"
+		},
+		"errors": {
+			"loadMoreFailed": "Couldn’t load more profiles",
+			"loadProfileFailed": "Couldn’t load profile",
+			"refreshFailed": "Couldn’t refresh profiles"
+		},
+		"searchFilters": {
+			"errors": {
+				"loadFailed": "Couldn’t load filters",
+				"updateFailed": "Couldn’t save filters"
+			}
+		}
+	},
+	"locationChange": {
+		"a11y": {
+			"change": "Change location",
+			"autoUpdating": "Location is updating automatically"
+		}
+	},
+	"locationEmpty": {
+		"title": "Choose Location",
+		"description": "Use your current location or choose one on the map to find nearby profiles.",
+		"useCurrentLocation": "Use current location",
+		"pickManually": "Choose on map"
+	},
+	"gridFilters": {
+		"title": "Filters"
+	},
+	"quickFilters": {
+		"a11y": {
+			"allFilters": "All filters"
+		}
+	},
+	"filters": {
+		"noMin": "No min",
+		"noMax": "No max",
+		"ageAndOver_one": "{{count}} year and over",
+		"ageAndOver_other": "{{count}} years and over",
+		"withinDistance": "Within {{distance}}",
+		"apply": "Apply",
+		"reset": "Reset",
+		"less": "Less",
+		"more": "More",
+		"age": {
+			"a11y": {
+				"minimum": "Minimum Age",
+				"maximum": "Maximum Age",
+				"toggle": "Filter by Age"
+			}
+		},
+		"height": {
+			"a11y": {
+				"minimum": "Minimum Height",
+				"maximum": "Maximum Height"
+			}
+		},
+		"weight": {
+			"a11y": {
+				"minimum": "Minimum Weight",
+				"maximum": "Maximum Weight"
+			}
+		},
+		"distance": {
+			"a11y": {
+				"maximum": "Maximum Distance"
+			}
+		},
+		"tags": {
+			"selected_one": "{{count}} selected",
+			"selected_other": "{{count}} selected",
+			"truncated_one": "Showing the first {{shown}} of {{count}} match. Keep typing to narrow the results.",
+			"truncated_other": "Showing the first {{shown}} of {{count}} matches. Keep typing to narrow the results.",
+			"noMatches": "No tags match “{{query}}”",
+			"errors": {
+				"loadFailed": "Couldn’t load tags"
+			}
+		}
+	},
+	"rightNow": {
+		"filters": {
+			"errors": {
+				"loadFailed": "Couldn’t load Right Now filters",
+				"updateFailed": "Couldn’t update Right Now filters"
+			},
+			"sort": {
+				"newest": "Newest",
+				"distance": "Distance"
+			},
+			"a11y": {
+				"sort": "Sort: {{sort}}"
+			},
+			"hosting": {
+				"label": "Hosting",
+				"hosting": "Hosting",
+				"notHosting": "Not Hosting",
+				"a11y": {
+					"toggle": "Filter by Hosting"
+				}
+			}
+		},
+		"feed": {
+			"newPosts": "New posts",
+			"errors": {
+				"refreshFailed": "Couldn’t refresh Right Now"
+			}
+		},
+		"empty": {
+			"noResults": {
+				"description": "No posts match these filters."
+			},
+			"noPosts": {
+				"title": "No Posts Yet",
+				"description": "No one nearby is on Right Now.",
+				"noOneElse": "No one else nearby is on Right Now.",
+				"joinFirst": "No one nearby is on Right Now. Join to be the first."
+			}
+		},
+		"post": {
+			"joined": "{{name}} joined",
+			"joinedAnonymous": "Joined",
+			"discreet": "Discreet post",
+			"age_one": "{{count}} year old",
+			"age_other": "{{count}} years old",
+			"underReview": "Under review",
+			"edit": "Edit",
+			"message": "Message",
+			"hosting": "Hosting",
+			"a11y": {
+				"viewProfile": "View {{name}}’s profile",
+				"viewProfileAnonymous": "View profile",
+				"message": "Message {{name}}",
+				"edit": "Edit your post",
+				"report": "Report post"
+			}
+		},
+		"photo": {
+			"alt": "Post photo",
+			"mayContainNudity": "May contain nudity",
+			"a11y": {
+				"open": "Open photo"
+			}
+		},
+		"timeLeft": {
+			"seconds": "{{seconds}}s",
+			"minutes": "{{minutes}}m",
+			"hours": "{{hours}}h",
+			"hoursMinutes": "{{hours}}h {{minutes}}m"
+		},
+		"join": {
+			"label": "Join",
+			"allowance_one": "{{count}} left",
+			"allowance_other": "{{count}} left",
+			"allowanceNone": "0 left",
+			"a11y": {
+				"withAllowance": "Join · {{allowance}}",
+				"exhausted": "Join · {{allowance}}. No free posts left in this area"
+			},
+			"running": {
+				"active": "{{time}} left",
+				"off": "Off · {{time}}",
+				"a11y": {
+					"active": "Your Right Now post, {{time}} left",
+					"off": "Your Right Now post, off, {{time}} left"
+				}
+			},
+			"confirm": {
+				"title": "Join Right Now?",
+				"description": "You’ll show as “Joined” until you add a post.",
+				"join": "Join now"
+			}
+		},
+		"sheet": {
+			"title": "Right Now",
+			"status": {
+				"active": "Active · {{time}} left",
+				"off": "Off · {{time}} left"
+			},
+			"a11y": {
+				"visible": "Show my post"
+			},
+			"text": {
+				"label": "Text",
+				"placeholder": "What are you looking for?"
+			},
+			"hosting": "Hosting",
+			"rejected": {
+				"textAndPhoto": "Your text and photo were rejected",
+				"photo": "Your photo was rejected",
+				"text": "Your text was rejected",
+				"noReason": "No reason was given."
+			},
+			"rejectReason": {
+				"bullying": "Bullying",
+				"selfHarm": "Self harm",
+				"drugPatterns": "Drug patterns",
+				"hateSpeech": "Hate speech",
+				"sexSolicitation": "Solicitation of sex",
+				"spamDisruption": "Spam/disruption",
+				"underage": "Content with minors",
+				"other": "Other"
+			},
+			"discard": {
+				"title": "Discard changes?",
+				"description": "You have unsaved changes.",
+				"keepEditing": "Keep editing",
+				"discard": "Discard"
+			},
+			"location": {
+				"showOnMap": "Show me on map",
+				"accuracy": "Location accuracy",
+				"radius": "Within about {{distance}}"
+			},
+			"photo": {
+				"label": "Photo",
+				"altRejected": "Post photo, rejected",
+				"remove": "Remove photo",
+				"keep": "Keep photo",
+				"uploading": "Uploading photo",
+				"add": "Add photo",
+				"upload": "Upload a photo",
+				"addToPost": "Add to post",
+				"errors": {
+					"uploadFailed": "Couldn’t upload photo",
+					"pickerFailed": "Couldn’t open the photo picker",
+					"tooSmall": "This photo is too small"
+				}
+			}
+		},
+		"ownPost": {
+			"errors": {
+				"joinFailed": "Couldn’t join Right Now",
+				"saveFailed": "Couldn’t save your post",
+				"turnOffFailed": "Couldn’t turn off Right Now",
+				"turnOnFailed": "Couldn’t turn on Right Now",
+				"restartFailed": "Couldn’t start a new Right Now session"
+			},
+			"noFreePosts": "No free posts left in this area",
+			"alreadyRunning": "You already have a post running",
+			"rejected": "Your post was rejected",
+			"why": "Why?",
+			"ended": "Your Right Now session ended",
+			"goAgain": "Go again"
+		}
+	},
+	"locationChooser": {
+		"map": {
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"selectedLocation": "Selected location",
+			"attribution": "OpenStreetMap contributors"
+		},
+		"autoUpdate": "Update automatically using GPS",
+		"searchPlaceholder": "Search places…",
+		"a11y": {
+			"title": "Choose Location",
+			"description": "Drag the map to place the pin where you want to browse from.",
+			"locateMe": "Go to current location"
+		}
+	},
+	"location": {
+		"permissionDenied": "Location permission denied. Change this in your system settings to use GPS.",
+		"openSettings": "Settings",
+		"errors": {
+			"locateFailed": "Couldn’t get your current location",
+			"autoUpdateFailed": "Couldn’t update your location automatically"
+		}
+	}
+}

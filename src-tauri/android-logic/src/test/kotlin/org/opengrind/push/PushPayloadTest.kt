@@ -35,7 +35,9 @@ class PushPayloadTest {
 		"timestamp" to "1699999999000",
 	)
 
-	private fun decide(data: Map<String, String>) = PushPayload.decide(data, now)
+	private val words: (PushText) -> String = { "[${it.name}]" }
+
+	private fun decide(data: Map<String, String>) = PushPayload.decide(data, now, words)
 
 	@Test
 	fun `a direct message becomes a notification with its plaintext title and body`() {
@@ -50,19 +52,49 @@ class PushPayloadTest {
 	}
 
 	@Test
-	fun `a translated body renders the english string rather than its key`() {
-		val decision = decide(
-			message("body" to "CHAT_IMAGE_NOTIFICATION_BODY", "translateBody" to "true"),
-		) as PushDecision.Notify
-		assertEquals("Sent you a picture", decision.body)
+	fun `a translated body is worded by the text of its key rather than shown as the key`() {
+		val texts = mapOf(
+			"CHAT_IMAGE_NOTIFICATION_BODY" to PushText.Picture,
+			"CHAT_LOCATION_NOTIFICATION_BODY" to PushText.Location,
+			"CHAT_GIF_NOTIFICATION_BODY" to PushText.Gif,
+			"CHAT_AUDIO_NOTIFICATION_BODY" to PushText.Audio,
+			"CHAT_GAYMOJI_NOTIFICATION_BODY" to PushText.Gaymoji,
+			"CHAT_EXPIRING_IMAGE_NOTIFICATION_BODY" to PushText.ExpiringImage,
+			"CHAT_VIDEO_NOTIFICATION_BODY" to PushText.Video,
+			"CHAT_ALBUM_NOTIFICATION_BODY" to PushText.Album,
+			"CHAT_ALBUM_CONTENT_REACTION_NOTIFICATION_BODY" to PushText.AlbumReaction,
+			"TAP_NOTIFICATION_BODY" to PushText.Tap,
+		)
+		for ((key, text) in texts) {
+			val decision = decide(
+				message("body" to key, "translateBody" to "true"),
+			) as PushDecision.Notify
+			assertEquals(key, words(text), decision.body)
+		}
 	}
 
 	@Test
-	fun `a translation key open grind does not know falls back instead of leaking the key`() {
-		val decision = decide(
+	fun `a body key open grind does not know falls back to the default for its kind`() {
+		val future = decide(
 			message("body" to "CHAT_FUTURE_NOTIFICATION_BODY", "translateBody" to "true"),
 		) as PushDecision.Notify
-		assertEquals("Sent you a message", decision.body)
+		assertEquals("[Message]", future.body)
+
+		val generic = decide(
+			message("body" to "CHAT_MESSAGE_NOTIFICATION_BODY", "translateBody" to "true"),
+		) as PushDecision.Notify
+		assertEquals("[Message]", generic.body)
+
+		val futureTap = decide(tap("body" to "FUTURE_TAP_NOTIFICATION_BODY")) as PushDecision.Notify
+		assertEquals("[Tap]", futureTap.body)
+	}
+
+	@Test
+	fun `a body that is not marked for translation is shown as sent`() {
+		val decision = decide(
+			message("body" to "CHAT_IMAGE_NOTIFICATION_BODY", "translateBody" to "false"),
+		) as PushDecision.Notify
+		assertEquals("CHAT_IMAGE_NOTIFICATION_BODY", decision.body)
 	}
 
 	@Test
@@ -75,13 +107,34 @@ class PushPayloadTest {
 		val shouted = decide(
 			message("body" to "TAP_NOTIFICATION_BODY", "translateBody" to "TRUE"),
 		) as PushDecision.Notify
-		assertEquals("Tapped you", shouted.body)
+		assertEquals("[Tap]", shouted.body)
 	}
 
 	@Test
-	fun `a missing title becomes someone`() {
-		val decision = decide(message() - "title") as PushDecision.Notify
-		assertEquals(PushStrings.SOMEONE, decision.title)
+	fun `a missing or empty title becomes someone`() {
+		assertEquals("[Someone]", (decide(message() - "title") as PushDecision.Notify).title)
+		assertEquals("[Someone]", (decide(message("title" to "")) as PushDecision.Notify).title)
+	}
+
+	@Test
+	fun `a translated title is worded as someone, whether its key is known or not`() {
+		val known = decide(
+			message("title" to "SOMEONE_TITLE", "translateTitle" to "true"),
+		) as PushDecision.Notify
+		assertEquals("[Someone]", known.title)
+
+		val unknown = decide(
+			message("title" to "FUTURE_TITLE", "translateTitle" to "true"),
+		) as PushDecision.Notify
+		assertEquals("[Someone]", unknown.title)
+	}
+
+	@Test
+	fun `a title that is not marked for translation is shown as sent`() {
+		val decision = decide(
+			message("title" to "SOMEONE_TITLE", "translateTitle" to "false"),
+		) as PushDecision.Notify
+		assertEquals("SOMEONE_TITLE", decision.title)
 	}
 
 	@Test
@@ -95,7 +148,7 @@ class PushPayloadTest {
 			),
 		) as PushDecision.Notify
 		assertEquals(PushKind.Tap, decision.kind)
-		assertEquals("Tapped you", decision.body)
+		assertEquals("[Tap]", decision.body)
 		assertEquals(null, decision.groupKey)
 	}
 
@@ -199,7 +252,7 @@ class PushPayloadTest {
 			"senderId" to "852120758",
 			"bodyArgs" to "[]",
 		)
-		val decision = PushPayload.decide(live, now) as PushDecision.Notify
+		val decision = decide(live) as PushDecision.Notify
 		assertEquals(PushKind.Message, decision.kind)
 		assertEquals("Viktor", decision.title)
 		assertEquals("payload dump 215032", decision.body)

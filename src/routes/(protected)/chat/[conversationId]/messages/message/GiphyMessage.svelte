@@ -5,6 +5,7 @@
 	import { receivedGiphySrc } from "#lib/api/messaging/gifs.ts";
 	import { giphyOriginalUrl } from "#lib/api/messaging/giphy-link.ts";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import type { GiphyMessage } from "#lib/model/messaging/messages.ts";
 	import GifBadge from "../../giphy/GifBadge.svelte";
@@ -53,12 +54,12 @@
 			bind:this={link}
 			{href}
 			rel="noreferrer"
-			aria-label="GIF"
+			aria-label={t("chat.messagePreview.gif")}
 			class="item relative block"
 		>
 			<MediaImage
 				{src}
-				alt="GIF"
+				alt={t("chat.messagePreview.gif")}
 				aspectRatio={size.aspectRatio}
 				class={["w-full rounded-lg", media.cornerClass]}
 				imgClass="bg-card-foreground/10"
@@ -82,8 +83,13 @@
 			}}
 		>
 			<GifIcon weight="fill" class="size-6" />
-			<span>GIF from GIPHY</span>
-			<span class="text-xs">Tap to load</span>
+			<span>{t("chat.message.gif.fromGiphy")}</span>
+			<span class="text-xs can-hover:hidden">
+				{t("chat.message.gif.tapToLoad")}
+			</span>
+			<span class="hidden text-xs can-hover:inline">
+				{t("chat.message.gif.clickToLoad")}
+			</span>
 		</button>
 	{/if}
 	{@render media.adornments?.()}

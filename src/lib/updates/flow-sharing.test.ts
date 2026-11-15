@@ -234,7 +234,7 @@ describe("flows sharing one device", () => {
 		[
 			"app",
 			"google-oauth",
-			"Wait for the Google OAuth app to finish downloading",
+			"Wait for the Open Grind Google OAuth app to finish downloading",
 		],
 	])(
 		"tells the %s flow that the %s download has to finish first",

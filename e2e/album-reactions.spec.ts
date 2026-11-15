@@ -93,7 +93,7 @@ test("an album composer sends reactions and replies to the selected item", async
 	await expect(react).toBeEnabled();
 	const replyBox = page.getByRole("textbox", { name: "Reply to album item" });
 	await expect(replyBox).toBeEnabled();
-	await expect(replyBox).toHaveAttribute("placeholder", "Write a reply...");
+	await expect(replyBox).toHaveAttribute("placeholder", "Write a reply…");
 	expect(
 		await replyBox.evaluate((input) => {
 			let element: Element | null = input;

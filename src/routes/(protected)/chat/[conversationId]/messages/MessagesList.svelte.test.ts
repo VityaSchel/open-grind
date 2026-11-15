@@ -417,7 +417,7 @@ describe("MessagesList actions", () => {
 		await (onDelete as () => Promise<void>)();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith(
-			expect.objectContaining({ label: "Failed to delete message" }),
+			expect.objectContaining({ label: "Couldn’t delete message" }),
 		);
 		expect(remove.mock.results[0]!.value.revert).toHaveBeenCalledOnce();
 	});
@@ -435,7 +435,7 @@ describe("MessagesList actions", () => {
 });
 
 describe("MessagesList unsend", () => {
-	const UNSEND_REASON = "Unsending a message requires a Grindr subscription.";
+	const UNSEND_REASON = "chat.conversation.bypassReason.unsend";
 
 	const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -536,7 +536,7 @@ describe("MessagesList unsend", () => {
 		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to unsend message",
+			label: "Couldn’t unsend message",
 			error: failure,
 		});
 		expect(offerBypassMock).not.toHaveBeenCalled();

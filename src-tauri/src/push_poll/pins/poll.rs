@@ -2,8 +2,11 @@ use std::collections::BTreeSet;
 
 use serde_json::Value;
 
-use super::{LINES, PAYLOAD, POLL, POLL_SERVICE, SCHEDULE, STRINGS};
-use crate::pin_support::{braced_block, kotlin_constant, squashed};
+use super::{
+	ANDROID_STRINGS, ANNOUNCE, LINES, PAYLOAD, POLL, POLL_SERVICE, PUSH_TEXT,
+	PUSH_WORDS, SCHEDULE, STRINGS,
+};
+use crate::pin_support::{braced_block, camel_case, kotlin_constant, squashed};
 use crate::push_poll::pushes::{
 	Poll, ShownConversation, BODY_KEYS, CHATS_CHANNEL, CLEAR_DEEPLINK,
 	CONVERSATION_DEEPLINK, GENERIC_BODY, MESSAGE_LINES, UNSEND_DEEPLINK,
@@ -67,20 +70,79 @@ fn every_body_the_poll_emits_is_one_kotlin_can_word() {
 	let strings = squashed(STRINGS);
 	for key in BODY_KEYS.into_iter().filter(|key| *key != GENERIC_BODY) {
 		assert!(
-			strings.contains(&format!("\"{key}\"to\"")),
-			"PushStrings.kt has no wording for {key}, so the poll's notification shows the generic body instead"
+			strings.contains(&format!("\"{key}\"toPushText.")),
+			"PushStrings.kt has no PushText for {key}, so the poll's notification shows the generic body instead"
 		);
 	}
 	assert!(
-		strings.contains("returntranslations[value]?:fallback"),
+		strings.contains("returnwords(texts[value]?:fallback)"),
 		"PushStrings.resolve no longer falls back for an unknown key, so {GENERIC_BODY} would be dropped"
 	);
 	assert!(
+		strings.contains("PushKind.Message->PushText.Message"),
+		"PushStrings.defaultBody no longer words a message with PushText.Message, which is how {GENERIC_BODY} is shown"
+	);
+	assert!(
 		squashed(PAYLOAD).contains(
-			"PushStrings.resolve(data[\"body\"],data[\"translateBody\"],PushStrings.defaultBody(kind),)"
+			"PushStrings.resolve(value=data[\"body\"],translate=data[\"translateBody\"],fallback=PushStrings.defaultBody(kind),words=words,)"
 		),
 		"PushPayload no longer words an untranslated body with the default for its kind, which is how {GENERIC_BODY} is shown"
 	);
+}
+
+fn lower_first(name: &str) -> String {
+	let mut characters = name.chars();
+	characters.next().map_or_else(String::new, |first| {
+		first.to_lowercase().chain(characters).collect()
+	})
+}
+
+#[test]
+fn every_push_text_reads_the_message_desktop_notifications_show() {
+	let texts: BTreeSet<&str> =
+		braced_block(PUSH_TEXT, "PushText.kt", "enum class PushText")
+			.split(',')
+			.map(str::trim)
+			.filter(|text| !text.is_empty())
+			.collect();
+	let words =
+		squashed(braced_block(PUSH_WORDS, "PushWords.kt", "fun resourceOf("));
+	let arms: Vec<(&str, &str)> = words
+		.split("PushText.")
+		.skip(1)
+		.filter_map(|arm| arm.split_once("->R.string."))
+		.collect();
+	assert_eq!(
+		arms.iter().map(|(text, _)| *text).collect::<BTreeSet<_>>(),
+		texts,
+		"PushWords.resourceOf was not parsed, or it no longer words every PushText"
+	);
+	let manifest: Value = serde_json::from_str(ANDROID_STRINGS)
+		.expect("android-strings.json is not JSON");
+	for (text, resource) in arms {
+		let (prefix, key) = match text {
+			"Someone" => ("push_", "common.someone".to_owned()),
+			"Tap" => ("push_body_", "interest.taps.notification".to_owned()),
+			_ => (
+				"push_body_",
+				format!("chat.notification.{}", lower_first(text)),
+			),
+		};
+		assert_eq!(
+			resource.strip_prefix(prefix).map(camel_case),
+			Some(lower_first(text)),
+			"PushWords.kt words PushText.{text} with R.string.{resource}, not with {prefix} and its own name"
+		);
+		assert_eq!(
+			manifest.get(resource).and_then(Value::as_str),
+			Some(key.as_str()),
+			"android-strings.json must map {resource} to {key}"
+		);
+		assert!(
+			ANNOUNCE.contains(&format!("\"{key}\"")),
+			"desktop notifications no longer show {key}, so PushText.{text} reads differently on Android"
+		);
+	}
 }
 
 #[test]

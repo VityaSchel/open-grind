@@ -1,15 +1,17 @@
 <script lang="ts">
-	import { format } from "date-fns";
 	import { untrack } from "svelte";
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import { formatDate, formatInteger } from "#lib/i18n/format.ts";
+	import { followLocale, t } from "#lib/i18n/index.ts";
 	import { profileMediaUrl } from "#lib/util/media.ts";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeLabels,
 		applyPhotoSwipeOpenTracking,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
@@ -69,6 +71,7 @@
 					zoomSVG: ZOOM_SVG,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeLabels(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);
@@ -122,12 +125,21 @@
 										pswp.currSlide?.data.element?.dataset
 											.createdAt,
 									);
-								if (createdAt !== undefined) {
-									element.textContent = format(
-										createdAt,
-										"dd MMMM yyyy",
-									);
+								if (
+									createdAt === undefined ||
+									pswp.isDestroying
+								) {
+									return;
 								}
+								pswp.on(
+									"destroy",
+									followLocale(() => {
+										element.textContent = formatDate({
+											date: createdAt,
+											preset: "dayMonthYear",
+										});
+									}),
+								);
 							}, 0);
 						},
 					});
@@ -208,7 +220,10 @@
 					eager={index <= reach}
 					{createdAt}
 					{covered}
-					label="Profile photo {index + 1} of {medias.length}"
+					label={t("profile.imageCarousel.a11y.photo", {
+						position: formatInteger(index + 1),
+						total: formatInteger(medias.length),
+					})}
 				/>
 			{/each}
 		</div>

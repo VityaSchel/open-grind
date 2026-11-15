@@ -94,7 +94,7 @@ describe("RightNowPostReportState", () => {
 		await report.request({ postId: 1, profileId: 201, beforeOpen });
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to check for an earlier report",
+			label: "Couldn’t check for an earlier report",
 			error,
 		});
 		expect(beforeOpen).not.toHaveBeenCalled();

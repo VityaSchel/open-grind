@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import type {
 	HondurasHold,
 	LocationLease,
@@ -40,7 +47,10 @@ const { backGestureEventHandlers } =
 	await import("#lib/platform/back-gesture-event.svelte.ts");
 const EntitlementBypassAlert = (await import("./EntitlementBypassAlert.svelte"))
 	.default;
+const { setLocale, SOURCE_LOCALE } = await import("#lib/i18n/index.ts");
 
+const REASON_KEY = "chat.conversation.bypassReason.unsend";
+const LATER_REASON_KEY = "chat.conversation.bypassReason.expiringPhotoLimit";
 const REASON = "Unsending a message requires a Grindr subscription.";
 
 type FakeHold = HondurasHold & { leases: LocationLease[] };
@@ -88,8 +98,16 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 const bypassButton = () => screen.getByRole("button", { name: "Bypass" });
 const cancelButton = () => screen.getByRole("button", { name: "Cancel" });
 
+function description(): HTMLElement {
+	const node = screen
+		.getByRole("alertdialog")
+		.querySelector<HTMLElement>('[data-slot="alert-dialog-description"]');
+	if (node === null) throw new Error("no dialog description");
+	return node;
+}
+
 async function offer(): Promise<{ answer: Promise<LocationLease | null> }> {
-	const answer = offerEntitlementBypass({ reason: REASON });
+	const answer = offerEntitlementBypass({ reason: REASON_KEY });
 	await vi.waitFor(bypassButton);
 	return { answer };
 }
@@ -136,6 +154,7 @@ describe("EntitlementBypassAlert", () => {
 			dismissEntitlementBypass();
 			cleanup();
 			vi.restoreAllMocks();
+			await setLocale({ locale: SOURCE_LOCALE });
 		}
 	});
 
@@ -153,6 +172,54 @@ describe("EntitlementBypassAlert", () => {
 			"href",
 			"https://opengrind.org/guides/bypasses",
 		);
+	});
+
+	it("explains the bypass in one sentence that links the guide", async () => {
+		await offer();
+
+		expect(description().textContent).toBe(
+			`${REASON} Open Grind can attempt to bypass this by momentarily spoofing your geolocation to Honduras. Learn more.`,
+		);
+		expect(
+			within(description()).getByRole("link", { name: "Learn more" }),
+		).toBeTruthy();
+	});
+
+	it("shows the reason in the active locale", async () => {
+		await offer();
+		const reason = screen.getByText(REASON);
+
+		await setLocale({ locale: "en-XA" });
+
+		await vi.waitFor(() => expect(screen.queryByText(REASON)).toBeNull());
+		expect(reason.textContent).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("words the prompt in the active locale", async () => {
+		await offer();
+		const title = screen.getByText("Paid feature");
+		const buttons = [cancelButton(), bypassButton()];
+		const href = within(description())
+			.getByRole("link", { name: "Learn more" })
+			.getAttribute("href");
+
+		await setLocale({ locale: "en-XA" });
+
+		const explanation = [...description().childNodes]
+			.filter((node) => node.nodeName !== "P")
+			.map((node) => node.textContent)
+			.join("")
+			.trim();
+		const lines = [
+			title.textContent,
+			explanation,
+			...buttons.map((button) => button.textContent.trim()),
+		];
+		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
+		const link = within(description()).getByRole("link");
+		expect(link.getAttribute("href")).toBe(href);
+		expect(link.textContent).not.toBe("Learn more");
+		expect(explanation).toContain(link.textContent);
 	});
 
 	it("hands the request a lease from a Honduras hold taken from the home location on Bypass", async () => {
@@ -237,8 +304,8 @@ describe("EntitlementBypassAlert", () => {
 	});
 
 	it("hands every queued request a lease from one hold and stays busy until the last is released", async () => {
-		const first = offerEntitlementBypass({ reason: REASON });
-		const second = offerEntitlementBypass({ reason: "another feature" });
+		const first = offerEntitlementBypass({ reason: REASON_KEY });
+		const second = offerEntitlementBypass({ reason: LATER_REASON_KEY });
 		await vi.waitFor(bypassButton);
 
 		await fireEvent.click(bypassButton());
@@ -273,7 +340,7 @@ describe("EntitlementBypassAlert", () => {
 			error,
 		);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
+			label: "Couldn’t bypass this paid feature",
 			error,
 			id: "entitlement-bypass",
 		});

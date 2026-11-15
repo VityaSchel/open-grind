@@ -14,3 +14,5 @@ node_modules
 /coverage
 KEYS.md
 /src/lib/credits/generated.json
+/src/lib/i18n/generated.ts
+/src/lib/i18n/shipped-files.ts

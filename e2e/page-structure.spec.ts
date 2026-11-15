@@ -30,7 +30,7 @@ test.describe("every navigation bar has a name of its own", () => {
 		{ path: DEMO_CONVERSATION, names: ["Conversation"] },
 		{
 			path: DEMO_PROFILE,
-			names: ["Back", "Chat and tap", "Main", "Profile actions"],
+			names: ["Back", "Chat and Tap", "Main", "Profile Actions"],
 		},
 	];
 	for (const { path, names } of pages) {
@@ -78,17 +78,17 @@ test("the command palette title exists only while the palette is open", async ({
 	await page
 		.getByRole("navigation", { name: "Main" })
 		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await expect(page.getByText("Command Palette")).toHaveCount(0);
+	await expect(page.getByText("Command Center")).toHaveCount(0);
 
 	await page.keyboard.press("ControlOrMeta+k");
 
 	await expect(
-		page.getByRole("dialog", { name: "Command Palette" }),
+		page.getByRole("dialog", { name: "Command Center" }),
 	).toBeVisible();
 
 	await page.keyboard.press("Escape");
 
-	await expect(page.getByText("Command Palette")).toHaveCount(0);
+	await expect(page.getByText("Command Center")).toHaveCount(0);
 });
 
 test("the command palette search box names the suggestion list it controls", async ({

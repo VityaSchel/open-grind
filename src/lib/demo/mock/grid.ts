@@ -19,6 +19,7 @@ import {
 	NOW,
 } from "../config";
 import { num } from "../routing";
+import { sceneProfile } from "../screenshot-scene";
 import { demoProfileResolves } from "./blocks";
 import { demoFavoriteOf } from "./favorites";
 import {
@@ -166,15 +167,20 @@ type CascadePartialItem = z.infer<
 
 function cascadeProfileData(seed: DemoSeed) {
 	const photos = photosOf(seed.id);
+	const {
+		onlineUntil = onlineUntilOf(seed),
+		unreadCount = seed.unread,
+		isVisiting = false,
+	} = __SCREENSHOTS__ ? sceneProfile(seed.id) : {};
 	return {
 		profileId: seed.id,
-		onlineUntil: onlineUntilOf(seed),
+		onlineUntil,
 		displayName: seed.name,
 		distanceMeters: seed.distanceM ?? undefined,
 		lastOnline: lastOnlineOf(seed),
 		rightNow: demoRightNowStatusOf(seed.id),
-		unreadCount: seed.unread,
-		isVisiting: false,
+		unreadCount,
+		isVisiting,
 		isPopular: seed.favorite || seed.unread > 0,
 		primaryImageUrl: photos[0]
 			? `https://cdns.grindr.com/images/profile/480x480/${photos[0]}`

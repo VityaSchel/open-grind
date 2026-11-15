@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PIN_ZOOM } from "#lib/components/location-chooser/constants.ts";
 	import GeoMapPicker from "#lib/components/location-chooser/GeoMapPicker.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { draftFromMessage } from "#lib/model/messaging/messages.ts";
 	import type { Coordinates } from "#lib/location/location-request.svelte.ts";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
@@ -22,7 +23,7 @@
 
 	const count = $derived(pinPos ? 1 : 0);
 	$effect(() => {
-		onSelectionChange({ count, label: "Send location" });
+		onSelectionChange({ count, action: "sendLocation" });
 	});
 
 	export function submitSelection() {
@@ -36,7 +37,7 @@
 </script>
 
 <p id={hintId} class="sr-only">
-	Drag the map to place the pin on the location you want to share.
+	{t("chat.composer.attachments.location.a11y.description")}
 </p>
 <div
 	class="relative mx-auto mb-[calc(var(--sheet-actions-clearance)-var(--sheet-panel-padding-bottom))] aspect-square w-[min(100%,max(12rem,50svh))] overflow-hidden rounded-lg"

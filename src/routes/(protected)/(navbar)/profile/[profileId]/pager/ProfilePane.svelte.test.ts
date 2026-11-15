@@ -146,9 +146,11 @@ describe("ProfilePane failures", () => {
 		]);
 		expect(heading(section)).toBe("Peer, 27");
 		expect(
-			screen.getByRole("button", { name: "Retry", hidden: true }),
+			screen.getByRole("button", { name: "Try again", hidden: true }),
 		).not.toBeNull();
-		expect(screen.queryByText("Couldn't reach the server")).toBeNull();
+		expect(
+			screen.queryByText("Couldn’t get a response from Grindr"),
+		).toBeNull();
 	});
 
 	it("loads the profile again from the retry control", async () => {
@@ -156,12 +158,14 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 		await flush();
 
 		expect(getProfileMock).toHaveBeenCalledTimes(2);
 		expect(heading(section)).toBe("Loaded, 30");
-		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 	});
 
 	it("shows the full error screen for a failed load with no grid row", async () => {
@@ -169,7 +173,9 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: null });
 		await flush();
 
-		expect(screen.getByText("Couldn't reach the server")).not.toBeNull();
+		expect(
+			screen.getByText("Couldn’t get a response from Grindr"),
+		).not.toBeNull();
 		expect(headingElement(section)).toBeNull();
 		expect(section.querySelector(".carousel")).toBeNull();
 	});
@@ -179,7 +185,7 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		expect(screen.getByText("You hid this profile.")).not.toBeNull();
+		expect(screen.getByText("You have hidden this user")).not.toBeNull();
 		expect(section.querySelector("img")).toBeNull();
 		expect(headingElement(section)).toBeNull();
 	});
@@ -297,7 +303,9 @@ describe("ProfilePane profile actions", () => {
 		await flush();
 		const failedLink = screen.getByRole("link", { name: "Edit profile" });
 
-		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 		await flush();
 
 		expect(heading(section)).toBe("Me, 30");
@@ -311,9 +319,11 @@ describe("ProfilePane profile actions", () => {
 		renderPane({ active: true, row: null, profileId: OUR_ID });
 		await flush();
 
-		expect(screen.getByText("Couldn't reach the server")).not.toBeNull();
 		expect(
-			screen.queryByRole("navigation", { name: "Profile actions" }),
+			screen.getByText("Couldn’t get a response from Grindr"),
+		).not.toBeNull();
+		expect(
+			screen.queryByRole("navigation", { name: "Profile Actions" }),
 		).toBeNull();
 	});
 
@@ -337,14 +347,14 @@ describe("ProfilePane profile actions", () => {
 		renderPane({ active: true, row: gridRow() });
 		await tick();
 		expect(
-			screen.queryByRole("navigation", { name: "Profile actions" }),
+			screen.queryByRole("navigation", { name: "Profile Actions" }),
 		).toBeNull();
 
 		loaded.resolve(fullProfile(LOADED));
 		await flush();
 
 		const actions = within(
-			screen.getByRole("navigation", { name: "Profile actions" }),
+			screen.getByRole("navigation", { name: "Profile Actions" }),
 		);
 		expect(
 			actions.getByRole("switch", { name: "Add to favorites" }),
@@ -364,13 +374,13 @@ describe("ProfilePane hiding and blocking", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await chooseFromProfileMenu("Hide profile");
+		await chooseFromProfileMenu("Hide user");
 
 		expect(hideUserMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
 		expect(
-			within(section).getByText("You hid this profile."),
+			within(section).getByText("You have hidden this user"),
 		).not.toBeNull();
 		expect(button("Unhide").disabled).toBe(true);
 
@@ -385,17 +395,19 @@ describe("ProfilePane hiding and blocking", () => {
 		const hide = pendingRequest(hideUserMock);
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
-		await chooseFromProfileMenu("Hide profile");
+		await chooseFromProfileMenu("Hide user");
 		const rejection = new Error("offline");
 
 		hide.reject(rejection);
 		await flush();
 
-		expect(within(section).queryByText("You hid this profile.")).toBeNull();
+		expect(
+			within(section).queryByText("You have hidden this user"),
+		).toBeNull();
 		expect(heading(section)).toBe("Loaded, 30");
 		expect(button("Profile menu").disabled).toBe(false);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to hide user",
+			label: "Couldn’t hide",
 			error: rejection,
 		});
 		expect(getProfileMock).toHaveBeenCalledOnce();
@@ -406,10 +418,10 @@ describe("ProfilePane hiding and blocking", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await chooseFromProfileMenu("Block profile");
+		await chooseFromProfileMenu("Block user");
 
 		expect(
-			within(section).getByText("You have blocked this profile."),
+			within(section).getByText("You have blocked this user"),
 		).not.toBeNull();
 		expect(button("Unblock").disabled).toBe(false);
 
@@ -419,7 +431,7 @@ describe("ProfilePane hiding and blocking", () => {
 
 		expect(heading(section)).toBe("Loaded, 30");
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to block user",
+			label: "Couldn’t block",
 			error: rejection,
 		});
 	});
@@ -429,7 +441,7 @@ describe("ProfilePane hiding and blocking", () => {
 		const unblock = pendingRequest(unblockUserMock);
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
-		await chooseFromProfileMenu("Block profile");
+		await chooseFromProfileMenu("Block user");
 
 		await fireEvent.click(button("Unblock"));
 		await flush();
@@ -459,14 +471,14 @@ describe("ProfilePane hiding and blocking", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await chooseFromProfileMenu("Block profile");
+		await chooseFromProfileMenu("Block user");
 		await flush();
 
 		expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
 		expect(
-			within(section).getByText("You have blocked this profile."),
+			within(section).getByText("You have blocked this user"),
 		).not.toBeNull();
 	});
 
@@ -475,7 +487,7 @@ describe("ProfilePane hiding and blocking", () => {
 		const unhide = pendingRequest(unhideUserMock);
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
-		await chooseFromProfileMenu("Hide profile");
+		await chooseFromProfileMenu("Hide user");
 		await flush();
 
 		await fireEvent.click(button("Unhide"));
@@ -500,7 +512,7 @@ describe("ProfilePane hiding and blocking", () => {
 
 		await fireEvent.click(button("Unblock"));
 
-		expect(screen.queryByText("You have blocked this profile.")).toBeNull();
+		expect(screen.queryByText("You have blocked this user")).toBeNull();
 		expect(getProfileMock).toHaveBeenCalledOnce();
 
 		unblock.resolve();
@@ -525,9 +537,52 @@ describe("ProfilePane hiding and blocking", () => {
 
 		expect(button("Unblock").disabled).toBe(false);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to unblock user",
+			label: "Couldn’t unblock",
 			error: rejection,
 		});
 		expect(getProfileMock).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ProfilePane window title", () => {
+	beforeEach(() => {
+		document.title = "Previous Page";
+	});
+
+	it("names the person from the grid row, then from the loaded profile", async () => {
+		const response = Promise.withResolvers<Profile>();
+		getProfileMock.mockReturnValueOnce(response.promise);
+		renderPane({ active: true, row: gridRow() });
+		await tick();
+
+		expect(document.title).toBe("Peer — Open Grind");
+
+		response.resolve(fullProfile(LOADED));
+		await flush();
+
+		expect(document.title).toBe("Loaded — Open Grind");
+	});
+
+	it("falls back to Profile while a pane without a row loads", async () => {
+		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
+		renderPane({ active: true, row: null });
+		await tick();
+
+		expect(document.title).toBe("Profile — Open Grind");
+	});
+
+	it("leaves out the name of a hidden user", async () => {
+		getProfileMock.mockRejectedValue(new HiddenProfileError());
+		renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		expect(document.title).toBe("Profile — Open Grind");
+	});
+
+	it("leaves the title to the active pane", async () => {
+		renderPane({ active: false, row: gridRow() });
+		await flush();
+
+		expect(document.title).toBe("Previous Page");
 	});
 });

@@ -63,9 +63,9 @@ pub async fn pick_android_media(
 			)
 			.await
 			.map_err(|error| {
-				AppError::Media(format!(
-					"Could not open the photo picker: {error}"
-				))
+				AppError::Media(crate::error::MediaError::PickerFailed {
+					detail: error.to_string(),
+				})
 			})?;
 		Ok(response.uris)
 	}

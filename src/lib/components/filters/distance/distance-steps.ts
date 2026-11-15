@@ -1,3 +1,5 @@
+import { formatNumber } from "#lib/i18n/format.ts";
+import { t } from "#lib/i18n/index.ts";
 import {
 	METRES_PER_KILOMETRE,
 	METRES_PER_MILE,
@@ -43,5 +45,9 @@ export function maxDistanceLabel({
 	step: number;
 	units: UnitSystem;
 }): string {
-	return `Within ${step} ${units === "imperial" ? "mi" : "km"}`;
+	const distance = formatNumber({
+		value: step,
+		preset: units === "imperial" ? "radiusMiles" : "radiusKilometers",
+	});
+	return t("browse.filters.withinDistance", { distance });
 }

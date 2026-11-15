@@ -1,0 +1,107 @@
+{
+	"documentTitle": "{{page}} — Open Grind",
+	"error": {
+		"pageNotFound": "Page not found",
+		"title": "Unexpected error",
+		"description": "Something went wrong while loading this page.",
+		"goHome": "Go to Browse",
+		"reportIssue": "Report an issue"
+	},
+	"subpageScreen": {
+		"a11y": {
+			"navigation": "Page"
+		}
+	},
+	"backLink": {
+		"a11y": {
+			"label": "Back"
+		}
+	},
+	"saveChangesBar": {
+		"save": "Save changes"
+	},
+	"dataRefreshControl": {
+		"pullHint": "Pull to refresh",
+		"releaseHint": "Release to refresh",
+		"refreshButton": "Refresh"
+	},
+	"scrollToTopButton": {
+		"a11y": {
+			"label": "Scroll to top",
+			"labelWithText": "{{text}}, scroll to top"
+		}
+	},
+	"toaster": {
+		"a11y": {
+			"region": "Notifications",
+			"close": "Close notification"
+		}
+	},
+	"navBar": {
+		"a11y": {
+			"navigation": "Main",
+			"me": "Me"
+		},
+		"tabs": {
+			"browse": "Browse",
+			"rightNow": "Right Now",
+			"inbox": "Inbox"
+		}
+	},
+	"notFound": {
+		"description": "The page you’re looking for doesn’t exist.",
+		"clippy": {
+			"lost": "It looks like you’re a little lost.",
+			"offer": "Would you like help?",
+			"promise": "Don’t worry, Clippy would never",
+			"never": {
+				"sellData": "Sell your information",
+				"ageVerification": "Add AI age verification",
+				"exploitation": "Exploit troubled queers"
+			},
+			"a11y": {
+				"image": "Clippy"
+			}
+		}
+	},
+	"onboarding": {
+		"title": "Welcome",
+		"tagline": "Unofficial Grindr client",
+		"description": "Cross-platform, free, libre, ad-free, tracker-free, privacy-centered, and community-driven",
+		"addToAppsMenu": "Add Open Grind to your apps menu",
+		"start": "Get started",
+		"errors": {
+			"finishSetupFailed": "Couldn’t finish setup"
+		}
+	},
+	"webViewWarning": {
+		"title": "Android WebView may be too old",
+		"description": "Open Grind may not display correctly on older Android System WebView versions. This build expects WebView {{minimumVersion}} or newer.",
+		"detected": "Detected provider: {{provider}} ({{version}})",
+		"unknownProvider": "Unknown provider",
+		"unknownVersion": "Unknown version",
+		"update": "Update WebView",
+		"continue": "Continue anyway"
+	},
+	"menuBar": {
+		"about": "About Open Grind",
+		"services": "Services",
+		"hide": "Hide Open Grind",
+		"hideOthers": "Hide Others",
+		"quit": "Quit Open Grind",
+		"file": "File",
+		"closeWindow": "Close Window",
+		"edit": "Edit",
+		"undo": "Undo",
+		"redo": "Redo",
+		"cut": "Cut",
+		"copy": "Copy",
+		"paste": "Paste",
+		"selectAll": "Select All",
+		"view": "View",
+		"window": "Window",
+		"minimize": "Minimize",
+		"zoom": "Zoom",
+		"help": "Help"
+	}
+}

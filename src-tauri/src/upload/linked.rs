@@ -10,14 +10,11 @@ use wreq::{redirect, Client, Response};
 use super::inspect::{inspect, MediaKind};
 use super::media_error;
 use super::staged::StagedMedia;
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 
 const MAX_BYTES: u64 = 120 * 1024 * 1024;
 
 const UNTYPED: [&str; 2] = ["application/octet-stream", "binary/octet-stream"];
-
-const NOT_MEDIA: &str = "That link isn't a photo or video";
-const TOO_LARGE: &str = "That file is too large to add";
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -87,13 +84,12 @@ async fn download(
 		.await
 		.and_then(Response::error_for_status)
 		.map_err(http_error)?;
-	let declared = declared(&response)
-		.ok_or_else(|| AppError::Media(NOT_MEDIA.to_owned()))?;
+	let declared = declared(&response).ok_or(MediaError::LinkNotMedia)?;
 	if response
 		.content_length()
 		.is_some_and(|length| length > max_bytes)
 	{
-		return Err(AppError::Media(TOO_LARGE.to_owned()));
+		return Err(AppError::Media(MediaError::LinkTooLarge));
 	}
 	let id = staged.create().map_err(media_error)?;
 	let mut file = staged.appender(&id).map_err(media_error)?;
@@ -102,7 +98,7 @@ async fn download(
 		while let Some(chunk) = response.chunk().await.map_err(http_error)? {
 			written += chunk.len() as u64;
 			if written > max_bytes {
-				return Err(AppError::Media(TOO_LARGE.to_owned()));
+				return Err(AppError::Media(MediaError::LinkTooLarge));
 			}
 			file.write_all(&chunk).map_err(media_error)?;
 		}
@@ -122,7 +118,7 @@ async fn download(
 		Some(mime_type) => Ok(StagedLink { id, mime_type }),
 		None => {
 			let _ = staged.discard(&id);
-			Err(AppError::Media(NOT_MEDIA.to_owned()))
+			Err(AppError::Media(MediaError::LinkNotMedia))
 		}
 	}
 }
@@ -216,9 +212,7 @@ mod tests {
 			.await
 			.expect_err("refused");
 
-		assert!(
-			matches!(refused, AppError::Media(message) if message == NOT_MEDIA)
-		);
+		assert!(matches!(refused, AppError::Media(MediaError::LinkNotMedia)));
 		assert_eq!(stage.files(), 0);
 	}
 
@@ -249,9 +243,7 @@ mod tests {
 			.await
 			.expect_err("refused");
 
-		assert!(
-			matches!(refused, AppError::Media(message) if message == NOT_MEDIA)
-		);
+		assert!(matches!(refused, AppError::Media(MediaError::LinkNotMedia)));
 		assert_eq!(stage.files(), 0);
 	}
 
@@ -264,9 +256,7 @@ mod tests {
 			.await
 			.expect_err("refused");
 
-		assert!(
-			matches!(refused, AppError::Media(message) if message == NOT_MEDIA)
-		);
+		assert!(matches!(refused, AppError::Media(MediaError::LinkNotMedia)));
 		assert_eq!(stage.files(), 0);
 	}
 
@@ -280,9 +270,7 @@ mod tests {
 			.await
 			.expect_err("refused");
 
-		assert!(
-			matches!(refused, AppError::Media(message) if message == TOO_LARGE)
-		);
+		assert!(matches!(refused, AppError::Media(MediaError::LinkTooLarge)));
 		assert_eq!(stage.files(), 0);
 	}
 }

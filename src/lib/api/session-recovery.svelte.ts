@@ -1,16 +1,19 @@
 import { toast } from "svelte-sonner";
 
+import { registerAccountCache } from "#lib/api/account-caches.ts";
 import {
 	blockedKindOf,
 	callMethod,
 	markRequestBlocked,
 } from "#lib/api/methods.ts";
+import { showPersistentErrorToast } from "#lib/api/persistent-error-toast.ts";
 import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import {
 	clearSessionError,
 	type SessionErrorKind,
 	sessionErrorState,
 } from "#lib/api/session-error-state.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 
 const STALE_REPORT_MS = 60_000;
 
@@ -101,9 +104,9 @@ class SessionRecovery {
 		sessionErrorState.unauthorized = report.unauthorized;
 
 		if (report.kind === "Http" || report.kind === "RateLimited") {
-			toast.error("Can't reach Grindr — retrying", {
+			showPersistentErrorToast({
 				id: TRANSPORT_TOAST_ID,
-				duration: Number.POSITIVE_INFINITY,
+				message: () => t("feedback.sessionRecovery.retrying"),
 			});
 			return;
 		}
@@ -118,3 +121,5 @@ class SessionRecovery {
 }
 
 export const sessionRecovery = new SessionRecovery();
+
+registerAccountCache({ reset: () => toast.dismiss(TRANSPORT_TOAST_ID) });

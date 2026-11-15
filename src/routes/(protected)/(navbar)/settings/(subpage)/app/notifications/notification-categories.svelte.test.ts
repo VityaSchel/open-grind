@@ -22,6 +22,7 @@ import {
 	opened,
 	push,
 	resetNotificationsPage,
+	showErrorToast,
 	stored,
 } from "./notifications-page-test-helpers.svelte";
 
@@ -102,7 +103,7 @@ describe("the notification categories", () => {
 		expect(disabled(taps)).toBe(true);
 		expect(checked(messages)).toBe("true");
 		expect(disabled(messages)).toBe(false);
-		const caption = screen.getByText("Not available in slow mode");
+		const caption = screen.getByText("Not available in Slow Mode");
 		expect(caption.closest("label")).toBeNull();
 		expect(caption.previousElementSibling).toBe(taps.closest("label"));
 	});
@@ -116,7 +117,7 @@ describe("the notification categories", () => {
 
 		await waitFor(() => expect(checked(taps)).toBe("true"));
 		expect(disabled(taps)).toBe(false);
-		expect(screen.queryByText("Not available in slow mode")).toBeNull();
+		expect(screen.queryByText("Not available in Slow Mode")).toBeNull();
 		expect(push.setPushCategory).not.toHaveBeenCalled();
 		expect(account.setPushSettings).not.toHaveBeenCalled();
 	});
@@ -132,7 +133,7 @@ describe("the notification categories", () => {
 
 			expect(checked(taps)).toBe("true");
 			expect(disabled(taps)).toBe(false);
-			expect(screen.queryByText("Not available in slow mode")).toBeNull();
+			expect(screen.queryByText("Not available in Slow Mode")).toBeNull();
 		},
 	);
 
@@ -205,6 +206,23 @@ describe("the notification categories", () => {
 		expect(account.setPushSettings).toHaveBeenCalledWith({
 			tapPushNotification: false,
 		});
+	});
+
+	it("names the failure and keeps Received taps when saving fails", async () => {
+		await deliveredFast();
+		const failure = new Error("offline");
+		push.setPushCategory.mockRejectedValueOnce(failure);
+		const { taps } = await opened(NotificationsPage);
+
+		await fireEvent.click(taps);
+
+		await waitFor(() =>
+			expect(showErrorToast).toHaveBeenCalledWith({
+				label: "Couldn’t save notification settings",
+				error: failure,
+			}),
+		);
+		expect(checked(taps)).toBe("true");
 	});
 
 	it("disables every category while notifications are off", async () => {

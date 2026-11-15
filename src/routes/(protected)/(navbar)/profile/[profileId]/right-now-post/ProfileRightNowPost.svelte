@@ -12,6 +12,7 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
 	import * as Card from "#lib/components/ui/card/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { getNow } from "#lib/util/now.ts";
 	import { preloadFullImage } from "#lib/util/photoswipe/full-size.ts";
@@ -90,7 +91,7 @@
 				if (controller.signal.aborted) return;
 				console.error(error);
 				showErrorToast({
-					label: "Failed to open Right Now post",
+					label: t("profile.rightNow.post.errors.openFailed"),
 					error,
 				});
 				viewing = false;
@@ -125,7 +126,7 @@
 					class="font-medium text-foreground outline-none after:absolute after:inset-0 after:z-1"
 					onclick={() => (viewing = true)}
 				>
-					Right Now
+					{t("profile.rightNow.post.open")}
 				</button>
 				{#if post.posted !== null}
 					<span aria-hidden="true">·</span>
@@ -138,6 +139,7 @@
 				{#if text !== null}
 					<p
 						class="min-w-0 flex-1 text-base wrap-break-word whitespace-pre-wrap"
+						translate="no"
 					>
 						{text}
 					</p>
@@ -150,7 +152,7 @@
 					>
 						<MediaImage
 							src={proxyMediaUrl(photo.thumbnailUrl)}
-							alt="Post photo"
+							alt={t("browse.rightNow.photo.alt")}
 							class="size-full rounded-lg"
 							imgClass={{ "scale-110 blur-xl": blurred }}
 							aspectRatio="1 / 1"
@@ -166,7 +168,11 @@
 								class="absolute inset-0 grid place-items-center text-muted-foreground"
 							>
 								<EyeSlashIcon weight="fill" class="size-5" />
-								<span class="sr-only">May contain nudity</span>
+								<span class="sr-only">
+									{t(
+										"browse.rightNow.photo.mayContainNudity",
+									)}
+								</span>
 							</p>
 						{/if}
 					</div>

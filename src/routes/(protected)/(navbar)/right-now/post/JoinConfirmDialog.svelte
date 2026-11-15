@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 
@@ -36,14 +37,18 @@
 <AlertDialog.Root bind:open>
 	<AlertDialog.Content {escapeKeydownBehavior}>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Join Right Now?</AlertDialog.Title>
+			<AlertDialog.Title>
+				{t("browse.rightNow.join.confirm.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description>
-				You'll show as "Joined" until you add a post.
+				{t("browse.rightNow.join.confirm.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={ownPost.joining} class="contents">
-				<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel size="lg">
+					{t("common.actions.cancel")}
+				</AlertDialog.Cancel>
 				<AlertDialog.Action
 					size="lg"
 					aria-busy={ownPost.joining}
@@ -52,7 +57,7 @@
 					{#if ownPost.joining}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Join now
+					{t("browse.rightNow.join.confirm.join")}
 				</AlertDialog.Action>
 			</fieldset>
 		</AlertDialog.Footer>

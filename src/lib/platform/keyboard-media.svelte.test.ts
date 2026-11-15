@@ -100,7 +100,7 @@ describe("keyboard media", () => {
 		insert({ id: null });
 
 		expect(toastError).toHaveBeenCalledWith(
-			"Couldn't read what the keyboard sent",
+			"Couldn’t read what the keyboard sent",
 		);
 		expect(receive).not.toHaveBeenCalled();
 	});

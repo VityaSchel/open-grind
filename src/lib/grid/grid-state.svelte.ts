@@ -13,6 +13,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "#lib/app-data/preferences.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 import { autoLocation } from "#lib/location/auto-location.ts";
 import { showsOnReturn, staysOnline } from "#lib/presence/presence-gate.ts";
 import {
@@ -270,7 +271,10 @@ class GridState {
 			}
 		} catch (error) {
 			console.error(id, error);
-			showErrorToast({ label: "Failed to load profile", error });
+			showErrorToast({
+				label: t("browse.grid.errors.loadProfileFailed"),
+				error,
+			});
 		} finally {
 			this.#resolvingIds.delete(id);
 		}
@@ -353,7 +357,7 @@ class GridState {
 			if (opts?.automatic) return;
 			if (opts?.silent) {
 				showErrorToast({
-					label: "Failed to refresh profiles",
+					label: t("browse.grid.errors.refreshFailed"),
 					error: err,
 					onRetry: () =>
 						void this.refresh({

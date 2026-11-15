@@ -208,7 +208,7 @@ test.describe("album uploads", () => {
 		await page
 			.getByRole("button", { name: "Add photos or videos" })
 			.click();
-		const sheet = page.getByRole("dialog", { name: "Previous uploads" });
+		const sheet = page.getByRole("dialog", { name: "Previous Uploads" });
 		await sheet
 			.getByRole("button", { name: "Photo 1", exact: true })
 			.click();

@@ -1,3 +1,4 @@
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import type {
 	RightNowModeratedText,
 	RightNowPostDetails,
@@ -5,19 +6,22 @@ import type {
 	RightNowPostRequest,
 } from "#lib/model/right-now/post.ts";
 
-const textRejectReasonLabels = new Map([
-	["BULLYING", "Bullying"],
-	["SELF_HARM", "Self harm"],
-	["DRUG_PATTERNS", "Drug patterns"],
-	["HATE_SPEECH", "Hate speech"],
-	["SOL_SEX", "Solicitation of sex"],
-	["SPAM_DISRUPT", "Spam/disruption"],
-	["UNDERAGE", "Content with minors"],
-	["OTHER", "Other"],
-]);
+const textRejectReasonKeys: Readonly<Record<string, PlainMessageKey>> = {
+	BULLYING: "browse.rightNow.sheet.rejectReason.bullying",
+	SELF_HARM: "browse.rightNow.sheet.rejectReason.selfHarm",
+	DRUG_PATTERNS: "browse.rightNow.sheet.rejectReason.drugPatterns",
+	HATE_SPEECH: "browse.rightNow.sheet.rejectReason.hateSpeech",
+	SOL_SEX: "browse.rightNow.sheet.rejectReason.sexSolicitation",
+	SPAM_DISRUPT: "browse.rightNow.sheet.rejectReason.spamDisruption",
+	UNDERAGE: "browse.rightNow.sheet.rejectReason.underage",
+	OTHER: "browse.rightNow.sheet.rejectReason.other",
+};
 
 export function textRejectReasonLabel({ reason }: { reason: string }): string {
-	return textRejectReasonLabels.get(reason) ?? "Other";
+	const key = Object.hasOwn(textRejectReasonKeys, reason)
+		? textRejectReasonKeys[reason]
+		: undefined;
+	return t(key ?? "browse.rightNow.sheet.rejectReason.other");
 }
 
 function liveModeratedText({

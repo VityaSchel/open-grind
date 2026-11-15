@@ -5,7 +5,7 @@ import {
 	ApiError,
 	type ApiErrorKind,
 	apiErrorKinds,
-	blockedAndStaleMessages,
+	apiErrorMessageKeys,
 	httpStatusOf,
 } from "#lib/api/api-error.ts";
 import { capText } from "#lib/api/redact/text.ts";
@@ -16,23 +16,111 @@ import {
 } from "#lib/api/request-blocked-state.svelte.ts";
 import { demoCallMethod } from "#lib/demo/index.ts";
 import {
+	neverSettles,
+	sceneMethodOutcome,
+} from "#lib/demo/screenshot-scene.ts";
+import { formatInteger } from "#lib/i18n/format.ts";
+import {
+	type MessageKey,
+	type PlainMessageKey,
+	sourceText,
+	t,
+	type Translate,
+} from "#lib/i18n/index.ts";
+import {
 	type AccountStatusError,
 	accountStatusErrorSchema,
 } from "#lib/model/authentication.ts";
 import { geohashSchema } from "#lib/model/geohash.ts";
+import { BYTES_PER_MEGABYTE } from "#lib/util/bytes.ts";
 
 const maxPrettyMessageChars = 200;
 
-const unknownErrorMessage = "An unknown error occurred";
+const messagelessMessageKeys = {
+	RequestBlocked: apiErrorMessageKeys.RequestBlocked,
+	NetworkBlocked: apiErrorMessageKeys.NetworkBlocked,
+	SessionStale: apiErrorMessageKeys.SessionStale,
+	RateLimited: "feedback.appError.rateLimited",
+	NotSignedIn: "feedback.appError.notSignedIn",
+	ContentTooLarge: "feedback.appError.contentTooLarge",
+} as const satisfies Partial<Record<ApiErrorKind, MessageKey>>;
 
-const connectionFailedMessage =
-	"Couldn't connect to Grindr. Check your internet connection and try again.";
+type MessagelessMessageKey =
+	| (typeof messagelessMessageKeys)[keyof typeof messagelessMessageKeys]
+	| "feedback.appError.unknown";
 
-const messagelessMessages: Partial<Record<ApiErrorKind, string>> = {
-	...blockedAndStaleMessages,
-	RateLimited: "Grindr is rate limiting us",
-	NotSignedIn: "You're signed out",
-	ContentTooLarge: "Larger than the upload limit",
+const appErrorSchema = z.object({
+	kind: z.enum(apiErrorKinds),
+	message: z
+		.string()
+		.or(z.object({ code: z.number(), message: z.string() }))
+		.or(
+			z.object({
+				reason: z.string(),
+				detail: z.string().nullish(),
+				maxBytes: z.number().optional(),
+			}),
+		)
+		.optional(),
+});
+
+type AppError = z.infer<typeof appErrorSchema>;
+
+const namedMediaReasons = [
+	"notMedia",
+	"linkNotMedia",
+	"linkTooLarge",
+	"videoUnreadable",
+	"notAPhoto",
+	"photoSizeUnreadable",
+	"photoUnloadable",
+	"photoDamaged",
+	"heicUnsupported",
+	"photoUndecodable",
+	"outsideReadableFolders",
+] as const;
+
+type NamedMediaReason = (typeof namedMediaReasons)[number];
+
+const mediaReasonMessageKeys = {
+	notMedia: "common.media.errors.unsupportedFile",
+	linkNotMedia: "common.media.errors.linkNotMedia",
+	linkTooLarge: "common.media.errors.linkTooLarge",
+	videoUnreadable: "common.media.errors.videoUnreadable",
+	notAPhoto: "common.media.errors.notAPhoto",
+	photoSizeUnreadable: "common.media.errors.photoSizeUnreadable",
+	photoUnloadable: "common.media.errors.photoUnloadable",
+	photoDamaged: "common.media.errors.photoDamaged",
+	heicUnsupported: "common.media.errors.heicUnsupported",
+	photoUndecodable: "common.media.errors.photoUndecodable",
+	outsideReadableFolders: "common.media.errors.outsideReadableFolders",
+} as const satisfies Record<NamedMediaReason, PlainMessageKey>;
+
+const mediaRefusalSchema = z.discriminatedUnion("reason", [
+	z.object({ reason: z.enum(namedMediaReasons) }),
+	z.object({
+		reason: z.literal("photoTooLarge"),
+		maxBytes: z.int().positive(),
+	}),
+]);
+
+type MediaRefusal = z.infer<typeof mediaRefusalSchema>;
+
+const mediaRefusalErrorSchema = z.object({
+	kind: z.literal("Media"),
+	message: mediaRefusalSchema,
+});
+
+type Wording = {
+	translate: Translate;
+	formatInteger: (value: number) => string;
+};
+
+const shownWording: Wording = { translate: t, formatInteger };
+
+const diagnosticWording: Wording = {
+	translate: sourceText,
+	formatInteger: String,
 };
 
 export const banInfoSchema = z.object({
@@ -140,20 +228,29 @@ export const methods = {
 	},
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
-export async function callMethod<T extends keyof typeof methods>(
-	method: T,
-	...args: undefined extends z.infer<(typeof methods)[T]["request"]>
-		? [data?: z.infer<(typeof methods)[T]["request"]>]
-		: [data: z.infer<(typeof methods)[T]["request"]>]
-): Promise<z.infer<(typeof methods)[T]["response"]>> {
-	type Result = z.infer<(typeof methods)[T]["response"]>;
-	if (__DEMO__) {
-		return methods[method].response.parse(demoCallMethod(method)) as Result;
-	}
+function demoMethodAnswer(method: string): unknown {
+	const scripted = __SCREENSHOTS__ ? sceneMethodOutcome(method) : undefined;
+	if (scripted === undefined) return demoCallMethod(method);
+	// eslint-disable-next-line @typescript-eslint/only-throw-error -- Tauri commands reject with the bare AppError object
+	if ("error" in scripted) throw scripted.error;
+	return "pending" in scripted ? neverSettles() : scripted.answer;
+}
+
+type MethodResult<T extends keyof typeof methods> = z.infer<
+	(typeof methods)[T]["response"]
+>;
+
+async function parseAnswer<T extends keyof typeof methods>({
+	method,
+	answer,
+}: {
+	method: T;
+	answer: () => unknown;
+}): Promise<MethodResult<T>> {
 	try {
 		return methods[method].response.parse(
-			await invoke(method, args[0]),
-		) as Result;
+			await answer(),
+		) as MethodResult<T>;
 	} catch (error) {
 		const kind = blockedKindOf(asAppError(error)?.kind);
 		if (kind !== undefined) {
@@ -161,6 +258,18 @@ export async function callMethod<T extends keyof typeof methods>(
 		}
 		throw error;
 	}
+}
+
+export async function callMethod<T extends keyof typeof methods>(
+	method: T,
+	...args: undefined extends z.infer<(typeof methods)[T]["request"]>
+		? [data?: z.infer<(typeof methods)[T]["request"]>]
+		: [data: z.infer<(typeof methods)[T]["request"]>]
+): Promise<MethodResult<T>> {
+	if (__DEMO__) {
+		return parseAnswer({ method, answer: () => demoMethodAnswer(method) });
+	}
+	return parseAnswer({ method, answer: () => invoke(method, args[0]) });
 }
 
 export function markRequestBlocked({
@@ -198,37 +307,84 @@ export function asAccountStatusError(
 	return parsed.success ? parsed.data.message : null;
 }
 
-export function asAppError(error: unknown) {
-	const { data, success } = z
-		.object({
-			kind: z.enum(apiErrorKinds),
-			message: z
-				.string()
-				.or(z.object({ code: z.number(), message: z.string() }))
-				.or(
-					z.object({
-						reason: z.string(),
-						detail: z.string().nullish(),
-					}),
-				)
-				.optional(),
-		})
-		.safeParse(error);
-	if (success) {
-		let prettyMessage: string;
-		if (data.kind === "Connect") {
-			prettyMessage = connectionFailedMessage;
-		} else if (typeof data.message === "string") {
-			prettyMessage = summarizeServerMessage(data.message);
-		} else if (data.message && "code" in data.message) {
-			const { code, message } = data.message;
-			prettyMessage = `Error ${code}: ${summarizeServerMessage(message)}`;
-		} else {
-			prettyMessage =
-				messagelessMessages[data.kind] ?? unknownErrorMessage;
+function messagelessMessageKey(kind: ApiErrorKind): MessagelessMessageKey {
+	const keys: Partial<Record<ApiErrorKind, MessagelessMessageKey>> =
+		messagelessMessageKeys;
+	return keys[kind] ?? "feedback.appError.unknown";
+}
+
+function describeMediaRefusal({
+	refusal,
+	wording: { translate, formatInteger },
+}: {
+	refusal: MediaRefusal;
+	wording: Wording;
+}): string {
+	if (refusal.reason === "photoTooLarge") {
+		return translate("common.media.errors.photoTooLarge", {
+			megabytes: formatInteger(
+				Math.floor(refusal.maxBytes / BYTES_PER_MEGABYTE),
+			),
+		});
+	}
+	return translate(mediaReasonMessageKeys[refusal.reason]);
+}
+
+function describeAppError({
+	appError: { kind, message },
+	wording,
+}: {
+	appError: AppError;
+	wording: Wording;
+}): string {
+	const { translate } = wording;
+	if (kind === "Connect") {
+		return translate("feedback.appError.connectionFailed");
+	}
+	if (typeof message === "string") {
+		return describeServerMessage({ message, translate });
+	}
+	if (message !== undefined && "code" in message) {
+		return translate("feedback.appError.withCode", {
+			code: String(message.code),
+			detail: describeServerMessage({
+				message: message.message,
+				translate,
+			}),
+		});
+	}
+	if (kind === "Media" && message !== undefined) {
+		const refusal = mediaRefusalSchema.safeParse(message);
+		if (refusal.success) {
+			return describeMediaRefusal({ refusal: refusal.data, wording });
 		}
+		if (typeof message.detail === "string") {
+			return describeServerMessage({
+				message: message.detail,
+				translate,
+			});
+		}
+	}
+	return translate(messagelessMessageKey(kind));
+}
+
+export function asAppError(error: unknown) {
+	const { data, success } = appErrorSchema.safeParse(error);
+	if (success) {
+		const prettyMessage = describeAppError({
+			appError: data,
+			wording: shownWording,
+		});
 		return { ...data, prettyMessage };
 	}
+}
+
+export function diagnosticMessage(error: unknown): string {
+	const { data, success } = appErrorSchema.safeParse(error);
+	if (success) {
+		return describeAppError({ appError: data, wording: diagnosticWording });
+	}
+	return error instanceof Error ? error.message : String(error);
 }
 
 export function errorKindOf(error: unknown): ApiErrorKind | null {
@@ -246,19 +402,37 @@ export function uploadRefusalMessage({
 }): string | null {
 	const kind = errorKindOf(error);
 	if (kind === "ContentTooLarge" || httpStatusOf(error) === 413) {
-		return `Larger than the ${limitLabel} limit`;
+		return t("feedback.appError.overLimit", { limit: limitLabel });
 	}
-	if (kind !== "Media") return null;
-	const detail = asAppError(error)?.message;
-	return typeof detail === "string" && detail !== "" ? detail : null;
+	const refused = mediaRefusalErrorSchema.safeParse(
+		error instanceof ApiError ? error.cause : error,
+	);
+	return refused.success
+		? describeMediaRefusal({
+				refusal: refused.data.message,
+				wording: shownWording,
+			})
+		: null;
 }
 
-export function summarizeServerMessage(message: string): string {
+function describeServerMessage({
+	message,
+	translate,
+}: {
+	message: string;
+	translate: Translate;
+}): string {
 	const summary = summariseNonJson(message);
 	if (summary.nonJson !== "html") {
 		return capText(message, maxPrettyMessageChars);
 	}
 	return summary.title === undefined
-		? "The server returned a web page instead of data"
-		: `The server returned a web page: "${summary.title}"`;
+		? translate("feedback.appError.webPage")
+		: translate("feedback.appError.titledWebPage", {
+				title: summary.title,
+			});
+}
+
+export function summarizeServerMessage(message: string): string {
+	return describeServerMessage({ message, translate: t });
 }

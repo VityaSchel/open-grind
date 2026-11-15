@@ -142,8 +142,8 @@ test("Write a message stays clickable while the Right Now post is scrolled under
 		timeout: FIRST_ROUTE_COMPILE_MS,
 	});
 	const write = page
-		.getByRole("navigation", { name: "Chat and tap" })
-		.getByRole("link", { name: "Write a message..." });
+		.getByRole("navigation", { name: "Chat and Tap" })
+		.getByRole("link", { name: "Write a message…" });
 	await expect(write).toBeVisible();
 
 	const writeBox = await layoutBox(write);

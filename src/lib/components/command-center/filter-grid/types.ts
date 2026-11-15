@@ -1,10 +1,26 @@
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 import type { GridSearchFilters } from "#lib/model/browse/grid/filters.ts";
+
+export type FilterError =
+	| { kind: "unknownFilter" }
+	| { kind: "expectedBoolean" }
+	| { kind: "notANumber" }
+	| { kind: "outOfRange"; min: number; max: number }
+	| { kind: "rangeSyntax" }
+	| { kind: "noValues" }
+	| { kind: "unknownValue"; value: string }
+	| { kind: "invalidGenderId"; value: string };
+
+export type InvalidValueKind = Extract<FilterError, { value: string }>["kind"];
+
+export type ValuePart = { text: string; verbatim: boolean };
 
 export type ParsedFilter = {
 	key: string;
-	valueText: string;
+	label?: PlainMessageKey;
+	valueParts: ValuePart[];
 	valid: boolean;
-	error?: string;
+	error?: FilterError;
 };
 
 export type ParsedFilterGridQuery = {
@@ -14,12 +30,39 @@ export type ParsedFilterGridQuery = {
 	invalidCount: number;
 };
 
-export type ApplyResult = { ok: true } | { ok: false; error: string };
+export type ApplyResult = { ok: true } | { ok: false; error: FilterError };
 export type Apply = (raw: string, draft: GridSearchFilters) => ApplyResult;
-export type Render = (filters: GridSearchFilters) => string;
+export type Render = (filters: GridSearchFilters) => ValuePart[];
 
 export type Param = { keys: string[]; apply: Apply };
-export type Filter = { label: string; render: Render; params: Param[] };
+export type FilterId =
+	| "online"
+	| "favorites"
+	| "rightNow"
+	| "fresh"
+	| "notRecentlyChatted"
+	| "photos"
+	| "age"
+	| "height"
+	| "weight"
+	| "position"
+	| "tribes"
+	| "tribesImInto"
+	| "bodyType"
+	| "relationship"
+	| "nsfw"
+	| "lookingFor"
+	| "meetAt"
+	| "health"
+	| "genders"
+	| "tags";
+
+export type Filter = {
+	id: FilterId;
+	label: PlainMessageKey;
+	render: Render;
+	params: Param[];
+};
 
 export type BooleanKey = {
 	[K in keyof GridSearchFilters]: GridSearchFilters[K] extends boolean

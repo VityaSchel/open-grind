@@ -13,12 +13,12 @@ async function openReportSheet(page: Page): Promise<Locator> {
 	await installTauriShim(page);
 	await page.goto(DEMO_PROFILE);
 	await page.getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Report profile" }).click();
+	await page.getByRole("menuitem", { name: "Report user" }).click();
 	const drawer = page.locator(DRAWER);
 	await drawer.waitFor({ timeout: 10_000 });
 	await page.waitForTimeout(700);
 	await expect(
-		drawer.getByRole("heading", { name: "Report profile" }),
+		drawer.getByRole("heading", { name: "Report User" }),
 	).toBeVisible();
 	return drawer;
 }

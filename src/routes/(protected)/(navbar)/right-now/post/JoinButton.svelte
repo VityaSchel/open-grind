@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { FLOATING_CHIP_FLY } from "#lib/components/shared/floating-chip.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { fly } from "#lib/util/reduced-motion.ts";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
 	import { formatTimeLeft } from "./time-left";
@@ -40,19 +41,27 @@
 	const remaining = $derived(
 		Math.min(1, Math.max(0, ownPost.timeLeftMs / lifetimeMs)),
 	);
-	const allowanceText = $derived(
-		typeof ownPost.freePostsLeft === "number"
-			? ` · ${ownPost.freePostsLeft} left`
-			: "",
+	const allowance = $derived.by(() => {
+		const left = ownPost.freePostsLeft;
+		if (typeof left !== "number") return null;
+		return left === 0
+			? t("browse.rightNow.join.allowanceNone")
+			: t("browse.rightNow.join.allowance", { count: left });
+	});
+	const joinLabel = $derived(
+		allowance === null
+			? t("browse.rightNow.join.label")
+			: t("browse.rightNow.join.a11y.withAllowance", { allowance }),
 	);
-	const joinLabel = $derived(`Join${allowanceText}`);
 	const runningLabel = $derived(
 		off
-			? `Your Right Now post, off, ${timeLeft} left`
-			: `Your Right Now post, ${timeLeft} left`,
+			? t("browse.rightNow.join.running.a11y.off", { time: timeLeft })
+			: t("browse.rightNow.join.running.a11y.active", { time: timeLeft }),
 	);
 	const runningText = $derived(
-		off ? `Off · ${timeLeft}` : `${timeLeft} left`,
+		off
+			? t("browse.rightNow.join.running.off", { time: timeLeft })
+			: t("browse.rightNow.join.running.active", { time: timeLeft }),
 	);
 </script>
 
@@ -122,15 +131,19 @@
 				class="max-w-full shadow-sm"
 				disabled={exhausted || ownPost.joining}
 				aria-label={exhausted
-					? `${joinLabel}. No free posts left in this area`
+					? t("browse.rightNow.join.a11y.exhausted", {
+							allowance:
+								allowance ??
+								t("browse.rightNow.join.allowanceNone"),
+						})
 					: joinLabel}
 				onclick={onjoin}
 			>
 				<span class="truncate"
-					>Join<span
+					>{t("browse.rightNow.join.label")}<span
 						data-slot="join-button-allowance"
 						class={{ "max-sm:hidden": compact }}
-						>{allowanceText}</span
+						>{allowance === null ? "" : ` · ${allowance}`}</span
 					></span
 				>
 			</Button>

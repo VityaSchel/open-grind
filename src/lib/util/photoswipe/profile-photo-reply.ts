@@ -14,7 +14,7 @@ export function applyProfilePhotoReply(
 	},
 ): () => void {
 	return applyPhotoSwipeReply(lightbox, {
-		label: "Reply to profile photo",
+		label: "media.lightbox.reply.a11y.profilePhoto",
 		canReply: (pswp) => !!imageHash(pswp),
 		visible: (pswp) => !!imageHash(pswp),
 		onreply: ({ text, pswp }) => {

@@ -1,0 +1,208 @@
+{
+	"lightbox": {
+		"zoom": "Zoom",
+		"previous": "Previous",
+		"next": "Next",
+		"errors": {
+			"loadFailed": "Couldn’t load media",
+			"playFailed": "This system can’t play this video.",
+			"decoderMissing": "Playing this video needs an H.264 decoder, which isn’t installed on this system. <codecsGuideLink>How to install video codecs</codecsGuideLink>"
+		},
+		"reply": {
+			"placeholder": "Write a reply…",
+			"a11y": {
+				"send": "Send reply",
+				"react": "React to album item with fire",
+				"albumItem": "Reply to album item",
+				"profilePhoto": "Reply to profile photo"
+			}
+		}
+	},
+	"album": {
+		"noPlaysLeft": "No plays left",
+		"untitled": "Untitled Album",
+		"itemCount_one": "{{count}} item",
+		"itemCount_other": "{{count}} items",
+		"tile": {
+			"shared": "Shared",
+			"a11y": {
+				"containsVideo": "Contains video",
+				"cantBeShared": "Can’t be shared"
+			}
+		},
+		"preview": {
+			"errors": {
+				"loadFailed": "Couldn’t load album",
+				"openFailed": "Couldn’t open album"
+			},
+			"a11y": {
+				"open": "Open album"
+			}
+		}
+	},
+	"matureContent": {
+		"label": "18+",
+		"show": "Show",
+		"a11y": {
+			"show": "Show mature content"
+		}
+	},
+	"sheet": {
+		"tile": {
+			"a11y": {
+				"photo": "Photo {{position}}",
+				"video": "Video {{position}}"
+			}
+		},
+		"tileMenu": {
+			"deletePermanently": "Delete permanently",
+			"a11y": {
+				"photoOptions": "Photo options",
+				"videoOptions": "Video options"
+			}
+		},
+		"deleteDialog": {
+			"photoTitle": "Delete this photo?",
+			"videoTitle": "Delete this video?",
+			"description": "It will be deleted from your uploads. This can’t be undone."
+		},
+		"errors": {
+			"deletePhotoFailed": "Couldn’t delete photo",
+			"deleteVideoFailed": "Couldn’t delete video"
+		},
+		"previousUploads": {
+			"title": "Previous Uploads",
+			"empty": {
+				"title": "No Previous Uploads"
+			}
+		}
+	},
+	"grid": {
+		"a11y": {
+			"maxSelected_one": "Maximum {{count}} selected",
+			"maxSelected_other": "Maximum {{count}} selected"
+		}
+	},
+	"videoPlayer": {
+		"a11y": {
+			"play": "Play",
+			"pause": "Pause",
+			"mute": "Mute",
+			"unmute": "Unmute"
+		}
+	},
+	"videoScrubber": {
+		"a11y": {
+			"seek": "Seek"
+		}
+	},
+	"picker": {
+		"filters": {
+			"image": "Images",
+			"video": "Videos",
+			"media": "Media"
+		}
+	},
+	"albums": {
+		"add": "Add album",
+		"new": {
+			"empty": {
+				"title": "Add a photo to start your album",
+				"description": "The album is created once you add its first photo or video."
+			},
+			"dropToStart": "Drop to start an album",
+			"errors": {
+				"albumLimit": "You can’t create more albums",
+				"createFailed": "Couldn’t create album"
+			}
+		},
+		"editor": {
+			"header": {
+				"sharedWith": "Shared with",
+				"updated": "Updated {{date}}",
+				"mediaUsage": "{{photos}}/{{maxPhotos}} photos, {{videos}}/{{maxVideos}} videos",
+				"a11y": {
+					"preview": "Preview album"
+				}
+			},
+			"name": {
+				"label": "Album name",
+				"hint": "Only you see the album name"
+			},
+			"menu": {
+				"delete": "Delete album",
+				"deleted": "Your album has been deleted",
+				"confirm": {
+					"title": "Delete album?",
+					"description": "This album and everything in it will be deleted, and anyone you shared it with will lose access. This can’t be undone."
+				},
+				"errors": {
+					"deleteFailed": "Couldn’t delete album"
+				},
+				"a11y": {
+					"trigger": "Album menu"
+				}
+			},
+			"content": {
+				"addMedia": "Add photos or videos",
+				"addToAlbum": "Add to album",
+				"dropToAdd": "Drop to add to album",
+				"empty": {
+					"title": "No Media Yet",
+					"description": "Photos and videos you add appear here."
+				},
+				"a11y": {
+					"uploadingPhoto": "Uploading photo",
+					"uploadingVideo": "Uploading video",
+					"photoSlot": "Album photo in slot {{slot}}",
+					"videoSlot": "Album video in slot {{slot}}",
+					"photoSlotProcessing": "Album photo in slot {{slot}}, processing",
+					"videoSlotProcessing": "Album video in slot {{slot}}, processing",
+					"removePhotoSlot": "Remove album photo in slot {{slot}}",
+					"removeVideoSlot": "Remove album video in slot {{slot}}",
+					"keepPhotoSlot": "Keep album photo in slot {{slot}}",
+					"keepVideoSlot": "Keep album video in slot {{slot}}"
+				}
+			},
+			"saved": "Album updated",
+			"errors": {
+				"stillProcessing": "This video is still processing. Try removing it again in a moment.",
+				"saveFailed": "Couldn’t save album changes"
+			},
+			"a11y": {
+				"markedForRemoval_one": "{{count}} item marked for removal",
+				"markedForRemoval_other": "{{count}} items marked for removal"
+			}
+		},
+		"sharedWith": {
+			"title": "Shared With",
+			"empty": {
+				"title": "Not shared yet",
+				"description": "People you share this album with appear here."
+			},
+			"a11y": {
+				"sharing": "Sharing"
+			}
+		},
+		"uploads": {
+			"addedReopen": "Added. Reopen the album to see it.",
+			"errors": {
+				"albumFull": "The album is full. Remove something to add more.",
+				"videoLimit_one": "You can have {{count}} video in your album. Remove one to add another.",
+				"videoLimit_other": "You can have {{count}} videos in your album. Remove one to add another.",
+				"leftOut_one": "{{count}} left out, the album is full",
+				"leftOut_other": "{{count}} left out, the album is full",
+				"addFailed": "Couldn’t add to album",
+				"photosFull_one": "This album already holds {{count}} photo",
+				"photosFull_other": "This album already holds {{count}} photos",
+				"videosFull_one": "This album already holds {{count}} video",
+				"videosFull_other": "This album already holds {{count}} videos",
+				"addPhotoFailed": "Couldn’t add photo",
+				"addVideoFailed": "Couldn’t add video"
+			}
+		}
+	},
+	"uploads": {
+		"notification": "Uploading media…"
+	}
+}

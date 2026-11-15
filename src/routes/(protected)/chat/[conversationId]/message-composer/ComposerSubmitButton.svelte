@@ -2,6 +2,7 @@
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
 	import PrimaryComposerButton from "#lib/components/shared/PrimaryComposerButton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { softKeyboardVisibility } from "#lib/platform/android-native-bridge.ts";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
 
@@ -10,7 +11,7 @@
 
 <PrimaryComposerButton
 	type="submit"
-	aria-label="Send message"
+	aria-label={t("chat.composer.a11y.send")}
 	{disabled}
 	onpointerdown={(event) => {
 		if (softKeyboardVisibility() !== false) event.preventDefault();

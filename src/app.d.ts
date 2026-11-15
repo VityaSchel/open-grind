@@ -2,8 +2,13 @@ import type { NativeInsets } from "#lib/platform/android-native-bridge.ts";
 
 declare global {
 	const __DEMO__: boolean;
+	const __SCREENSHOTS__: boolean;
 
 	namespace App {
+		interface Error {
+			type?: string;
+		}
+
 		interface PageState {
 			profileOrigin?: "browse";
 		}

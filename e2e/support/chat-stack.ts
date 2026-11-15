@@ -17,8 +17,8 @@ export const listScroller = (page: Page) =>
 export const rows = (page: Page) => page.locator('a[href^="/chat/"]:visible');
 export const row = (page: Page, { href }: { href: string }) =>
 	page.locator(`a[href="${href}"]:visible`);
-export const backToChats = (page: Page) =>
-	page.getByRole("link", { name: "Back to chats" });
+export const backToInbox = (page: Page) =>
+	page.getByRole("link", { name: "Back to Inbox" });
 
 export async function openInbox(
 	page: Page,

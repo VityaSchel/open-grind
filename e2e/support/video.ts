@@ -10,7 +10,7 @@ export const ACTIVE_SURFACE = `.pswp__item:not([aria-hidden="true"]) ${SURFACE}`
 export const CONTROLS = `${ACTIVE_SURFACE} [data-pswp-interactive]`;
 
 /** The demo clip is the last item of the conversation's album. */
-const CLIP = "**/picsum.photos/seed/album-5001-2/600/800";
+export const CLIP = "**/picsum.photos/seed/album-5001-2/600/800";
 
 export async function openClip(page: Page): Promise<void> {
 	await installTauriShim(page);

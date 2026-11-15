@@ -14,14 +14,23 @@
 	import * as Drawer from "#lib/components/ui/drawer/index.ts";
 	import * as Tabs from "#lib/components/ui/tabs/index.ts";
 	import { Toggle } from "#lib/components/ui/toggle/index.ts";
+	import { formatNumber } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { decodeGeohash } from "#lib/model/geohash.ts";
 	import type { Coordinates } from "#lib/location/location-request.svelte.ts";
 	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
 	import ComposerLocationTab from "./location/ComposerLocationTab.svelte";
 	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";
-	import type { SelectionTab, Tab, TabSelection } from "./tabs";
+	import {
+		selectionActionKeys,
+		type SelectionTab,
+		type Tab,
+		tabLabelKeys,
+		type TabSelection,
+	} from "./tabs";
 
 	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
+	const EXPIRING_PHOTO_SECONDS = 10;
 
 	let {
 		open = $bindable(),
@@ -56,7 +65,9 @@
 </script>
 
 <MediaSheet bind:open fullsize={isFullsizeTab} {onCloseAutoFocus}>
-	<Drawer.Title class="sr-only">Attachments</Drawer.Title>
+	<Drawer.Title class="sr-only">
+		{t("chat.composer.attachments.a11y.title")}
+	</Drawer.Title>
 	<Tabs.Root
 		bind:value={selectedTab}
 		class={["min-h-0 gap-0", { "h-full": isFullsizeTab }]}
@@ -95,7 +106,9 @@
 
 		<MediaSheetActions
 			aboveTabBar
-			label={selection?.label ?? ""}
+			label={selection === undefined
+				? ""
+				: t(selectionActionKeys[selection.action])}
 			count={selection?.count ?? 0}
 			showCount={selectedTab !== "location"}
 			onSubmit={submitSelection}
@@ -103,7 +116,10 @@
 			{#snippet leading()}
 				{#if selectedTab === "media"}
 					<Toggle
-						aria-label="Set photo as expiring after 10 seconds"
+						aria-label={t(
+							"chat.composer.attachments.expiring.a11y.toggle",
+							{ count: EXPIRING_PHOTO_SECONDS },
+						)}
 						size="lg"
 						class={{
 							"bg-muted hover:bg-muted/80": !expiring,
@@ -118,9 +134,12 @@
 							class="size-5"
 						/>
 						{#if expiring}
-							10s
+							{formatNumber({
+								value: EXPIRING_PHOTO_SECONDS,
+								preset: "durationSeconds",
+							})}
 						{:else}
-							Off
+							{t("chat.composer.attachments.expiring.off")}
 						{/if}
 					</Toggle>
 				{/if}
@@ -130,15 +149,15 @@
 		<MediaSheetTabBar>
 			<MediaSheetTab value="media">
 				<ImageIcon weight="fill" class="size-5" />
-				Media
+				{t(tabLabelKeys.media)}
 			</MediaSheetTab>
 			<MediaSheetTab value="albums">
 				<FolderOpenIcon weight="fill" class="size-5" />
-				Albums
+				{t(tabLabelKeys.albums)}
 			</MediaSheetTab>
 			<MediaSheetTab value="location">
 				<NavigationArrowIcon weight="fill" class="size-5" />
-				Location
+				{t(tabLabelKeys.location)}
 			</MediaSheetTab>
 		</MediaSheetTabBar>
 	</Tabs.Root>

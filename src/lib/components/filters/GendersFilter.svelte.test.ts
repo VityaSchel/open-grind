@@ -7,11 +7,18 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { getGendersMock } = vi.hoisted(() => ({ getGendersMock: vi.fn() }));
+
+vi.mock("#lib/api/users/genders.ts", () => ({ getGenders: getGendersMock }));
 
 import { demoGenders } from "#lib/demo/mock/reference.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { GENDER_ASK_ME } from "#lib/model/browse/grid/filters.ts";
 import type { Gender } from "#lib/model/users/genders.ts";
+import GendersFilter from "./GendersFilter.svelte";
 
 const MAN = 1;
 const CIS_MAN = 4;
@@ -27,12 +34,6 @@ const catalog: Gender[] = [
 		excludeOnFilterSelection: [TRANS_WOMAN],
 	},
 ];
-
-vi.mock("#lib/api/users/genders.ts", () => ({
-	getGenders: () => Promise.resolve(catalog),
-}));
-
-import GendersFilter from "./GendersFilter.svelte";
 
 function renderFilter(genders: number[]) {
 	const stored = $state({ checked: true, genders });
@@ -63,7 +64,15 @@ async function expectHidden(...names: string[]) {
 	});
 }
 
-afterEach(cleanup);
+beforeEach(() => {
+	getGendersMock.mockReset();
+	getGendersMock.mockResolvedValue(catalog);
+});
+
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("GendersFilter", () => {
 	it("hides Cis Man and Trans Men once Men is picked, and Men once Cis Man is", async () => {
@@ -109,5 +118,54 @@ describe("GendersFilter", () => {
 
 		expect(stored.genders).toEqual([]);
 		expect(stored.checked).toBe(false);
+	});
+
+	it("shows the other genders behind More, then offers Less", async () => {
+		renderFilter([]);
+		const more = await screen.findByRole("button", { name: "More" });
+
+		expect(screen.getByRole("checkbox", { name: "Gender" })).toBeTruthy();
+		expect(
+			screen.getByRole("button", { name: "Not Specified" }),
+		).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Agender" })).toBeNull();
+
+		await fireEvent.click(more);
+
+		expect(screen.getByRole("button", { name: "Less" })).toBe(more);
+		expect(screen.getByRole("button", { name: "Agender" })).toBeTruthy();
+	});
+
+	it("words the field, the unspecified chip and the toggle in the active locale", async () => {
+		renderFilter([]);
+		const toggle = await screen.findByRole("button", { name: "More" });
+		const field = screen.getByRole("checkbox", { name: "Gender" });
+		const notSpecified = screen.getByRole("button", {
+			name: "Not Specified",
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByRole("checkbox", { name: PSEUDO_MESSAGE })).toBe(
+			field,
+		);
+		expect(notSpecified.textContent).toMatch(PSEUDO_MESSAGE);
+		const more = toggle.textContent;
+		expect(more).toMatch(PSEUDO_MESSAGE);
+
+		await fireEvent.click(toggle);
+
+		expect(toggle.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(toggle.textContent).not.toBe(more);
+	});
+
+	it("says when the genders fail to load, in the active locale", async () => {
+		getGendersMock.mockRejectedValue(new Error("offline"));
+		renderFilter([]);
+		const failure = await screen.findByText("Couldn’t load genders");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(failure.textContent).toMatch(PSEUDO_MESSAGE);
 	});
 });

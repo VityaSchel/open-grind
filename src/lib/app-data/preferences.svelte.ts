@@ -4,16 +4,20 @@ import z from "zod";
 
 import { backdropBlurCalibrationSchema } from "#lib/blur/calibration/decide.ts";
 import { backdropBlurQualitySchema } from "#lib/blur/quality.ts";
+import { getRegionalSettings, t } from "#lib/i18n/index.ts";
 import { gridSearchFiltersSchema } from "#lib/model/browse/grid/filters.ts";
 import { geohashSchema } from "#lib/model/geohash.ts";
 import { rightNowFeedFiltersSchema } from "#lib/model/right-now/filters.ts";
-import { unitSystemSchema } from "#lib/util/units.ts";
 import {
-	existsAppDataFile,
-	readAppDataFile,
-	removeAppDataFile,
-	writeAppDataFileAtomic,
-} from ".";
+	languageSyncSchema,
+	languageTagSchema,
+} from "#lib/platform/language-sync.ts";
+import {
+	regionalSettingsArrived,
+	regionalSettingsArrivedInTime,
+} from "#lib/platform/regional-settings.ts";
+import { unitSystemFor, unitSystemSchema } from "#lib/util/units.ts";
+import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
 const preferencesSchema = z.object({
 	autoUpdateLocation: z.boolean().default(false),
@@ -28,6 +32,8 @@ const preferencesSchema = z.object({
 	geohash: geohashSchema.nullable().default(null),
 	giphyConsent: z.boolean().default(false),
 	hapticFeedback: z.boolean().default(true),
+	language: languageTagSchema.nullable().default(null).catch(null),
+	languageSync: languageSyncSchema.nullable().default(null).catch(null),
 	onboardingComplete: z.boolean().default(false),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	notificationsEnabled: z.boolean().default(false),
@@ -36,6 +42,7 @@ const preferencesSchema = z.object({
 	rightNowFeedFilters: rightNowFeedFiltersSchema.optional(),
 	showMatureContent: z.boolean().default(false),
 	stayOnline: z.boolean().default(true),
+	systemUnitsPending: z.boolean().default(false),
 	units: unitSystemSchema.default("metric"),
 });
 
@@ -69,12 +76,61 @@ function publish(preferences: Preferences): void {
 	loaded = true;
 }
 
-async function readFromDisk(): Promise<Preferences> {
-	if (!(await existsAppDataFile("preferences.data"))) {
-		return preferencesSchema.parse({});
-	}
+function adoptSystemUnitsOnArrival(): void {
+	void regionalSettingsArrived()
+		.then(() =>
+			enqueueWrite(async () => {
+				const current = await getPreferences();
+				if (!current.systemUnitsPending) return;
+				const preferences = preferencesSchema.parse({
+					...current,
+					units: unitSystemFor(
+						getRegionalSettings().measurementSystem,
+					),
+					systemUnitsPending: false,
+				});
+				await writePreferences(preferences);
+				publish(preferences);
+			}),
+		)
+		.catch(console.error);
+}
+
+async function withSystemUnits(
+	preferences: Partial<Preferences>,
+): Promise<Preferences> {
+	const arrived = await regionalSettingsArrivedInTime();
+	if (!arrived) adoptSystemUnitsOnArrival();
+	const measurementSystem = arrived
+		? getRegionalSettings().measurementSystem
+		: undefined;
+	return preferencesSchema.parse({
+		...preferences,
+		units: unitSystemFor(measurementSystem),
+		systemUnitsPending: !arrived,
+	});
+}
+
+async function writePreferences(preferences: Preferences): Promise<void> {
+	await writeAppDataFileAtomic({
+		path: "preferences.data",
+		content: encode(preferences),
+	});
+}
+
+async function readStoredPreferences(): Promise<Preferences | undefined> {
+	if (!(await existsAppDataFile("preferences.data"))) return undefined;
 	const bytes = await readAppDataFile("preferences.data");
 	return preferencesSchema.parse(decode(bytes));
+}
+
+async function readFromDisk(): Promise<Preferences> {
+	const stored = await readStoredPreferences();
+	if (stored !== undefined && !stored.systemUnitsPending) return stored;
+	const preferences = await withSystemUnits(stored ?? {});
+	if (!preferences.systemUnitsPending)
+		await writePreferences(preferences).catch(console.error);
+	return preferences;
 }
 
 export async function getPreferences(): Promise<Preferences> {
@@ -86,9 +142,9 @@ export async function getPreferences(): Promise<Preferences> {
 		})
 		.catch((error: unknown) => {
 			console.error(error);
-			toast.error("Failed to load preferences. Reset to defaults?", {
+			toast.error(t("settings.preferences.errors.loadFailed"), {
 				action: {
-					label: "Reset",
+					label: t("settings.preferences.reset"),
 					onClick: () => void resetToDefaults(),
 				},
 				duration: 10000,
@@ -122,22 +178,18 @@ export async function setPreferences(
 		const preferences = preferencesSchema.parse({
 			...oldValues,
 			...newValues,
+			systemUnitsPending:
+				oldValues.systemUnitsPending && newValues.units === undefined,
 		});
-		await writeAppDataFileAtomic({
-			path: "preferences.data",
-			content: encode(preferences),
-		});
+		await writePreferences(preferences);
 		publish(preferences);
 	});
 }
 
 async function resetToDefaults(): Promise<void> {
 	await enqueueWrite(async () => {
-		const preferences = preferencesSchema.parse({});
-		await writeAppDataFileAtomic({
-			path: "preferences.data",
-			content: encode(preferences),
-		});
+		const preferences = await withSystemUnits({});
+		await writePreferences(preferences);
 		publish(preferences);
 	});
 	window.location.reload();
@@ -151,24 +203,12 @@ const accountPreferenceKeys = [
 	"rightNowFeedFilters",
 ] as const;
 
-function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
-	return a.length === b.length && a.every((byte, index) => byte === b[index]);
-}
-
 export async function clearAccountPreferences(): Promise<void> {
 	await enqueueWrite(async () => {
 		const kept: Partial<Preferences> = { ...(await getPreferences()) };
 		for (const key of accountPreferenceKeys) delete kept[key];
 		const preferences = preferencesSchema.parse(kept);
 		publish(preferences);
-		const encoded = encode(preferences);
-		if (bytesEqual(encoded, encode(preferencesSchema.parse({})))) {
-			await removeAppDataFile("preferences.data");
-		} else {
-			await writeAppDataFileAtomic({
-				path: "preferences.data",
-				content: encoded,
-			});
-		}
+		await writePreferences(preferences);
 	});
 }

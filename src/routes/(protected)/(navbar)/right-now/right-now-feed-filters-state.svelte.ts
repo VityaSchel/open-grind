@@ -7,8 +7,8 @@ export class RightNowFeedFiltersState extends PersistedFiltersState<"rightNowFee
 			key: "rightNowFeedFilters",
 			defaults: defaultRightNowFeedFilters,
 			labels: {
-				load: "Failed to load Right Now filters",
-				save: "Failed to update Right Now filters",
+				load: "browse.rightNow.filters.errors.loadFailed",
+				save: "browse.rightNow.filters.errors.updateFailed",
 			},
 			onQueryChange,
 		});

@@ -7,6 +7,8 @@
 
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { playHaptic } from "#lib/haptics.ts";
+	import { formatClockTime } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
@@ -27,7 +29,6 @@
 	import LocationMessage from "./LocationMessage.svelte";
 	import MessageContextMenu from "./MessageContextMenu.svelte";
 	import MessageDateGroup from "./MessageDateGroup.svelte";
-	import MessageTime from "./MessageTime.svelte";
 	import MessageWrapper from "./MessageWrapper.svelte";
 	import ProfilePhotoReplyMessage from "./ProfilePhotoReplyMessage.svelte";
 	import Reaction from "./Reaction.svelte";
@@ -97,13 +98,13 @@
 	);
 	const firstInStack = $derived(indexInStack === 0);
 	const lastInStack = $derived(indexInStack === stackLength - 1);
+	const time = $derived(formatClockTime(message.timestamp));
 
 	setMessageContext(() => ({
 		firstInStack,
 		lastInStack,
 		indexInStack,
 		isOut,
-		timestamp: message.timestamp,
 	}));
 
 	const ACTIONS_GAP_PX = 4;
@@ -404,7 +405,7 @@
 						data-slot="message-actions"
 						variant="secondary"
 						size="icon-sm"
-						aria-label="Message actions"
+						aria-label={t("chat.message.a11y.actions")}
 						aria-haspopup="dialog"
 						aria-expanded={contextMenuOpen}
 						class="absolute size-8 -translate-y-1/2 scroll-my-20 transition-none not-focus-visible:sr-only"
@@ -433,18 +434,17 @@
 			]}
 		>
 			{#if status === "pending"}
-				Sending...
+				{t("chat.message.status.sending")}
 			{:else if status === "error"}
-				<span class="text-destructive"> Failed to send </span>
+				<span class="text-destructive">
+					{t("chat.message.status.notSent")}
+				</span>
+			{:else if isRead === null}
+				{time}
+			{:else if isRead}
+				{t("chat.message.status.readAt", { time })}
 			{:else}
-				{#if isRead !== null}
-					{#if isRead}
-						Read
-					{:else}
-						Sent
-					{/if}
-				{/if}
-				<MessageTime />
+				{t("chat.message.status.sentAt", { time })}
 			{/if}
 		</span>
 	{/if}

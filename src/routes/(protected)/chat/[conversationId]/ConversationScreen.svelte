@@ -2,7 +2,9 @@
 	import { untrack } from "svelte";
 
 	import { getConversations } from "#lib/chat/conversations-context.svelte.ts";
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import * as Card from "#lib/components/ui/card/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { setScreenLeaving } from "#lib/platform/back-gesture-event.svelte.ts";
 	import type { MessageDraft } from "#lib/model/messaging/messages.ts";
 	import ChatNavBar from "./conversation-nav-bar/ConversationNavBar.svelte";
@@ -68,6 +70,12 @@
 	let composerHeight = $state(0);
 </script>
 
+{#if !leaving}
+	<PageTitle
+		page={conversationState.profile?.name ||
+			t("chat.conversation.navBar.a11y.navigation")}
+	/>
+{/if}
 <ChatNavBar />
 <Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
 	<ConversationMessages {composerHeight} />

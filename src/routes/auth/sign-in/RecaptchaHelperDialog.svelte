@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { installedFromFdroid } from "#lib/updates/capability.svelte.ts";
 	import { RECAPTCHA_HELPER_GUIDE } from "#lib/updates/manual-install.ts";
@@ -16,27 +17,28 @@
 <AlertDialog.Root bind:open>
 	<AlertDialog.Content interactOutsideBehavior="close">
 		<AlertDialog.Header>
-			<AlertDialog.Title>Install reCAPTCHA helper</AlertDialog.Title>
+			<AlertDialog.Title>
+				{t("auth.signIn.captcha.helper.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
-				Wrong email or password, or Grindr wants a captcha check. The
-				check needs the reCAPTCHA helper add-on for Open Grind and the
-				official Grindr app installed. The add-on includes Google's
-				proprietary reCAPTCHA library, so it's not installed by default.
+				{t("auth.signIn.captcha.helper.description")}
 				{#if installedFromFdroid()}
-					This add-on bypasses F-Droid's checks.
+					{t("common.addons.fdroidNotice")}
 				{/if}
 				<Link
 					href={RECAPTCHA_HELPER_GUIDE}
 					class="font-medium text-primary underline underline-offset-2"
 				>
-					Learn more
+					{t("common.actions.learnMore")}
 				</Link>
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel size="lg">
+				{t("common.actions.cancel")}
+			</AlertDialog.Cancel>
 			<AlertDialog.Action size="lg" onclick={onContinue}>
-				Continue
+				{t("common.actions.continue")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

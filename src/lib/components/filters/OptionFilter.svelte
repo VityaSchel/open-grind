@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "#lib/i18n/index.ts";
 	import { optionsFromMap } from "#lib/util/options.ts";
 	import FilterSimpleArray from "./FilterSimpleArray.svelte";
 	import type { OptionFilterDefinition } from "./option-filters";
@@ -24,7 +25,7 @@
 	bind:checked
 	bind:value
 	id={filter.id}
-	label={filter.label}
+	label={t(filter.label)}
 	{items}
 	convert={Number}
 	notSpecified

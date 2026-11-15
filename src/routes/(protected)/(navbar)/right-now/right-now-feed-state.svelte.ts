@@ -16,6 +16,7 @@ import {
 	onProfileViewabilityChange,
 } from "#lib/api/users/profile-viewability.ts";
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
+import { t } from "#lib/i18n/index.ts";
 import { staysOnline } from "#lib/presence/presence-gate.ts";
 import { now } from "#lib/util/clock.ts";
 import { Generation } from "#lib/util/generation.ts";
@@ -104,7 +105,8 @@ export class RightNowFeedState extends ReconcilingListState<
 	constructor() {
 		super({
 			pageSize: PAGE_SIZE,
-			refreshErrorLabel: "Failed to refresh Right Now",
+			refreshErrorLabel: () =>
+				t("browse.rightNow.feed.errors.refreshFailed"),
 			marksOnline: true,
 		});
 		this.start();

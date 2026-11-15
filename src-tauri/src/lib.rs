@@ -1,5 +1,6 @@
 pub mod api;
 mod app_data;
+mod app_language;
 mod app_origin;
 mod app_settings;
 mod appearance;
@@ -24,6 +25,7 @@ mod plugin_rejection;
 mod predecessor;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
+mod regional;
 mod scroll_phase;
 mod state;
 mod storage;
@@ -180,6 +182,8 @@ pub fn run() {
         .plugin(app_settings::plugin())
         .plugin(disguise::plugin())
         .plugin(media_picker::plugin())
+        .plugin(regional::plugin())
+        .plugin(app_language::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -267,6 +271,10 @@ pub fn run() {
             media_picker::pick_android_media,
             appearance::backdrop_filter_renders,
             appearance::webview_engine,
+            regional::regional_settings,
+            app_language::app_languages,
+            app_language::set_app_language,
+            app_language::set_native_language,
             app_data::read_app_data,
             app_data::write_app_data,
             app_data::remove_app_data,
@@ -310,6 +318,10 @@ pub fn run() {
                 context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]
                 quit_when_closed(&window);
+                #[cfg(desktop)]
+                regional::refresh_on_focus(&window);
+                #[cfg(desktop)]
+                app_language::refresh_on_focus(&window);
                 #[cfg(desktop)]
                 disguise::desktop::restore(app.handle(), &window);
             }

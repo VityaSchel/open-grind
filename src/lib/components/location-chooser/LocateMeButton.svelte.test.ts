@@ -30,7 +30,9 @@ it("cancels its GPS request on leaving and ignores a late result", async () => {
 	);
 	const onlocate = vi.fn();
 	const { unmount } = render(LocateMeButton, { onlocate });
-	await fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
+	await fireEvent.click(
+		screen.getByRole("button", { name: "Go to current location" }),
+	);
 	unmount();
 	expect(mocks.abortStale).toHaveBeenCalledExactlyOnceWith(1);
 	finish({ status: "ok", coords: { lat: 52.52, lon: 13.405 } });

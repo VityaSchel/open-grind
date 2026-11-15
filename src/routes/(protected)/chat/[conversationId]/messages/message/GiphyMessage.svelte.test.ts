@@ -131,7 +131,7 @@ describe("a GIF message", () => {
 		expect(dialog.textContent).toContain("Enable GIPHY?");
 		expect(
 			screen
-				.getByRole("link", { name: "Privacy Policy" })
+				.getByRole("link", { name: "Privacy policy" })
 				.getAttribute("href"),
 		).toContain("giphy.com");
 		expect(await requestedSources()).not.toContain(GIF_URL);
@@ -170,7 +170,7 @@ describe("a GIF message", () => {
 
 		await vi.waitFor(() =>
 			expect(toast.error).toHaveBeenCalledWith(
-				"Failed to save preferences",
+				"Couldn’t enable GIPHY",
 				expect.anything(),
 			),
 		);

@@ -3,6 +3,7 @@ import type PhotoSwipe from "photoswipe";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import ReplyComposer from "#lib/components/shared/ReplyComposer.svelte";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 import { reservePhotoSwipeBottom } from "./sizing";
 
 export function applyPhotoSwipeReply(
@@ -16,7 +17,7 @@ export function applyPhotoSwipeReply(
 		visible,
 		signal,
 	}: {
-		label: string;
+		label: PlainMessageKey;
 		onreply?: (reply: {
 			text: string;
 			pswp: PhotoSwipe;

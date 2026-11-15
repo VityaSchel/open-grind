@@ -21,6 +21,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 	},
 }));
 
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { ws } from "#lib/ws.svelte.ts";
 
@@ -67,8 +68,9 @@ describe("ws.sendCommand", () => {
 		listeners.clear();
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		vi.useRealTimers();
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("resolves with the parsed response payload", async () => {
@@ -144,6 +146,16 @@ describe("ws.sendCommand", () => {
 			name: "ApiError",
 			kind: "Http",
 			cause: appError,
+		});
+	});
+
+	it("keeps a transport failure's message English for error reports", async () => {
+		await setLocale({ locale: "en-XA" });
+		invokeMock.mockRejectedValue({ kind: "RateLimited" });
+
+		await expect(sendCommand()).rejects.toMatchObject({
+			kind: "RateLimited",
+			message: "Too many requests. Wait a moment and try again.",
 		});
 	});
 

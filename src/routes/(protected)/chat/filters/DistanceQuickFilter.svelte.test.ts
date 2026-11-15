@@ -12,11 +12,11 @@ import DistanceQuickFilter from "./DistanceQuickFilter.svelte";
 const METRES_PER_KM = 1000;
 
 function filterSwitch(): HTMLElement {
-	return screen.getByRole("switch", { name: "Filter by distance" });
+	return screen.getByRole("switch", { name: "Filter by Distance" });
 }
 
 function distanceSlider(): HTMLElement {
-	return screen.getByRole("slider", { name: "Maximum distance" });
+	return screen.getByRole("slider", { name: "Maximum Distance" });
 }
 
 function button(name: string): HTMLElement {

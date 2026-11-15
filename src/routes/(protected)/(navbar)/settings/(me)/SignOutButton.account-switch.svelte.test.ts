@@ -11,6 +11,7 @@ import {
 
 import { conversation, settled } from "#lib/chat/conversations-test-helpers.ts";
 import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
+import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { defaultRightNowFeedFilters } from "#lib/model/right-now/filters.ts";
 
 const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
@@ -26,6 +27,7 @@ const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 		shownPushConversations: vi.fn(() => Promise.resolve([])),
 	},
 	toast: {
+		custom: vi.fn(),
 		error: vi.fn(),
 		warning: vi.fn(),
 		success: vi.fn(),
@@ -161,6 +163,8 @@ async function firstAccount() {
 		await import("#lib/chat/conversations-context.svelte.ts");
 	const markers = await import("#lib/chat/inbox-last-viewed.svelte.ts");
 	const taps = await import("#lib/interest/taps-last-viewed.ts");
+	const incoming =
+		await import("#lib/components/incoming-message-toast/incoming-message-toast-manager.ts");
 	const { load } = await import("../../../+layout");
 	expect(await load({} as Parameters<typeof load>[0])).toEqual({
 		ourProfileId: FIRST,
@@ -194,6 +198,17 @@ async function firstAccount() {
 	expect(await favorites.getFavoriteNote({ profileId: PEER })).toMatchObject({
 		notes: `private note ${FIRST}`,
 	});
+	incoming.showIncomingMessageToast({
+		conversationId: `private:${FIRST}`,
+		message: apiResponseMessageSchema.parse({
+			messageId: "first-account-message",
+			conversationId: `private:${FIRST}`,
+			senderId: PEER,
+			timestamp: 1000,
+			type: "Text",
+			body: { text: "private first-account message" },
+		}),
+	});
 	return { preferences, favorites, conversations, markers, taps, state };
 }
 
@@ -222,7 +237,7 @@ async function assertSecondAccount(
 	).toBeUndefined();
 	expect(app.state.drafts.get("shared-chat")).toBe("");
 	expect(app.state.drafts.replyTo("shared-chat")).toBeNull();
-	expect(toast.dismiss).toHaveBeenCalled();
+	expect(toast.dismiss).toHaveBeenCalledWith(`private:${FIRST}`);
 	expect(push.setNotificationsEnabled).toHaveBeenCalledWith(false);
 	expect(push.deletePushToken).toHaveBeenCalledOnce();
 	expect(
@@ -266,7 +281,7 @@ describe("account changes through the real auth, cache and preferences flow", ()
 		const { default: SignOutButton } =
 			await import("./SignOutButton.svelte");
 		render(SignOutButton);
-		await fireEvent.click(screen.getByRole("button", { name: "Sign Out" }));
+		await fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 		await fireEvent.click(
 			await screen.findByRole("button", { name: "Continue" }),
 		);

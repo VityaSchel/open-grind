@@ -64,7 +64,7 @@ it("names the Right Now filters in the load failure toast", async () => {
 	await loadedState();
 
 	expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-		label: "Failed to load Right Now filters",
+		label: "Couldn’t load Right Now filters",
 		error: expect.any(Error),
 	});
 });

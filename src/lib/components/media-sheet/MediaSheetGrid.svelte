@@ -10,6 +10,7 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import DeleteMediaDialog from "./DeleteMediaDialog.svelte";
 	import MediaSheetTile from "./MediaSheetTile.svelte";
@@ -68,8 +69,8 @@
 			console.error(err);
 			showErrorToast({
 				label: video
-					? "Couldn't delete video"
-					: "Couldn't delete photo",
+					? t("media.sheet.errors.deleteVideoFailed")
+					: t("media.sheet.errors.deletePhotoFailed"),
 				error: err,
 			});
 		} finally {

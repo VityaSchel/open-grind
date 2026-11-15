@@ -1,0 +1,55 @@
+{
+	"commandCenter": {
+		"placeholder": "Type a command…",
+		"empty": "Unknown command",
+		"a11y": {
+			"list": "Suggestions…"
+		},
+		"suggestions": {
+			"heading": "Suggestions",
+			"openProfileById": "Start with {{prefix}} to open profile by ID",
+			"filterGrid": "Start with {{prefix}} to filter Grid",
+			"quickGoTo": "Start with {{prefix}} to quick go to",
+			"setLocationByGeohash": "Start with {{prefix}} to set location by geohash"
+		}
+	},
+	"trigger": {
+		"controlKey": "Ctrl"
+	},
+	"filterGrid": {
+		"heading": "Filter Grid…",
+		"hint": "Type a Grid query, e.g. {{example}}",
+		"applyHint_one": "Press Enter to apply {{count}} filter",
+		"applyHint_other": "Press Enter to apply {{count}} filters",
+		"fixHint": "Fix the highlighted filters to apply",
+		"yes": "Yes",
+		"no": "No",
+		"errors": {
+			"unknownFilter": "Unknown filter",
+			"expectedBoolean": "Expected {{trueValue}} or {{falseValue}}",
+			"notANumber": "Not a number",
+			"outOfRange": "Must be between {{min}} and {{max}}",
+			"rangeSyntax": "Use min-max, e.g. {{example}}",
+			"noValues": "No values",
+			"unknownValue": "Unknown value “{{value}}”",
+			"invalidGenderId": "Invalid gender ID “{{value}}”",
+			"applyFailed": "Couldn’t apply filters"
+		}
+	},
+	"openProfileById": {
+		"heading": "Open profile by ID…",
+		"hint": "Enter the profile ID to search"
+	},
+	"quickGoTo": {
+		"heading": "Quick go to…"
+	},
+	"setLocationByGeohash": {
+		"heading": "Set location by geohash…",
+		"copyCurrent": "Copy currently selected location: {{geohash}}",
+		"copied": "Location copied to clipboard",
+		"hint": "Enter the {{length}}-character geohash to set your location",
+		"errors": {
+			"copyFailed": "Couldn’t copy location"
+		}
+	}
+}

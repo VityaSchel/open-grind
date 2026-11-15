@@ -1,11 +1,19 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import { sessionErrorState } from "#lib/api/session-error-state.svelte.ts";
 import { sessionRecovery } from "#lib/api/session-recovery.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import SessionErrorAlert from "./SessionErrorAlert.svelte";
 
@@ -56,6 +64,7 @@ vi.mock("svelte-sonner", () => ({
 		error: toastErrorMock,
 		success: toastSuccessMock,
 		dismiss: toastDismissMock,
+		getActiveToasts: () => [],
 	},
 }));
 
@@ -80,6 +89,7 @@ describe("SessionErrorAlert", () => {
 			.mockResolvedValue({ profileId: 1, expiresAt: 0, stale: true });
 		signOutMock.mockReset().mockResolvedValue(undefined);
 		toastErrorMock.mockReset();
+		toastSuccessMock.mockReset();
 		writeTextMock.mockReset().mockResolvedValue(undefined);
 		tauriListeners.clear();
 		wsConnectedHandlers.length = 0;
@@ -94,10 +104,11 @@ describe("SessionErrorAlert", () => {
 		requestBlockedAlertState.disable = false;
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		requestBlockedAlertState.open = false;
 		requestBlockedAlertState.disable = false;
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("takes the dialog back down when the session recovers on its own", () => {
@@ -212,6 +223,35 @@ describe("SessionErrorAlert", () => {
 		expect(toastErrorMock).not.toHaveBeenCalled();
 	});
 
+	it("retitles an open dialog when Grindr then rate limits the refresh", async () => {
+		sessionErrorState.open = false;
+		render(SessionErrorAlert);
+
+		emit("auth:session-error", {
+			message: "Could not refresh the session",
+			unauthorized: false,
+			kind: "SessionStale",
+			attempts: 3,
+			transient: false,
+		});
+		emit("auth:session-error", {
+			message: "Too many requests",
+			unauthorized: false,
+			kind: "RateLimited",
+			attempts: 3,
+			transient: false,
+		});
+		await settle();
+
+		expect(sessionErrorState.open).toBe(true);
+		expect(
+			screen
+				.getByRole("alertdialog")
+				.querySelector('[data-slot="alert-dialog-title"]')
+				?.textContent.trim(),
+		).toBe("Too many requests");
+	});
+
 	it("closes on a refresh that succeeds", async () => {
 		callMethodMock.mockResolvedValue({ profileId: 1, restriction: null });
 		render(SessionErrorAlert);
@@ -233,17 +273,55 @@ describe("SessionErrorAlert", () => {
 	});
 
 	it("shows a bounded excerpt of a huge error but copies all of it", async () => {
-		sessionErrorState.message = "x".repeat(400);
+		sessionErrorState.message = "x".repeat(2400);
 		render(SessionErrorAlert);
 
-		await fireEvent.click(button("Copy error"));
+		await fireEvent.click(button("Copy error details"));
 
 		expect(
-			screen.getByText(`${"x".repeat(200)}…<+200 chars>`),
+			screen.getByText(`${"x".repeat(200)}…<+2200 chars>`),
 		).toBeTruthy();
 		await vi.waitFor(() => {
-			expect(writeTextMock).toHaveBeenCalledWith("x".repeat(400));
+			expect(writeTextMock).toHaveBeenCalledWith("x".repeat(2400));
 		});
+	});
+
+	it("redacts the error it copies without asking first", async () => {
+		sessionErrorState.message =
+			"Refresh failed for me@example.com: POST https://grindr.mobi/v3/sessions/eyJhbGciOiJIUzI1NiJ9?token=Zm9vYmFy returned 401";
+		render(SessionErrorAlert);
+
+		await fireEvent.click(button("Copy error details"));
+
+		await vi.waitFor(() => {
+			expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+				"Refresh failed for <email>: POST https://grindr.mobi/v3/sessions/{id}?token={string:8} returned 401",
+			);
+		});
+		expect(toastSuccessMock).toHaveBeenCalledExactlyOnceWith(
+			"Copied to clipboard",
+		);
+	});
+
+	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
+		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		render(SessionErrorAlert);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Copy error details" }),
+		);
+
+		await vi.waitFor(() => {
+			expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+				"Couldn’t copy to clipboard",
+			);
+		});
+		expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+			"connection reset",
+		);
+		expect(toastSuccessMock).not.toHaveBeenCalled();
+		expect(sessionErrorState.open).toBe(true);
 	});
 
 	it("keeps the attempt count visible on a huge error", async () => {
@@ -273,7 +351,7 @@ describe("SessionErrorAlert", () => {
 
 		expect(
 			screen.getByText(
-				'The server returned a web page: "Attention Required! | Cloudflare"',
+				"The server returned a web page: “Attention Required! | Cloudflare”",
 			),
 		).toBeTruthy();
 		expect(screen.queryByText(/Ray ID/)).toBeNull();
@@ -317,6 +395,56 @@ describe("SessionErrorAlert", () => {
 		expect(toastErrorMock).toHaveBeenCalled();
 	});
 
+	it("speaks the active locale but copies the error in English", async () => {
+		sessionErrorState.kind = "Api";
+		sessionErrorState.attempts = 3;
+		render(SessionErrorAlert);
+		const copyButton = screen.getByRole("button", {
+			name: "Copy error details",
+		});
+		await setLocale({ locale: "en-XA" });
+
+		const dialog = screen.getByRole("alertdialog");
+		const lines = [
+			dialog.querySelector('[data-slot="alert-dialog-title"]'),
+			dialog.querySelector('[data-slot="alert-dialog-description"]'),
+			screen.getByText(/connection reset/),
+			...within(dialog).getAllByRole("button"),
+		].map((line) => line?.textContent.trim());
+		expect(lines).toHaveLength(7);
+		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
+
+		await fireEvent.click(copyButton);
+
+		await vi.waitFor(() => {
+			expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+				"connection reset (after 3 attempts)",
+			);
+		});
+		expect(toastSuccessMock).toHaveBeenLastCalledWith(
+			expect.stringMatching(PSEUDO_MESSAGE),
+		);
+	});
+
+	it.each([
+		{ outcome: "a session that is gone", error: { kind: "NotSignedIn" } },
+		{ outcome: "a failure with no message", error: new Error("offline") },
+	])(
+		"words a retry that hits $outcome in the active locale",
+		async ({ error }) => {
+			callMethodMock.mockRejectedValue(error);
+			render(SessionErrorAlert);
+			const tryAgain = screen.getByRole("button", { name: "Try again" });
+			await setLocale({ locale: "en-XA" });
+
+			await fireEvent.click(tryAgain);
+
+			expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+				expect.stringMatching(PSEUDO_MESSAGE),
+			);
+		},
+	);
+
 	it("dismisses on Escape for as long as Dismiss would", async () => {
 		const refused = {
 			message: "Could not refresh the session",
@@ -345,7 +473,12 @@ describe("SessionErrorAlert", () => {
 		await fireEvent.click(button("Try again"));
 
 		expect(button("Try again").getAttribute("aria-busy")).toBe("true");
-		for (const name of ["Copy error", "Dismiss", "Sign out", "Try again"]) {
+		for (const name of [
+			"Copy error details",
+			"Dismiss",
+			"Sign out",
+			"Try again",
+		]) {
 			expect(button(name).matches(":disabled")).toBe(true);
 		}
 

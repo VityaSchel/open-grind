@@ -19,6 +19,7 @@
 	import VideoCameraIcon from "phosphor-svelte/lib/VideoCameraIcon";
 
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { localFileOf } from "#lib/platform/media-file.ts";
 	import { formatMediaDuration } from "#lib/util/format-time.ts";
 	import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
@@ -80,7 +81,7 @@
 	{:else if item.preview !== null}
 		<img
 			src={item.preview.dataUrl}
-			alt="To send"
+			alt={t("chat.composer.sendMedia.a11y.preview")}
 			class={[
 				"size-full",
 				{ "object-contain": single, "object-cover": !single },

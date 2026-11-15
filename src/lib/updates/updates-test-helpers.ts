@@ -1,14 +1,16 @@
 import { vi } from "vitest";
 
 import {
+	type AddonKey,
 	APP_COMPONENT,
 	COMPONENT_KEYS,
 	COMPONENT_PACKAGE,
 	type ComponentKey,
 	GOOGLE_OAUTH_COMPONENT,
 } from "./components";
-import type { InstallKind, StagePresenter, UpdateFlow } from "./flow";
+import type { UpdateFlow } from "./flow";
 import type * as UpdateApi from "./index";
+import type { InstallKind, StagePresenter } from "./stage";
 import type * as Toasts from "./toasts";
 import type {
 	Capability,
@@ -19,6 +21,12 @@ import type {
 } from "./types";
 
 const PUBLISHED_TAG = "v1.2.0";
+
+export const addonNames = {
+	"google-oauth": "Open Grind Google OAuth app",
+	recaptcha: "Open Grind reCAPTCHA helper",
+	fcm: "Open Grind FCM service",
+} satisfies Record<AddonKey, string>;
 
 export function installedBy(installer: string): Capability {
 	return {
@@ -239,6 +247,7 @@ export function recorder() {
 		presenter,
 		events,
 		activate: () => lastShow?.onActivate(),
+		cancel: () => lastShow?.onCancel(),
 		shownKind: () => lastShow?.kind ?? null,
 		swipe: () => lastShow?.onDismiss(),
 		problems: () => events.filter((event) => event.startsWith("problem:")),

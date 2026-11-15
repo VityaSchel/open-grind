@@ -7,6 +7,7 @@
 		setPreferences,
 	} from "#lib/app-data/preferences.svelte.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		id,
@@ -35,7 +36,10 @@
 			pending = newValue;
 			setPreferences({ [preference]: newValue }).catch((error) => {
 				pending = null;
-				showErrorToast({ label: "Failed to save preferences", error });
+				showErrorToast({
+					label: t("settings.setting.errors.saveFailed"),
+					error,
+				});
 			});
 		}
 	}

@@ -38,7 +38,7 @@ describe("the Join Right Now confirmation", () => {
 			screen.getByRole("alertdialog", { name: "Join Right Now?" }),
 		).toBeTruthy();
 		expect(
-			screen.getByText(`You'll show as "Joined" until you add a post.`),
+			screen.getByText("You’ll show as “Joined” until you add a post."),
 		).toBeTruthy();
 	});
 

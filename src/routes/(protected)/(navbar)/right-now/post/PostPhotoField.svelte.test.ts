@@ -103,7 +103,7 @@ function renderField({
 
 async function openUploads() {
 	await fireEvent.click(screen.getByRole("button", { name: "Add photo" }));
-	return screen.findByRole("dialog", { name: "Previous uploads" });
+	return screen.findByRole("dialog", { name: "Previous Uploads" });
 }
 
 afterEach(() => {
@@ -252,7 +252,7 @@ describe("the post photo field", () => {
 
 		await vi.waitFor(() =>
 			expect(errorToast.showErrorToast).toHaveBeenCalledWith({
-				label: "Couldn't upload photo",
+				label: "Couldn’t upload photo",
 				error,
 			}),
 		);

@@ -192,7 +192,7 @@ it("keeps Shift+Enter for newlines and submits a reply with Enter on desktop", a
 	await open({ onreply });
 	const input = screen.getByRole("textbox", { name: "Reply to album item" });
 	expect(input.tagName).toBe("TEXTAREA");
-	expect(input.getAttribute("placeholder")).toBe("Write a reply...");
+	expect(input.getAttribute("placeholder")).toBe("Write a reply…");
 	await fireEvent.input(input, {
 		target: { value: "First line\nSecond line" },
 	});

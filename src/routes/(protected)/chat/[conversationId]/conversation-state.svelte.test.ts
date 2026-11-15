@@ -535,7 +535,7 @@ describe("ConversationState error classification", () => {
 		expect(state.error).toBeNull();
 		expect(state.messages).toHaveLength(1);
 		expect(showErrorToastMock).toHaveBeenCalledWith(
-			expect.objectContaining({ label: "Failed to refresh messages" }),
+			expect.objectContaining({ label: "Couldn’t refresh messages" }),
 		);
 	});
 
@@ -565,7 +565,7 @@ describe("ConversationState error classification", () => {
 		expect(state.error).toBeNull();
 		expect(state.messages).toHaveLength(1);
 		expect(showErrorToastMock).toHaveBeenCalledWith(
-			expect.objectContaining({ label: "Failed to load more messages" }),
+			expect.objectContaining({ label: "Couldn’t load more messages" }),
 		);
 	});
 

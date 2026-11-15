@@ -3,6 +3,7 @@ import type PhotoSwipeLightbox from "photoswipe/lightbox";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import type { MediaDimensions } from "#lib/util/media-dimensions.ts";
 import { applyPhotoSwipeErrorUi } from "./error-ui";
+import { applyPhotoSwipeLabels } from "./labels";
 import { trackPhotoSwipeBusy } from "./open-tracking";
 import { applyPhotoSwipeRoundedCrops } from "./rounded-crop";
 import {
@@ -16,6 +17,7 @@ import "./photoswipe.css";
 
 export { applyPhotoSwipeComponent } from "./component";
 export { applyPhotoSwipeErrorUi } from "./error-ui";
+export { applyPhotoSwipeLabels } from "./labels";
 export {
 	applyPhotoSwipeOpenTracking,
 	isPhotoSwipeBusy,
@@ -93,6 +95,7 @@ export async function openLightbox({
 			zoomSVG: ZOOM_SVG,
 		});
 		applyPhotoSwipeErrorUi(lightbox);
+		applyPhotoSwipeLabels(lightbox);
 		applyPhotoSwipeViewportSync(lightbox);
 		lightbox.addFilter("numItems", () => items.length);
 		lightbox.addFilter("itemData", (itemData, index) => {

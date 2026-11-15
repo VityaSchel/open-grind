@@ -5,6 +5,8 @@ import { latLng, Map, Marker } from "leaflet";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { encodeGeohash } from "#lib/model/geohash.ts";
 import { PIN_ZOOM } from "./constants";
 import { stubMapResizeObserver } from "./map-test-helpers";
@@ -106,17 +108,29 @@ describe("LocationChooser", () => {
 		setPreferencesMock.mockResolvedValue(undefined);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		vi.resetAllMocks();
 		vi.restoreAllMocks();
 		vi.unstubAllGlobals();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("relabels Save and the GPS switch when the locale switches", async () => {
+		open();
+		const save = saveButton();
+		const gpsLabel = screen.getByText("Update automatically using GPS");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(save.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(gpsLabel.textContent).toMatch(PSEUDO_MESSAGE);
 	});
 
 	it("saves the map center after panning, with a fixed marker", async () => {
 		const setView = vi.spyOn(Map.prototype, "setView");
 		const onSubmit = open();
-		await screen.findByRole("button", { name: "Locate me" });
+		await screen.findByRole("button", { name: "Go to current location" });
 		const map = setView.mock.instances[0];
 		if (!(map instanceof Map)) throw new Error("Map was not mounted");
 		expect(map.getCenter()).toEqual(latLng(PARIS.lat, PARIS.lon));
@@ -156,7 +170,7 @@ describe("LocationChooser", () => {
 				finish = resolve;
 			}),
 		);
-		await screen.findByRole("button", { name: "Locate me" });
+		await screen.findByRole("button", { name: "Go to current location" });
 		const map = setView.mock.instances[0];
 		if (!(map instanceof Map)) throw new Error("Map was not mounted");
 		flushSync(() => {
@@ -200,7 +214,7 @@ describe("LocationChooser", () => {
 				return this.fire("move");
 			});
 		const onSubmit = open({ pinPos: undefined });
-		await screen.findByRole("button", { name: "Locate me" });
+		await screen.findByRole("button", { name: "Go to current location" });
 		const map = setView.mock.instances[0];
 		if (!(map instanceof Map)) throw new Error("Map was not mounted");
 		flushSync(() => resize());

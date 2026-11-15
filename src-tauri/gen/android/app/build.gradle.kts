@@ -57,6 +57,9 @@ android {
         // Mirror of MIN_CHROMIUM_MAJOR in src-tauri/src/lib.rs.
         buildConfigField("int", "MIN_SUPPORTED_WEBVIEW_MAJOR", "111")
     }
+	androidResources {
+		localeFilters += prop("opengrind.android.localeFilters").split(",")
+	}
 	signingConfigs {
 		if (hasKeystore) {
 			create("release") {
@@ -76,6 +79,7 @@ android {
             isDebuggable = true
             isJniDebuggable = true
             isMinifyEnabled = false
+            isPseudoLocalesEnabled = true
             packaging {
 				jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
                 jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")

@@ -10,6 +10,9 @@ vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 }));
 
 import { GridSearchFiltersState } from "#lib/grid/grid-search-filters-state.svelte.ts";
+import { slot } from "#lib/i18n/fixtures/dom.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -25,29 +28,30 @@ async function openAgeFilter() {
 	return { filters, rerender: view.rerender };
 }
 
-const minimumAge = () => screen.getByRole("slider", { name: "Minimum age" });
+const minimumAge = () => screen.getByRole("slider", { name: "Minimum Age" });
 
 function switchChecked() {
 	return screen
-		.getByRole("switch", { name: "Filter by age" })
+		.getByRole("switch", { name: "Filter by Age" })
 		.getAttribute("aria-checked");
 }
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("AgeQuickFilter", () => {
 	it("keeps an in-progress edit when the stored filters change underneath", async () => {
 		const { filters } = await openAgeFilter();
 
-		expect(document.body.textContent).toContain("18 years & over");
+		expect(document.body.textContent).toContain("18 years and over");
 
 		filters.set({ age: [30, 40] });
 		flushSync();
 
-		expect(document.body.textContent).toContain("18 years & over");
-		expect(document.body.textContent).not.toContain("30 - 40");
+		expect(document.body.textContent).toContain("18 years and over");
+		expect(document.body.textContent).not.toContain("30–40");
 	});
 
 	it("keeps reset available at the default age range, where it changes nothing", async () => {
@@ -59,7 +63,7 @@ describe("AgeQuickFilter", () => {
 
 		await fireEvent.click(reset);
 
-		expect(document.body.textContent).toContain("18 years & over");
+		expect(document.body.textContent).toContain("18 years and over");
 		expect(switchChecked()).toBe("false");
 
 		await fireEvent.click(screen.getByRole("button", { name: "Apply" }));
@@ -104,5 +108,29 @@ describe("AgeQuickFilter", () => {
 			String(AGE_MIN),
 		);
 		expect(switchChecked()).toBe("false");
+	});
+
+	it("words the drawer title, switch and actions in the active locale", async () => {
+		await openAgeFilter();
+
+		const title = slot("drawer-title");
+		const filterSwitch = screen.getByRole("switch", {
+			name: "Filter by Age",
+		});
+		const actions = ["Reset", "Apply"].map((name) =>
+			screen.getByRole("button", { name }),
+		);
+
+		expect(title.textContent).toBe("Age");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(title.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(screen.getByRole("switch", { name: PSEUDO_MESSAGE })).toBe(
+			filterSwitch,
+		);
+		expect(screen.getAllByRole("button", { name: PSEUDO_MESSAGE })).toEqual(
+			actions,
+		);
 	});
 });

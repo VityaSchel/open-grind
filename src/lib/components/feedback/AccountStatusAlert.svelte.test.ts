@@ -8,6 +8,13 @@ import {
 	accountStatusState,
 	showAccountStatusForError,
 } from "#lib/api/account-status-state.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import {
+	setLocale,
+	setRegionalSettings,
+	SOURCE_LOCALE,
+} from "#lib/i18n/index.ts";
+import { webRegionalSettings } from "#lib/i18n/regional.ts";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import type { AccountStatusError } from "#lib/model/authentication.ts";
@@ -19,12 +26,18 @@ const {
 	checkForUpdatesNowMock,
 	updater,
 	tauriListeners,
+	toastErrorMock,
+	toastSuccessMock,
+	writeTextMock,
 } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(),
 	signOutMock: vi.fn(),
 	checkForUpdatesNowMock: vi.fn<() => Promise<void>>(),
 	updater: { selfManaged: false },
 	tauriListeners: new Map<string, (event: { payload: unknown }) => void>(),
+	toastErrorMock: vi.fn(),
+	toastSuccessMock: vi.fn(),
+	writeTextMock: vi.fn(),
 }));
 
 vi.mock("@tauri-apps/api/event", () => ({
@@ -36,6 +49,12 @@ vi.mock("@tauri-apps/api/event", () => ({
 vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
+}));
+vi.mock("svelte-sonner", () => ({
+	toast: { success: toastSuccessMock, error: toastErrorMock },
+}));
+vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
+	writeText: writeTextMock,
 }));
 vi.mock("#lib/api/sign-out.ts", () => ({ signOut: signOutMock }));
 vi.mock("#lib/updates/capability.svelte.ts", () => ({
@@ -53,6 +72,8 @@ const deprecatedVersion = {
 	code: 8,
 	message: "The client version is deprecated",
 } as const;
+const banned = { kind: "profile", code: 27, message: "Banned" };
+const suspensionEnd = new Date(2026, 9, 25, 14, 0).getTime();
 
 function emit(event: string, payload: unknown) {
 	tauriListeners.get(event)?.({ payload });
@@ -65,11 +86,14 @@ async function showOn(event: string, payload: unknown) {
 }
 
 function showBanned(info: Record<string, unknown> = {}) {
-	return showOn("auth:banned", {
-		kind: "profile",
-		code: 27,
-		message: "Banned",
-		...info,
+	return showOn("auth:banned", { ...banned, ...info });
+}
+
+function showTimedBan(restriction: Record<string, unknown>) {
+	return showOn("auth:restriction", {
+		kind: "timedBan",
+		reason: "Scam / Spam",
+		...restriction,
 	});
 }
 
@@ -83,22 +107,39 @@ function swipeBack() {
 	for (const handler of backGestureEventHandlers.keys()) handler();
 }
 
+function dialogText(slot: "title" | "description") {
+	return screen
+		.getByRole("alertdialog")
+		.querySelector(`[data-slot="alert-dialog-${slot}"]`)
+		?.textContent.trim();
+}
+
 const button = (name: string) => screen.getByRole("button", { name });
 const heading = () => screen.getByRole("heading").textContent;
 const link = (name: string) =>
 	screen.getByRole("link", { name }).getAttribute("href");
+const actions = () => [
+	...screen
+		.getByRole("alertdialog")
+		.querySelectorAll<HTMLElement>(
+			'[data-slot="alert-dialog-footer"] :is(button, a)',
+		),
+];
 
 beforeEach(() => {
 	callMethodMock.mockResolvedValue(null);
+	writeTextMock.mockResolvedValue(undefined);
 });
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.clearAllMocks();
 	tauriListeners.clear();
 	clearAccountCaches();
 	resetNowForTesting();
 	updater.selfManaged = false;
+	setRegionalSettings(webRegionalSettings());
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("AccountStatusAlert", () => {
@@ -143,23 +184,73 @@ describe("AccountStatusAlert", () => {
 
 		expect(accountStatusState.open).toBe(true);
 	});
+
+	it.each([
+		{ locale: SOURCE_LOCALE, toast: "Copied to clipboard" },
+		{ locale: "en-XA", toast: expect.stringMatching(PSEUDO_MESSAGE) },
+	])(
+		"copies the ban details as English JSON under $locale",
+		async ({ locale, toast }) => {
+			const info = {
+				...banned,
+				reason: "Scam / Spam",
+				subReason: "PHISHING_AND_FRAUD",
+			};
+			await showBanned(info);
+			const copyButton = button("Copy details");
+			await setLocale({ locale });
+
+			await fireEvent.click(copyButton);
+
+			await vi.waitFor(() => {
+				expect(toastSuccessMock).toHaveBeenCalledExactlyOnceWith(toast);
+			});
+			expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+				JSON.stringify(info, null, 2),
+			);
+			expect(toastErrorMock).not.toHaveBeenCalled();
+		},
+	);
+
+	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
+		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		await showError(deprecatedVersion);
+
+		await fireEvent.click(button("Copy details"));
+
+		await vi.waitFor(() => {
+			expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+				"Couldn’t copy to clipboard",
+			);
+		});
+		expect(toastSuccessMock).not.toHaveBeenCalled();
+	});
 });
 
 describe("bans and restrictions", () => {
 	it("explains a permanent ban with its sub-reason, Learn more and Appeal", async () => {
-		const dialog = await showBanned({
+		await showBanned({
 			reason: "Scam / Spam",
 			subReason: "PHISHING_AND_FRAUD",
 		});
 
-		expect(dialog.textContent).toContain(
-			"Grindr banned this account (Phishing, fraud, and harmful links).",
+		expect(dialogText("description")).toBe(
+			"Grindr banned this account (Phishing, fraud, and harmful links). Learn more",
 		);
 		expect(link("Learn more")).toMatch(
 			/^https:\/\/help\.grindr\.com\/hc\/[a-z]+\/articles\/1500009296922-Banned-profiles$/,
 		);
 		expect(link("Appeal")).toBe("https://web.grindr.com/ban-appeal");
 		expect(button("Copy details")).toBeTruthy();
+	});
+
+	it("never shows the server's own ban reason", async () => {
+		await showBanned({ reason: "Scam / Spam" });
+
+		expect(dialogText("description")).toBe(
+			"Grindr banned this account. Learn more",
+		);
 	});
 
 	it("offers no appeal for a ban Grindr made through its block decision", async () => {
@@ -189,6 +280,9 @@ describe("bans and restrictions", () => {
 		await showBanned({ kind: "device", code: 28 });
 
 		expect(heading()).toBe("Security check failed");
+		expect(dialogText("description")).toBe(
+			"Couldn’t pass Grindr security check. Sign out and try again.",
+		);
 		expect(button("Copy details")).toBeTruthy();
 	});
 
@@ -205,29 +299,51 @@ describe("bans and restrictions", () => {
 		expect(heading()).toBe("Account banned");
 	});
 
-	function showTimedBan(subReason: string) {
-		return showOn("auth:restriction", {
-			kind: "timedBan",
-			reason: "Scam / Spam",
-			subReason,
-			endsAt: new Date(2026, 9, 25, 14, 0).getTime(),
-		});
-	}
-
-	it("says until when a timed ban suspends the account", async () => {
+	it("says until when a timed ban suspends the account, in the system's 24-hour clock", async () => {
+		setRegionalSettings({ locale: "en-US", hourCycle: "h23" });
 		setNowForTesting(() => new Date(2026, 9, 22, 12).getTime());
 
-		const dialog = await showTimedBan("PROFILE_SPAM");
+		await showTimedBan({
+			subReason: "PROFILE_SPAM",
+			endsAt: suspensionEnd,
+		});
 
 		expect(heading()).toBe("Account suspended");
-		expect(dialog.textContent).toContain(
+		expect(dialogText("description")).toBe(
 			"Grindr suspended this account (Profile spam and advertising) until Oct 25, 14:00.",
 		);
 		expect(screen.queryByRole("link", { name: "Appeal" })).toBeNull();
 	});
 
+	it("writes the end of a suspension in the system's 12-hour clock and adds a later year", async () => {
+		setRegionalSettings({ locale: "en-US", hourCycle: "h12" });
+		setNowForTesting(() => new Date(2025, 11, 30, 12).getTime());
+
+		await showTimedBan({ endsAt: suspensionEnd });
+
+		expect(dialogText("description")).toBe(
+			"Grindr suspended this account until Oct 25, 2026, 2:00 PM.",
+		);
+	});
+
+	it.each([
+		{
+			subReason: "BOT_ACTIVITY",
+			description:
+				"Grindr suspended this account (Automated/bot activity).",
+		},
+		{ subReason: "Other", description: "Grindr suspended this account." },
+	])(
+		"explains a $subReason suspension without an end",
+		async ({ subReason, description }) => {
+			await showTimedBan({ subReason });
+
+			expect(dialogText("description")).toBe(description);
+		},
+	);
+
 	it("offers an appeal only for timed bans Grindr lets users appeal", async () => {
-		await showTimedBan("DRUG_SALES");
+		await showTimedBan({ subReason: "DRUG_SALES", endsAt: suspensionEnd });
 
 		expect(link("Appeal")).toBe("https://web.grindr.com/ban-appeal");
 	});
@@ -314,5 +430,96 @@ describe("unsupported app version", () => {
 		emit("auth:unsupported-version", refusedRefresh);
 
 		expect(accountStatusState.open).toBe(false);
+	});
+});
+
+describe("in the active locale", () => {
+	it.each([
+		{
+			popup: "a ban with its reason",
+			show: () => showBanned({ subReason: "PHISHING_AND_FRAUD" }),
+			actions: 3,
+		},
+		{
+			popup: "a ban without a reason",
+			show: () => showBanned(),
+			actions: 3,
+		},
+		{
+			popup: "a blocked network",
+			show: () => showBanned({ kind: "network", code: 31 }),
+			actions: 1,
+		},
+		{
+			popup: "a failed security check",
+			show: () => showBanned({ kind: "device", code: 28 }),
+			actions: 2,
+		},
+		{
+			popup: "an age restriction",
+			show: () => showBanned({ kind: "underage", code: 35 }),
+			actions: 2,
+		},
+		{
+			popup: "an age check",
+			show: () => showOn("auth:restriction", { kind: "ageVerification" }),
+			actions: 1,
+		},
+		{
+			popup: "a restriction",
+			show: () => showOn("auth:restriction", { kind: "other" }),
+			actions: 1,
+		},
+		{
+			popup: "a suspension with its reason and end",
+			show: () =>
+				showTimedBan({
+					subReason: "DRUG_SALES",
+					endsAt: suspensionEnd,
+				}),
+			actions: 2,
+		},
+		{
+			popup: "a suspension with its end",
+			show: () => showTimedBan({ endsAt: suspensionEnd }),
+			actions: 1,
+		},
+		{
+			popup: "a suspension with its reason",
+			show: () => showTimedBan({ subReason: "DRUG_SALES" }),
+			actions: 2,
+		},
+		{ popup: "a suspension", show: () => showTimedBan({}), actions: 1 },
+		{
+			popup: "a required phone verification",
+			show: () => showError(verificationRequired),
+			actions: 2,
+		},
+		{
+			popup: "an unsupported version",
+			show: () => showError(deprecatedVersion),
+			actions: 2,
+		},
+	])("words $popup", async ({ show, actions: count }) => {
+		await show();
+
+		await setLocale({ locale: "en-XA" });
+
+		const lines = [
+			dialogText("title"),
+			dialogText("description"),
+			...actions().map((action) => action.textContent.trim()),
+		];
+		expect(lines).toHaveLength(count + 2);
+		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("translates the ban reason inside the description", async () => {
+		await showBanned({ subReason: "PHISHING_AND_FRAUD" });
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(dialogText("description")).toMatch(/\(⟦[^⟧]+⟧\)/);
+		expect(dialogText("description")).not.toContain("Phishing");
 	});
 });

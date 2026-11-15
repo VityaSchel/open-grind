@@ -41,7 +41,7 @@ test("a draft outlives leaving its conversation and never follows another one", 
 	await rowLink(page, first!).click();
 	await composer(page).waitFor({ timeout: 60_000 });
 	await composer(page).fill(DRAFT);
-	await page.getByRole("link", { name: "Back to chats" }).click();
+	await page.getByRole("link", { name: "Back to Inbox" }).click();
 
 	const preview = rowPreview(page, first!);
 	await expect(preview).toBeVisible();
@@ -73,7 +73,7 @@ test("a draft outlives leaving its conversation and never follows another one", 
 	await composer(page).waitFor({ timeout: 60_000 });
 	await expect(composer(page)).toHaveValue("");
 
-	await page.getByRole("link", { name: "Back to chats" }).click();
+	await page.getByRole("link", { name: "Back to Inbox" }).click();
 	await rowLink(page, first!).click();
 	await expect(composer(page)).toHaveValue(DRAFT);
 });
@@ -105,7 +105,7 @@ test("the draft label stays on the first line of the preview", async ({
 	await page.goto(DEMO_CONVERSATION);
 	await composer(page).waitFor({ timeout: 60_000 });
 	await composer(page).fill("supercalifragilisticexpialidocious tonight");
-	await page.getByRole("link", { name: "Back to chats" }).click();
+	await page.getByRole("link", { name: "Back to Inbox" }).click();
 
 	const preview = rowPreview(page, DEMO_CONVERSATION);
 	await preview.waitFor({ timeout: 30_000 });

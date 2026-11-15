@@ -68,7 +68,7 @@ async function bypassPaywall(page: Page) {
 		"the action retried under the bypass has settled",
 	).toBeHidden({ timeout: 120_000 });
 	await expect(
-		page.getByText("Failed to bypass this paid feature"),
+		page.getByText("Couldn’t bypass this paid feature"),
 	).toBeHidden();
 }
 

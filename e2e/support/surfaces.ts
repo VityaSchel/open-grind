@@ -56,7 +56,7 @@ export const SURFACES: Surface[] = [
 		path: "/right-now",
 		bars: { bottom: "nothing" },
 		ready: shows((page) =>
-			page.getByRole("button", { name: "Pick manually" }),
+			page.getByRole("button", { name: "Choose on map" }),
 		),
 	},
 	{
@@ -171,7 +171,25 @@ export const SURFACES: Surface[] = [
 		name: "App settings",
 		path: "/settings/app",
 		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("link")),
+	},
+	{
+		name: "Display settings",
+		path: "/settings/app/display",
+		bars: BARS_OVER_CONTENT,
 		ready: shows((page) => page.getByRole("slider")),
+	},
+	{
+		name: "Privacy settings",
+		path: "/settings/app/privacy",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("switch")),
+	},
+	{
+		name: "Security settings",
+		path: "/settings/app/security",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("link")),
 	},
 	{
 		name: "Credits",
@@ -181,6 +199,12 @@ export const SURFACES: Surface[] = [
 			await shows(suggestAnEdit)(page);
 			await keepFirstCreditRows(page);
 		},
+	},
+	{
+		name: "Language",
+		path: "/settings/app/language",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => page.locator('[data-slot="language-option"]')),
 	},
 	{
 		name: "Notifications",

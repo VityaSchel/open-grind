@@ -55,6 +55,16 @@ export function disguiseRenameNeedsAdmin(): boolean {
 	return state.renameNeedsAdmin;
 }
 
+const DISGUISE_FAILURES = ["nameTaken", "renameNeedsAdmin", "failed"] as const;
+
+export type DisguiseFailure = (typeof DISGUISE_FAILURES)[number];
+
+const disguiseErrorSchema = z.object({ reason: z.enum(DISGUISE_FAILURES) });
+
+export function disguiseFailure(error: unknown): DisguiseFailure {
+	return disguiseErrorSchema.safeParse(error).data?.reason ?? "failed";
+}
+
 const previewsSchema = z.record(z.string(), z.string());
 
 export async function loadDisguisePreviews(): Promise<Record<string, string>> {
@@ -67,23 +77,23 @@ export async function selectDisguise(
 	id: string,
 	{ resume }: { resume: string | null },
 ): Promise<void> {
-	await invoke("disguise_select", { id, resume });
-	state = await read();
-}
-
-function settingsTrail(path: string): string[] {
-	const segments = path.split("/").filter(Boolean);
-	return segments.map(
-		(_, index) => `/${segments.slice(0, index + 1).join("/")}`,
-	);
+	try {
+		await invoke("disguise_select", { id, resume });
+	} finally {
+		state = await read();
+	}
 }
 
 const resumeSchema = z.string().startsWith("/settings/");
 
-export async function reopenAfterDisguiseRestart(): Promise<void> {
+export async function reopenAfterDisguiseRestart({
+	trail,
+}: {
+	trail: (path: string) => string[];
+}): Promise<void> {
 	if (!isTauri()) return;
 	const answer = await invoke("disguise_take_resume").catch(() => null);
 	const path = resumeSchema.safeParse(answer).data;
 	if (!path) return;
-	for (const step of settingsTrail(path)) await goto(step);
+	for (const step of trail(path)) await goto(step);
 }

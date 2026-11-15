@@ -12,6 +12,7 @@ const session = vi.hoisted(() => ({
 vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
 vi.mock("#lib/api/current-session.ts", () => session);
 
+import { screenshotScene } from "#lib/demo/screenshot-scene.ts";
 import {
 	MATURE_CONTENT_SETTING_HREF,
 	matureContentCovered,
@@ -19,7 +20,9 @@ import {
 
 afterEach(() => {
 	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	vi.clearAllMocks();
+	screenshotScene.playBuild = false;
 });
 
 describe("matureContentCovered", () => {
@@ -59,12 +62,33 @@ describe("matureContentCovered", () => {
 
 		expect(matureContentCovered()).toBe(false);
 	});
+
+	it("covers for any account in a translator screenshot scene of the Google Play build", () => {
+		vi.stubGlobal("__SCREENSHOTS__", true);
+		screenshotScene.playBuild = true;
+		session.signedInProfileIdSnapshot.mockReturnValueOnce(
+			GATED_ACCOUNT + 1,
+		);
+
+		expect(matureContentCovered()).toBe(true);
+	});
+
+	it("leaves the account gate to builds without screenshots", () => {
+		vi.stubGlobal("__SCREENSHOTS__", false);
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		screenshotScene.playBuild = true;
+		session.signedInProfileIdSnapshot.mockReturnValueOnce(
+			GATED_ACCOUNT + 1,
+		);
+
+		expect(matureContentCovered()).toBe(false);
+	});
 });
 
 describe("MATURE_CONTENT_SETTING_HREF", () => {
-	it("points at the switch on the app settings page", () => {
+	it("points at the switch on the Display settings page", () => {
 		expect(MATURE_CONTENT_SETTING_HREF).toBe(
-			"/settings/app#show-mature-content",
+			"/settings/app/display#show-mature-content",
 		);
 	});
 });

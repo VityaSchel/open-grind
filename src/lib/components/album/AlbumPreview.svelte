@@ -9,6 +9,7 @@
 	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { stableSignedUrl } from "#lib/util/signed-url.ts";
 	import {
@@ -24,7 +25,7 @@
 		hasPhoto,
 		hasVideo,
 		ourAlbum = false,
-		label = "Open album",
+		label,
 		class: className,
 		contentClass,
 		attach = () => {},
@@ -56,6 +57,9 @@
 
 	let preview = $state<PreviewState>({ status: "idle" });
 	const covered = $derived(!ourAlbum && matureContentCovered());
+	const accessibleLabel = $derived(
+		label ?? t("media.album.preview.a11y.open"),
+	);
 
 	let loadedCoverUrl = $state<string | null>(null);
 	const shownCoverUrl = $derived(
@@ -81,7 +85,7 @@
 				if (controller.signal.aborted) return;
 				console.error(error);
 				showErrorToast({
-					label: "Failed to load album content",
+					label: t("media.album.preview.errors.loadFailed"),
 					error,
 				});
 				preview = { status: "idle" };
@@ -104,7 +108,10 @@
 		}).catch((error: unknown) => {
 			if (controller.signal.aborted) return;
 			console.error(error);
-			showErrorToast({ label: "Failed to open album", error });
+			showErrorToast({
+				label: t("media.album.preview.errors.openFailed"),
+				error,
+			});
 			preview = { status: "idle" };
 		});
 		return () => controller.abort();
@@ -151,7 +158,7 @@
 	<div
 		data-slot="album-preview"
 		role="group"
-		aria-label={label}
+		aria-label={accessibleLabel}
 		class={["relative", className, contentClass]}
 		{@attach attach}
 	>
@@ -171,7 +178,7 @@
 				"opacity-50": preview.status === "loading",
 			},
 		]}
-		aria-label={label}
+		aria-label={accessibleLabel}
 		onclick={open}
 		disabled={preview.status !== "idle"}
 		{@attach attach}

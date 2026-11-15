@@ -22,6 +22,7 @@ import {
 } from "#lib/api/right-now/post.ts";
 import { invalidateProfile } from "#lib/api/users/profiles.ts";
 import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import {
 	type FreeRightNowPosts,
 	freeRightNowPostsLeft,
@@ -146,7 +147,7 @@ export class RightNowPostState {
 	join(): Promise<boolean> {
 		return this.#create({
 			request: { shareLocation: "NONE", media: [], hosting: false },
-			failureLabel: "Failed to join Right Now",
+			failureLabel: "browse.rightNow.ownPost.errors.joinFailed",
 		});
 	}
 
@@ -167,7 +168,7 @@ export class RightNowPostState {
 				locationRadius:
 					changes.locationRadius ?? current.locationRadius,
 			}),
-			failureLabel: "Failed to save your post",
+			failureLabel: "browse.rightNow.ownPost.errors.saveFailed",
 		});
 	}
 
@@ -180,8 +181,8 @@ export class RightNowPostState {
 				postStatus: hidden ? "HIDDEN" : "ACTIVE",
 			}),
 			failureLabel: hidden
-				? "Failed to turn off Right Now"
-				: "Failed to turn on Right Now",
+				? "browse.rightNow.ownPost.errors.turnOffFailed"
+				: "browse.rightNow.ownPost.errors.turnOnFailed",
 			onRetry: () => void this.setHidden({ hidden }),
 		});
 	}
@@ -242,7 +243,7 @@ export class RightNowPostState {
 		failureLabel,
 	}: {
 		request: RightNowPostRequest;
-		failureLabel: string;
+		failureLabel: PlainMessageKey;
 	}): Promise<boolean> {
 		if (this.#destroyed || this.joining || this.post !== null) return false;
 		this.joining = true;
@@ -262,13 +263,13 @@ export class RightNowPostState {
 			if (this.#gone) return false;
 			if (error instanceof NoFreeRightNowPostsError) {
 				this.freePostsLeft = 0;
-				toast.error("No free posts left in this area", {
+				toast.error(t("browse.rightNow.ownPost.noFreePosts"), {
 					id: NO_FREE_POSTS_TOAST_ID,
 				});
 				return false;
 			}
 			if (error instanceof RightNowPostAlreadyRunningError) {
-				toast("You already have a post running", {
+				toast(t("browse.rightNow.ownPost.alreadyRunning"), {
 					id: ALREADY_RUNNING_TOAST_ID,
 				});
 				await this.#refetch();
@@ -276,7 +277,7 @@ export class RightNowPostState {
 			}
 			console.error(error);
 			showErrorToast({
-				label: failureLabel,
+				label: t(failureLabel),
 				error,
 				onRetry: () =>
 					void this.#createAndOpenSheet({ request, failureLabel }),
@@ -297,7 +298,7 @@ export class RightNowPostState {
 		unchanged: (post: RightNowPostDetails) => boolean;
 		send: (postId: number) => Promise<void>;
 		merge: (post: RightNowPostDetails) => RightNowPostDetails;
-		failureLabel: string;
+		failureLabel: PlainMessageKey;
 		onRetry?: () => void;
 	}): Promise<boolean> {
 		const post = this.post;
@@ -318,7 +319,7 @@ export class RightNowPostState {
 				return false;
 			}
 			console.error(error);
-			showErrorToast({ label: failureLabel, error, onRetry });
+			showErrorToast({ label: t(failureLabel), error, onRetry });
 			return false;
 		} finally {
 			this.saving = false;
@@ -403,21 +404,25 @@ export class RightNowPostState {
 		);
 		if (fresh.length === 0) return;
 		this.#notifiedRejections = [...this.#notifiedRejections, ...fresh];
-		toast.error("Your post was rejected", {
+		toast.error(t("browse.rightNow.ownPost.rejected"), {
 			id: REJECTED_TOAST_ID,
-			action: { label: "Why?", onClick: () => this.#openSheet() },
+			action: {
+				label: t("browse.rightNow.ownPost.why"),
+				onClick: () => this.#openSheet(),
+			},
 		});
 	}
 
 	#ended(previous: RightNowPostDetails): void {
-		toast("Your Right Now session ended", {
+		toast(t("browse.rightNow.ownPost.ended"), {
 			id: ENDED_TOAST_ID,
 			action: {
-				label: "Go again",
+				label: t("browse.rightNow.ownPost.goAgain"),
 				onClick: () =>
 					void this.#createAndOpenSheet({
 						request: repostRequest(previous),
-						failureLabel: "Failed to start a new Right Now session",
+						failureLabel:
+							"browse.rightNow.ownPost.errors.restartFailed",
 					}),
 			},
 		});
@@ -430,7 +435,7 @@ export class RightNowPostState {
 		failureLabel,
 	}: {
 		request: RightNowPostRequest;
-		failureLabel: string;
+		failureLabel: PlainMessageKey;
 	}): Promise<void> {
 		if (await this.#create({ request, failureLabel })) this.#openSheet();
 	}

@@ -3,6 +3,7 @@
 	import PencilIcon from "phosphor-svelte/lib/PencilIcon";
 
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		own,
@@ -31,13 +32,13 @@
 		onclick={onedit}
 	>
 		<PencilIcon weight="fill" class="size-5" />
-		Edit post
+		{t("profile.rightNow.viewer.edit")}
 	</button>
 {:else}
 	<button
 		type="button"
 		class="grid media-disc place-items-center"
-		aria-label="Report post"
+		aria-label={t("browse.rightNow.post.a11y.report")}
 		aria-busy={checking}
 		onclick={() => void report()}
 	>

@@ -13,7 +13,6 @@ export const OSM_MAX_ZOOM = 19;
 export const OSM_TILE_OPTIONS: TileLayerOptions = {
 	maxZoom: OSM_MAX_ZOOM,
 	referrerPolicy: "strict-origin-when-cross-origin",
-	attribution: `&copy; <a href="${OSM_COPYRIGHT_URL}" target="_blank" rel="noreferrer nofollow noopener">OpenStreetMap contributors</a> &nbsp;`,
 	// do not enable: https://github.com/Leaflet/Leaflet/issues/6195
 	// detectRetina: true,
 };

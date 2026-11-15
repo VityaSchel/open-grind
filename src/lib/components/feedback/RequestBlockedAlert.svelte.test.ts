@@ -21,7 +21,7 @@ vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const rotateButton = () =>
-	screen.getByRole("button", { name: "Rotate parameters" });
+	screen.getByRole("button", { name: "Rotate device parameters" });
 const closeButton = () => screen.getByRole("button", { name: "Close" });
 
 async function startRotationThatHangs() {
@@ -55,7 +55,9 @@ describe("RequestBlockedAlert", () => {
 	it("names Cloudflare and offers to rotate device parameters", () => {
 		render(RequestBlockedAlert);
 
-		expect(screen.getByText("Grindr blocks your requests")).toBeTruthy();
+		expect(
+			screen.getByText("Grindr is blocking your requests"),
+		).toBeTruthy();
 		expect(
 			screen.getByText(/Cloudflare protecting the Grindr API/),
 		).toBeTruthy();
@@ -79,13 +81,11 @@ describe("RequestBlockedAlert", () => {
 		render(RequestBlockedAlert);
 
 		expect(
-			screen.getByText(
-				"Something blocked the request before it reached Grindr",
-			),
+			screen.getByText("Something is blocking your requests to Grindr"),
 		).toBeTruthy();
 		expect(screen.getByText(/captive portal/)).toBeTruthy();
 		expect(
-			screen.getByText(/edge in front of the Grindr API/),
+			screen.getByText(/server in front of the Grindr API/),
 		).toBeTruthy();
 		expect(screen.queryByRole("link", { name: "known issue" })).toBeNull();
 		expect(closeButton()).toBeTruthy();
@@ -107,11 +107,11 @@ describe("RequestBlockedAlert", () => {
 		render(RequestBlockedAlert);
 
 		expect(
-			screen.getByLabelText("Don't show again in this session"),
+			screen.getByLabelText("Don’t show again in this session"),
 		).toBeTruthy();
 	});
 
-	it("marks Rotate parameters busy and locks both buttons while rotating parameters", async () => {
+	it("marks Rotate device parameters busy and locks both buttons while rotating parameters", async () => {
 		const finishRotation = await startRotationThatHangs();
 
 		expect(rotateButton().getAttribute("aria-busy")).toBe("true");

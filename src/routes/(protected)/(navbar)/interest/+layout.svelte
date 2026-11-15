@@ -3,9 +3,11 @@
 	import { page } from "$app/state";
 	import { onDestroy } from "svelte";
 
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { toggleVariants } from "#lib/components/ui/toggle/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { isAndroidPlatform } from "#lib/platform/os.ts";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
@@ -22,6 +24,9 @@
 	let settling = 0;
 
 	const routedTab = $derived(interestTabIndex(page.url.pathname));
+	const routedLabel = $derived(
+		(INTEREST_TABS[routedTab] ?? INTEREST_TABS[0]).label,
+	);
 	const chipFollows = $derived(
 		!chipDetachesAtRest ||
 			pagerUnsettled ||
@@ -62,11 +67,12 @@
 		{label}
 	</Button>
 {/snippet}
+<PageTitle page={t(routedLabel)} />
 <div class="interest">
 	<ProgressiveBlur
 		direction="topToBottom"
 		tag="nav"
-		aria-label="Interest"
+		aria-label={t("common.sections.interest")}
 		data-fixed-header
 		class="fixed top-0 left-0 z-10 w-full px-4 pt-fixed-header pb-2"
 		bgClass="bg-linear-to-b from-background to-transparent"
@@ -85,7 +91,7 @@
 			style:--last-tab={INTEREST_TABS.length - 1}
 		></span>
 		{#each INTEREST_TABS as { href, label } (href)}
-			{@render tab(href, label)}
+			{@render tab(href, t(label))}
 		{/each}
 	</ProgressiveBlur>
 	<InterestPager

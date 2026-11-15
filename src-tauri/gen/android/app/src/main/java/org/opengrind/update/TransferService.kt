@@ -17,6 +17,7 @@ import java.lang.ref.WeakReference
 import org.opengrind.R
 import org.opengrind.addon.AddonNames
 import org.opengrind.disguise.Disguise
+import org.opengrind.language.NativeLanguage
 
 // Prevent Android from freezing the process and dropping its sockets
 class TransferService : Service() {
@@ -142,20 +143,28 @@ class TransferService : Service() {
 			ContextCompat.getMainExecutor(context).execute { running?.get()?.settle() }
 		}
 
+		fun renameChannel(context: Context) {
+			val manager = context.getSystemService(NotificationManager::class.java)
+			val channel = manager.getNotificationChannel(CHANNEL_ID) ?: return
+			channel.name = NativeLanguage.localized(context).getString(R.string.transfer_channel_name)
+			manager.createNotificationChannel(channel)
+		}
+
 		private fun notification(
 			context: Context,
 			transfer: Transfer,
 		): Notification {
+			val localized = NativeLanguage.localized(context)
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 				val channel = NotificationChannel(
 					CHANNEL_ID,
-					context.getString(R.string.transfer_channel_name),
+					localized.getString(R.string.transfer_channel_name),
 					NotificationManager.IMPORTANCE_LOW,
 				).apply { setShowBadge(false) }
 				context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 			}
 			val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-				.setContentTitle(titleText(context, transfer))
+				.setContentTitle(titleText(localized, transfer))
 				.setSmallIcon(
 					if (transfer.title == TransferTitle.MediaUpload) {
 						android.R.drawable.stat_sys_upload
@@ -177,16 +186,17 @@ class TransferService : Service() {
 		}
 
 		private fun titleText(
-			context: Context,
+			localized: Context,
 			transfer: Transfer,
 		): String {
-			val addon = context.getString(AddonNames.resourceOf(transfer.addonPackage))
-			return when (transfer.title) {
-				TransferTitle.AppUpdate -> context.getString(R.string.update_transfer_title)
-				TransferTitle.AddonInstall -> context.getString(R.string.addon_install_transfer_title, addon)
-				TransferTitle.AddonUpdate -> context.getString(R.string.addon_update_transfer_title, addon)
-				TransferTitle.MediaUpload -> context.getString(R.string.media_upload_transfer_title)
+			val addon = AddonNames.titlesOf(transfer.addonPackage)
+			val title = when (transfer.title) {
+				TransferTitle.AppUpdate -> R.string.update_transfer_title
+				TransferTitle.AddonInstall -> addon.install
+				TransferTitle.AddonUpdate -> addon.update
+				TransferTitle.MediaUpload -> R.string.media_upload_transfer_title
 			}
+			return localized.getString(title)
 		}
 	}
 }

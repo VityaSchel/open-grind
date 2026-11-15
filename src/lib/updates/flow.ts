@@ -1,10 +1,12 @@
 import { Generation } from "#lib/util/generation.ts";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 import {
 	APP_COMPONENT,
 	COMPONENT_PACKAGE,
 	type ComponentKey,
 } from "./components";
 import {
+	downloadFailedKey,
 	installFailedText,
 	noReleaseText,
 	unsupportedText,
@@ -26,30 +28,15 @@ import {
 	takeInstallOutcome,
 } from "./index";
 import { openPermissionScreen, ReturnAction } from "./on-return";
-import { stageOf, type StageView } from "./stage";
+import { stageOf, type StagePresenter, type StageView } from "./stage";
 import type { CheckResult, InstallOutcome, Release } from "./types";
 
 export type Trigger = "launch" | "manual" | "automatic";
-export type InstallKind = Release["kind"];
 export type CheckReport = "offered" | "current" | "busy" | "failed";
 export type CheckOptions = { reportFailure?: boolean };
 type FailureReport = "all" | "unsigned" | "none";
+type Problem = { error?: unknown; fallback: PlainMessageKey };
 type DownloadOptions = { byUser?: boolean; arm?: boolean; trigger?: Trigger };
-
-export type StagePresenter = {
-	show(args: {
-		view: StageView;
-		kind: InstallKind;
-		onActivate: () => void;
-		onCancel: () => void;
-		onDismiss: () => void;
-	}): void;
-	dismiss(): void;
-	problem(title: string): void;
-	manualInstall(body: string): void;
-	installed(args: { tag: string | null; kind: InstallKind }): void;
-	upToDate(): void;
-};
 
 const fromScratch = { received: 0, total: 0 };
 const AUTOMATIC_CHECK_TICK_MS = 60 * 60 * 1000;
@@ -71,7 +58,7 @@ export class UpdateFlow {
 	#readyTag: string | null = null;
 	#offerTag: string | null = null;
 	readonly #installOnReturn = new ReturnAction();
-	#readyKind: InstallKind = "update";
+	#readyKind: Release["kind"] = "update";
 	#showing = new Generation();
 	#armedTag: string | null = null;
 	#canInstallNow = false;
@@ -210,7 +197,10 @@ export class UpdateFlow {
 			arm: true,
 		});
 		if (handled) return;
-		if (retried) this.#presenter.problem("Couldn't start the download");
+		if (retried)
+			this.#problem({
+				fallback: "updates.flow.errors.startDownloadFailed",
+			});
 		else await this.#installFromCheck({ retried: true });
 	}
 
@@ -239,7 +229,8 @@ export class UpdateFlow {
 			if (kind === "busy" || kind === "autoChecksDisabled") {
 				this.#armedTag = null;
 				this.#show(before ?? { stage: "paused", received, total });
-				if (byUser) this.#problem({ error, fallback: "" });
+				if (byUser)
+					this.#problem({ error, fallback: "updates.errors.busy" });
 				return true;
 			}
 			if (kind !== "nothingStaged") {
@@ -260,7 +251,7 @@ export class UpdateFlow {
 		try {
 			const claim = await this.#claimInstall();
 			if (!claim) {
-				this.#presenter.problem("Finish the other install first");
+				this.#problem({ fallback: "updates.flow.finishOtherInstall" });
 				return;
 			}
 			const readiness = await getUpdateReadiness(this.component);
@@ -299,7 +290,7 @@ export class UpdateFlow {
 					this.#hide();
 					this.#presenter.manualInstall(
 						updateErrorText(error, {
-							fallback: "Drag it onto Applications",
+							fallback: "updates.errors.needsManualInstall",
 						}),
 					);
 					return;
@@ -309,7 +300,7 @@ export class UpdateFlow {
 				default:
 					this.#problem({
 						error,
-						fallback: "Couldn't install the update",
+						fallback: "updates.errors.installFailed",
 					});
 			}
 		} finally {
@@ -362,9 +353,9 @@ export class UpdateFlow {
 				}),
 		});
 		if (!opened) {
-			this.#presenter.problem(
-				"Couldn't open the install permission screen",
-			);
+			this.#problem({
+				fallback: "updates.flow.errors.openPermissionScreenFailed",
+			});
 		}
 	}
 
@@ -450,7 +441,7 @@ export class UpdateFlow {
 				if (report === "all") {
 					this.#problem({
 						error,
-						fallback: "Couldn't check for updates",
+						fallback: "updates.errors.checkFailed",
 					});
 				} else if (
 					report === "unsigned" &&
@@ -594,7 +585,7 @@ export class UpdateFlow {
 					(error: unknown) =>
 						this.#problem({
 							error,
-							fallback: "Couldn't stop the download",
+							fallback: "updates.flow.errors.stopDownloadFailed",
 						}),
 				),
 			onDismiss: () => {
@@ -613,7 +604,7 @@ export class UpdateFlow {
 		this.#presenter.dismiss();
 	}
 
-	#problem({ error, fallback }: { error: unknown; fallback: string }): void {
+	#problem({ error, fallback }: Problem): void {
 		this.#presenter.problem(
 			updateErrorText(error, {
 				fallback,
@@ -632,7 +623,10 @@ export class UpdateFlow {
 		}
 
 		this.#hide();
-		this.#problem({ error, fallback: "The update failed" });
+		this.#problem({
+			error,
+			fallback: downloadFailedKey({ component: this.component }),
+		});
 
 		if (known?.kind !== "server") return;
 

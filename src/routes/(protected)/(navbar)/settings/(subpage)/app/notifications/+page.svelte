@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "#lib/i18n/index.ts";
 	import { isAndroidPlatform } from "#lib/platform/os.ts";
 	import { pushAvailableHere } from "#lib/push/index.ts";
 	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
@@ -16,6 +17,6 @@
 	<p
 		class="fixed inset-x-4 inset-y-0 m-auto size-fit text-center text-sm text-balance text-muted-foreground"
 	>
-		Notifications are not supported on this platform yet.
+		{t("settings.notifications.unsupported")}
 	</p>
 {/if}

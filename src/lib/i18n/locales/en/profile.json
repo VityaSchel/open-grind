@@ -1,0 +1,334 @@
+{
+	"fields": {
+		"lastTested": "Last Tested",
+		"imInto": "I’m Into",
+		"lookingFor": "Looking For",
+		"meetAt": "Meet At",
+		"acceptNsfwPics": "NSFW Pics?",
+		"hivStatus": "HIV Status",
+		"vaccinatedFor": "Vaccinated For",
+		"pronouns": {
+			"errors": {
+				"loadFailed": "Couldn’t load pronouns"
+			}
+		}
+	},
+	"sexualPosition": {
+		"top": "Top",
+		"bottom": "Bottom",
+		"versatile": "Versatile",
+		"versBottom": "Vers Bottom",
+		"versTop": "Vers Top",
+		"side": "Side"
+	},
+	"lookingFor": {
+		"chat": "Chat",
+		"dates": "Dates",
+		"friends": "Friends",
+		"networking": "Networking",
+		"relationship": "Relationship",
+		"hookups": "Hookups"
+	},
+	"acceptNsfwPics": {
+		"never": "Never",
+		"notAtFirst": "Not at First",
+		"yesPlease": "Yes Please"
+	},
+	"relationshipStatus": {
+		"single": "Single",
+		"dating": "Dating",
+		"exclusive": "Exclusive",
+		"committed": "Committed",
+		"partnered": "Partnered",
+		"engaged": "Engaged",
+		"married": "Married",
+		"openRelationship": "Open Relationship"
+	},
+	"bodyType": {
+		"toned": "Toned",
+		"average": "Average",
+		"large": "Large",
+		"muscular": "Muscular",
+		"slim": "Slim",
+		"stocky": "Stocky"
+	},
+	"tribe": {
+		"bear": "Bear",
+		"cleanCut": "Clean-Cut",
+		"daddy": "Daddy",
+		"discreet": "Discreet",
+		"geek": "Geek",
+		"jock": "Jock",
+		"leather": "Leather",
+		"otter": "Otter",
+		"poz": "Poz",
+		"rugged": "Rugged",
+		"trans": "Trans",
+		"twink": "Twink",
+		"sober": "Sober"
+	},
+	"meetAt": {
+		"myPlace": "My Place",
+		"yourPlace": "Your Place",
+		"bar": "Bar",
+		"coffeeShop": "Coffee Shop",
+		"restaurant": "Restaurant"
+	},
+	"ethnicity": {
+		"asian": "Asian",
+		"black": "Black",
+		"latino": "Latino",
+		"middleEastern": "Middle Eastern",
+		"mixed": "Mixed",
+		"nativeAmerican": "Native American",
+		"white": "White",
+		"other": "Other",
+		"southAsian": "South Asian"
+	},
+	"hivStatus": {
+		"negative": "Negative",
+		"negativeOnPrep": "Negative, on PrEP",
+		"positive": "Positive",
+		"positiveUndetectable": "Positive, Undetectable",
+		"preferToDiscuss": "Prefer to Discuss"
+	},
+	"healthPractice": {
+		"condoms": "Condoms",
+		"doxyPep": "I’m on doxyPEP",
+		"prep": "I’m on PrEP",
+		"hivUndetectable": "I’m HIV Undetectable",
+		"preferToDiscuss": "Prefer to Discuss",
+		"sober": "Sober",
+		"drugFree": "Drug-Free"
+	},
+	"vaccine": {
+		"covid19": "COVID-19",
+		"monkeypox": "Monkeypox",
+		"meningitis": "Meningitis"
+	},
+	"tap": {
+		"a11y": {
+			"icon": {
+				"friendly": "Cookie tap",
+				"hot": "Fire tap",
+				"looking": "Demon tap"
+			},
+			"send": {
+				"friendly": "Send a Cookie tap",
+				"hot": "Send a Fire tap",
+				"looking": "Send a Demon tap"
+			},
+			"sent": {
+				"friendly": "Cookie tap sent",
+				"hot": "Fire tap sent",
+				"looking": "Demon tap sent"
+			}
+		},
+		"errors": {
+			"sendFailed": "Couldn’t send tap"
+		}
+	},
+	"onlineStatus": {
+		"onlineNow": "Online now",
+		"onlineNowVisiting": "Online now. Visiting",
+		"visiting": "Visiting",
+		"lastOnline": "Online {{ago}}",
+		"offline": "Offline"
+	},
+	"newBadge": {
+		"label": "New",
+		"title": "Joined recently"
+	},
+	"favoriteStar": {
+		"a11y": {
+			"label": "Favorite"
+		}
+	},
+	"miniCard": {
+		"a11y": {
+			"chattedRecently": "Chatted recently",
+			"anonymous": "Profile"
+		},
+		"unreadCount_one": "{{count}} <srOnly>unread message</srOnly>",
+		"unreadCount_other": "{{count}} <srOnly>unread messages</srOnly>",
+		"cappedUnreadCount_one": "<cappedCount>{{count}}+</cappedCount> <srOnly>unread messages</srOnly>",
+		"cappedUnreadCount_other": "<cappedCount>{{count}}+</cappedCount> <srOnly>unread messages</srOnly>"
+	},
+	"item": {
+		"a11y": {
+			"profileLink": "{{name}}’s profile"
+		}
+	},
+	"imageCarousel": {
+		"a11y": {
+			"photo": "Profile photo {{position}} of {{total}}"
+		},
+		"reply": {
+			"sent": "Message sent"
+		}
+	},
+	"backButton": {
+		"a11y": {
+			"navigation": "Back"
+		}
+	},
+	"bottomNav": {
+		"a11y": {
+			"navigation": "Chat and Tap"
+		}
+	},
+	"topNav": {
+		"a11y": {
+			"navigation": "Profile Actions"
+		},
+		"editProfile": "Edit profile",
+		"favorite": {
+			"a11y": {
+				"add": "Add to favorites",
+				"remove": "Remove from favorites"
+			},
+			"errors": {
+				"addFailed": "Couldn’t add to favorites",
+				"removeFailed": "Couldn’t remove from favorites"
+			}
+		},
+		"actionsMenu": {
+			"a11y": {
+				"trigger": "Profile menu"
+			},
+			"copyId": "Copy profile ID",
+			"idCopied": "Profile ID copied to clipboard",
+			"report": "Report user",
+			"hide": "Hide user",
+			"block": "Block user",
+			"errors": {
+				"copyIdFailed": "Couldn’t copy profile ID"
+			}
+		}
+	},
+	"page": {
+		"title": "Profile",
+		"errors": {
+			"refreshFailed": "Couldn’t refresh profile"
+		}
+	},
+	"visit": {
+		"errors": {
+			"recordFailed": "Couldn’t record your view of this profile"
+		}
+	},
+	"viewability": {
+		"errors": {
+			"blockIgnored": "Can’t block this user. Try hiding instead."
+		}
+	},
+	"blocked": {
+		"byUs": "You have blocked this user",
+		"byThem": "This user has blocked you",
+		"unblock": "Unblock",
+		"bugHint": "If you know this is a bug in the app, <reportIssueLink>report an issue</reportIssueLink>."
+	},
+	"hidden": {
+		"title": "You have hidden this user",
+		"unhide": "Unhide"
+	},
+	"favoriteNote": {
+		"add": "Add note",
+		"title": "Note",
+		"a11y": {
+			"description": "A private note about this profile. Only you can see it."
+		},
+		"placeholder": "Note for this profile…",
+		"phoneNumber": {
+			"label": "Phone number",
+			"placeholder": "Optional"
+		},
+		"saved": "Note saved",
+		"deleted": "Note deleted",
+		"errors": {
+			"saveFailed": "Couldn’t save note"
+		}
+	},
+	"report": {
+		"reason": {
+			"spam": "Spam",
+			"harassmentBullying": "Harassment or Bullying",
+			"hateDiscrimination": "Hate Speech/Discrimination",
+			"nudityPornography": "Nudity or Pornography",
+			"underage": "Underage",
+			"impersonation": "Impersonation",
+			"illegalActivity": "Illegal Activity",
+			"sexualSolicitation": "Sexual Solicitation",
+			"seriousInPersonIncident": "Serious In-Person Incident"
+		},
+		"location": {
+			"profilePhoto": "Profile Photo",
+			"profileInformation": "Profile Information",
+			"chatMessage": "Chat Message",
+			"album": "Album",
+			"rightNowPhoto": "Right Now Photo",
+			"rightNowText": "Right Now Text"
+		},
+		"profile": {
+			"title": "Report User",
+			"a11y": {
+				"description": "Send a report about this user to Grindr."
+			}
+		},
+		"message": {
+			"title": "Report Messages",
+			"a11y": {
+				"description": "Send a report about this user’s messages to Grindr."
+			}
+		},
+		"submitted": "Report submitted",
+		"reviewed": "Grindr will review your report.",
+		"blockHint": "You can block this user so you no longer see each other.",
+		"done": "Done",
+		"a11y": {
+			"reason": "Reason"
+		},
+		"whereItHappened": "Where it happened",
+		"details": "Details (optional)",
+		"inPersonIncident": {
+			"note": "Grindr’s trust and safety team handles serious in-person incidents through its help center. The form opens in your browser.",
+			"openHelpForm": "Open help form"
+		},
+		"submit": "Submit report",
+		"errors": {
+			"sendFailed": "Couldn’t send report"
+		},
+		"rightNowPost": {
+			"title": "Report Post",
+			"a11y": {
+				"description": "Send a report about this Right Now post to Grindr."
+			},
+			"reviewed": "Grindr will review this post.",
+			"alreadyReported": "Already reported",
+			"awaitingModeration": "Awaiting moderation",
+			"awaitingModerationSince": "{{time}} · Awaiting moderation",
+			"errors": {
+				"checkFailed": "Couldn’t check for an earlier report"
+			}
+		}
+	},
+	"rightNow": {
+		"badge": {
+			"hosting": "Hosting",
+			"rightNow": "Right Now"
+		},
+		"indicator": {
+			"hosting": "Right Now · Hosting",
+			"active": "Right Now"
+		},
+		"post": {
+			"open": "Right Now",
+			"errors": {
+				"openFailed": "Couldn’t open Right Now post"
+			}
+		},
+		"viewer": {
+			"edit": "Edit post"
+		}
+	}
+}

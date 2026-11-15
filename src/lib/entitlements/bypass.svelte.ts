@@ -3,10 +3,11 @@ import { toast } from "svelte-sonner";
 import { registerAccountCache } from "#lib/api/account-caches.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import { holdInHonduras, type LocationLease } from "./honduras-hold";
 
 type BypassRequest = {
-	reason: string;
+	reason: PlainMessageKey;
 	answer: (lease: LocationLease | null) => void;
 };
 
@@ -14,9 +15,9 @@ const TOAST_ID = "entitlement-bypass";
 
 export const entitlementBypassState = $state<{
 	open: boolean;
-	reason: string;
+	reason: PlainMessageKey | null;
 	busy: boolean;
-}>({ open: false, reason: "", busy: false });
+}>({ open: false, reason: null, busy: false });
 
 let requests: BypassRequest[] = [];
 
@@ -35,7 +36,7 @@ function reportBypassFailure({
 }): void {
 	console.error(`Entitlement bypass failed: ${step}`, error);
 	showErrorToast({
-		label: "Failed to bypass this paid feature",
+		label: t("feedback.entitlementBypass.errors.bypassFailed"),
 		error,
 		id: TOAST_ID,
 	});
@@ -48,7 +49,7 @@ export function reportRefusedDespiteBypass(error: unknown): void {
 export function offerEntitlementBypass({
 	reason,
 }: {
-	reason: string;
+	reason: PlainMessageKey;
 }): Promise<LocationLease | null> {
 	return new Promise((answer) => {
 		requests.push({ reason, answer });
@@ -84,7 +85,7 @@ export async function runEntitlementBypass(): Promise<void> {
 	const home = preferencesSnapshot().geohash;
 	if (home === null) {
 		dismissEntitlementBypass();
-		toast.error("Set your location before using this bypass", {
+		toast.error(t("feedback.entitlementBypass.needsLocation"), {
 			id: TOAST_ID,
 		});
 		return;

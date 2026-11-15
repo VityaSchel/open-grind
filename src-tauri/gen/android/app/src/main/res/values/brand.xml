@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name" translatable="false">Open Grind</string>
+	<string name="main_activity_title" translatable="false">Open Grind</string>
+</resources>

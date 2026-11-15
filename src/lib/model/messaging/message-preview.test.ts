@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	previewFromMessage,
+	previewIsUserText,
 	previewLabel,
+	quoteIsUserText,
 	quoteLabel,
 } from "#lib/model/messaging/message-preview.ts";
 
@@ -142,7 +146,7 @@ describe("previewFromMessage", () => {
 			albumId: null,
 			imageHash: null,
 		});
-		expect(previewLabel(preview)).toBe("Expiring image");
+		expect(previewLabel(preview)).toBe("Expiring photo");
 	});
 
 	it("labels a chat video the way its bubble does", () => {
@@ -194,7 +198,7 @@ describe("quoteLabel", () => {
 	});
 
 	it.each([
-		["ExpiringImage", "Expiring image"],
+		["ExpiringImage", "Expiring photo"],
 		["Location", "Location"],
 		["Giphy", "GIF"],
 		["Gaymoji", "Gaymoji"],
@@ -208,6 +212,47 @@ describe("quoteLabel", () => {
 
 	it("does not render an empty pill for a blank text message", () => {
 		expect(quoteLabel(preview("Text", "   "))).toBe("Message");
+	});
+});
+
+describe("user text in previews", () => {
+	it("tells message text from a label we supply", () => {
+		expect(previewIsUserText({ type: "Text", text: "Photo" })).toBe(true);
+		expect(previewIsUserText({ type: "Image" })).toBe(false);
+		expect(previewIsUserText({ type: "Audio" })).toBe(false);
+		expect(
+			previewIsUserText({ type: "AlbumContentReaction", text: "" }),
+		).toBe(false);
+		expect(previewIsUserText(null)).toBe(false);
+	});
+
+	it("treats the stand-in for a blank quote as our label", () => {
+		expect(quoteIsUserText({ type: "Text", text: "hello" })).toBe(true);
+		expect(quoteIsUserText({ type: "Text", text: "   " })).toBe(false);
+		expect(quoteIsUserText({ type: "Giphy" })).toBe(false);
+	});
+});
+
+describe("preview labels across locales", () => {
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("translates a type at call time and leaves message text alone", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(previewLabel({ type: "Image" })).toMatch(PSEUDO_MESSAGE);
+		expect(previewLabel({ type: "Album", albumId: 7 })).toMatch(
+			PSEUDO_MESSAGE,
+		);
+		expect(previewLabel({ type: "Text", text: "Album" })).toBe("Album");
+		expect(previewLabel(null)).toBeNull();
+		expect(quoteLabel({ type: "Unsent" })).toMatch(PSEUDO_MESSAGE);
+		expect(quoteLabel({ type: "Giphy" })).toMatch(PSEUDO_MESSAGE);
+		expect(quoteLabel({ type: "Text", text: "   " })).toMatch(
+			PSEUDO_MESSAGE,
+		);
+		expect(quoteLabel({ type: "Text", text: "Photo" })).toBe("Photo");
 	});
 });
 

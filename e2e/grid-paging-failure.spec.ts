@@ -154,7 +154,8 @@ async function nthRequest({
 	return request;
 }
 
-const retryButton = (page: Page) => page.getByRole("button", { name: "Retry" });
+const retryButton = (page: Page) =>
+	page.getByRole("button", { name: "Try again" });
 
 async function expectOneErrorAndNoToast(page: Page): Promise<void> {
 	await expect(retryButton(page)).toBeVisible();

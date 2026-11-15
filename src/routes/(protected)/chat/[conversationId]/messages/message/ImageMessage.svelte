@@ -2,6 +2,7 @@
 	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import { stableSignedUrl } from "#lib/util/signed-url.ts";
@@ -46,7 +47,7 @@
 		data-pswp-width={size.width ?? undefined}
 		data-pswp-height={size.height ?? undefined}
 		role={covered ? "group" : undefined}
-		aria-label="Photo"
+		aria-label={t("chat.messagePreview.photo")}
 		aria-disabled={failed ? "true" : undefined}
 		class="item relative block"
 	>

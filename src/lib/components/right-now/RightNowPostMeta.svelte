@@ -4,6 +4,7 @@
 
 	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		posted,
@@ -33,7 +34,7 @@
 	{#if hosting}
 		<span class="flex items-center">
 			<HouseIcon weight="fill" class="size-4" />
-			<span class="sr-only">Hosting</span>
+			<span class="sr-only">{t("browse.rightNow.post.hosting")}</span>
 		</span>
 	{/if}
 </div>

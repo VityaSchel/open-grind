@@ -39,7 +39,7 @@ async function gridColumnsBesideScrollbar({
 		);
 }
 
-test("the default window opens All filters as three columns that stay under the sheet's height cap", async ({
+test("the default window opens All Filters as three columns that stay under the sheet's height cap", async ({
 	page,
 }) => {
 	await openBrowse(page);

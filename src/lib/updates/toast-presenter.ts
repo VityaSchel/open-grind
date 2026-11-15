@@ -1,6 +1,8 @@
-import { ADDON_NAME, APP_COMPONENT, type ComponentKey } from "./components";
+import { t } from "#lib/i18n/index.ts";
+import { ADDON_MESSAGES } from "./addon-messages";
+import { APP_COMPONENT, type ComponentKey } from "./components";
 import { problemBody } from "./error-copy";
-import type { StagePresenter } from "./flow";
+import type { StagePresenter } from "./stage";
 import {
 	dismissStage,
 	showAddonInstalled,
@@ -11,11 +13,15 @@ import {
 	showUpToDate,
 } from "./toasts";
 
-export function toastPresenter(component: ComponentKey): StagePresenter {
-	const subject =
+function upToDateTitle(component: ComponentKey): string {
+	return t(
 		component === APP_COMPONENT
-			? "Open Grind"
-			: `The ${ADDON_NAME[component]}`;
+			? "updates.toasts.upToDate"
+			: ADDON_MESSAGES[component].upToDate,
+	);
+}
+
+export function toastPresenter(component: ComponentKey): StagePresenter {
 	return {
 		show: (stage) => showStage({ component, ...stage }),
 		dismiss: () => dismissStage(component),
@@ -26,6 +32,6 @@ export function toastPresenter(component: ComponentKey): StagePresenter {
 			if (component === APP_COMPONENT) void showInstalled();
 			else showAddonInstalled({ component, tag, kind });
 		},
-		upToDate: () => showUpToDate(`${subject} is up to date`),
+		upToDate: () => showUpToDate(upToDateTitle(component)),
 	};
 }

@@ -16,7 +16,13 @@
 	import * as ContextMenu from "#lib/components/ui/context-menu/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
 	import { playHaptic } from "#lib/haptics.ts";
-	import { previewLabel } from "#lib/model/messaging/message-preview.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
+	import {
+		previewIsUserText,
+		previewLabel,
+	} from "#lib/model/messaging/message-preview.ts";
 	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 	import type { Conversation } from "#lib/model/messaging/conversations.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
@@ -38,6 +44,7 @@
 	const preview = $derived(conversation.data.preview);
 	const participant = $derived(conversation.data.participants[0]);
 	const previewText = $derived(previewLabel(preview));
+	const previewUserText = $derived(previewIsUserText(preview));
 	const conversationId = $derived(conversation.data.conversationId);
 	const draft = $derived(conversations.drafts.get(conversationId));
 
@@ -105,6 +112,7 @@
 	>
 		{#snippet description()}
 			<Item.Description
+				translate={draft !== "" || previewUserText ? "no" : undefined}
 				class={[
 					"wrap-anywhere",
 					{
@@ -116,17 +124,20 @@
 				]}
 			>
 				{#if draft !== ""}
-					<span
-						data-slot="conversation-draft-prefix"
-						class="font-bold text-primary">Draft:&nbsp;</span
-					>{draft}
+					<Rich key="chat.conversations.row.draft" {draft}>
+						{#snippet draftPrefix(text)}<span
+								data-slot="conversation-draft-prefix"
+								class="font-bold text-primary"
+								translate="yes">{text}</span
+							>{/snippet}
+					</Rich>
 				{:else if previewText !== null}
 					{previewText}
 				{:else}
 					<span
 						class="font-normal tracking-tight text-muted-foreground italic"
 					>
-						Preview not available
+						{t("chat.conversations.row.previewUnavailable")}
 					</span>
 				{/if}
 			</Item.Description>
@@ -152,7 +163,7 @@
 							: "default"}
 						class="px-count-badge @max-row:hidden"
 					>
-						{conversation.data.unreadCount}
+						{formatInteger(conversation.data.unreadCount)}
 					</Badge>
 				{/if}
 			</Item.Actions>
@@ -182,19 +193,19 @@
 				<ContextMenu.Item onSelect={togglePinned}>
 					{#if conversation.data.pinned}
 						<PushPinSlashIcon weight="fill" class="size-5" />
-						Unpin
+						{t("chat.conversations.row.actions.unpin")}
 					{:else}
 						<PushPinIcon weight="fill" class="size-5" />
-						Pin
+						{t("chat.conversations.row.actions.pin")}
 					{/if}
 				</ContextMenu.Item>
 				<ContextMenu.Item onSelect={toggleMuted}>
 					{#if conversation.data.muted}
 						<BellIcon weight="fill" class="size-5" />
-						Unmute
+						{t("chat.conversations.row.actions.unmute")}
 					{:else}
 						<BellSimpleSlashIcon weight="fill" class="size-5" />
-						Mute
+						{t("chat.conversations.row.actions.mute")}
 					{/if}
 				</ContextMenu.Item>
 				<ContextMenu.Separator />
@@ -203,7 +214,7 @@
 					onSelect={onRequestDelete}
 				>
 					<TrashIcon class="size-5" />
-					Delete
+					{t("common.actions.delete")}
 				</ContextMenu.Item>
 			</ContextMenu.Content>
 		{/if}

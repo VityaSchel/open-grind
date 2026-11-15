@@ -2,6 +2,7 @@
 	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
 
 	import SplashIcon from "#lib/components/right-now/SplashIcon.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 
 	let { status }: { status: RightNowStatus } = $props();
@@ -14,10 +15,10 @@
 	>
 		{#if status === "HOSTING"}
 			<HouseIcon weight="fill" class="shrink-0" />
-			Hosting
+			{t("profile.rightNow.badge.hosting")}
 		{:else}
 			<SplashIcon weight="fill" class="shrink-0" />
-			Right Now
+			{t("profile.rightNow.badge.rightNow")}
 		{/if}
 	</span>
 {/if}

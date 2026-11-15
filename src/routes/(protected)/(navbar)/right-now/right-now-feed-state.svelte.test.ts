@@ -427,7 +427,7 @@ describe("RightNowFeedState", () => {
 
 		expect(shown(state)).toEqual([1]);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to refresh Right Now",
+			label: "Couldn’t refresh Right Now",
 			error: expect.any(Error),
 			onRetry: expect.any(Function),
 		});

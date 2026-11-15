@@ -3,6 +3,7 @@ import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { getProfiles } from "#lib/api/users/profiles.ts";
+import { t } from "#lib/i18n/index.ts";
 import { Generation } from "#lib/util/generation.ts";
 import type { ProfileListOptions, ProfileListProfile } from "./profile-list";
 
@@ -137,7 +138,7 @@ export class ProfileListState {
 				for (const chunk of chunks) this.#requestedChunks.delete(chunk);
 				console.error(error);
 				showErrorToast({
-					label: "Failed to load profiles",
+					label: t("common.profileList.errors.loadFailed"),
 					error,
 					onRetry: () => void this.#resolveVisible(),
 				});

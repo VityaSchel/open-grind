@@ -470,7 +470,7 @@ describe("updateOwnProfile", () => {
 
 		expect(error).toBeInstanceOf(ProfileModerationError);
 		expect((error as ProfileModerationError).rejected).toEqual([
-			{ field: "Display name", terms: ["BANNED_TERM"] },
+			{ field: "display_name", terms: ["BANNED_TERM"] },
 		]);
 		expect((await getProfile(PROFILE_ID)).displayName).toBeUndefined();
 	});

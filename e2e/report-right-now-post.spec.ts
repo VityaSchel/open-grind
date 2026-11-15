@@ -57,7 +57,7 @@ test("reporting a known author's post files it about the post and blocking takes
 		.getByRole("textbox", { name: "Details" })
 		.fill("keeps posting insults");
 	await expect(
-		drawer.getByRole("button", { name: "Right Now Image" }),
+		drawer.getByRole("button", { name: "Right Now Photo" }),
 		"a post report already knows where it happened",
 	).toHaveCount(0);
 	await drawer.getByRole("button", { name: "Submit report" }).click();
@@ -65,7 +65,7 @@ test("reporting a known author's post files it about the post and blocking takes
 	await expect(
 		drawer.getByText("Grindr will review this post."),
 	).toBeVisible();
-	await drawer.getByRole("button", { name: "Block profile" }).click();
+	await drawer.getByRole("button", { name: "Block user" }).click();
 	await expect(page.locator(DRAWER)).toBeHidden();
 
 	await expect(
@@ -102,7 +102,7 @@ test("an anonymous post's report offers no block, and reporting it again says th
 		drawer.getByText("Grindr will review this post."),
 	).toBeVisible();
 	await expect(
-		drawer.getByRole("button", { name: "Block profile" }),
+		drawer.getByRole("button", { name: "Block user" }),
 		"an anonymous author cannot be blocked",
 	).toHaveCount(0);
 	await drawer.getByRole("button", { name: "Done" }).click();

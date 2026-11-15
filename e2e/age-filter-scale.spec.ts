@@ -12,7 +12,7 @@ async function openAgeFilter(page: Page) {
 	await page.getByRole("button", { name: "Age", exact: true }).click();
 	const dialog = page.getByRole("dialog");
 	const thumbs = dialog.getByRole("slider", {
-		name: /^(Minimum|Maximum) age$/,
+		name: /^(Minimum|Maximum) Age$/,
 	});
 	await expect(thumbs).toHaveCount(2);
 	await dialog.evaluate((node) =>

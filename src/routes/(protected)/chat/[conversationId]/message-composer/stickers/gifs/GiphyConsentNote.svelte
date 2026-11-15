@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { turnOnGiphy } from "../../../giphy/giphy-consent";
 	import GiphyConsentText from "../../../giphy/GiphyConsentText.svelte";
 
@@ -20,12 +21,13 @@
 	<p
 		class="text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground"
 	>
-		Enable GIPHY? <GiphyConsentText />
+		{t("chat.giphy.consent.title")}
+		<GiphyConsentText />
 	</p>
 	<Button disabled={pending} aria-busy={pending} onclick={() => void agree()}>
 		{#if pending}
 			<Spinner aria-hidden="true" />
 		{/if}
-		Continue
+		{t("common.actions.continue")}
 	</Button>
 </div>

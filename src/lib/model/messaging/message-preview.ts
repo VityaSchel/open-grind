@@ -1,3 +1,4 @@
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 import type {
 	ApiResponseMessage,
 	QuotedMessage,
@@ -75,51 +76,111 @@ export function previewFromMessage(
 
 const EXPIRING_VIDEO_TYPES = new Set(["Video", "PrivateVideo"]);
 
-const PREVIEW_LABELS: Record<string, string> = {
-	Gaymoji: "Gaymoji",
-	Giphy: "GIF",
-	Location: "Location",
-	ProfilePhotoReply: "Replied to a photo",
+const previewTypeKeys = {
+	album: "chat.messagePreview.album",
+	albumReaction: "chat.messagePreview.albumReaction",
+	expiringPhoto: "chat.messagePreview.expiringPhoto",
+	expiringVideo: "chat.messagePreview.expiringVideo",
+	photo: "chat.messagePreview.photo",
+	photoReply: "chat.messagePreview.photoReply",
+	unsent: "chat.messagePreview.unsent",
+	voiceMessage: "chat.messagePreview.voiceMessage",
+	video: "chat.messagePreview.video",
+	videoCall: "chat.messagePreview.videoCall",
+	gaymoji: "chat.messagePreview.gaymoji",
+	gif: "chat.messagePreview.gif",
+	location: "chat.messagePreview.location",
+	profile: "chat.messagePreview.profile",
+	rightNow: "chat.messagePreview.rightNow",
+	message: "chat.messagePreview.message",
+} as const satisfies Record<string, MessageKey>;
+
+type PreviewType = keyof typeof previewTypeKeys;
+
+type PreviewContent =
+	| { readonly kind: "text"; readonly text: string }
+	| { readonly kind: "type"; readonly type: PreviewType };
+
+const labeledTypes: Partial<Record<string, PreviewType>> = {
+	Gaymoji: "gaymoji",
+	Giphy: "gif",
+	Location: "location",
+	ProfilePhotoReply: "photoReply",
 };
 
-export function previewLabel(
+const quoteTypes: Partial<Record<string, PreviewType>> = {
+	Unsent: "unsent",
+	Audio: "voiceMessage",
+	NonExpiringVideo: "video",
+	VideoCall: "videoCall",
+	ProfileLink: "profile",
+	ProfilePhotoReply: "photo",
+	AlbumContentReaction: "album",
+	AlbumContentReply: "album",
+	RightNowRequest: "rightNow",
+};
+
+function mediaType(preview: MessagePreview): PreviewType | null {
+	const labeled = labeledTypes[preview.type];
+	if (labeled !== undefined) return labeled;
+	if ((preview.albumId ?? null) !== null) return "album";
+	if (preview.type === "ExpiringImage") return "expiringPhoto";
+	if (EXPIRING_VIDEO_TYPES.has(preview.type)) return "expiringVideo";
+	if ((preview.imageHash ?? null) !== null || preview.type === "Image") {
+		return "photo";
+	}
+	return null;
+}
+
+function previewContent(
 	preview: MessagePreview | null | undefined,
-): string | null {
+): PreviewContent | null {
 	if (preview === null || preview === undefined) return null;
-	if (preview.type === "AlbumContentReaction") return "Reacted to an album";
+	if (preview.type === "AlbumContentReaction") {
+		return { kind: "type", type: "albumReaction" };
+	}
 	const text =
 		preview.text ??
 		preview.albumContentReply ??
 		preview.photoContentReply ??
 		null;
-	if (text !== null) return text;
-	const label = PREVIEW_LABELS[preview.type];
-	if (label !== undefined) return label;
-	if ((preview.albumId ?? null) !== null) return "Album";
-	if (preview.type === "ExpiringImage") return "Expiring image";
-	if (EXPIRING_VIDEO_TYPES.has(preview.type)) return "Expiring video";
-	if ((preview.imageHash ?? null) !== null || preview.type === "Image") {
-		return "Photo";
-	}
-	return null;
+	if (text !== null) return { kind: "text", text };
+	const type = mediaType(preview);
+	return type === null ? null : { kind: "type", type };
 }
 
-const QUOTE_LABELS: Record<string, string> = {
-	Unsent: "Unsent message",
-	Audio: "Voice message",
-	NonExpiringVideo: "Video",
-	VideoCall: "Video call",
-	ProfileLink: "Profile",
-	ProfilePhotoReply: "Photo",
-	AlbumContentReaction: "Album",
-	AlbumContentReply: "Album",
-	RightNowRequest: "Right Now",
-};
-
-// Unlike previewLabel, a quote always needs something to render — the inbox
+// Unlike previewContent, a quote always needs something to render — the inbox
 // and the toast deliberately render its null, a quote pill cannot.
+function quoteContent(preview: MessagePreview): PreviewContent {
+	const content = previewContent(preview);
+	if (content?.kind === "type") return content;
+	if (content !== null && content.text.trim() !== "") return content;
+	return { kind: "type", type: quoteTypes[preview.type] ?? "message" };
+}
+
+function previewContentLabel(content: PreviewContent): string {
+	return content.kind === "text"
+		? content.text
+		: t(previewTypeKeys[content.type]);
+}
+
+export function previewLabel(
+	preview: MessagePreview | null | undefined,
+): string | null {
+	const content = previewContent(preview);
+	return content === null ? null : previewContentLabel(content);
+}
+
 export function quoteLabel(preview: MessagePreview): string {
-	const label = previewLabel(preview);
-	if (label !== null && label.trim() !== "") return label;
-	return QUOTE_LABELS[preview.type] ?? "Message";
+	return previewContentLabel(quoteContent(preview));
+}
+
+export function previewIsUserText(
+	preview: MessagePreview | null | undefined,
+): boolean {
+	return previewContent(preview)?.kind === "text";
+}
+
+export function quoteIsUserText(preview: MessagePreview): boolean {
+	return quoteContent(preview).kind === "text";
 }

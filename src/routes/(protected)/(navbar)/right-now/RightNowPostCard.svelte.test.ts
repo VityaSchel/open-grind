@@ -75,7 +75,7 @@ describe("a Right Now post card", () => {
 
 		expect(
 			screen
-				.getByRole("link", { name: "View Simon's profile" })
+				.getByRole("link", { name: "View Simon’s profile" })
 				.getAttribute("href"),
 		).toBe(`/profile/${AUTHOR_ID}`);
 	});

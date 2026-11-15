@@ -1,0 +1,325 @@
+{
+	"subpage": {
+		"titles": {
+			"account": "Account Settings",
+			"privacy": "Privacy",
+			"blocked": "Blocked Users",
+			"hidden": "Hidden Users",
+			"albums": "My Albums",
+			"newAlbum": "New Album",
+			"editAlbum": "Edit Album",
+			"app": "App Settings",
+			"language": "Language",
+			"notifications": "Notifications",
+			"credits": "Credits & Licenses",
+			"profile": "Edit Profile"
+		}
+	},
+	"setting": {
+		"errors": {
+			"saveFailed": "Couldn’t save setting"
+		}
+	},
+	"preferences": {
+		"reset": "Reset",
+		"errors": {
+			"loadFailed": "Couldn’t load app settings. Reset to defaults?"
+		}
+	},
+	"me": {
+		"profile": {
+			"viewProfile": "View your profile",
+			"errors": {
+				"loadNameFailed": "Couldn’t load name"
+			}
+		},
+		"signOut": {
+			"title": "Sign out?",
+			"description": "Are you sure you want to sign out? You can sign back in at any time."
+		},
+		"socials": {
+			"website": "Open Grind website",
+			"sourceCode": "Open Grind source code",
+			"announcements": "Open Grind announcements",
+			"discussion": "Open Grind discussion",
+			"telegram": {
+				"title": "Telegram channel is semiofficial",
+				"description": "You’re about to visit a Telegram channel that operates as a convenient mirror of the official announcements room hosted on Matrix.",
+				"openTelegram": "Open Telegram channel",
+				"joinMatrix": "Join official Matrix room"
+			}
+		}
+	},
+	"account": {
+		"email": "Email",
+		"password": "Password",
+		"deleteAccount": "Delete account",
+		"unimplemented": "Account settings aren’t implemented yet. Follow the progress in {{issueLink}}."
+	},
+	"privacy": {
+		"showDistance": {
+			"title": "Show my distance",
+			"description": "Reveal your approximate location to other users as distance, e.g. {{distance}}."
+		}
+	},
+	"blocked": {
+		"empty": {
+			"title": "No Blocked Users",
+			"description": "People you block will appear here."
+		},
+		"a11y": {
+			"toggle": "Blocked"
+		}
+	},
+	"hidden": {
+		"empty": {
+			"title": "No Hidden Users",
+			"description": "People you hide will appear here."
+		},
+		"a11y": {
+			"toggle": "Hidden"
+		}
+	},
+	"app": {
+		"showMatureContent": {
+			"title": "Show mature content",
+			"description": "I’m 18+ and want to see nudity."
+		},
+		"sections": {
+			"display": "Display",
+			"privacy": "Privacy",
+			"security": "Security",
+			"updates": "Updates"
+		},
+		"units": {
+			"title": "Units",
+			"description": "Choose how distance, height, and weight are displayed.",
+			"metric": "Metric",
+			"imperial": "Imperial"
+		},
+		"backdropBlur": {
+			"title": "Background blur",
+			"quality": {
+				"off": "Off",
+				"min": "Low",
+				"medium": "Medium",
+				"max": "Full"
+			},
+			"description": {
+				"off": "No blur. Bars and menus use solid shading instead.",
+				"min": "A single light blur behind bars and menus.",
+				"medium": "A softer gradient blur. Best on older devices.",
+				"max": "The full gradient blur."
+			},
+			"unsupported": "This system can’t blur backgrounds, so blur is always off.",
+			"trialPending": "Being chosen automatically as you scroll.",
+			"automatic": "Chosen automatically for this device."
+		},
+		"hapticFeedback": {
+			"title": "Haptic feedback",
+			"description": "Use the haptic engine for interactions."
+		},
+		"appsMenuEntry": {
+			"title": "Show in apps menu",
+			"description": "Add Open Grind to your apps menu so it appears in your launcher and gets its icon."
+		},
+		"stayOnline": {
+			"title": "Stay online while the app is open",
+			"description": "Refresh your online status in the background automatically, while the app is open."
+		},
+		"revealMessageRead": {
+			"title": "Reveal message read status",
+			"description": "Let others know when you’ve read their messages. Your read receipts remain unaffected."
+		},
+		"revealProfileViews": {
+			"title": "Reveal profile views",
+			"description": "Let others know when you’ve viewed their profile. Your profile view history remains unaffected."
+		},
+		"giphy": {
+			"title": "Enable GIPHY",
+			"description": "Search, send and see GIFs from GIPHY. GIPHY sees your IP address, your searches and their language, which GIFs load and that you use a Grindr app."
+		},
+		"discreetAppIcon": {
+			"title": "Discreet App Icon",
+			"description": "Change how Open Grind looks on your home screen and in your app list.",
+			"unimplemented": "Discreet App Icon isn’t implemented yet. Follow the progress in {{issueLink}}.",
+			"stillShown": {
+				"android": "The app’s name still shows in notifications and system settings.",
+				"macos": "The app’s name still shows in the menu bar, notifications and system settings. If the Dock keeps the old icon or name, Command-click it there.",
+				"windows": "The app’s name still shows in Task Manager.",
+				"linux": "The app’s name still shows in task managers."
+			},
+			"renameNeedsAdmin": "Renaming the app needs an administrator account.",
+			"restart": {
+				"android": "Open Grind restarts as {{appName}}. Its home screen shortcut is removed, so add it again from the app drawer.",
+				"macos": "Open Grind restarts to rename itself to {{appName}}."
+			},
+			"confirm": {
+				"title": "Change the app icon?",
+				"change": "Change"
+			},
+			"errors": {
+				"changeFailed": "Couldn’t change the app icon",
+				"nameTaken": "An app named {{appName}} is already in this folder",
+				"renameNeedsAdmin": "The icon changed, but renaming the app needs an administrator account"
+			}
+		},
+		"pin": {
+			"title": "PIN",
+			"unimplemented": "The PIN lock isn’t implemented yet. Follow the progress in {{issueLink}}."
+		},
+		"privacyPolicy": "Privacy policy"
+	},
+	"notifications": {
+		"unsupported": "Notifications aren’t supported on this platform yet.",
+		"enable": "Enable notifications",
+		"mode": {
+			"fast": {
+				"title": "Fast Mode",
+				"description": "Use Google’s Firebase proprietary service to receive push notifications instantly."
+			},
+			"slow": {
+				"title": "Slow Mode",
+				"description": "Poll for new notifications periodically in the background using Android’s native scheduler."
+			},
+			"recommended": "Recommended",
+			"a11y": {
+				"group": "Delivery mode"
+			}
+		},
+		"categories": {
+			"messages": "New messages",
+			"taps": "Received taps",
+			"unavailableInSlowMode": "Not available in Slow Mode",
+			"errors": {
+				"saveFailed": "Couldn’t save notification settings"
+			}
+		},
+		"addon": {
+			"title": "Install push notifications add-on",
+			"description": "To enable Fast Mode, install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it isn’t installed by default."
+		}
+	},
+	"credits": {
+		"specialThanks": "Special Thanks",
+		"highlights": {
+			"svelte": "Thanks to {{projectLink}} for the awesome UI building framework!",
+			"svelteKit": "Thanks to {{projectLink}} for the awesome frontend framework!",
+			"tauri": "Thanks to {{projectLink}} for the cross-platform framework!",
+			"photoSwipe": "Thanks to {{projectLink}} for the awesome lightbox component!",
+			"sveaflet": "Thanks to {{projectLink}} for the awesome map component!",
+			"svelteSonner": "Thanks to {{projectLink}} for the awesome toasts component!",
+			"tailwindCss": "Thanks to {{projectLink}} for the framework to rapidly style UIs!",
+			"zod": "Thanks to {{projectLink}} for the awesome schema validation library!",
+			"shadcnSvelte": "Thanks to {{projectLink}} for re-building the awesome shadcn/ui!",
+			"bitsUi": "Thanks to {{projectLink}} for the awesome Svelte UI components library!",
+			"emblaCarouselSvelte": "Thanks to {{projectLink}} for the awesome image carousel library!",
+			"phosphorSvelte": "Thanks to {{projectLink}} for providing the awesome Phosphor Icons set!",
+			"vaulSvelte": "Thanks to {{projectLink}} for the awesome Drawer component!"
+		},
+		"sections": {
+			"webPackages": "Web Packages",
+			"rustCrates": "Rust Crates",
+			"platformLibraries": "{{platform}} Libraries"
+		},
+		"license": "{{license}} license",
+		"licenseWithVersions": "{{license}} license · {{versions}}",
+		"suggestEdit": "Suggest an edit",
+		"errors": {
+			"loadFailed": "Couldn’t load the credits. Try again."
+		}
+	},
+	"profile": {
+		"sections": {
+			"photos": "Photos",
+			"basics": "Basics",
+			"about": "About"
+		},
+		"photos": {
+			"add": "Add photos",
+			"upload": "Upload photos",
+			"submit": "Add to profile",
+			"dropToAdd": "Drop to add photos",
+			"a11y": {
+				"slot": "Profile photo in slot {{slot}}",
+				"slotAwaitingReview": "Profile photo in slot {{slot}}, awaiting review",
+				"removeSlot": "Remove profile photo in slot {{slot}}",
+				"keepSlot": "Keep profile photo in slot {{slot}}",
+				"uploading": "Uploading profile photo"
+			},
+			"errors": {
+				"dailyLimit": "You’ve reached today’s limit for new profile photos",
+				"openPickerFailed": "Couldn’t open the photo picker",
+				"uploadFailed": "Couldn’t upload photo",
+				"leftOut_one": "{{count}} left out, a profile holds up to {{max}} photos",
+				"leftOut_other": "{{count}} left out, a profile holds up to {{max}} photos"
+			}
+		},
+		"fields": {
+			"displayName": "Display name",
+			"age": "Age",
+			"showAge": "Show my age",
+			"position": "Position",
+			"showPosition": "Show my position",
+			"height": "Height",
+			"weight": "Weight",
+			"bodyType": "Body type",
+			"tags": "Tags",
+			"aboutMe": "About me",
+			"gender": "Gender",
+			"pronouns": "Pronouns",
+			"myTribes": "My tribes",
+			"showTribes": "Show my tribes",
+			"ethnicity": "Ethnicity",
+			"relationshipStatus": "Relationship status",
+			"lookingFor": "Looking for",
+			"meetAt": "Meet at",
+			"acceptNsfwPics": "Accept NSFW pics",
+			"tribesImInto": "Tribes I’m into",
+			"hivStatus": "HIV status",
+			"lastTested": "Last tested",
+			"sexualHealthPractices": "Sexual health practices",
+			"vaccines": "Vaccines"
+		},
+		"placeholders": {
+			"displayName": "Everyone will see this on the Grid…",
+			"aboutMe": "Tell people who you are and what you’re looking for (not what you’re not looking for)",
+			"searchGenders": "Search genders…",
+			"searchPronouns": "Search pronouns…"
+		},
+		"age": {
+			"unit_one": "year",
+			"unit_other": "years",
+			"a11y": {
+				"value_one": "{{count}} year",
+				"value_other": "{{count}} years"
+			}
+		},
+		"units": {
+			"centimeters": "cm",
+			"kilograms": "kg",
+			"pounds": "lb"
+		},
+		"notSet": "Not Set",
+		"socialPlaceholder": "username",
+		"combo": {
+			"selected_one": "{{count}}/{{max}} selected",
+			"selected_other": "{{count}}/{{max}} selected",
+			"selectedAtMax_one": "{{count}}/{{max}} selected · remove one to add another",
+			"selectedAtMax_other": "{{count}}/{{max}} selected · remove one to add another",
+			"noMatches": "No matches",
+			"a11y": {
+				"remove": "Remove {{label}}",
+				"toggleList": "Toggle list"
+			}
+		},
+		"saved": "Profile updated",
+		"errors": {
+			"loadFailed": "Couldn’t load your profile. Try again.",
+			"saveFailed": "Couldn’t save profile changes",
+			"bannedTerms": "Couldn’t save — these terms aren’t allowed",
+			"bannedTermsField": "{{field}}: {{terms}}",
+			"bannedTermsEntries": "{{entries}}; {{entry}}"
+		}
+	}
+}

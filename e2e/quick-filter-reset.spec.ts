@@ -25,17 +25,17 @@ async function openInbox(page: Page): Promise<void> {
 const AGE: QuickFilter = {
 	pill: "Age",
 	title: "Age",
-	switchLabel: "Filter by age",
+	switchLabel: "Filter by Age",
 };
 const DISTANCE: QuickFilter = {
 	pill: "Distance",
 	title: "Distance",
-	switchLabel: "Filter by distance",
+	switchLabel: "Filter by Distance",
 };
 const POSITION: QuickFilter = {
 	pill: "Position",
-	title: "Positions",
-	switchLabel: "Filter by position",
+	title: "Position",
+	switchLabel: "Filter by Position",
 };
 
 const SCREENS = [
@@ -51,7 +51,10 @@ async function resetUntouchedFilter({
 	quickFilter: QuickFilter;
 }): Promise<void> {
 	const drawer = page.getByRole("dialog", { name: title });
-	const filterSwitch = drawer.getByRole("switch", { name: switchLabel });
+	const filterSwitch = drawer.getByRole("switch", {
+		name: switchLabel,
+		exact: true,
+	});
 	const reset = drawer.getByRole("button", { name: "Reset", exact: true });
 
 	await page.getByRole("button", { name: pill, exact: true }).click();

@@ -4,16 +4,13 @@ use image::{ImageFormat, ImageReader};
 use serde::Deserialize;
 
 use crate::api::rest::{encode_response, RawResponse};
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 use crate::photo;
 use crate::state::AppState;
 use crate::upload::file::{
 	open_photo, profile_of, signed_in_as, unless_session_changes, Race,
 };
 use crate::upload::picked::PickedFile;
-
-const NOT_A_PHOTO: &str = "Only photos can be sent here";
-const UNREADABLE_SIZE: &str = "That photo's size can't be read";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,7 +27,7 @@ fn with_crop(
 	let (width, height) =
 		ImageReader::with_format(Cursor::new(jpeg), ImageFormat::Jpeg)
 			.into_dimensions()
-			.map_err(|_| AppError::Media(UNREADABLE_SIZE.to_owned()))?;
+			.map_err(|_| MediaError::PhotoSizeUnreadable)?;
 	let side = width.min(height);
 	let left = (width - side) / 2;
 	let top = (height - side) / 2;
@@ -67,7 +64,7 @@ pub async fn upload_media(
 		return Err(AppError::NotSignedIn);
 	};
 	let Some(bytes) = open_photo(app.clone(), file).await? else {
-		return Err(AppError::Media(NOT_A_PHOTO.to_owned()));
+		return Err(MediaError::NotAPhoto.into());
 	};
 	let photo = photo::normalize(&app, bytes, photo::JPEG.to_owned()).await?;
 	let path = match crop {
@@ -194,7 +191,10 @@ mod tests {
 			let refused = with_crop("/v4/media/upload", b"not a jpeg", crop)
 				.expect_err("refused");
 
-			assert!(matches!(refused, AppError::Media(_)));
+			assert!(matches!(
+				refused,
+				AppError::Media(MediaError::PhotoSizeUnreadable)
+			));
 		}
 	}
 }

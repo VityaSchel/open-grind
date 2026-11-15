@@ -298,11 +298,16 @@ export async function openGrid(page: Page): Promise<void> {
 	await ensureGridLocation(page);
 }
 
+export async function commandCenterShortcut(page: Page): Promise<string> {
+	const platform = await page.evaluate(() => navigator.platform);
+	return /Mac|iPod|iPhone|iPad/.test(platform) ? "Meta+k" : "Control+k";
+}
+
 export async function runPaletteCommand(
 	page: Page,
 	command: string,
 ): Promise<void> {
-	await page.keyboard.press("ControlOrMeta+k");
+	await page.keyboard.press(await commandCenterShortcut(page));
 	const palette = page.getByRole("combobox");
 	await palette.waitFor();
 	await palette.fill(command);
@@ -328,11 +333,16 @@ export async function installTauriShim(
 		}
 
 		const files = new Map<string, Uint8Array>();
+		let menuResources = 0;
 
 		const invoke = (cmd: string, args?: unknown): unknown => {
 			const { file = "", content = "" } = (args ?? {}) as AppDataArgs;
 
 			if (cmd.startsWith("plugin:event|")) return null;
+			if (cmd === "plugin:menu|new") {
+				menuResources += 1;
+				return [menuResources, `menu-${menuResources}`];
+			}
 			if (cmd === "read_app_data") {
 				return files.get(file)?.slice().buffer ?? null;
 			}
@@ -404,6 +414,10 @@ export class TrustedTouch {
 
 	end() {
 		return this.send("touchEnd", []);
+	}
+
+	cancel() {
+		return this.send("touchCancel", []);
 	}
 
 	async drag(

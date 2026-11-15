@@ -5,6 +5,7 @@
 	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
 	import LocationChange from "#lib/components/location-chooser/LocationChange.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { TOP_SLOP_PX } from "#lib/util/scroll.ts";
 	import RightNowPostControls from "./post/RightNowPostControls.svelte";
@@ -82,7 +83,7 @@
 	</div>
 	<ScrollToTopButton
 		{container}
-		text={feed.hasNewPosts ? "New posts" : undefined}
+		text={feed.hasNewPosts ? t("browse.rightNow.feed.newPosts") : undefined}
 		onjump={feed.hasNewPosts ? () => void feed.refresh() : undefined}
 		bind:labeled={labeledChip}
 		class="bottom-nav-clear"

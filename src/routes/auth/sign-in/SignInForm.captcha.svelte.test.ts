@@ -114,7 +114,7 @@ describe("SignInForm CAPTCHA retry", () => {
 				"recaptcha_first_party_enabled",
 			);
 			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-				"Invalid email or password",
+				"Incorrect email or password",
 			);
 			expect(gotoMock).not.toHaveBeenCalled();
 			expectReady();
@@ -148,13 +148,13 @@ describe("SignInForm CAPTCHA retry", () => {
 	it.each([
 		[
 			"addonDisabled",
-			"Enable the Open Grind reCAPTCHA helper to sign in to this account.",
+			"The Open Grind reCAPTCHA helper is turned off. Turn it on in Android settings, then try again.",
 		],
 		[
 			"addonUntrusted",
-			"The installed reCAPTCHA helper isn't the official Open Grind build.",
+			"The installed Open Grind reCAPTCHA helper isn’t an official build.",
 		],
-		["failed", "Captcha verification failed. Try again."],
+		["failed", "Couldn’t complete reCAPTCHA verification. Try again."],
 		["cancelled", null],
 	])(
 		"handles the CAPTCHA helper's %s result without retrying",
@@ -193,7 +193,7 @@ describe("SignInForm CAPTCHA retry", () => {
 		],
 		[
 			"grindrMissing",
-			"The reCAPTCHA helper needs the official Grindr app installed to verify this sign-in.",
+			"The Open Grind reCAPTCHA helper needs the official Grindr app installed to verify this sign-in.",
 		],
 	])(
 		"points the CAPTCHA helper's %s result to the helper guide",
@@ -282,18 +282,18 @@ describe("SignInForm CAPTCHA retry", () => {
 	it.each([
 		[
 			invalidCredentials,
-			"Wrong email or password, or Grindr rejected the reCAPTCHA helper's check.",
+			"Wrong email or password, or Grindr rejected the reCAPTCHA helper’s check.",
 		],
 		[
 			{ kind: "Unauthorized" },
-			"Wrong email or password, or Grindr rejected the reCAPTCHA helper's check.",
+			"Wrong email or password, or Grindr rejected the reCAPTCHA helper’s check.",
 		],
 		[
 			{
 				kind: "Api",
 				message: { code: 18, message: "Invalid captcha token" },
 			},
-			"Grindr rejected the reCAPTCHA helper's check.",
+			"Grindr rejected the reCAPTCHA helper’s check.",
 		],
 	])(
 		"explains a refused CAPTCHA retry exactly once (%j)",

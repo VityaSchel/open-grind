@@ -3,6 +3,7 @@ import type PhotoSwipeLightbox from "photoswipe/lightbox";
 import {
 	applyPhotoSwipeBackGesture,
 	applyPhotoSwipeErrorUi,
+	applyPhotoSwipeLabels,
 	applyPhotoSwipeThumbDimensions,
 	applyPhotoSwipeViewportSync,
 	CLOSE_SVG,
@@ -67,6 +68,7 @@ function configure({
 	croppedThumbs: boolean;
 }) {
 	applyPhotoSwipeErrorUi(lightbox);
+	applyPhotoSwipeLabels(lightbox);
 	if (croppedThumbs) {
 		sizeFromFullImages(lightbox);
 		applyPhotoSwipeRoundedCrops(lightbox);

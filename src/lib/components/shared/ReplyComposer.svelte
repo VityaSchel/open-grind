@@ -2,6 +2,7 @@
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
 	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 	import { softKeyboardVisibility } from "#lib/platform/android-native-bridge.ts";
 	import MessageTextInput from "./MessageTextInput.svelte";
 	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
@@ -12,7 +13,7 @@
 		allowReaction,
 		onsubmit,
 	}: {
-		label: string;
+		label: PlainMessageKey;
 		allowReply: boolean;
 		allowReaction: boolean;
 		onsubmit: (text: string) => void;
@@ -63,8 +64,8 @@
 			<MessageTextInput
 				{...interactions}
 				padding="pr-12 pl-3"
-				aria-label={label}
-				placeholder="Write a reply..."
+				aria-label={t(label)}
+				placeholder={t("media.lightbox.reply.placeholder")}
 				disabled={!available}
 				bind:value={text}
 			/>
@@ -76,7 +77,9 @@
 				"right-1 bottom-1 size-9 rounded-full! p-0",
 				{ "disabled:opacity-100": react && reacted },
 			]}
-			aria-label={react ? "React to album item with fire" : "Send reply"}
+			aria-label={react
+				? t("media.lightbox.reply.a11y.react")
+				: t("media.lightbox.reply.a11y.send")}
 			disabled={!available || (react ? reacted : text.trim() === "")}
 			onpointerdown={(event) => {
 				if (softKeyboardVisibility() !== false) event.preventDefault();

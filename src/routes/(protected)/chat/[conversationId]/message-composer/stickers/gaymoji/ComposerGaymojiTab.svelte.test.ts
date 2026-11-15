@@ -160,7 +160,7 @@ describe("composer Gaymoji tab", () => {
 		await settle();
 
 		const strip = screen.getByRole("navigation", {
-			name: "Gaymoji categories",
+			name: "Gaymoji Categories",
 		});
 		expect(
 			[...strip.querySelectorAll("button")].map((button) =>
@@ -177,6 +177,31 @@ describe("composer Gaymoji tab", () => {
 				.getByRole("region", { name: "Mood" })
 				.querySelectorAll('[data-slot="sticker-tile"]'),
 		).toHaveLength(6);
+	});
+
+	it("keeps a title made from an unknown category out of page translation", async () => {
+		api.getGaymoji.mockResolvedValue([
+			{ name: "body", items: shortItems.slice(0, 6) },
+			{ name: "bears+otters_2024", items: shortItems.slice(6) },
+		]);
+		mount({ active: true });
+		await settle();
+
+		const translateOf = (element: HTMLElement) =>
+			element.getAttribute("translate");
+		const unknown = "Bears & otters 2024";
+		expect(
+			translateOf(screen.getByRole("heading", { name: unknown })),
+		).toBe("no");
+		expect(translateOf(screen.getByRole("button", { name: unknown }))).toBe(
+			"no",
+		);
+		expect(translateOf(screen.getByRole("heading", { name: "Body" }))).toBe(
+			null,
+		);
+		expect(translateOf(screen.getByRole("button", { name: "Body" }))).toBe(
+			null,
+		);
 	});
 
 	it("presses only the Gaymoji its menu has picked", async () => {
@@ -204,15 +229,17 @@ describe("composer Gaymoji tab", () => {
 		const { container } = mount({ active: true });
 		await settle();
 
-		expect(screen.getByText("Couldn't load Gaymoji")).toBeTruthy();
+		expect(screen.getByText("Couldn’t load Gaymoji")).toBeTruthy();
 		expect(container.textContent).not.toContain("Grindr");
 		expect(tiles()).toHaveLength(0);
 
-		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 		await settle();
 
 		expect(api.getGaymoji).toHaveBeenCalledTimes(2);
-		expect(screen.queryByText("Couldn't load Gaymoji")).toBeNull();
+		expect(screen.queryByText("Couldn’t load Gaymoji")).toBeNull();
 		expect(tiles()).toHaveLength(shortItems.length);
 	});
 

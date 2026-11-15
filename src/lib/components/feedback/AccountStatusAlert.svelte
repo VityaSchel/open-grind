@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { listen } from "@tauri-apps/api/event";
-	import { format, isSameYear } from "date-fns";
+	import { isSameYear } from "date-fns";
 	import ArrowUpRightIcon from "phosphor-svelte/lib/ArrowUpRightIcon";
 	import { onMount } from "svelte";
-	import { toast } from "svelte-sonner";
 
 	import {
 		accountStatusState,
@@ -12,6 +11,7 @@
 		showAccountRestriction,
 		showAccountStatus,
 	} from "#lib/api/account-status-state.svelte.ts";
+	import { copyToClipboard } from "#lib/api/error-copy.ts";
 	import {
 		asAccountStatusError,
 		banInfoSchema,
@@ -23,6 +23,8 @@
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { formatClockTime, formatDate } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { updatesSelfManaged } from "#lib/updates/capability.svelte.ts";
 	import { checkForUpdatesNow } from "#lib/updates/update-checks.ts";
@@ -48,23 +50,60 @@
 
 	const DOWNLOAD_PAGE_URL = "https://opengrind.org/guides/download";
 
-	const appeal: ExternalAction = { label: "Appeal", href: BAN_APPEAL_URL };
-
 	const status = $derived(accountStatusState.status);
 
 	const signsOut = $derived(
 		status?.kind === "banned" || status?.kind === "restriction",
 	);
 
-	function withReason(sentence: string, reason: string | null) {
-		return reason ? `${sentence} (${reason})` : sentence;
+	function appeal(): ExternalAction {
+		return {
+			label: t("feedback.accountStatus.appeal"),
+			href: BAN_APPEAL_URL,
+		};
 	}
 
-	function formatEnd(endsAt: number) {
-		return format(
-			endsAt,
-			isSameYear(endsAt, now()) ? "MMM d, H:mm" : "MMM d, yyyy, H:mm",
-		);
+	function bannedDescription(subReason: string | null | undefined) {
+		const reason = banSubReasonLabel(subReason);
+		return reason
+			? t("feedback.accountStatus.banned.descriptionWithReason", {
+					reason,
+				})
+			: t("feedback.accountStatus.banned.description");
+	}
+
+	function suspensionEnd(endsAt: number) {
+		return {
+			date: formatDate({
+				date: endsAt,
+				preset: isSameYear(endsAt, now()) ? "monthDay" : "monthDayYear",
+			}),
+			time: formatClockTime(endsAt),
+		};
+	}
+
+	function suspendedDescription({
+		subReason,
+		endsAt,
+	}: {
+		subReason?: string | null;
+		endsAt?: number | null;
+	}) {
+		const reason = banSubReasonLabel(subReason);
+		if (!endsAt) {
+			return reason
+				? t("feedback.accountStatus.suspended.descriptionWithReason", {
+						reason,
+					})
+				: t("feedback.accountStatus.suspended.description");
+		}
+		const end = suspensionEnd(endsAt);
+		return reason
+			? t("feedback.accountStatus.suspended.descriptionWithReasonUntil", {
+					reason,
+					...end,
+				})
+			: t("feedback.accountStatus.suspended.descriptionUntil", end);
 	}
 
 	const content = $derived.by((): Content => {
@@ -72,37 +111,42 @@
 			const { info } = status;
 			if (info.kind === "network") {
 				return {
-					title: "Network blocked",
-					description:
-						"This network was blocked by Grindr. Switch it or turn off your VPN, then sign in again.",
-					closeLabel: "OK",
+					title: t("feedback.accountStatus.networkBlocked.title"),
+					description: t(
+						"feedback.accountStatus.networkBlocked.description",
+					),
+					closeLabel: t("feedback.accountStatus.ok"),
 				};
 			}
 			if (info.kind === "device") {
 				return {
-					title: "Security check failed",
-					description:
-						"Couldn't pass Grindr security check. Please sign out and try again.",
+					title: t("feedback.accountStatus.securityCheck.title"),
+					description: t(
+						"feedback.accountStatus.securityCheck.description",
+					),
 					details: info,
 				};
 			}
 			if (info.kind === "underage" && info.code === 35) {
 				return {
-					title: "Age restricted",
-					description:
-						"Grindr requires your account to complete an age verification check. Please complete it in the official app, then sign in again.",
+					title: t("feedback.accountStatus.ageRestricted.title"),
+					description: t(
+						"feedback.accountStatus.ageRestricted.description",
+					),
 					externalAction: {
-						label: "Verify age",
+						label: t(
+							"feedback.accountStatus.ageRestricted.verifyAge",
+						),
 						href: grindrHelpUrl("ageVerification"),
 					},
 				};
 			}
 			return {
-				title: "Account banned",
-				description: `${withReason("Grindr banned this account", banSubReasonLabel(info.subReason))}.`,
+				title: t("feedback.accountStatus.banned.title"),
+				description: bannedDescription(info.subReason),
 				learnMoreHref: grindrHelpUrl("bannedProfiles"),
 				externalAction: banOffersAppeal(info.subReason)
-					? appeal
+					? appeal()
 					: undefined,
 				details: info,
 			};
@@ -111,55 +155,52 @@
 			const { restriction } = status;
 			if (restriction.kind === "ageVerification") {
 				return {
-					title: "Age verification required",
-					description:
-						"Grindr requires you to verify your age before continuing. Complete it in the official Grindr app, then sign in again. Open Grind does not bypass age verification.",
+					title: t("feedback.accountStatus.ageVerification.title"),
+					description: t(
+						"feedback.accountStatus.ageVerification.description",
+					),
 				};
 			}
 			if (restriction.kind === "timedBan") {
-				const sentence = withReason(
-					"Grindr suspended this account",
-					banSubReasonLabel(restriction.subReason),
-				);
 				return {
-					title: "Account suspended",
-					description: restriction.endsAt
-						? `${sentence} until ${formatEnd(restriction.endsAt)}.`
-						: `${sentence}.`,
+					title: t("feedback.accountStatus.suspended.title"),
+					description: suspendedDescription(restriction),
 					externalAction: timedBanOffersAppeal(restriction.subReason)
-						? appeal
+						? appeal()
 						: undefined,
 				};
 			}
 			return {
-				title: "Account restricted",
-				description:
-					"Your account is currently restricted and can't be used. Check the official Grindr app for details.",
+				title: t("feedback.accountStatus.restricted.title"),
+				description: t("feedback.accountStatus.restricted.description"),
 			};
 		}
 		if (status?.kind === "unsupportedVersion") {
 			return {
-				title: "Update Open Grind",
-				description:
-					"Grindr no longer supports this version of Open Grind.",
+				title: t("feedback.accountStatus.unsupportedVersion.title"),
+				description: t(
+					"feedback.accountStatus.unsupportedVersion.description",
+				),
 				details: status.error,
 				checksForUpdates: true,
 			};
 		}
 		if (status?.kind === "phoneVerificationRequired") {
 			return {
-				title: "Phone verification required",
-				description:
-					"Verify your phone number in the official Grindr app, then sign in again.",
+				title: t("feedback.accountStatus.phoneVerification.title"),
+				description: t(
+					"feedback.accountStatus.phoneVerification.description",
+				),
 				details: status.error,
-				closeLabel: "OK",
+				closeLabel: t("feedback.accountStatus.ok"),
 			};
 		}
 		return { title: "", description: "" };
 	});
 
 	const closeLabel = $derived(
-		content.closeLabel ?? (signsOut ? "Sign out" : undefined),
+		content.closeLabel ??
+			(signsOut ? t("common.actions.signOut") : undefined),
 	);
 
 	onMount(() => {
@@ -204,15 +245,10 @@
 		},
 	});
 
-	async function copyDetails() {
-		try {
-			const clipboard =
-				await import("@tauri-apps/plugin-clipboard-manager");
-			await clipboard.writeText(JSON.stringify(content.details, null, 2));
-			toast.success("Details copied to clipboard");
-		} catch (error) {
-			console.error(error);
-		}
+	function copyDetails() {
+		void copyToClipboard({
+			text: JSON.stringify(content.details, null, 2),
+		});
 	}
 
 	async function checkForUpdates() {
@@ -260,7 +296,7 @@
 				{content.description}
 				{#if content.learnMoreHref}
 					<Link href={content.learnMoreHref} class="underline">
-						Learn more
+						{t("common.actions.learnMore")}
 					</Link>
 				{/if}
 			</AlertDialog.Description>
@@ -269,7 +305,7 @@
 			<fieldset disabled={running !== false} class="contents">
 				{#if content.details !== undefined}
 					<Button variant="ghost" onclick={copyDetails}>
-						Copy details
+						{t("feedback.accountStatus.copyDetails")}
 					</Button>
 				{/if}
 				{#if content.externalAction}
@@ -290,11 +326,16 @@
 							{#if running === "checkForUpdates"}
 								<Spinner aria-hidden="true" />
 							{/if}
-							Check for updates
+							{t(
+								"feedback.accountStatus.unsupportedVersion.checkForUpdates",
+							)}
 						</Button>
 					{:else}
 						<Link href={DOWNLOAD_PAGE_URL} class={buttonVariants()}>
-							Check for updates <ArrowUpRightIcon />
+							{t(
+								"feedback.accountStatus.unsupportedVersion.checkForUpdates",
+							)}
+							<ArrowUpRightIcon />
 						</Link>
 					{/if}
 				{/if}

@@ -153,6 +153,19 @@ export class PageStackState {
 		return true;
 	}
 
+	forgetSnapshots(): void {
+		this.#ancestors = [];
+		if (this.tracking || this.ghost === null) return;
+		this.#settle.stop();
+		if (this.#backOwed) {
+			this.#settle.track(1);
+			this.#payBack();
+			return;
+		}
+		this.#generation.next();
+		this.#rest();
+	}
+
 	trackSwipeBack(progress: number): void {
 		if (!this.tracking) return;
 		this.#settle.track(progress);

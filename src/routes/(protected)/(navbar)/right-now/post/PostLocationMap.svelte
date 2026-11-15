@@ -10,6 +10,7 @@
 		OSM_TILE_URL,
 	} from "#lib/components/location-chooser/constants.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { accuracyMapView } from "./accuracy-map";
 
 	let {
@@ -93,7 +94,7 @@
 				href={OSM_COPYRIGHT_URL}
 				target="_blank"
 				rel="noreferrer nofollow noopener"
-				>OpenStreetMap contributors</Link
+				>{t("browse.locationChooser.map.attribution")}</Link
 			> &nbsp;
 		</div>
 	</div>

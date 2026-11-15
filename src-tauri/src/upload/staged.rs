@@ -7,14 +7,13 @@ use tauri::{AppHandle, Manager, Runtime};
 use uuid::Uuid;
 
 use super::media_error;
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 use crate::media::read_photo;
 use crate::photo;
 
 const DIRECTORY: &str = "staged-media";
 
 const NOT_STAGED: &str = "That file was never staged by this app";
-const UNREADABLE_PHOTO: &str = "That photo couldn't be loaded";
 
 pub struct StagedMedia(PathBuf);
 
@@ -104,9 +103,11 @@ pub async fn append_staged_media(
 	id: String,
 	chunk: String,
 ) -> Result<(), AppError> {
-	let bytes = STANDARD
-		.decode(chunk)
-		.map_err(|error| AppError::Media(error.to_string()))?;
+	let bytes = STANDARD.decode(chunk).map_err(|error| {
+		AppError::Media(MediaError::Io {
+			detail: error.to_string(),
+		})
+	})?;
 	photo::off_thread(move || StagedMedia::of(&app)?.append(&id, &bytes))
 		.await?
 		.map_err(media_error)
@@ -129,7 +130,7 @@ pub async fn stage_proxied_photo(
 ) -> Result<String, AppError> {
 	let bytes = read_photo(&app, &url)
 		.await
-		.ok_or_else(|| AppError::Media(UNREADABLE_PHOTO.to_owned()))?;
+		.ok_or(MediaError::PhotoUnloadable)?;
 	photo::off_thread(move || StagedMedia::of(&app)?.create_with(&bytes))
 		.await?
 		.map_err(media_error)

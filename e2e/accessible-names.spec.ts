@@ -74,13 +74,13 @@ test.describe("every control has an accessible name", () => {
 		await page.keyboard.press("Escape");
 
 		await page.getByRole("button", { name: "Age", exact: true }).click();
-		await page.getByRole("slider", { name: "Minimum age" }).waitFor();
+		await page.getByRole("slider", { name: "Minimum Age" }).waitFor();
 		await expectEveryControlNamed(page, "age filter");
 		await page.keyboard.press("Escape");
 
 		await page.locator('[aria-label="Change location"]').click();
 		await page
-			.getByPlaceholder("Search places...")
+			.getByPlaceholder("Search places…")
 			.waitFor({ timeout: 180_000 });
 		await page
 			.getByRole("button", { name: "Selected location" })

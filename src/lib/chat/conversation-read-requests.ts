@@ -1,5 +1,6 @@
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { markConversationAsRead } from "#lib/api/messaging/conversations.ts";
+import { t } from "#lib/i18n/index.ts";
 import type { Conversation } from "#lib/model/messaging/conversations.ts";
 
 type Restore = () => void;
@@ -62,7 +63,7 @@ export class ConversationReadRequests {
 				} catch (error) {
 					console.error(error);
 					showErrorToast({
-						label: "Failed to mark conversation as read",
+						label: t("chat.conversations.errors.markReadFailed"),
 						error,
 					});
 					for (const restore of [

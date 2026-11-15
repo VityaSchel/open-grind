@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
 use crate::api::oauth::{
-	is_allowed_target, new_nonce, without_secrets, CANCELED,
+	delivered, is_allowed_target, new_nonce, without_secrets, CANCELED,
 };
 use crate::error::AppError;
 
@@ -96,7 +96,7 @@ async fn run_flow(
 	#[allow(unused_mut)]
 	let mut builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
-			.title("Sign in with Google")
+			.title("Sign In with Google")
 			.inner_size(window_width, window_height)
 			.user_agent(USER_AGENT)
 			.initialization_script(init_script(&nonce))
@@ -140,9 +140,7 @@ async fn run_flow(
 		}
 	});
 
-	let result = rx.await.map_err(|_| {
-		AppError::Auth("sign-in flow ended unexpectedly".into())
-	})?;
+	let result = delivered(rx).await;
 
 	let _ = window.clear_all_browsing_data();
 	let _ = window.close();

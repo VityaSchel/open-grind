@@ -13,6 +13,7 @@ import type { RightNowStatus } from "#lib/model/right-now/index.ts";
 import { DEMO_ID_START, demoMeProfileId, MINUTE, NOW } from "../config";
 import { num } from "../routing";
 import { demoFavoriteOf } from "./favorites";
+import { neutralText } from "./neutral";
 import {
 	type DemoSeed,
 	distanceForId,
@@ -120,7 +121,7 @@ function feedPost({
 	const media = postMedia({ rng, index });
 	const text =
 		media.length === 0 || chance({ rng, probability: 0.6 })
-			? pick({ rng, items: POST_TEXTS })
+			? neutralText(pick({ rng, items: POST_TEXTS }))
 			: undefined;
 	const ageAtStart = Math.floor(rng() * POST_WINDOW);
 	const renewals = Math.max(

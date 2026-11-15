@@ -7,12 +7,14 @@ import { ApiError, type ApiErrorKind } from "#lib/api/api-error.ts";
 import {
 	asAppError,
 	blockedKindOf,
+	diagnosticMessage,
 	markRequestBlocked,
 } from "#lib/api/methods.ts";
 import { redactPath } from "#lib/api/redact/text.ts";
 import { parseJson } from "#lib/api/redact/value.ts";
 import { signOutIfSessionLost } from "#lib/api/session-lost.ts";
 import { demoRoute } from "#lib/demo/index.ts";
+import { neverSettles, sceneRestFault } from "#lib/demo/screenshot-scene.ts";
 import { deprecatedClientVersionErrorSchema } from "#lib/model/authentication.ts";
 import { schemaName } from "#lib/model/schema-names.ts";
 import { fromBase64, toBase64 } from "#lib/util/base64.ts";
@@ -123,24 +125,32 @@ function decodeRestResponse({
 
 type RestResponse = ReturnType<typeof buildRestResponse>;
 
+type InvokeError = (options: {
+	error: unknown;
+	requestInfo: RequestInfo;
+}) => ApiError;
+
 async function respondFromDemoOrSend({
 	requestInfo,
 	ErrorClass,
+	invokeError,
 	send,
 }: {
 	requestInfo: RequestInfo;
 	ErrorClass?: ApiErrorClass;
+	invokeError: InvokeError;
 	send: () => Promise<RestResponse>;
 }): Promise<RestResponse> {
 	if (!__DEMO__) return await send();
+	const faulted = await sceneFault({ requestInfo, ErrorClass, invokeError });
+	if (faulted !== undefined) return faulted;
 	const { path, method } = requestInfo;
 	const { status, body } = demoRoute({
 		path,
 		method,
 		body: requestInfo.body,
 	});
-	const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
-	return buildRestResponse({ status, responseBody, requestInfo, ErrorClass });
+	return demoRestResponse({ status, body, requestInfo, ErrorClass });
 }
 
 function restInvokeError({
@@ -172,9 +182,7 @@ function restInvokeError({
 		signOutIfSessionLost().catch((error) => console.error(error));
 	}
 	return new ApiError({
-		message:
-			appError?.prettyMessage ??
-			(error instanceof Error ? error.message : String(error)),
+		message: diagnosticMessage(error),
 		request: requestInfo,
 		response: null,
 		kind: appError?.kind ?? null,
@@ -239,6 +247,46 @@ export async function uploadFileRest(
 	}
 }
 
+function demoRestResponse({
+	status,
+	body,
+	requestInfo,
+	ErrorClass,
+}: {
+	status: number;
+	body?: unknown;
+	requestInfo: RequestInfo;
+	ErrorClass?: ApiErrorClass;
+}) {
+	const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
+	return buildRestResponse({ status, responseBody, requestInfo, ErrorClass });
+}
+
+async function sceneFault({
+	requestInfo,
+	ErrorClass,
+	invokeError,
+}: {
+	requestInfo: RequestInfo;
+	ErrorClass?: ApiErrorClass;
+	invokeError: InvokeError;
+}) {
+	const { path, method } = requestInfo;
+	const fault = __SCREENSHOTS__
+		? sceneRestFault({ path, method })
+		: undefined;
+	if (fault === undefined) return undefined;
+	if ("pending" in fault) return neverSettles();
+	if ("error" in fault) {
+		throw invokeError({ error: fault.error, requestInfo });
+	}
+	return demoRestResponse({ ...fault, requestInfo, ErrorClass });
+}
+
+export async function sceneFaultResponse(requestInfo: RequestInfo) {
+	return await sceneFault({ requestInfo, invokeError: restInvokeError });
+}
+
 export async function fetchRest(
 	path: string,
 	options: {
@@ -251,6 +299,7 @@ export async function fetchRest(
 	const requestInfo = { method, path, body: options.body };
 	const response = await respondFromDemoOrSend({
 		requestInfo,
+		invokeError: restInvokeError,
 		send: () =>
 			sendRestRequest({
 				requestInfo,
@@ -297,11 +346,13 @@ async function sendRestRequest({
 }
 
 const externalErrorMessages: Partial<Record<ApiErrorKind, string>> = {
-	Connect: "Couldn't connect. Check your internet connection and try again.",
+	Connect: "Failed to connect to the server",
 	NetworkBlocked:
-		"Something blocked the request before it reached the server",
-	RequestBlocked: "The server blocked the request",
-	RateLimited: "Too many requests, try again later",
+		"Failed to reach the server because something blocked the request",
+	RequestBlocked:
+		"Failed to get a response because the server blocked the request",
+	RateLimited:
+		"Failed to get a response because the server rate-limited the request",
 };
 
 function externalInvokeError({
@@ -316,8 +367,7 @@ function externalInvokeError({
 	return new ExternalRequestError({
 		message:
 			(appError && externalErrorMessages[appError.kind]) ??
-			appError?.prettyMessage ??
-			(error instanceof Error ? error.message : String(error)),
+			diagnosticMessage(error),
 		request: requestInfo,
 		response: null,
 		kind: appError?.kind ?? null,
@@ -364,6 +414,7 @@ export async function fetchExternal({
 	return await respondFromDemoOrSend({
 		requestInfo,
 		ErrorClass: ExternalRequestError,
+		invokeError: externalInvokeError,
 		send: () => sendExternalRequest({ url, range, requestInfo }),
 	});
 }

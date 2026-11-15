@@ -4,10 +4,11 @@ import { signedInProfileId } from "#lib/api/current-session.ts";
 import { uploadRefusalMessage } from "#lib/api/methods.ts";
 import { invokeRest, uploadFileRest } from "#lib/api/transport.ts";
 import { demoUploadChatMedia } from "#lib/demo/index.ts";
+import { t } from "#lib/i18n/index.ts";
 import { mediaUrlSchema } from "#lib/model/media.ts";
 import {
 	CHAT_MEDIA_MAX_BYTES,
-	CHAT_MEDIA_MAX_LABEL,
+	chatMediaMaxLabel,
 } from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	demoPickedFile,
@@ -37,10 +38,12 @@ export class UnsupportedChatMediaError extends Error {
 }
 
 export function chatMediaFailureMessage(error: unknown): string {
-	if (error instanceof UnsupportedChatMediaError) return error.message;
+	if (error instanceof UnsupportedChatMediaError) {
+		return t("common.media.errors.unsupportedFile");
+	}
 	return (
-		uploadRefusalMessage({ error, limitLabel: CHAT_MEDIA_MAX_LABEL }) ??
-		"Couldn't upload photo or video"
+		uploadRefusalMessage({ error, limitLabel: chatMediaMaxLabel() }) ??
+		t("chat.composer.attachments.media.errors.uploadFailed")
 	);
 }
 

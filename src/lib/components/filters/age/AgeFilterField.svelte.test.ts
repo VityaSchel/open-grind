@@ -3,12 +3,14 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import AgeFilterField from "./AgeFilterField.svelte";
 
 const TRACK_WIDTH = 1000;
 
-const minimumAge = () => screen.getByRole("slider", { name: "Minimum age" });
-const maximumAge = () => screen.getByRole("slider", { name: "Maximum age" });
+const minimumAge = () => screen.getByRole("slider", { name: "Minimum Age" });
+const maximumAge = () => screen.getByRole("slider", { name: "Maximum Age" });
 
 function renderField(value: number[]) {
 	const { container } = render(AgeFilterField, {
@@ -40,9 +42,27 @@ function pointer({
 	);
 }
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("AgeFilterField", () => {
+	it("names the field and both thumbs in the active locale", async () => {
+		renderField([25, 60]);
+		const field = screen.getByRole("checkbox", { name: "Age" });
+		const thumbs = [minimumAge(), maximumAge()];
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByRole("checkbox", { name: PSEUDO_MESSAGE })).toBe(
+			field,
+		);
+		expect(screen.getAllByRole("slider", { name: PSEUDO_MESSAGE })).toEqual(
+			thumbs,
+		);
+	});
+
 	it("announces ages, not track positions", () => {
 		renderField([25, 60]);
 
@@ -61,11 +81,11 @@ describe("AgeFilterField", () => {
 
 		await fireEvent.keyDown(minimumAge(), { key: "ArrowRight" });
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("26");
-		expect(screen.getByText("26 - 60")).toBeTruthy();
+		expect(screen.getByText("26–60")).toBeTruthy();
 
 		await fireEvent.keyDown(maximumAge(), { key: "ArrowLeft" });
 		expect(maximumAge().getAttribute("aria-valuenow")).toBe("59");
-		expect(screen.getByText("26 - 59")).toBeTruthy();
+		expect(screen.getByText("26–59")).toBeTruthy();
 	});
 
 	it("reaches the youngest and oldest ages with Home and End", async () => {
@@ -76,7 +96,7 @@ describe("AgeFilterField", () => {
 
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("18");
 		expect(maximumAge().getAttribute("aria-valuenow")).toBe("99");
-		expect(screen.getByText("18 years & over")).toBeTruthy();
+		expect(screen.getByText("18 years and over")).toBeTruthy();
 	});
 
 	it("gives the common ages most of the track when pressed and dragged", async () => {
@@ -84,7 +104,7 @@ describe("AgeFilterField", () => {
 
 		await pointer({ target: track, type: "pointerdown", clientX: 500 });
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("40");
-		expect(screen.getByText("40 years & over")).toBeTruthy();
+		expect(screen.getByText("40 years and over")).toBeTruthy();
 
 		await pointer({ target: track, type: "pointermove", clientX: 250 });
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("29");
@@ -93,6 +113,6 @@ describe("AgeFilterField", () => {
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("74");
 		await pointer({ target: track, type: "pointerup", clientX: 900 });
 
-		expect(screen.getByText("74 years & over")).toBeTruthy();
+		expect(screen.getByText("74 years and over")).toBeTruthy();
 	});
 });

@@ -33,7 +33,7 @@ async function openProfileFromGrid(page: Page): Promise<RegExp> {
 async function openProfileMenu(page: Page) {
 	await activeProfilePane(page).getByLabel("Profile menu").click();
 	await expect(
-		menu(page).getByRole("menuitem", { name: "Report profile" }),
+		menu(page).getByRole("menuitem", { name: "Report user" }),
 	).toBeVisible();
 }
 

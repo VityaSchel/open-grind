@@ -97,13 +97,7 @@ describe("the update capability probe", () => {
 
 		await hydrateUpdateCapability();
 
-		const { unsupportedText } = await import("./error-copy");
-		expect(updatesUnsupportedReason()).toBe(
-			unsupportedText({
-				reason: "locationNotWritable",
-				detail: { path: "/opt/open-grind.AppImage" },
-			}),
-		);
+		expect(updatesUnsupportedReason()).toBe("locationNotWritable");
 	});
 
 	it("explains a probe that could not tell whether updates apply", async () => {
@@ -113,10 +107,7 @@ describe("the update capability probe", () => {
 
 		await hydrateUpdateCapability();
 
-		const { unsupportedText } = await import("./error-copy");
-		expect(updatesUnsupportedReason()).toBe(
-			unsupportedText({ reason: "undetermined" }),
-		);
+		expect(updatesUnsupportedReason()).toBe("undetermined");
 	});
 
 	it("says nothing where updates could never apply, such as the web demo", async () => {

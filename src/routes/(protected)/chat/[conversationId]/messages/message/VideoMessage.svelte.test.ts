@@ -291,7 +291,7 @@ describe("video message on Google Play", () => {
 			getByRole("link", { name: /^Expiring video 18\+/ }).getAttribute(
 				"href",
 			),
-		).toBe("/settings/app#show-mature-content");
+		).toBe("/settings/app/display#show-mature-content");
 		expect(messagesApi.getSingleMessage).not.toHaveBeenCalled();
 	});
 

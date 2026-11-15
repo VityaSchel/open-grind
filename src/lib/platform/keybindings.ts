@@ -1,6 +1,19 @@
 import { parseKeybinding } from "tinykeys";
 
-export function modifierKeyLabel(): string {
-	const [press] = parseKeybinding("$mod+k");
-	return press?.[0].includes("Meta") ? "⌘" : "Ctrl";
+export type Shortcut = {
+	readonly modifier: "meta" | "control";
+	readonly key: string;
+};
+
+export const commandCenterKeybinding = "$mod+k";
+
+export function parseShortcut(keybinding: string): Shortcut {
+	const [press] = parseKeybinding(keybinding);
+	const [modifiers = [], , key = ""] = press ?? [];
+	return {
+		modifier: modifiers.some((modifier) => modifier === "Meta")
+			? "meta"
+			: "control",
+		key: String(key).toUpperCase(),
+	};
 }

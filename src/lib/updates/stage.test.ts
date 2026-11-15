@@ -35,23 +35,23 @@ function bodies(subject: CopySubject) {
 describe("the stage toast title", () => {
 	it("says update while an installed add-on updates", () => {
 		expect(titles({ component: "google-oauth", kind: "update" })).toEqual({
-			available: "Google OAuth app update available",
-			downloading: "Downloading the Google OAuth app update…",
-			verifying: "Verifying the Google OAuth app update…",
-			paused: "Google OAuth app update is available",
-			ready: "Google OAuth app update is downloaded",
-			installing: "Updating the Google OAuth app…",
+			available: "Open Grind Google OAuth app update available",
+			downloading: "Downloading the Open Grind Google OAuth app update…",
+			verifying: "Verifying the Open Grind Google OAuth app update…",
+			paused: "Open Grind Google OAuth app update is available",
+			ready: "Open Grind Google OAuth app update is downloaded",
+			installing: "Updating the Open Grind Google OAuth app…",
 		});
 	});
 
 	it("says install while an add-on installs for the first time", () => {
 		expect(titles({ component: "google-oauth", kind: "install" })).toEqual({
-			available: "Google OAuth app is available",
-			downloading: "Downloading the Google OAuth app…",
-			verifying: "Verifying the Google OAuth app…",
-			paused: "Google OAuth app is ready to download",
-			ready: "Google OAuth app is downloaded",
-			installing: "Installing the Google OAuth app…",
+			available: "Open Grind Google OAuth app is available",
+			downloading: "Downloading the Open Grind Google OAuth app…",
+			verifying: "Verifying the Open Grind Google OAuth app…",
+			paused: "Open Grind Google OAuth app is ready to download",
+			ready: "Open Grind Google OAuth app is downloaded",
+			installing: "Installing the Open Grind Google OAuth app…",
 		});
 	});
 
@@ -110,12 +110,12 @@ describe("the reCAPTCHA helper's stage toast title", () => {
 				kind: "update",
 			}),
 		).toStrictEqual({
-			available: "reCAPTCHA helper update available",
-			downloading: "Downloading the reCAPTCHA helper update…",
-			verifying: "Verifying the reCAPTCHA helper update…",
-			paused: "reCAPTCHA helper update is available",
-			ready: "reCAPTCHA helper update is downloaded",
-			installing: "Updating the reCAPTCHA helper…",
+			available: "Open Grind reCAPTCHA helper update available",
+			downloading: "Downloading the Open Grind reCAPTCHA helper update…",
+			verifying: "Verifying the Open Grind reCAPTCHA helper update…",
+			paused: "Open Grind reCAPTCHA helper update is available",
+			ready: "Open Grind reCAPTCHA helper update is downloaded",
+			installing: "Updating the Open Grind reCAPTCHA helper…",
 		});
 		expect(
 			stageTitle({
@@ -123,7 +123,7 @@ describe("the reCAPTCHA helper's stage toast title", () => {
 				kind: "install",
 				stage: "downloading",
 			}),
-		).toBe("Downloading the reCAPTCHA helper…");
+		).toBe("Downloading the Open Grind reCAPTCHA helper…");
 	});
 });
 
@@ -135,9 +135,9 @@ describe("the FCM service's stage toast title", () => {
 				kind: "install",
 				stage: "installing",
 			}),
-		).toBe("Installing the FCM service…");
+		).toBe("Installing the Open Grind FCM service…");
 		expect(
 			stageTitle({ component: "fcm", kind: "update", stage: "ready" }),
-		).toBe("FCM service update is downloaded");
+		).toBe("Open Grind FCM service update is downloaded");
 	});
 });

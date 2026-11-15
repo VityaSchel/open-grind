@@ -145,7 +145,7 @@ describe("the add-on activity the sign-in screen observes", () => {
 		await addonUpdates.installNow();
 
 		expect(toasts.showUpToDate).toHaveBeenCalledExactlyOnceWith(
-			"The Google OAuth app is up to date",
+			"The Open Grind Google OAuth app is up to date",
 		);
 	});
 });
@@ -201,7 +201,7 @@ describe("the reCAPTCHA helper's update flow", () => {
 		await recaptchaUpdates.installNow();
 
 		expect(toasts.showUpToDate).toHaveBeenCalledExactlyOnceWith(
-			"The reCAPTCHA helper is up to date",
+			"The Open Grind reCAPTCHA helper is up to date",
 		);
 	});
 });

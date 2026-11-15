@@ -1,0 +1,191 @@
+{
+	"actions": {
+		"close": "Close",
+		"cancel": "Cancel",
+		"continue": "Continue",
+		"delete": "Delete",
+		"retry": "Try again",
+		"copyError": "Copy error details",
+		"learnMore": "Learn more",
+		"save": "Save",
+		"signOut": "Sign out"
+	},
+	"time": {
+		"justNow": "Just now",
+		"minutes_one": "{{count}} min",
+		"minutes_other": "{{count}} mins",
+		"hours_one": "{{count}} hr",
+		"hours_other": "{{count}} hrs",
+		"yesterday": "Yesterday",
+		"today": "Today"
+	},
+	"format": {
+		"range": "{{min}}–{{max}}"
+	},
+	"units": {
+		"feetInches": "{{feet}}′{{inches}}″"
+	},
+	"unimplemented": {
+		"title": "Unimplemented"
+	},
+	"someone": "Someone",
+	"carousel": {
+		"a11y": {
+			"previous": "Previous slide",
+			"next": "Next slide",
+			"carouselRole": "carousel",
+			"slideRole": "slide"
+		}
+	},
+	"commandDialog": {
+		"a11y": {
+			"title": "Command Center",
+			"description": "Search for a command to run."
+		}
+	},
+	"spinner": {
+		"a11y": {
+			"loading": "Loading"
+		}
+	},
+	"updates": {
+		"checkAutomatically": "Check updates automatically"
+	},
+	"desktopEntry": {
+		"errors": {
+			"addFailed": "Couldn’t add Open Grind to your apps menu",
+			"removeFailed": "Couldn’t remove Open Grind from your apps menu"
+		}
+	},
+	"sections": {
+		"interest": "Interest"
+	},
+	"filters": {
+		"noResults": "No Results",
+		"notSpecified": "Not Specified",
+		"online": "Online",
+		"rightNow": "Right Now",
+		"position": {
+			"label": "Position",
+			"a11y": {
+				"toggle": "Filter by Position"
+			}
+		},
+		"distance": {
+			"label": "Distance",
+			"a11y": {
+				"toggle": "Filter by Distance"
+			}
+		},
+		"favorites": "Favorites",
+		"fresh": "Fresh",
+		"haventChattedToday": "Haven’t Chatted Today",
+		"age": {
+			"label": "Age"
+		},
+		"height": {
+			"label": "Height"
+		},
+		"weight": {
+			"label": "Weight"
+		},
+		"genders": {
+			"label": "Gender"
+		},
+		"tags": {
+			"label": "Tags"
+		},
+		"photos": {
+			"label": "Photos",
+			"hasPhotos": "Has Photos",
+			"hasFacePics": "Has Face Pics",
+			"hasAlbums": "Has Albums"
+		},
+		"options": {
+			"tribes": "Their Tribes",
+			"tribesImInto": "Tribes They’re Into",
+			"bodyType": "Body Type",
+			"relationshipStatus": "Relationship Status",
+			"acceptNsfwPics": "Accept NSFW Pics",
+			"lookingFor": "Looking For",
+			"meetAt": "Meet At"
+		}
+	},
+	"media": {
+		"errors": {
+			"unsupportedFile": "That file isn’t a photo or video",
+			"linkNotMedia": "That link isn’t a photo or video",
+			"linkTooLarge": "That file is too large to add",
+			"readFailed": "Couldn’t read that file",
+			"linkFailed": "Couldn’t download that image",
+			"videosNotAllowed": "Videos can’t be added here",
+			"videoUnreadable": "That video’s format can’t be read",
+			"photoTooLarge": "Photos over {{megabytes}} MB can’t be uploaded",
+			"notAPhoto": "Only photos can be sent here",
+			"photoSizeUnreadable": "That photo’s size can’t be read",
+			"photoUnloadable": "That photo couldn’t be loaded",
+			"photoDamaged": "Unreadable or damaged photo",
+			"heicUnsupported": "HEIC photos aren’t supported on this platform yet",
+			"photoUndecodable": "Undecodable photo",
+			"outsideReadableFolders": "That file is outside the folders this app may read"
+		},
+		"uploadPhotosOrVideos": "Upload photos or videos",
+		"drop": {
+			"onlyPhotosAndVideos": "Only photos and videos can be dropped here",
+			"onlyPhotos": "Only photos can be dropped here"
+		}
+	},
+	"albumShare": {
+		"errors": {
+			"shareFailed": "Couldn’t share album",
+			"unshareFailed": "Couldn’t unshare album"
+		}
+	},
+	"profileList": {
+		"unavailable": "Unavailable profile",
+		"profileId": "ID: {{id}}",
+		"errors": {
+			"loadFailed": "Couldn’t load profiles"
+		},
+		"a11y": {
+			"profileId": "ID {{id}}",
+			"toggle": "{{label}}: {{name}}"
+		}
+	},
+	"location": {
+		"errors": {
+			"saveFailed": "Couldn’t save location"
+		}
+	},
+	"genders": {
+		"errors": {
+			"loadFailed": "Couldn’t load genders"
+		}
+	},
+	"tags": {
+		"searchPlaceholder": "Search tags…"
+	},
+	"profileFields": {
+		"healthPractices": "Health Practices"
+	},
+	"profileSections": {
+		"stats": "Stats",
+		"expectations": "Expectations",
+		"health": "Health",
+		"socials": "Socials"
+	},
+	"chat": {
+		"writeMessage": "Write a message…"
+	},
+	"addons": {
+		"fdroidNotice": "By installing it, you choose to bypass F-Droid’s checks."
+	},
+	"viewability": {
+		"errors": {
+			"blockFailed": "Couldn’t block",
+			"unblockFailed": "Couldn’t unblock",
+			"hideFailed": "Couldn’t hide",
+			"unhideFailed": "Couldn’t unhide"
+		}
+	}
+}

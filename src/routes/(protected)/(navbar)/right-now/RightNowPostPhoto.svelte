@@ -2,6 +2,7 @@
 	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { preloadFullImage } from "#lib/util/photoswipe/full-size.ts";
 	import { attachGalleryLightbox } from "#lib/util/photoswipe/gallery-lightbox.ts";
@@ -27,7 +28,7 @@
 {#snippet photo()}
 	<MediaImage
 		{src}
-		alt="Post photo"
+		alt={t("browse.rightNow.photo.alt")}
 		class="size-full rounded-xl"
 		imgClass={{ "scale-110 blur-xl": blurred }}
 		aspectRatio="1 / 1"
@@ -51,7 +52,7 @@
 			data-slot="right-now-post-photo-caption"
 			class="absolute inset-x-2 bottom-2 rounded-full bg-background/80 px-3 py-1 text-center text-xs text-muted-foreground"
 		>
-			May contain nudity
+			{t("browse.rightNow.photo.mayContainNudity")}
 		</p>
 	</div>
 {:else}
@@ -63,7 +64,7 @@
 		<a
 			href={fullSrc}
 			rel="noreferrer"
-			aria-label="Open photo"
+			aria-label={t("browse.rightNow.photo.a11y.open")}
 			class={[
 				frameClass,
 				"item outline-none focus-visible:ring-3 focus-visible:ring-ring/50",

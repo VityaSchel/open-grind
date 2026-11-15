@@ -2,15 +2,16 @@
 	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 
 	import * as Alert from "#lib/components/ui/alert/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { RightNowPostRejection } from "../right-now-post-state.svelte";
 
 	let { rejected }: { rejected: RightNowPostRejection } = $props();
 
 	const title = $derived.by(() => {
 		if (rejected.text && rejected.photo)
-			return "Your text and photo were rejected";
-		if (rejected.photo) return "Your photo was rejected";
-		return "Your text was rejected";
+			return t("browse.rightNow.sheet.rejected.textAndPhoto");
+		if (rejected.photo) return t("browse.rightNow.sheet.rejected.photo");
+		return t("browse.rightNow.sheet.rejected.text");
 	});
 </script>
 
@@ -25,7 +26,7 @@
 				{/each}
 			</ul>
 		{:else}
-			No reason was given.
+			{t("browse.rightNow.sheet.rejected.noReason")}
 		{/if}
 	</Alert.Description>
 </Alert.Root>

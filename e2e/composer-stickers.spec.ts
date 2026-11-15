@@ -194,8 +194,8 @@ test.describe("composer stickers sheet", () => {
 		await sendGif(page);
 
 		await expect(page.locator(DRAWER)).toHaveCount(0);
+		await expect(page.getByText("Sending…")).toHaveCount(0);
 		const newest = page.locator(MESSAGE_ROW).last();
-		await expect(newest.getByText("Sending...")).toHaveCount(0);
 		const gif = newest
 			.locator(GIPHY_MESSAGE)
 			.getByRole("img", { name: "GIF" });
@@ -210,7 +210,7 @@ test.describe("composer stickers sheet", () => {
 		await sendGif(page);
 		await expect(page.locator(DRAWER)).toHaveCount(0);
 		await page
-			.getByRole("textbox", { name: "Say something..." })
+			.getByRole("textbox", { name: "Write a message…" })
 			.fill("Lined up?");
 		await page.getByRole("button", { name: "Send message" }).click();
 
@@ -242,8 +242,8 @@ test.describe("composer stickers sheet", () => {
 		await stickerSendButton(page).click();
 
 		await expect(page.locator(DRAWER)).toHaveCount(0);
+		await expect(page.getByText("Sending…")).toHaveCount(0);
 		const newest = page.locator(MESSAGE_ROW).last();
-		await expect(newest.getByText("Sending...")).toHaveCount(0);
 		await expect(
 			newest
 				.locator('[data-slot="gaymoji-message"]')

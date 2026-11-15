@@ -134,7 +134,7 @@ describe("a Right Now post photo on Google Play", () => {
 			screen
 				.getByRole("link", { name: "Show mature content" })
 				.getAttribute("href"),
-		).toBe("/settings/app#show-mature-content");
+		).toBe("/settings/app/display#show-mature-content");
 		expect(screen.queryByRole("link", { name: "Open photo" })).toBeNull();
 		expect(attachGalleryLightboxMock).not.toHaveBeenCalled();
 		await showThumbnail();

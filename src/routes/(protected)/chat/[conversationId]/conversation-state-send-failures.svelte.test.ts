@@ -198,16 +198,8 @@ describe("ConversationState send failures", () => {
 		await flush();
 
 		expect(offerBypassMock.mock.calls).toStrictEqual([
-			[
-				{
-					reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
-				},
-			],
-			[
-				{
-					reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
-				},
-			],
+			[{ reason: "chat.conversation.bypassReason.expiringPhotoLimit" }],
+			[{ reason: "chat.conversation.bypassReason.expiringPhotoLimit" }],
 		]);
 		expect(state.messages.map((m) => m.status)).toStrictEqual([
 			"error",

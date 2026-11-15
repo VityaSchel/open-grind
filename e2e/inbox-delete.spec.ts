@@ -11,7 +11,7 @@ import {
 	watchRendered,
 } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	dim,
 	recordFrames,
 	row,
@@ -249,7 +249,7 @@ test.describe("Back into a conversation deleted this session", () => {
 		await expect(page.locator(MESSAGE_ROW).first()).toBeVisible();
 	});
 
-	test("Back to chats skips it and still answers the next tap", async ({
+	test("Back to Inbox skips it and still answers the next tap", async ({
 		page,
 	}) => {
 		await openInboxFromHome(page);
@@ -258,13 +258,13 @@ test.describe("Back into a conversation deleted this session", () => {
 		await deleteFromList(page, { href: deleted! });
 		const paths = [...atInbox.paths, kept, deleted, open];
 
-		await backToChats(page).click();
+		await backToInbox(page).click();
 		await expect
 			.poll(() => historyEntries(page), {
-				message: "Back to chats lands on the conversation before",
+				message: "Back to Inbox lands on the conversation before",
 			})
 			.toEqual({ index: atInbox.index + 1, paths });
-		await backToChats(page).click();
+		await backToInbox(page).click();
 
 		await expect
 			.poll(() => historyEntries(page), {

@@ -1,0 +1,43 @@
+{
+	"tabs": {
+		"views": "Views",
+		"taps": "Taps"
+	},
+	"taps": {
+		"empty": {
+			"title": "No Taps Yet",
+			"description": "Browse <gridLink>Grid</gridLink> to find people, and they might tap you back."
+		},
+		"errors": {
+			"refreshFailed": "Couldn’t refresh taps"
+		},
+		"notification": "Tapped you"
+	},
+	"views": {
+		"empty": {
+			"title": "No Views Yet",
+			"description": "When someone views your profile, they’ll show up here."
+		},
+		"untracked": {
+			"title": "Viewed Me is off",
+			"description": "Grindr isn’t recording who views your profile because “Show Me In Viewed Me List” is off in your Grindr settings. Turning it on changes it in the official Grindr app too, and lets people see when you view their profiles.",
+			"enable": "Turn on"
+		},
+		"preview": {
+			"a11y": {
+				"secretAdmirer": "Secret admirer",
+				"hiddenViewer": "Hidden viewer"
+			},
+			"totalViews_one": "{{count}} view",
+			"totalViews_other": "{{count}} views",
+			"viewCount_one": "{{count}}<srOnly>view</srOnly>",
+			"viewCount_other": "{{count}}<srOnly>views</srOnly>",
+			"cappedViewCount_one": "{{count}}+<srOnly>views</srOnly>",
+			"cappedViewCount_other": "{{count}}+<srOnly>views</srOnly>"
+		},
+		"errors": {
+			"refreshFailed": "Couldn’t refresh views",
+			"turnOnViewedMeFailed": "Couldn’t turn on Viewed Me"
+		}
+	}
+}

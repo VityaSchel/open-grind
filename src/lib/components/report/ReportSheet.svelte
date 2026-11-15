@@ -14,6 +14,7 @@
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { Textarea } from "#lib/components/ui/textarea/index.ts";
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { type MessageKey, t } from "#lib/i18n/index.ts";
 	import {
 		type ReportLocation,
 		reportLocationSchema,
@@ -31,48 +32,48 @@
 		onBlock,
 	}: { open: boolean; target: ReportTarget; onBlock?: () => void } = $props();
 
-	const reasonLabels: Record<ReportReason, string> = {
-		SPAM: "Spam",
-		HARASSMENT_BULLYING: "Harassment or Bullying",
-		HATE_DISCRIMINATION: "Hate Speech/Discrimination",
-		NUDITY_PORNOGRAPHY: "Nudity or Pornography",
-		UNDERAGE: "Underage",
-		IMPERSONATION: "Impersonation",
-		ILLEGAL_ACTIVITY: "Illegal Activity",
-		SEXUAL_SOLICITATION: "Sexual Solicitation",
-		SERIOUS_IN_PERSON_INCIDENT: "Serious In Person Incident",
-	};
+	const reasonKeys = {
+		SPAM: "profile.report.reason.spam",
+		HARASSMENT_BULLYING: "profile.report.reason.harassmentBullying",
+		HATE_DISCRIMINATION: "profile.report.reason.hateDiscrimination",
+		NUDITY_PORNOGRAPHY: "profile.report.reason.nudityPornography",
+		UNDERAGE: "profile.report.reason.underage",
+		IMPERSONATION: "profile.report.reason.impersonation",
+		ILLEGAL_ACTIVITY: "profile.report.reason.illegalActivity",
+		SEXUAL_SOLICITATION: "profile.report.reason.sexualSolicitation",
+		SERIOUS_IN_PERSON_INCIDENT:
+			"profile.report.reason.seriousInPersonIncident",
+	} as const satisfies Record<ReportReason, MessageKey>;
 
-	const locationLabels: Record<ReportLocation, string> = {
-		PROFILE_PHOTO: "Profile Photo",
-		PROFILE_INFORMATION: "Profile Information",
-		CHAT_MESSAGE: "Chat Message",
-		ALBUM: "Album",
-		RIGHT_NOW_PHOTO: "Right Now Image",
-		RIGHT_NOW_TEXT: "Right Now Text",
-	};
+	const locationKeys = {
+		PROFILE_PHOTO: "profile.report.location.profilePhoto",
+		PROFILE_INFORMATION: "profile.report.location.profileInformation",
+		CHAT_MESSAGE: "profile.report.location.chatMessage",
+		ALBUM: "profile.report.location.album",
+		RIGHT_NOW_PHOTO: "profile.report.location.rightNowPhoto",
+		RIGHT_NOW_TEXT: "profile.report.location.rightNowText",
+	} as const satisfies Record<ReportLocation, MessageKey>;
 
-	const targetCopy: Record<
-		ReportTarget["kind"],
-		{ title: string; description: string; reviewed: string }
-	> = {
+	const targetKeys = {
 		profile: {
-			title: "Report profile",
-			description: "Send a report about this profile to Grindr.",
-			reviewed: "Grindr will review this profile.",
+			title: "profile.report.profile.title",
+			description: "profile.report.profile.a11y.description",
+			reviewed: "profile.report.reviewed",
 		},
 		message: {
-			title: "Report message",
-			description:
-				"Send a report about this person's messages to Grindr.",
-			reviewed: "Grindr will review your report.",
+			title: "profile.report.message.title",
+			description: "profile.report.message.a11y.description",
+			reviewed: "profile.report.reviewed",
 		},
 		rightNowPost: {
-			title: "Report post",
-			description: "Send a report about this Right Now post to Grindr.",
-			reviewed: "Grindr will review this post.",
+			title: "profile.report.rightNowPost.title",
+			description: "profile.report.rightNowPost.a11y.description",
+			reviewed: "profile.report.rightNowPost.reviewed",
 		},
-	};
+	} as const satisfies Record<
+		ReportTarget["kind"],
+		Record<"title" | "description" | "reviewed", MessageKey>
+	>;
 
 	const presetLocations: Record<
 		ReportTarget["kind"],
@@ -83,15 +84,13 @@
 		rightNowPost: ["RIGHT_NOW_PHOTO", "RIGHT_NOW_TEXT"],
 	};
 
-	const detailsLabel = "Details (optional)";
-
 	let reason = $state<ReportReason | null>(null);
 	let locations = $state<ReportLocation[]>([]);
 	let comment = $state("");
 	let submitting = $state(false);
 	let submitted = $state(false);
 
-	const copy = $derived(targetCopy[target.kind]);
+	const copy = $derived(targetKeys[target.kind]);
 	const isInPersonIncident = $derived(
 		reason === "SERIOUS_IN_PERSON_INCIDENT",
 	);
@@ -127,7 +126,10 @@
 			submitted = true;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to send report", error });
+			showErrorToast({
+				label: t("profile.report.errors.sendFailed"),
+				error,
+			});
 		} finally {
 			submitting = false;
 		}
@@ -161,10 +163,10 @@
 	>
 		<ResponsiveDialog.Header>
 			<ResponsiveDialog.Title>
-				{submitted ? "Report submitted" : copy.title}
+				{submitted ? t("profile.report.submitted") : t(copy.title)}
 			</ResponsiveDialog.Title>
 			<ResponsiveDialog.Description class="sr-only">
-				{copy.description}
+				{t(copy.description)}
 			</ResponsiveDialog.Description>
 		</ResponsiveDialog.Header>
 		{#if submitted}
@@ -173,10 +175,10 @@
 					data-slot="report-submitted"
 					class="flex flex-col items-center gap-2 py-4 text-center"
 				>
-					<p>{copy.reviewed}</p>
+					<p>{t(copy.reviewed)}</p>
 					{#if target.profileId !== null}
 						<p class="text-sm text-muted-foreground">
-							You can block this profile so you stop seeing it.
+							{t("profile.report.blockHint")}
 						</p>
 					{/if}
 				</div>
@@ -188,11 +190,11 @@
 						variant="destructive"
 						onclick={() => block({ profileId })}
 					>
-						Block profile
+						{t("profile.topNav.actionsMenu.block")}
 					</Button>
 				{/if}
 				<Button variant="secondary" onclick={() => (open = false)}>
-					Done
+					{t("profile.report.done")}
 				</Button>
 			</ResponsiveDialog.Footer>
 		{:else}
@@ -210,7 +212,7 @@
 							orientation="vertical"
 							variant="outline"
 							spacing={2}
-							aria-label="Reason"
+							aria-label={t("profile.report.a11y.reason")}
 							class="w-full"
 							bind:value={
 								() => reason ?? "",
@@ -223,7 +225,7 @@
 						>
 							{#each reportReasonSchema.options as value (value)}
 								<ToggleGroup.Item {value} class="justify-start">
-									{reasonLabels[value]}
+									{t(reasonKeys[value])}
 								</ToggleGroup.Item>
 							{/each}
 						</ToggleGroup.Root>
@@ -234,13 +236,13 @@
 							class="flex flex-col gap-1.5"
 						>
 							<span class="px-1 text-sm leading-none font-medium">
-								Where it happened
+								{t("profile.report.whereItHappened")}
 							</span>
 							<ToggleGroup.Root
 								type="multiple"
 								variant="outline"
 								spacing={2}
-								aria-label="Where it happened"
+								aria-label={t("profile.report.whereItHappened")}
 								class="w-full flex-wrap gap-1"
 								bind:value={
 									() => locations,
@@ -250,7 +252,7 @@
 							>
 								{#each reportLocationSchema.options as value (value)}
 									<ToggleGroup.Item {value}>
-										{locationLabels[value]}
+										{t(locationKeys[value])}
 									</ToggleGroup.Item>
 								{/each}
 							</ToggleGroup.Root>
@@ -259,8 +261,8 @@
 					{#if detailsShown}
 						<Textarea
 							bind:value={comment}
-							aria-label={detailsLabel}
-							placeholder={detailsLabel}
+							aria-label={t("profile.report.details")}
+							placeholder={t("profile.report.details")}
 							class="min-h-24"
 						/>
 					{/if}
@@ -269,9 +271,7 @@
 							data-slot="report-incident-note"
 							class="px-1 text-sm text-muted-foreground"
 						>
-							Grindr's trust and safety team handles serious
-							in-person incidents through its help center. The
-							form opens in your browser.
+							{t("profile.report.inPersonIncident.note")}
 						</p>
 					{/if}
 				</ResponsiveDialog.Body>
@@ -281,7 +281,8 @@
 							href={grindrHelpUrl("inPersonIncidentForm")}
 							class={buttonVariants()}
 						>
-							Open help form <ArrowUpRightIcon />
+							{t("profile.report.inPersonIncident.openHelpForm")}
+							<ArrowUpRightIcon />
 						</Link>
 					{:else}
 						<Button
@@ -292,7 +293,7 @@
 							{#if submitting}
 								<Spinner aria-hidden="true" />
 							{/if}
-							Submit report
+							{t("profile.report.submit")}
 						</Button>
 					{/if}
 				</ResponsiveDialog.Footer>

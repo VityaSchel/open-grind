@@ -4,9 +4,11 @@
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import {
 		currentDisguise,
+		disguiseFailure,
 		type DisguisePreset,
 		disguisePresets,
 		disguiseRenameNeedsAdmin,
@@ -38,13 +40,13 @@
 	function stillShown(): string {
 		switch (currentPlatform()) {
 			case "android":
-				return "The app's name still shows in notifications and system settings.";
+				return t("settings.app.discreetAppIcon.stillShown.android");
 			case "macos":
-				return "The app's name still shows in the menu bar, notifications and system settings. If the Dock keeps the old icon or name, Command-click it there.";
+				return t("settings.app.discreetAppIcon.stillShown.macos");
 			case "windows":
-				return "The app's name still shows in Task Manager.";
+				return t("settings.app.discreetAppIcon.stillShown.windows");
 			case "linux":
-				return "The app's name still shows in task managers.";
+				return t("settings.app.discreetAppIcon.stillShown.linux");
 			default:
 				return "";
 		}
@@ -53,16 +55,41 @@
 	function restartNotice(choice: DisguisePreset): string | null {
 		switch (currentPlatform()) {
 			case "android":
-				return `Open Grind restarts as ${choice.name}. Its home screen shortcut is removed, so add it again from the app drawer.`;
+				return t("settings.app.discreetAppIcon.restart.android", {
+					appName: choice.name,
+				});
 			case "macos":
 				return disguiseRenameNeedsAdmin()
 					? null
-					: `Open Grind restarts to rename itself to ${choice.name}.`;
+					: t("settings.app.discreetAppIcon.restart.macos", {
+							appName: choice.name,
+						});
 			case "linux":
 			case "windows":
 				return null;
 			default:
 				return null;
+		}
+	}
+
+	function failureLabel({
+		error,
+		choice,
+	}: {
+		error: unknown;
+		choice: DisguisePreset;
+	}): string {
+		switch (disguiseFailure(error)) {
+			case "nameTaken":
+				return t("settings.app.discreetAppIcon.errors.nameTaken", {
+					appName: choice.name,
+				});
+			case "renameNeedsAdmin":
+				return t(
+					"settings.app.discreetAppIcon.errors.renameNeedsAdmin",
+				);
+			case "failed":
+				return t("settings.app.discreetAppIcon.errors.changeFailed");
 		}
 	}
 
@@ -74,13 +101,7 @@
 					restartNotice(choice) === null ? null : page.url.pathname,
 			});
 		} catch (error) {
-			showErrorToast({
-				label:
-					typeof error === "string"
-						? error
-						: "Couldn't change the app icon",
-				error,
-			});
+			showErrorToast({ label: failureLabel({ error, choice }), error });
 		} finally {
 			applying = false;
 			alertOpen = false;
@@ -122,6 +143,7 @@
 			]}
 		/>
 		<span
+			translate="no"
 			class={[
 				"line-clamp-2 w-full text-center text-xs text-balance",
 				{ "text-primary": selected },
@@ -131,10 +153,10 @@
 {/snippet}
 
 <p class="px-4 text-sm text-muted-foreground">
-	Change how Open Grind looks on your home screen and in your app list.
+	{t("settings.app.discreetAppIcon.description")}
 	{stillShown()}
 	{#if disguiseRenameNeedsAdmin()}
-		Renaming the app needs an administrator account.
+		{t("settings.app.discreetAppIcon.renameNeedsAdmin")}
 	{/if}
 </p>
 <div
@@ -153,14 +175,18 @@
 <AlertDialog.Root bind:open={alertOpen}>
 	<AlertDialog.Content {escapeKeydownBehavior}>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Change the app icon?</AlertDialog.Title>
+			<AlertDialog.Title>
+				{t("settings.app.discreetAppIcon.confirm.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description>
 				{pending ? restartNotice(pending) : ""}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={applying} class="contents">
-				<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel size="lg">
+					{t("common.actions.cancel")}
+				</AlertDialog.Cancel>
 				<AlertDialog.Action
 					onclick={() => {
 						if (pending) void apply(pending);
@@ -171,7 +197,7 @@
 					{#if applying}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Change
+					{t("settings.app.discreetAppIcon.confirm.change")}
 				</AlertDialog.Action>
 			</fieldset>
 		</AlertDialog.Footer>

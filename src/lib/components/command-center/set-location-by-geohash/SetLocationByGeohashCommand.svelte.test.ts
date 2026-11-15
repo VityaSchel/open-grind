@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { encode } from "@msgpack/msgpack";
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { fireEvent, within } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { readMock, writeMock, writeTextMock, toastMock, showErrorToastMock } =
@@ -31,33 +31,21 @@ vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 }));
 
 import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { commandCenterState } from "../command-center-state.svelte";
-import CommandCenter from "../CommandCenter.svelte";
+import {
+	enterQuery,
+	expectCommandGroup,
+	openWith,
+	option,
+	options,
+	resetCommandCenter,
+	textOf,
+	type,
+} from "../command-center-test-helpers";
 
 const GEOHASH = "u33dc0cpgp00";
-
-Element.prototype.scrollIntoView = () => {};
-
-function options(): HTMLElement[] {
-	return screen.queryAllByRole("option");
-}
-
-function option(value: string): HTMLElement | undefined {
-	return options().find((item) => item.dataset.value === value);
-}
-
-async function type(query: string) {
-	await fireEvent.input(screen.getByRole("combobox"), {
-		target: { value: query },
-	});
-	await vi.waitFor(() => expect(options().length).toBeGreaterThan(0));
-}
-
-async function openWith(query: string) {
-	commandCenterState.open = true;
-	render(CommandCenter);
-	await type(query);
-}
 
 beforeEach(async () => {
 	readMock.mockReset().mockResolvedValue(encode({}));
@@ -68,13 +56,11 @@ beforeEach(async () => {
 	showErrorToastMock.mockReset();
 	await setPreferences({ geohash: null });
 	writeMock.mockClear();
-	commandCenterState.query = "";
-	commandCenterState.value = "";
 });
 
-afterEach(() => {
-	cleanup();
-	commandCenterState.open = false;
+afterEach(async () => {
+	resetCommandCenter();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("set location by geohash command", () => {
@@ -84,9 +70,16 @@ describe("set location by geohash command", () => {
 
 		await openWith("@");
 
+		expectCommandGroup({
+			name: "Set location by geohash…",
+			value: "set-location-by-geohash",
+		});
 		const copy = option("@copy");
 		expect(copy?.textContent).toContain(
 			`Copy currently selected location: ${GEOHASH}`,
+		);
+		expect(within(copy!).getByText(GEOHASH).getAttribute("translate")).toBe(
+			"no",
 		);
 		expect(copy).toHaveProperty("dataset.selected", "");
 		expect(option("@")).toBeUndefined();
@@ -112,14 +105,18 @@ describe("set location by geohash command", () => {
 
 	it("reports a failed copy without mutating anything", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
-		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		const error = new Error("no clipboard");
+		writeTextMock.mockRejectedValue(error);
 		await setPreferences({ geohash: GEOHASH });
 		writeMock.mockClear();
 		await openWith("@");
 
 		await fireEvent.click(option("@copy")!);
 		await vi.waitFor(() =>
-			expect(showErrorToastMock).toHaveBeenCalledOnce(),
+			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+				label: "Couldn’t copy location",
+				error,
+			}),
 		);
 
 		expect(toastMock.success).not.toHaveBeenCalled();
@@ -147,6 +144,34 @@ describe("set location by geohash command", () => {
 		const set = option(`@${GEOHASH}`);
 		expect(set?.textContent).toContain(GEOHASH);
 		expect(set).toHaveProperty("dataset.selected", "");
+		expect(set?.getAttribute("translate")).toBe("no");
+	});
+
+	it("reports a location it couldn't save", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const error = new Error("disk full");
+		await openWith(`@${GEOHASH}`);
+		writeMock.mockRejectedValue(error);
+
+		await fireEvent.click(option(`@${GEOHASH}`)!);
+		await vi.waitFor(() =>
+			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+				label: "Couldn’t save location",
+				error,
+			}),
+		);
+
+		expect(writeMock).toHaveBeenCalledOnce();
+		expect(toastMock.success).not.toHaveBeenCalled();
+	});
+
+	it("drops a query longer than a geohash", async () => {
+		await openWith("@u33");
+		expect(options().map((item) => item.dataset.value)).toEqual(["@u33"]);
+
+		await enterQuery(`@${GEOHASH}0`);
+
+		await vi.waitFor(() => expect(options()).toEqual([]));
 	});
 
 	it("leaves a single item behind when the query changes", async () => {
@@ -161,5 +186,25 @@ describe("set location by geohash command", () => {
 
 		await type("@");
 		expect(options().map((item) => item.dataset.value)).toEqual(["@copy"]);
+	});
+
+	it("words the heading, hint and copy action in the active locale", async () => {
+		await openWith("@");
+		await setLocale({ locale: "en-XA" });
+
+		expectCommandGroup({
+			name: PSEUDO_MESSAGE,
+			value: "set-location-by-geohash",
+		});
+		expect(textOf(option("@")!)).toMatch(PSEUDO_MESSAGE);
+
+		await setPreferences({ geohash: GEOHASH });
+
+		await vi.waitFor(() => expect(option("@copy")).toBeDefined());
+		const copy = option("@copy")!;
+		expect(textOf(copy)).toMatch(PSEUDO_MESSAGE);
+		expect(within(copy).getByText(GEOHASH).getAttribute("translate")).toBe(
+			"no",
+		);
 	});
 });

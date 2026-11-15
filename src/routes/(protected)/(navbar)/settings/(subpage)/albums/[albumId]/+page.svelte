@@ -19,10 +19,6 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Edit album</title>
-</svelte:head>
-
 {#await album}
 	<AlbumHeaderLayout>
 		{#snippet preview()}

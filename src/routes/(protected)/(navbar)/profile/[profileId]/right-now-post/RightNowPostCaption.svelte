@@ -38,6 +38,7 @@
 			{#if text !== null}
 				<p
 					class="text-base wrap-break-word whitespace-pre-wrap select-text"
+					translate="no"
 				>
 					{text}
 				</p>

@@ -33,7 +33,7 @@ test("sends replies from the selected profile photo and keeps the chat draft", a
 	await expect(page.getByText("Message sent", { exact: true })).toBeVisible();
 	await expect(page).toHaveURL(/\/profile\/100001$/);
 	await page
-		.getByRole("link", { name: "Write a message...", exact: true })
+		.getByRole("link", { name: "Write a message…", exact: true })
 		.click();
 	await expect(page.getByRole("textbox")).toHaveValue("Existing chat draft");
 	const reply = page
@@ -80,7 +80,7 @@ test("sends the profile photo reply without leaving the profile", async ({
 	await expect(page.getByText("Message sent", { exact: true })).toBeVisible();
 	await expect(page).toHaveURL(/\/profile\/100001$/);
 	await page
-		.getByRole("link", { name: "Write a message...", exact: true })
+		.getByRole("link", { name: "Write a message…", exact: true })
 		.click();
 	await expect(
 		page.getByRole("article").filter({ hasText: "Hello from your photo" }),
@@ -120,7 +120,7 @@ test("the profile reply composer matches the date gradient's bottom stop", async
 	await page.getByRole("link", { name: /Profile photo 1 of/ }).click();
 	const label = page.locator(".pswp__created-at-label");
 	await expect(label).toBeVisible();
-	await expect(label).toHaveText(/\d{2} \w+ \d{4}/);
+	await expect(label).toHaveText(/\w+ \d{1,2}, \d{4}/);
 	const background = await page
 		.locator(".pswp__reply-composer")
 		.evaluate((composer) => getComputedStyle(composer).backgroundColor);

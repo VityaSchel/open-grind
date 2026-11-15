@@ -3,6 +3,7 @@
 	import type { HTMLAttributes } from "svelte/elements";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { cn, type WithElementRef } from "#lib/util/utils.ts";
 
 	let {
@@ -29,7 +30,9 @@
 	{#if showCloseButton}
 		<DialogPrimitive.Close>
 			{#snippet child({ props })}
-				<Button variant="outline" {...props}>Close</Button>
+				<Button variant="outline" {...props}
+					>{t("common.actions.close")}</Button
+				>
 			{/snippet}
 		</DialogPrimitive.Close>
 	{/if}

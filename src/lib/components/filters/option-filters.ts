@@ -8,10 +8,11 @@ import {
 	relationshipStatuses,
 	tribes,
 } from "#lib/model/users/profiles.ts";
+import type { PlainMessageKey } from "#lib/i18n/index.ts";
 
 export type OptionFilterDefinition = {
 	id: string;
-	label: string;
+	label: PlainMessageKey;
 	table: Record<number, string>;
 	isOffered?: (id: number) => boolean;
 };
@@ -19,31 +20,43 @@ export type OptionFilterDefinition = {
 export const optionFilters = {
 	tribes: {
 		id: "tribes",
-		label: "Their Tribes",
+		label: "common.filters.options.tribes",
 		table: tribes,
 		isOffered: isTribeOfferedNow,
 	},
 	tribesImInto: {
 		id: "tribes-im-into",
-		label: "Tribes They're Into",
+		label: "common.filters.options.tribesImInto",
 		table: tribes,
 	},
-	bodyTypes: { id: "body-type", label: "Body Type", table: bodyTypes },
+	bodyTypes: {
+		id: "body-type",
+		label: "common.filters.options.bodyType",
+		table: bodyTypes,
+	},
 	relationshipStatuses: {
 		id: "relationship-status",
-		label: "Relationship Status",
+		label: "common.filters.options.relationshipStatus",
 		table: relationshipStatuses,
 	},
 	acceptNSFWPics: {
 		id: "accept-nsfw-pics",
-		label: "Accept NSFW Pics",
+		label: "common.filters.options.acceptNsfwPics",
 		table: acceptNSFWPics,
 	},
-	lookingFor: { id: "looking-for", label: "Looking for", table: lookingFor },
-	meetAt: { id: "meet-at", label: "Meet at", table: meetAt },
+	lookingFor: {
+		id: "looking-for",
+		label: "common.filters.options.lookingFor",
+		table: lookingFor,
+	},
+	meetAt: {
+		id: "meet-at",
+		label: "common.filters.options.meetAt",
+		table: meetAt,
+	},
 	healthPractices: {
 		id: "health-practices",
-		label: "Health Practices",
+		label: "common.profileFields.healthPractices",
 		table: healthPractices,
 	},
 } as const satisfies Record<string, OptionFilterDefinition>;

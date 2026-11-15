@@ -40,7 +40,7 @@ describe("ProfileBody", () => {
 			lookingFor: [LookingFor.Chat],
 		});
 
-		const imInto = fields.indexOf("I'm Into Bear, Otter");
+		const imInto = fields.indexOf("I’m Into Bear, Otter");
 		expect(imInto).toBeGreaterThanOrEqual(0);
 		expect(fields[imInto + 1]).toBe("Looking For Chat");
 	});
@@ -54,7 +54,7 @@ describe("ProfileBody", () => {
 		});
 
 		const vaccinated = fields.indexOf(
-			"Vaccinated for COVID-19, Meningitis",
+			"Vaccinated For COVID-19, Meningitis",
 		);
 		expect(vaccinated).toBeGreaterThanOrEqual(0);
 		expect(fields[vaccinated - 1]).toMatch(/^Last Tested /);

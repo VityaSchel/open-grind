@@ -3,6 +3,7 @@
 
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
 	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { sexualPositions } from "#lib/model/users/profiles.ts";
 	import { labelFromMap } from "#lib/util/options.ts";
 	import { formatHeight, formatWeightGrams } from "#lib/util/units.ts";
@@ -28,7 +29,9 @@
 		[
 			post.profileFields.age === null
 				? undefined
-				: `${post.profileFields.age} years old`,
+				: t("browse.rightNow.post.age", {
+						count: post.profileFields.age,
+					}),
 			post.profileFields.height === null
 				? undefined
 				: formatHeight(post.profileFields.height, units),
@@ -60,7 +63,7 @@
 			<PostHeadline
 				id={headlineId}
 				text={post.text}
-				placeholder="Discreet post"
+				placeholder={t("browse.rightNow.post.discreet")}
 				hasPhoto={photo !== undefined}
 				{onreport}
 			/>

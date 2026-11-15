@@ -28,7 +28,7 @@ async function openPositionFilter() {
 
 function switchChecked() {
 	return screen
-		.getByRole("switch", { name: "Filter by position" })
+		.getByRole("switch", { name: "Filter by Position" })
 		.getAttribute("aria-checked");
 }
 

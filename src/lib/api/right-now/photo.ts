@@ -13,7 +13,7 @@ import {
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const UPLOAD_PATH = "/v2/media/upload";
-const TOO_FEW_BYTES = "Bytes too few";
+const TOO_FEW_BYTES = /Bytes too few/;
 
 export class RightNowPhotoTooSmallError extends Error {
 	constructor() {
@@ -31,7 +31,7 @@ async function uploadPhoto({
 		args: { path: UPLOAD_PATH, signed: false, file, crop: "cropAndThumb" },
 		requestInfo: { method: "POST", path: UPLOAD_PATH },
 	});
-	if (response.status === 400 && response.text().includes(TOO_FEW_BYTES)) {
+	if (response.status === 400 && TOO_FEW_BYTES.test(response.text())) {
 		throw new RightNowPhotoTooSmallError();
 	}
 	return response.jsonParsed(rightNowMediaUploadResponseSchema);

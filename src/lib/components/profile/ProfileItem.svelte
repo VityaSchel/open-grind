@@ -4,6 +4,7 @@
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
 	import * as Avatar from "#lib/components/ui/avatar/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { longPressHandlers } from "#lib/util/long-press.ts";
 
 	let {
@@ -44,7 +45,9 @@
 		onLongPress ? longPressHandlers(onLongPress) : {},
 	);
 	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
-	const accessibleName = $derived(title.value ?? title.fallback ?? "Someone");
+	const accessibleName = $derived(
+		title.value ?? title.fallback ?? t("common.someone"),
+	);
 </script>
 
 {#snippet avatarNode()}
@@ -94,7 +97,9 @@
 	{#if avatar.link}
 		<a
 			href={avatar.link}
-			aria-label="{accessibleName}'s profile"
+			aria-label={t("profile.item.a11y.profileLink", {
+				name: accessibleName,
+			})}
 			class="rounded-l-2xl @max-row:hidden"
 			tabindex={linkTabindex}
 		>

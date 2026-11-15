@@ -10,6 +10,8 @@ import {
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { isPhotoSwipeBusy } from "#lib/util/photoswipe/index.ts";
 import * as safeArea from "#lib/util/safe-area.ts";
 import ImageCarousel from "./ImageCarousel.svelte";
@@ -27,6 +29,11 @@ function mediasOf(hashes: string[]) {
 }
 
 const MEDIAS = mediasOf(["first", "second"]);
+
+const photoLabels = (container: HTMLElement) =>
+	[...container.querySelectorAll(".item")].map((item) =>
+		item.getAttribute("aria-label"),
+	);
 
 function galleryOf({
 	container,
@@ -47,8 +54,37 @@ function galleryOf({
 }
 
 describe("ImageCarousel", () => {
-	afterEach(cleanup);
+	afterEach(async () => {
+		cleanup();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
 	afterEach(() => vi.restoreAllMocks());
+
+	it("labels each photo with its position among the photos", () => {
+		const { container } = render(ImageCarousel, {
+			props: { medias: MEDIAS },
+		});
+
+		expect(photoLabels(container)).toEqual([
+			"Profile photo 1 of 2",
+			"Profile photo 2 of 2",
+		]);
+	});
+
+	it("words the photo labels in the active locale", async () => {
+		const { container } = render(ImageCarousel, {
+			props: { medias: MEDIAS },
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		const labels = photoLabels(container);
+		for (const label of labels) expect(label).toMatch(PSEUDO_MESSAGE);
+		expect(labels.map((label) => label?.match(/\d+/g))).toEqual([
+			["1", "2"],
+			["2", "2"],
+		]);
+	});
 
 	it("waits for the viewer to open before sending a normalized reply", async () => {
 		const onreply = vi.fn();

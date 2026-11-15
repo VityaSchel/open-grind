@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { loadCredits } from "#lib/credits/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import CreditsList from "./CreditsList.svelte";
 
 	const credits = loadCredits();
@@ -16,6 +17,6 @@
 	<CreditsList {cards} {groups} />
 {:catch}
 	<p class="px-1 py-8 text-center text-destructive">
-		Failed to load the credits. Please try again.
+		{t("settings.credits.errors.loadFailed")}
 	</p>
 {/await}

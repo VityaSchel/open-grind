@@ -15,12 +15,13 @@ pub const COMPANION_UNAVAILABLE: &str = "companion-unavailable";
 pub const COMPANION_UNTRUSTED: &str = "companion-untrusted";
 pub const COMPANION_REFUSED: &str = "companion-refused";
 pub const COMPANION_DISABLED: &str = "companion-disabled";
+pub const COMPANION_FAILED: &str = "companion-failed";
 const COMPANION_CANCELLED: &str = "cancelled";
-const COMPANION_FAILED: &str = "Google sign-in failed";
 
-pub trait OauthProvider: Send + Sync + 'static {
-	const NAME: &'static str;
-}
+pub const IN_PROGRESS: &str = "sign-in-in-progress";
+pub const FLOW_ENDED: &str = "sign-in-flow-ended";
+
+pub trait OauthProvider: Send + Sync + 'static {}
 
 /// The type parameter gives each provider its own Tauri state key.
 pub struct OauthBridge<P: OauthProvider> {
@@ -47,10 +48,7 @@ impl<P: OauthProvider> OauthBridge<P> {
 	) -> Result<oneshot::Receiver<Result<String, String>>, AppError> {
 		let mut pending = self.pending.lock().unwrap();
 		if pending.is_some() {
-			return Err(AppError::Auth(format!(
-				"{} sign-in already in progress",
-				P::NAME
-			)));
+			return Err(AppError::Auth(IN_PROGRESS.into()));
 		}
 		let (tx, rx) = oneshot::channel();
 		*pending = Some(tx);
@@ -66,6 +64,12 @@ impl<P: OauthProvider> OauthBridge<P> {
 	pub(crate) fn abort(&self) {
 		let _ = self.pending.lock().unwrap().take();
 	}
+}
+
+pub async fn delivered(
+	rx: oneshot::Receiver<Result<String, String>>,
+) -> Result<String, String> {
+	rx.await.unwrap_or_else(|_| Err(FLOW_ENDED.to_owned()))
 }
 
 pub fn companion_failure(rejection: Option<&str>) -> AppError {
@@ -151,9 +155,7 @@ mod tests {
 
 	struct TestProvider;
 
-	impl OauthProvider for TestProvider {
-		const NAME: &'static str = "Test";
-	}
+	impl OauthProvider for TestProvider {}
 
 	fn bridge() -> OauthBridge<TestProvider> {
 		OauthBridge::new()
@@ -228,6 +230,11 @@ mod tests {
 			)),
 			"sign-in.ts companionRefused is not {COMPANION_REFUSED}"
 		);
+		assert!(
+			frontend
+				.contains(&format!("companionFailed = \"{COMPANION_FAILED}\"")),
+			"sign-in.ts companionFailed is not {COMPANION_FAILED}"
+		);
 		let squashed =
 			|source: &str| source.split_whitespace().collect::<String>();
 		assert!(
@@ -252,6 +259,20 @@ mod tests {
 			)),
 			"GoogleOauthPlugin.kt ERROR_CANCELLED is not {COMPANION_CANCELLED}"
 		);
+	}
+
+	#[test]
+	fn flow_markers_match_the_frontend() {
+		let frontend = include_str!("../../../src/lib/api/sign-in.ts");
+		for (typescript, marker) in [
+			("signInInProgress", IN_PROGRESS),
+			("signInFlowEnded", FLOW_ENDED),
+		] {
+			assert!(
+				frontend.contains(&format!("{typescript} = \"{marker}\"")),
+				"sign-in.ts {typescript} is not {marker}"
+			);
+		}
 	}
 
 	#[test]
@@ -308,13 +329,29 @@ mod tests {
 	}
 
 	#[test]
-	fn the_refusal_names_the_provider() {
+	fn the_refusal_reaches_the_frontend_as_its_marker() {
 		let bridge = bridge();
 		let _rx = bridge.begin().expect("first flow starts");
 		let Err(AppError::Auth(message)) = bridge.begin() else {
 			panic!("a second flow must be refused");
 		};
-		assert_eq!(message, "Test sign-in already in progress");
+		assert_eq!(message, IN_PROGRESS);
+	}
+
+	#[tokio::test]
+	async fn a_delivered_result_is_the_verdict() {
+		let bridge = bridge();
+		let rx = bridge.begin().expect("first flow starts");
+		bridge.fulfill(Ok("token".into()));
+		assert_eq!(delivered(rx).await, Ok("token".into()));
+	}
+
+	#[tokio::test]
+	async fn a_flow_aborted_before_its_result_ends_as_its_marker() {
+		let bridge = bridge();
+		let rx = bridge.begin().expect("first flow starts");
+		bridge.abort();
+		assert_eq!(delivered(rx).await, Err(FLOW_ENDED.into()));
 	}
 
 	#[test]

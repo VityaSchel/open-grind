@@ -135,18 +135,47 @@ describe("the disguise state", () => {
 	});
 
 	it("surfaces a failure to the caller", async () => {
-		tauri.invoke.mockRejectedValue(
-			"The icon changed, but renaming the app needs an administrator",
-		);
+		const refused = { reason: "failed", detail: "macOS refused" };
+		tauri.invoke.mockRejectedValue(refused);
 		const { selectDisguise } = await import("./disguise.svelte");
 
 		await expect(selectDisguise("papizza", { resume: null })).rejects.toBe(
-			"The icon changed, but renaming the app needs an administrator",
+			refused,
 		);
+	});
+
+	it("re-reads the state after a failure, so the picker shows an icon that changed anyway", async () => {
+		backendReports("original");
+		const { hydrateDisguiseState, selectDisguise, currentDisguise } =
+			await import("./disguise.svelte");
+		await hydrateDisguiseState();
+		backendReports("papizza");
+		tauri.invoke.mockRejectedValueOnce({ reason: "renameNeedsAdmin" });
+
+		await expect(
+			selectDisguise("papizza", { resume: null }),
+		).rejects.toEqual({ reason: "renameNeedsAdmin" });
+
+		expect(currentDisguise()).toBe("papizza");
+	});
+
+	it.each([
+		[{ reason: "nameTaken" }, "nameTaken"],
+		[{ reason: "renameNeedsAdmin" }, "renameNeedsAdmin"],
+		[{ reason: "failed", detail: "macOS refused" }, "failed"],
+		[{ reason: "somethingNew" }, "failed"],
+		["unknown disguise papizza", "failed"],
+		[new Error("ipc down"), "failed"],
+	])("reads the failure %j as %s", async (error, failure) => {
+		const { disguiseFailure } = await import("./disguise.svelte");
+
+		expect(disguiseFailure(error)).toBe(failure);
 	});
 });
 
 describe("reopening after a disguise restart", () => {
+	const SETTINGS_TRAIL = (path: string) => ["/settings", path];
+
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
@@ -161,16 +190,18 @@ describe("reopening after a disguise restart", () => {
 		);
 	}
 
-	it("walks back down to the screen the restart left, so Back retraces it", async () => {
+	it("walks the trail down to the screen the restart left, so Back retraces it", async () => {
 		backendResumes("/settings/app/discreet-icon");
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 
-		await reopenAfterDisguiseRestart();
+		await reopenAfterDisguiseRestart({
+			trail: (path) => ["/settings", "/settings/app/security", path],
+		});
 
 		expect(goto.mock.calls.map(([path]) => path)).toEqual([
 			"/settings",
-			"/settings/app",
+			"/settings/app/security",
 			"/settings/app/discreet-icon",
 		]);
 	});
@@ -180,7 +211,7 @@ describe("reopening after a disguise restart", () => {
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 
-		await reopenAfterDisguiseRestart();
+		await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
 
 		expect(goto).not.toHaveBeenCalled();
 	});
@@ -197,7 +228,7 @@ describe("reopening after a disguise restart", () => {
 			const { reopenAfterDisguiseRestart } =
 				await import("./disguise.svelte");
 
-			await reopenAfterDisguiseRestart();
+			await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
 
 			expect(goto).not.toHaveBeenCalled();
 		}
@@ -208,7 +239,7 @@ describe("reopening after a disguise restart", () => {
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 
-		await reopenAfterDisguiseRestart();
+		await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
 
 		expect(tauri.invoke).not.toHaveBeenCalled();
 		expect(goto).not.toHaveBeenCalled();
