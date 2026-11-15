@@ -15,13 +15,6 @@ impl Purpose {
 			Self::Deactivation => "Open Grind going to the background",
 		}
 	}
-
-	const fn slot(self) -> usize {
-		match self {
-			Self::MediaUpload => 0,
-			Self::Deactivation => 1,
-		}
-	}
 }
 
 pub struct Slot {
@@ -72,18 +65,18 @@ impl Slot {
 }
 
 pub struct Ledger {
-	slots: [Slot; 2],
+	slots: [Slot; Purpose::ALL.len()],
 }
 
 impl Ledger {
 	pub const fn new() -> Self {
 		Self {
-			slots: [Slot::new(), Slot::new()],
+			slots: [const { Slot::new() }; Purpose::ALL.len()],
 		}
 	}
 
 	pub fn slot(&mut self, purpose: Purpose) -> &mut Slot {
-		&mut self.slots[purpose.slot()]
+		&mut self.slots[purpose as usize]
 	}
 
 	pub fn backgrounded(&mut self) {
@@ -99,7 +92,7 @@ impl Ledger {
 	pub fn unprotected(&self) -> Vec<Purpose> {
 		Purpose::ALL
 			.into_iter()
-			.filter(|purpose| self.slots[purpose.slot()].unprotected())
+			.filter(|purpose| self.slots[*purpose as usize].unprotected())
 			.collect()
 	}
 }
