@@ -172,7 +172,7 @@ pub(crate) fn install(_app: &AppHandle) -> Result<(), DesktopEntryError> {
 	let text = rewrite_entry(&fs::read_to_string(source)?, &appimage);
 	#[cfg(target_os = "linux")]
 	let text = crate::disguise::linux::disguised_entry(_app, text)
-		.map_err(|error| DesktopEntryError(error.0))?;
+		.map_err(|error| DesktopEntryError(error.to_string()))?;
 	fs::write(&entry, text)?;
 	Ok(())
 }
