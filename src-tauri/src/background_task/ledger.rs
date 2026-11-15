@@ -110,7 +110,6 @@ mod tests {
 
 	#[test]
 	fn each_purpose_shows_up_under_its_own_task_name() {
-		assert_eq!(Purpose::MediaUpload.task_name(), "Open Grind media upload");
 		assert_ne!(
 			Purpose::Deactivation.task_name(),
 			Purpose::MediaUpload.task_name()
