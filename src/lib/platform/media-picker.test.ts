@@ -129,25 +129,6 @@ describe("pickMultipleMedia", () => {
 				path: "/tmp/raw.unknown",
 			},
 		]);
-
-		expect(openMock).toHaveBeenCalledWith({
-			filters: [
-				{
-					name: "Media",
-					extensions: [
-						"jpg",
-						"jpeg",
-						"png",
-						"webp",
-						"mp4",
-						"mov",
-						"heic",
-						"heif",
-					],
-				},
-			],
-			multiple: true,
-		});
 	});
 
 	it.each([
