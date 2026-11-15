@@ -12,6 +12,7 @@ final class Driver: XCTestCase {
 		"edgeSwipe": ["inset", "y", "to", "seconds", "press", "hold"],
 	]
 	private static let edgeSwipeStepsPerSecond = 30.0
+	private static let dragPress: TimeInterval = 0.05
 	private let timeout: TimeInterval = 15
 	private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
@@ -115,7 +116,7 @@ final class Driver: XCTestCase {
 			guard path.count == 4 else { throw failure("drag needs a path of [x1, y1, x2, y2]") }
 			let start = coordinate(path[0], path[1], in: app)
 			let end = coordinate(path[2], path[3], in: app)
-			start.press(forDuration: 0.05, thenDragTo: end)
+			start.press(forDuration: Self.dragPress, thenDragTo: end)
 		}
 		if let options: [String: Any] = try value("dragHold", in: step) {
 			try dragHold(options, in: app)
@@ -163,14 +164,13 @@ final class Driver: XCTestCase {
 		guard let path: [Double] = try value("path", in: options), path.count == 4 else {
 			throw failure("dragHold needs a path of [x1, y1, x2, y2]")
 		}
-		let press = 0.05
 		let hold: Double = try value("hold", in: options) ?? 2
 		let velocity: Double = try value("velocity", in: options) ?? 1000
 		let start = coordinate(path[0], path[1], in: app)
 		let end = coordinate(path[2], path[3], in: app)
 		let travel = hypot(end.screenPoint.x - start.screenPoint.x, end.screenPoint.y - start.screenPoint.y) / velocity
-		let captured = captureLater(options, of: app, after: press + travel + hold / 2)
-		start.press(forDuration: press, thenDragTo: end, withVelocity: XCUIGestureVelocity(velocity), thenHoldForDuration: hold)
+		let captured = captureLater(options, of: app, after: Self.dragPress + travel + hold / 2)
+		start.press(forDuration: Self.dragPress, thenDragTo: end, withVelocity: XCUIGestureVelocity(velocity), thenHoldForDuration: hold)
 		try captured()
 	}
 
