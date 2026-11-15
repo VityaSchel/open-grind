@@ -61,6 +61,6 @@ describe("the Security settings", () => {
 			screen
 				.getByRole("link", { name: "Discreet App Icon" })
 				.getAttribute("href"),
-		).toBe("/settings/app/security/discreet-icon");
+		).toBe("/settings/app/discreet-icon");
 	});
 });

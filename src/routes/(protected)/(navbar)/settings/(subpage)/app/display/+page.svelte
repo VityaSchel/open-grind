@@ -1,4 +1,8 @@
 <script lang="ts">
+	import {
+		MATURE_CONTENT_SETTING_ID,
+		matureContentCovered,
+	} from "#lib/components/mature-content/mature-content.ts";
 	import { hapticsAvailable } from "#lib/haptics.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { desktopEntryAvailable } from "#lib/platform/desktop-entry.svelte.ts";
@@ -8,6 +12,14 @@
 	import UnitsSetting from "./UnitsSetting.svelte";
 </script>
 
+{#if matureContentCovered()}
+	<PreferenceSwitchSetting
+		id={MATURE_CONTENT_SETTING_ID}
+		preference="showMatureContent"
+		title={t("settings.app.showMatureContent.title")}
+		description={t("settings.app.showMatureContent.description")}
+	/>
+{/if}
 <UnitsSetting />
 <BackdropBlurSetting />
 {#if hapticsAvailable()}

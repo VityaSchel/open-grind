@@ -6,13 +6,11 @@ export interface Messages {
 	"auth.passwordReset.title": undefined;
 	"auth.passwordReset.unimplemented": { issueLink: string };
 	"auth.signIn.captcha.errors.addonDisabled": undefined;
-	"auth.signIn.captcha.errors.addonUnavailable": undefined;
 	"auth.signIn.captcha.errors.addonUntrusted": undefined;
 	"auth.signIn.captcha.errors.credentialsOrRejected": undefined;
 	"auth.signIn.captcha.errors.credentialsOrUnsupportedPlatform": undefined;
 	"auth.signIn.captcha.errors.grindrMissing": undefined;
 	"auth.signIn.captcha.errors.rejected": undefined;
-	"auth.signIn.captcha.errors.unsupportedPlatform": undefined;
 	"auth.signIn.captcha.errors.verifyFailed": undefined;
 	"auth.signIn.captcha.helper.description": undefined;
 	"auth.signIn.captcha.helper.title": undefined;
@@ -205,7 +203,6 @@ export interface Messages {
 	"browse.rightNow.timeLeft.hoursMinutes": { hours: string; minutes: string };
 	"browse.rightNow.timeLeft.minutes": { minutes: string };
 	"browse.rightNow.timeLeft.seconds": { seconds: string };
-	"browse.rightNow.unimplemented": { issueLink: string };
 	"chat.composer.a11y.send": undefined;
 	"chat.composer.attachments.a11y.add": undefined;
 	"chat.composer.attachments.a11y.title": undefined;
@@ -330,6 +327,7 @@ export interface Messages {
 	"chat.message.location.openMap": undefined;
 	"chat.message.location.title": undefined;
 	"chat.message.profilePhotoReply.a11y.open": undefined;
+	"chat.message.profilePhotoReply.a11y.photo": undefined;
 	"chat.message.profilePhotoReply.errors.openFailed": undefined;
 	"chat.message.reaction.a11y.fire": undefined;
 	"chat.message.status.notSent": undefined;
@@ -631,8 +629,6 @@ export interface Messages {
 	"media.album.tile.a11y.containsVideo": undefined;
 	"media.album.tile.shared": undefined;
 	"media.album.untitled": undefined;
-	"media.album.warning.title": undefined;
-	"media.album.warning.view": undefined;
 	"media.albums.add": undefined;
 	"media.albums.editor.a11y.markedForRemoval": { count: number };
 	"media.albums.editor.content.a11y.keepPhotoSlot": { slot: string };
@@ -694,6 +690,9 @@ export interface Messages {
 	"media.lightbox.reply.a11y.send": undefined;
 	"media.lightbox.reply.placeholder": undefined;
 	"media.lightbox.zoom": undefined;
+	"media.matureContent.a11y.show": undefined;
+	"media.matureContent.label": undefined;
+	"media.matureContent.show": undefined;
 	"media.picker.filters.image": undefined;
 	"media.picker.filters.media": undefined;
 	"media.picker.filters.video": undefined;
@@ -916,6 +915,8 @@ export interface Messages {
 	"settings.app.discreetAppIcon.confirm.title": undefined;
 	"settings.app.discreetAppIcon.description": undefined;
 	"settings.app.discreetAppIcon.errors.changeFailed": undefined;
+	"settings.app.discreetAppIcon.errors.nameTaken": { appName: string };
+	"settings.app.discreetAppIcon.errors.renameNeedsAdmin": undefined;
 	"settings.app.discreetAppIcon.renameNeedsAdmin": undefined;
 	"settings.app.discreetAppIcon.restart.android": { appName: string };
 	"settings.app.discreetAppIcon.restart.macos": { appName: string };
@@ -940,6 +941,8 @@ export interface Messages {
 	"settings.app.sections.privacy": undefined;
 	"settings.app.sections.security": undefined;
 	"settings.app.sections.updates": undefined;
+	"settings.app.showMatureContent.description": undefined;
+	"settings.app.showMatureContent.title": undefined;
 	"settings.app.stayOnline.description": undefined;
 	"settings.app.stayOnline.title": undefined;
 	"settings.app.units.description": undefined;
@@ -1334,7 +1337,6 @@ export interface RichMessages {
 	"browse.rightNow.timeLeft.hoursMinutes": { hours: "placeholder"; minutes: "placeholder" };
 	"browse.rightNow.timeLeft.minutes": { minutes: "placeholder" };
 	"browse.rightNow.timeLeft.seconds": { seconds: "placeholder" };
-	"browse.rightNow.unimplemented": { issueLink: "placeholder" };
 	"chat.composer.voiceMessage.unimplemented": { issueLink: "placeholder" };
 	"chat.conversations.empty.description": { gridLink: "tag" };
 	"chat.conversations.row.draft": { draft: "placeholder"; draftPrefix: "tag" };
@@ -1395,6 +1397,7 @@ export interface RichMessages {
 	"profile.onlineStatus.lastOnline": { ago: "placeholder" };
 	"profile.report.rightNowPost.awaitingModerationSince": { time: "placeholder" };
 	"settings.account.unimplemented": { issueLink: "placeholder" };
+	"settings.app.discreetAppIcon.errors.nameTaken": { appName: "placeholder" };
 	"settings.app.discreetAppIcon.restart.android": { appName: "placeholder" };
 	"settings.app.discreetAppIcon.restart.macos": { appName: "placeholder" };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: "placeholder" };

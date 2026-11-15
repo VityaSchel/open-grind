@@ -34,7 +34,7 @@ const TITLES: Record<string, string> = {
 	"/app/notifications": "Notifications",
 	"/app/privacy": "Privacy",
 	"/app/security": "Security",
-	"/app/security/discreet-icon": "Discreet App Icon",
+	"/app/discreet-icon": "Discreet App Icon",
 	"/app/updates": "Updates",
 	"/app/credits": "Credits & Licenses",
 	"/profile": "Edit Profile",

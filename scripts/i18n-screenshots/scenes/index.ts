@@ -136,6 +136,11 @@ import {
 	keyboardMediaOutsideChat,
 } from "./keyboard-media";
 import {
+	matureContentCovers,
+	matureContentReplies,
+	matureContentSetting,
+} from "./mature-content";
+import {
 	albumDropTarget,
 	chatDropFailures,
 	chatDropTarget,
@@ -149,7 +154,6 @@ import {
 import {
 	albumPreviewFailures,
 	albumVideoPlayer,
-	albumWarning,
 	profileLightbox,
 	videoDecoderMissing,
 	videoPlayFailed,
@@ -238,6 +242,8 @@ import {
 	linuxDiscreetIcon,
 	macosDiscreetIcon,
 	macosDiscreetIconAdmin,
+	macosDiscreetIconNameTaken,
+	macosDiscreetIconRenameRefused,
 	windowsDiscreetIcon,
 } from "./settings-discreet";
 import {
@@ -443,7 +449,9 @@ export const scenes: Scene[] = [
 	profilePhotoReply,
 	albumVideoPlayer,
 	albumPreviewFailures,
-	albumWarning,
+	matureContentSetting,
+	matureContentCovers,
+	matureContentReplies,
 	videoPlayFailed,
 	videoDecoderMissing,
 	newAlbum,
@@ -467,6 +475,8 @@ export const scenes: Scene[] = [
 	discreetIcon,
 	macosDiscreetIcon,
 	macosDiscreetIconAdmin,
+	macosDiscreetIconNameTaken,
+	macosDiscreetIconRenameRefused,
 	windowsDiscreetIcon,
 	linuxDiscreetIcon,
 	settingSaveFailed,

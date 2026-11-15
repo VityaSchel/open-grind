@@ -111,34 +111,13 @@ describe("publishNativeLanguage", () => {
 		["zh-CN", "zh-Hans"],
 		["de-AT", "de"],
 		["en-US", "en-US"],
-	])(
-		"sends the catalog shown for %s on Android 9–12",
-		async (locale, tag) => {
-			const { setLocale, publishNativeLanguage } = await load();
-			await setLocale({ locale });
-
-			await publishNativeLanguage({ choice: locale, tier: "none" });
-
-			expect(sent()).toEqual([{ tag }]);
-		},
-	);
-
-	it("clears the tag while the app follows the system", async () => {
+	])("sends the tag of the catalog shown for %s", async (locale, tag) => {
 		const { setLocale, publishNativeLanguage } = await load();
-		await setLocale({ locale: "de" });
+		await setLocale({ locale });
 
-		await publishNativeLanguage({ choice: null, tier: "none" });
+		await publishNativeLanguage();
 
-		expect(sent()).toEqual([{ tag: null }]);
-	});
-
-	it("leaves a two-way platform to its per-app language", async () => {
-		const { setLocale, publishNativeLanguage } = await load();
-		await setLocale({ locale: "de" });
-
-		await publishNativeLanguage({ choice: "de", tier: "two-way" });
-
-		expect(sent()).toEqual([{ tag: null }]);
+		expect(sent()).toEqual([{ tag }]);
 	});
 
 	it.each([
@@ -147,33 +126,27 @@ describe("publishNativeLanguage", () => {
 	])("sends nothing in %s", async (_, enabled, platform) => {
 		tauri.enabled = enabled;
 		os.platform = platform;
-		const {
-			setLocale,
-			publishNativeLanguage,
-			publishPinnedNativeLanguage,
-		} = await load();
+		const { setLocale, publishNativeLanguage } = await load();
 		await setLocale({ locale: "de" });
 
-		await publishNativeLanguage({ choice: "de", tier: "none" });
-		await publishPinnedNativeLanguage();
+		await publishNativeLanguage();
 
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 
-	it("sends a tag only when it changes", async () => {
+	it("sends the same tag again, so Android stores the languages it now stands for", async () => {
 		const { setLocale, publishNativeLanguage } = await load();
 		await setLocale({ locale: "de" });
 
-		await publishNativeLanguage({ choice: "de", tier: "none" });
-		await publishNativeLanguage({ choice: "de-DE", tier: "none" });
-		await publishNativeLanguage({ choice: null, tier: "none" });
-		await publishNativeLanguage({ choice: "de", tier: "two-way" });
-		await publishNativeLanguage({ choice: "de", tier: "none" });
+		await publishNativeLanguage();
+		await publishNativeLanguage();
+		await setLocale({ locale: "fr" });
+		await publishNativeLanguage();
 
-		expect(sent()).toEqual([{ tag: "de" }, { tag: null }, { tag: "de" }]);
+		expect(sent()).toEqual([{ tag: "de" }, { tag: "de" }, { tag: "fr" }]);
 	});
 
-	it("logs a failed send and sends the same tag again next time", async () => {
+	it("logs a failed send and sends the next one", async () => {
 		const consoleError = vi
 			.spyOn(console, "error")
 			.mockImplementation(() => {});
@@ -182,11 +155,9 @@ describe("publishNativeLanguage", () => {
 		const { setLocale, publishNativeLanguage } = await load();
 		await setLocale({ locale: "de" });
 
-		await expect(
-			publishNativeLanguage({ choice: "de", tier: "none" }),
-		).resolves.toBeUndefined();
+		await expect(publishNativeLanguage()).resolves.toBeUndefined();
 		answer();
-		await publishNativeLanguage({ choice: "de", tier: "none" });
+		await publishNativeLanguage();
 
 		expect(consoleError).toHaveBeenCalledWith(
 			"Failed to set the native text language",
@@ -207,7 +178,7 @@ describe("the interface language", () => {
 		expect(sent()).toEqual([{ tag: "es-419" }]);
 	});
 
-	it("sends no tag on Android 13 and later", async () => {
+	it("sends the chosen catalog on Android 13 and later", async () => {
 		preferences.stored = { language: "de", languageSync: { native: "de" } };
 		answer({
 			languages: reading({
@@ -221,8 +192,30 @@ describe("the interface language", () => {
 		await startLanguage();
 		await settle();
 
-		expect(sent()).toEqual([{ tag: null }]);
+		expect(sent()).toEqual([{ tag: "de" }]);
 	});
+
+	it.each([
+		["Android 9–12", "none"],
+		["Android 13 and later", "two-way"],
+	])(
+		"sends the catalog a secondary system language shows on %s",
+		async (_, tier) => {
+			answer({
+				languages: reading({
+					tier,
+					app: null,
+					system: ["it-IT", "de-AT"],
+				}),
+			});
+			const { startLanguage } = await load();
+
+			await startLanguage();
+			await settle();
+
+			expect(sent()).toEqual([{ tag: "de" }]);
+		},
+	);
 
 	it("sends nothing while the native read has failed", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
@@ -261,7 +254,7 @@ describe("the interface language", () => {
 			await after({ ms: 100, value: undefined });
 
 			expect(early).toEqual([]);
-			expect(sent()).toEqual([{ tag: null }]);
+			expect(sent()).toEqual([{ tag: "de" }]);
 		},
 		FRESH_IMPORTS_TIMEOUT_MS,
 	);
@@ -274,12 +267,12 @@ describe("the interface language", () => {
 		await settle();
 
 		expect(preferences.stored.language).toBe("fr");
-		expect(sent()).toEqual([{ tag: null }, { tag: "fr" }]);
+		expect(sent()).toEqual([{ tag: "en-US" }, { tag: "fr" }]);
 	});
 
 	it.each([
 		["the stored choice", "de", "de"],
-		["the cleared tag", null, null],
+		["the system language's catalog", null, "en-US"],
 	])(
 		"sends %s again when a new choice can’t be stored",
 		async (_, language, tag) => {

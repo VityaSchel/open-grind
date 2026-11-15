@@ -80,7 +80,7 @@ pub(crate) fn restore(app: &AppHandle, window: &WebviewWindow) {
 		tracing::warn!(
 			"[disguise] could not restore {:?}: {}",
 			chosen.map(|p| &p.id),
-			error.0
+			error
 		);
 	}
 }
@@ -105,6 +105,6 @@ fn decorate(
 		tracing::warn!("[disguise] could not set the window title: {error}");
 	}
 	if let Err(error) = platform::decorate(app, window, chosen) {
-		tracing::warn!("[disguise] could not set the window icon: {}", error.0);
+		tracing::warn!("[disguise] could not set the window icon: {error}");
 	}
 }

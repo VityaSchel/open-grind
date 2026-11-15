@@ -8,6 +8,7 @@
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import {
 		currentDisguise,
+		disguiseFailure,
 		type DisguisePreset,
 		disguisePresets,
 		disguiseRenameNeedsAdmin,
@@ -71,6 +72,27 @@
 		}
 	}
 
+	function failureLabel({
+		error,
+		choice,
+	}: {
+		error: unknown;
+		choice: DisguisePreset;
+	}): string {
+		switch (disguiseFailure(error)) {
+			case "nameTaken":
+				return t("settings.app.discreetAppIcon.errors.nameTaken", {
+					appName: choice.name,
+				});
+			case "renameNeedsAdmin":
+				return t(
+					"settings.app.discreetAppIcon.errors.renameNeedsAdmin",
+				);
+			case "failed":
+				return t("settings.app.discreetAppIcon.errors.changeFailed");
+		}
+	}
+
 	async function apply(choice: DisguisePreset) {
 		applying = true;
 		try {
@@ -79,10 +101,7 @@
 					restartNotice(choice) === null ? null : page.url.pathname,
 			});
 		} catch (error) {
-			showErrorToast({
-				label: t("settings.app.discreetAppIcon.errors.changeFailed"),
-				error,
-			});
+			showErrorToast({ label: failureLabel({ error, choice }), error });
 		} finally {
 			applying = false;
 			alertOpen = false;

@@ -6,6 +6,8 @@
 	import type { ClassValue } from "svelte/elements";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
@@ -15,8 +17,6 @@
 		loadAlbumSlides,
 		openAlbumLightbox,
 	} from "./album-lightbox";
-	import { albumWarningDue, markAlbumWarningSeen } from "./album-warning";
-	import AlbumWarningDialog from "./AlbumWarningDialog.svelte";
 
 	let {
 		albumId,
@@ -52,11 +52,14 @@
 
 	type PreviewState =
 		| { status: "idle" }
-		| { status: "warning" }
 		| { status: "loading" }
 		| { status: "open"; slides: AlbumSlide[] };
 
 	let preview = $state<PreviewState>({ status: "idle" });
+	const covered = $derived(!ourAlbum && matureContentCovered());
+	const accessibleLabel = $derived(
+		label ?? t("media.album.preview.a11y.open"),
+	);
 
 	let loadedCoverUrl = $state<string | null>(null);
 	const shownCoverUrl = $derived(
@@ -64,15 +67,7 @@
 	);
 
 	function open() {
-		preview =
-			!ourAlbum && albumWarningDue()
-				? { status: "warning" }
-				: { status: "loading" };
-	}
-
-	function view() {
 		preview = { status: "loading" };
-		markAlbumWarningSeen();
 	}
 
 	$effect(() => {
@@ -123,22 +118,7 @@
 	});
 </script>
 
-<button
-	data-slot="album-preview"
-	class={[
-		"relative",
-		className,
-		contentClass,
-		{
-			"cursor-pointer": preview.status === "idle",
-			"opacity-50": preview.status === "loading",
-		},
-	]}
-	aria-label={label ?? t("media.album.preview.a11y.open")}
-	onclick={open}
-	disabled={preview.status !== "idle"}
-	{@attach attach}
->
+{#snippet content()}
 	<MediaImage
 		src={proxyMediaUrl(shownCoverUrl)}
 		onload={() => (loadedCoverUrl = shownCoverUrl)}
@@ -172,17 +152,41 @@
 			{/if}
 		</div>
 	</div>
-	{@render children?.()}
-</button>
-<AlbumWarningDialog
-	bind:open={
-		() => preview.status === "warning",
-		(next) => {
-			if (!next) preview = { status: "idle" };
-		}
-	}
-	onview={view}
-/>
+{/snippet}
+
+{#if covered}
+	<div
+		data-slot="album-preview"
+		role="group"
+		aria-label={accessibleLabel}
+		class={["relative", className, contentClass]}
+		{@attach attach}
+	>
+		{@render content()}
+		<MatureContentCover class="rounded-[inherit]" />
+		{@render children?.()}
+	</div>
+{:else}
+	<button
+		data-slot="album-preview"
+		class={[
+			"relative",
+			className,
+			contentClass,
+			{
+				"cursor-pointer": preview.status === "idle",
+				"opacity-50": preview.status === "loading",
+			},
+		]}
+		aria-label={accessibleLabel}
+		onclick={open}
+		disabled={preview.status !== "idle"}
+		{@attach attach}
+	>
+		{@render content()}
+		{@render children?.()}
+	</button>
+{/if}
 
 <style>
 	:global(.pswp__img) {

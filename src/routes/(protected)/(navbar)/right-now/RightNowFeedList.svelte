@@ -76,6 +76,7 @@
 				{:else}
 					<DiscreetPostCard
 						post={item.data}
+						own={item.data.id === ownPostId}
 						onreport={item.data.id === ownPostId
 							? null
 							: () =>

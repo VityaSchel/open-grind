@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
@@ -8,9 +10,11 @@
 	import { mediaRenewal } from "./media-renewal";
 	import { MeasuredSize, MessageMediaState } from "./message-media.svelte";
 
-	let { message }: { message: ImageMessage["body"] } = $props();
+	let { message, isOut }: { message: ImageMessage["body"]; isOut: boolean } =
+		$props();
 
 	const media = new MessageMediaState();
+	const covered = $derived(!isOut && matureContentCovered());
 	const renewMedia = mediaRenewal();
 	let loadedUrl = $state<string | null>(null);
 	const tileUrl = $derived(
@@ -36,14 +40,16 @@
 </script>
 
 <div class={["relative", media.widthClass]} {@attach media.attach}>
-	<a
-		href={failed ? undefined : href}
-		rel="noreferrer"
+	<svelte:element
+		this={covered ? "div" : "a"}
+		href={covered || failed ? undefined : href}
+		rel={covered ? undefined : "noreferrer"}
 		data-pswp-width={size.width ?? undefined}
 		data-pswp-height={size.height ?? undefined}
+		role={covered ? "group" : undefined}
 		aria-label={t("chat.messagePreview.photo")}
 		aria-disabled={failed ? "true" : undefined}
-		class="item block"
+		class="item relative block"
 	>
 		<MediaImage
 			{src}
@@ -57,6 +63,9 @@
 			bind:failedSrc
 			onexpired={renewMedia}
 		/>
-	</a>
+		{#if covered}
+			<MatureContentCover class={["rounded-lg", media.cornerClass]} />
+		{/if}
+	</svelte:element>
 	{@render media.adornments?.()}
 </div>

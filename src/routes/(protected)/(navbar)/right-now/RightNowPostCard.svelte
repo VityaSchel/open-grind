@@ -68,6 +68,7 @@
 			<Avatar.Root class="size-12 after:rounded-full">
 				<UserAvatar
 					mediaHash={post.mediaHash ?? null}
+					own={ownPost}
 					class="size-full *:rounded-full"
 					size="lg"
 				/>
@@ -96,7 +97,7 @@
 			</p>
 		{/if}
 		{#if photo}
-			<RightNowPostPhoto media={photo} />
+			<RightNowPostPhoto media={photo} own={ownPost} />
 		{/if}
 		<div class="flex items-center justify-between gap-2">
 			<RightNowPostMeta

@@ -66,6 +66,10 @@ const TRANSPARENCY_FILE =
 	"BUNDLE-METADATA/com.android.tools.build.bundletool/code_transparency_signed.jwt";
 const TRANSPARENCY_FINGERPRINT_LABEL =
 	"Google Play code transparency key SHA-256 fingerprint:";
+const PLAY_OVERLAY_REMOVES = [
+	"android.permission.REQUEST_INSTALL_PACKAGES",
+	"org.opengrind.update.TransferService",
+];
 
 const publishedKeys = (
 	await Bun.file(path.join(import.meta.dir, "..", "KEYS.md")).text()
@@ -220,7 +224,21 @@ async function checkTransparency(bundle: string) {
 	console.log(`code transparency key SHA-256: ${fingerprint}`);
 }
 
+async function requirePlayBuild(bundle: string) {
+	const manifest =
+		await $`bundletool dump manifest --bundle=${bundle}`.text();
+	const leftovers = PLAY_OVERLAY_REMOVES.filter((name) =>
+		manifest.includes(`"${name}"`),
+	);
+	if (leftovers.length > 0) {
+		throw new Error(
+			`${path.basename(bundle)} was built without OPEN_GRIND_STORE=play: its manifest still declares ${leftovers.join(", ")}`,
+		);
+	}
+}
+
 async function signAab(input: string, output: string) {
+	await requirePlayBuild(input);
 	const { store, alias, password } = await keystore(
 		"OPEN_GRIND_PLAY_KEYSTORE_PROPERTIES",
 	);

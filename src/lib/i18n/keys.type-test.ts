@@ -108,7 +108,6 @@ expectTypeOf<{
 expectTypeOf<RichKeyWith<{ issueLink: "placeholder" }>>().toEqualTypeOf<
 	| "auth.passwordReset.unimplemented"
 	| "auth.signUp.unimplemented"
-	| "browse.rightNow.unimplemented"
 	| "chat.composer.voiceMessage.unimplemented"
 	| "settings.account.unimplemented"
 	| "settings.app.discreetAppIcon.unimplemented"

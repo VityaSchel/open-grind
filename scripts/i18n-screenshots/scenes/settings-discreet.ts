@@ -18,7 +18,8 @@ const PREVIEW = `data:image/svg+xml,${encodeURIComponent(
 
 function disguiseNative({
 	renameNeedsAdmin = false,
-}: { renameNeedsAdmin?: boolean } = {}): NativeOverrides {
+	failure = "The launcher refused the change",
+}: { renameNeedsAdmin?: boolean; failure?: unknown } = {}): NativeOverrides {
 	return {
 		disguise_state: {
 			answer: {
@@ -36,14 +37,14 @@ function disguiseNative({
 				]),
 			),
 		},
-		disguise_select: { reject: "The launcher refused the change" },
+		disguise_select: { reject: failure },
 	};
 }
 
 function openDiscreetIcon(page: Page): Promise<void> {
 	return visit({
 		page,
-		path: "/settings/app/security/discreet-icon",
+		path: "/settings/app/discreet-icon",
 		ready: page.locator('[data-slot="disguise-choices"] button img[src]'),
 	});
 }
@@ -105,6 +106,46 @@ export const macosDiscreetIcon: Scene = {
 		},
 	],
 };
+
+function macosRenameFailure({
+	id,
+	reason,
+}: {
+	id: string;
+	reason: "nameTaken" | "renameNeedsAdmin";
+}): Scene {
+	return {
+		platform: "desktop",
+		native: disguiseNative({ failure: { reason } }),
+		views: [
+			{
+				id,
+				screen: "settings/discreet-icon/macos",
+				survivesLocaleSwitch: false,
+				drive: async (page) => {
+					await openDiscreetIcon(page);
+					await choosePreset(page);
+					const confirm = page.getByRole("alertdialog");
+					await confirm.waitFor();
+					await addingToast({
+						page,
+						action: () => press(confirm.getByRole("button").last()),
+					});
+				},
+			},
+		],
+	};
+}
+
+export const macosDiscreetIconNameTaken = macosRenameFailure({
+	id: "settings/discreet-icon/macos/name-taken",
+	reason: "nameTaken",
+});
+
+export const macosDiscreetIconRenameRefused = macosRenameFailure({
+	id: "settings/discreet-icon/macos/rename-needs-admin",
+	reason: "renameNeedsAdmin",
+});
 
 export const macosDiscreetIconAdmin: Scene = {
 	platform: "desktop",

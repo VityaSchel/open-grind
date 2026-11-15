@@ -7,6 +7,7 @@
 	import { cn } from "#lib/util/utils.ts";
 
 	let {
+		id,
 		title,
 		description,
 		icon,
@@ -15,6 +16,7 @@
 		busy = false,
 		class: className,
 	}: {
+		id?: string;
 		title: string;
 		description?: string;
 		icon?: Snippet;
@@ -26,6 +28,7 @@
 </script>
 
 <Label
+	{id}
 	class={cn(
 		"flex items-center space-x-2 rounded-xl border p-4 transition-all hover:bg-muted aria-disabled:opacity-60",
 		className,

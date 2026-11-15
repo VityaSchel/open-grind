@@ -95,7 +95,6 @@
 		}
 	},
 	"rightNow": {
-		"unimplemented": "The Right Now tab isn’t implemented yet. Follow the progress in {{issueLink}}.",
 		"filters": {
 			"errors": {
 				"loadFailed": "Couldn’t load Right Now filters",

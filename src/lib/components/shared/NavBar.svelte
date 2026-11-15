@@ -68,7 +68,11 @@
 </script>
 
 {#snippet label(text: string)}
-	<span class="label" data-label={text}>{text}</span>
+	<span class="label" data-label={text}>
+		<span data-slot="navbar-tab-label" class="max-w-full truncate"
+			>{text}</span
+		>
+	</span>
 {/snippet}
 
 <ProgressiveBlur
@@ -77,14 +81,13 @@
 	aria-label={t("shell.navBar.a11y.navigation")}
 	class="fixed bottom-0 z-50 w-full pt-2 pb-fixed-nav"
 	bgClass="bg-linear-to-t from-background to-transparent"
-	contentClass="flex gap-2 overflow-auto no-scrollbar px-1 *:first:ms-auto *:last:me-auto"
-	contentScrollIntent="x"
+	contentClass="flex justify-center gap-2 px-1"
 	{@attach bottomChrome}
 >
 	<div
 		class={[
 			tabsListVariants({ variant: "default" }),
-			"links shrink-0 [&>a>svg]:size-5!",
+			"links min-w-0 [&>a>svg]:size-5!",
 		]}
 	>
 		<a
@@ -153,6 +156,7 @@
 			{@const mainPhoto = photos[0] as { mediaHash: string } | undefined}
 			<UserAvatar
 				mediaHash={mainPhoto?.mediaHash ?? null}
+				own
 				class="size-full *:rounded-full"
 				size="lg"
 			/>
@@ -166,15 +170,15 @@
 	@reference "$layout";
 
 	.links a {
-		@apply relative inline-flex h-[calc(100%-1px)] flex-1 flex-col items-center justify-center gap-0.5 rounded-full border border-transparent! px-3 py-1 text-xs whitespace-nowrap text-foreground/60 transition-colors group-data-vertical/tabs:rounded-2xl group-data-vertical/tabs:px-3 group-data-vertical/tabs:py-1.5 hover:bg-input/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none dark:text-muted-foreground dark:hover:bg-input/20 data-active:font-medium data-active:text-foreground dark:data-active:border-input dark:data-active:text-accent [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4;
+		@apply relative inline-flex h-[calc(100%-1px)] max-w-max min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full border border-transparent! px-3 py-1 text-xs whitespace-nowrap text-foreground/60 transition-colors group-data-vertical/tabs:rounded-2xl group-data-vertical/tabs:px-3 group-data-vertical/tabs:py-1.5 hover:bg-input/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none dark:text-muted-foreground dark:hover:bg-input/20 data-active:font-medium data-active:text-foreground dark:data-active:border-input dark:data-active:text-accent [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4;
 	}
 
 	.label {
-		@apply flex flex-col items-center;
+		@apply flex max-w-full flex-col items-center;
 	}
 
 	.label::after {
-		@apply invisible h-0 overflow-hidden font-medium select-none;
+		@apply invisible h-0 max-w-full overflow-hidden font-medium select-none;
 		content: attr(data-label);
 	}
 </style>

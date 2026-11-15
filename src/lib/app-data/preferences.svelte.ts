@@ -20,7 +20,6 @@ import { unitSystemFor, unitSystemSchema } from "#lib/util/units.ts";
 import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
 const preferencesSchema = z.object({
-	albumWarningSeen: z.boolean().default(false),
 	autoUpdateLocation: z.boolean().default(false),
 	backdropBlurCalibration: backdropBlurCalibrationSchema
 		.nullable()
@@ -41,6 +40,7 @@ const preferencesSchema = z.object({
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
 	rightNowFeedFilters: rightNowFeedFiltersSchema.optional(),
+	showMatureContent: z.boolean().default(false),
 	stayOnline: z.boolean().default(true),
 	systemUnitsPending: z.boolean().default(false),
 	units: unitSystemSchema.default("metric"),
