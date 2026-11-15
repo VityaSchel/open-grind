@@ -73,32 +73,11 @@ async function pick({
 	kind: MediaKind;
 	multiple: boolean;
 }): Promise<PickedMedia[]> {
-	const filter = filtersByKind[kind];
-
-	if (__DEMO__) {
-		const files = await pickDemoFiles({ filter, multiple });
-		return files.map(
-			(file): PickedMedia => ({
-				source: "demo",
-				key: crypto.randomUUID(),
-				mimeType: file.type === "" ? null : file.type,
-				file,
-			}),
-		);
-	}
+	if (__DEMO__) return pickDemoMedia({ kind, multiple });
 
 	switch (currentPlatform()) {
-		case "android": {
-			const uris = await pickAndroidUris({ filter, multiple });
-			return uris.map(
-				(uri): PickedMedia => ({
-					source: "android",
-					key: crypto.randomUUID(),
-					mimeType: null,
-					uri,
-				}),
-			);
-		}
+		case "android":
+			return pickAndroidMedia({ kind, multiple });
 		case "ios":
 			return pickIosMedia({ kind, multiple });
 		case "linux":
@@ -164,27 +143,36 @@ async function pickWithDialog({
 	);
 }
 
-async function pickAndroidUris({
-	filter,
+async function pickAndroidMedia({
+	kind,
 	multiple,
 }: {
-	filter: MediaFilter;
+	kind: MediaKind;
 	multiple: boolean;
-}): Promise<AndroidFsUri[]> {
+}): Promise<PickedMedia[]> {
+	const { mimeTypes } = filtersByKind[kind];
 	const picked = await invoke<string[] | null>("pick_android_media", {
-		mimeTypes: filter.mimeTypes,
+		mimeTypes,
 		multiple,
 	});
-	if (picked !== null) {
-		return picked.map(
-			(uri): AndroidFsUri => ({ uri, documentTopTreeUri: null }),
-		);
-	}
-	return AndroidFs.showOpenFilePicker({
-		pickerType: "Gallery",
-		mimeTypes: filter.mimeTypes,
-		multiple,
-	});
+	const uris =
+		picked === null
+			? await AndroidFs.showOpenFilePicker({
+					pickerType: "Gallery",
+					mimeTypes,
+					multiple,
+				})
+			: picked.map(
+					(uri): AndroidFsUri => ({ uri, documentTopTreeUri: null }),
+				);
+	return uris.map(
+		(uri): PickedMedia => ({
+			source: "android",
+			key: crypto.randomUUID(),
+			mimeType: null,
+			uri,
+		}),
+	);
 }
 
 export function mimeTypeFromPath(path: string): string | null {
@@ -192,20 +180,28 @@ export function mimeTypeFromPath(path: string): string | null {
 	return mimeTypesByExtension[extension] ?? null;
 }
 
-function pickDemoFiles({
-	filter,
+async function pickDemoMedia({
+	kind,
 	multiple,
 }: {
-	filter: MediaFilter;
+	kind: MediaKind;
 	multiple: boolean;
-}): Promise<File[]> {
-	return new Promise((resolve) => {
+}): Promise<PickedMedia[]> {
+	const files = await new Promise<File[]>((resolve) => {
 		const input = document.createElement("input");
 		input.type = "file";
-		input.accept = filter.mimeTypes.join(",");
+		input.accept = filtersByKind[kind].mimeTypes.join(",");
 		input.multiple = multiple;
 		input.onchange = () => resolve(Array.from(input.files ?? []));
 		input.oncancel = () => resolve([]);
 		input.click();
 	});
+	return files.map(
+		(file): PickedMedia => ({
+			source: "demo",
+			key: crypto.randomUUID(),
+			mimeType: file.type === "" ? null : file.type,
+			file,
+		}),
+	);
 }
