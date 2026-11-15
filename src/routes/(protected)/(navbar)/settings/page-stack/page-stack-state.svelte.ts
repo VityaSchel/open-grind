@@ -32,7 +32,7 @@ export class PageStackState {
 	#pushedFrom: { path: string }[];
 	#generation = new Generation();
 	#backOwed = false;
-	#committedByGesture = false;
+	#committedByGesture = $state(false);
 	readonly #backWatchdog = new BackWatchdog();
 
 	constructor({
@@ -62,7 +62,11 @@ export class PageStackState {
 	}
 
 	get offersSwipeBack(): boolean {
-		return this.#ancestors.length > 0 && this.#livePane() !== null;
+		return (
+			this.#ancestors.length > 0 &&
+			this.#livePane() !== null &&
+			!this.#committedByGesture
+		);
 	}
 
 	async navigate(navigation: OnNavigate): Promise<(() => void) | void> {
@@ -149,7 +153,7 @@ export class PageStackState {
 		}
 
 		const previous = this.#ancestors.at(-1);
-		if (!previous || !this.#livePane()) return false;
+		if (!previous || !this.offersSwipeBack) return false;
 
 		this.ghost = previous;
 		this.liveRole = "front";

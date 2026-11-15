@@ -160,34 +160,6 @@ describe("PageStackState committing a swipe", () => {
 		expect(animations).toHaveLength(settled);
 		vi.useRealTimers();
 	});
-
-	it("never slides back a page whose Back navigated after a second swipe paid another", async () => {
-		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-		const harness = makeStack();
-		const { stack, animations } = harness;
-		vi.spyOn(history, "back").mockImplementation(() => {});
-		await push(harness, { from: "/settings", to: "/settings/app" });
-		stack.beginSwipeBack();
-		stack.commitSwipeBack();
-		await settleLast(animations);
-		stack.beginSwipeBack();
-		stack.commitSwipeBack();
-		await settleLast(animations);
-		const adopt = await stack.navigate(
-			navigationEvent({
-				from: "/settings/app",
-				to: "/settings",
-				delta: -1,
-			}),
-		);
-		adopt?.();
-		const settled = animations.length;
-
-		vi.advanceTimersByTime(1000);
-
-		expect(animations).toHaveLength(settled);
-		vi.useRealTimers();
-	});
 });
 
 describe("PageStackState offering a back swipe", () => {
@@ -220,5 +192,44 @@ describe("PageStackState offering a back swipe", () => {
 		expect(stack.offersSwipeBack).toBe(true);
 		expect(stack.beginSwipeBack()).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
+	});
+
+	it("stops offering one from the paid Back until the page lands, so a second swipe cannot go back twice", async () => {
+		const harness = makeStack();
+		const { stack, animations } = harness;
+		const back = vi.spyOn(history, "back").mockImplementation(() => {});
+		await push(harness, { from: "/settings", to: "/settings/account" });
+		await push(harness, {
+			from: "/settings/account",
+			to: "/settings/account/privacy",
+		});
+		const offers: boolean[] = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				offers.push(stack.offersSwipeBack);
+			});
+		});
+		flushSync();
+
+		stack.beginSwipeBack();
+		stack.commitSwipeBack();
+		await settleLast(animations);
+		flushSync();
+
+		expect(stack.beginSwipeBack()).toBe(false);
+		expect(back).toHaveBeenCalledOnce();
+
+		const adopt = await stack.navigate(
+			navigationEvent({
+				from: "/settings/account/privacy",
+				to: "/settings/account",
+				delta: -1,
+			}),
+		);
+		adopt?.();
+		flushSync();
+
+		expect(offers).toEqual([true, false, true]);
+		stop();
 	});
 });
