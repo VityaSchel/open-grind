@@ -11,7 +11,7 @@ import type {
 	MissingLocationGrant,
 } from "./location-request.svelte";
 
-const PERMISSION_TOAST_ID = "location-permission";
+const GPS_BLOCKED_TOAST_ID = "gps-blocked";
 
 const DENIAL_COPY = {
 	permission:
@@ -29,7 +29,7 @@ function showLocationPermissionToast({
 	missing: MissingLocationGrant;
 }): void {
 	toast.error(DENIAL_COPY[missing], {
-		id: PERMISSION_TOAST_ID,
+		id: GPS_BLOCKED_TOAST_ID,
 		...(canOpenAppSettings() && {
 			action: { label: "Settings", onClick: openAppSettings },
 		}),
@@ -47,7 +47,7 @@ function showLocationErrorToast({
 }): void {
 	switch (reason) {
 		case "disabled":
-			toast.error(LOCATION_DISABLED_COPY, { id: PERMISSION_TOAST_ID });
+			toast.error(LOCATION_DISABLED_COPY, { id: GPS_BLOCKED_TOAST_ID });
 			return;
 		case "failed":
 			showErrorToast({ label, error });
