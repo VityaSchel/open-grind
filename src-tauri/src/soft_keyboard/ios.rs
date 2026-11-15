@@ -13,7 +13,7 @@ use objc2_foundation::{
 	NSValue,
 };
 use objc2_ui_kit::{
-	NSValueUIGeometryExtensions, UICoordinateSpace,
+	NSValueUIGeometryExtensions, UICoordinateSpace, UIEdgeInsets,
 	UIKeyboardAnimationCurveUserInfoKey,
 	UIKeyboardAnimationDurationUserInfoKey,
 	UIKeyboardDidChangeFrameNotification, UIKeyboardDidShowNotification,
@@ -120,14 +120,8 @@ impl KeyboardFrame {
 		if page_follows {
 			self.catch_up(overlap);
 		}
-		let safe = self.safeAreaInsets();
 		let layout = KeyboardLayout {
-			safe: Edges {
-				top: safe.top,
-				bottom: safe.bottom,
-				left: safe.left,
-				right: safe.right,
-			},
+			safe: self.safeAreaInsets().into(),
 			overlap,
 			page_follows,
 		};
@@ -160,7 +154,7 @@ impl KeyboardFrame {
 			self.ivars().keyboard.get(),
 			&window.screen().coordinateSpace(),
 		);
-		geometry::keyboard_overlap(rect(self.bounds()), rect(keyboard))
+		geometry::keyboard_overlap(self.bounds().into(), keyboard.into())
 	}
 
 	fn keyboard_will_change(&self, change: KeyboardChange) {
@@ -310,12 +304,25 @@ fn epoch_milliseconds() -> f64 {
 		.map_or(0.0, |elapsed| elapsed.as_secs_f64() * 1000.0)
 }
 
-fn rect(rect: CGRect) -> Rect {
-	Rect {
-		x: rect.origin.x,
-		y: rect.origin.y,
-		width: rect.size.width,
-		height: rect.size.height,
+impl From<CGRect> for Rect {
+	fn from(rect: CGRect) -> Self {
+		Self {
+			x: rect.origin.x,
+			y: rect.origin.y,
+			width: rect.size.width,
+			height: rect.size.height,
+		}
+	}
+}
+
+impl From<UIEdgeInsets> for Edges {
+	fn from(insets: UIEdgeInsets) -> Self {
+		Self {
+			top: insets.top,
+			bottom: insets.bottom,
+			left: insets.left,
+			right: insets.right,
+		}
 	}
 }
 
