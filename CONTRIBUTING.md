@@ -62,6 +62,7 @@ Projects reference:
 
     - Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app.
     - Run with `OPEN_GRIND_DEMO=1` to switch to SFW mock data.
+    - `tauri android dev` launches `.MainActivity`, which is disabled while a discreet app icon is selected on the device. Switch back to the Open Grind icon first.
 
 ### Project structure
 

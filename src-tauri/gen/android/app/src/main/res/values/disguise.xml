@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="disguise_open_back_door" translatable="false">Open Back Door</string>
+  <string name="disguise_navigaitor" translatable="false">Navigaitor</string>
+  <string name="disguise_papizza" translatable="false">papizza</string>
+  <string name="disguise_hook_app" translatable="false">Hook App</string>
+  <string name="disguise_bus_sy" translatable="false">Bus.sy</string>
+  <string name="disguise_food_amarelo" translatable="false">Food Amarelo</string>
+  <string name="disguise_kvirchat" translatable="false">KVirChat</string>
+  <string name="disguise_vibrogym" translatable="false">VibroGym</string>
+  <string name="disguise_taps24" translatable="false">Taps24</string>
+  <string name="disguise_sosim_settings" translatable="false">soSim settings</string>
+  <string name="disguise_cogsoccer" translatable="false">CogSoccer</string>
+  <string name="disguise_cornball" translatable="false">Cornball</string>
+  <string name="disguise_twinkies" translatable="false">Twinkies</string>
+  <string name="disguise_peaches_online" translatable="false">Peaches Online</string>
+  <string name="disguise_myeggplants" translatable="false">MyEggplants</string>
+  <string name="disguise_picdictionary" translatable="false">PicDictionary</string>
+  <string name="disguise_hayman" translatable="false">HayMan</string>
+  <string name="disguise_pasact" translatable="false">PASACT</string>
+  <string name="disguise_blow_today" translatable="false">Blow Today</string>
+  <string name="disguise_greener" translatable="false">Greener</string>
+  <string name="disguise_catfishers" translatable="false">CatFishers</string>
+  <string name="disguise_bible" translatable="false">Bible</string>
+  <string name="disguise_ultra_calculator" translatable="false">Ultra Calculator 2.0 2027</string>
+  <string name="disguise_grindle" translatable="false">grindle</string>
+</resources>

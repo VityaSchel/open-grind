@@ -515,12 +515,14 @@ describe("the Android app", () => {
 	const mapped = Object.keys(
 		JSON.parse(read(path.join(root, ANDROID_MANIFEST))) as object,
 	);
-	const brand = declaredStrings([
-		{
-			file: "brand.xml",
-			text: read(path.join(root, ANDROID_RES, "values/brand.xml")),
-		},
-	]);
+	const handWritten = declaredStrings(
+		globSync("values/*.xml", { cwd: path.join(root, ANDROID_RES) })
+			.filter((relative) => relative !== "values/strings.xml")
+			.map((relative) => ({
+				file: relative,
+				text: read(path.join(root, ANDROID_RES, relative)),
+			})),
+	);
 	const namesIn = ({
 		files,
 		pattern,
@@ -549,13 +551,13 @@ describe("the Android app", () => {
 	it("reads references from Kotlin and from XML", () => {
 		expect(kotlin).toContain("push_self");
 		expect(xml).toContain("app_name");
-		expect(brand.has("app_name")).toBe(true);
+		expect(handWritten.has("app_name")).toBe(true);
 	});
 
 	it("declares every string resource it references", () => {
 		expect(
 			[...referenced].filter(
-				(name) => !mapped.includes(name) && !brand.has(name),
+				(name) => !mapped.includes(name) && !handWritten.has(name),
 			),
 		).toEqual([]);
 	});

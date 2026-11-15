@@ -4,8 +4,12 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { toast } = vi.hoisted(() => ({ toast: vi.fn() }));
+const disguise = vi.hoisted(() => ({ available: false }));
 
 vi.mock("svelte-sonner", () => ({ toast }));
+vi.mock("#lib/platform/disguise.svelte.ts", () => ({
+	disguiseAvailable: () => disguise.available,
+}));
 
 import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
 import SecurityPage from "./+page.svelte";
@@ -13,6 +17,7 @@ import SecurityPage from "./+page.svelte";
 afterEach(() => {
 	cleanup();
 	toast.mockReset();
+	disguise.available = false;
 });
 
 describe("the Security settings", () => {
@@ -47,4 +52,15 @@ describe("the Security settings", () => {
 			});
 		},
 	);
+
+	it("open the discreet app icon choices where the system can change the icon", () => {
+		disguise.available = true;
+		render(SecurityPage);
+
+		expect(
+			screen
+				.getByRole("link", { name: "Discreet App Icon" })
+				.getAttribute("href"),
+		).toBe("/settings/app/security/discreet-icon");
+	});
 });

@@ -167,6 +167,11 @@ const routes: readonly RouteCase[] = [
 		shows: 'main a[href="#/"]',
 	},
 	{
+		route: "/(protected)/(navbar)/settings/(subpage)/app/security/discreet-icon",
+		path: `${APP}/security/discreet-icon`,
+		shows: '[data-slot="disguise-choices"] button',
+	},
+	{
 		route: "/(protected)/(navbar)/settings/(subpage)/app/updates",
 		path: `${APP}/updates`,
 		shows: `nav a[href="${APP}"]`,

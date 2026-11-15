@@ -58,6 +58,11 @@
 			title: "settings.app.sections.security",
 			back: "/settings/app",
 		},
+		[`${base}/app/security/discreet-icon`]: {
+			title: "settings.app.discreetAppIcon.title",
+			back: "/settings/app/security",
+			wide: true,
+		},
 		[`${base}/app/updates`]: {
 			title: "settings.app.sections.updates",
 			back: "/settings/app",
