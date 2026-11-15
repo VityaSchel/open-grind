@@ -26,10 +26,13 @@ afterEach(() => {
 });
 
 describe("canOpenAppSettings", () => {
-	it.each(platforms)("on %s matches the native command", (platform) => {
-		runningOn(platform);
-		expect(canOpenAppSettings()).toBe(opensAppSettings[platform]);
-	});
+	it.each(platforms)(
+		"on %s reports whether the app's settings page can be opened",
+		(platform) => {
+			runningOn(platform);
+			expect(canOpenAppSettings()).toBe(opensAppSettings[platform]);
+		},
+	);
 });
 
 describe("openAppSettings", () => {
