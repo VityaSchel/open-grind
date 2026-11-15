@@ -133,7 +133,6 @@ describe("PageStackState committing a swipe", () => {
 		);
 		pop?.();
 		expect(stack.ghost?.path).toBe("/settings/app");
-		vi.useRealTimers();
 	});
 
 	it("never slides back a commit whose Back did navigate", async () => {
@@ -158,7 +157,6 @@ describe("PageStackState committing a swipe", () => {
 		vi.advanceTimersByTime(1000);
 
 		expect(animations).toHaveLength(settled);
-		vi.useRealTimers();
 	});
 });
 
