@@ -2,11 +2,13 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { callMethod } from "#lib/api/methods.ts";
 import { currentPlatform, isMobilePlatform } from "#lib/platform/os.ts";
+import { Generation } from "#lib/util/generation.ts";
 
 class AppLifecycle {
 	active = $state(true);
 	#pending: Promise<void> | null = null;
 	readonly #unfinished = new Set<Promise<unknown>>();
+	readonly #hides = new Generation();
 
 	constructor() {
 		if (typeof document === "undefined") return;
@@ -47,9 +49,11 @@ class AppLifecycle {
 	}
 
 	async #allowSuspensionAfter(deactivation: Promise<void>): Promise<void> {
+		const hide = this.#hides.next();
 		switch (currentPlatform()) {
 			case "ios":
 				await Promise.allSettled([deactivation, ...this.#unfinished]);
+				if (this.#hides.isStale(hide)) return;
 				await invoke("allow_suspension").catch((error: unknown) => {
 					console.error("[lifecycle] allow_suspension failed", error);
 				});

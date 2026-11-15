@@ -75,4 +75,29 @@ describe("appLifecycle on iOS", () => {
 		await settle();
 		expect(allowedSuspensions()).toBe(1);
 	});
+
+	it("lets only the latest trip to the background suspend the app", async () => {
+		runningOn("ios");
+		const first = Promise.withResolvers<null>();
+		const latest = Promise.withResolvers<null>();
+		mocks.callMethod
+			.mockReturnValueOnce(first.promise)
+			.mockReturnValueOnce(Promise.resolve(null))
+			.mockReturnValueOnce(latest.promise);
+
+		setVisibility("hidden");
+		await settle();
+		setVisibility("visible");
+		await settle();
+		setVisibility("hidden");
+		await settle();
+
+		first.resolve(null);
+		await settle();
+		expect(allowedSuspensions()).toBe(0);
+
+		latest.resolve(null);
+		await settle();
+		expect(allowedSuspensions()).toBe(1);
+	});
 });
