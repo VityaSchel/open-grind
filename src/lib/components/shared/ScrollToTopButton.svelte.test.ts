@@ -125,45 +125,6 @@ describe("the scroll-to-top button", () => {
 		animate.mockRestore();
 	});
 
-	it("jumps to within one screen of the top before gliding the rest", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(5000);
-
-		await view.click();
-		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
-		expect(view.button()).toBeNull();
-
-		await view.glideFor(GLIDE_MS);
-		expect(view.scroller.scrollTop).toBe(0);
-	});
-
-	it("glides without a jump when the top is less than a screen away", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(500);
-
-		await view.click();
-		expect(view.scroller.scrollTop).toBe(500);
-
-		await view.glideFor(GLIDE_MS);
-		expect(view.scroller.scrollTop).toBe(0);
-	});
-
-	it("starts the glide fast and slows into the top", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(SCREEN_HEIGHT);
-
-		await view.click();
-		await view.glideFor(GLIDE_MS / 4);
-		const firstQuarter = SCREEN_HEIGHT - view.scroller.scrollTop;
-		await view.glideFor(GLIDE_MS / 2);
-		const lastQuarterStart = view.scroller.scrollTop;
-		await view.glideFor(GLIDE_MS / 4);
-
-		expect(firstQuarter).toBeGreaterThan(SCREEN_HEIGHT / 3);
-		expect(lastQuarterStart).toBeLessThan(SCREEN_HEIGHT / 30);
-		expect(view.scroller.scrollTop).toBe(0);
-	});
-
 	for (const takeover of ["wheel", "touchstart"]) {
 		it(`stays hidden while the glide runs and returns on ${takeover}`, async () => {
 			const view = await mountWithScroller();

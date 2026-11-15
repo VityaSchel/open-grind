@@ -93,6 +93,31 @@ describe("jumpThenGlideToTop", () => {
 		expect(glidingToTop(list)).toBe(false);
 	});
 
+	it("glides without a jump when the top is less than a screen away", () => {
+		const list = scrolledList(500);
+
+		jumpThenGlideToTop({ element: list });
+		expect(list.scrollTop).toBe(500);
+
+		vi.advanceTimersByTime(GLIDE_MS);
+		expect(list.scrollTop).toBe(0);
+	});
+
+	it("starts the glide fast and slows into the top", () => {
+		const list = scrolledList(SCREEN_HEIGHT);
+
+		jumpThenGlideToTop({ element: list });
+		vi.advanceTimersByTime(GLIDE_MS / 4);
+		const firstQuarter = SCREEN_HEIGHT - list.scrollTop;
+		vi.advanceTimersByTime(GLIDE_MS / 2);
+		const lastQuarterStart = list.scrollTop;
+		vi.advanceTimersByTime(GLIDE_MS / 4);
+
+		expect(firstQuarter).toBeGreaterThan(SCREEN_HEIGHT / 3);
+		expect(lastQuarterStart).toBeLessThan(SCREEN_HEIGHT / 30);
+		expect(list.scrollTop).toBe(0);
+	});
+
 	it("keeps gliding toward a landing that content inserted above pushes down", () => {
 		const list = scrolledList(500);
 		let inserted = 0;
