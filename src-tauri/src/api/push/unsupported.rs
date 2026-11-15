@@ -6,22 +6,20 @@ use super::{
 	PushSignal,
 };
 
-const UNSUPPORTED: PushError = PushError::UnsupportedPlatform;
-
 pub fn plugin() -> TauriPlugin<Wry> {
 	Builder::new("push").build()
 }
 
 pub async fn addon_ready(_app: &AppHandle) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn token(_app: &AppHandle) -> Result<String, PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn delete_token(_app: &AppHandle) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn notifications_enabled(
@@ -34,13 +32,13 @@ pub async fn set_notifications_enabled(
 	_app: &AppHandle,
 	_enabled: bool,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn open_notification_settings(
 	_app: &AppHandle,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn dismiss_conversation(
@@ -65,7 +63,7 @@ pub async fn set_mode(
 	_app: &AppHandle,
 	_mode: PushMode,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn categories(
@@ -79,14 +77,14 @@ pub async fn set_category(
 	_category: String,
 	_enabled: bool,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn open_category_settings(
 	_app: &AppHandle,
 	_category: String,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn notification_permission(
@@ -98,14 +96,14 @@ pub async fn notification_permission(
 pub async fn request_notification_permission(
 	_app: &AppHandle,
 ) -> Result<NotificationPermission, PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn notify(
 	_app: &AppHandle,
 	_announcement: Announcement,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
 
 pub async fn take_deeplink(
@@ -122,5 +120,5 @@ pub fn watch(
 	_app: &AppHandle,
 	_on_event: tauri::ipc::Channel<PushSignal>,
 ) -> Result<(), PushError> {
-	Err(UNSUPPORTED)
+	Err(PushError::UnsupportedPlatform)
 }
