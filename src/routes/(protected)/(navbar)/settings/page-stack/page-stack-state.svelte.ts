@@ -129,6 +129,7 @@ export class PageStackState {
 		this.ghost = snapshot;
 		this.liveRole = relation === "push" ? "front" : "back";
 		if (!turnsAround) this.#settle.progress = 1 - target;
+		this.#settle.apply();
 
 		await tick();
 		snapshot.restore();

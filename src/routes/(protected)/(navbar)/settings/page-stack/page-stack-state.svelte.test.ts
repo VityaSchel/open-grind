@@ -21,7 +21,7 @@ describe("PageStackState navigation", () => {
 		);
 		expect(stack.liveRole).toBe("front");
 		expect(stack.ghost?.path).toBe("/settings");
-		expect(applied).toEqual([1]);
+		expect(applied).toEqual([1, 1]);
 
 		start?.();
 		expect(animations.at(-1)).toMatchObject({
@@ -45,10 +45,27 @@ describe("PageStackState navigation", () => {
 		);
 		expect(stack.liveRole).toBe("back");
 		expect(stack.ghost?.path).toBe("/settings/app");
-		expect(applied).toEqual([0]);
+		expect(applied).toEqual([0, 0]);
 
 		start?.();
 		expect(animations.at(-1)).toMatchObject({ from: 0, to: 1 });
+	});
+
+	it("puts the panes at the start of a slide before the ghost mounts", async () => {
+		const harness = makeStack();
+		const { stack, applied } = harness;
+		await push(harness, { from: "/settings", to: "/settings/app" });
+		applied.length = 0;
+
+		const navigating = stack.navigate(
+			navigationEvent({ from: "/settings/app", to: "/settings" }),
+		);
+
+		expect(applied, "positioned in the same task as the ghost").toEqual([
+			0,
+		]);
+		await navigating;
+		expect(applied).toEqual([0, 0]);
 	});
 
 	it("slides a history move over several levels back onto the root it was pushed from", async () => {
