@@ -70,7 +70,8 @@ export interface Messages {
 	"browse.filters.tags.errors.loadFailed": undefined;
 	"browse.filters.tags.noMatches": { query: string };
 	"browse.filters.tags.selected": { count: number };
-	"browse.filters.tags.truncated": { count: number; shown: string };
+	"browse.filters.tags.truncated.matches": { count: number };
+	"browse.filters.tags.truncated.shown": { count: number };
 	"browse.filters.weight.a11y.maximum": undefined;
 	"browse.filters.weight.a11y.minimum": undefined;
 	"browse.filters.withinDistance": { distance: string };
@@ -1051,7 +1052,8 @@ export interface Messages {
 	"settings.profile.photos.add": undefined;
 	"settings.profile.photos.dropToAdd": undefined;
 	"settings.profile.photos.errors.dailyLimit": undefined;
-	"settings.profile.photos.errors.leftOut": { count: number; max: string };
+	"settings.profile.photos.errors.leftOut.description": { count: number };
+	"settings.profile.photos.errors.leftOut.title": { count: number };
 	"settings.profile.photos.errors.openPickerFailed": undefined;
 	"settings.profile.photos.errors.uploadFailed": undefined;
 	"settings.profile.photos.submit": undefined;
@@ -1318,7 +1320,6 @@ export interface RichMessages {
 	"auth.signIn.google.useCompanion": { companionButton: "tag" };
 	"auth.signUp.unimplemented": { issueLink: "placeholder" };
 	"browse.filters.tags.noMatches": { query: "placeholder" };
-	"browse.filters.tags.truncated": { count: "count"; shown: "placeholder" };
 	"browse.filters.withinDistance": { distance: "placeholder" };
 	"browse.rightNow.filters.a11y.sort": { sort: "placeholder" };
 	"browse.rightNow.join.a11y.exhausted": { allowance: "placeholder" };
@@ -1428,7 +1429,6 @@ export interface RichMessages {
 	"settings.profile.photos.a11y.removeSlot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: "placeholder" };
-	"settings.profile.photos.errors.leftOut": { count: "count"; max: "placeholder" };
 	"shell.documentTitle": { page: "placeholder" };
 	"shell.scrollToTopButton.a11y.labelWithText": { text: "placeholder" };
 	"shell.webViewWarning.description": { minimumVersion: "placeholder" };

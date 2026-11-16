@@ -143,11 +143,11 @@ expectTypeOf<"chat.conversations.errors.deleteFailed">().toExtend<
 expectTypeOf<"common.actions.close">().not.toExtend<
 	MessageKeyWith<{ count: number }>
 >();
-expectTypeOf<"browse.filters.tags.truncated">().not.toExtend<
+expectTypeOf<"settings.profile.combo.selected">().not.toExtend<
 	MessageKeyWith<{ count: number }>
 >();
-expectTypeOf<"browse.filters.tags.truncated">().toExtend<
-	MessageKeyWith<{ count: number; shown: string }>
+expectTypeOf<"settings.profile.combo.selected">().toExtend<
+	MessageKeyWith<{ count: number; max: string }>
 >();
 expectTypeOf(sourceText).toEqualTypeOf<Translate>();
 expectTypeOf(

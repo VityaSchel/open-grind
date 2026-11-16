@@ -290,9 +290,9 @@ describe("profile pictures upload", () => {
 		await vi.waitFor(() =>
 			expect(profiles.uploadProfilePhoto).toHaveBeenCalledTimes(2),
 		);
-		expect(sonner.toast.error).toHaveBeenCalledWith(
-			"1 left out, a profile holds up to 6 photos",
-		);
+		expect(sonner.toast.error).toHaveBeenCalledWith("1 photo left out", {
+			description: "A profile holds up to 6 photos.",
+		});
 	});
 
 	it("names the daily limit and stops uploading the rest of the picks", async () => {
@@ -338,7 +338,10 @@ describe("profile pictures upload", () => {
 
 		await vi.waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
-				`${bracketed(1)} left out, a profile holds up to ${bracketed(6)} photos`,
+				`${bracketed(1)} photo left out`,
+				{
+					description: `A profile holds up to ${bracketed(6)} photos.`,
+				},
 			),
 		);
 	});

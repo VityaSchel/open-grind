@@ -162,10 +162,15 @@
 		const accepted = picked.slice(0, Math.max(0, room));
 		if (picked.length > accepted.length) {
 			toast.error(
-				t("settings.profile.photos.errors.leftOut", {
+				t("settings.profile.photos.errors.leftOut.title", {
 					count: picked.length - accepted.length,
-					max: formatInteger(maxProfilePhotos),
 				}),
+				{
+					description: t(
+						"settings.profile.photos.errors.leftOut.description",
+						{ count: maxProfilePhotos },
+					),
+				},
 			);
 			void discardStagedMedia(picked.slice(accepted.length));
 		}

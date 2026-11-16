@@ -251,8 +251,12 @@
 				"dailyLimit": "You’ve reached today’s limit for new profile photos",
 				"openPickerFailed": "Couldn’t open the photo picker",
 				"uploadFailed": "Couldn’t upload photo",
-				"leftOut_one": "{{count}} left out, a profile holds up to {{max}} photos",
-				"leftOut_other": "{{count}} left out, a profile holds up to {{max}} photos"
+				"leftOut": {
+					"title_one": "{{count}} photo left out",
+					"title_other": "{{count}} photos left out",
+					"description_one": "A profile holds up to {{count}} photo.",
+					"description_other": "A profile holds up to {{count}} photos."
+				}
 			}
 		},
 		"fields": {
