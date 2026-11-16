@@ -9,6 +9,7 @@
 	} from "#lib/api/users/favorites.ts";
 	import MultilineField from "#lib/components/fields/MultilineField.svelte";
 	import TextField from "#lib/components/fields/TextField.svelte";
+	import DiscardChangesDialog from "#lib/components/shared/DiscardChangesDialog.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
@@ -34,6 +35,7 @@
 	let notes = $state(untrack(() => note.notes));
 	let phoneNumber = $state(untrack(() => note.phoneNumber));
 	let saving = $state(false);
+	let confirmingDiscard = $state(false);
 
 	$effect(() => {
 		if (!open) return;
@@ -47,6 +49,10 @@
 	const dirty = $derived(
 		notes !== note.notes || phoneNumber !== note.phoneNumber,
 	);
+
+	function askToDiscard() {
+		if (!saving && dirty) confirmingDiscard = true;
+	}
 
 	async function save() {
 		if (saving || !dirty || over) return;
@@ -78,7 +84,11 @@
 	}
 </script>
 
-<ResponsiveDialog.Root bind:open>
+<ResponsiveDialog.Root
+	bind:open
+	dismissible={!saving && !dirty}
+	onDismissBlocked={askToDiscard}
+>
 	<ResponsiveDialog.Content
 		class="flex flex-col gap-4"
 		drawerClass="**:[fieldset>div]:px-4"
@@ -127,3 +137,7 @@
 		</fieldset>
 	</ResponsiveDialog.Content>
 </ResponsiveDialog.Root>
+<DiscardChangesDialog
+	bind:open={confirmingDiscard}
+	ondiscard={() => (open = false)}
+/>
