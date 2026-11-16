@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 
+use crate::app_language::native_strings_before_launch;
+use crate::native_strings::NativeText;
+
 const SHARED: &str = "/Applications";
 
 pub fn enforce() {
@@ -16,11 +19,17 @@ pub fn enforce() {
 		return;
 	}
 
+	let strings = native_strings_before_launch();
 	rfd::MessageDialog::new()
 		.set_level(rfd::MessageLevel::Error)
-		.set_title("Move Open Grind to Applications")
-		.set_description(format!("Open Grind updates itself in place, so it has to run from {SHARED}."))
-		.set_buttons(rfd::MessageButtons::OkCustom("Quit".to_owned()))
+		.set_title(strings.text(NativeText::LocationTitle))
+		.set_description(
+			strings
+				.fill(NativeText::LocationDescription, &[("folder", SHARED)]),
+		)
+		.set_buttons(rfd::MessageButtons::OkCustom(
+			strings.text(NativeText::LocationQuit).to_owned(),
+		))
 		.show();
 	std::process::exit(1);
 }

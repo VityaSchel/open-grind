@@ -66,7 +66,9 @@ When preparing a release, run `bun run gen:i18n` after merging Weblate's pull re
 
 The macOS menu bar uses the `shell.menuBar` messages, in Apple’s title case like the items macOS adds to the same menus. `#lib/platform/app-menu.ts` relabels it when the language changes, but the items macOS titles itself, such as Enter Full Screen, Start Dictation and the Help search, change only after a relaunch.
 
-Dialogs that the desktop app shows before its web view loads stay English: the warning about an outdated WebView2 or WebKitGTK, and the macOS requests to quit an older Open Grind or to move it to Applications.
+Text that the desktop app draws in Rust comes from the same messages: the warning about an outdated WebView2 or WebKitGTK, the macOS requests to quit an older Open Grind or to move it to Applications, and the titles of the Google and Facebook sign-in windows. `desktop-strings.json` maps each name of the Rust `NativeText` enum to a message key, with the limits Android has. `bun run gen:i18n` writes `src-tauri/src/native_strings/catalogs.json` with English, each shipped language and the data the matcher needs, and Rust compiles it in. Placeholders stay `{{name}}`, Rust fills them by name, and a text a translation lacks shows in English. `bun run check:i18n` holds the file to the rules of the Android files: it fails when English or the matcher data is out of date, a shipped language is missing or one that is not shipped is there, and only warns about an out-of-date translation, which `check:i18n-release` fails on.
+
+The sign-in windows use the language the app shows, which `#lib/platform/native-language.ts` sends to `set_native_language` on the desktop too. The dialogs open before the web view, so they choose as the app does: the choice stored in the preferences, then the system languages, then American English. The macOS requests come before the app can read its preferences, so they read the per-app language instead, which follows the choice in the installed app. `native_strings/matcher.rs` ports `matcher.ts`, and `bun run gen:i18n` also writes `matcher-cases.json`, the catalogs `matcher.ts` picks for a list of tags, which a Rust test checks the port against.
 
 ## Regional formats
 
@@ -74,7 +76,7 @@ Words follow the app's language. Numbers, dates and times follow the system's re
 
 ## Changing a string
 
-A new meaning, tag or placeholder needs a new key. To rename a key, lock the Weblate components and merge their pending changes, then run `bun scripts/i18n/rename-key.ts <old> <new>`. It moves the key with all its plural forms in every language, rewrites its quoted uses in `src/`, `e2e/` and the screenshot scenes, and renames it in `android-strings.json` and in `uncapturable.json`, both its entry and the reasons that name it. It refuses a new key that a catalog or `uncapturable.json` already has. A wildcard entry in `uncapturable.json` that covered the old key but not the new one stays, and the script warns about it, so give the new key its own entry or show it in a screenshot view.
+A new meaning, tag or placeholder needs a new key. To rename a key, lock the Weblate components and merge their pending changes, then run `bun scripts/i18n/rename-key.ts <old> <new>`. It moves the key with all its plural forms in every language, rewrites its quoted uses in `src/`, `e2e/` and the screenshot scenes, and renames it in `android-strings.json`, `desktop-strings.json` and `uncapturable.json`, both its entry and the reasons that name it. It refuses a new key that a catalog or `uncapturable.json` already has. A wildcard entry in `uncapturable.json` that covered the old key but not the new one stays, and the script warns about it, so give the new key its own entry or show it in a screenshot view.
 
 ## Finding raw English
 

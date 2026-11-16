@@ -7,6 +7,8 @@ use crate::api::oauth::{
 	delivered, is_allowed_target, new_nonce, without_secrets, CANCELED,
 };
 use crate::error::AppError;
+#[cfg(desktop)]
+use crate::native_strings::NativeText;
 
 use super::GoogleOauthBridge;
 
@@ -96,7 +98,6 @@ async fn run_flow(
 	#[allow(unused_mut)]
 	let mut builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
-			.title("Sign In with Google")
 			.inner_size(window_width, window_height)
 			.user_agent(USER_AGENT)
 			.initialization_script(init_script(&nonce))
@@ -122,6 +123,12 @@ async fn run_flow(
 				}
 				false
 			});
+
+	#[cfg(desktop)]
+	{
+		let strings = crate::app_language::native_strings(app);
+		builder = builder.title(strings.text(NativeText::GoogleSignInTitle));
+	}
 
 	#[cfg(target_os = "windows")]
 	{
