@@ -18,6 +18,7 @@
 		<package android:name="org.opengrind.google_oauth" />
 		<package android:name="org.opengrind.recaptcha" />
 		<package android:name="org.opengrind.fcm" />
+		<package android:name="com.google.android.gms" />
 	</queries>
 
 	<!-- AndroidTV support -->
@@ -437,6 +438,19 @@
 			android:name="org.opengrind.push.PushPollService"
 			android:exported="false"
 			android:permission="android.permission.BIND_JOB_SERVICE" />
+
+		<service
+			android:name="org.opengrind.push.RelayJobService"
+			android:exported="false"
+			android:permission="android.permission.BIND_JOB_SERVICE" />
+
+		<service
+			android:name="org.opengrind.push.RelayPushService"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="org.unifiedpush.android.connector.PUSH_EVENT" />
+			</intent-filter>
+		</service>
 
 		<receiver
 			android:name="org.opengrind.push.PushReceiver"

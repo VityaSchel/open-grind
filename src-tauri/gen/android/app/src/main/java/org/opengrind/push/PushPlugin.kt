@@ -3,8 +3,11 @@ package org.opengrind.push
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.webkit.WebView
+import androidx.activity.result.ActivityResult
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.Permission
@@ -15,11 +18,16 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+import org.json.JSONObject
 import org.opengrind.addon.AddonGate
 import org.opengrind.addon.AddonLaunchCheck
+import org.opengrind.launchForResult
+import org.unifiedpush.android.connector.UnifiedPush
 
 private const val NOTIFICATION_ALIAS = "postNotification"
 private const val ERROR_SETTINGS_UNAVAILABLE = "settings-unavailable"
+private const val ERROR_UNKNOWN_SOURCE = "unknown source"
+private const val PLAY_SERVICES_PACKAGE = "com.google.android.gms"
 
 @InvokeArg
 internal class WatchArgs {
@@ -48,6 +56,17 @@ internal class ConversationArgs {
 	var dedupeKey: String? = null
 }
 
+@InvokeArg
+internal class SourceArgs {
+	var source: String? = null
+}
+
+@InvokeArg
+internal class CommitArgs {
+	lateinit var code: String
+	lateinit var profileId: String
+}
+
 @TauriPlugin(
 	permissions = [
 		Permission(
@@ -60,10 +79,15 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	override fun load(webView: WebView) {
 		super.load(webView)
 		offerDeeplink(activity.intent)
+		runCatching { RelaySetup.cancel(activity.applicationContext) }
+		runCatching { noticeMissingDistributor() }
+		runCatching { resumeOrphanCleanup() }
 		runCatching { PushSchedule.follow(activity, PushSettings.mode(activity)) }
 	}
 
 	override fun onNewIntent(intent: Intent) = offerDeeplink(intent)
+
+	override fun onResume() = RelaySetup.resumed()
 
 	@Command
 	fun addonReady(invoke: Invoke) = gated(invoke) { invoke.resolve() }
@@ -111,11 +135,137 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	@Command
 	fun setMode(invoke: Invoke) {
 		val mode = PushMode.of(invoke.parseArgs(ModeArgs::class.java).mode)
+		if (mode == PushMode.Fast && PushSettings.fastSource(activity) == null) {
+			return invoke.reject(RelayContract.ERROR_FAST_UNCONFIGURED)
+		}
 		PushSettings.setMode(activity, mode)
-		PushNotifier.createChannels(activity)
-		if (mode != PushMode.Fast) PushNotifier.cancelAll(activity)
-		PushSchedule.follow(activity, mode)
+		followMode(mode)
 		invoke.resolve()
+	}
+
+	@Command
+	fun fastSource(invoke: Invoke) {
+		val source = PushSettings.fastSource(activity)
+		invoke.resolve(JSObject().apply { put("source", source?.wire ?: JSONObject.NULL) })
+	}
+
+	@Command
+	fun setFastSource(invoke: Invoke) {
+		val wire = invoke.parseArgs(SourceArgs::class.java).source
+		val source = FastSource.of(wire)
+		if (wire != null && source == null) return invoke.reject(ERROR_UNKNOWN_SOURCE)
+		if (source == FastSource.Relay && !RelayPairing.paired(activity)) {
+			return invoke.reject(RelayContract.ERROR_UNPAIRED)
+		}
+		RelayJobService.cancel(activity)
+		val wasFast = PushSettings.mode(activity) == PushMode.Fast
+		PushSettings.setFastSource(activity, source)
+		if (source == null && wasFast) followMode(PushMode.Slow)
+		invoke.resolve()
+	}
+
+	@Command
+	fun playServicesAvailable(invoke: Invoke) =
+		invoke.resolve(JSObject().apply { put("available", installed(PLAY_SERVICES_PACKAGE)?.enabled == true) })
+
+	@Command
+	fun beginRelay(invoke: Invoke) = RelaySetup.begin(activity, invoke)
+
+	@Command
+	fun saveRelayConfig(invoke: Invoke) {
+		val config = RelaySetup.config() ?: return invoke.reject(RelayContract.ERROR_NO_SETUP)
+		try {
+			activity.launchForResult(RelayConfigFile.saveIntent()) { result -> savePicked(invoke, result, config) }
+		} catch (e: Exception) {
+			invoke.reject(RelayContract.ERROR_SAVE_FAILED, e.javaClass.simpleName)
+		}
+	}
+
+	@Command
+	fun shareRelayConfig(invoke: Invoke) {
+		val config = RelaySetup.config() ?: return invoke.reject(RelayContract.ERROR_NO_SETUP)
+		try {
+			activity.startActivity(RelayConfigFile.shareIntent(activity, config))
+			invoke.resolve()
+		} catch (e: Exception) {
+			invoke.reject(RelayContract.ERROR_SHARE_FAILED, e.javaClass.simpleName)
+		}
+	}
+
+	@Command
+	fun awaitRelay(invoke: Invoke) = RelaySetup.await(invoke)
+
+	@Command
+	fun commitRelay(invoke: Invoke) {
+		val args = invoke.parseArgs(CommitArgs::class.java)
+		when (RelaySetup.commit(activity.applicationContext, args.code, args.profileId)) {
+			RelayCommitResult.Matched -> invoke.resolve(JSObject().apply { put("matched", true) })
+			RelayCommitResult.Mismatched -> invoke.resolve(JSObject().apply { put("matched", false) })
+			RelayCommitResult.NoSetup -> invoke.reject(RelayContract.ERROR_NO_SETUP)
+		}
+	}
+
+	@Command
+	fun registerRelay(invoke: Invoke) {
+		val context = activity.applicationContext
+		RelayRegistration.later {
+			when (RelayRegistration.register(context)) {
+				RelayOutcome.Done -> invoke.resolve()
+				RelayOutcome.Failed -> invoke.reject(RelayContract.ERROR_REGISTER_FAILED)
+				RelayOutcome.AccountChanged -> invoke.reject(RelayContract.ERROR_ACCOUNT_CHANGED)
+				RelayOutcome.Unpaired -> invoke.reject(RelayContract.ERROR_UNPAIRED)
+			}
+		}
+	}
+
+	@Command
+	fun unregisterRelay(invoke: Invoke) {
+		val context = activity.applicationContext
+		RelayRegistration.later {
+			when (RelayRegistration.unregisterAll(context)) {
+				RelayOutcome.AccountChanged -> invoke.reject(RelayContract.ERROR_ACCOUNT_CHANGED)
+				RelayOutcome.Done, RelayOutcome.Failed, RelayOutcome.Unpaired -> invoke.resolve()
+			}
+		}
+	}
+
+	@Command
+	fun cancelRelay(invoke: Invoke) {
+		RelaySetup.cancel(activity.applicationContext)
+		invoke.resolve()
+	}
+
+	@Command
+	fun forgetRelay(invoke: Invoke) {
+		val context = activity.applicationContext
+		RelayJobService.cancel(context)
+		RelaySetup.cancel(context)
+		RelayPairing.instance(context)?.let { committed ->
+			runCatching { UnifiedPush.unregister(context, committed) }
+		}
+		if (RelayPairing.forget(context)) RelayJobService.scheduleOrphanCleanup(context)
+		val wasFast = PushSettings.mode(context) == PushMode.Fast
+		if (PushSettings.dropFastSource(context, FastSource.Relay) && wasFast) followMode(PushMode.Slow)
+		invoke.resolve()
+	}
+
+	@Command
+	fun dropOrphans(invoke: Invoke) {
+		val context = activity.applicationContext
+		RelayJobService.cancelOrphanCleanup(context)
+		RelayPairing.dropOrphans(context)
+		invoke.resolve()
+	}
+
+	@Command
+	fun relayStatus(invoke: Invoke) {
+		noticeMissingDistributor()
+		invoke.resolve(
+			JSObject().apply {
+				put("paired", RelayPairing.paired(activity))
+				put("broken", RelayPairing.broken(activity) != null)
+			},
+		)
 	}
 
 	@Command
@@ -210,6 +360,51 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 			AddonGate.Verdict.TurnedOff -> invoke.reject(PushContract.ERROR_TURNED_OFF)
 			AddonGate.Verdict.Outdated -> invoke.reject(PushContract.ERROR_OUTDATED)
 		}
+	}
+
+	private fun followMode(mode: PushMode) {
+		PushNotifier.createChannels(activity)
+		if (mode != PushMode.Fast) PushNotifier.cancelAll(activity)
+		PushSchedule.follow(activity, mode)
+	}
+
+	private fun savePicked(invoke: Invoke, result: ActivityResult, config: ByteArray) {
+		val uri = result.data?.data
+		if (result.resultCode != Activity.RESULT_OK || uri == null) {
+			return invoke.resolve(JSObject().apply { put("saved", false) })
+		}
+		val context = activity.applicationContext
+		Thread({
+			try {
+				RelayConfigFile.write(context, uri, config)
+				invoke.resolve(JSObject().apply { put("saved", true) })
+			} catch (e: Exception) {
+				invoke.reject(RelayContract.ERROR_SAVE_FAILED, e.javaClass.simpleName)
+			}
+		}, "opengrind-relay-save").start()
+	}
+
+	private fun noticeMissingDistributor() {
+		val committed = RelayPairing.instance(activity) ?: return
+		if (!RelayPairing.paired(activity) || RelayPairing.broken(activity) != null) return
+		if (UnifiedPush.getSavedDistributor(activity) == null) {
+			RelayPairing.markBroken(activity, RelayBreak.DistributorGone, committed)
+		}
+	}
+
+	private fun resumeOrphanCleanup() {
+		if (RelayPairing.orphans(activity) != null) RelayJobService.scheduleOrphanCleanup(activity)
+	}
+
+	private fun installed(packageName: String): ApplicationInfo? = try {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			activity.packageManager.getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(0L))
+		} else {
+			@Suppress("DEPRECATION")
+			activity.packageManager.getApplicationInfo(packageName, 0)
+		}
+	} catch (e: PackageManager.NameNotFoundException) {
+		null
 	}
 
 	private fun withCategory(invoke: Invoke, category: String, run: (PushKind) -> Unit) {

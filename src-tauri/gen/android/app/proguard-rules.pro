@@ -24,3 +24,7 @@
 -keep class org.opengrind.RustWebView {
   void clearAllBrowsingData();
 }
+
+-dontwarn com.google.api.client.http.**
+-dontwarn org.conscrypt.**
+-dontwarn sun.misc.Unsafe

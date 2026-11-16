@@ -8,6 +8,7 @@ import android.os.Bundle
 class PushReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		if (PushSettings.mode(context) != PushMode.Fast) return
+		if (PushSettings.fastSource(context) != FastSource.Addon) return
 		if (!sentByAddon(context, intent)) return
 		when (intent.action) {
 			PushContract.ACTION_MESSAGE -> deliver(context, intent)
