@@ -90,7 +90,7 @@
 <main class="screen-nav-host">
 	<div
 		bind:this={scroller}
-		class="h-full w-full overflow-y-auto overscroll-none"
+		class="h-full w-full scroll-pt-header-clear-19 scroll-pb-nav-clear overflow-y-auto overscroll-none"
 		data-slot="subpage-scroller"
 	>
 		<div

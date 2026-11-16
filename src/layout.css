@@ -365,8 +365,18 @@ a {
 @utility pb-nav-clear {
 	padding-bottom: calc(0.5rem + var(--content-pb) + var(--bar-content-gap));
 }
+@utility scroll-pb-nav-clear {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--content-pb) + var(--bar-content-gap)
+	);
+}
 @utility pt-header-clear-* {
 	padding-top: calc(--spacing(--value(integer)) + var(--bar-content-gap));
+}
+@utility scroll-pt-header-clear-* {
+	scroll-padding-top: calc(
+		--spacing(--value(integer)) + var(--bar-content-gap)
+	);
 }
 @utility bottom-nav-clear {
 	bottom: calc(var(--nav-clear) + var(--safe-area-bottom));

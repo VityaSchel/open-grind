@@ -18,7 +18,7 @@
 <main class="screen-nav-host">
 	<div
 		data-slot="me-scroller"
-		class="h-full w-full overflow-y-auto overscroll-none"
+		class="h-full w-full scroll-pb-nav-clear overflow-y-auto overscroll-none"
 	>
 		<div class="flex w-full p-4 pb-nav-clear">
 			<div class="m-auto flex w-full max-w-120 flex-col gap-3">

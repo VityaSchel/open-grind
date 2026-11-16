@@ -48,7 +48,7 @@
 				/>
 			{/if}
 			<div
-				class="pull-scroller"
+				class="pull-scroller scroll-pt-header-clear-17 scroll-pb-nav-clear"
 				bind:this={gridContainer}
 				onscroll={() =>
 					(gridState.scrollY = gridContainer?.scrollTop ?? 0)}

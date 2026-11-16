@@ -41,7 +41,7 @@
 	<div
 		bind:this={container}
 		data-slot="taps-scroller"
-		class="pull-scroller overscroll-x-auto"
+		class="pull-scroller scroll-pt-header-clear-16 scroll-pb-nav-clear overscroll-x-auto"
 		onscroll={() => (taps.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div

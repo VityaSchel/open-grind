@@ -188,10 +188,10 @@
 			bind:this={container}
 			data-slot="conversations-scroller"
 			class={[
-				"flex min-h-0 flex-1 flex-col gap-1 overflow-auto overscroll-contain px-4",
+				"flex min-h-0 flex-1 scroll-pb-nav-clear flex-col gap-1 overflow-auto overscroll-contain px-4",
 				{
-					"pt-header-clear-15": !selecting,
-					"pt-[calc(var(--selection-bar-height)+var(--bar-content-gap))]":
+					"scroll-pt-header-clear-15 pt-header-clear-15": !selecting,
+					"scroll-pt-[calc(var(--selection-bar-height)+var(--bar-content-gap))] pt-[calc(var(--selection-bar-height)+var(--bar-content-gap))]":
 						selecting,
 				},
 				className,

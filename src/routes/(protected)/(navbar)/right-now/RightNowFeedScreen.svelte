@@ -63,7 +63,7 @@
 	<div
 		bind:this={container}
 		data-slot="right-now-scroller"
-		class="relative pull-scroller [scrollbar-gutter:stable_both-edges]"
+		class="relative pull-scroller scroll-pt-header-clear-17 scroll-pb-nav-clear [scrollbar-gutter:stable_both-edges]"
 		onscroll={() => feed.followScroll(container?.scrollTop ?? 0)}
 	>
 		<div
