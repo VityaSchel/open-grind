@@ -71,7 +71,8 @@ export interface Messages {
 	"browse.filters.tags.errors.loadFailed": undefined;
 	"browse.filters.tags.noMatches": { query: string };
 	"browse.filters.tags.selected": { count: number };
-	"browse.filters.tags.truncated": { count: number; shown: string };
+	"browse.filters.tags.truncated.matches": { count: number };
+	"browse.filters.tags.truncated.shown": { count: number };
 	"browse.filters.weight.a11y.maximum": undefined;
 	"browse.filters.weight.a11y.minimum": undefined;
 	"browse.filters.withinDistance": { distance: string };
@@ -166,10 +167,6 @@ export interface Messages {
 	"browse.rightNow.post.message": undefined;
 	"browse.rightNow.post.underReview": undefined;
 	"browse.rightNow.sheet.a11y.visible": undefined;
-	"browse.rightNow.sheet.discard.description": undefined;
-	"browse.rightNow.sheet.discard.discard": undefined;
-	"browse.rightNow.sheet.discard.keepEditing": undefined;
-	"browse.rightNow.sheet.discard.title": undefined;
 	"browse.rightNow.sheet.hosting": undefined;
 	"browse.rightNow.sheet.location.accuracy": undefined;
 	"browse.rightNow.sheet.location.radius": { distance: string };
@@ -1055,7 +1052,8 @@ export interface Messages {
 	"settings.profile.photos.add": undefined;
 	"settings.profile.photos.dropToAdd": undefined;
 	"settings.profile.photos.errors.dailyLimit": undefined;
-	"settings.profile.photos.errors.leftOut": { count: number; max: string };
+	"settings.profile.photos.errors.leftOut.description": { count: number };
+	"settings.profile.photos.errors.leftOut.title": { count: number };
 	"settings.profile.photos.errors.openPickerFailed": undefined;
 	"settings.profile.photos.errors.uploadFailed": undefined;
 	"settings.profile.photos.submit": undefined;
@@ -1091,6 +1089,10 @@ export interface Messages {
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;
+	"shell.discardChangesDialog.description": undefined;
+	"shell.discardChangesDialog.discard": undefined;
+	"shell.discardChangesDialog.keepEditing": undefined;
+	"shell.discardChangesDialog.title": undefined;
 	"shell.documentTitle": { page: string };
 	"shell.error.description": undefined;
 	"shell.error.goHome": undefined;
@@ -1324,7 +1326,6 @@ export interface RichMessages {
 	"auth.signIn.google.useCompanion": { companionButton: "tag" };
 	"auth.signUp.unimplemented": { issueLink: "placeholder" };
 	"browse.filters.tags.noMatches": { query: "placeholder" };
-	"browse.filters.tags.truncated": { count: "count"; shown: "placeholder" };
 	"browse.filters.withinDistance": { distance: "placeholder" };
 	"browse.rightNow.filters.a11y.sort": { sort: "placeholder" };
 	"browse.rightNow.join.a11y.exhausted": { allowance: "placeholder" };
@@ -1434,7 +1435,6 @@ export interface RichMessages {
 	"settings.profile.photos.a11y.removeSlot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: "placeholder" };
-	"settings.profile.photos.errors.leftOut": { count: "count"; max: "placeholder" };
 	"shell.documentTitle": { page: "placeholder" };
 	"shell.scrollToTopButton.a11y.labelWithText": { text: "placeholder" };
 	"shell.webViewWarning.description": { minimumVersion: "placeholder" };

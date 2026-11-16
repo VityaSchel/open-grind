@@ -324,9 +324,12 @@ export async function runPaletteCommand(
 
 export async function installTauriShim(
 	page: Page,
-	{ platform }: { platform: SupportedPlatform },
+	{
+		platform,
+		demoImages = true,
+	}: { platform: SupportedPlatform; demoImages?: boolean },
 ): Promise<void> {
-	await serveDemoImages(page.context());
+	if (demoImages) await serveDemoImages(page.context());
 	await page.addInitScript((platformName: string) => {
 		interface AppDataArgs {
 			file?: string;

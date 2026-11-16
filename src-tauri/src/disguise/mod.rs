@@ -65,17 +65,10 @@ pub fn disguise_previews() -> HashMap<&'static str, String> {
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "reason", content = "detail")]
-#[cfg_attr(
-	any(
-		target_os = "android",
-		target_os = "ios",
-		target_os = "linux",
-		target_os = "windows"
-	),
-	allow(dead_code)
-)]
 pub enum DisguiseError {
+	#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
 	NameTaken,
+	#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
 	RenameNeedsAdmin,
 	Failed(String),
 }

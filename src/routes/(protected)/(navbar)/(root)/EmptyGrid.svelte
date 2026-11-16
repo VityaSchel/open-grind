@@ -26,7 +26,7 @@
 	});
 </script>
 
-<Empty.Root class="col-span-full">
+<Empty.Root>
 	<Empty.Header>
 		<Empty.Media variant="icon">
 			<Icon weight={favorites ? "fill" : "regular"} />

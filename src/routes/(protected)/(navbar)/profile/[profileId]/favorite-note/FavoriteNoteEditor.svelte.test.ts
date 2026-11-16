@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -26,6 +27,7 @@ vi.mock("svelte-sonner", () => ({ toast: { success: toastSuccessMock } }));
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 import FavoriteNoteEditor from "./FavoriteNoteEditor.svelte";
 
 const PROFILE_ID = 7;
@@ -54,16 +56,25 @@ const saves = [
 
 function renderEditor() {
 	const onSave = vi.fn();
+	const stored = $state({ open: true });
 	render(FavoriteNoteEditor, {
 		props: {
 			profileId: PROFILE_ID,
 			note: { notes: "old note", phoneNumber: "" },
 			onSave,
-			open: true,
+			get open() {
+				return stored.open;
+			},
+			set open(next: boolean) {
+				stored.open = next;
+			},
 		},
 	});
-	return onSave;
+	return { onSave, stored };
 }
+
+const discardPrompt = () =>
+	screen.queryByRole("alertdialog", { name: "Discard changes?" });
 
 function saveButton(): HTMLButtonElement {
 	const button = screen.getByRole("dialog").querySelector("fieldset button");
@@ -148,7 +159,7 @@ describe("FavoriteNoteEditor", () => {
 	it.each(saves)(
 		"toasts $toast once $change is saved",
 		async ({ notes, request, requestArgs, toast }) => {
-			const onSave = renderEditor();
+			const { onSave } = renderEditor();
 
 			await saveAndWait({ notes });
 
@@ -164,7 +175,7 @@ describe("FavoriteNoteEditor", () => {
 	it.each(saves)(
 		"toasts Couldn’t save note when saving $change fails",
 		async ({ notes, request }) => {
-			const onSave = renderEditor();
+			const { onSave } = renderEditor();
 
 			const failure = await failSave({ notes, request });
 
@@ -217,5 +228,76 @@ describe("FavoriteNoteEditor", () => {
 		expect(showErrorToastMock.mock.lastCall?.[0].label).toMatch(
 			PSEUDO_MESSAGE,
 		);
+	});
+});
+
+describe("closing the note editor", () => {
+	it("closes at once without asking when nothing changed", () => {
+		const { stored } = renderEditor();
+
+		runBackGestureHandlers();
+		flushSync();
+
+		expect(stored.open).toBe(false);
+		expect(discardPrompt()).toBeNull();
+	});
+
+	it("asks before dropping an edited note and keeps it on Keep editing", async () => {
+		const { stored } = renderEditor();
+		await fireEvent.input(notesField(), { target: { value: EDITED_NOTE } });
+
+		runBackGestureHandlers();
+
+		expect(
+			await screen.findByRole("alertdialog", {
+				name: "Discard changes?",
+			}),
+		).toBeTruthy();
+		expect(stored.open).toBe(true);
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Keep editing" }),
+		);
+		await vi.waitFor(() => expect(discardPrompt()).toBeNull());
+		expect(stored.open).toBe(true);
+		expect(notesField().value).toBe(EDITED_NOTE);
+	});
+
+	it("asks on Escape as well", async () => {
+		const { stored } = renderEditor();
+		await fireEvent.input(phoneField(), { target: { value: "555" } });
+
+		await fireEvent.keyDown(phoneField(), { key: "Escape" });
+
+		expect(
+			await screen.findByRole("alertdialog", {
+				name: "Discard changes?",
+			}),
+		).toBeTruthy();
+		expect(stored.open).toBe(true);
+	});
+
+	it("drops the edit and closes without saving on Discard", async () => {
+		const { stored } = renderEditor();
+		await fireEvent.input(notesField(), { target: { value: EDITED_NOTE } });
+		runBackGestureHandlers();
+
+		await fireEvent.click(
+			await screen.findByRole("button", { name: "Discard" }),
+		);
+
+		expect(stored.open).toBe(false);
+		expect(putFavoriteNoteMock).not.toHaveBeenCalled();
+	});
+
+	it("stays open without asking while a save runs", async () => {
+		putFavoriteNoteMock.mockReturnValueOnce(new Promise(() => {}));
+		const { stored } = renderEditor();
+		await save({ notes: EDITED_NOTE });
+
+		runBackGestureHandlers();
+		flushSync();
+
+		expect(stored.open).toBe(true);
+		expect(discardPrompt()).toBeNull();
 	});
 });

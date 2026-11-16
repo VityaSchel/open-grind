@@ -19,6 +19,7 @@
 	import MultilineField from "#lib/components/fields/MultilineField.svelte";
 	import TextField from "#lib/components/fields/TextField.svelte";
 	import SaveChangesBar from "#lib/components/shared/SaveChangesBar.svelte";
+	import { guardUnsavedChanges } from "#lib/components/shared/unsaved-changes-guard.svelte.ts";
 	import { WheelPicker } from "#lib/components/ui/carousel/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import {
@@ -136,6 +137,8 @@
 
 	let savedForm = $state.raw($state.snapshot(form));
 	const dirty = $derived(!deepEqual($state.snapshot(form), savedForm));
+
+	guardUnsavedChanges(() => dirty && !saving);
 
 	async function save() {
 		if (saving || aboutMeOverLimit || !dirty) return;

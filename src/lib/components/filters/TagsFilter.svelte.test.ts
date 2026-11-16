@@ -19,8 +19,10 @@ import TagsFilter from "./TagsFilter.svelte";
 
 const SEARCH_RESULTS_SHOWN = 50;
 const MATCHING_TAGS = SEARCH_RESULTS_SHOWN + 10;
-const truncatedNotice = (format: (value: number) => string) =>
-	`Showing the first ${format(SEARCH_RESULTS_SHOWN)} of ${format(MATCHING_TAGS)} matches. Keep typing to narrow the results.`;
+const matchesNotice = (format: (value: number) => string) =>
+	`${format(MATCHING_TAGS)} tags match.`;
+const shownNotice = (format: (value: number) => string) =>
+	`Showing the first ${format(SEARCH_RESULTS_SHOWN)}. Keep typing to narrow the results.`;
 
 const tag = (tagId: number, text: string) => ({
 	tagId,
@@ -127,13 +129,15 @@ describe("TagsFilter", () => {
 		renderFilter();
 		await search("match");
 
-		const notice = await screen.findByText(truncatedNotice(String));
+		const matches = await screen.findByText(matchesNotice(String));
+		const shown = screen.getByText(shownNotice(String));
 
 		await setLocale({ locale: "en-XA" });
 
-		expect(notice.textContent).toMatch(PSEUDO_MESSAGE);
-		expect(notice.textContent).toContain(String(SEARCH_RESULTS_SHOWN));
-		expect(notice.textContent).toContain(String(MATCHING_TAGS));
+		expect(matches.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(matches.textContent).toContain(String(MATCHING_TAGS));
+		expect(shown.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(shown.textContent).toContain(String(SEARCH_RESULTS_SHOWN));
 	});
 
 	it("prints both numbers of the notice with the count formatter", async () => {
@@ -142,9 +146,12 @@ describe("TagsFilter", () => {
 		renderFilter();
 		await search("match");
 
-		const notice = await screen.findByText(/^Showing the first /);
+		const matches = await screen.findByText(/ tags match\.$/);
 
-		expect(notice.textContent).toBe(truncatedNotice(bracketed));
+		expect(matches.textContent).toBe(matchesNotice(bracketed));
+		expect(screen.getByText(/^Showing the first /).textContent).toBe(
+			shownNotice(bracketed),
+		);
 	});
 
 	it("quotes a search that matches no tag", async () => {

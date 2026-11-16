@@ -47,9 +47,9 @@ export function returnTo(pathname: string): void {
 	if (!traverseBackTo(pathname)) void goto(pathname, { replace: true });
 }
 
-export function goBack({ parent }: { parent: string }): void {
+export function goBack({ fallback }: { fallback: string }): void {
 	if (!canGoBack()) {
-		returnTo(parent);
+		returnTo(fallback);
 		return;
 	}
 
@@ -64,7 +64,7 @@ export function goBack({ parent }: { parent: string }): void {
 			location.href === from &&
 			navigating.type === null;
 		leaving.abort();
-		if (stalled) returnTo(parent);
+		if (stalled) returnTo(fallback);
 	}, BACK_WATCHDOG_MS);
 	history.back();
 }

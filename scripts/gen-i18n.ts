@@ -21,6 +21,10 @@ import {
 	withBundleLocalizations,
 	withLocaleFilters,
 } from "./i18n/native-languages";
+import {
+	ALLOWED_PLURAL_PLACEHOLDERS,
+	checkPluralPlaceholders,
+} from "./i18n/plural-placeholders";
 import { renderTypes } from "./i18n/render-types";
 import { checkShipped, renderShippedFiles } from "./i18n/shipped";
 import {
@@ -126,6 +130,10 @@ const translatedStrings = shipped.languages.map((locale) =>
 
 const problems = [
 	...errors,
+	...checkPluralPlaceholders({
+		texts: english,
+		allowed: ALLOWED_PLURAL_PLACEHOLDERS,
+	}),
 	...reports.flatMap((report) => report.errors),
 	...shipped.errors,
 	...android.errors,

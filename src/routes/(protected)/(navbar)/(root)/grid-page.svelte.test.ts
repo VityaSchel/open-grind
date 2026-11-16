@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { flushSync, tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { rendered } from "#lib/grid/grid-test-helpers.ts";
 import { t } from "#lib/i18n/index.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type { GridProfile } from "#lib/grid/grid.ts";
@@ -18,7 +19,10 @@ class FakeGridState {
 	refreshing = false;
 	paging = { running: false, failure: null, armToken: "" };
 	nextPage: number | null = null;
-	profiles: GridProfile[] = [];
+	profiles: GridProfile[] = Array.from(
+		{ length: REVEALED_INDEX + 1 },
+		(_, id) => rendered({ id }),
+	);
 	scrollY = SAVED_TOP;
 	revealProfileId: number | null = REVEALED_ID;
 	startOverListeners = new Set<() => void>();

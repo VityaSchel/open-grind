@@ -19,8 +19,11 @@
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
+	import { goBack } from "#lib/util/history.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
+	import DiscardChangesDialog from "./DiscardChangesDialog.svelte";
 	import { provideSubpageActions } from "./subpage-actions-context.svelte";
+	import { provideUnsavedChangesGuard } from "./unsaved-changes-guard.svelte";
 
 	let {
 		routes,
@@ -39,6 +42,10 @@
 	);
 
 	const title = $derived(current.title === undefined ? "" : t(current.title));
+
+	const unsavedChanges = provideUnsavedChangesGuard({
+		goBack: () => goBack({ fallback: current.back }),
+	});
 
 	let scroller: HTMLDivElement | null = $state(null);
 	const offsets: Record<string, number> = {};
@@ -105,3 +112,7 @@
 		</div>
 	</div>
 </main>
+<DiscardChangesDialog
+	bind:open={unsavedChanges.confirming}
+	ondiscard={() => unsavedChanges.discard()}
+/>

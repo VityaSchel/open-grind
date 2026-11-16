@@ -9,12 +9,13 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { api, errorToast, sonner } = vi.hoisted(() => ({
+const { api, errorToast, guardUnsavedChanges, sonner } = vi.hoisted(() => ({
 	api: {
 		deleteAlbumContent: vi.fn<() => Promise<void>>(),
 		getAlbumStorageLimits: () => new Promise<never>(() => {}),
 	},
 	errorToast: { showErrorToast: vi.fn() },
+	guardUnsavedChanges: vi.fn<(unsaved: () => boolean) => void>(),
 	sonner: { toast: { success: vi.fn(), error: vi.fn() } },
 }));
 
@@ -29,6 +30,9 @@ vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 }));
 vi.mock("#lib/components/shared/subpage-actions-context.svelte.ts", () => ({
 	setSubpageActions: vi.fn(),
+}));
+vi.mock("#lib/components/shared/unsaved-changes-guard.svelte.ts", () => ({
+	guardUnsavedChanges,
 }));
 
 import { ApiError } from "#lib/api/api-error.ts";
@@ -113,6 +117,25 @@ describe("album editor", () => {
 		await setLocale({ locale: "en-XA" });
 
 		expect(status.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("guards its edits until a save starts", async () => {
+		api.deleteAlbumContent.mockReturnValue(new Promise<never>(() => {}));
+		renderEditor([item({ contentId: 1 }), item({ contentId: 2 })]);
+		const unsaved = () => guardUnsavedChanges.mock.lastCall?.[0]();
+		expect(unsaved()).toBe(false);
+
+		await fireEvent.click(
+			screen.getByRole("button", {
+				name: "Remove album photo in slot 1",
+			}),
+		);
+		expect(unsaved()).toBe(true);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Save changes" }),
+		);
+		expect(unsaved()).toBe(false);
 	});
 
 	it("confirms a saved change", async () => {

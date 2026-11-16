@@ -5,7 +5,7 @@
 	import { Input } from "#lib/components/ui/input/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
-	import { formatInteger, formatList } from "#lib/i18n/format.ts";
+	import { formatList } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { tagCatalog } from "#lib/model/browse/grid/filters.ts";
 	import { deepEqual } from "#lib/util/deep-equal.ts";
@@ -119,10 +119,17 @@
 							<div
 								class="w-full py-2 text-center text-xs text-muted-foreground"
 							>
-								{t("browse.filters.tags.truncated", {
-									count: filtered.length,
-									shown: formatInteger(shown.length),
-								})}
+								<p>
+									{t(
+										"browse.filters.tags.truncated.matches",
+										{ count: filtered.length },
+									)}
+								</p>
+								<p>
+									{t("browse.filters.tags.truncated.shown", {
+										count: shown.length,
+									})}
+								</p>
 							</div>
 						{/if}
 					{:else}

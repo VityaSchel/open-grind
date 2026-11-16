@@ -27,7 +27,7 @@ describe("UntrackedViewsGrid", () => {
 		const { container } = renderUntracked();
 
 		expect(container.textContent).toBe(
-			" Viewed Me is off Grindr isn’t recording who views your profile because “Show Me In Viewed Me List” is off in your Grindr settings. Turning it on changes it in the official Grindr app too, and lets people see when you view their profiles. Turn on",
+			" Viewed Me is off Grindr isn’t recording who views your profile because “Show Me In Viewed Me List” is off in your Grindr settings. Turning it on changes it in the official Grindr app too, where it lets people see when you view their profiles. Open Grind tells people only if “Reveal profile views” is on in its privacy settings. Turn on",
 		);
 		expect(enableButton().textContent).toBe("Turn on");
 	});

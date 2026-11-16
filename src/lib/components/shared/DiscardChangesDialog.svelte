@@ -15,15 +15,15 @@
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>
-				{t("browse.rightNow.sheet.discard.title")}
+				{t("shell.discardChangesDialog.title")}
 			</AlertDialog.Title>
 			<AlertDialog.Description>
-				{t("browse.rightNow.sheet.discard.description")}
+				{t("shell.discardChangesDialog.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel size="lg">
-				{t("browse.rightNow.sheet.discard.keepEditing")}
+				{t("shell.discardChangesDialog.keepEditing")}
 			</AlertDialog.Cancel>
 			<AlertDialog.Action
 				variant="destructive"
@@ -33,7 +33,7 @@
 					ondiscard();
 				}}
 			>
-				{t("browse.rightNow.sheet.discard.discard")}
+				{t("shell.discardChangesDialog.discard")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

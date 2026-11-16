@@ -86,8 +86,12 @@
 		"tags": {
 			"selected_one": "{{count}} selected",
 			"selected_other": "{{count}} selected",
-			"truncated_one": "Showing the first {{shown}} of {{count}} match. Keep typing to narrow the results.",
-			"truncated_other": "Showing the first {{shown}} of {{count}} matches. Keep typing to narrow the results.",
+			"truncated": {
+				"matches_one": "{{count}} tag matches.",
+				"matches_other": "{{count}} tags match.",
+				"shown_one": "Showing the first {{count}}. Keep typing to narrow the results.",
+				"shown_other": "Showing the first {{count}}. Keep typing to narrow the results."
+			},
 			"noMatches": "No tags match “{{query}}”",
 			"errors": {
 				"loadFailed": "Couldn’t load tags"
@@ -216,12 +220,6 @@
 				"spamDisruption": "Spam/disruption",
 				"underage": "Content with minors",
 				"other": "Other"
-			},
-			"discard": {
-				"title": "Discard changes?",
-				"description": "You have unsaved changes.",
-				"keepEditing": "Keep editing",
-				"discard": "Discard"
 			},
 			"location": {
 				"showOnMap": "Show me on map",

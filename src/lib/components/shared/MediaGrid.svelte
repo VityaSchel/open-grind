@@ -33,7 +33,7 @@
 	} = $props();
 </script>
 
-<div class="@container/photo-grid flex flex-col rounded-grid">
+<div class="@container/photo-grid flex flex-1 flex-col rounded-grid">
 	{#if error !== null}
 		<div class="flex flex-1">
 			<ApiErrorDisplay {error} {onRetry} class="m-auto" />

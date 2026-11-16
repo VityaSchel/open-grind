@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { afterNavigate } from "$app/navigation";
+	import { afterNavigate, beforeNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
@@ -27,6 +27,12 @@
 		leaving = false;
 	});
 
+	beforeNavigate(({ complete }) => {
+		complete.catch(() => {
+			leaving = false;
+		});
+	});
+
 	onMount(() =>
 		tinykeys(window, {
 			Escape: (event) => {
@@ -49,7 +55,7 @@
 		event.preventDefault();
 		if (leaving) return;
 		leaving = true;
-		goBack({ parent: href });
+		goBack({ fallback: href });
 	}}
 >
 	{@render children?.()}

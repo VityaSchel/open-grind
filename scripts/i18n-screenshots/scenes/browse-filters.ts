@@ -198,7 +198,7 @@ export const tagSearchTruncated: Scene = {
 				await searchTags({
 					page,
 					query: "ing",
-					shows: `Showing the first 50 of ${PASTIMES.length} matches`,
+					shows: "Showing the first 50.",
 				});
 			},
 		},
