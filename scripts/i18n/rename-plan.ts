@@ -18,6 +18,7 @@ type Rename = { from: string; to: string };
 
 const LOCALE_DIRECTORY = "src/lib/i18n/locales";
 const ANDROID_STRINGS = "src/lib/i18n/android-strings.json";
+const DESKTOP_STRINGS = "src/lib/i18n/desktop-strings.json";
 const UNCAPTURABLE = "scripts/i18n-screenshots/uncapturable.json";
 const LITERAL_SOURCES = [
 	{ pattern: "src/**/*.{js,ts,svelte}", exclude: [] },
@@ -102,7 +103,11 @@ export function planRename({
 		from,
 		to,
 	});
-	const literals = [ANDROID_STRINGS, ...literalFiles(root)].map((file) => {
+	const literals = [
+		ANDROID_STRINGS,
+		DESKTOP_STRINGS,
+		...literalFiles(root),
+	].map((file) => {
 		const text = read(file);
 		return { file, text, renamed: renameLiterals({ text, from, to }) };
 	});

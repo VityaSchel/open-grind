@@ -1,0 +1,15 @@
+{
+	"webview_warning_title": "shell.webViewWarning.desktop.title",
+	"webview2_description": "shell.webViewWarning.desktop.webView2.description",
+	"webview2_update": "shell.webViewWarning.desktop.webView2.update",
+	"webkitgtk_description": "shell.webViewWarning.desktop.webKitGtk.description",
+	"webkitgtk_update": "shell.webViewWarning.desktop.webKitGtk.update",
+	"predecessor_title": "shell.predecessor.title",
+	"predecessor_description": "shell.predecessor.description",
+	"predecessor_quit": "shell.predecessor.quit",
+	"location_title": "updates.location.title",
+	"location_description": "updates.location.description",
+	"location_quit": "updates.location.quit",
+	"google_sign_in_title": "auth.signIn.google.title",
+	"facebook_sign_in_title": "auth.signIn.facebook.title"
+}

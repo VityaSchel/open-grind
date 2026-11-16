@@ -87,7 +87,23 @@
 		"unknownProvider": "Unknown provider",
 		"unknownVersion": "Unknown version",
 		"update": "Update WebView",
-		"continue": "Continue anyway"
+		"continue": "Continue anyway",
+		"desktop": {
+			"title": "WebView may be too old",
+			"webView2": {
+				"description": "Open Grind needs Microsoft Edge WebView2 {{minimumVersion}} or newer to display correctly (found {{version}}).",
+				"update": "Update the WebView2 Runtime, then restart the app."
+			},
+			"webKitGtk": {
+				"description": "Open Grind needs WebKitGTK {{minimumVersion}} or newer to display correctly (found {{version}}).",
+				"update": "Update webkit2gtk / your distribution, then restart the app."
+			}
+		}
+	},
+	"predecessor": {
+		"title": "Quit the older Open Grind",
+		"description": "An older version of Open Grind is still open. Quit it, then open Open Grind again.",
+		"quit": "Quit"
 	},
 	"menuBar": {
 		"about": "About Open Grind",
