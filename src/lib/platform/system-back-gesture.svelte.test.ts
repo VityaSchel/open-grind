@@ -367,6 +367,24 @@ describe("on iOS", () => {
 		detach();
 	});
 
+	it("disarms while a guard on leaving the screen is up, and arms again once it goes", () => {
+		const { stack } = makeStack();
+		const detach = attachSystemBackGesture(stack);
+		flushSync();
+		expect(armedPushes()).toEqual([true]);
+		const unsavedEdits = () => false;
+
+		backGestureEventHandlers.set(unsavedEdits, "guard");
+		flushSync();
+		expect(armedPushes()).toEqual([true, false]);
+		expect(start()).toBe(false);
+		backGestureEventHandlers.delete(unsavedEdits);
+		flushSync();
+
+		expect(armedPushes()).toEqual([true, false, true]);
+		detach();
+	});
+
 	it("keeps the swipe armed while it tracks, and cancels it when an overlay opens mid-swipe", () => {
 		const { stack, calls, offerSwipeBack } = makeStack();
 		const detach = attachSystemBackGesture(stack);

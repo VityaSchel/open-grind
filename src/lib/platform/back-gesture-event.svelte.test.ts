@@ -48,6 +48,19 @@ describe("back gesture layers", () => {
 		expect(stack).not.toHaveBeenCalled();
 	});
 
+	it("runs a guard on leaving the screen below the screen's own handlers and above the stack", () => {
+		const stack = register({ layer: "stack" });
+		const guard = register({ layer: "guard" });
+		const screen = register({ layer: "screen" });
+
+		expect(topBackGestureHandler()).toBe(screen);
+		backGestureEventHandlers.delete(screen);
+		expect(topBackGestureHandler()).toBe(guard);
+		expect(runBackGestureHandlers()).toBe(true);
+		expect(guard).toHaveBeenCalledOnce();
+		expect(stack).not.toHaveBeenCalled();
+	});
+
 	it("lets the newest handler of a layer win", () => {
 		const older = register({ layer: "overlay" });
 		const newer = register({ layer: "overlay" });
