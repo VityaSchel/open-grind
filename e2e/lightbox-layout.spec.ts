@@ -8,6 +8,8 @@ const LIGHTBOX = ".pswp";
 const SLIDE_IMAGE = ".pswp__img";
 const TOP_BAR = ".pswp__top-bar";
 const CLOSE_BUTTON = ".pswp__button--close";
+const ZOOM_BUTTON = ".pswp__button--zoom";
+const ZOOM_PLUS_BAR = ".pswp__zoom-icn-bar-v";
 const NEXT_BUTTON = ".pswp__button--arrow--next";
 const CAROUSEL = ".carousel";
 const CAROUSEL_PHOTO = `${CAROUSEL} .item`;
@@ -166,6 +168,30 @@ test.describe("lightbox layout", () => {
 			WIDTH - (closeRight ?? 0),
 			"the close button clears the cutout plus its own margin",
 		).toBeCloseTo(CUTOUT + 12, 0);
+	});
+
+	test("the zoom button wears the close button's chrome and drops its plus bar once zoomed in", async ({
+		page,
+	}) => {
+		await enterConversation(page);
+		await openAlbum(page);
+
+		const zoom = page.locator(ZOOM_BUTTON);
+		await expect(zoom).toBeVisible();
+		expect(await chromeStyle(zoom)).toEqual(
+			await chromeStyle(page.locator(CLOSE_BUTTON)),
+		);
+		await expect(zoom.locator("svg")).toHaveAttribute(
+			"viewBox",
+			"0 0 256 256",
+		);
+		const plusBar = zoom.locator(ZOOM_PLUS_BAR);
+		await expect(plusBar).toBeVisible();
+		await expect.poll(() => openLightboxIndex(page)).not.toBeNull();
+
+		await zoom.click();
+
+		await expect(plusBar).toBeHidden();
 	});
 
 	test("the photo recenters when the keyboard collapses mid-open", async ({

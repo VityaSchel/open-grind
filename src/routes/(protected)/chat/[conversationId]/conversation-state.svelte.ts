@@ -1,4 +1,4 @@
-/* eslint max-lines: ["error", { "max": 605, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
+/* eslint max-lines: ["error", { "max": 606, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
 
 import { createContext } from "svelte";
 
@@ -15,6 +15,7 @@ import {
 	offerEntitlementBypass,
 	reportRefusedDespiteBypass,
 } from "#lib/entitlements/bypass.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 import { previewFromMessage } from "#lib/model/messaging/message-preview.ts";
 import { reconciler } from "#lib/util/reconcile.ts";
 import {
@@ -266,7 +267,7 @@ export class ConversationState {
 				this.error = error;
 			} else {
 				showErrorToast({
-					label: "Failed to refresh messages",
+					label: t("chat.conversation.errors.refreshFailed"),
 					error,
 					onRetry: () => void this.refresh(),
 				});
@@ -365,7 +366,7 @@ export class ConversationState {
 				this.error = error;
 			} else {
 				showErrorToast({
-					label: "Failed to load more messages",
+					label: t("chat.conversation.errors.loadMoreFailed"),
 					error,
 				});
 			}
@@ -439,7 +440,7 @@ export class ConversationState {
 				urn === "urn:gr:err:entitlement_limit"
 			) {
 				const lease = await offerEntitlementBypass({
-					reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
+					reason: "chat.conversation.bypassReason.expiringPhotoLimit",
 				});
 				if (lease === null) return;
 				await this.#attemptSend(delivery)
@@ -598,7 +599,7 @@ export class ConversationState {
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
-				label: "Failed to mark conversation as read",
+				label: t("chat.conversations.errors.markReadFailed"),
 				error,
 			});
 		}

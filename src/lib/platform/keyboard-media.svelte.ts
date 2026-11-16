@@ -3,14 +3,12 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
+import { t } from "#lib/i18n/index.ts";
 import { discardStagedMedia } from "#lib/platform/media-file.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const KEYBOARD_MEDIA_EVENT = "keyboard-media";
-
-const UNREADABLE_MESSAGE = "Couldn't read what the keyboard sent";
-const NO_CHAT_MESSAGE = "Stickers can only be sent in a chat";
 
 const stagedSchema = z.object({
 	id: z.string().nullable(),
@@ -52,7 +50,7 @@ export function listenForKeyboardMedia(): () => void {
 
 function deliver({ id, mimeType }: z.infer<typeof stagedSchema>): void {
 	if (id === null) {
-		toast.error(UNREADABLE_MESSAGE);
+		toast.error(t("chat.keyboardMedia.errors.readFailed"));
 		return;
 	}
 	const media: PickedMedia = {
@@ -63,7 +61,7 @@ function deliver({ id, mimeType }: z.infer<typeof stagedSchema>): void {
 	};
 	const target = targets.at(-1);
 	if (target === undefined) {
-		toast.error(NO_CHAT_MESSAGE);
+		toast.error(t("chat.keyboardMedia.errors.notInChat"));
 		void discardStagedMedia([media]);
 		return;
 	}

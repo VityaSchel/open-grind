@@ -22,5 +22,5 @@
 		"e2e/updater/**/*.ts",
 		"e2e/ios/**/*.ts"
 	],
-	"exclude": ["scripts/store-screenshots/"]
+	"exclude": ["scripts/store-screenshots/", "scripts/i18n-screenshots/"]
 }

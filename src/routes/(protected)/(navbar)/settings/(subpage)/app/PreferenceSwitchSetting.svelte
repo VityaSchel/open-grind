@@ -7,19 +7,26 @@
 		setPreferences,
 	} from "#lib/app-data/preferences.svelte.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
+		id,
 		preference,
 		title,
 		description,
-	}: { preference: BooleanPreference; title: string; description: string } =
-		$props();
+	}: {
+		id?: string;
+		preference: BooleanPreference;
+		title: string;
+		description: string;
+	} = $props();
 
 	let pending = $state<boolean | null>(null);
 	const value = $derived(pending ?? preferencesSnapshot()[preference]);
 </script>
 
 <SwitchField
+	{id}
 	{title}
 	{description}
 	disabled={!preferencesLoaded()}
@@ -29,7 +36,10 @@
 			pending = newValue;
 			setPreferences({ [preference]: newValue }).catch((error) => {
 				pending = null;
-				showErrorToast({ label: "Failed to save preferences", error });
+				showErrorToast({
+					label: t("settings.setting.errors.saveFailed"),
+					error,
+				});
 			});
 		}
 	}

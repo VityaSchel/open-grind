@@ -1,11 +1,18 @@
 import z from "zod";
 
-const precision = 12;
+export const GEOHASH_PRECISION = 12;
+
+const geohashCharacters = /^[0-9b-hjkmnp-z]+$/;
 
 export const geohashSchema = z
 	.string()
-	.length(precision)
-	.regex(/^[0-9b-hjkmnp-z]+$/);
+	.length(GEOHASH_PRECISION)
+	.regex(geohashCharacters);
+
+export const geohashPrefixSchema = z
+	.string()
+	.max(GEOHASH_PRECISION)
+	.regex(geohashCharacters);
 
 const BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz";
 
@@ -25,7 +32,7 @@ export function encodeGeohash({
 		bit = 0,
 		even = true;
 
-	while (hash.length < precision) {
+	while (hash.length < GEOHASH_PRECISION) {
 		if (even) {
 			const mid = (lonLo + lonHi) / 2;
 			if (lon >= mid) {

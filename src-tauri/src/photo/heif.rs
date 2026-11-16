@@ -6,12 +6,10 @@ mod apple;
 use tauri::{AppHandle, Runtime};
 
 use crate::error::AppError;
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+use crate::error::MediaError;
 
 use super::source::Source;
-
-#[cfg(any(target_os = "android", target_os = "linux", target_os = "windows"))]
-pub const UNSUPPORTED: &str =
-	"HEIC photos aren't supported on this platform yet";
 
 #[cfg(target_os = "android")]
 pub use android::plugin;
@@ -32,6 +30,6 @@ pub async fn decode<R: Runtime>(
 	#[cfg(any(target_os = "linux", target_os = "windows"))]
 	{
 		let _ = (app, bytes);
-		Err(AppError::Media(UNSUPPORTED.to_owned()))
+		Err(MediaError::HeicUnsupported.into())
 	}
 }

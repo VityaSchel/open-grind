@@ -1,14 +1,26 @@
 <script lang="ts">
 	import Link from "#lib/components/ui/link/Link.svelte";
+	import Rich from "#lib/i18n/Rich.svelte";
+	import type { HighlightBlurbKey } from "#lib/credits/types.ts";
 
-	let { name, blurb, url }: { name: string; blurb?: string; url?: string } =
-		$props();
-
-	const [before = "", after = ""] = $derived(blurb?.split("{name}") ?? []);
+	let {
+		name,
+		blurb,
+		url,
+	}: { name: string; blurb?: HighlightBlurbKey; url?: string } = $props();
 </script>
 
+{#snippet projectLink()}
+	{#if url}<Link
+			href={url}
+			class="font-semibold hover:underline"
+			translate="no">{name}</Link
+		>{:else}<span class="font-semibold" translate="no">{name}</span>{/if}
+{/snippet}
+
 <p class="text-sm wrap-anywhere text-muted-foreground">
-	{before}{#if url}<Link href={url} class="font-semibold hover:underline"
-			>{name}</Link
-		>{:else}<span class="font-semibold">{name}</span>{/if}{after}
+	{#if blurb}<Rich
+			key={blurb}
+			{projectLink}
+		/>{:else}{@render projectLink()}{/if}
 </p>

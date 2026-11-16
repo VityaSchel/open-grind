@@ -4,16 +4,20 @@
 
 	import ToastUnimplemented from "#lib/components/feedback/ToastUnimplemented.svelte";
 	import PrimaryComposerButton from "#lib/components/shared/PrimaryComposerButton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	const { disabled } = $derived(getMessageComposerContext()());
 </script>
 
 <PrimaryComposerButton
-	aria-label="Record voice message"
+	aria-label={t("chat.composer.voiceMessage.a11y.record")}
 	onclick={() => {
 		toast(ToastUnimplemented, {
-			componentProps: { feature: "Voice messages", issue: 35 },
+			componentProps: {
+				message: "chat.composer.voiceMessage.unimplemented",
+				issue: 35,
+			},
 		});
 	}}
 	class="ps-0"

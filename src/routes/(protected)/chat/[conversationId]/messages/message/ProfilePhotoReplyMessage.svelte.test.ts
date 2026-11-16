@@ -12,6 +12,10 @@ const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }));
 vi.mock("../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ send: sendMock }),
 }));
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { runningOn } from "#lib/test/platform.ts";
@@ -190,5 +194,36 @@ describe("profile photo reply messages", () => {
 		const signal = open.mock.calls[0]![0].signal;
 		view.unmount();
 		expect(signal.aborted).toBe(true);
+	});
+});
+
+describe("profile photo reply messages on Google Play", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	it("covers the peer's photo our reply quotes and keeps it out of the viewer", () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		renderPhoto({ isOut: true });
+
+		expect(
+			screen.queryByRole("button", {
+				name: "Open replied profile photo",
+			}),
+		).toBeNull();
+		expect(
+			within(
+				screen.getByRole("group", { name: "Replied profile photo" }),
+			).getByRole("link", { name: "Show mature content" }),
+		).toBeTruthy();
+		expect(screen.getByText("Nice photo!")).toBeTruthy();
+	});
+
+	it("shows our own photo that the peer's reply quotes", () => {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		renderPhoto({ isOut: false });
+
+		expect(photoButton()).toBeTruthy();
+		expect(
+			screen.queryByRole("link", { name: "Show mature content" }),
+		).toBeNull();
 	});
 });

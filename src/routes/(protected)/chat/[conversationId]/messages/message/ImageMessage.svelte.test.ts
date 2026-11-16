@@ -4,6 +4,11 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
+
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
@@ -121,5 +126,48 @@ describe("photo message", () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(init).not.toHaveBeenCalled();
+	});
+});
+
+describe("photo message on Google Play", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	function renderOnPlay({ isOut }: { isOut: boolean }) {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		return render(Message, {
+			props: {
+				message: photoMessage(OLD),
+				isOut,
+				isRead: null,
+				indexInStack: 0,
+				stackLength: 1,
+			},
+		});
+	}
+
+	it("covers a received photo and links to the mature content setting instead of the lightbox", () => {
+		const { container, getByRole } = renderOnPlay({ isOut: false });
+
+		expect(container.querySelector('a[aria-label="Photo"]')).toBeNull();
+		const photo = getByRole("group", { name: "Photo" });
+		expect(
+			photo.contains(getByRole("link", { name: "Show mature content" })),
+		).toBe(true);
+		expect(photo.querySelector("img")?.getAttribute("src")).toBe(
+			proxyMediaUrl(OLD),
+		);
+	});
+
+	it("shows a photo we sent", () => {
+		const { container } = renderOnPlay({ isOut: true });
+
+		expect(
+			container
+				.querySelector('a[aria-label="Photo"]')
+				?.getAttribute("href"),
+		).toBe(proxyMediaUrl(OLD));
+		expect(
+			container.querySelector('[data-slot="mature-content-cover"]'),
+		).toBeNull();
 	});
 });

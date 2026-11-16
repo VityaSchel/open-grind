@@ -144,7 +144,10 @@ describe("getTrendingGifs", () => {
 					id: "xT0xeChUR33EsYNNRK",
 					tileUrl: proxyMediaUrl(`${media}/200w_d.webp`),
 					stillTileUrl: proxyMediaUrl(`${media}/200_s.gif`),
-					alt: "Season 2 No GIF by Portlandia",
+					alt: {
+						kind: "title",
+						title: "Season 2 No GIF by Portlandia",
+					},
 					body: {
 						id: "xT0xeChUR33EsYNNRK",
 						urlPath: `${media}/200.gif`,
@@ -171,15 +174,23 @@ describe("getTrendingGifs", () => {
 	});
 
 	it.each([
-		["the title", { title: "Wave GIF", altText: "A wave" }, "Wave GIF"],
-		["the alt text", { title: "", altText: "A wave" }, "A wave"],
-		["a generic label", { title: "", altText: "" }, "GIF"],
+		[
+			"the title",
+			{ title: "Wave GIF", altText: "A wave" },
+			{ kind: "title", title: "Wave GIF" },
+		],
+		[
+			"the alt text",
+			{ title: "", altText: "A wave" },
+			{ kind: "title", title: "A wave" },
+		],
+		["a generic label", { title: "", altText: "" }, { kind: "untitled" }],
 	])("labels a tile with %s", async (_, names, alt) => {
 		respondWithPage({ data: [capturedGif(names)] });
 
 		const { gifs } = await getTrendingGifs({ offset: 0 });
 
-		expect(gifs[0]?.alt).toBe(alt);
+		expect(gifs[0]?.alt).toEqual(alt);
 	});
 
 	it.each([

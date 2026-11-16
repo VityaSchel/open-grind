@@ -612,7 +612,7 @@ describe("ConversationsState paging failures", () => {
 		expect(state.paging.running).toBe(false);
 		expect(showErrorToast).not.toHaveBeenCalledWith(
 			expect.objectContaining({
-				label: "Failed to load more conversations",
+				label: "Couldn’t load more conversations",
 			}),
 		);
 	});
@@ -696,7 +696,7 @@ describe("ConversationsState refresh failures", () => {
 		await state.refresh();
 
 		expect(showErrorToast).toHaveBeenCalledWith({
-			label: "Failed to refresh conversations",
+			label: "Couldn’t refresh conversations",
 			error: expect.any(Error),
 			onRetry: expect.any(Function),
 		});

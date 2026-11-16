@@ -5,6 +5,7 @@
 	import type { TransitionConfig } from "svelte/transition";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
 	import AnnouncedRefresh from "./refresh/AnnouncedRefresh.svelte";
 	import { attachPullInputs } from "./refresh/attach-inputs";
@@ -58,10 +59,6 @@
 	const REVEAL_TRANSITION: TransitionConfig = {
 		duration: REVEAL_MS,
 		easing: expoOut,
-	};
-	const CONTENT_SLIDE = {
-		duration: REVEAL_MS,
-		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
 	};
 
 	let distance = $state(Infinity);
@@ -198,8 +195,11 @@
 		position === "top" ? "--refresh-inset-top" : "--refresh-inset-bottom",
 	);
 
-	const slide = contentSlide({ ...CONTENT_SLIDE, pacedBy: buttonSpace });
-
+	const slide = contentSlide({
+		duration: REVEAL_MS,
+		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+		pacedBy: buttonSpace,
+	});
 	$effect(() => {
 		void buttonSpace.current;
 		slide.follow();
@@ -331,9 +331,9 @@
 						: -hintOffset}px"
 				>
 					{#if model.phase === "armed"}
-						Release to refresh
+						{t("shell.dataRefreshControl.releaseHint")}
 					{:else}
-						Pull to refresh
+						{t("shell.dataRefreshControl.pullHint")}
 					{/if}
 				</span>
 			{:else if buttonShown || restingButton.shown}
@@ -402,6 +402,6 @@
 		aria-busy={busy || undefined}
 		onclick={() => model.clickTrigger()}
 	>
-		Refresh
+		{t("shell.dataRefreshControl.refreshButton")}
 	</Button>
 {/snippet}

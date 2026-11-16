@@ -6,6 +6,7 @@
 
 	import ScreenChromeCover from "#lib/components/shared/ScreenChromeCover.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
 	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import DialogPortal from "./dialog-portal.svelte";
@@ -54,7 +55,7 @@
 						{...props}
 					>
 						<XIcon />
-						<span class="sr-only">Close</span>
+						<span class="sr-only">{t("common.actions.close")}</span>
 					</Button>
 				{/snippet}
 			</DialogPrimitive.Close>

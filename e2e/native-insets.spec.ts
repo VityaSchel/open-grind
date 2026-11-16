@@ -7,7 +7,7 @@ import {
 	installTauriShim,
 } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	openConversation,
 	openInbox,
 	sheet,
@@ -50,7 +50,7 @@ const mainNav = (page: Page) =>
 const landHeldInsets = (page: Page) =>
 	page.evaluate(() => window.dispatchEvent(new Event("resize")));
 const composerField = (page: Page) =>
-	page.getByRole("textbox", { name: "Say something..." });
+	page.getByRole("textbox", { name: "Write a message…" });
 const sentBubble = (page: Page, { text }: { text: string }) =>
 	page.locator('[data-slot="message-bubble"]').filter({ hasText: text });
 
@@ -137,7 +137,7 @@ async function slidingSoonAfterBack(
 			holdMs,
 		},
 	);
-	await backToChats(page).click();
+	await backToInbox(page).click();
 	return watch.evaluate(({ sliding }) => sliding);
 }
 
@@ -398,7 +398,7 @@ test("the nav bar on iOS stays under a conversation that follows the keyboard an
 		to: 0,
 		duration: CLOSE_RIDE_MS,
 	});
-	await backToChats(page).click();
+	await backToInbox(page).click();
 	await expect(sheet(page)).toHaveCount(0);
 	await expect(mainNav(page)).toBeVisible();
 	expect(await navHiddenChanges.jsonValue()).toEqual([]);

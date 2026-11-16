@@ -14,7 +14,7 @@ use super::GoogleOauthBridge;
 const HELPER_URL: &str = "https://web.grindr.com/";
 const HELPER_HOST: &str = "web.grindr.com";
 const WINDOW_LABEL: &str = "google-oauth";
-const WINDOW_TITLE: &str = "Sign in with Google";
+const WINDOW_TITLE: &str = "Sign In with Google";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);

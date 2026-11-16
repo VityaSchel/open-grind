@@ -7,6 +7,7 @@ import {
 	getAlbumStorageLimits,
 } from "#lib/api/messaging/albums.ts";
 import { albumRoom } from "#lib/components/album/album.ts";
+import { t } from "#lib/i18n/index.ts";
 import { discardStagedMedia } from "#lib/platform/media-file.ts";
 import type { MyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
 import type { ScreenedMedia } from "#lib/platform/media-intake.svelte.ts";
@@ -19,8 +20,6 @@ import {
 	type AlbumUploads,
 	isPlanLimitReached,
 } from "../album-uploads/album-uploads-state.svelte";
-
-const ALBUM_LIMIT_MESSAGE = "You can't create more albums";
 
 export async function createAlbumFromMedia({
 	uploads,
@@ -49,9 +48,12 @@ export async function createAlbumFromMedia({
 		console.error(error);
 		void discardStagedMedia(media ?? inspected.map((pick) => pick.media));
 		if (isPlanLimitReached(error)) {
-			toast.error(ALBUM_LIMIT_MESSAGE);
+			toast.error(t("media.albums.new.errors.albumLimit"));
 			return;
 		}
-		showErrorToast({ label: "Couldn't create album", error });
+		showErrorToast({
+			label: t("media.albums.new.errors.createFailed"),
+			error,
+		});
 	}
 }

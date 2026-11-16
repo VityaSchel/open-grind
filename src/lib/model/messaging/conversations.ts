@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { mediaHashPublicSchema } from "#lib/model/media.ts";
-import { rightNowStatusSchema } from "#lib/model/right-now.ts";
+import { rightNowStatusSchema } from "#lib/model/right-now/index.ts";
 import {
 	knownValueOr,
 	knownValueOrNull,

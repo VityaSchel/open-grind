@@ -1,12 +1,12 @@
 import { accountScoped } from "#lib/api/account-caches.ts";
-import { markBlockedProfilesUnviewable } from "#lib/api/browse/blocks.ts";
-import { markHiddenProfilesUnviewable } from "#lib/api/browse/hides.ts";
+import { markBlockedAndHiddenProfilesUnviewable } from "#lib/api/browse/unviewable-profiles.ts";
 import { getReceivedTaps } from "#lib/api/interest/taps.ts";
 import {
 	isProfileViewable,
 	onProfileViewabilityChange,
 } from "#lib/api/users/profile-viewability.ts";
 import { onProfileEdit } from "#lib/api/users/profiles.ts";
+import { t } from "#lib/i18n/index.ts";
 import { tapsLastViewed } from "#lib/interest/taps-last-viewed.ts";
 import { announceTap } from "#lib/push/announce.ts";
 import { ReconcilingListState } from "#lib/util/reconciling-list-state.svelte.ts";
@@ -55,7 +55,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	}) {
 		super({
 			pageSize: PAGE_SIZE,
-			refreshErrorLabel: "Failed to refresh taps",
+			refreshErrorLabel: () => t("interest.taps.errors.refreshFailed"),
 			marksOnline: true,
 		});
 		this.ourProfileId = ourProfileId;
@@ -89,12 +89,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	}
 
 	protected fetch(): Promise<TapsSnapshot> {
-		void markBlockedProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
-		void markHiddenProfilesUnviewable().catch((error) =>
-			console.error(error),
-		);
+		markBlockedAndHiddenProfilesUnviewable();
 		return getReceivedTaps();
 	}
 

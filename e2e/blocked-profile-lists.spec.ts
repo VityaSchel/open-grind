@@ -17,10 +17,8 @@ async function blockFirstViewer(page: Page) {
 	await expect(page).toHaveURL(new RegExp(`${href}$`));
 
 	await page.getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Block profile" }).click();
-	await expect(
-		page.getByText("You have blocked this profile."),
-	).toBeVisible();
+	await page.getByRole("menuitem", { name: "Block user" }).click();
+	await expect(page.getByText("You have blocked this user")).toBeVisible();
 
 	return {
 		cards,

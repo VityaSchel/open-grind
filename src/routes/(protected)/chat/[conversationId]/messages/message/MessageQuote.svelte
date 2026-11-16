@@ -3,6 +3,7 @@
 
 	import {
 		previewFromMessage,
+		quoteIsUserText,
 		quoteLabel,
 	} from "#lib/model/messaging/message-preview.ts";
 	import type { QuotedMessage } from "#lib/model/messaging/messages.ts";
@@ -15,9 +16,9 @@
 
 	const { clone } = $derived(getMessageMetaContext()());
 
-	const label = $derived(
-		quoted ? quoteLabel(previewFromMessage(quoted)) : null,
-	);
+	const preview = $derived(quoted ? previewFromMessage(quoted) : null);
+	const label = $derived(preview ? quoteLabel(preview) : null);
+	const userText = $derived(preview ? quoteIsUserText(preview) : false);
 </script>
 
 <div
@@ -43,7 +44,10 @@
 			{ "p-2": !!children, "px-3 py-1.5": !children },
 		]}
 	>
-		{#if label}<span class="line-clamp-1">{label}</span>{/if}
+		{#if label}<span
+				class="line-clamp-1"
+				translate={userText ? "no" : undefined}>{label}</span
+			>{/if}
 		{@render children?.()}
 	</div>
 </div>

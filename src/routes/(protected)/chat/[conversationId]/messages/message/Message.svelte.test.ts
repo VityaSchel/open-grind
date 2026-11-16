@@ -1,13 +1,21 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, within } from "@testing-library/svelte";
+import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { type ComponentProps, tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
+const { playHapticMock, toastMock, writeTextMock } = vi.hoisted(() => ({
+	playHapticMock: vi.fn(),
+	toastMock: { success: vi.fn(), error: vi.fn() },
+	writeTextMock: vi.fn(),
+}));
 vi.mock("#lib/haptics.ts", () => ({
 	hapticsAvailable: () => true,
 	playHaptic: playHapticMock,
+}));
+vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
+	writeText: writeTextMock,
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
@@ -15,10 +23,12 @@ import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
+import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';
+const SENT_AT = new Date(2026, 9, 5, 9, 5);
 
 type MessageActions = Pick<
 	ComponentProps<typeof Message>,
@@ -28,10 +38,16 @@ type MessageActions = Pick<
 function renderMessage({
 	type,
 	body,
+	replyToMessage,
+	isRead = null,
+	status,
 	actions = {},
 }: {
 	type: string;
 	body: Record<string, unknown>;
+	replyToMessage?: { type: string; body: Record<string, unknown> };
+	isRead?: boolean | null;
+	status?: "sent" | "pending" | "error";
 	actions?: MessageActions;
 }) {
 	const { container } = render(Message, {
@@ -40,14 +56,20 @@ function renderMessage({
 				messageId: "m1",
 				conversationId: "100001:100002",
 				senderId: 100002,
-				timestamp: 1_700_000_000_000,
+				timestamp: SENT_AT.getTime(),
 				type,
 				body,
+				replyToMessage: replyToMessage && {
+					messageId: "m0",
+					senderId: 100001,
+					...replyToMessage,
+				},
 			}),
 			isOut: false,
-			isRead: null,
+			isRead,
 			indexInStack: 0,
 			stackLength: 1,
+			status,
 			...actions,
 		},
 	});
@@ -79,13 +101,103 @@ function menuDialog(): HTMLDialogElement {
 	return dialog;
 }
 
+async function openMenu(row: HTMLElement): Promise<HTMLDialogElement> {
+	actionsButton(row).click();
+	await tick();
+	return menuDialog();
+}
+
 beforeEach(() => {
 	runningOn("windows");
 });
 
 afterEach(() => {
 	cleanup();
-	playHapticMock.mockReset();
+	vi.resetAllMocks();
+});
+
+describe("message translation boundary", () => {
+	it("keeps the words of a text message out of page translation", () => {
+		expect(untranslatableTexts(renderTextMessage())).toEqual([
+			"hello there",
+		]);
+	});
+
+	it("keeps quoted words out of page translation but not a quoted type label", () => {
+		const quotingText = renderMessage({
+			type: "Text",
+			body: { text: "sure" },
+			replyToMessage: { type: "Text", body: { text: "lunch?" } },
+		});
+
+		expect(untranslatableTexts(quotingText)).toEqual(["lunch?", "sure"]);
+		cleanup();
+
+		const quotingPhoto = renderMessage({
+			type: "Text",
+			body: { text: "sure" },
+			replyToMessage: {
+				type: "Image",
+				body: {
+					mediaId: 1,
+					width: 300,
+					height: 400,
+					url: "https://d3.cloudfront.net/chat/a.jpg?Expires=1700000900&Signature=s&Key-Pair-Id=K",
+					imageHash: "a".repeat(64),
+					takenOnGrindr: false,
+					createdAt: null,
+				},
+			},
+		});
+
+		expect(quotingPhoto.textContent).toContain("Photo");
+		expect(untranslatableTexts(quotingPhoto)).toEqual(["sure"]);
+	});
+
+	it("keeps an unsupported wire type out of page translation", () => {
+		const row = renderMessage({ type: "SomethingNew", body: {} });
+
+		expect(row.textContent?.trim()).toBe(
+			"Unsupported message type: SomethingNew",
+		);
+		expect(untranslatableTexts(row)).toEqual(["SomethingNew"]);
+	});
+
+	it("keeps a Gaymoji's name out of page translation", () => {
+		const row = renderMessage({
+			type: "Gaymoji",
+			body: { imageHash: "gaymoji/4_Happy_Mask.png" },
+		});
+
+		expect(
+			within(row)
+				.getByRole("img", { name: "Happy Mask" })
+				.closest("[translate]")
+				?.getAttribute("translate"),
+		).toBe("no");
+	});
+});
+
+describe("message status line", () => {
+	it.each([
+		{ isRead: true, status: "sent", text: "Read 9:05 AM" },
+		{ isRead: false, status: "sent", text: "Sent 9:05 AM" },
+		{ isRead: null, status: "sent", text: "9:05 AM" },
+		{ isRead: false, status: "pending", text: "Sending…" },
+		{ isRead: false, status: "error", text: "Not sent" },
+	] as const)(
+		"reads $text for a $status message in local time",
+		({ isRead, status, text }) => {
+			renderMessage({
+				type: "Text",
+				body: { text: "hello there" },
+				isRead,
+				status,
+			});
+
+			expect(screen.queryAllByText(text)).toHaveLength(1);
+		},
+	);
 });
 
 describe("message menu haptics", () => {
@@ -132,6 +244,51 @@ describe("message menu haptics", () => {
 
 		expect(await menuOpened(row)).toBe(false);
 		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("message menu", () => {
+	it("names the fire icon with the end of the double-tap hint", async () => {
+		const row = renderTextMessage();
+		const dialog = await openMenu(row);
+		const fireIcon = within(dialog).getByAltText("react with fire");
+
+		expect(fireIcon.parentElement?.textContent?.trim()).toBe(
+			"Double tap to",
+		);
+	});
+
+	it("copies the message words, says so and closes", async () => {
+		const row = renderTextMessage();
+		const dialog = await openMenu(row);
+
+		within(dialog).getByRole("button", { name: "Copy message" }).click();
+
+		await vi.waitFor(() => {
+			expect(toastMock.success).toHaveBeenCalledExactlyOnceWith(
+				"Message copied to clipboard",
+			);
+		});
+		expect(writeTextMock).toHaveBeenCalledExactlyOnceWith("hello there");
+		expect(toastMock.error).not.toHaveBeenCalled();
+		await vi.waitFor(() => expect(row.style.visibility).toBe(""));
+	});
+
+	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
+		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const row = renderTextMessage();
+		const dialog = await openMenu(row);
+
+		within(dialog).getByRole("button", { name: "Copy message" }).click();
+
+		await vi.waitFor(() => {
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				"Couldn’t copy to clipboard",
+			);
+		});
+		expect(toastMock.success).not.toHaveBeenCalled();
+		await vi.waitFor(() => expect(row.style.visibility).toBe(""));
 	});
 });
 
@@ -183,9 +340,7 @@ describe("message actions button", () => {
 		const row = renderTextMessage();
 		const button = actionsButton(row);
 		button.focus();
-		button.click();
-		await tick();
-		const dialog = menuDialog();
+		const dialog = await openMenu(row);
 		within(dialog).getByRole("button", { name: "Copy message" }).focus();
 
 		dialog.close();

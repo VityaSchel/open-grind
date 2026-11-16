@@ -8,7 +8,7 @@ import {
 	MESSAGE_ROW,
 } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	dim,
 	openConversation,
 	openInbox,
@@ -179,7 +179,7 @@ test.describe("the iOS edge swipe in chats", () => {
 	}) => {
 		await installTauriShim(page, { platform: "ios" });
 		await page.goto(DEMO_CONVERSATION);
-		await backToChats(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await backToInbox(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 		await expectStaysOff(page);
 	});
@@ -192,9 +192,9 @@ test("the iOS edge swipe stays off on a profile and in the chat opened from it",
 	await expectStaysOff(page);
 
 	await activeProfilePane(page)
-		.getByRole("link", { name: "Write a message..." })
+		.getByRole("link", { name: "Write a message…" })
 		.click();
 	await expect(page).toHaveURL(/\/chat\//);
-	await backToChats(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await backToInbox(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await expectStaysOff(page);
 });

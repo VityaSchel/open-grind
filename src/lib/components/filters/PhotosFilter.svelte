@@ -5,6 +5,7 @@
 	import type z from "zod";
 
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { filterPhotosSchema } from "#lib/model/browse/grid/filters.ts";
 	import FilterBoolean from "./FilterBoolean.svelte";
 
@@ -16,7 +17,9 @@
 </script>
 
 <div class="flex min-w-0 flex-col gap-2">
-	<FilterBoolean id="photos" bind:checked>Photos</FilterBoolean>
+	<FilterBoolean id="photos" bind:checked>
+		{t("common.filters.photos.label")}
+	</FilterBoolean>
 	<div class="ps-6">
 		<ToggleGroup.Root
 			type="multiple"
@@ -30,15 +33,15 @@
 		>
 			<ToggleGroup.Item value="has-photos">
 				<ImageIcon />
-				Has Photos
+				{t("common.filters.photos.hasPhotos")}
 			</ToggleGroup.Item>
 			<ToggleGroup.Item value="has-face-pics">
 				<SmileyWinkIcon />
-				Has Face Pics
+				{t("common.filters.photos.hasFacePics")}
 			</ToggleGroup.Item>
 			<ToggleGroup.Item value="has-albums">
 				<FolderLockIcon />
-				Has Album(s)
+				{t("common.filters.photos.hasAlbums")}
 			</ToggleGroup.Item>
 		</ToggleGroup.Root>
 	</div>

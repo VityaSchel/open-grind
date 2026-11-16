@@ -4,13 +4,20 @@
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 	import type { Snippet } from "svelte";
 
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import DisplayName from "#lib/components/profile/DisplayName.svelte";
 	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
+	import ProfileRightNowIndicator from "#lib/components/profile/ProfileRightNowIndicator.svelte";
 	import ProfileStatusIndicator from "#lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
 	import Frost from "#lib/components/shared/Frost.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import { profileMediaUrl } from "#lib/util/media.ts";
+	import type { RightNowStatus } from "#lib/model/right-now/index.ts";
+
+	const UNREAD_COUNT_CAP = 99;
 
 	let {
 		mediaHash = null,
@@ -22,6 +29,7 @@
 		isFavorite = false,
 		isVisiting = false,
 		hadRecentChat = false,
+		rightNow = "NOT_ACTIVE",
 		anonymous = false,
 		href = null,
 		onclick,
@@ -37,6 +45,7 @@
 		isFavorite?: boolean;
 		isVisiting?: boolean;
 		hadRecentChat?: boolean;
+		rightNow?: RightNowStatus;
 		anonymous?: boolean;
 		href?: string | null;
 		onclick?: (event: MouseEvent) => void;
@@ -47,12 +56,18 @@
 	let loadedMediaHash = $state<string | null>(null);
 	const photo = $derived(
 		!PUBLIC_ENABLE_BLUR_EFFECTS &&
+			!matureContentCovered() &&
 			mediaHash !== null &&
 			loadedMediaHash === mediaHash
 			? profileMediaUrl({ mediaHash, size: "thumb" })
 			: null,
 	);
 </script>
+
+{#snippet srOnly(text: string)}<span class="sr-only">{text}</span>{/snippet}
+{#snippet cappedCount(text: string)}
+	<span class="text-3xs">{text}</span>
+{/snippet}
 
 {#snippet content()}
 	<div class="absolute size-full bg-stone-700">
@@ -86,7 +101,9 @@
 						weight="fill"
 						class="m-auto size-4/6 text-yellow-500"
 					/>
-					<span class="sr-only">Favorite</span>
+					<span class="sr-only"
+						>{t("profile.favoriteStar.a11y.label")}</span
+					>
 				</div>
 			{/if}
 			{#if hadRecentChat}
@@ -108,7 +125,9 @@
 						weight="fill"
 						class="m-auto size-3/5 -translate-y-px text-sky-400"
 					/>
-					<span class="sr-only">Chatted recently</span>
+					<span class="sr-only"
+						>{t("profile.miniCard.a11y.chattedRecently")}</span
+					>
 				</div>
 			{/if}
 		</div>
@@ -130,6 +149,7 @@
 					{isVisiting}
 					class="me-1"
 				/>
+				<ProfileRightNowIndicator status={rightNow} class="me-1" />
 
 				<span
 					class={[
@@ -151,12 +171,20 @@
 				<span
 					class="flex size-5 shrink-0 items-center justify-center rounded-full border border-black/20 bg-primary text-2xs font-semibold text-primary-foreground"
 				>
-					{#if unread > 99}
-						<span class="text-3xs">99+</span>
+					{#if unread > UNREAD_COUNT_CAP}
+						<Rich
+							key="profile.miniCard.cappedUnreadCount"
+							count={UNREAD_COUNT_CAP}
+							{cappedCount}
+							{srOnly}
+						/>
 					{:else}
-						{unread}
+						<Rich
+							key="profile.miniCard.unreadCount"
+							count={unread}
+							{srOnly}
+						/>
 					{/if}
-					<span class="sr-only">unread messages</span>
 				</span>
 			{/if}
 		</div>
@@ -168,7 +196,9 @@
 	<a
 		{href}
 		{onclick}
-		aria-label={anonymous ? "Profile" : undefined}
+		aria-label={anonymous
+			? t("profile.miniCard.a11y.anonymous")
+			: undefined}
 		class={[
 			"@container relative flex aspect-square items-end overflow-hidden",
 			className,

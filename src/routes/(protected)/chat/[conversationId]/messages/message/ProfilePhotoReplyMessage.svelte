@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { showErrorToast } from "#lib/api/error-toast.ts";
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { mediaHashPublicSchema } from "#lib/model/media.ts";
 	import {
 		draftFromMessage,
@@ -19,6 +22,7 @@
 	}: { message: ProfilePhotoReplyMessage["body"]; isOut: boolean } = $props();
 
 	const conversationState = getConversationState();
+	const covered = $derived(isOut && matureContentCovered());
 	const src = $derived.by(() => {
 		const hash = mediaHashPublicSchema.safeParse(message.imageHash);
 		return hash.success
@@ -68,7 +72,10 @@
 			},
 		}).catch((error: unknown) => {
 			if (controller.signal.aborted) return;
-			showErrorToast({ label: "Failed to open profile photo", error });
+			showErrorToast({
+				label: t("chat.message.profilePhotoReply.errors.openFailed"),
+				error,
+			});
 			open = false;
 			loading = false;
 		});
@@ -76,29 +83,44 @@
 	});
 </script>
 
+{#snippet photo()}
+	<MediaImage
+		{src}
+		class="size-full"
+		imgClass="bg-card-foreground/10"
+		onload={(loaded) => (image = loaded)}
+	/>
+{/snippet}
+
 <MessageQuote>
-	<button
-		aria-label="Open replied profile photo"
-		class={[
-			"block aspect-3/4 w-32 overflow-hidden rounded-lg",
-			{ "opacity-50": loading },
-		]}
-		onclick={() => {
-			loading = true;
-			open = true;
-		}}
-		disabled={src === null || open}
-	>
-		<MediaImage
-			{src}
-			class="size-full"
-			imgClass="bg-card-foreground/10"
-			onload={(loaded) => (image = loaded)}
-		/>
-	</button>
+	{#if covered}
+		<div
+			role="group"
+			aria-label={t("chat.message.profilePhotoReply.a11y.photo")}
+			class="relative block aspect-3/4 w-32 overflow-hidden rounded-lg"
+		>
+			{@render photo()}
+			<MatureContentCover />
+		</div>
+	{:else}
+		<button
+			aria-label={t("chat.message.profilePhotoReply.a11y.open")}
+			class={[
+				"block aspect-3/4 w-32 overflow-hidden rounded-lg",
+				{ "opacity-50": loading },
+			]}
+			onclick={() => {
+				loading = true;
+				open = true;
+			}}
+			disabled={src === null || open}
+		>
+			{@render photo()}
+		</button>
+	{/if}
 </MessageQuote>
 <MessageBubble tone="sent">
-	<span class="wrap-anywhere whitespace-pre-wrap"
+	<span class="wrap-anywhere whitespace-pre-wrap" translate="no"
 		>{message.photoContentReply}</span
 	>
 </MessageBubble>

@@ -1,0 +1,387 @@
+import type { Locator, Page } from "@playwright/test";
+
+import { DEMO_CONVERSATION, MESSAGE_ROW } from "../../../e2e/support/app";
+import {
+	DRAWER,
+	SELECTABLE_MEDIA_TILE,
+	SHARED_ALBUM_TILE,
+	UNSHARED_ALBUM_TILE,
+} from "../../../e2e/support/drawer";
+import { profileTile } from "../../../e2e/support/gps";
+import type {
+	NativeError,
+	RestFault,
+} from "../../../src/lib/demo/screenshot-scene";
+import type { Scene } from ".";
+import { chooseNeutralLocation, MAP_SEARCH } from "./browse";
+import {
+	chooseFromMessageMenu,
+	failRandomUuids,
+	lastIncoming,
+	openConversation,
+} from "./chat-drive";
+import { PREVIEWS_INBOX, QUOTES_ID } from "./chat-fixtures";
+import { ALERT, chooseGeneratedMedia } from "./drive";
+import { CONNECT_FAILED } from "./faults";
+import { press } from "./press";
+import { addingToast, holdToast, toastsShown } from "./toast";
+import { visit } from "./visit";
+
+const FIRST_UPLOADED_MEDIA_ID = 920_000;
+const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
+const UPLOAD_LABEL = "Upload photos or videos";
+const SHEET_ACTION = '[data-slot="sheet-actions"] button';
+const MAP_PIN = ".leaflet-marker-icon";
+
+type MediaRefusal =
+	| "notMedia"
+	| "videoUnreadable"
+	| "notAPhoto"
+	| "photoSizeUnreadable"
+	| "photoDamaged"
+	| "heicUnsupported"
+	| "photoUndecodable"
+	| "outsideReadableFolders"
+	| "photoTooLarge";
+
+const REFUSAL_VIEWS = [
+	["notMedia", "videoUnreadable", "notAPhoto"],
+	["photoSizeUnreadable", "photoDamaged", "heicUnsupported"],
+	["photoUndecodable", "outsideReadableFolders", "photoTooLarge"],
+] as const satisfies readonly (readonly MediaRefusal[])[];
+
+function refusal(reason: MediaRefusal): NativeError {
+	return {
+		kind: "Media",
+		message:
+			reason === "photoTooLarge"
+				? { reason, maxBytes: MAX_PHOTO_BYTES }
+				: { reason },
+	};
+}
+
+function savingUpload({
+	index,
+	error,
+}: {
+	index: number;
+	error: NativeError;
+}): RestFault {
+	return {
+		method: "PUT",
+		path: `/v4/chat/media/drawer/${FIRST_UPLOADED_MEDIA_ID + index}`,
+		error,
+	};
+}
+
+export async function openAttachments(page: Page): Promise<void> {
+	await visit({
+		page,
+		path: DEMO_CONVERSATION,
+		ready: page.locator(MESSAGE_ROW),
+	});
+	await openAttachmentSheet(page);
+}
+
+async function openAttachmentSheet(page: Page): Promise<void> {
+	await press(page.getByRole("button", { name: "Add attachment" }));
+	await page.locator(DRAWER).waitFor();
+}
+
+async function openAttachmentsAtNeutralLocation(page: Page): Promise<void> {
+	await chooseNeutralLocation(page);
+	await profileTile(page).first().waitFor();
+	await press(page.locator('nav a[href="/chat"]').first());
+	await press(page.locator(`main a[href="${DEMO_CONVERSATION}"]`).first());
+	await page.locator(MESSAGE_ROW).first().waitFor();
+	await openAttachmentSheet(page);
+}
+
+function sheetAction(page: Page): Locator {
+	return page.locator(SHEET_ACTION).last();
+}
+
+function sharingAction(page: Page): Locator {
+	return sheetAction(page).filter({ hasNotText: "Unshare" });
+}
+
+async function openTab({
+	page,
+	tab,
+}: {
+	page: Page;
+	tab: "Media" | "Albums" | "Location";
+}): Promise<void> {
+	await press(page.getByRole("tab", { name: tab }));
+}
+
+function uploadPhotos({
+	page,
+	count,
+}: {
+	page: Page;
+	count: number;
+}): Promise<void> {
+	return chooseGeneratedMedia({
+		page,
+		photos: count,
+		open: () =>
+			press(page.getByRole("button", { name: UPLOAD_LABEL }).first()),
+	});
+}
+
+export const replyPreview: Scene = {
+	platform: "phone",
+	demo: { inbox: PREVIEWS_INBOX },
+	views: [
+		{
+			id: "chat/composer/reply",
+			drive: async (page) => {
+				await openConversation({ page, withId: QUOTES_ID });
+				await chooseFromMessageMenu({
+					row: lastIncoming(page),
+					action: "Reply",
+				});
+				await page
+					.getByRole("button", { name: "Cancel reply" })
+					.waitFor();
+			},
+		},
+	],
+};
+
+export const voiceMessage: Scene = {
+	platform: "phone",
+	demo: { inbox: PREVIEWS_INBOX },
+	views: [
+		{
+			id: "chat/composer/voice-unimplemented",
+			screen: "chat/conversation/quotes",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await openConversation({ page, withId: QUOTES_ID });
+				await press(
+					page.getByRole("button", { name: "Record voice message" }),
+				);
+				await holdToast(page);
+			},
+		},
+	],
+};
+
+export const attachmentTabs: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "chat/attachments/media-selected",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openAttachments(page);
+				await press(page.locator(SELECTABLE_MEDIA_TILE).first());
+				await sheetAction(page).waitFor();
+			},
+		},
+		{
+			id: "chat/attachments/albums-share",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openTab({ page, tab: "Albums" });
+				await press(page.locator(UNSHARED_ALBUM_TILE).first());
+				await sharingAction(page).waitFor();
+			},
+		},
+		{
+			id: "chat/attachments/albums-unshare",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await press(page.locator(UNSHARED_ALBUM_TILE).first());
+				await press(page.locator(SHARED_ALBUM_TILE).first());
+				await sheetAction(page).getByText("Unshare").waitFor();
+			},
+		},
+		{
+			id: "chat/attachments/location",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openTab({ page, tab: "Location" });
+				await page.locator(MAP_SEARCH).waitFor();
+			},
+		},
+	],
+};
+
+export const locationSharing: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "chat/attachments/location-pinned",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openAttachmentsAtNeutralLocation(page);
+				await openTab({ page, tab: "Location" });
+				await page.locator(MAP_PIN).waitFor();
+				await sheetAction(page).getByText("Send location").waitFor();
+			},
+		},
+		{
+			id: "chat/conversation/location",
+			drive: async (page) => {
+				await press(sheetAction(page));
+				await page.locator(DRAWER).waitFor({ state: "hidden" });
+				await page
+					.getByRole("link", { name: /Open map/ })
+					.last()
+					.waitFor();
+			},
+		},
+	],
+};
+
+export const emptyAttachments: Scene = {
+	platform: "phone",
+	demo: { emptyLists: ["drawer", "albums"] },
+	views: [
+		{
+			id: "chat/attachments/media-empty",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openAttachments(page);
+				await page.getByText("No Media Sent Yet").waitFor();
+			},
+		},
+		{
+			id: "chat/attachments/albums-empty",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openTab({ page, tab: "Albums" });
+				await page.getByText("No Albums Yet").waitFor();
+			},
+		},
+	],
+};
+
+export const albumShareFailures: Scene = {
+	platform: "phone",
+	demo: {
+		restFaults: [
+			{
+				method: "POST",
+				path: { pattern: "^/v4/albums/\\d+/shares$" },
+				error: CONNECT_FAILED,
+			},
+			{
+				method: "PUT",
+				path: { pattern: "^/v1/albums/\\d+/unshares$" },
+				error: CONNECT_FAILED,
+			},
+		],
+	},
+	views: [
+		{
+			id: "chat/attachments/share-failures",
+			screen: "chat/conversation",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await openAttachments(page);
+				await openTab({ page, tab: "Albums" });
+				await press(page.locator(SHARED_ALBUM_TILE).first());
+				await sheetAction(page).getByText("Unshare").waitFor();
+				await addingToast({
+					page,
+					action: () => press(sheetAction(page)),
+				});
+				await press(page.locator(SHARED_ALBUM_TILE).first());
+				await press(page.locator(UNSHARED_ALBUM_TILE).first());
+				await sharingAction(page).waitFor();
+				await addingToast({
+					page,
+					action: () => sheetAction(page).dispatchEvent("click"),
+				});
+			},
+		},
+	],
+};
+
+export const expiringPhotoLimit: Scene = {
+	platform: "phone",
+	demo: {
+		restFaults: [
+			{
+				method: "POST",
+				path: "/v4/chat/message/send",
+				status: 403,
+				body: { type: "urn:gr:err:entitlement_limit" },
+			},
+		],
+	},
+	views: [
+		{
+			id: "chat/attachments/expiring-limit",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openAttachments(page);
+				await press(page.locator(SELECTABLE_MEDIA_TILE).first());
+				await press(
+					page.getByRole("button", { name: "Set photo as expiring" }),
+				);
+				await press(sheetAction(page));
+				await page.locator(ALERT).waitFor();
+			},
+		},
+	],
+};
+
+export const uploadFailure: Scene = {
+	platform: "phone",
+	demo: { restFaults: [savingUpload({ index: 0, error: CONNECT_FAILED })] },
+	views: [
+		{
+			id: "chat/attachments/upload-failed",
+			screen: "chat/conversation",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await openAttachments(page);
+				await uploadPhotos({ page, count: 1 });
+				await holdToast(page);
+			},
+		},
+	],
+};
+
+export const pickerFailure: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "chat/attachments/picker-failed",
+			screen: "chat/conversation",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await openAttachments(page);
+				await failRandomUuids(page);
+				await uploadPhotos({ page, count: 1 });
+				await holdToast(page);
+			},
+		},
+	],
+};
+
+export const uploadRefusals: Scene[] = REFUSAL_VIEWS.map((reasons, view) => ({
+	platform: "phone",
+	demo: {
+		restFaults: reasons.map((reason, index) =>
+			savingUpload({ index, error: refusal(reason) }),
+		),
+	},
+	views: [
+		{
+			id: `chat/attachments/refusals/${view + 1}`,
+			screen: "chat/conversation",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await openAttachments(page);
+				await uploadPhotos({ page, count: reasons.length });
+				await toastsShown({ page, count: reasons.length });
+			},
+		},
+	],
+}));

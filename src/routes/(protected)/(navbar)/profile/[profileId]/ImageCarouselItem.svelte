@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MatureContentCover from "#lib/components/mature-content/MatureContentCover.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 
@@ -8,12 +9,14 @@
 		eager,
 		createdAt,
 		label,
+		covered = false,
 	}: {
 		src: string;
 		mediaHash: string;
 		eager: boolean;
 		createdAt: number | null;
 		label: string;
+		covered?: boolean;
 	} = $props();
 
 	let width: number | null = $state(null);
@@ -22,14 +25,16 @@
 	const failed = $derived(failedSrc === src);
 </script>
 
-<a
+<svelte:element
+	this={covered ? "div" : "a"}
 	class="item relative block aspect-auto h-full max-h-[inherit] w-full shrink-0 bg-stone-700"
 	data-cropped="true"
 	data-pswp-width={width}
 	data-pswp-height={height}
 	data-created-at={createdAt}
 	data-media-hash={mediaHash}
-	href={failed ? undefined : src}
+	href={covered || failed ? undefined : src}
+	role={covered ? "group" : undefined}
 	aria-disabled={failed ? "true" : undefined}
 	aria-label={label}
 >
@@ -52,7 +57,10 @@
 			/>
 		{/if}
 	{/if}
-</a>
+	{#if covered}
+		<MatureContentCover />
+	{/if}
+</svelte:element>
 
 <style lang="postcss">
 	@reference "$layout";

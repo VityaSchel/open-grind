@@ -6,7 +6,8 @@ import {
 	uploadChatMediaFile,
 } from "#lib/api/messaging/chat-media.ts";
 import { uploadRefusalMessage } from "#lib/api/methods.ts";
-import { CHAT_MEDIA_MAX_LABEL } from "#lib/model/messaging/chat-media-limits.ts";
+import { t } from "#lib/i18n/index.ts";
+import { chatMediaMaxLabel } from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	discardStagedMedia,
 	type MediaPreview,
@@ -20,8 +21,6 @@ import { createSerialQueue } from "#lib/util/serial-queue.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { sendNowDraft } from "../attachments/media/media-messages";
 import type { MessageComposerContext } from "../message-composer-context.svelte";
-
-const UNREADABLE_PHOTO_MESSAGE = "Couldn't read that photo";
 
 export type OfferedMedia = ScreenedMedia & {
 	preview: MediaPreview | null;
@@ -106,8 +105,8 @@ export class SendMediaOffer {
 			toast.error(
 				uploadRefusalMessage({
 					error,
-					limitLabel: CHAT_MEDIA_MAX_LABEL,
-				}) ?? UNREADABLE_PHOTO_MESSAGE,
+					limitLabel: chatMediaMaxLabel(),
+				}) ?? t("chat.composer.sendMedia.errors.previewFailed"),
 			);
 			this.items = this.items.filter((offered) => offered !== item);
 			void discardStagedMedia([item.media]);

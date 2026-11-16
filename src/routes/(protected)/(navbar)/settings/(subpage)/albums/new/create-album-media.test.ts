@@ -36,7 +36,6 @@ const myAlbums = { reload } as unknown as MyAlbumsState;
 const limits = {
 	maxAlbums: 5,
 	maxContentSize: 125829120,
-	maxContentSizeHumanReadable: "120.00 MB",
 	maxContentItemsPerAlbum: 10,
 	maxVideosPerAlbum: 1,
 };
@@ -127,7 +126,7 @@ describe("creating an album from its first upload", () => {
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(sonner.toast.error).toHaveBeenCalledWith(
-			"You can't create more albums",
+			"You can’t create more albums",
 		);
 		expect(errorToast.showErrorToast).not.toHaveBeenCalled();
 		expect(navigation.goto).not.toHaveBeenCalled();
@@ -159,7 +158,7 @@ describe("creating an album from its first upload", () => {
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(errorToast.showErrorToast).toHaveBeenCalledWith({
-			label: "Couldn't create album",
+			label: "Couldn’t create album",
 			error,
 		});
 	});

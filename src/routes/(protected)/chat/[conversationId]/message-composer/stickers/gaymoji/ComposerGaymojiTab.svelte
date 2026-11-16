@@ -7,6 +7,7 @@
 	} from "#lib/api/messaging/gaymoji.ts";
 	import { gaymojiSections } from "#lib/chat/gaymoji-sections.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { StickerPick } from "../sticker-pick";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";
@@ -125,7 +126,7 @@
 		</div>
 	{:else if manifest.status === "failed"}
 		<StickerLoadFailure
-			message="Couldn't load Gaymoji"
+			message={t("chat.composer.stickers.gaymoji.errors.loadFailed")}
 			onRetry={() => void load()}
 		/>
 	{/if}

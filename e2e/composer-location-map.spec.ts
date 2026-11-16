@@ -77,7 +77,7 @@ test("location sharing loads maps on demand and preserves the searched and panne
 			await page.getByRole("tab", { name: "Media", exact: true }).click();
 	}
 	const initialBounds = (await map.boundingBox())!;
-	await page.getByPlaceholder("Search places...").fill("Paris");
+	await page.getByPlaceholder("Search places…").fill("Paris");
 	const viewportWithSearchKeyboard = { width: 420, height: 500 };
 	await page.setViewportSize(viewportWithSearchKeyboard);
 	await page.getByRole("button", { name: "Paris France" }).click();
@@ -110,7 +110,7 @@ test("location sharing loads maps on demand and preserves the searched and panne
 	await expect
 		.poll(async () => (await map.boundingBox())?.height ?? 0)
 		.toBeGreaterThanOrEqual(192);
-	await page.getByPlaceholder("Search places...").click({ trial: true });
+	await page.getByPlaceholder("Search places…").click({ trial: true });
 	await send.click({ trial: true });
 	await page.setViewportSize({ width: 420, height: 800 });
 	await expect

@@ -11,6 +11,7 @@
 		getDrawerMedia,
 	} from "#lib/api/messaging/drawer.ts";
 	import MediaSheetGrid from "#lib/components/media-sheet/MediaSheetGrid.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		discardStagedMedia,
 		mediaFileKindOf,
@@ -64,7 +65,9 @@
 			picked = await pickMultipleMedia("media");
 		} catch (err) {
 			console.error(err);
-			toast.error("Couldn't open the picker");
+			toast.error(
+				t("chat.composer.attachments.media.errors.openPickerFailed"),
+			);
 			return;
 		} finally {
 			picking = false;
@@ -91,7 +94,7 @@
 
 	function toggleSelected(id: number) {
 		selected.toggle(id);
-		onSelectionChange({ count: selected.size, label: "Send" });
+		onSelectionChange({ count: selected.size, action: "send" });
 	}
 
 	function describe(item: DrawerMedia) {
@@ -125,8 +128,8 @@
 	{describe}
 	{selected}
 	onToggle={toggleSelected}
-	emptyTitle="No media sent yet"
-	addLabel="Upload photos or videos"
+	emptyTitle={t("chat.composer.attachments.media.empty.title")}
+	addLabel={t("common.media.uploadPhotosOrVideos")}
 	onAdd={addMedia}
 	pending={uploadingCount}
 	remove={(item) => deleteDrawerMedia(item.id)}

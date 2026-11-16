@@ -47,7 +47,7 @@ test("an inline album reply sends the selected item and preserves the chat draft
 	await expect(dialog).toHaveCount(0);
 	await expect(page.getByRole("textbox")).toHaveValue("Existing chat draft");
 	await page.getByRole("textbox").fill("");
-	await page.getByRole("link", { name: "Back to chats" }).click();
+	await page.getByRole("link", { name: "Back to Inbox" }).click();
 	await expect(
 		page.getByRole("link", { name: /theo.*Love the second photo/ }),
 	).toBeVisible();

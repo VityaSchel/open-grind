@@ -34,6 +34,7 @@ vi.mock("../../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ conversationId: "100001:100002" }),
 }));
 
+import { UnsupportedChatMediaError } from "#lib/api/messaging/chat-media.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
 import ComposerMediaTab from "./ComposerMediaTab.svelte";
@@ -43,6 +44,7 @@ const SKELETON = '[data-slot="skeleton"]';
 const PREVIEW = '[data-slot="video-preview"]';
 const VIDEO_BADGE = '[data-slot="media-tile-video-badge"]';
 const LIFTED = '[data-slot="media-tile-lifted"]';
+const UPLOAD = "Upload photos or videos";
 
 const photo: DrawerMedia = {
 	id: 800_001,
@@ -99,9 +101,7 @@ describe("composer media tab", () => {
 		await tick();
 		await tick();
 
-		await fireEvent.click(
-			getByRole("button", { name: "Upload photos or videos" }),
-		);
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
 		await vi.waitFor(() =>
 			expect(chatMedia.addMediaToDrawer).toHaveBeenCalledOnce(),
 		);
@@ -161,9 +161,7 @@ describe("composer media tab", () => {
 		await tick();
 		await tick();
 
-		await fireEvent.click(
-			getByRole("button", { name: "Upload photos or videos" }),
-		);
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
 
 		await vi.waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
@@ -182,13 +180,11 @@ describe("composer media tab", () => {
 		await tick();
 		await tick();
 
-		await fireEvent.click(
-			getByRole("button", { name: "Upload photos or videos" }),
-		);
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
 
 		await vi.waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
-				"Couldn't upload photo or video",
+				"Couldn’t upload photo or video",
 			),
 		);
 	});
@@ -207,15 +203,51 @@ describe("composer media tab", () => {
 		await tick();
 		await tick();
 
-		await fireEvent.click(
-			getByRole("button", { name: "Upload photos or videos" }),
-		);
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
 
 		await vi.waitFor(() =>
 			expect(
 				mediaFile.discardStagedMedia,
 			).toHaveBeenCalledExactlyOnceWith([staged]),
 		);
+	});
+
+	it("says a picked file isn’t a photo or video instead of the diagnostic", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([
+			{ key: "picked", mimeType: "text/plain", path: "/picked.txt" },
+		]);
+		chatMedia.addMediaToDrawer.mockRejectedValue(
+			new UnsupportedChatMediaError(),
+		);
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
+
+		await vi.waitFor(() =>
+			expect(sonner.toast.error).toHaveBeenCalledWith(
+				"That file isn’t a photo or video",
+			),
+		);
+	});
+
+	it("says the picker couldn’t open when it fails", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockRejectedValue(new Error("denied"));
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
+
+		await vi.waitFor(() =>
+			expect(sonner.toast.error).toHaveBeenCalledWith(
+				"Couldn’t open the picker",
+			),
+		);
+		expect(chatMedia.addMediaToDrawer).not.toHaveBeenCalled();
 	});
 
 	it("shows a video as a muted, paused preview marked as video", async () => {
@@ -283,7 +315,7 @@ describe("composer media tab", () => {
 		);
 		expect(onSelectionChange).toHaveBeenLastCalledWith({
 			count: 0,
-			label: "Send",
+			action: "send",
 		});
 	});
 });

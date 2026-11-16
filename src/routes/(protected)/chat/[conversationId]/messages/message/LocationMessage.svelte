@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MapPinIcon from "phosphor-svelte/lib/MapPinIcon";
 
+	import { t } from "#lib/i18n/index.ts";
 	import { openExternalLink } from "#lib/platform/link-opener.ts";
 	import { currentPlatform } from "#lib/platform/os.ts";
 	import type { LocationMessage } from "#lib/model/messaging/messages.ts";
@@ -36,11 +37,17 @@
 	>
 		<MapPinIcon size={28} weight="fill" aria-hidden="true" />
 		<div>
-			<div class="font-medium">Location</div>
-			<div class="text-xs opacity-70">
-				{message.lat.toFixed(5)}, {message.lon.toFixed(5)}
+			<div class="font-medium">
+				{t("chat.message.location.title")}
 			</div>
-			<span class="text-sm underline underline-offset-2"> Open map </span>
+			<div class="text-xs opacity-70">
+				<span translate="no" dir="ltr"
+					>{message.lat.toFixed(5)}, {message.lon.toFixed(5)}</span
+				>
+			</div>
+			<span class="text-sm underline underline-offset-2">
+				{t("chat.message.location.openMap")}
+			</span>
 		</div>
 	</a>
 </MessageBubble>

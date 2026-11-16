@@ -3,6 +3,8 @@
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
 	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 
 	let { filtered = false }: { filtered?: boolean } = $props();
 
@@ -15,14 +17,16 @@
 			<Icon weight="fill" />
 		</Empty.Media>
 		{#if filtered}
-			<Empty.Title>No Results</Empty.Title>
+			<Empty.Title>{t("common.filters.noResults")}</Empty.Title>
 			<Empty.Description>
-				No conversations match these filters.
+				{t("chat.conversations.empty.filteredDescription")}
 			</Empty.Description>
 		{:else}
-			<Empty.Title>No Conversations Yet</Empty.Title>
+			<Empty.Title>{t("chat.conversations.empty.title")}</Empty.Title>
 			<Empty.Description>
-				Browse <a href="/">Grid</a> to find people to chat with.
+				<Rich key="chat.conversations.empty.description">
+					{#snippet gridLink(text)}<a href="/">{text}</a>{/snippet}
+				</Rich>
 			</Empty.Description>
 		{/if}
 	</Empty.Header>

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { version } from "$app/env";
 
+	import PageTitle from "#lib/components/shared/PageTitle.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import AccountSettingsLink from "./AccountSettingsLink.svelte";
 	import AlbumsLink from "./AlbumsLink.svelte";
@@ -11,6 +13,8 @@
 
 	const { data }: import("./$types").PageProps = $props();
 </script>
+
+<PageTitle page={t("shell.navBar.a11y.me")} />
 
 <main class="screen-nav-host">
 	<div
@@ -30,6 +34,7 @@
 				<Socials />
 				<span
 					data-slot="me-version"
+					translate="no"
 					class="px-4 pt-2 pb-7 font-mono text-xs break-all whitespace-pre-wrap text-muted-foreground select-text"
 				>
 					{version}

@@ -1,6 +1,7 @@
 import { toast } from "svelte-sonner";
 
 import { showErrorToast } from "#lib/api/error-toast.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import {
 	canOpenAppSettings,
 	openAppSettings,
@@ -13,25 +14,23 @@ import type {
 
 const GPS_BLOCKED_TOAST_ID = "gps-blocked";
 
-const DENIAL_COPY = {
-	permission:
-		"Location permission denied. Change this in your system settings to use GPS.",
-	precision:
-		"Precise Location is off. Turn it on in your system settings to use GPS.",
-} as const satisfies Record<MissingLocationGrant, string>;
-
-const LOCATION_DISABLED_COPY =
-	"Location Services are off or restricted. Turn them on in your system settings to use GPS.";
+const denialMessageKeys = {
+	permission: "browse.location.permissionDenied",
+	precision: "browse.location.preciseLocationOff",
+} as const satisfies Record<MissingLocationGrant, PlainMessageKey>;
 
 function showLocationPermissionToast({
 	missing,
 }: {
 	missing: MissingLocationGrant;
 }): void {
-	toast.error(DENIAL_COPY[missing], {
+	toast.error(t(denialMessageKeys[missing]), {
 		id: GPS_BLOCKED_TOAST_ID,
 		...(canOpenAppSettings() && {
-			action: { label: "Settings", onClick: openAppSettings },
+			action: {
+				label: t("browse.location.openSettings"),
+				onClick: openAppSettings,
+			},
 		}),
 	});
 }
@@ -47,7 +46,9 @@ function showLocationErrorToast({
 }): void {
 	switch (reason) {
 		case "disabled":
-			toast.error(LOCATION_DISABLED_COPY, { id: GPS_BLOCKED_TOAST_ID });
+			toast.error(t("browse.location.locationServicesOff"), {
+				id: GPS_BLOCKED_TOAST_ID,
+			});
 			return;
 		case "failed":
 			showErrorToast({ label, error });
@@ -56,7 +57,9 @@ function showLocationErrorToast({
 
 export function reportLocationFailure(
 	outcome: LocationOutcome,
-	{ label = "Failed to get current location" }: { label?: string } = {},
+	{
+		label = t("browse.location.errors.locateFailed"),
+	}: { label?: string } = {},
 ): void {
 	if (outcome.status === "denied") showLocationPermissionToast(outcome);
 	if (outcome.status === "error") {

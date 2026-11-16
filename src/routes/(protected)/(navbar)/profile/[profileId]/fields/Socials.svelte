@@ -17,18 +17,22 @@
 			<ProfileField>
 				{#if platform === "instagram"}
 					<SiInstagram class="size-3.5 shrink-0" aria-hidden="true" />
-					<Link href="https://instagram.com/{social.userId}">
+					<Link
+						href="https://instagram.com/{social.userId}"
+						translate="no"
+					>
 						{social.userId}
 					</Link>
 				{:else if platform === "twitter"}
 					<SiX class="size-3.5 shrink-0" aria-hidden="true" />
-					<Link href="https://x.com/{social.userId}">
+					<Link href="https://x.com/{social.userId}" translate="no">
 						{social.userId}
 					</Link>
 				{:else if platform === "facebook"}
 					<SiFacebook class="size-3.5 shrink-0" aria-hidden="true" />
 					<Link
 						href="https://facebook.com/profile.php?id={social.userId}"
+						translate="no"
 					>
 						{social.userId}
 					</Link>

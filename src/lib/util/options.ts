@@ -4,12 +4,17 @@ export type Option<T extends string | number = number> = {
 };
 
 export function optionsFromMap<K extends number>(
-	map: Record<K, string>,
+	map: Readonly<Record<K, string>>,
 ): Option<K>[] {
-	return Object.entries(map).map(([value, label]) => ({
-		value: Number(value) as K,
-		label: label as string,
-	}));
+	return Object.keys(map).map((key) => {
+		const value = Number(key) as K;
+		return {
+			value,
+			get label() {
+				return map[value];
+			},
+		};
+	});
 }
 
 export function labelFromMap({

@@ -17,6 +17,7 @@ import {
 } from "#lib/api/methods.ts";
 import { noticeStorageBackend } from "#lib/api/storage-notice.ts";
 import { clearProfileCaches } from "#lib/api/users/profiles.ts";
+import { t } from "#lib/i18n/index.ts";
 
 type AppErrorView = NonNullable<ReturnType<typeof asAppError>>;
 
@@ -24,14 +25,24 @@ export const companionUnavailable = "companion-unavailable";
 export const companionUntrusted = "companion-untrusted";
 export const companionRefused = "companion-refused";
 export const companionDisabled = "companion-disabled";
-export const untrustedCompanionMessage =
-	"The installed Open Grind Google OAuth app isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.";
-export const refusedCompanionMessage =
-	"The Open Grind Google OAuth app only accepts official copies of Open Grind. Update it, or paste the OAuth token manually.";
-export const disabledCompanionMessage =
-	"The Open Grind Google OAuth app is turned off. Turn it on in Android settings, then try again.";
+const companionFailed = "companion-failed";
+export const signInInProgress = "sign-in-in-progress";
+export const signInFlowEnded = "sign-in-flow-ended";
+export const signInTimedOut = "sign-in-timed-out";
 
-const unavailablePageMessage = "Couldn't show the sign-in page";
+export function untrustedCompanionMessage(): string {
+	return t("auth.signIn.companion.errors.untrusted");
+}
+
+export function refusedCompanionMessage(): string {
+	return t("auth.signIn.companion.errors.refused");
+}
+
+export function disabledCompanionMessage(): string {
+	return t("auth.signIn.companion.errors.disabled");
+}
+
+const signInPageUnavailable = "sign-in-page-unavailable";
 
 export function finishSignIn(result: {
 	restriction?: Restriction | null;
@@ -59,17 +70,24 @@ export function reportSignInFailure({
 	if (blockedKind && markRequestBlocked({ kind: blockedKind })) return;
 	if (appError?.kind === "Auth" && typeof appError.message === "string") {
 		if (appError.message === "Sign-in canceled") return;
-		if (appError.message.startsWith(`${unavailablePageMessage}: `)) {
-			showErrorToast({ label: unavailablePageMessage, error });
+		if (appError.message.startsWith(`${signInPageUnavailable}: `)) {
+			showErrorToast({
+				label: t("auth.signIn.errors.pageUnavailable"),
+				error,
+			});
 			return;
 		}
 		if (appError.message === "account not registered") {
-			toast.error(
-				"Account not registered in Grindr. Register first using the official Grindr app",
-			);
+			toast.error(t("auth.signIn.errors.notRegistered"));
 			return;
 		}
 		if (onAuthFailure(appError.message)) return;
+		if (appError.message === companionFailed) {
+			toast.error(
+				t("auth.signIn.errors.providerFailed", { provider: "Google" }),
+			);
+			return;
+		}
 	}
 	if (appError && onFailure(appError)) return;
 	const ban = asBanned(error);
@@ -83,7 +101,7 @@ export function reportSignInFailure({
 		return;
 	}
 	if (appError?.kind === "RateLimited") {
-		toast.error("Too many attempts. Please try again later.");
+		toast.error(t("auth.signIn.errors.rateLimited"));
 		return;
 	}
 	if (appError) {

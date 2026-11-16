@@ -3,8 +3,13 @@ import type { NativeInsets } from "#lib/platform/native-insets.ts";
 
 declare global {
 	const __DEMO__: boolean;
+	const __SCREENSHOTS__: boolean;
 
 	namespace App {
+		interface Error {
+			type?: string;
+		}
+
 		interface PageState {
 			profileOrigin?: "browse";
 		}

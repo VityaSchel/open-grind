@@ -18,6 +18,7 @@
 	import { abortBackdropBlurTrialGesture } from "#lib/blur/calibration/trial.svelte.ts";
 	import { hydrateBackdropCompositing } from "#lib/blur/compositing.svelte.ts";
 	import { applyBackdropBlurQuality } from "#lib/blur/quality.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { blockNativeMenu } from "#lib/platform/block-native-menu.ts";
 	import { blockZoom } from "#lib/platform/block-zoom.ts";
 	import { trackHoverPointer } from "#lib/platform/hover-pointer.ts";
@@ -188,6 +189,8 @@
 			toastOptions={{ class: "toast" }}
 			closeButton
 			expand
+			containerAriaLabel={t("shell.toaster.a11y.region")}
+			closeButtonAriaLabel={t("shell.toaster.a11y.close")}
 		/>
 	</div>
 	{@render children?.()}

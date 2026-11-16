@@ -4,6 +4,7 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
+	import { copyToClipboard } from "#lib/api/error-copy.ts";
 	import {
 		asAppError,
 		blockedKindOf,
@@ -11,9 +12,10 @@
 		markRequestBlocked,
 		summarizeServerMessage,
 	} from "#lib/api/methods.ts";
-	import { capText } from "#lib/api/redact/text.ts";
+	import { capText, scrubText } from "#lib/api/redact/text.ts";
 	import {
 		clearSessionError,
+		type SessionErrorKind,
 		sessionErrorKinds,
 		sessionErrorState,
 	} from "#lib/api/session-error-state.svelte.ts";
@@ -22,8 +24,47 @@
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import {
+		type MessageKey,
+		sourceText,
+		t,
+		type Translate,
+	} from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { ws } from "#lib/ws.svelte.ts";
+
+	type SessionErrorVariant = "rateLimited" | "refused" | "unreachable";
+
+	const copyKeys = {
+		rateLimited: {
+			title: "feedback.sessionError.rateLimited.title",
+			description: "feedback.sessionError.rateLimited.description",
+		},
+		refused: {
+			title: "feedback.sessionError.refused.title",
+			description: "feedback.sessionError.refused.description",
+		},
+		unreachable: {
+			title: "feedback.sessionError.unreachable.title",
+			description: "feedback.sessionError.unreachable.description",
+		},
+	} as const satisfies Record<
+		SessionErrorVariant,
+		Record<"title" | "description", MessageKey>
+	>;
+
+	const variants = {
+		Http: "unreachable",
+		RateLimited: "rateLimited",
+		RequestBlocked: "unreachable",
+		NetworkBlocked: "unreachable",
+		Unauthorized: "unreachable",
+		Auth: "refused",
+		SessionStale: "refused",
+		Api: "refused",
+		Banned: "unreachable",
+		NotSignedIn: "unreachable",
+	} as const satisfies Record<SessionErrorKind, SessionErrorVariant>;
 
 	const payloadSchema = z.object({
 		message: z.string(),
@@ -81,60 +122,42 @@
 		},
 	});
 
-	const copy = $derived.by(() => {
-		switch (sessionErrorState.kind) {
-			case "RateLimited":
-				return {
-					title: "Grindr is rate limiting us",
-					description:
-						"Grindr turned away our attempts to refresh your session. Wait a moment and try again.",
-				};
-			case "Api":
-			case "Auth":
-			case "SessionStale":
-				return {
-					title: "Grindr refused your session",
-					description:
-						"Grindr wouldn't refresh your session. Try again, and if it keeps happening, copy the error and report it.",
-				};
-			default:
-				return {
-					title: "Can't connect to Grindr",
-					description:
-						"We couldn't reach Grindr to refresh your session. Check your internet connection and try again. If this keeps happening, copy the error and report it.",
-				};
-		}
-	});
+	const copy = $derived(copyKeys[variants[sessionErrorState.kind]]);
 
 	const maxShownMessageChars = 300;
 
-	const attemptsSuffix = $derived(
-		sessionErrorState.attempts > 0
-			? ` (after ${sessionErrorState.attempts} ${
-					sessionErrorState.attempts === 1 ? "attempt" : "attempts"
-				})`
-			: "",
-	);
+	function withAttempts({
+		detail,
+		translate,
+	}: {
+		detail: string;
+		translate: Translate;
+	}): string {
+		const count = sessionErrorState.attempts;
+		return count > 0
+			? translate("feedback.sessionError.detailAfterAttempts", {
+					detail,
+					count,
+				})
+			: detail;
+	}
 
-	const detail = $derived(sessionErrorState.message + attemptsSuffix);
+	const copiedDetail = $derived(
+		withAttempts({
+			detail: scrubText(sessionErrorState.message),
+			translate: sourceText,
+		}),
+	);
 
 	const shownDetail = $derived(
-		capText(
-			summarizeServerMessage(sessionErrorState.message),
-			maxShownMessageChars,
-		) + attemptsSuffix,
+		withAttempts({
+			detail: capText(
+				summarizeServerMessage(sessionErrorState.message),
+				maxShownMessageChars,
+			),
+			translate: t,
+		}),
 	);
-
-	async function copyError() {
-		try {
-			const clipboard =
-				await import("@tauri-apps/plugin-clipboard-manager");
-			await clipboard.writeText(detail);
-			toast.success("Error copied to clipboard");
-		} catch (error) {
-			console.error(error);
-		}
-	}
 
 	async function tryAgain() {
 		running = "tryAgain";
@@ -148,11 +171,14 @@
 				return;
 			}
 			if (appError?.kind === "NotSignedIn") {
-				toast.error("Your session expired — please sign in again");
+				toast.error(t("feedback.sessionError.expired"));
 				await onSignOut();
 				return;
 			}
-			toast.error(appError?.prettyMessage ?? "Still can't connect");
+			toast.error(
+				appError?.prettyMessage ??
+					t("feedback.sessionError.errors.tryAgainFailed"),
+			);
 		} finally {
 			running = false;
 		}
@@ -180,8 +206,9 @@
 		interactOutsideBehavior="ignore"
 	>
 		<AlertDialog.Header>
-			<AlertDialog.Title>{copy.title}</AlertDialog.Title>
-			<AlertDialog.Description>{copy.description}</AlertDialog.Description
+			<AlertDialog.Title>{t(copy.title)}</AlertDialog.Title>
+			<AlertDialog.Description
+				>{t(copy.description)}</AlertDialog.Description
 			>
 		</AlertDialog.Header>
 		{#if sessionErrorState.message}
@@ -193,12 +220,17 @@
 		{/if}
 		<AlertDialog.Footer>
 			<fieldset disabled={running !== false} class="contents">
-				<Button variant="ghost" onclick={copyError}>Copy error</Button>
+				<Button
+					variant="ghost"
+					onclick={() => void copyToClipboard({ text: copiedDetail })}
+				>
+					{t("common.actions.copyError")}
+				</Button>
 				<Button
 					variant="ghost"
 					onclick={() => sessionRecovery.dismiss()}
 				>
-					Dismiss
+					{t("feedback.sessionError.dismiss")}
 				</Button>
 				<Button
 					variant="outline"
@@ -208,13 +240,13 @@
 					{#if running === "signOut"}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Sign out
+					{t("common.actions.signOut")}
 				</Button>
 				<Button onclick={tryAgain} aria-busy={running === "tryAgain"}>
 					{#if running === "tryAgain"}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Try again
+					{t("common.actions.retry")}
 				</Button>
 			</fieldset>
 		</AlertDialog.Footer>

@@ -26,7 +26,7 @@ describe("ReplyComposer send button on ios", () => {
 			window.__iosInsets = ime ? IOS_KEYBOARD_SHOWN : IOS_INSETS;
 			const { component } = render(ReplyComposer, {
 				props: {
-					label: "Reply to album item",
+					label: "media.lightbox.reply.a11y.albumItem",
 					allowReply: true,
 					allowReaction: false,
 					onsubmit: () => {},

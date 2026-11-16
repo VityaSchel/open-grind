@@ -4,8 +4,10 @@
 	import { toast } from "svelte-sonner";
 
 	import UserAvatar from "#lib/components/profile/UserAvatar.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		previewFromMessage,
+		previewIsUserText,
 		previewLabel,
 	} from "#lib/model/messaging/message-preview.ts";
 	import { type ApiResponseMessage } from "#lib/model/messaging/messages.ts";
@@ -21,6 +23,8 @@
 	} = $props();
 
 	const TAP_SLOP_PX = 10;
+
+	const preview = $derived(previewFromMessage(message));
 
 	let press: AbortController | null = null;
 
@@ -72,6 +76,7 @@
 		{#if sender && sender.name}
 			<span
 				class="truncate font-heading text-sm leading-snug font-medium"
+				translate="no"
 			>
 				{sender.name}
 			</span>
@@ -79,11 +84,14 @@
 			<span
 				class="font-normal tracking-tight text-muted-foreground italic"
 			>
-				Someone
+				{t("common.someone")}
 			</span>
 		{/if}
-		<p class="truncate text-sm">
-			{previewLabel(previewFromMessage(message))}
+		<p
+			class="truncate text-sm"
+			translate={previewIsUserText(preview) ? "no" : undefined}
+		>
+			{previewLabel(preview)}
 		</p>
 	</div>
 </div>

@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tokio::sync::oneshot;
 
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 use crate::presenting::{present_on_top, Presentation};
 use crate::upload::staged::StagedMedia;
 use crate::MAIN_WINDOW_LABEL;
@@ -312,13 +312,15 @@ pub async fn pick_ios_media(
 	kind: MediaKind,
 	multiple: bool,
 ) -> Result<Picked, AppError> {
-	let staged = Arc::new(
-		StagedMedia::of(&app)
-			.map_err(|error| AppError::Media(error.to_string()))?,
-	);
-	let main = app
-		.get_webview_window(MAIN_WINDOW_LABEL)
-		.ok_or_else(|| AppError::Media(NO_MAIN_WINDOW.to_owned()))?;
+	let staged =
+		Arc::new(StagedMedia::of(&app).map_err(|error| MediaError::Io {
+			detail: error.to_string(),
+		})?);
+	let main = app.get_webview_window(MAIN_WINDOW_LABEL).ok_or_else(|| {
+		MediaError::PickerFailed {
+			detail: NO_MAIN_WINDOW.to_owned(),
+		}
+	})?;
 	let (answer, answered) = oneshot::channel();
 	let request = Request {
 		kind,
@@ -338,11 +340,16 @@ pub async fn pick_ios_media(
 			}
 		}
 	})
-	.map_err(|error| AppError::Media(error.to_string()))?;
+	.map_err(|error| MediaError::PickerFailed {
+		detail: error.to_string(),
+	})?;
 
-	let loading = answered
-		.await
-		.unwrap_or(Err(NEVER_ANSWERED))
-		.map_err(|message| AppError::Media(message.to_owned()))?;
+	let loading =
+		answered
+			.await
+			.unwrap_or(Err(NEVER_ANSWERED))
+			.map_err(|message| MediaError::PickerFailed {
+				detail: message.to_owned(),
+			})?;
 	Ok(collect(loading).await)
 }

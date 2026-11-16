@@ -5,10 +5,12 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import PagingSentinel from "#lib/components/shared/PagingSentinel.svelte";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { GiphyTile } from "#lib/api/messaging/gifs.ts";
 	import GifBadge from "../../../giphy/GifBadge.svelte";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import StickerTile from "../StickerTile.svelte";
+	import { gifAltText } from "./gif-alt";
 	import type { GifFeed } from "./gif-feed.svelte";
 
 	let {
@@ -43,7 +45,7 @@
 		</div>
 	{:else if feed.error}
 		<StickerLoadFailure
-			message="Couldn't load GIFs"
+			message={t("chat.composer.stickers.gifs.errors.loadFailed")}
 			onRetry={() => feed.retry()}
 		/>
 	{:else if feed.empty}
@@ -52,14 +54,17 @@
 				<Empty.Media variant="icon">
 					<MagnifyingGlassIcon weight="bold" />
 				</Empty.Media>
-				<Empty.Title>No GIFs found</Empty.Title>
+				<Empty.Title
+					>{t("chat.composer.stickers.gifs.empty")}</Empty.Title
+				>
 			</Empty.Header>
 		</Empty.Root>
 	{:else}
 		<div data-slot="sticker-grid" class={GRID_CLASS}>
 			{#each feed.gifs as gif (gif.id)}
 				<StickerTile
-					label={gif.alt}
+					label={gifAltText(gif.alt)}
+					translateLabel={gif.alt.kind !== "title"}
 					selected={gif.id === pickedId}
 					onclick={() => onToggle(gif)}
 					class="aspect-4/3 bg-muted"
@@ -68,7 +73,7 @@
 						src={prefersReducedMotion.current
 							? gif.stillTileUrl
 							: gif.tileUrl}
-						alt={gif.alt}
+						alt={gifAltText(gif.alt)}
 						loading="lazy"
 						fallbackAspectRatio={TILE_ASPECT}
 						class="size-full rounded-[inherit]"
@@ -86,14 +91,14 @@
 		</div>
 		<div role="status" class="sr-only">
 			{feed.paging.running
-				? "Loading more GIFs"
+				? t("chat.composer.stickers.gifs.a11y.loadingMore")
 				: feed.paging.failure
-					? "Couldn't load more GIFs"
+					? t("chat.composer.stickers.gifs.errors.loadMoreFailed")
 					: ""}
 		</div>
 		{#if feed.paging.failure}
 			<StickerLoadFailure
-				message="Couldn't load more GIFs"
+				message={t("chat.composer.stickers.gifs.errors.loadMoreFailed")}
 				onRetry={() => feed.paging.retry()}
 			/>
 		{/if}

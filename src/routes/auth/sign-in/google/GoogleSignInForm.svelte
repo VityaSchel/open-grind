@@ -24,6 +24,8 @@
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { Textarea } from "#lib/components/ui/textarea/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import { openExternalLink } from "#lib/platform/link-opener.ts";
 	import { isPlayBuild } from "#lib/platform/store.ts";
 	import {
@@ -99,7 +101,7 @@
 				void continueInCompanion();
 			} else if (
 				addonInstallerAvailable() &&
-				(await addonPublishedHere())
+				(await addonPublishedHere(GOOGLE_OAUTH_COMPONENT))
 			) {
 				await addonUpdates.installNow();
 			} else {
@@ -122,21 +124,21 @@
 					if (message === companionUnavailable) {
 						launchFailed = true;
 						toast.error(
-							"Couldn't find the Open Grind Google OAuth app on your device. Install it first, or paste the OAuth token manually.",
+							t("auth.signIn.companion.errors.unavailable"),
 						);
 						return true;
 					}
 					if (message === companionDisabled) {
-						toast.error(disabledCompanionMessage);
+						toast.error(disabledCompanionMessage());
 						return true;
 					}
 					if (message === companionUntrusted) {
-						toast.error(untrustedCompanionMessage);
+						toast.error(untrustedCompanionMessage());
 						pasting = true;
 						return true;
 					}
 					if (message === companionRefused) {
-						toast.error(refusedCompanionMessage);
+						toast.error(refusedCompanionMessage());
 						pasting = true;
 						return true;
 					}
@@ -157,21 +159,21 @@
 	}}
 />
 
-{#snippet companionLink()}
+{#snippet companionLink(text: string)}
 	<Link
 		href={companionHref}
 		class="font-medium text-primary underline underline-offset-2"
 	>
-		Open Grind Google OAuth app
+		{text}
 	</Link>
 {/snippet}
 
 {#if googleHandoffState.phase === "signingIn"}
 	<Card.Root class="m-auto w-full max-w-sm gap-2">
 		<Card.Header>
-			<Card.Title>Signing you in</Card.Title>
+			<Card.Title>{t("auth.signIn.google.signingIn.title")}</Card.Title>
 			<Card.Description>
-				Finishing the sign-in from the Google OAuth app.
+				{t("auth.signIn.google.signingIn.description")}
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex justify-center py-4">
@@ -200,31 +202,46 @@
 		>
 			<Card.Root class="gap-4">
 				<Card.Header>
-					<Card.Title>Sign in with Google</Card.Title>
+					<Card.Title>{t("auth.signIn.google.title")}</Card.Title>
 					<Card.Description>
 						{#if view === "install" && isPlayBuild()}
-							Signing in with Google needs the {@render companionLink()}
+							<Rich
+								key="auth.signIn.google.install.playDescription"
+								{companionLink}
+							/>
 						{:else if view === "install"}
-							Download and install the {@render companionLink()} to
-							sign in with Google
+							<Rich
+								key="auth.signIn.google.install.description"
+								{companionLink}
+							/>
 							{#if installedFromFdroid()}
 								<span class="mt-2 block">
-									This add-on bypasses F-Droid's checks
+									{t("common.addons.fdroidNotice")}
 								</span>
 							{/if}
 						{:else if view === "continue"}
-							Continue in the {@render companionLink()} to sign in with
-							Google
+							<Rich
+								key="auth.signIn.google.continue.description"
+								{companionLink}
+							/>
 						{:else}
 							<ol class="ms-5 list-decimal">
-								<li>Install the {@render companionLink()}</li>
 								<li>
-									Sign in with Google in the Open Grind Google
-									OAuth app and copy the token
+									<Rich
+										key="auth.signIn.google.paste.steps.install"
+										{companionLink}
+									/>
 								</li>
 								<li>
-									Return to this screen, paste it and tap
-									"Sign in"
+									{t(
+										"auth.signIn.google.paste.steps.copyToken",
+									)}
+								</li>
+								<li>
+									{t(
+										"auth.signIn.google.paste.steps.submit",
+										{ button: t("auth.signIn.submit") },
+									)}
 								</li>
 							</ol>
 						{/if}
@@ -233,10 +250,14 @@
 				{#if view === "paste"}
 					<Card.Content>
 						<div class="mt-2 grid gap-2">
-							<Label for="token">Token</Label>
+							<Label for="token">
+								{t("auth.signIn.google.paste.token.label")}
+							</Label>
 							<Textarea
 								id="token"
-								placeholder="Paste your token here"
+								placeholder={t(
+									"auth.signIn.google.paste.token.placeholder",
+								)}
 								required
 								rows={5}
 								bind:value={token}
@@ -269,7 +290,7 @@
 							{#if continuing}
 								<Spinner aria-hidden="true" />
 							{/if}
-							Continue
+							{t("common.actions.continue")}
 						</Button>
 					{:else}
 						<Button
@@ -281,7 +302,7 @@
 							{#if submitting}
 								<Spinner aria-hidden="true" />
 							{/if}
-							Sign in
+							{t("auth.signIn.submit")}
 						</Button>
 					{/if}
 					<Button
@@ -290,32 +311,39 @@
 						href="/auth/sign-in"
 						disabled={submitting || continuing}
 					>
-						Go back
+						{t("auth.signIn.google.goBack")}
 					</Button>
 				</Card.Footer>
 			</Card.Root>
 		</form>
 		{#if automated}
 			<p class="text-center text-sm text-muted-foreground">
-				or
 				{#if view === "paste"}
-					<Button
-						variant="link"
-						class="h-auto p-0"
-						disabled={submitting}
-						onclick={() => (pasting = false)}
-					>
-						use the Open Grind Google OAuth app
-					</Button>
+					<Rich key="auth.signIn.google.useCompanion">
+						{#snippet companionButton(text)}
+							<Button
+								variant="link"
+								class="h-auto p-0"
+								disabled={submitting}
+								onclick={() => (pasting = false)}
+							>
+								{text}
+							</Button>
+						{/snippet}
+					</Rich>
 				{:else}
-					<Button
-						variant="link"
-						class="h-auto p-0"
-						disabled={continuing}
-						onclick={() => (pasting = true)}
-					>
-						paste the OAuth token manually
-					</Button>
+					<Rich key="auth.signIn.google.pasteManually">
+						{#snippet pasteButton(text)}
+							<Button
+								variant="link"
+								class="h-auto p-0"
+								disabled={continuing}
+								onclick={() => (pasting = true)}
+							>
+								{text}
+							</Button>
+						{/snippet}
+					</Rich>
 				{/if}
 			</p>
 		{/if}

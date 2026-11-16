@@ -8,6 +8,8 @@
 	import type { SvelteMediaTimeRange } from "svelte/elements";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import { describeMediaError } from "#lib/platform/media-failure.ts";
 	import { now } from "#lib/util/clock.ts";
 	import { formatMediaDuration } from "#lib/util/format-time.ts";
 	import { firstFrameSrc, releaseVideoOnDestroy } from "#lib/util/media.ts";
@@ -31,15 +33,8 @@
 	let retriedSrc: string | null = null;
 	let startedAt = now();
 
-	function elapsedSeconds(): string {
-		return ((now() - startedAt) / 1000).toFixed(1);
-	}
-
-	function describeFailure(error: MediaError | null): string {
-		if (error === null)
-			return `unknown media error after ${elapsedSeconds()}s`;
-		const message = error.message === "" ? "" : `: ${error.message}`;
-		return `MediaError ${error.code} after ${elapsedSeconds()}s${message}`;
+	function elapsedSeconds(): number {
+		return (now() - startedAt) / 1000;
 	}
 
 	function failed() {
@@ -56,14 +51,20 @@
 			video?.load();
 			return;
 		}
-		onfail?.({ undecodable, detail: describeFailure(error) });
+		onfail?.({
+			undecodable,
+			detail: describeMediaError({
+				error,
+				elapsedSeconds: elapsedSeconds(),
+			}),
+		});
 	}
 
 	function loaded() {
 		if (element !== null && element.videoWidth === 0) {
 			onfail?.({
 				undecodable: true,
-				detail: `no decodable video track after ${elapsedSeconds()}s`,
+				detail: `no decodable video track after ${elapsedSeconds().toFixed(1)}s`,
 			});
 			return;
 		}
@@ -161,7 +162,9 @@
 				<Button
 					variant="outline"
 					size="icon-lg"
-					aria-label={paused ? "Play" : "Pause"}
+					aria-label={paused
+						? t("media.videoPlayer.a11y.play")
+						: t("media.videoPlayer.a11y.pause")}
 					class="shrink-0 cursor-pointer glass-media-controls"
 					onclick={() => (paused = !paused)}
 				>
@@ -186,7 +189,9 @@
 				<Button
 					variant="outline"
 					size="icon-lg"
-					aria-label={muted ? "Unmute" : "Mute"}
+					aria-label={muted
+						? t("media.videoPlayer.a11y.unmute")
+						: t("media.videoPlayer.a11y.mute")}
 					class="shrink-0 cursor-pointer glass-media-controls"
 					onclick={() => (muted = !muted)}
 				>

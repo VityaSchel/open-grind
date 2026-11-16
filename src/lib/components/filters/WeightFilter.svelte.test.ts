@@ -9,13 +9,15 @@ vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	preferencesSnapshot: () => preferences,
 }));
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { formatWeightKg, kgToPounds } from "#lib/util/units.ts";
 import WeightFilter from "./WeightFilter.svelte";
 
 const TRACK_WIDTH = 1000;
 
 const minimumWeight = () =>
-	screen.getByRole("slider", { name: "Minimum weight" });
+	screen.getByRole("slider", { name: "Minimum Weight" });
 
 function renderFilter(weight: number[]) {
 	const stored = $state({ weight });
@@ -55,14 +57,30 @@ function pressTrackMiddle(track: HTMLElement) {
 }
 
 const maximumWeight = () =>
-	screen.getByRole("slider", { name: "Maximum weight" });
+	screen.getByRole("slider", { name: "Maximum Weight" });
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	preferences.units = "metric";
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("WeightFilter", () => {
+	it("names the field and both thumbs in the active locale", async () => {
+		renderFilter([80, 272]);
+		const field = screen.getByRole("checkbox", { name: "Weight" });
+		const thumbs = [minimumWeight(), maximumWeight()];
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByRole("checkbox", { name: PSEUDO_MESSAGE })).toBe(
+			field,
+		);
+		expect(screen.getAllByRole("slider", { name: PSEUDO_MESSAGE })).toEqual(
+			thumbs,
+		);
+	});
+
 	it("announces each thumb in the units its label shows", () => {
 		preferences.units = "imperial";
 		renderFilter([80, 272]);
@@ -84,7 +102,7 @@ describe("WeightFilter", () => {
 		await fireEvent.keyDown(minimumWeight(), { key: "ArrowRight" });
 
 		expect(minimumWeight().getAttribute("aria-valuenow")).toBe("81");
-		expect(screen.getByText("81 kg - No max")).toBeTruthy();
+		expect(screen.getByText("81 kg–No max")).toBeTruthy();
 	});
 
 	it("gives the common weights most of the track", async () => {
@@ -93,7 +111,7 @@ describe("WeightFilter", () => {
 		await pressTrackMiddle(track);
 
 		expect(minimumWeight().getAttribute("aria-valuenow")).toBe("94");
-		expect(screen.getByText("94 kg - No max")).toBeTruthy();
+		expect(screen.getByText("94 kg–No max")).toBeTruthy();
 	});
 
 	it("keeps a weight picked in pounds while the other thumb moves in kilograms", async () => {
@@ -111,7 +129,7 @@ describe("WeightFilter", () => {
 		await fireEvent.keyDown(maximumWeight(), { key: "ArrowRight" });
 
 		expect(stored.weight).toEqual([41, 272]);
-		expect(screen.getByText("No min - No max")).toBeTruthy();
+		expect(screen.getByText("No min–No max")).toBeTruthy();
 	});
 });
 
@@ -128,7 +146,7 @@ describe("WeightFilter in imperial units", () => {
 		}
 
 		expect(labels).toEqual(["177 lb", "178 lb", "179 lb"]);
-		expect(screen.getByText("179 lb - No max")).toBeTruthy();
+		expect(screen.getByText("179 lb–No max")).toBeTruthy();
 	});
 
 	it("counts the thumbs in pounds", () => {
@@ -169,7 +187,7 @@ describe("WeightFilter in imperial units", () => {
 		await fireEvent.keyDown(maximumWeight(), { key: "End" });
 
 		expect(stored.weight).toEqual([41, 272]);
-		expect(screen.getByText("No min - No max")).toBeTruthy();
+		expect(screen.getByText("No min–No max")).toBeTruthy();
 	});
 
 	it("keeps each weight where the kilogram track has it", async () => {

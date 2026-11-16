@@ -1,0 +1,227 @@
+{
+	"addons": {
+		"googleOauth": {
+			"name": "Open Grind Google OAuth app",
+			"stage": {
+				"install": {
+					"available": "Open Grind Google OAuth app is available",
+					"downloading": "Downloading the Open Grind Google OAuth app…",
+					"verifying": "Verifying the Open Grind Google OAuth app…",
+					"paused": "Open Grind Google OAuth app is ready to download",
+					"ready": "Open Grind Google OAuth app is downloaded",
+					"installing": "Installing the Open Grind Google OAuth app…"
+				},
+				"update": {
+					"available": "Open Grind Google OAuth app update available",
+					"downloading": "Downloading the Open Grind Google OAuth app update…",
+					"verifying": "Verifying the Open Grind Google OAuth app update…",
+					"paused": "Open Grind Google OAuth app update is available",
+					"ready": "Open Grind Google OAuth app update is downloaded",
+					"installing": "Updating the Open Grind Google OAuth app…"
+				}
+			},
+			"installed": "Open Grind Google OAuth app installed",
+			"installedVersion": "Open Grind Google OAuth app installed: {{tag}}",
+			"updated": "Open Grind Google OAuth app updated",
+			"updatedVersion": "Open Grind Google OAuth app updated: {{tag}}",
+			"upToDate": "The Open Grind Google OAuth app is up to date",
+			"errors": {
+				"externallyManaged": "The store that installed the Open Grind Google OAuth app manages its updates",
+				"foreignSigner": "This build isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app",
+				"foreignTarget": "The installed Open Grind Google OAuth app isn’t signed by Open Grind. Uninstall it to install the official one.",
+				"noReleaseArtifacts": "The Open Grind Google OAuth app isn’t published for this device",
+				"undetermined": "Open Grind can’t tell whether it may install the Open Grind Google OAuth app",
+				"downloadFailed": "Couldn’t download the Open Grind Google OAuth app",
+				"verifyFailed": "Couldn’t verify the Open Grind Google OAuth app",
+				"saveDownloadFailed": "Couldn’t save the Open Grind Google OAuth app download",
+				"installFailed": "Couldn’t install the Open Grind Google OAuth app",
+				"updateFailed": "Couldn’t update the Open Grind Google OAuth app",
+				"noStorageToInstall": "Not enough storage to install the Open Grind Google OAuth app",
+				"noStorageToUpdate": "Not enough storage to update the Open Grind Google OAuth app",
+				"busy": "Wait for the Open Grind Google OAuth app to finish downloading",
+				"noRelease": "No Open Grind Google OAuth app release is published yet"
+			}
+		},
+		"recaptcha": {
+			"name": "Open Grind reCAPTCHA helper",
+			"stage": {
+				"install": {
+					"available": "Open Grind reCAPTCHA helper is available",
+					"downloading": "Downloading the Open Grind reCAPTCHA helper…",
+					"verifying": "Verifying the Open Grind reCAPTCHA helper…",
+					"paused": "Open Grind reCAPTCHA helper is ready to download",
+					"ready": "Open Grind reCAPTCHA helper is downloaded",
+					"installing": "Installing the Open Grind reCAPTCHA helper…"
+				},
+				"update": {
+					"available": "Open Grind reCAPTCHA helper update available",
+					"downloading": "Downloading the Open Grind reCAPTCHA helper update…",
+					"verifying": "Verifying the Open Grind reCAPTCHA helper update…",
+					"paused": "Open Grind reCAPTCHA helper update is available",
+					"ready": "Open Grind reCAPTCHA helper update is downloaded",
+					"installing": "Updating the Open Grind reCAPTCHA helper…"
+				}
+			},
+			"installed": "Open Grind reCAPTCHA helper installed",
+			"installedVersion": "Open Grind reCAPTCHA helper installed: {{tag}}",
+			"updated": "Open Grind reCAPTCHA helper updated",
+			"updatedVersion": "Open Grind reCAPTCHA helper updated: {{tag}}",
+			"upToDate": "The Open Grind reCAPTCHA helper is up to date",
+			"errors": {
+				"externallyManaged": "The store that installed the Open Grind reCAPTCHA helper manages its updates",
+				"foreignSigner": "This build isn’t signed by Open Grind, so it can’t install the Open Grind reCAPTCHA helper",
+				"foreignTarget": "The installed Open Grind reCAPTCHA helper isn’t signed by Open Grind. Uninstall it to install the official one.",
+				"noReleaseArtifacts": "The Open Grind reCAPTCHA helper isn’t published for this device",
+				"undetermined": "Open Grind can’t tell whether it may install the Open Grind reCAPTCHA helper",
+				"downloadFailed": "Couldn’t download the Open Grind reCAPTCHA helper",
+				"verifyFailed": "Couldn’t verify the Open Grind reCAPTCHA helper",
+				"saveDownloadFailed": "Couldn’t save the Open Grind reCAPTCHA helper download",
+				"installFailed": "Couldn’t install the Open Grind reCAPTCHA helper",
+				"updateFailed": "Couldn’t update the Open Grind reCAPTCHA helper",
+				"noStorageToInstall": "Not enough storage to install the Open Grind reCAPTCHA helper",
+				"noStorageToUpdate": "Not enough storage to update the Open Grind reCAPTCHA helper",
+				"busy": "Wait for the Open Grind reCAPTCHA helper to finish downloading",
+				"noRelease": "No Open Grind reCAPTCHA helper release is published yet"
+			}
+		},
+		"fcm": {
+			"name": "Open Grind FCM service",
+			"stage": {
+				"install": {
+					"available": "Open Grind FCM service is available",
+					"downloading": "Downloading the Open Grind FCM service…",
+					"verifying": "Verifying the Open Grind FCM service…",
+					"paused": "Open Grind FCM service is ready to download",
+					"ready": "Open Grind FCM service is downloaded",
+					"installing": "Installing the Open Grind FCM service…"
+				},
+				"update": {
+					"available": "Open Grind FCM service update available",
+					"downloading": "Downloading the Open Grind FCM service update…",
+					"verifying": "Verifying the Open Grind FCM service update…",
+					"paused": "Open Grind FCM service update is available",
+					"ready": "Open Grind FCM service update is downloaded",
+					"installing": "Updating the Open Grind FCM service…"
+				}
+			},
+			"installed": "Open Grind FCM service installed",
+			"installedVersion": "Open Grind FCM service installed: {{tag}}",
+			"updated": "Open Grind FCM service updated",
+			"updatedVersion": "Open Grind FCM service updated: {{tag}}",
+			"upToDate": "The Open Grind FCM service is up to date",
+			"errors": {
+				"externallyManaged": "The store that installed the Open Grind FCM service manages its updates",
+				"foreignSigner": "This build isn’t signed by Open Grind, so it can’t install the Open Grind FCM service",
+				"foreignTarget": "The installed Open Grind FCM service isn’t signed by Open Grind. Uninstall it to install the official one.",
+				"noReleaseArtifacts": "The Open Grind FCM service isn’t published for this device",
+				"undetermined": "Open Grind can’t tell whether it may install the Open Grind FCM service",
+				"downloadFailed": "Couldn’t download the Open Grind FCM service",
+				"verifyFailed": "Couldn’t verify the Open Grind FCM service",
+				"saveDownloadFailed": "Couldn’t save the Open Grind FCM service download",
+				"installFailed": "Couldn’t install the Open Grind FCM service",
+				"updateFailed": "Couldn’t update the Open Grind FCM service",
+				"noStorageToInstall": "Not enough storage to install the Open Grind FCM service",
+				"noStorageToUpdate": "Not enough storage to update the Open Grind FCM service",
+				"busy": "Wait for the Open Grind FCM service to finish downloading",
+				"noRelease": "No Open Grind FCM service release is published yet"
+			}
+		}
+	},
+	"stage": {
+		"available": "New update available",
+		"downloading": "Downloading update…",
+		"verifying": "Verifying the update…",
+		"paused": "Update is available",
+		"ready": "Update is downloaded",
+		"installing": "Installing…",
+		"hints": {
+			"installOrDismiss": "Tap to install, swipe to dismiss",
+			"download": "Tap to download",
+			"install": "Tap to install",
+			"updateOrDismiss": "Tap to update, swipe to dismiss",
+			"update": "Tap to update"
+		}
+	},
+	"toasts": {
+		"a11y": {
+			"stopDownload": "Stop the download"
+		},
+		"manualInstall": "The update is ready in Finder",
+		"updatedTo": "Updated to {{tag}}",
+		"changelog": "Tap to see changelog",
+		"upToDate": "Open Grind is up to date"
+	},
+	"errors": {
+		"network": "Couldn’t reach the release server",
+		"serverRefused": "The release server refused the request",
+		"malformedIndex": "The release server sent something unreadable",
+		"noArtifact": "The release has no download for this platform",
+		"verifyFailed": "Couldn’t verify the update",
+		"foreignUrl": "The release points somewhere outside the release server",
+		"writeFailed": "Couldn’t write the update to storage",
+		"oversize": "The download was larger than the release said",
+		"assetReplaced": "The release changed during the download. Try again.",
+		"canceled": "Update canceled",
+		"nothingStaged": "No update is ready to install",
+		"needsUnknownSources": "Open Grind needs permission to install updates",
+		"needsManualInstall": "Quit Open Grind, then drag it onto Applications",
+		"installFailed": "Couldn’t install the update",
+		"checkTooSoon": "Already checked for updates recently",
+		"autoChecksDisabled": "Automatic update checks are disabled",
+		"unknownComponent": "Open Grind doesn’t know that component",
+		"busy": "Another download is already running",
+		"busyApp": "Wait for the Open Grind update to finish downloading",
+		"noStorage": "Not enough storage to install the update",
+		"noRelease": "No Open Grind release is published yet",
+		"checkFailed": "Couldn’t check for updates",
+		"unsupported": {
+			"externallyManaged": "Updates are managed by the store that installed the app",
+			"foreignSigner": "This build isn’t signed by Open Grind",
+			"foreignTarget": "The installed app isn’t signed by Open Grind",
+			"undetermined": "Open Grind can’t tell whether it may update itself",
+			"noReleaseArtifacts": "No release is published for this platform",
+			"sandboxed": "The sandbox this app runs in manages its own updates",
+			"locationNotWritable": "Open Grind can’t install the update in its directory"
+		}
+	},
+	"flow": {
+		"finishOtherInstall": "Finish the other install first",
+		"errors": {
+			"startDownloadFailed": "Couldn’t start the download",
+			"openPermissionScreenFailed": "Couldn’t open the install permission screen",
+			"stopDownloadFailed": "Couldn’t stop the download",
+			"downloadFailed": "Couldn’t download the update"
+		}
+	},
+	"checks": {
+		"noUpdates": "No updates available",
+		"noAddons": "No add-ons installed"
+	},
+	"settings": {
+		"checkNow": "Check for updates",
+		"automaticChecks": {
+			"addonsTitle": "Check add-on updates automatically",
+			"description": {
+				"app": "Periodically request updates for Open Grind from git.opengrind.org. No personally identifiable information is sent, and no requests are stored or analyzed.",
+				"appAndAddons": "Periodically request updates for Open Grind and its add-ons from git.opengrind.org. No personally identifiable information is sent, and no requests are stored or analyzed.",
+				"addonsOnly": "Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, and no requests are stored or analyzed.",
+				"addonsOnlyWithReason": "{{reason}}. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, and no requests are stored or analyzed."
+			}
+		},
+		"errors": {
+			"loadFailed": "Couldn’t load update settings",
+			"saveFailed": "Couldn’t save update settings"
+		}
+	},
+	"push": {
+		"errors": {
+			"enableFailed": "Couldn’t enable notifications",
+			"disableFailed": "Couldn’t disable notifications",
+			"enableFastModeFailed": "Couldn’t enable Fast Mode for push notifications",
+			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode"
+		}
+	},
+	"transfers": {
+		"channel": "Transfers"
+	}
+}

@@ -1,0 +1,90 @@
+<script lang="ts">
+	import DetectiveIcon from "phosphor-svelte/lib/DetectiveIcon";
+
+	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import RightNowPostMeta from "#lib/components/right-now/RightNowPostMeta.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import { sexualPositions } from "#lib/model/users/profiles.ts";
+	import { labelFromMap } from "#lib/util/options.ts";
+	import { formatHeight, formatWeightGrams } from "#lib/util/units.ts";
+	import type { DiscreetPostData } from "#lib/model/right-now/feed.ts";
+	import PostHeadline from "./PostHeadline.svelte";
+	import RightNowPostPhoto from "./RightNowPostPhoto.svelte";
+
+	let {
+		post,
+		own,
+		onreport,
+	}: {
+		post: DiscreetPostData;
+		own: boolean;
+		onreport: (() => Promise<void>) | null;
+	} = $props();
+
+	const headlineId = $props.id();
+
+	const units = $derived(preferencesSnapshot().units);
+	const photo = $derived(post.media?.at(0));
+	const fields = $derived(
+		[
+			post.profileFields.age === null
+				? undefined
+				: t("browse.rightNow.post.age", {
+						count: post.profileFields.age,
+					}),
+			post.profileFields.height === null
+				? undefined
+				: formatHeight(post.profileFields.height, units),
+			post.profileFields.weight === null
+				? undefined
+				: formatWeightGrams(post.profileFields.weight, units),
+			post.profileFields.position === null
+				? undefined
+				: labelFromMap({
+						labels: sexualPositions,
+						id: post.profileFields.position,
+					}),
+		].filter((field) => field !== undefined),
+	);
+</script>
+
+<article
+	data-slot="right-now-discreet-post"
+	aria-labelledby={headlineId}
+	class="flex gap-3 py-3"
+>
+	<div
+		class="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+	>
+		<DetectiveIcon weight="fill" class="size-6" />
+	</div>
+	<div class="flex min-w-0 flex-1 flex-col gap-2">
+		<div class="flex flex-col gap-1">
+			<PostHeadline
+				id={headlineId}
+				text={post.text}
+				placeholder={t("browse.rightNow.post.discreet")}
+				hasPhoto={photo !== undefined}
+				{onreport}
+			/>
+			{#if fields.length > 0}
+				<p
+					data-slot="right-now-discreet-post-fields"
+					class="text-sm text-muted-foreground"
+				>
+					{fields.join(" · ")}
+				</p>
+			{/if}
+		</div>
+		{#if photo}
+			<RightNowPostPhoto media={photo} {own} />
+		{/if}
+		<div class="flex min-h-8 items-center">
+			<RightNowPostMeta
+				posted={post.posted}
+				distance={post.distance}
+				hosting={post.hosting}
+			/>
+		</div>
+	</div>
+</article>

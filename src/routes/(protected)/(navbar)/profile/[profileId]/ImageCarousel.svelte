@@ -1,18 +1,22 @@
 <script lang="ts">
-	import { format } from "date-fns";
 	import { untrack } from "svelte";
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
+	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import { formatDate, formatInteger } from "#lib/i18n/format.ts";
+	import { followLocale, t } from "#lib/i18n/index.ts";
 	import { profileMediaUrl } from "#lib/util/media.ts";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeLabels,
 		applyPhotoSwipeOpenTracking,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 		CLOSE_SVG,
+		ZOOM_SVG,
 	} from "#lib/util/photoswipe/index.ts";
 	import { applyProfilePhotoReply } from "#lib/util/photoswipe/profile-photo-reply.ts";
 	import { devicePixelHeight } from "./device-pixel-height";
@@ -20,6 +24,7 @@
 
 	let {
 		medias,
+		own = false,
 		onreply,
 	}: {
 		medias: {
@@ -27,11 +32,14 @@
 			takenOnGrindr: boolean | null;
 			createdAt: number | null;
 		}[];
+		own?: boolean;
 		onreply?: (reply: { imageHash: string; text: string }) => void;
 	} = $props();
 
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
+
+	const covered = $derived(!own && matureContentCovered());
 
 	let gallery: HTMLDivElement | null = $state(null);
 	let viewer = $state.raw<PhotoSwipeLightbox>();
@@ -60,8 +68,10 @@
 					pswpModule: () => import("photoswipe"),
 					mainClass,
 					closeSVG: CLOSE_SVG,
+					zoomSVG: ZOOM_SVG,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeLabels(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);
@@ -115,12 +125,21 @@
 										pswp.currSlide?.data.element?.dataset
 											.createdAt,
 									);
-								if (createdAt !== undefined) {
-									element.textContent = format(
-										createdAt,
-										"dd MMMM yyyy",
-									);
+								if (
+									createdAt === undefined ||
+									pswp.isDestroying
+								) {
+									return;
 								}
+								pswp.on(
+									"destroy",
+									followLocale(() => {
+										element.textContent = formatDate({
+											date: createdAt,
+											preset: "dayMonthYear",
+										});
+									}),
+								);
 							}, 0);
 						},
 					});
@@ -200,7 +219,11 @@
 					{mediaHash}
 					eager={index <= reach}
 					{createdAt}
-					label="Profile photo {index + 1} of {medias.length}"
+					{covered}
+					label={t("profile.imageCarousel.a11y.photo", {
+						position: formatInteger(index + 1),
+						total: formatInteger(medias.length),
+					})}
 				/>
 			{/each}
 		</div>

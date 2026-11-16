@@ -232,7 +232,7 @@ test.describe("a narrow macOS window", () => {
 			back: CHAT_STACK.list,
 			dim: CHAT_STACK.dim,
 		});
-		await page.getByRole("link", { name: "Back to chats" }).click();
+		await page.getByRole("link", { name: "Back to Inbox" }).click();
 		expectFade(await closed, {
 			direction: "out",
 			travel: 0,
@@ -257,7 +257,7 @@ test.describe("a narrow macOS window", () => {
 		const fading = pauseOnceSliding(page, {
 			pane: CHAT_STACK.conversation,
 		});
-		await page.getByRole("link", { name: "Back to chats" }).click();
+		await page.getByRole("link", { name: "Back to Inbox" }).click();
 		await fading;
 		const row = (await conversations.nth(2).boundingBox())!;
 		await page.mouse.click(row.x + row.width / 2, row.y + row.height / 2);

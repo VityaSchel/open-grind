@@ -17,7 +17,7 @@ pub mod user_agent;
 pub const CANCELED: &str = "Sign-in canceled";
 
 #[cfg(any(target_os = "ios", test))]
-const SHEET_UNAVAILABLE: &str = "Couldn't show the sign-in page";
+const SHEET_UNAVAILABLE: &str = "sign-in-page-unavailable";
 
 const FLOW_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
@@ -25,12 +25,14 @@ pub const COMPANION_UNAVAILABLE: &str = "companion-unavailable";
 pub const COMPANION_UNTRUSTED: &str = "companion-untrusted";
 pub const COMPANION_REFUSED: &str = "companion-refused";
 pub const COMPANION_DISABLED: &str = "companion-disabled";
+pub const COMPANION_FAILED: &str = "companion-failed";
 const COMPANION_CANCELLED: &str = "cancelled";
-const COMPANION_FAILED: &str = "Google sign-in failed";
 
-pub trait OauthProvider: Send + Sync + 'static {
-	const NAME: &'static str;
-}
+pub const IN_PROGRESS: &str = "sign-in-in-progress";
+pub const FLOW_ENDED: &str = "sign-in-flow-ended";
+pub const TIMED_OUT: &str = "sign-in-timed-out";
+
+pub trait OauthProvider: Send + Sync + 'static {}
 
 /// The type parameter gives each provider its own Tauri state key.
 pub struct OauthBridge<P: OauthProvider> {
@@ -57,10 +59,7 @@ impl<P: OauthProvider> OauthBridge<P> {
 	) -> Result<oneshot::Receiver<Result<String, String>>, AppError> {
 		let mut pending = self.pending.lock().unwrap();
 		if pending.is_some() {
-			return Err(AppError::Auth(format!(
-				"{} sign-in already in progress",
-				P::NAME
-			)));
+			return Err(AppError::Auth(IN_PROGRESS.into()));
 		}
 		let (tx, rx) = oneshot::channel();
 		*pending = Some(tx);
@@ -104,11 +103,21 @@ pub async fn await_sign_in<P: OauthProvider>(
 			.fulfill(Err(format!("{SHEET_UNAVAILABLE}: {e}")));
 	}
 
-	match tokio::time::timeout(FLOW_TIMEOUT, wait.answer).await {
-		Ok(Ok(result)) => result,
-		Ok(Err(_)) => Err("sign-in flow ended unexpectedly".to_owned()),
-		Err(_) => Err("Sign-in timed out".to_owned()),
-	}
+	answer_in_time(wait.answer).await
+}
+
+async fn delivered(
+	rx: oneshot::Receiver<Result<String, String>>,
+) -> Result<String, String> {
+	rx.await.unwrap_or_else(|_| Err(FLOW_ENDED.to_owned()))
+}
+
+async fn answer_in_time(
+	rx: oneshot::Receiver<Result<String, String>>,
+) -> Result<String, String> {
+	tokio::time::timeout(FLOW_TIMEOUT, delivered(rx))
+		.await
+		.unwrap_or_else(|_| Err(TIMED_OUT.to_owned()))
 }
 
 pub fn companion_failure(rejection: Option<&str>) -> AppError {
@@ -194,9 +203,7 @@ mod tests {
 
 	struct TestProvider;
 
-	impl OauthProvider for TestProvider {
-		const NAME: &'static str = "Test";
-	}
+	impl OauthProvider for TestProvider {}
 
 	fn bridge() -> OauthBridge<TestProvider> {
 		OauthBridge::new()
@@ -271,6 +278,11 @@ mod tests {
 			)),
 			"sign-in.ts companionRefused is not {COMPANION_REFUSED}"
 		);
+		assert!(
+			frontend
+				.contains(&format!("companionFailed = \"{COMPANION_FAILED}\"")),
+			"sign-in.ts companionFailed is not {COMPANION_FAILED}"
+		);
 		let squashed =
 			|source: &str| source.split_whitespace().collect::<String>();
 		assert!(
@@ -306,10 +318,25 @@ mod tests {
 		);
 		assert!(
 			frontend.contains(&format!(
-				"unavailablePageMessage = \"{SHEET_UNAVAILABLE}\""
+				"signInPageUnavailable = \"{SHEET_UNAVAILABLE}\""
 			)),
-			"sign-in.ts unavailablePageMessage is not {SHEET_UNAVAILABLE}"
+			"sign-in.ts signInPageUnavailable is not {SHEET_UNAVAILABLE}"
 		);
+	}
+
+	#[test]
+	fn flow_markers_match_the_frontend() {
+		let frontend = include_str!("../../../src/lib/api/sign-in.ts");
+		for (typescript, marker) in [
+			("signInInProgress", IN_PROGRESS),
+			("signInFlowEnded", FLOW_ENDED),
+			("signInTimedOut", TIMED_OUT),
+		] {
+			assert!(
+				frontend.contains(&format!("{typescript} = \"{marker}\"")),
+				"sign-in.ts {typescript} is not {marker}"
+			);
+		}
 	}
 
 	#[test]
@@ -366,13 +393,49 @@ mod tests {
 	}
 
 	#[test]
-	fn the_refusal_names_the_provider() {
+	fn the_refusal_reaches_the_frontend_as_its_marker() {
 		let bridge = bridge();
 		let _rx = bridge.begin().expect("first flow starts");
 		let Err(AppError::Auth(message)) = bridge.begin() else {
 			panic!("a second flow must be refused");
 		};
-		assert_eq!(message, "Test sign-in already in progress");
+		assert_eq!(message, IN_PROGRESS);
+	}
+
+	#[tokio::test]
+	async fn a_delivered_result_is_the_verdict() {
+		let bridge = bridge();
+		let rx = bridge.begin().expect("first flow starts");
+		bridge.fulfill(Ok("token".into()));
+		assert_eq!(delivered(rx).await, Ok("token".into()));
+	}
+
+	#[tokio::test]
+	async fn a_flow_aborted_before_its_result_ends_as_its_marker() {
+		let bridge = bridge();
+		let rx = bridge.begin().expect("first flow starts");
+		bridge.abort();
+		assert_eq!(delivered(rx).await, Err(FLOW_ENDED.into()));
+	}
+
+	#[tokio::test]
+	async fn a_result_delivered_in_time_is_the_answer() {
+		let (tx, rx) = oneshot::channel();
+		tx.send(Ok("token".to_owned())).unwrap();
+		assert_eq!(answer_in_time(rx).await, Ok("token".into()));
+	}
+
+	#[tokio::test(start_paused = true)]
+	async fn a_sign_in_page_left_open_past_the_limit_times_out() {
+		let (_tx, rx) = oneshot::channel();
+		assert_eq!(answer_in_time(rx).await, Err(TIMED_OUT.into()));
+	}
+
+	#[tokio::test]
+	async fn a_flow_whose_answer_can_never_arrive_ends_unexpectedly() {
+		let (tx, rx) = oneshot::channel::<Result<String, String>>();
+		drop(tx);
+		assert_eq!(answer_in_time(rx).await, Err(FLOW_ENDED.into()));
 	}
 
 	#[test]

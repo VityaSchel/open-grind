@@ -54,7 +54,7 @@ async function settledDialog(page: Page, name: string) {
 
 const AGE_QUICK_FILTER: Surface = {
 	name: "age quick filter",
-	thumb: "Minimum age",
+	thumb: "Minimum Age",
 	open: async (page) => {
 		await openBrowse(page);
 		await page.getByRole("button", { name: "Age", exact: true }).click();
@@ -64,7 +64,7 @@ const AGE_QUICK_FILTER: Surface = {
 
 const DISTANCE_QUICK_FILTER: Surface = {
 	name: "inbox distance filter",
-	thumb: "Maximum distance",
+	thumb: "Maximum Distance",
 	open: async (page) => {
 		await page.setViewportSize(VIEWPORT);
 		await installTauriShim(page, { platform: "macos" });
@@ -81,7 +81,7 @@ const DISTANCE_QUICK_FILTER: Surface = {
 
 const FULL_FILTERS: Surface = {
 	name: "full filters",
-	thumb: "Minimum age",
+	thumb: "Minimum Age",
 	open: async (page) => {
 		await openBrowse(page);
 		await page.getByRole("button", { name: "All filters" }).click();

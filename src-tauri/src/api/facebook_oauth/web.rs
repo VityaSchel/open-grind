@@ -15,7 +15,7 @@ use super::dialog::{
 use super::FacebookOauthBridge;
 
 const WINDOW_LABEL: &str = "facebook-oauth";
-const WINDOW_TITLE: &str = "Sign in with Facebook";
+const WINDOW_TITLE: &str = "Sign In with Facebook";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (600.0, 700.0);
@@ -84,9 +84,13 @@ async fn run_flow(
 
 	#[cfg(target_os = "android")]
 	{
+		let creator = app
+			.get_webview_window(crate::MAIN_WINDOW_LABEL)
+			.and_then(|main| main.activity_name().ok())
+			.unwrap_or_else(|| "MainActivity".to_owned());
 		builder = builder
 			.activity_name("FacebookOauthActivity")
-			.created_by_activity_name("MainActivity");
+			.created_by_activity_name(creator);
 	}
 
 	#[cfg(target_os = "windows")]

@@ -15,7 +15,7 @@ async function openReportSheet(page: import("@playwright/test").Page) {
 	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_PROFILE);
 	await page.getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Report profile" }).click();
+	await page.getByRole("menuitem", { name: "Report user" }).click();
 	const drawer = page.locator(DRAWER);
 	await drawer.waitFor({ timeout: 10_000 });
 	await page.waitForTimeout(700);
@@ -27,7 +27,7 @@ test("reporting a profile submits it and offers to block", async ({ page }) => {
 	const drawer = await openReportSheet(page);
 
 	await expect(
-		drawer.getByRole("heading", { name: "Report profile" }),
+		drawer.getByRole("heading", { name: "Report User" }),
 	).toBeVisible();
 
 	const submit = drawer.getByRole("button", { name: "Submit report" });
@@ -52,14 +52,12 @@ test("reporting a profile submits it and offers to block", async ({ page }) => {
 	await submit.click();
 
 	await expect(
-		drawer.getByText("Grindr will review this profile."),
+		drawer.getByText("Grindr will review your report."),
 	).toBeVisible();
 
-	await drawer.getByRole("button", { name: "Block profile" }).click();
+	await drawer.getByRole("button", { name: "Block user" }).click();
 	await expect(page.locator(DRAWER)).toBeHidden();
-	await expect(
-		page.getByText("You have blocked this profile."),
-	).toBeVisible();
+	await expect(page.getByText("You have blocked this user")).toBeVisible();
 });
 
 test("a spam report asks for nothing else", async ({ page }) => {
@@ -79,14 +77,12 @@ test("a spam report asks for nothing else", async ({ page }) => {
 
 	await drawer.getByRole("button", { name: "Submit report" }).click();
 	await expect(
-		drawer.getByText("Grindr will review this profile."),
+		drawer.getByText("Grindr will review your report."),
 	).toBeVisible();
 
 	await drawer.getByRole("button", { name: "Done" }).click();
 	await expect(page.locator(DRAWER)).toBeHidden();
-	await expect(page.getByText("You have blocked this profile.")).toHaveCount(
-		0,
-	);
+	await expect(page.getByText("You have blocked this user")).toHaveCount(0);
 });
 
 test("a serious in-person incident opens Grindr's help form instead of a report", async ({
@@ -97,7 +93,7 @@ test("a serious in-person incident opens Grindr's help form instead of a report"
 	const openedUrls = await captureOpenedUrls(page);
 
 	await drawer
-		.getByRole("radio", { name: "Serious In Person Incident" })
+		.getByRole("radio", { name: "Serious In-Person Incident" })
 		.click();
 
 	expect(
@@ -136,10 +132,10 @@ test("reporting a chat message titles the sheet for the message and prefills the
 	await page.waitForTimeout(700);
 
 	await expect(
-		drawer.getByRole("heading", { name: "Report message" }),
+		drawer.getByRole("heading", { name: "Report Messages" }),
 	).toBeVisible();
 	await expect(drawer).toHaveAccessibleDescription(
-		"Send a report about this person's messages to Grindr.",
+		"Send a report about this user’s messages to Grindr.",
 	);
 
 	await drawer.getByRole("radio", { name: "Harassment or Bullying" }).click();
@@ -156,7 +152,7 @@ test("reporting a chat message titles the sheet for the message and prefills the
 		drawer.getByText("Grindr will review your report."),
 	).toBeVisible();
 	await expect(
-		drawer.getByRole("button", { name: "Block profile" }),
+		drawer.getByRole("button", { name: "Block user" }),
 		"blocking still targets the sender's profile",
 	).toBeVisible();
 });
@@ -169,7 +165,7 @@ test("the report opens as a dialog on a desktop-width viewport", async ({
 	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_PROFILE);
 	await page.getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Report profile" }).click();
+	await page.getByRole("menuitem", { name: "Report user" }).click();
 
 	const dialog = page.locator('[data-slot="dialog-content"]');
 	await dialog.waitFor({ timeout: 10_000 });
@@ -178,13 +174,13 @@ test("the report opens as a dialog on a desktop-width viewport", async ({
 		"a desktop viewport gets the dialog, not the bottom sheet",
 	).toHaveCount(0);
 	await expect(
-		dialog.getByRole("heading", { name: "Report profile" }),
+		dialog.getByRole("heading", { name: "Report User" }),
 	).toBeVisible();
 
 	await dialog.getByRole("radio", { name: "Spam" }).click();
 	await dialog.getByRole("button", { name: "Submit report" }).click();
 
 	await expect(
-		dialog.getByText("Grindr will review this profile."),
+		dialog.getByText("Grindr will review your report."),
 	).toBeVisible();
 });

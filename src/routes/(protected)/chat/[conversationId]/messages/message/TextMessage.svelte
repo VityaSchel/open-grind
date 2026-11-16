@@ -6,5 +6,7 @@
 </script>
 
 <MessageBubble tone="sent">
-	<span class="wrap-anywhere whitespace-pre-wrap">{message.text}</span>
+	<span class="wrap-anywhere whitespace-pre-wrap" translate="no"
+		>{message.text}</span
+	>
 </MessageBubble>

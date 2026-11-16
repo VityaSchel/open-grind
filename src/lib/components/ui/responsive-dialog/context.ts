@@ -2,7 +2,10 @@ import { getContext, hasContext, setContext } from "svelte";
 
 const RESPONSIVE_DIALOG_CONTEXT = Symbol("RESPONSIVE_DIALOG_CONTEXT");
 
-export type ResponsiveDialogContext = { readonly desktop: boolean };
+export type ResponsiveDialogContext = {
+	readonly desktop: boolean;
+	dismissAttempted(): void;
+};
 
 export function setResponsiveDialogContext(
 	context: ResponsiveDialogContext,

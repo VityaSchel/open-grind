@@ -18,7 +18,7 @@ const DROPDOWNS = [
 	"Ethnicity",
 	"Relationship status",
 	"My tribes",
-	"Tribes I'm into",
+	"Tribes I’m into",
 	"Looking for",
 	"Meet at",
 	"Accept NSFW pics",
@@ -84,6 +84,13 @@ test("every picker takes its name from its label", async ({ page }) => {
 	await expect(page.getByRole("listbox", { name: "Tags" })).toBeVisible();
 });
 
+test("the age wheel speaks the age in years", async ({ page }) => {
+	await expect(page.getByRole("slider", { name: "Age" })).toHaveAttribute(
+		"aria-valuetext",
+		/^\d+ years$/,
+	);
+});
+
 test("tapping a picker's label leaves the picker closed", async ({ page }) => {
 	for (const [name, picker] of [
 		["Position", dropdown(page, "Position")],
@@ -139,7 +146,7 @@ test("the position menu runs from top to side with an icon per position", async 
 	await position.click();
 
 	const items = page.getByRole("menuitemradio");
-	await expect(items).toHaveText(["Not set", ...POSITION_SPECTRUM]);
+	await expect(items).toHaveText(["Not Set", ...POSITION_SPECTRUM]);
 	for (const name of POSITION_SPECTRUM) {
 		await expect(
 			page

@@ -1,0 +1,253 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+
+const tauri = vi.hoisted(() => ({ invoke: vi.fn() }));
+const goto = vi.hoisted(() => vi.fn());
+
+vi.mock("@tauri-apps/api/core", () => tauri);
+vi.mock("$app/navigation", () => ({ goto }));
+
+const presets = [
+	{ id: "hook-app", name: "Hook App" },
+	{ id: "papizza", name: "papizza" },
+];
+
+function backendReports(current: string) {
+	tauri.invoke.mockImplementation((command: string) =>
+		command === "disguise_state"
+			? Promise.resolve({
+					available: true,
+					current,
+					presets,
+					renameNeedsAdmin: false,
+				})
+			: Promise.resolve(),
+	);
+}
+
+describe("the disguise state", () => {
+	beforeEach(() => {
+		vi.resetModules();
+		vi.clearAllMocks();
+		runningOn("macos");
+	});
+
+	afterEach(resetPlatform);
+
+	it("offers nothing until it has been hydrated", async () => {
+		backendReports("original");
+		const { disguiseAvailable, disguisePresets } =
+			await import("./disguise.svelte");
+
+		expect(disguiseAvailable()).toBe(false);
+		expect(disguisePresets()).toEqual([]);
+	});
+
+	it("reports the presets and the current choice once hydrated", async () => {
+		backendReports("hook-app");
+		const {
+			hydrateDisguiseState,
+			disguiseAvailable,
+			currentDisguise,
+			disguisePresets,
+		} = await import("./disguise.svelte");
+
+		await hydrateDisguiseState();
+
+		expect(tauri.invoke).toHaveBeenCalledWith("disguise_state");
+		expect(disguiseAvailable()).toBe(true);
+		expect(currentDisguise()).toBe("hook-app");
+		expect(disguisePresets()).toEqual(presets);
+	});
+
+	it("says when only an administrator could rename the app", async () => {
+		tauri.invoke.mockResolvedValue({
+			available: true,
+			current: "original",
+			presets,
+			renameNeedsAdmin: true,
+		});
+		const { hydrateDisguiseState, disguiseRenameNeedsAdmin } =
+			await import("./disguise.svelte");
+
+		expect(disguiseRenameNeedsAdmin()).toBe(false);
+		await hydrateDisguiseState();
+
+		expect(disguiseRenameNeedsAdmin()).toBe(true);
+	});
+
+	it("never rejects, so a failed probe cannot block the layout load", async () => {
+		tauri.invoke.mockRejectedValue(new Error("no plugin"));
+		const { hydrateDisguiseState, disguiseAvailable, currentDisguise } =
+			await import("./disguise.svelte");
+
+		await expect(hydrateDisguiseState()).resolves.toBeUndefined();
+		expect(disguiseAvailable()).toBe(false);
+		expect(currentDisguise()).toBe("original");
+	});
+
+	it("treats a malformed answer as unavailable", async () => {
+		for (const answer of [null, "yes", { available: true }]) {
+			vi.resetModules();
+			tauri.invoke.mockResolvedValue(answer);
+			const { hydrateDisguiseState, disguiseAvailable } =
+				await import("./disguise.svelte");
+
+			await hydrateDisguiseState();
+
+			expect(disguiseAvailable()).toBe(false);
+		}
+	});
+
+	it("probes once, not on every navigation", async () => {
+		backendReports("original");
+		const { hydrateDisguiseState } = await import("./disguise.svelte");
+
+		await hydrateDisguiseState();
+		await hydrateDisguiseState();
+
+		expect(tauri.invoke).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not reach for the backend on iOS, which offers no disguises", async () => {
+		runningOn("ios");
+		const { hydrateDisguiseState, disguiseAvailable } =
+			await import("./disguise.svelte");
+
+		await hydrateDisguiseState();
+
+		expect(tauri.invoke).not.toHaveBeenCalled();
+		expect(disguiseAvailable()).toBe(false);
+	});
+
+	it("selects a disguise and re-reads, so the picker shows what applied", async () => {
+		backendReports("original");
+		const { selectDisguise, currentDisguise } =
+			await import("./disguise.svelte");
+		backendReports("papizza");
+
+		await selectDisguise("papizza", {
+			resume: "/settings/app/discreet-icon",
+		});
+
+		expect(tauri.invoke).toHaveBeenCalledWith("disguise_select", {
+			id: "papizza",
+			resume: "/settings/app/discreet-icon",
+		});
+		expect(currentDisguise()).toBe("papizza");
+	});
+
+	it("surfaces a failure to the caller", async () => {
+		const refused = { reason: "failed", detail: "macOS refused" };
+		tauri.invoke.mockRejectedValue(refused);
+		const { selectDisguise } = await import("./disguise.svelte");
+
+		await expect(selectDisguise("papizza", { resume: null })).rejects.toBe(
+			refused,
+		);
+	});
+
+	it("re-reads the state after a failure, so the picker shows an icon that changed anyway", async () => {
+		backendReports("original");
+		const { hydrateDisguiseState, selectDisguise, currentDisguise } =
+			await import("./disguise.svelte");
+		await hydrateDisguiseState();
+		backendReports("papizza");
+		tauri.invoke.mockRejectedValueOnce({ reason: "renameNeedsAdmin" });
+
+		await expect(
+			selectDisguise("papizza", { resume: null }),
+		).rejects.toEqual({ reason: "renameNeedsAdmin" });
+
+		expect(currentDisguise()).toBe("papizza");
+	});
+
+	it.each([
+		[{ reason: "nameTaken" }, "nameTaken"],
+		[{ reason: "renameNeedsAdmin" }, "renameNeedsAdmin"],
+		[{ reason: "failed", detail: "macOS refused" }, "failed"],
+		[{ reason: "somethingNew" }, "failed"],
+		["unknown disguise papizza", "failed"],
+		[new Error("ipc down"), "failed"],
+	])("reads the failure %j as %s", async (error, failure) => {
+		const { disguiseFailure } = await import("./disguise.svelte");
+
+		expect(disguiseFailure(error)).toBe(failure);
+	});
+});
+
+describe("reopening after a disguise restart", () => {
+	const SETTINGS_TRAIL = (path: string) => ["/settings", path];
+
+	beforeEach(() => {
+		vi.resetModules();
+		vi.clearAllMocks();
+		runningOn("macos");
+	});
+
+	afterEach(resetPlatform);
+
+	function backendResumes(path: unknown) {
+		tauri.invoke.mockImplementation((command: string) =>
+			command === "disguise_take_resume"
+				? Promise.resolve(path)
+				: Promise.resolve(),
+		);
+	}
+
+	it("walks the trail down to the screen the restart left, so Back retraces it", async () => {
+		backendResumes("/settings/app/discreet-icon");
+		const { reopenAfterDisguiseRestart } =
+			await import("./disguise.svelte");
+
+		await reopenAfterDisguiseRestart({
+			trail: (path) => ["/settings", "/settings/app/security", path],
+		});
+
+		expect(goto.mock.calls.map(([path]) => path)).toEqual([
+			"/settings",
+			"/settings/app/security",
+			"/settings/app/discreet-icon",
+		]);
+	});
+
+	it("stays put after a plain start", async () => {
+		backendResumes(null);
+		const { reopenAfterDisguiseRestart } =
+			await import("./disguise.svelte");
+
+		await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it("only reopens settings screens", async () => {
+		for (const path of [
+			"/",
+			"/chat/123",
+			"https://example.com/settings/",
+			42,
+		]) {
+			vi.clearAllMocks();
+			backendResumes(path);
+			const { reopenAfterDisguiseRestart } =
+				await import("./disguise.svelte");
+
+			await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
+
+			expect(goto).not.toHaveBeenCalled();
+		}
+	});
+
+	it("does not reach for the backend on iOS, which offers no disguises", async () => {
+		runningOn("ios");
+		const { reopenAfterDisguiseRestart } =
+			await import("./disguise.svelte");
+
+		await reopenAfterDisguiseRestart({ trail: SETTINGS_TRAIL });
+
+		expect(tauri.invoke).not.toHaveBeenCalled();
+		expect(goto).not.toHaveBeenCalled();
+	});
+});

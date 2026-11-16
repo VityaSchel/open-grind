@@ -1,5 +1,10 @@
-import { isTribeOfferedNow } from "#lib/api/feature-flags-state.svelte.ts";
 import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+import {
+	type OptionFilterDefinition,
+	optionFilters,
+} from "#lib/components/filters/option-filters.ts";
+import { formatListParts, formatRange } from "#lib/i18n/format.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -23,16 +28,7 @@ import {
 	WEIGHT_KG_MIN,
 	weightGramsToKg,
 } from "#lib/model/browse/grid/filters.ts";
-import {
-	acceptNSFWPics,
-	bodyTypes,
-	healthPractices,
-	lookingFor,
-	meetAt,
-	relationshipStatuses,
-	sexualPositions,
-	tribes,
-} from "#lib/model/users/profiles.ts";
+import { sexualPositions } from "#lib/model/users/profiles.ts";
 import { formatHeight, formatWeightKg } from "#lib/util/units.ts";
 import {
 	booleanApply,
@@ -45,35 +41,58 @@ import {
 	type RangeTarget,
 	splitList,
 } from "./apply";
-import type { BooleanKey, Filter, ListKey, Render } from "./types";
+import type { BooleanKey, Filter, FilterId, ListKey, ValuePart } from "./types";
+
+const translated = (text: string): ValuePart => ({ text, verbatim: false });
+const verbatim = (text: string): ValuePart => ({ text, verbatim: true });
+
+function listParts(items: readonly ValuePart[]): ValuePart[] {
+	const elements = [...items];
+	return formatListParts(items.map(({ text }) => text)).map(
+		({ type, value }) =>
+			type === "element"
+				? { text: value, verbatim: elements.shift()?.verbatim ?? false }
+				: translated(value),
+	);
+}
 
 function rangeText(
 	bounds: Omit<Parameters<typeof rangeBoundTexts>[0], "units">,
 ): string {
-	return rangeBoundTexts({
+	const [min, max] = rangeBoundTexts({
 		...bounds,
 		units: preferencesSnapshot().units,
-	}).join(" - ");
+	});
+	return formatRange({ min, max });
 }
 
 function booleanFilter({
+	id,
 	label,
 	keys,
 	field,
 }: {
-	label: string;
+	id: FilterId;
+	label: PlainMessageKey;
 	keys: string[];
 	field: BooleanKey;
 }): Filter {
 	return {
+		id,
 		label,
-		render: (filters) => (filters[field] ? "Yes" : "No"),
+		render: (filters) => [
+			translated(
+				filters[field]
+					? t("commands.filterGrid.yes")
+					: t("commands.filterGrid.no"),
+			),
+		],
 		params: [{ keys, apply: booleanApply(field) }],
 	};
 }
 
 function rangeFilter(options: {
-	label: string;
+	label: PlainMessageKey;
 	target: RangeTarget;
 	min: number;
 	max: number;
@@ -82,14 +101,15 @@ function rangeFilter(options: {
 	rawMin?: number;
 	rawMax?: number;
 	store?: (value: number) => number;
-	render: Render;
+	render: (filters: GridSearchFilters) => string;
 }): Filter {
 	const { target, min, max, store } = options;
 	const rawMin = options.rawMin ?? min;
 	const rawMax = options.rawMax ?? max;
 	return {
+		id: target,
 		label: options.label,
-		render: options.render,
+		render: (filters) => [translated(options.render(filters))],
 		params: [
 			{
 				keys: [options.minKey],
@@ -111,41 +131,43 @@ function rangeFilter(options: {
 					store,
 				}),
 			},
-			{
-				keys: [options.label],
-				apply: combinedRangeApply({ target, min, max }),
-			},
+			{ keys: [target], apply: combinedRangeApply({ target, min, max }) },
 		],
 	};
 }
 
 function enumFilter({
-	label,
+	id,
 	keys,
 	target,
 	enabled,
 	enumObject,
-	labelMap,
-	isOffered = () => true,
+	option: { label, table, isOffered = () => true },
 }: {
-	label: string;
+	id: FilterId;
 	keys: string[];
 	target: ListKey;
 	enabled: BooleanKey;
 	enumObject: Record<string, number>;
-	labelMap: Record<number, string>;
-	isOffered?: (id: number) => boolean;
+	option: Pick<OptionFilterDefinition, "label" | "table" | "isOffered">;
 }): Filter {
 	const allowed = new Set(Object.values(enumObject));
-	const labels = allowed.has(-1)
-		? { ...labelMap, [-1]: "Not specified" }
-		: labelMap;
+	const labelOf = (id: number) =>
+		id === -1 && allowed.has(-1)
+			? t("common.filters.notSpecified")
+			: table[id];
 	return {
+		id,
 		label,
 		render: (filters) =>
-			(filters[target] as number[])
-				.map((id) => labels[id] ?? String(id))
-				.join(", "),
+			listParts(
+				(filters[target] as number[]).map((id) => {
+					const label = labelOf(id);
+					return label === undefined
+						? verbatim(String(id))
+						: translated(label);
+				}),
+			),
 		params: [
 			{
 				keys,
@@ -153,44 +175,58 @@ function enumFilter({
 					target,
 					enabled,
 					isValid: (id) => allowed.has(id) && isOffered(id),
-					invalidLabel: "Unknown value",
+					invalid: "unknownValue",
 				}),
 			},
 		],
 	};
 }
 
-const photoLabels: Record<GridSearchFilters["photos"][number], string> = {
-	"has-photos": "Has photos",
-	"has-face-pics": "Face pics",
-	"has-albums": "Has albums",
-};
+const photoLabels = {
+	"has-photos": "common.filters.photos.hasPhotos",
+	"has-face-pics": "common.filters.photos.hasFacePics",
+	"has-albums": "common.filters.photos.hasAlbums",
+} as const satisfies Record<
+	GridSearchFilters["photos"][number],
+	PlainMessageKey
+>;
 
 export const filters: Filter[] = [
 	booleanFilter({
-		label: "online",
+		id: "online",
+		label: "common.filters.online",
 		keys: ["onlineOnly", "online"],
 		field: "isOnline",
 	}),
 	booleanFilter({
-		label: "favorites",
+		id: "favorites",
+		label: "common.filters.favorites",
 		keys: ["favorites", "favorite", "fav"],
 		field: "isFavorite",
 	}),
 	booleanFilter({
-		label: "right now",
+		id: "rightNow",
+		label: "common.filters.rightNow",
 		keys: ["rightNow", "right-now", "rn"],
 		field: "isRightNow",
 	}),
-	booleanFilter({ label: "fresh", keys: ["fresh"], field: "isFresh" }),
 	booleanFilter({
-		label: "not recently chatted",
+		id: "fresh",
+		label: "common.filters.fresh",
+		keys: ["fresh"],
+		field: "isFresh",
+	}),
+	booleanFilter({
+		id: "notRecentlyChatted",
+		label: "common.filters.haventChattedToday",
 		keys: ["notRecentlyChatted", "haventChattedToday"],
 		field: "haventChattedTodayEnabled",
 	}),
 	{
-		label: "photos",
-		render: (f) => f.photos.map((tag) => photoLabels[tag]).join(", "),
+		id: "photos",
+		label: "common.filters.photos.label",
+		render: (f) =>
+			listParts(f.photos.map((tag) => translated(t(photoLabels[tag])))),
 		params: [
 			{
 				keys: ["photoOnly", "hasPhotos"],
@@ -207,7 +243,7 @@ export const filters: Filter[] = [
 		],
 	},
 	rangeFilter({
-		label: "age",
+		label: "common.filters.age.label",
 		target: "age",
 		min: AGE_MIN,
 		max: AGE_MAX,
@@ -216,7 +252,7 @@ export const filters: Filter[] = [
 		render: (f) => ageRangeLabel(f.age),
 	}),
 	rangeFilter({
-		label: "height",
+		label: "common.filters.height.label",
 		target: "height",
 		min: HEIGHT_CM_MIN,
 		max: HEIGHT_CM_MAX,
@@ -231,7 +267,7 @@ export const filters: Filter[] = [
 			}),
 	}),
 	rangeFilter({
-		label: "weight",
+		label: "common.filters.weight.label",
 		target: "weight",
 		min: WEIGHT_KG_MIN,
 		max: WEIGHT_KG_MAX,
@@ -249,84 +285,91 @@ export const filters: Filter[] = [
 			}),
 	}),
 	enumFilter({
-		label: "position",
+		id: "position",
 		keys: ["sexualPositions", "positions", "position"],
 		target: "positions",
 		enabled: "positionEnabled",
 		enumObject: FilterPosition,
-		labelMap: sexualPositions,
+		option: {
+			label: "common.filters.position.label",
+			table: sexualPositions,
+		},
 	}),
 	enumFilter({
-		label: "tribes",
+		id: "tribes",
 		keys: ["tribes", "tribe"],
 		target: "tribes",
 		enabled: "tribesEnabled",
 		enumObject: FilterTribe,
-		labelMap: tribes,
-		isOffered: isTribeOfferedNow,
+		option: optionFilters.tribes,
 	}),
 	enumFilter({
-		label: "tribes they're into",
+		id: "tribesImInto",
 		keys: ["tribesImInto"],
 		target: "tribesImInto",
 		enabled: "tribesImIntoEnabled",
 		enumObject: FilterTribe,
-		labelMap: tribes,
+		option: optionFilters.tribesImInto,
 	}),
 	enumFilter({
-		label: "body type",
+		id: "bodyType",
 		keys: ["bodyTypes", "bodyType", "body"],
 		target: "bodyTypes",
 		enabled: "bodyTypesEnabled",
 		enumObject: FilterBodyType,
-		labelMap: bodyTypes,
+		option: optionFilters.bodyTypes,
 	}),
 	enumFilter({
-		label: "relationship",
+		id: "relationship",
 		keys: ["relationshipStatuses", "relationshipStatus", "relationship"],
 		target: "relationshipStatuses",
 		enabled: "relationshipStatusesEnabled",
 		enumObject: FilterRelationshipStatus,
-		labelMap: relationshipStatuses,
+		option: optionFilters.relationshipStatuses,
 	}),
 	enumFilter({
-		label: "nsfw",
+		id: "nsfw",
 		keys: ["nsfwPics", "nsfw"],
 		target: "acceptNSFWPics",
 		enabled: "acceptNSFWPicsEnabled",
 		enumObject: FilterAcceptNSFWPics,
-		labelMap: acceptNSFWPics,
+		option: optionFilters.acceptNSFWPics,
 	}),
 	enumFilter({
-		label: "looking for",
+		id: "lookingFor",
 		keys: ["lookingFor", "looking"],
 		target: "lookingFor",
 		enabled: "lookingForEnabled",
 		enumObject: FilterLookingFor,
-		labelMap: lookingFor,
+		option: optionFilters.lookingFor,
 	}),
 	enumFilter({
-		label: "meet at",
+		id: "meetAt",
 		keys: ["meetAt", "meet"],
 		target: "meetAt",
 		enabled: "meetAtEnabled",
 		enumObject: FilterMeetAt,
-		labelMap: meetAt,
+		option: optionFilters.meetAt,
 	}),
 	enumFilter({
-		label: "health",
+		id: "health",
 		keys: ["sexualHealth", "health"],
 		target: "healthPractices",
 		enabled: "healthPracticesEnabled",
 		enumObject: FilterHealthPractice,
-		labelMap: healthPractices,
+		option: optionFilters.healthPractices,
 	}),
 	{
-		label: "genders",
+		id: "genders",
+		label: "common.filters.genders.label",
 		render: (f) =>
-			f.genders
-				.map((id) => (id === -1 ? "Not specified" : String(id)))
-				.join(", "),
+			listParts(
+				f.genders.map((id) =>
+					id === -1
+						? translated(t("common.filters.notSpecified"))
+						: verbatim(String(id)),
+				),
+			),
 		params: [
 			{
 				keys: ["genders", "gender"],
@@ -335,20 +378,21 @@ export const filters: Filter[] = [
 					enabled: "genderEnabled",
 					isValid: (id) =>
 						id === -1 || (id >= 0 && isFilterableGenderId(id)),
-					invalidLabel: "Invalid gender ID",
+					invalid: "invalidGenderId",
 				}),
 			},
 		],
 	},
 	{
-		label: "tags",
-		render: (f) => f.tags.join(", "),
+		id: "tags",
+		label: "common.filters.tags.label",
+		render: (f) => listParts(f.tags.map(verbatim)),
 		params: [
 			{
 				keys: ["tags", "tag"],
 				apply: (raw, draft) => {
 					const parts = splitList(raw);
-					if (parts.length === 0) return err("No values");
+					if (parts.length === 0) return err({ kind: "noValues" });
 					draft.tagsEnabled = true;
 					draft.tags = parts;
 					return ok;

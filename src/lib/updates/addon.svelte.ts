@@ -6,9 +6,9 @@ import {
 	GOOGLE_OAUTH_COMPONENT,
 	RECAPTCHA_COMPONENT,
 } from "./components";
-import { type StagePresenter, UpdateFlow } from "./flow";
+import { UpdateFlow } from "./flow";
 import { getUpdateReadiness, updatesAvailableHere } from "./index";
-import type { UpdateStage } from "./stage";
+import type { StagePresenter, UpdateStage } from "./stage";
 import { toastPresenter } from "./toast-presenter";
 
 type Activity = { stage: UpdateStage | null; installs: number };
@@ -43,10 +43,10 @@ export function addonInstallerAvailable(): boolean {
 	);
 }
 
-export async function addonPublishedHere(): Promise<boolean> {
-	const readiness = await getUpdateReadiness(GOOGLE_OAUTH_COMPONENT).catch(
-		() => null,
-	);
+export async function addonPublishedHere(
+	component: AddonKey,
+): Promise<boolean> {
+	const readiness = await getUpdateReadiness(component).catch(() => null);
 	return !(
 		readiness?.state === "unsupported" &&
 		readiness.detail.reason === "noReleaseArtifacts"

@@ -11,6 +11,8 @@ vi.mock("#lib/api/messaging/albums.ts", () => api);
 
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { demoMyAlbums } from "#lib/demo/mock/albums.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import MyAlbumsPage from "./+page.svelte";
 
@@ -40,10 +42,11 @@ beforeEach(() => {
 	runningOn("windows");
 });
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.restoreAllMocks();
 	clearAccountCaches();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("my albums page", () => {
@@ -115,5 +118,17 @@ describe("my albums page", () => {
 		expect(tiles).toBe(albums.length);
 		expect(addAlbum()).not.toBeNull();
 		expect(logged).toHaveBeenCalledWith(failure);
+	});
+
+	it("names the add cell in the active locale", async () => {
+		api.getAlbumStorageLimits.mockResolvedValueOnce({
+			maxAlbums: albums.length + 1,
+		});
+		await tilesOf(opened());
+		const add = addAlbum();
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(add?.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 });

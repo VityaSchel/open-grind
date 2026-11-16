@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/svelte";
+import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "#lib/api/api-error.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import ApiErrorDisplay from "./ApiErrorDisplay.svelte";
 
 const request = { method: "GET", path: "/v4/cascade", body: undefined };
@@ -17,14 +19,17 @@ const schemaMismatch = () =>
 
 function retryButton(): HTMLElement | undefined {
 	return [...document.querySelectorAll("button")].find(
-		(button) => button.textContent?.trim() === "Retry",
+		(button) => button.textContent?.trim() === "Try again",
 	);
 }
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("ApiErrorDisplay", () => {
-	it("offers Retry for an error that cannot be classified as retryable", () => {
+	it("offers a retry button for an error that cannot be classified as retryable", () => {
 		const error = schemaMismatch();
 		expect(error.retryable).toBe(false);
 
@@ -44,21 +49,18 @@ describe("ApiErrorDisplay", () => {
 		expect(onRetry).toHaveBeenCalledOnce();
 	});
 
-	it("offers no Retry when the caller has no way to retry", () => {
+	it("offers no retry button when the caller has no way to retry", () => {
 		render(ApiErrorDisplay, { props: { error: schemaMismatch() } });
 
 		expect(retryButton()).toBeUndefined();
 	});
 
 	it.each([
-		["Connect", "Couldn't connect to Grindr"],
-		["Http", "Couldn't reach the server"],
+		["Connect", "Couldn’t connect to Grindr"],
+		["Http", "Couldn’t get a response from Grindr"],
 		["RequestBlocked", "Grindr is blocking your requests"],
-		[
-			"NetworkBlocked",
-			"Something blocked the request before it reached Grindr",
-		],
-		["SessionStale", "Couldn't refresh your session"],
+		["NetworkBlocked", "Something is blocking your requests to Grindr"],
+		["SessionStale", "Couldn’t refresh your session"],
 	] as const)("blames %s for the failure it actually was", (kind, shown) => {
 		render(ApiErrorDisplay, {
 			props: {
@@ -84,12 +86,33 @@ describe("ApiErrorDisplay", () => {
 
 		render(ApiErrorDisplay, { props: { error } });
 
-		expect(screen.getByText("The server ran into a problem")).toBeTruthy();
+		expect(screen.getByText("Grindr ran into a problem")).toBeTruthy();
 	});
 
 	it("stays vague when nothing classified the failure", () => {
 		render(ApiErrorDisplay, { props: { error: schemaMismatch() } });
 
 		expect(screen.getByText("Something went wrong")).toBeTruthy();
+	});
+
+	it("follows the interface language once rendered", async () => {
+		const error = new ApiError({
+			message: "Connect failure",
+			request,
+			kind: "Connect",
+		});
+		render(ApiErrorDisplay, { props: { error, onRetry: vi.fn() } });
+
+		await setLocale({ locale: "en-XA" });
+		flushSync();
+
+		expect(screen.getByText(t("feedback.apiError.connect"))).toBeTruthy();
+		expect(screen.queryByText("Couldn’t connect to Grindr")).toBeNull();
+		expect(
+			screen.getByRole("button", { name: t("common.actions.retry") }),
+		).toBeTruthy();
+		expect(
+			screen.getByRole("button", { name: t("common.actions.copyError") }),
+		).toBeTruthy();
 	});
 });

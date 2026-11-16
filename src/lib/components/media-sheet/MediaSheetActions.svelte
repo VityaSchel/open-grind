@@ -7,6 +7,7 @@
 	import { Badge } from "#lib/components/ui/badge/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
 	import { cn } from "#lib/util/utils.ts";
 
 	let {
@@ -74,7 +75,7 @@
 					variant="secondary"
 					class="bg-primary-foreground/10 text-primary-foreground"
 				>
-					{count}
+					{formatInteger(count)}
 				</Badge>
 			{/if}
 		</Button>

@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const { toastErrorMock, showErrorToastMock, openExternalLinkMock } = vi.hoisted(
 	() => ({
@@ -18,6 +18,8 @@ vi.mock("#lib/platform/link-opener.ts", () => ({
 
 import { ApiError } from "#lib/api/api-error.ts";
 import { BlockDidNotStickError } from "#lib/api/browse/blocks.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { showBlockFailure } from "./block-failure";
 
 const WHY_BLOCKING_FAILS =
@@ -35,11 +37,15 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
+afterEach(async () => {
+	await setLocale({ locale: SOURCE_LOCALE });
+});
+
 it("suggests hiding when Grindr does not list the profile as blocked", () => {
 	showBlockFailure(new BlockDidNotStickError());
 
 	expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
-		"Blocking this profile failed. Try hiding instead.",
+		"Can’t block this user. Try hiding instead.",
 		expect.anything(),
 	);
 	expect(showErrorToastMock).not.toHaveBeenCalled();
@@ -63,7 +69,24 @@ it.each([
 
 	expect(toastErrorMock).not.toHaveBeenCalled();
 	expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-		label: "Failed to block user",
+		label: "Couldn’t block",
 		error,
 	});
+});
+
+it("words the hiding suggestion and its link in the active locale", async () => {
+	await setLocale({ locale: "en-XA" });
+
+	showBlockFailure(new BlockDidNotStickError());
+
+	expect(toastErrorMock.mock.lastCall?.[0]).toMatch(PSEUDO_MESSAGE);
+	expect(learnMore().label).toMatch(PSEUDO_MESSAGE);
+});
+
+it("words a failed block in the active locale", async () => {
+	await setLocale({ locale: "en-XA" });
+
+	showBlockFailure(new Error("offline"));
+
+	expect(showErrorToastMock.mock.lastCall?.[0].label).toMatch(PSEUDO_MESSAGE);
 });

@@ -5,6 +5,7 @@ import {
 	ensureGridLocation,
 	FIRST_ROUTE_COMPILE_MS,
 } from "./app";
+import { rightNowJoinPill } from "./right-now";
 
 type Edge = "top" | "bottom";
 type Backdrop = "content" | "nothing";
@@ -25,6 +26,8 @@ const shows = (locate: (page: Page) => Locator) => (page: Page) =>
 const mainNavigation = (page: Page) =>
 	page.getByRole("navigation", { name: "Main" });
 const subpage = (page: Page) => page.locator('[data-slot="subpage-scroller"]');
+const rightNowPost = (page: Page) =>
+	page.locator('[data-slot="right-now-post"]');
 const suggestAnEdit = (page: Page) =>
 	page.getByRole("link", { name: "Suggest an edit" });
 
@@ -49,10 +52,26 @@ export const SURFACES: Surface[] = [
 		},
 	},
 	{
-		name: "Right Now",
+		name: "Right Now location chooser",
 		path: "/right-now",
 		bars: { bottom: "nothing" },
-		ready: shows(mainNavigation),
+		ready: shows((page) =>
+			page.getByRole("button", { name: "Choose on map" }),
+		),
+	},
+	{
+		name: "Right Now",
+		path: "/",
+		bars: BARS_OVER_CONTENT,
+		ready: async (page) => {
+			await shows(mainNavigation)(page);
+			await ensureGridLocation(page);
+			await mainNavigation(page)
+				.getByRole("link", { name: "Right Now" })
+				.click();
+			await shows(rightNowPost)(page);
+			await shows(rightNowJoinPill)(page);
+		},
 	},
 	{
 		name: "Interest views",
@@ -152,7 +171,25 @@ export const SURFACES: Surface[] = [
 		name: "App settings",
 		path: "/settings/app",
 		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("link")),
+	},
+	{
+		name: "Display settings",
+		path: "/settings/app/display",
+		bars: BARS_OVER_CONTENT,
 		ready: shows((page) => page.getByRole("slider")),
+	},
+	{
+		name: "Privacy settings",
+		path: "/settings/app/privacy",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("switch")),
+	},
+	{
+		name: "Security settings",
+		path: "/settings/app/security",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("link")),
 	},
 	{
 		name: "Credits",
@@ -162,6 +199,12 @@ export const SURFACES: Surface[] = [
 			await shows(suggestAnEdit)(page);
 			await keepFirstCreditRows(page);
 		},
+	},
+	{
+		name: "Language",
+		path: "/settings/app/language",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => page.locator('[data-slot="language-option"]')),
 	},
 	{
 		name: "Notifications",

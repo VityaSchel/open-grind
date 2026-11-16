@@ -10,6 +10,8 @@
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { PROFILE_PHOTO_AWAITING_REVIEW } from "#lib/model/users/profiles.ts";
 	import { discardStagedMedia } from "#lib/platform/media-file.ts";
 	import {
@@ -23,9 +25,6 @@
 	import { profileMediaUrl } from "#lib/util/media.ts";
 	import { moveItem } from "#lib/util/reorder.ts";
 	import { maxProfilePhotos } from "./options";
-
-	const DAILY_LIMIT_MESSAGE =
-		"You've reached today's limit for new profile photos";
 
 	type PreviousUpload = { mediaHash: string; state: number };
 
@@ -51,7 +50,7 @@
 	});
 
 	const room = $derived(maxProfilePhotos - medias.length - uploading.length);
-	const canAdd = $derived(room > 0 && !__DEMO__);
+	const canAdd = $derived(room > 0 && (!__DEMO__ || __SCREENSHOTS__));
 
 	function slotKey(mediaHash: string, index: number): string {
 		return `${mediaHash}${index}`;
@@ -73,25 +72,30 @@
 
 	const slots = $derived([
 		...medias.map((media, index) => {
-			const label = `photo in slot ${index + 1}`;
+			const slot = formatInteger(index + 1);
 			return {
 				key: slotKey(media.mediaHash, index),
 				src: profileMediaUrl({
 					mediaHash: media.mediaHash,
 					size: "thumb",
 				}),
-				alt: media.pending
-					? `Profile ${label}, awaiting review`
-					: `Profile ${label}`,
-				deleteLabel: `Remove profile ${label}`,
-				undoLabel: `Keep profile ${label}`,
+				alt: t(
+					media.pending
+						? "settings.profile.photos.a11y.slotAwaitingReview"
+						: "settings.profile.photos.a11y.slot",
+					{ slot },
+				),
+				deleteLabel: t("settings.profile.photos.a11y.removeSlot", {
+					slot,
+				}),
+				undoLabel: t("settings.profile.photos.a11y.keepSlot", { slot }),
 				onDelete: () => toggleRemoved(media.mediaHash),
 			};
 		}),
 		...uploading.map((key) => ({
 			key: `uploading:${key}`,
 			src: null,
-			alt: "Uploading profile photo",
+			alt: t("settings.profile.photos.a11y.uploading"),
 			pending: true,
 		})),
 	]);
@@ -137,7 +141,7 @@
 	receiveMedia(() =>
 		canAdd && !disabled && !adding
 			? {
-					label: "Drop to add photos",
+					label: t("settings.profile.photos.dropToAdd"),
 					videos: false,
 					receive: (media) => void add(media),
 				}
@@ -149,7 +153,7 @@
 			return await pickMultipleMedia("image");
 		} catch (error) {
 			console.error(error);
-			toast.error("Couldn't open the photo picker");
+			toast.error(t("settings.profile.photos.errors.openPickerFailed"));
 			return [];
 		}
 	}
@@ -158,7 +162,10 @@
 		const accepted = picked.slice(0, Math.max(0, room));
 		if (picked.length > accepted.length) {
 			toast.error(
-				`${picked.length - accepted.length} left out, a profile holds up to ${maxProfilePhotos} photos`,
+				t("settings.profile.photos.errors.leftOut", {
+					count: picked.length - accepted.length,
+					max: formatInteger(maxProfilePhotos),
+				}),
 			);
 			void discardStagedMedia(picked.slice(accepted.length));
 		}
@@ -175,7 +182,11 @@
 				console.error(error);
 				const dailyLimit = httpStatusOf(error) === 403;
 				toast.error(
-					dailyLimit ? DAILY_LIMIT_MESSAGE : "Couldn't upload photo",
+					t(
+						dailyLimit
+							? "settings.profile.photos.errors.dailyLimit"
+							: "settings.profile.photos.errors.uploadFailed",
+					),
 				);
 				if (dailyLimit) {
 					const dropped = new Set(
@@ -204,7 +215,7 @@
 
 {#snippet addTile()}
 	<AddTile
-		label="Add photos"
+		label={t("settings.profile.photos.add")}
 		class="aspect-square w-full rounded-xl"
 		disabled={disabled || adding}
 		onclick={() => (sheetOpen = true)}
@@ -213,8 +224,8 @@
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}
-	uploadLabel="Upload photos"
-	submitLabel="Add to profile"
+	uploadLabel={t("settings.profile.photos.upload")}
+	submitLabel={t("settings.profile.photos.submit")}
 	max={room}
 	load={loadPreviousUploads}
 	describe={({ mediaHash }) => ({

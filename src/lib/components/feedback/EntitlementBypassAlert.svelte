@@ -7,6 +7,8 @@
 		entitlementBypassState,
 		runEntitlementBypass,
 	} from "#lib/entitlements/bypass.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
+	import Rich from "#lib/i18n/Rich.svelte";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	const escapeKeydownBehavior = $derived(
@@ -32,19 +34,28 @@
 		interactOutsideBehavior="ignore"
 	>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Paid feature</AlertDialog.Title>
+			<AlertDialog.Title
+				>{t("feedback.entitlementBypass.title")}</AlertDialog.Title
+			>
 			<AlertDialog.Description>
-				<p class="mb-3">{entitlementBypassState.reason}</p>
-				Open Grind can attempt to bypass this by momentarily spoofing your
-				geolocation to Honduras.
-				<Link href="https://opengrind.org/guides/bypasses">
-					Learn more
-				</Link>.
+				<p class="mb-3">
+					{entitlementBypassState.reason === null
+						? ""
+						: t(entitlementBypassState.reason)}
+				</p>
+				<Rich key="feedback.entitlementBypass.explanation">
+					{#snippet bypassGuideLink(text)}<Link
+							href="https://opengrind.org/guides/bypasses"
+							>{text}</Link
+						>{/snippet}
+				</Rich>
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={entitlementBypassState.busy} class="contents">
-				<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel size="lg"
+					>{t("common.actions.cancel")}</AlertDialog.Cancel
+				>
 				<AlertDialog.Action
 					size="lg"
 					onclick={() => void runEntitlementBypass()}
@@ -53,7 +64,7 @@
 					{#if entitlementBypassState.busy}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Bypass
+					{t("feedback.entitlementBypass.bypass")}
 				</AlertDialog.Action>
 			</fieldset>
 		</AlertDialog.Footer>

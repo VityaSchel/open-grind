@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-11-03
+Effective date: 2026-11-13
 
 Open Grind Governance, an unregistered project represented by Viktor Shchelochkov, makes the Open Grind app and runs the servers below. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
@@ -23,11 +23,13 @@ For the features you use, the app sends data straight to these services over enc
   - **GIPHY**: your GIF searches and language, the GIFs you load, and that you use Grindr. [Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy)
 - Only when using the **reCAPTCHA helper add-on**:
   - **Google**: device information, whenever Grindr asks for a captcha. [Policy](https://policies.google.com/privacy)
-- Only in **Fast mode** for notifications (the **FCM service add-on**):
+- Only in **Fast Mode** for notifications (the **FCM service add-on**):
   - **Google**: this device's Firebase installation ID and push token, and every notification Grindr sends through Firebase, including sender names and message text. [Policy](https://policies.google.com/privacy)
   - **Grindr**: that push token, so it can send your notifications.
 
 To stop sending data, turn the feature off or sign out. To delete data a service holds, ask that service; for Grindr, delete your Grindr account.
+
+On iOS, a reinstall erases your session, and app data stays out of backups.
 
 ## Open Grind servers and websites
 

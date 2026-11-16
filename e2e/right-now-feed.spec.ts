@@ -1,0 +1,320 @@
+import { expect, type Page, test } from "@playwright/test";
+
+import { DEV_SERVER_URL } from "../playwright.config";
+import {
+	afterTwoFrames,
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+} from "./support/app";
+import { failDemoRequests } from "./support/demo-faults";
+import { showsMedia } from "./support/drawer";
+import {
+	CHAT_MEDIA_HOST,
+	heightPerWidth,
+	PORTRAIT_HEIGHT_PER_WIDTH,
+	serveImages,
+	serveRightNowPortraitPhotos,
+} from "./support/media";
+import {
+	goToRightNow,
+	RIGHT_NOW_FEED_TIMEOUT,
+	scrollFeedToBottom,
+} from "./support/right-now";
+
+const POST = '[data-slot="right-now-post"]';
+const DISCREET_POST = '[data-slot="right-now-discreet-post"]';
+const POST_DISTANCE = '[data-slot="right-now-post-distance"]';
+const FEED_SCROLLER = '[data-slot="right-now-scroller"]';
+const LIGHTBOX = ".pswp";
+const LIGHTBOX_PHOTO = ".pswp__img:not(.pswp__img--placeholder)";
+const OPEN_PHOTO = "Open photo";
+const NOT_OPEN_PHOTO = /^(?!Open photo$)/;
+const NOT_REPORT_POST = /^(?!Report post$)/;
+const DEMO_DISCREET_POSTS = 2;
+const ORDERED_DISTANCES_CHECKED = 10;
+const SCROLLED_TOP = 1200;
+const METRES_PER_UNIT: Record<string, number> = { m: 1, km: 1000 };
+
+const articles = (page: Page) => page.getByRole("article");
+const feedScroller = (page: Page) => page.locator(FEED_SCROLLER);
+
+function metres(text: string): number {
+	const [amount = "", unit = ""] = text.trim().split(/\s+/);
+	return Number(amount) * (METRES_PER_UNIT[unit] ?? Number.NaN);
+}
+
+async function nearestFirst(page: Page): Promise<boolean> {
+	const texts = await page.locator(POST_DISTANCE).allTextContents();
+	const distances = texts.map(metres);
+	const ascending = distances.toSorted((a, b) => a - b);
+	return (
+		distances.length >= ORDERED_DISTANCES_CHECKED &&
+		distances.every((distance, index) => distance === ascending[index])
+	);
+}
+
+function feedScrollTop(page: Page): Promise<number> {
+	return feedScroller(page).evaluate((scroller) => scroller.scrollTop);
+}
+
+function feedScrollRange(page: Page): Promise<number> {
+	return feedScroller(page).evaluate(
+		(scroller) => scroller.scrollHeight - scroller.clientHeight,
+	);
+}
+
+async function openFilter(page: Page, name: string) {
+	await page.getByRole("button", { name, exact: true }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog.waitFor();
+	return dialog;
+}
+
+async function sortByDistance(page: Page): Promise<void> {
+	await page.getByRole("button", { name: "Sort: Newest" }).click();
+	await page.getByRole("button", { name: "Sort: Distance" }).waitFor();
+}
+
+test.describe("the demo feed", () => {
+	test.beforeEach(async ({ page }) => {
+		test.setTimeout(240_000);
+		await installTauriShim(page, { platform: "macos" });
+		await goToRightNow(page);
+		await articles(page)
+			.first()
+			.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
+	});
+
+	test("posts show their headlines, and discreet posts offer no link or button but their photo and Report", async ({
+		page,
+	}) => {
+		await expect(
+			page.locator(POST).first().getByRole("heading"),
+		).not.toBeEmpty();
+
+		const discreet = page.locator(DISCREET_POST);
+		await expect
+			.poll(
+				async () => {
+					await scrollFeedToBottom(page);
+					return discreet.count();
+				},
+				{ timeout: RIGHT_NOW_FEED_TIMEOUT },
+			)
+			.toBe(DEMO_DISCREET_POSTS);
+
+		for (const card of await discreet.all()) {
+			await expect(card.getByRole("heading")).not.toBeEmpty();
+			await expect(
+				card.getByRole("button", { name: "Report post" }),
+			).toHaveCount(1);
+			await expect(
+				card.getByRole("button", { name: NOT_REPORT_POST }),
+			).toHaveCount(0);
+			await expect(
+				card.getByRole("link", { name: NOT_OPEN_PHOTO }),
+			).toHaveCount(0);
+		}
+	});
+
+	test("only the feed scrolls, never the page around it", async ({
+		page,
+	}) => {
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						document.documentElement.scrollHeight -
+						document.documentElement.clientHeight,
+				),
+			)
+			.toBe(0);
+	});
+
+	test("sorting by Distance lists the closest posts first", async ({
+		page,
+	}) => {
+		expect(await nearestFirst(page)).toBe(false);
+
+		await sortByDistance(page);
+
+		await expect
+			.poll(() => nearestFirst(page), { timeout: RIGHT_NOW_FEED_TIMEOUT })
+			.toBe(true);
+	});
+
+	test("applying a filter shows the new feed from the top", async ({
+		page,
+	}) => {
+		await expect
+			.poll(() => feedScrollRange(page), {
+				timeout: RIGHT_NOW_FEED_TIMEOUT,
+			})
+			.toBeGreaterThan(SCROLLED_TOP);
+		await feedScroller(page).evaluate(
+			(scroller, top) => scroller.scrollTo({ top }),
+			SCROLLED_TOP,
+		);
+		await expect.poll(() => feedScrollTop(page)).toBe(SCROLLED_TOP);
+
+		const shownBefore = await articles(page).first().elementHandle();
+		if (shownBefore === null) throw new Error("the feed shows no post");
+
+		await sortByDistance(page);
+
+		await expect
+			.poll(() => shownBefore.evaluate((card) => card.isConnected), {
+				timeout: RIGHT_NOW_FEED_TIMEOUT,
+			})
+			.toBe(false);
+		await articles(page)
+			.first()
+			.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
+		await afterTwoFrames(page);
+		expect(await feedScrollRange(page)).toBeGreaterThan(SCROLLED_TOP);
+		expect(await feedScrollTop(page)).toBe(0);
+	});
+
+	test("the Hosting filter leaves only posts that are hosting", async ({
+		page,
+	}) => {
+		const unmarked = articles(page).filter({
+			hasNot: page.getByText("Hosting", { exact: true }),
+		});
+		await expect(unmarked.first()).toBeAttached();
+
+		const dialog = await openFilter(page, "Hosting");
+		await dialog.getByRole("switch", { name: "Filter by Hosting" }).check();
+		await dialog
+			.getByRole("radio", { name: "Hosting", exact: true })
+			.check();
+		await dialog.getByRole("button", { name: "Apply" }).click();
+
+		await expect
+			.poll(
+				async () => ({
+					shown: (await articles(page).count()) > 0,
+					unmarked: await unmarked.count(),
+				}),
+				{ timeout: RIGHT_NOW_FEED_TIMEOUT },
+			)
+			.toEqual({ shown: true, unmarked: 0 });
+	});
+
+	test("an age range nobody posts in shows the empty state, and Reset filters brings posts back", async ({
+		page,
+	}) => {
+		const dialog = await openFilter(page, "Age");
+		await dialog.getByRole("slider", { name: "Minimum Age" }).press("End");
+		await dialog.getByRole("button", { name: "Apply" }).click();
+
+		await expect(page.getByText("No Results")).toBeVisible({
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
+		await expect(articles(page)).toHaveCount(0);
+
+		await page.getByRole("button", { name: "Reset filters" }).click();
+
+		await expect(articles(page).first()).toBeVisible({
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
+		await expect(page.getByText("No Results")).toHaveCount(0);
+	});
+
+	test("returning from a profile keeps the feed's scroll offset", async ({
+		page,
+	}) => {
+		const card = page.locator(POST).nth(5);
+		await card.evaluate((node) => node.scrollIntoView({ block: "center" }));
+		const offset = await feedScrollTop(page);
+		expect(offset).toBeGreaterThan(0);
+
+		await card.getByRole("link").first().click();
+		await expect(page).toHaveURL(/\/profile\/\d+$/);
+
+		await page.goBack();
+		await expect(page).toHaveURL(/\/right-now$/);
+		await expect
+			.poll(() => feedScrollTop(page), {
+				timeout: RIGHT_NOW_FEED_TIMEOUT,
+			})
+			.toBe(offset);
+	});
+
+	test("a post photo opens in the lightbox, and Escape closes it in place", async ({
+		page,
+	}) => {
+		await serveImages(page, CHAT_MEDIA_HOST);
+
+		await page.getByRole("link", { name: OPEN_PHOTO }).first().click();
+		await expect(page.locator(LIGHTBOX)).toBeVisible({ timeout: 30_000 });
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						(window as { pswp?: { opener: { isOpen: boolean } } })
+							.pswp?.opener.isOpen,
+				),
+			)
+			.toBe(true);
+
+		await page.keyboard.press("Escape");
+
+		await expect(page.locator(LIGHTBOX)).toBeHidden();
+		await expect(page).toHaveURL(/\/right-now$/);
+	});
+});
+
+test.describe("a feed whose photos are cropped to square thumbnails", () => {
+	test("a portrait post photo opens in the lightbox at its own shape", async ({
+		page,
+	}) => {
+		test.setTimeout(240_000);
+		await installTauriShim(page, { platform: "macos" });
+		await serveRightNowPortraitPhotos(page);
+		await goToRightNow(page);
+		const photo = page.getByRole("link", { name: OPEN_PHOTO }).first();
+		await photo.waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
+		await expect
+			.poll(() => showsMedia(photo), {
+				message: "the square thumbnail shows",
+			})
+			.toBe(true);
+
+		await photo.click();
+
+		const lightbox = page.locator(LIGHTBOX);
+		await expect(lightbox).toBeVisible({ timeout: 30_000 });
+		await expect
+			.poll(() => heightPerWidth(lightbox.locator(LIGHTBOX_PHOTO)), {
+				message: "the full photo keeps its portrait shape",
+			})
+			.toBeCloseTo(PORTRAIT_HEIGHT_PER_WIDTH, 1);
+	});
+});
+
+test.describe("a feed whose first load fails", () => {
+	test.use({ baseURL: DEV_SERVER_URL });
+
+	test("shows the error, and Retry loads the posts", async ({ page }) => {
+		test.setTimeout(240_000);
+		await installTauriShim(page, { platform: "macos" });
+		await failDemoRequests(page, {
+			pathPrefix: "/v4/rightnow/feed",
+			times: 1,
+			status: 503,
+		});
+		await goToRightNow(page);
+
+		const retry = page.getByRole("button", { name: "Try again" });
+		await expect(retry).toBeVisible({ timeout: FIRST_ROUTE_COMPILE_MS });
+		expect(await articles(page).count()).toBe(0);
+
+		await retry.click();
+
+		await expect(articles(page).first()).toBeVisible({
+			timeout: RIGHT_NOW_FEED_TIMEOUT,
+		});
+		expect(await retry.count()).toBe(0);
+	});
+});

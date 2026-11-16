@@ -8,6 +8,7 @@
 	import UsersIcon from "phosphor-svelte/lib/UsersIcon";
 	import UsersThreeIcon from "phosphor-svelte/lib/UsersThreeIcon";
 
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		acceptNSFWPics,
 		ethnicities,
@@ -33,6 +34,8 @@
 	import ProfileHeading from "./ProfileHeading.svelte";
 	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
+	import ProfileRightNowPost from "./right-now-post/ProfileRightNowPost.svelte";
+	import RightNowBadge from "./RightNowBadge.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
 
 	let { profileState }: { profileState: ProfileState } = $props();
@@ -48,6 +51,7 @@
 		onlineUntil,
 		seen,
 		distance,
+		rightNow,
 		isNew,
 		sexualPosition,
 		height,
@@ -87,6 +91,7 @@
 				self={ourProfile}
 			/>
 			<Distance {distance} />
+			<RightNowBadge status={rightNow} />
 			<NewBadge {isNew} />
 		</div>
 		{#if sexualPosition !== null || height !== null || weight !== null || bodyType !== null}
@@ -97,11 +102,20 @@
 				<Height {height} {weight} {bodyType} />
 			</div>
 		{/if}
+		{#if profileState.rightNowPost !== null}
+			<ProfileRightNowPost
+				post={profileState.rightNowPost}
+				own={ourProfile}
+				{displayName}
+				onlineUntil={onlineUntil ?? null}
+				distance={distance ?? undefined}
+			/>
+		{/if}
 		<ProfileTags tags={profileTags} />
 		{#if aboutMe !== null}
 			<AboutMe>{aboutMe}</AboutMe>
 		{/if}
-		<ProfileSection title="Stats">
+		<ProfileSection title={t("common.profileSections.stats")}>
 			<Genders {genders} {pronouns} />
 			<LookupField
 				icon={UsersThreeIcon}
@@ -119,55 +133,55 @@
 				options={relationshipStatuses}
 			/>
 		</ProfileSection>
-		<ProfileSection title="Expectations">
+		<ProfileSection title={t("common.profileSections.expectations")}>
 			<LookupField
 				icon={UsersThreeIcon}
-				label="I'm Into"
+				label={t("profile.fields.imInto")}
 				value={tribesImInto}
 				options={tribes}
 			/>
 			<LookupField
 				icon={EyesIcon}
 				weight="fill"
-				label="Looking For"
+				label={t("profile.fields.lookingFor")}
 				value={lookingFor}
 				options={lookingForLabels}
 			/>
 			<LookupField
 				icon={HouseIcon}
-				label="Meet At"
+				label={t("profile.fields.meetAt")}
 				value={meetAt}
 				options={meetAtLabels}
 			/>
 			<LookupField
 				icon={CameraIcon}
-				label="NSFW Pics?"
+				label={t("profile.fields.acceptNsfwPics")}
 				value={nsfw}
 				options={acceptNSFWPics}
 			/>
 		</ProfileSection>
-		<ProfileSection title="Health">
+		<ProfileSection title={t("common.profileSections.health")}>
 			<LookupField
 				icon={HivStatusIcon}
-				label="HIV Status"
+				label={t("profile.fields.hivStatus")}
 				value={hivStatus}
 				options={hivStatusLabels}
 			/>
 			<LastTested lastTestedDate={lastTestedDateValue} />
 			<LookupField
 				icon={SyringeIcon}
-				label="Vaccinated for"
+				label={t("profile.fields.vaccinatedFor")}
 				value={vaccines}
 				options={vaccineLabels}
 			/>
 			<LookupField
 				icon={HeartbeatIcon}
-				label="Health Practices"
+				label={t("common.profileFields.healthPractices")}
 				value={sexualHealthValue}
 				options={healthPracticeLabels}
 			/>
 		</ProfileSection>
-		<ProfileSection title="Socials">
+		<ProfileSection title={t("common.profileSections.socials")}>
 			<Socials socials={socialNetworks} />
 		</ProfileSection>
 	</div>

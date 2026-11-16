@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { openExternalLink } = vi.hoisted(() => ({ openExternalLink: vi.fn() }));
 vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink }));
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import Message from "./Message.svelte";
@@ -65,10 +67,11 @@ beforeEach(() => {
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 });
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.useRealTimers();
 	vi.clearAllMocks();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("location messages", () => {
@@ -78,7 +81,9 @@ describe("location messages", () => {
 			renderLocation(isOut);
 
 			expect(screen.getByText("Location")).toBeTruthy();
-			expect(screen.getByText("51.50746, -0.12781")).toBeTruthy();
+			const coordinates = screen.getByText("51.50746, -0.12781");
+			expect(coordinates.getAttribute("translate")).toBe("no");
+			expect(coordinates.getAttribute("dir")).toBe("ltr");
 			const link = screen.getByRole("link", { name: LOCATION_NAME });
 			expect(link.getAttribute("href")).toBe(GEO_URL);
 			expect(link.contains(screen.getByText("Location"))).toBe(true);
@@ -210,5 +215,19 @@ describe("location messages", () => {
 		await vi.advanceTimersByTimeAsync(1_000);
 
 		expect(openExternalLink).not.toHaveBeenCalled();
+	});
+});
+
+describe("location message text", () => {
+	it("words its title and map link in the active locale", async () => {
+		renderLocation();
+		const title = screen.getByText("Location");
+		const openMap = screen.getByText("Open map");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(title.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(openMap.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(screen.getByText("51.50746, -0.12781")).toBeTruthy();
 	});
 });

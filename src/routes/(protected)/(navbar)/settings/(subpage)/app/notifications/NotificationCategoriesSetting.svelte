@@ -5,22 +5,22 @@
 	import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import SwitchField from "#lib/components/ui/switch-field/SwitchField.svelte";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 	import {
 		loadNotificationCategories,
 		notificationCategories,
 		toggleNotificationCategory,
 	} from "#lib/push/categories.svelte.ts";
-	import { pushFailures } from "#lib/push/error-copy.ts";
 	import {
 		notificationSettings,
 		offersDeliveryModes,
 	} from "#lib/push/notification-state.svelte.ts";
 	import type { PushCategoryName } from "#lib/push/types.ts";
 
-	const TITLES: Record<PushCategoryName, string> = {
-		messages: "New messages",
-		taps: "Received taps",
-	};
+	const titleKeys = {
+		messages: "settings.notifications.categories.messages",
+		taps: "settings.notifications.categories.taps",
+	} as const satisfies Record<PushCategoryName, PlainMessageKey>;
 
 	const saving = new SvelteSet<PushCategoryName>();
 
@@ -45,7 +45,10 @@
 			await toggleNotificationCategory({ category, enabled });
 		} catch (error) {
 			void loadNotificationCategories();
-			showErrorToast({ label: pushFailures.saveCategory, error });
+			showErrorToast({
+				label: t("settings.notifications.categories.errors.saveFailed"),
+				error,
+			});
 		} finally {
 			saving.delete(category);
 		}
@@ -56,7 +59,7 @@
 	{@const unavailable = inSlowMode && category === "taps"}
 	<div class="flex flex-col gap-1.5">
 		<SwitchField
-			title={TITLES[category]}
+			title={t(titleKeys[category])}
 			disabled={!notificationSettings.enabled ||
 				unavailable ||
 				saving.has(category)}
@@ -67,7 +70,7 @@
 		/>
 		{#if unavailable}
 			<p class="px-4 text-sm text-muted-foreground">
-				Not available in slow mode
+				{t("settings.notifications.categories.unavailableInSlowMode")}
 			</p>
 		{/if}
 	</div>

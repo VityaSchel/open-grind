@@ -8,7 +8,7 @@ export function gifTile(
 		id,
 		tileUrl: `https://media.giphy.com/media/${id}/200w.webp`,
 		stillTileUrl: `https://media.giphy.com/media/${id}/200_s.gif`,
-		alt,
+		alt: { kind: "title", title: alt },
 		body: {
 			id,
 			urlPath: `https://media.giphy.com/media/${id}/200.gif`,

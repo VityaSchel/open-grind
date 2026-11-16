@@ -19,17 +19,9 @@ const moderatedFieldKeys = [
 	"pronouns_display",
 ] as const;
 
-const moderatedFieldLabels: Record<
-	(typeof moderatedFieldKeys)[number],
-	string
-> = {
-	display_name: "Display name",
-	about_me: "About me",
-	gender_display: "Gender",
-	pronouns_display: "Pronouns",
-};
+export type ModeratedFieldKey = (typeof moderatedFieldKeys)[number];
 
-export type ModeratedField = { field: string; terms: string[] };
+export type ModeratedField = { field: ModeratedFieldKey; terms: string[] };
 
 export class ProfileModerationError extends Error {
 	rejected: ModeratedField[];
@@ -51,9 +43,6 @@ export function readBannedTerms(body: string): ModeratedField[] | null {
 	const result = bannedTermsErrorSchema.safeParse(parsed);
 	if (!result.success) return null;
 	return moderatedFieldKeys
-		.map((key) => ({
-			field: moderatedFieldLabels[key],
-			terms: result.data[key]?.terms ?? [],
-		}))
+		.map((field) => ({ field, terms: result.data[field]?.terms ?? [] }))
 		.filter((entry) => entry.terms.length > 0);
 }

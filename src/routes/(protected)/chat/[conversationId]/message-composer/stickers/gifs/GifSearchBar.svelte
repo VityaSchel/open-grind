@@ -3,6 +3,7 @@
 	import XIcon from "phosphor-svelte/lib/XIcon";
 
 	import * as InputGroup from "#lib/components/ui/input-group/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { GIF_INPUT_MAX_LENGTH } from "./gif-feed.svelte";
 
 	let {
@@ -43,8 +44,8 @@
 				type="search"
 				enterkeyhint="search"
 				maxlength={GIF_INPUT_MAX_LENGTH}
-				placeholder="Search GIFs or paste GIPHY link"
-				aria-label="Search GIFs or paste GIPHY link"
+				placeholder={t("chat.composer.stickers.gifs.search")}
+				aria-label={t("chat.composer.stickers.gifs.search")}
 				onfocus={() => {
 					focused = true;
 					onFocus?.();
@@ -66,7 +67,9 @@
 				<InputGroup.Addon align="inline-end">
 					<InputGroup.Button
 						size="icon-xs"
-						aria-label="Clear search"
+						aria-label={t(
+							"chat.composer.stickers.gifs.a11y.clearSearch",
+						)}
 						onclick={() => {
 							onInput("");
 							input?.focus();

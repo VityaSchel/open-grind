@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "#lib/i18n/index.ts";
 	import { receiveKeyboardMedia } from "#lib/platform/keyboard-media.svelte.ts";
 	import { receiveMedia } from "#lib/platform/media-intake.svelte.ts";
 	import type { PickedMedia } from "#lib/platform/media-picker.ts";
@@ -17,7 +18,7 @@
 	receiveMedia(() =>
 		composer().disabled
 			? null
-			: { label: "Drop to send", videos: true, receive },
+			: { label: t("chat.composer.dropToSend"), videos: true, receive },
 	);
 
 	receiveKeyboardMedia(() =>

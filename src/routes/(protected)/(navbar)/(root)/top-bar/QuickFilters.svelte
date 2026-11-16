@@ -2,13 +2,13 @@
 	import SlidersHorizontalIcon from "phosphor-svelte/lib/SlidersHorizontalIcon";
 
 	import { genderFilterFlag } from "#lib/api/feature-flags-state.svelte.ts";
+	import AgeQuickFilter from "#lib/components/filters/age/AgeQuickFilter.svelte";
+	import PositionQuickFilter from "#lib/components/filters/position/PositionQuickFilter.svelte";
 	import QuickFilterButton from "#lib/components/filters/QuickFilterButton.svelte";
 	import { buttonVariants } from "#lib/components/ui/button/index.ts";
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
-	import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
-	import AgeQuickFilter from "./AgeQuickFilter.svelte";
-	import PositionQuickFilter from "./PositionQuickFilter.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { sentFilterKeysWithoutQuickFilter } from "./quick-filters";
 
 	let {
@@ -18,7 +18,7 @@
 
 	const TOGGLE_FILTER_KEYS = ["isOnline", "isRightNow", "isFresh"] as const;
 
-	const filters = $derived(gridState.filters.value ?? defaultFilters);
+	const filters = $derived(gridState.filters.current);
 	const { ageEnabled, positionEnabled } = $derived(filters);
 	const sheetOnlyFiltersSent = $derived(
 		sentFilterKeysWithoutQuickFilter({
@@ -30,19 +30,19 @@
 
 <QuickFilterButton
 	active={sheetOnlyFiltersSent}
-	label="All filters"
+	label={t("browse.quickFilters.a11y.allFilters")}
 	onclick={() => (openFilters.all = true)}
 >
 	<SlidersHorizontalIcon />
 </QuickFilterButton>
 <QuickFilterButton active={ageEnabled} onclick={() => (openFilters.age = true)}>
-	Age
+	{t("common.filters.age.label")}
 </QuickFilterButton>
 <QuickFilterButton
 	active={positionEnabled}
 	onclick={() => (openFilters.position = true)}
 >
-	Position
+	{t("common.filters.position.label")}
 </QuickFilterButton>
 <ToggleGroup.Root
 	type="multiple"
@@ -64,21 +64,24 @@
 		value="isOnline"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Online
+		{t("common.filters.online")}
 	</ToggleGroup.Item>
 	<ToggleGroup.Item
 		value="isRightNow"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Right now
+		{t("common.filters.rightNow")}
 	</ToggleGroup.Item>
 	<ToggleGroup.Item
 		value="isFresh"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Fresh
+		{t("common.filters.fresh")}
 	</ToggleGroup.Item>
 </ToggleGroup.Root>
 
-<AgeQuickFilter bind:open={openFilters.age} />
-<PositionQuickFilter bind:open={openFilters.position} />
+<AgeQuickFilter bind:open={openFilters.age} filters={gridState.filters} />
+<PositionQuickFilter
+	bind:open={openFilters.position}
+	filters={gridState.filters}
+/>

@@ -93,4 +93,22 @@ describe("ImageCarouselItem", () => {
 		expect(container.querySelector("img")).not.toBeNull();
 		expect(screen.queryByRole("status")).not.toBeNull();
 	});
+
+	it("keeps a covered photo out of the lightbox and links to the mature content setting", () => {
+		const { container } = render(ImageCarouselItem, {
+			props: { ...PROPS, covered: true },
+		});
+
+		expect(container.querySelector(".item[href]")).toBeNull();
+		expect(
+			screen
+				.getByRole("group", { name: PROPS.label })
+				.contains(
+					screen.getByRole("link", { name: "Show mature content" }),
+				),
+		).toBe(true);
+		expect(container.querySelector("img")?.getAttribute("src")).toBe(
+			PROPS.src,
+		);
+	});
 });

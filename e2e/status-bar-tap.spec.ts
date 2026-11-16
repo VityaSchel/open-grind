@@ -8,7 +8,7 @@ import {
 	openGrid,
 } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	listScroller,
 	MESSAGE,
 	openConversation,
@@ -199,7 +199,7 @@ test("a status-bar tap leaves the inbox be under a conversation resting at its t
 	await page.waitForTimeout(600);
 	expect(await scrollTop(inbox)).toBe(inboxTop);
 
-	await backToChats(page).click();
+	await backToInbox(page).click();
 	await expect(sheet(page)).toHaveCount(0);
 	expect(await scrollTop(inbox)).toBe(inboxTop);
 	await tapStatusBar(page);

@@ -12,6 +12,7 @@
 	import MediaSheetTabBar from "#lib/components/media-sheet/MediaSheetTabBar.svelte";
 	import * as Drawer from "#lib/components/ui/drawer/index.ts";
 	import * as Tabs from "#lib/components/ui/tabs/index.ts";
+	import { type MessageKey, t } from "#lib/i18n/index.ts";
 	import { draftFromMessage } from "#lib/model/messaging/messages.ts";
 	import { giphyConsented } from "../../giphy/giphy-consent";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
@@ -26,10 +27,10 @@
 		onCloseAutoFocus,
 	}: { open: boolean; onCloseAutoFocus?: (event: Event) => void } = $props();
 
-	const SEND_LABELS: Record<StickerTab, string> = {
-		gifs: "Send GIF",
-		gaymoji: "Send Gaymoji",
-	};
+	const SEND_LABELS = {
+		gifs: "chat.composer.stickers.actions.sendGif",
+		gaymoji: "chat.composer.stickers.actions.sendGaymoji",
+	} as const satisfies Record<StickerTab, MessageKey>;
 
 	const composer = getMessageComposerContext();
 
@@ -79,7 +80,9 @@
 </script>
 
 <MediaSheet bind:open {fullsize} {onCloseAutoFocus}>
-	<Drawer.Title class="sr-only">GIFs and stickers</Drawer.Title>
+	<Drawer.Title class="sr-only">
+		{t("chat.composer.stickers.a11y.title")}
+	</Drawer.Title>
 	<Tabs.Root
 		bind:value={() => selectedTab, selectTab}
 		class={["min-h-0 gap-0", { "h-full": fullsize }]}
@@ -112,7 +115,7 @@
 
 		<MediaSheetActions
 			aboveTabBar
-			label={SEND_LABELS[selectedTab]}
+			label={t(SEND_LABELS[selectedTab])}
 			count={picked === undefined ? 0 : 1}
 			showCount={false}
 			onSubmit={submit}
@@ -125,11 +128,11 @@
 		>
 			<MediaSheetTab value="gifs">
 				<GifIcon weight="fill" class="size-5" />
-				GIFs
+				{t("chat.composer.stickers.tabs.gifs")}
 			</MediaSheetTab>
 			<MediaSheetTab value="gaymoji">
 				<SmileyIcon class="size-5" />
-				Gaymoji
+				{t("chat.composer.stickers.tabs.gaymoji")}
 			</MediaSheetTab>
 		</MediaSheetTabBar>
 	</Tabs.Root>
@@ -139,12 +142,12 @@
 	<div data-slot="gif-attribution" class="w-20 max-w-full">
 		<img
 			src={poweredByGiphy}
-			alt="Powered by GIPHY"
+			alt={t("chat.composer.stickers.poweredByGiphy")}
 			class="hidden w-full dark:block"
 		/>
 		<img
 			src={poweredByGiphyBoxed}
-			alt="Powered by GIPHY"
+			alt={t("chat.composer.stickers.poweredByGiphy")}
 			class="block w-full dark:hidden"
 		/>
 	</div>

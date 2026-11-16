@@ -52,7 +52,7 @@ function renderBar({ ourProfile = false }: { ourProfile?: boolean } = {}) {
 			onFavorite,
 		},
 	});
-	const nav = screen.getByRole("navigation", { name: "Profile actions" });
+	const nav = screen.getByRole("navigation", { name: "Profile Actions" });
 	return { nav, onFavorite };
 }
 

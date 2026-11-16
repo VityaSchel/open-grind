@@ -13,7 +13,7 @@ import {
 	openGrid,
 } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	MESSAGE,
 	openConversation,
 	openInbox,
@@ -243,10 +243,11 @@ test.describe("on an iPhone in landscape", () => {
 			width: IPHONE_LANDSCAPE.width,
 			label: "the nav bar",
 		});
-		await expectInside(mainNavigation.locator('[data-scroll-intent="x"]'), {
-			safe,
-			label: "the nav bar's tab scroller",
-		});
+		const navigationLinks = mainNavigation.getByRole("link");
+		await expect(navigationLinks).toHaveCount(5);
+		for (const link of await navigationLinks.all()) {
+			await expectInside(link, { safe, label: "a nav bar link" });
+		}
 		await expectEdgeToEdge(
 			page
 				.locator("[data-screen-chrome]")
@@ -439,7 +440,7 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		await openConversation(page);
 		await expect(page.locator(LIVE_STACK.sheet)).toHaveCount(1);
 
-		expect((await spanOf(backToChats(page))).left).toBeGreaterThan(
+		expect((await spanOf(backToInbox(page))).left).toBeGreaterThan(
 			safe.left - 0.5,
 		);
 		await expectInside(page.locator(COMPOSER), {
@@ -455,7 +456,7 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		await installTauriShim(page, { platform: "android" });
 		await page.goto("/settings");
 		const signOut = page.getByRole("button", {
-			name: "Sign Out",
+			name: "Sign out",
 			exact: true,
 		});
 		await signOut.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
@@ -480,7 +481,7 @@ test.describe("on a made-up narrow window beside a cutout", () => {
 		await startOnIos(page, NARROW_WINDOW_INSETS);
 		await page.goto("/settings/app/notifications");
 		const message = page.getByText(
-			"Notifications are not supported on this platform yet.",
+			"Notifications aren’t supported on this platform yet.",
 		);
 		await message.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 		await stackSettled(page);

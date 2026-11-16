@@ -13,35 +13,50 @@ import { defineConfig } from "vitest/config";
 const host = process.env.TAURI_DEV_HOST;
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const projectVersion = JSON.parse(
-	readFileSync(path.join(root, "package.json"), "utf-8"),
-).version;
-const cargoMetadata = JSON.parse(
-	execSync("cargo metadata --format-version 1", {
-		cwd: path.join(root, "src-tauri"),
-		maxBuffer: 16 * 1024 * 1024,
-	}),
-);
-const grindrManifest = cargoMetadata.packages.find(
-	(p) => p.name === "grindr",
-)?.manifest_path;
-if (!grindrManifest)
-	throw new Error("grindr crate not found in cargo metadata");
-const headersRs = readFileSync(
-	path.join(path.dirname(grindrManifest), "src", "headers.rs"),
-	"utf-8",
-);
-function scrapeHeaderConst(name) {
-	const match = headersRs.match(
-		new RegExp(`const ${name}: &str = "([^"]+)";`),
+
+const SCREENSHOT_VERSION_NAME = "OpenGrind/0.0.0\ngrindr3/0.0.0;0";
+
+function releaseVersionName() {
+	const projectVersion = JSON.parse(
+		readFileSync(path.join(root, "package.json"), "utf-8"),
+	).version;
+	const cargoMetadata = JSON.parse(
+		execSync("cargo metadata --format-version 1", {
+			cwd: path.join(root, "src-tauri"),
+			maxBuffer: 16 * 1024 * 1024,
+		}),
 	);
-	if (!match)
-		throw new Error(`${name} not found in the grindr crate headers`);
-	return match[1];
+	const grindrManifest = cargoMetadata.packages.find(
+		(p) => p.name === "grindr",
+	)?.manifest_path;
+	if (!grindrManifest)
+		throw new Error("grindr crate not found in cargo metadata");
+	const headersRs = readFileSync(
+		path.join(path.dirname(grindrManifest), "src", "headers.rs"),
+		"utf-8",
+	);
+	function scrapeHeaderConst(name) {
+		const match = headersRs.match(
+			new RegExp(`const ${name}: &str = "([^"]+)";`),
+		);
+		if (!match)
+			throw new Error(`${name} not found in the grindr crate headers`);
+		return match[1];
+	}
+	const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
+	const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
+	return `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`;
 }
-const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
-const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
-const versionName = `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`;
+
+function versionName() {
+	if (process.env.OPEN_GRIND_SCREENSHOTS !== "1") return releaseVersionName();
+	if (process.env.OPEN_GRIND_DEMO !== "1") {
+		throw new Error(
+			"OPEN_GRIND_SCREENSHOTS=1 only builds the demo, so it needs OPEN_GRIND_DEMO=1",
+		);
+	}
+	return SCREENSHOT_VERSION_NAME;
+}
 
 const releaseTreeShakesDemo = {
 	name: "open-grind:release-tree-shakes-demo",
@@ -60,7 +75,7 @@ export default defineConfig(async ({ command }) => ({
 			preprocess: vitePreprocess(),
 			compilerOptions: { experimental: { async: true } },
 			adapter: adapter({ fallback: "index.html" }),
-			version: { name: versionName, pollInterval: 0 },
+			version: { name: versionName(), pollInterval: 0 },
 		}),
 		tailwindcss(),
 		releaseTreeShakesDemo,
@@ -78,6 +93,11 @@ export default defineConfig(async ({ command }) => ({
 		__DEMO__: JSON.stringify(
 			!process.env.VITEST && process.env.OPEN_GRIND_DEMO === "1",
 		),
+		__SCREENSHOTS__: JSON.stringify(
+			!process.env.VITEST &&
+				process.env.OPEN_GRIND_DEMO === "1" &&
+				process.env.OPEN_GRIND_SCREENSHOTS === "1",
+		),
 	},
 
 	environments: {
@@ -86,7 +106,11 @@ export default defineConfig(async ({ command }) => ({
 				rolldownOptions: {
 					output: {
 						minify: {
-							compress: { dropConsole: command === "build" },
+							compress: {
+								dropConsole:
+									command === "build" &&
+									process.env.OPEN_GRIND_SCREENSHOTS !== "1",
+							},
 						},
 					},
 				},
@@ -124,6 +148,8 @@ export default defineConfig(async ({ command }) => ({
 			"src/**/*.test.ts",
 			"e2e-live/support/**/*.test.ts",
 			"scripts/credits/**/*.test.ts",
+			"scripts/i18n/**/*.test.ts",
+			"scripts/i18n-screenshots/**/*.test.ts",
 		],
 		setupFiles: ["src/test-setup.ts"],
 		// tinykeys caches navigator.platform at load, so vi.resetModules() cannot

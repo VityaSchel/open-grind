@@ -8,6 +8,8 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import SelectionOverlay from "#lib/components/shared/SelectionOverlay.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 	import {
@@ -58,7 +60,10 @@
 			variant="outline"
 			class="min-w-0 media-pill backdrop-filter-(--bd-chip)"
 		>
-			<span class="truncate font-semibold">
+			<span
+				class="truncate font-semibold"
+				translate={album.albumName ? "no" : undefined}
+			>
 				{albumDisplayName(album.albumName)}
 			</span>
 		</Badge>
@@ -73,7 +78,7 @@
 				variant="outline"
 				class="border-white/10 bg-muted/80"
 			>
-				Shared
+				{t("media.album.tile.shared")}
 			</Badge>
 		</div>
 	{/if}
@@ -82,7 +87,7 @@
 	>
 		<div data-slot="album-count-badge" class="px-1.5">
 			<ImagesIcon weight="fill" class="size-3.5" />
-			<span aria-hidden="true">{readyMedia.count}</span>
+			<span aria-hidden="true">{formatInteger(readyMedia.count)}</span>
 			<span class="sr-only">
 				{albumItemCountLabel(readyMedia.count)}
 			</span>
@@ -90,7 +95,9 @@
 		{#if readyMedia.hasVideo}
 			<div data-slot="album-video-badge">
 				<VideoIcon weight="fill" class="size-3.5" />
-				<span class="sr-only">contains video</span>
+				<span class="sr-only">
+					{t("media.album.tile.a11y.containsVideo")}
+				</span>
 			</div>
 		{/if}
 	</div>
@@ -102,7 +109,9 @@
 			class="absolute inset-0 z-2 flex items-center justify-center rounded-[inherit] bg-black/60 text-white"
 		>
 			<LockSimpleIcon weight="fill" class="size-6" />
-			<span class="sr-only">can't be shared</span>
+			<span class="sr-only">
+				{t("media.album.tile.a11y.cantBeShared")}
+			</span>
 		</div>
 	{/if}
 {/snippet}

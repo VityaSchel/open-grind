@@ -7,6 +7,8 @@ const TOP_GLIDE_MS = 400;
 
 const glidesToTop = new WeakMap<HTMLElement, () => void>();
 
+export const TOP_SLOP_PX = 16;
+
 export function hasScrollableOverflowY(el: Element): boolean {
 	const { overflowY } = getComputedStyle(el);
 	return overflowY === "auto" || overflowY === "scroll";

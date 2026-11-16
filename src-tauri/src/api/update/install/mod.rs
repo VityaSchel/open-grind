@@ -157,8 +157,11 @@ mod pins {
 	use crate::pin_support::{
 		addon_gate_verdicts, assert_rejections_classify_as, braced_block,
 		camel_case, is_identifier, kotlin_constant, kotlin_package,
-		source_tokens, spaced_match, squashed, ADDON_GATE, MANIFEST,
+		manifest_element, source_tokens, spaced_match, squashed, xml_attribute,
+		ADDON_GATE, MANIFEST,
 	};
+
+	mod addon_titles;
 
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
 	const LINUX_BUILD: &str = include_str!("../../../../../ci/linux/build.sh");
@@ -216,14 +219,6 @@ mod pins {
 	const MINT_TOKEN_PERMISSION: &str =
 		"org.opengrind.recaptcha.permission.MINT_TOKEN";
 
-	const ADDON_NAMES: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/addon/AddonNames.kt"
-	);
-
-	const ANDROID_STRINGS: &str = include_str!(
-		"../../../../gen/android/app/src/main/res/values/strings.xml"
-	);
-
 	const SIGNING_CERTIFICATES: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/addon/PackageSigningCertificates.kt"
 	);
@@ -259,32 +254,6 @@ mod pins {
 			tag.starts_with(|c: char| c.is_ascii_alphabetic())
 				.then_some((tag, element))
 		})
-	}
-
-	fn xml_attribute<'a>(element: &'a str, name: &str) -> Option<&'a str> {
-		let assignment = format!("{name}=\"");
-		element.match_indices(&assignment).find_map(|(at, _)| {
-			let value = &element[at + assignment.len()..];
-			element[..at]
-				.ends_with(char::is_whitespace)
-				.then(|| value.split('"').next().unwrap_or_default())
-		})
-	}
-
-	fn manifest_element(tag: &str, name: &str) -> &'static str {
-		let opening = format!("<{tag}");
-		let named = format!("android:name=\"{name}\"");
-		MANIFEST
-			.match_indices(&opening)
-			.map(|(at, _)| {
-				let end =
-					MANIFEST[at..].find('>').map_or(MANIFEST.len(), |i| at + i);
-				&MANIFEST[at..end]
-			})
-			.find(|element| element.contains(&named))
-			.unwrap_or_else(|| {
-				panic!("the manifest has no <{tag}> named {name}")
-			})
 	}
 
 	fn gate_verdicts() -> Vec<String> {
@@ -816,45 +785,6 @@ mod pins {
 			expected,
 			"install outcomes are routed by COMPONENT_PACKAGE, so it must name every component's install target"
 		);
-	}
-
-	#[test]
-	fn every_addon_is_named_the_same_in_the_app_and_in_its_download_notification(
-	) {
-		use super::super::component;
-
-		let names = components_ts_table("ADDON_NAME");
-		let mut addons: Vec<&str> = component::ALL
-			.iter()
-			.filter(|component| !component.is_self())
-			.map(|component| component.key)
-			.collect();
-		addons.sort_unstable();
-		assert_eq!(
-			names
-				.iter()
-				.map(|(key, _)| key.as_str())
-				.collect::<Vec<_>>(),
-			addons,
-			"ADDON_NAME must name every add-on the component table knows"
-		);
-
-		for (key, name) in names {
-			let resource = format!("addon_name_{}", key.replace('-', "_"));
-			assert!(
-				squashed(ANDROID_STRINGS).contains(&squashed(&format!(
-					"<string name=\"{resource}\">{name}</string>"
-				))),
-				"strings.xml {resource} does not match ADDON_NAME, so the download notification names the add-on differently from the rest of the app"
-			);
-			let package = component::by_key(&key).unwrap().install_target();
-			assert!(
-				squashed(ADDON_NAMES).contains(&squashed(&format!(
-					"\"{package}\"->R.string.{resource}"
-				))),
-				"AddonNames.kt does not map {package} to {resource}"
-			);
-		}
 	}
 
 	#[test]

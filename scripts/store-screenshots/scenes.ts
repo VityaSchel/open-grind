@@ -110,7 +110,7 @@ async function openFilters(page: Page): Promise<void> {
 	const sheet = page.getByRole("dialog");
 	await sheet.getByRole("button", { name: "Apply" }).waitFor();
 	await sheet.getByRole("checkbox", { name: "Online", exact: true }).click();
-	await setMinimumAge(sheet.getByRole("slider", { name: "Minimum age" }));
+	await setMinimumAge(sheet.getByRole("slider", { name: "Minimum Age" }));
 	await sheet.getByRole("button", { name: "Versatile", exact: true }).click();
 	await sheet.getByRole("checkbox", { name: "Tags" }).click();
 	await sheet.getByRole("button", { name: "Fitness", exact: true }).click();
@@ -130,7 +130,7 @@ async function openPabloProfile(page: Page): Promise<void> {
 	const stats = page.getByText("Stats", { exact: true });
 	await visit({ page, path: `/profile/${PABLO_PROFILE_ID}`, ready: stats });
 	const composer = page.locator("nav", {
-		has: page.getByRole("link", { name: "Write a message..." }),
+		has: page.getByRole("link", { name: "Write a message…" }),
 	});
 	const [statsBox, composerBox] = await Promise.all([
 		layoutBox(stats),

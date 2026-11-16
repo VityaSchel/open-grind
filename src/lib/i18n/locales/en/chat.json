@@ -1,0 +1,354 @@
+{
+	"layout": {
+		"selectConversation": "Select a conversation to start chatting"
+	},
+	"messagePreview": {
+		"album": "Album",
+		"albumReaction": "Reacted to an album",
+		"expiringPhoto": "Expiring photo",
+		"expiringVideo": "Expiring video",
+		"photo": "Photo",
+		"photoReply": "Replied to a photo",
+		"unsent": "Unsent message",
+		"voiceMessage": "Voice message",
+		"video": "Video",
+		"videoCall": "Video call",
+		"gaymoji": "Gaymoji",
+		"gif": "GIF",
+		"location": "Location",
+		"profile": "Profile",
+		"rightNow": "Right Now",
+		"message": "Message"
+	},
+	"notification": {
+		"message": "Sent you a message",
+		"picture": "Sent you a picture",
+		"expiringImage": "Sent you an expiring image",
+		"album": "Shared their album",
+		"albumReaction": "Reacted to your album",
+		"audio": "Sent you an audio message",
+		"video": "Sent you a video",
+		"gaymoji": "Sent you a Gaymoji",
+		"gif": "Sent you a GIF",
+		"location": "Sent you their location",
+		"you": "You"
+	},
+	"conversation": {
+		"bypassReason": {
+			"expiringPhotoLimit": "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
+			"unsend": "Unsending a message requires a Grindr subscription."
+		},
+		"navBar": {
+			"a11y": {
+				"navigation": "Conversation",
+				"back": "Back to Inbox"
+			},
+			"distanceUnknown": "Distance unknown"
+		},
+		"errors": {
+			"loadFailed": "Couldn’t load conversation",
+			"refreshFailed": "Couldn’t refresh messages",
+			"loadMoreFailed": "Couldn’t load more messages"
+		},
+		"unavailable": "Conversation is no longer available"
+	},
+	"messages": {
+		"errors": {
+			"unsendFailed": "Couldn’t unsend message",
+			"deleteFailed": "Couldn’t delete message",
+			"reactFailed": "Couldn’t react to message"
+		},
+		"scrollToBottomButton": {
+			"a11y": {
+				"label": "Scroll to newest messages"
+			}
+		}
+	},
+	"message": {
+		"a11y": {
+			"actions": "Message actions"
+		},
+		"status": {
+			"sending": "Sending…",
+			"notSent": "Not sent",
+			"readAt": "Read {{time}}",
+			"sentAt": "Sent {{time}}"
+		},
+		"contextMenu": {
+			"doubleTapToReact": "Double tap to <fireIcon>react with fire</fireIcon>",
+			"a11y": {
+				"reactWithFire": "React with fire"
+			},
+			"reply": "Reply",
+			"copy": "Copy message",
+			"copied": "Message copied to clipboard",
+			"deleteForMe": "Delete for me",
+			"unsend": "Unsend message",
+			"report": "Report"
+		},
+		"reaction": {
+			"a11y": {
+				"fire": "Fire reaction"
+			}
+		},
+		"albumContent": {
+			"a11y": {
+				"openReplied": "Open replied album content",
+				"openReacted": "Open reacted album content",
+				"unavailable": "Album content unavailable"
+			}
+		},
+		"profilePhotoReply": {
+			"a11y": {
+				"open": "Open replied profile photo",
+				"photo": "Replied profile photo"
+			},
+			"errors": {
+				"openFailed": "Couldn’t open profile photo"
+			}
+		},
+		"unsent": "Message unsent",
+		"unsupported": "Unsupported message type: {{type}}",
+		"expiringImage": {
+			"expired": "Expired photo",
+			"errors": {
+				"loadFailed": "Couldn’t load expiring photo",
+				"openFailed": "Couldn’t open expiring photo"
+			}
+		},
+		"video": {
+			"a11y": {
+				"play": "Play expiring video"
+			},
+			"errors": {
+				"loadFailed": "Couldn’t load expiring video",
+				"openFailed": "Couldn’t open expiring video"
+			}
+		},
+		"gif": {
+			"fromGiphy": "GIF from GIPHY",
+			"tapToLoad": "Tap to load",
+			"clickToLoad": "Click to load"
+		},
+		"location": {
+			"title": "Location",
+			"openMap": "Open map"
+		}
+	},
+	"conversations": {
+		"a11y": {
+			"loadingMore": "Loading more conversations"
+		},
+		"errors": {
+			"refreshFailed": "Couldn’t refresh conversations",
+			"syncFailed": "Couldn’t update the inbox",
+			"markReadFailed": "Couldn’t mark conversation as read",
+			"pinFailed_one": "Couldn’t pin conversation",
+			"pinFailed_other": "Couldn’t pin {{count}} conversations",
+			"unpinFailed_one": "Couldn’t unpin conversation",
+			"unpinFailed_other": "Couldn’t unpin {{count}} conversations",
+			"muteFailed_one": "Couldn’t mute conversation",
+			"muteFailed_other": "Couldn’t mute {{count}} conversations",
+			"unmuteFailed_one": "Couldn’t unmute conversation",
+			"unmuteFailed_other": "Couldn’t unmute {{count}} conversations",
+			"deleteFailed_one": "Couldn’t delete conversation",
+			"deleteFailed_other": "Couldn’t delete {{count}} conversations",
+			"loadMoreFailed": "Couldn’t load more conversations"
+		},
+		"empty": {
+			"title": "No Conversations Yet",
+			"description": "Browse <gridLink>Grid</gridLink> to find people to chat with.",
+			"filteredDescription": "No conversations match these filters."
+		},
+		"row": {
+			"draft": "<draftPrefix>Draft:</draftPrefix> {{draft}}",
+			"previewUnavailable": "Preview not available",
+			"actions": {
+				"pin": "Pin",
+				"unpin": "Unpin",
+				"mute": "Mute",
+				"unmute": "Unmute"
+			}
+		},
+		"selectionBar": {
+			"a11y": {
+				"navigation": "Selection",
+				"exit": "Exit selection",
+				"actions": "Selection actions"
+			},
+			"selected_one": "{{count}} selected",
+			"selected_other": "{{count}} selected",
+			"actions": {
+				"pin": "Pin selected",
+				"unpin": "Unpin selected",
+				"mute": "Mute selected",
+				"unmute": "Unmute selected",
+				"delete": "Delete selected"
+			}
+		}
+	},
+	"deleteConversations": {
+		"one": {
+			"title": "Delete conversation?",
+			"description": "This conversation will be deleted for you only. This can’t be undone."
+		},
+		"many": {
+			"title_one": "Delete {{count}} conversation?",
+			"title_other": "Delete {{count}} conversations?",
+			"description_one": "These conversations will be deleted for you only. This can’t be undone.",
+			"description_other": "These conversations will be deleted for you only. This can’t be undone."
+		}
+	},
+	"filters": {
+		"unread": "Unread",
+		"a11y": {
+			"favoritesOnly": "Favorites Only"
+		}
+	},
+	"composer": {
+		"errors": {
+			"sendFailed": "Couldn’t send message"
+		},
+		"dropToSend": "Drop to send",
+		"replyPreview": {
+			"a11y": {
+				"cancel": "Cancel reply"
+			}
+		},
+		"a11y": {
+			"send": "Send message"
+		},
+		"attachments": {
+			"a11y": {
+				"add": "Add attachment",
+				"title": "Attachments"
+			},
+			"tabs": {
+				"media": "Media",
+				"albums": "Albums",
+				"location": "Location"
+			},
+			"expiring": {
+				"off": "Off",
+				"a11y": {
+					"toggle_one": "Set photo as expiring after {{count}} second",
+					"toggle_other": "Set photo as expiring after {{count}} seconds"
+				}
+			},
+			"actions": {
+				"send": "Send",
+				"share": "Share",
+				"unshare": "Unshare",
+				"sendLocation": "Send location"
+			},
+			"media": {
+				"empty": {
+					"title": "No Media Sent Yet"
+				},
+				"errors": {
+					"uploadFailed": "Couldn’t upload photo or video",
+					"openPickerFailed": "Couldn’t open the picker"
+				},
+				"sent": "Sent"
+			},
+			"albums": {
+				"empty": {
+					"title": "No Albums Yet",
+					"description": "Albums you create appear here, ready to share."
+				}
+			},
+			"location": {
+				"a11y": {
+					"description": "Drag the map to place the pin on the location you want to share."
+				}
+			}
+		},
+		"stickers": {
+			"a11y": {
+				"open": "GIFs and stickers",
+				"title": "GIFs and Stickers"
+			},
+			"tabs": {
+				"gifs": "GIFs",
+				"gaymoji": "Gaymoji"
+			},
+			"actions": {
+				"sendGif": "Send GIF",
+				"sendGaymoji": "Send Gaymoji"
+			},
+			"poweredByGiphy": "Powered by GIPHY",
+			"gifs": {
+				"search": "Search GIFs or paste GIPHY link…",
+				"empty": "No GIFs Found",
+				"linkedGif": "GIF from a GIPHY link",
+				"a11y": {
+					"clearSearch": "Clear search",
+					"loadingMore": "Loading more GIFs"
+				},
+				"errors": {
+					"loadFailed": "Couldn’t load GIFs",
+					"loadMoreFailed": "Couldn’t load more GIFs"
+				}
+			},
+			"gaymoji": {
+				"a11y": {
+					"categories": "Gaymoji Categories"
+				},
+				"sections": {
+					"wenChing": "Wen Ching",
+					"datingAndSex": "Dating & Sex",
+					"body": "Body",
+					"profile": "Profile",
+					"holidays": "Holidays",
+					"objects": "Objects",
+					"mood": "Mood",
+					"other": "Other"
+				},
+				"errors": {
+					"loadFailed": "Couldn’t load Gaymoji"
+				}
+			}
+		},
+		"voiceMessage": {
+			"a11y": {
+				"record": "Record voice message"
+			},
+			"unimplemented": "Voice messages aren’t implemented yet. Follow the progress in {{issueLink}}."
+		},
+		"sendMedia": {
+			"a11y": {
+				"title": {
+					"photo": "Preview of the photo to send",
+					"video": "Preview of the video to send",
+					"photos_one": "Preview of {{count}} photo to send",
+					"photos_other": "Preview of {{count}} photos to send",
+					"videos_one": "Preview of {{count}} video to send",
+					"videos_other": "Preview of {{count}} videos to send",
+					"photosAndVideos_one": "Preview of {{count}} photos and videos to send",
+					"photosAndVideos_other": "Preview of {{count}} photos and videos to send"
+				},
+				"preview": "To send"
+			},
+			"errors": {
+				"previewFailed": "Couldn’t read that photo"
+			}
+		}
+	},
+	"keyboardMedia": {
+		"errors": {
+			"readFailed": "Couldn’t read what the keyboard sent",
+			"notInChat": "Stickers can only be sent in a chat"
+		}
+	},
+	"giphy": {
+		"badge": "GIF",
+		"consent": {
+			"title": "Enable GIPHY?",
+			"description": "Search, send and see GIFs from GIPHY. GIPHY sees your IP address, your searches and their language, which GIFs load and that you use a Grindr app.",
+			"privacyPolicy": "Privacy policy",
+			"errors": {
+				"saveFailed": "Couldn’t enable GIPHY"
+			}
+		}
+	}
+}

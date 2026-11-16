@@ -29,11 +29,13 @@ import { ReconcilingListState } from "./reconciling-list-state.svelte";
 
 type Item = { id: number; count: number };
 
+let refreshErrorLabel = "Failed to refresh";
+
 class TestList extends ReconcilingListState<Item, Item[]> {
 	items: Item[] = [];
 
 	constructor() {
-		super({ pageSize: 2, refreshErrorLabel: "Failed to refresh" });
+		super({ pageSize: 2, refreshErrorLabel: () => refreshErrorLabel });
 		this.start();
 	}
 
@@ -98,6 +100,7 @@ function deferred<T>() {
 }
 
 beforeEach(() => {
+	refreshErrorLabel = "Failed to refresh";
 	fetchMock.mockReset();
 	showErrorToastMock.mockReset();
 	unlistenMock.mockReset();
@@ -221,6 +224,40 @@ describe("ReconcilingListState", () => {
 		expect(state.refreshing).toBe(false);
 	});
 
+	it("keeps loading until the newest of two overlapping loads finishes", async () => {
+		const firstGate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(firstGate.promise);
+		const state = new TestList();
+
+		const secondGate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(secondGate.promise);
+		state.retry();
+
+		firstGate.resolve([item(1)]);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(state.loading).toBe(true);
+		expect(ids(state)).toEqual([]);
+
+		secondGate.resolve([item(2)]);
+		await waitForLoaded(state);
+		expect(ids(state)).toEqual([2]);
+	});
+
+	it("stays active while any attached view remains", async () => {
+		fetchMock.mockResolvedValueOnce([item(1)]);
+		const state = new TestList();
+		await waitForLoaded(state);
+
+		const detachFirst = state.attachView();
+		const detachSecond = state.attachView();
+		detachFirst();
+		detachFirst();
+		expect(state.viewActive).toBe(true);
+
+		detachSecond();
+		expect(state.viewActive).toBe(false);
+	});
+
 	it("stays silent when a superseded refresh fails", async () => {
 		fetchMock.mockResolvedValueOnce([item(1)]);
 		const state = new TestList();
@@ -293,6 +330,21 @@ describe("ReconcilingListState", () => {
 		await state.refresh();
 		expect(state.refreshFailed).toBe(false);
 		expect(ids(state)).toEqual([2]);
+	});
+
+	it("names a refresh failure in the wording current when it fails", async () => {
+		fetchMock
+			.mockResolvedValueOnce([item(1)])
+			.mockRejectedValueOnce(new Error("offline"));
+		const state = new TestList();
+		await waitForLoaded(state);
+		refreshErrorLabel = "Échec de l'actualisation";
+
+		await state.refresh();
+
+		expect(showErrorToastMock).toHaveBeenCalledWith(
+			expect.objectContaining({ label: "Échec de l'actualisation" }),
+		);
 	});
 
 	it("loads once, including when the list is legitimately empty", async () => {

@@ -36,6 +36,8 @@ vi.mock("#lib/util/media.ts", async (importOriginal) => ({
 }));
 
 import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { noteSoftKeyboardOpen } from "#lib/platform/soft-keyboard.svelte.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import NavBar from "./NavBar.svelte";
@@ -76,7 +78,49 @@ beforeEach(() => {
 	runningOn("windows");
 });
 
-afterEach(() => cleanup());
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
+
+function tabNames() {
+	const navigation = screen.getByRole("navigation");
+	return {
+		navigation: navigation.getAttribute("aria-label"),
+		links: screen
+			.getAllByRole("link")
+			.map(
+				(link) =>
+					link.getAttribute("aria-label") ?? link.textContent.trim(),
+			),
+	};
+}
+
+describe("NavBar", () => {
+	beforeEach(() => {
+		getProfileMock.mockResolvedValue(profileWith(medias()));
+	});
+
+	it("names the main navigation and its tabs", () => {
+		render(NavBar, { props: { ourProfileId: OUR_ID } });
+
+		expect(tabNames()).toEqual({
+			navigation: "Main",
+			links: ["Browse", "Right Now", "Interest", "Inbox", "Me"],
+		});
+	});
+
+	it("renames the navigation and its tabs when the locale changes", async () => {
+		render(NavBar, { props: { ourProfileId: OUR_ID } });
+
+		await setLocale({ locale: "en-XA" });
+
+		const { navigation, links } = tabNames();
+		expect(navigation).toMatch(PSEUDO_MESSAGE);
+		expect(links).toHaveLength(5);
+		for (const link of links) expect(link).toMatch(PSEUDO_MESSAGE);
+	});
+});
 
 describe("navbar avatar", () => {
 	it("shows the new main photo once our profile photos are saved", async () => {

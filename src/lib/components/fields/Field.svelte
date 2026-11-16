@@ -5,11 +5,17 @@
 
 	let {
 		label,
+		translateLabel = true,
 		error,
 		hint,
 		control,
 		picker,
-	}: { label: string; error?: string; hint?: string } & (
+	}: {
+		label: string;
+		translateLabel?: boolean;
+		error?: string;
+		hint?: string;
+	} & (
 		| { control: Snippet<[{ id: string }]>; picker?: never }
 		| { picker: Snippet<[{ labelId: string }]>; control?: never }
 	) = $props();
@@ -22,6 +28,7 @@
 		class="px-1"
 		for={control ? id : undefined}
 		id={picker ? id : undefined}
+		translate={translateLabel ? undefined : "no"}
 	>
 		{label}
 	</Label>

@@ -17,11 +17,16 @@ const GIPHY_PAGE_SIZE = 50;
 const GIPHY_RATING = "r";
 const GIPHY_MAX_OFFSET = { trending: 499, search: 4999 } as const;
 
+export type GifAlt =
+	| { readonly kind: "title"; readonly title: string }
+	| { readonly kind: "untitled" }
+	| { readonly kind: "linked" };
+
 export type GiphyTile = {
 	id: string;
 	tileUrl: string;
 	stillTileUrl: string;
-	alt: string;
+	alt: GifAlt;
 	body: GiphyBody;
 };
 
@@ -87,13 +92,18 @@ function tileUrlOf({
 	return rendition.webp === undefined ? rendition.url : rendition.webp;
 }
 
+function gifAlt({ title, alt_text: altText }: GiphyGif): GifAlt {
+	const named = title || altText;
+	return named ? { kind: "title", title: named } : { kind: "untitled" };
+}
+
 function giphyTile(gif: GiphyGif): GiphyTile {
 	const { fixed_height: animated, fixed_height_still: still } = gif.images;
 	return {
 		id: gif.id,
 		tileUrl: giphyMediaSrc(tileUrlOf(gif.images)),
 		stillTileUrl: giphyMediaSrc(still.url),
-		alt: gif.title || gif.alt_text || "GIF",
+		alt: gifAlt(gif),
 		body: giphyBody({
 			id: gif.id,
 			urlPath: animated.url,

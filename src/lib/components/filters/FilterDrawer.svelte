@@ -2,6 +2,7 @@
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.ts";
 	import * as Drawer from "#lib/components/ui/drawer/index.ts";
 	import { Switch } from "#lib/components/ui/switch/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let {
@@ -35,7 +36,7 @@
 		<Drawer.Header class="flex flex-row items-center justify-between">
 			<div class="flex flex-1 justify-start">
 				<Button variant="link" class="cursor-pointer" onclick={onreset}>
-					Reset
+					{t("browse.filters.reset")}
 				</Button>
 			</div>
 			<Drawer.Title>{title}</Drawer.Title>
@@ -54,7 +55,7 @@
 					open = false;
 				}}
 			>
-				Apply
+				{t("browse.filters.apply")}
 			</Drawer.Close>
 		</Drawer.Footer>
 	</Drawer.Content>

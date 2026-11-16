@@ -1,11 +1,8 @@
 <script lang="ts">
-	import {
-		ApiError,
-		type ApiErrorKind,
-		blockedAndStaleMessages,
-	} from "#lib/api/api-error.ts";
+	import { ApiError, apiErrorMessage } from "#lib/api/api-error.ts";
 	import { promptCopyError } from "#lib/api/error-copy.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 
 	let {
 		error,
@@ -19,19 +16,17 @@
 		buttonVariant?: import("#lib/components/ui/button/index.ts").ButtonVariant;
 	} = $props();
 
-	const kindMessages: Partial<Record<ApiErrorKind, string>> = {
-		...blockedAndStaleMessages,
-		Connect: "Couldn't connect to Grindr",
-		Http: "Couldn't reach the server",
-	};
-
 	const apiError = $derived(error instanceof ApiError ? error : null);
 	const retryable = $derived(apiError?.retryable ?? false);
 	const kindMessage = $derived(
-		apiError?.kind ? kindMessages[apiError.kind] : undefined,
+		apiError?.kind ? apiErrorMessage(apiError.kind) : undefined,
 	);
 	const fallbackMessage = $derived(
-		retryable ? "The server ran into a problem" : "Something went wrong",
+		t(
+			retryable
+				? "feedback.apiErrorDisplay.retryableFailure"
+				: "feedback.appError.unknown",
+		),
 	);
 	const message = $derived(kindMessage ?? fallbackMessage);
 </script>
@@ -47,7 +42,7 @@
 				size="sm"
 				onclick={onRetry}
 			>
-				Retry
+				{t("common.actions.retry")}
 			</Button>
 		{/if}
 		<Button
@@ -55,7 +50,7 @@
 			size="sm"
 			onclick={() => void promptCopyError(error).catch(() => {})}
 		>
-			Copy details
+			{t("common.actions.copyError")}
 		</Button>
 	</div>
 </div>

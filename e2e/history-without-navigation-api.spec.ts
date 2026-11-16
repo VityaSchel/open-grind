@@ -13,7 +13,7 @@ import {
 	watchRendered,
 } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	deleteFromList,
 	openConversation,
 	openInbox,
@@ -217,14 +217,14 @@ test.describe("without the Navigation API", () => {
 	test.describe("on a phone", () => {
 		test.use({ viewport: PHONE });
 
-		test("Back to chats walks back to the inbox and keeps the conversation ahead", async ({
+		test("Back to Inbox walks back to the inbox and keeps the conversation ahead", async ({
 			page,
 		}) => {
 			await openInbox(page, { platform: "ios" });
 			const atInbox = await historyAt(page);
 			const href = await openConversation(page);
 
-			await backToChats(page).click();
+			await backToInbox(page).click();
 			await expect(page).toHaveURL(/\/chat$/);
 			await expect(sheet(page)).toHaveCount(0);
 

@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
+import { screenshotScene } from "#lib/demo/screenshot-scene.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
@@ -67,7 +68,7 @@ export function updatesAvailableHere(): boolean {
 		case "linux":
 		case "macos":
 		case "windows":
-			return !__DEMO__;
+			return !__DEMO__ || (__SCREENSHOTS__ && screenshotScene.updates);
 		case "ios":
 			return false;
 	}

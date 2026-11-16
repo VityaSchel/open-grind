@@ -2,6 +2,7 @@
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import PagingSentinel from "#lib/components/shared/PagingSentinel.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import type { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 	import EmptyConversationsList from "./EmptyConversationsList.svelte";
 
@@ -20,9 +21,9 @@
 
 <div role="status" class="sr-only">
 	{paging.running
-		? "Loading more conversations"
+		? t("chat.conversations.a11y.loadingMore")
 		: paging.failure
-			? "Failed to load more conversations"
+			? t("chat.conversations.errors.loadMoreFailed")
 			: ""}
 </div>
 {#if listEmpty && !hasMore}

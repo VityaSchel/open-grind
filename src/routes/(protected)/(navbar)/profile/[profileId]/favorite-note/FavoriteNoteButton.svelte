@@ -2,6 +2,7 @@
 	import NotePencilIcon from "phosphor-svelte/lib/NotePencilIcon";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 	import type { Profile } from "#lib/model/users/profiles.ts";
 	import { holdsStillOnPull } from "../hold-still-on-pull";
@@ -20,7 +21,9 @@
 	let open = $state(false);
 
 	const empty = $derived(!note.notes && !note.phoneNumber);
-	const label = $derived(note.notes || note.phoneNumber || "Add note");
+	const label = $derived(
+		note.notes || note.phoneNumber || t("profile.favoriteNote.add"),
+	);
 </script>
 
 <Button
@@ -34,6 +37,6 @@
 		weight={empty ? "regular" : "fill"}
 		class="size-4 shrink-0"
 	/>
-	<span class="truncate">{label}</span>
+	<span class="truncate" translate={empty ? undefined : "no"}>{label}</span>
 </Button>
 <FavoriteNoteEditor {profileId} {note} {onSave} bind:open />

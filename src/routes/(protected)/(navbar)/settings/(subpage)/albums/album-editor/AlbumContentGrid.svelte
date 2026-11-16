@@ -1,13 +1,15 @@
 <script lang="ts">
-	import {
-		deleteDrawerMedia,
-		type DrawerMedia,
-		getAllDrawerMedia,
-	} from "#lib/api/messaging/drawer.ts";
 	import { albumRoom, isVideoContent } from "#lib/components/album/album.ts";
+	import { drawerPhotoUploads } from "#lib/components/media-sheet/drawer-photos.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
 	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
+	import { formatInteger } from "#lib/i18n/format.ts";
+	import {
+		type MessageKeyWith,
+		type PlainMessageKey,
+		t,
+	} from "#lib/i18n/index.ts";
 	import { receiveMedia } from "#lib/platform/media-intake.svelte.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import type { AlbumContent } from "#lib/model/messaging/albums.ts";
@@ -45,6 +47,32 @@
 		onReorder: (move: { from: number; to: number }) => void;
 	} = $props();
 
+	const uploadingKeys = {
+		photo: "media.albums.editor.content.a11y.uploadingPhoto",
+		video: "media.albums.editor.content.a11y.uploadingVideo",
+	} as const satisfies Record<PendingUpload["kind"], PlainMessageKey>;
+
+	const slotKeys = {
+		photo: {
+			ready: "media.albums.editor.content.a11y.photoSlot",
+			processing: "media.albums.editor.content.a11y.photoSlotProcessing",
+			remove: "media.albums.editor.content.a11y.removePhotoSlot",
+			keep: "media.albums.editor.content.a11y.keepPhotoSlot",
+		},
+		video: {
+			ready: "media.albums.editor.content.a11y.videoSlot",
+			processing: "media.albums.editor.content.a11y.videoSlotProcessing",
+			remove: "media.albums.editor.content.a11y.removeVideoSlot",
+			keep: "media.albums.editor.content.a11y.keepVideoSlot",
+		},
+	} as const satisfies Record<
+		PendingUpload["kind"],
+		Record<
+			"ready" | "processing" | "remove" | "keep",
+			MessageKeyWith<{ slot: string }>
+		>
+	>;
+
 	let adding = $state(false);
 	let sheetOpen = $state(false);
 
@@ -56,7 +84,7 @@
 		pending.map(({ key, kind }) => ({
 			key: `pending:${key}`,
 			src: null,
-			alt: kind === "video" ? "Uploading video" : "Uploading photo",
+			alt: t(uploadingKeys[kind]),
 			video: kind === "video",
 			pending: true,
 		})),
@@ -65,15 +93,16 @@
 	const contentSlots = $derived(
 		content.map((item, index) => {
 			const video = isVideoContent(item.contentType);
-			const label = `${video ? "video" : "photo"} in slot ${index + 1}`;
+			const keys = slotKeys[video ? "video" : "photo"];
+			const slot = formatInteger(index + 1);
 			return {
 				key: String(item.contentId),
 				src: proxyMediaUrl(item.thumbUrl),
-				alt: item.processing
-					? `Album ${label}, processing`
-					: `Album ${label}`,
-				deleteLabel: `Remove album ${label}`,
-				undoLabel: `Keep album ${label}`,
+				alt: t(item.processing ? keys.processing : keys.ready, {
+					slot,
+				}),
+				deleteLabel: t(keys.remove, { slot }),
+				undoLabel: t(keys.keep, { slot }),
 				video,
 				pending: item.processing,
 				onDelete: () => onToggleRemoved(item.contentId),
@@ -95,11 +124,6 @@
 			: limits.maxContentItemsPerAlbum - content.length - pending.length,
 	);
 
-	async function loadDrawerPhotos(): Promise<DrawerMedia[]> {
-		const drawer = await getAllDrawerMedia();
-		return drawer.filter((item) => !isVideoContent(item.contentType));
-	}
-
 	async function add(media?: PickedMedia[]) {
 		adding = true;
 		try {
@@ -118,7 +142,7 @@
 		saving || adding
 			? null
 			: {
-					label: "Drop to add to album",
+					label: t("media.albums.editor.content.dropToAdd"),
 					videos: true,
 					receive: (media) => void add(media),
 				},
@@ -127,8 +151,8 @@
 
 {#if slots.length === 0}
 	<AlbumMediaEmpty
-		title="No media yet"
-		description="Photos and videos you add appear here."
+		title={t("media.albums.editor.content.empty.title")}
+		description={t("media.albums.editor.content.empty.description")}
 		disabled={saving || adding || full}
 		onAdd={() => (sheetOpen = true)}
 	/>
@@ -144,7 +168,7 @@
 
 {#snippet leading()}
 	<AddTile
-		label="Add photos or videos"
+		label={t("media.albums.editor.content.addMedia")}
 		class="aspect-square w-full rounded-xl"
 		disabled={saving || adding || full}
 		onclick={() => (sheetOpen = true)}
@@ -153,17 +177,11 @@
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}
-	uploadLabel="Upload photos or videos"
-	submitLabel="Add to album"
+	uploadLabel={t("common.media.uploadPhotosOrVideos")}
+	submitLabel={t("media.albums.editor.content.addToAlbum")}
 	max={itemRoom}
-	load={loadDrawerPhotos}
-	describe={(item) => ({
-		key: item.id,
-		src: proxyMediaUrl(item.url),
-		video: false,
-	})}
+	{...drawerPhotoUploads}
 	onUpload={() => void add()}
-	onDelete={(item) => deleteDrawerMedia(item.id)}
 	onSubmit={(chosen) =>
 		addPreviousUploads({
 			uploads,

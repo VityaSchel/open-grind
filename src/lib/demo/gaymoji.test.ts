@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { FEATURED_ORIGINAL_IDS } from "#lib/chat/gaymoji-ids.ts";
 import {
 	FEATURED_CATEGORY,
-	FEATURED_ORIGINAL_IDS,
 	KNOWN_GAYMOJI_CATEGORIES,
 } from "#lib/chat/gaymoji-sections.ts";
 import { demoGaymojiImageUrl, demoRoute } from "#lib/demo/index.ts";

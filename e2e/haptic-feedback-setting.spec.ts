@@ -3,19 +3,19 @@ import { expect, type Page, test } from "@playwright/test";
 import type { SupportedPlatform } from "../src/lib/platform/os";
 import { installTauriShim } from "./support/app";
 
-const APP_SETTINGS = "/settings/app";
+const DISPLAY_SETTINGS = "/settings/app/display";
 const DESCRIPTION = "Use the haptic engine for interactions.";
 
 test.describe.configure({ timeout: 120_000 });
 
-async function openAppSettings(
+async function openDisplaySettings(
 	page: Page,
 	{ platform }: { platform: SupportedPlatform },
 ) {
 	await installTauriShim(page, { platform });
-	await page.goto(APP_SETTINGS);
+	await page.goto(DISPLAY_SETTINGS);
 	await page
-		.getByRole("heading", { name: "Display" })
+		.getByRole("slider", { name: "Background blur" })
 		.waitFor({ timeout: 120_000 });
 }
 
@@ -26,7 +26,7 @@ for (const platform of ["android", "ios", "macos"] as const) {
 	test(`${platform} describes haptics without naming gestures`, async ({
 		page,
 	}) => {
-		await openAppSettings(page, { platform });
+		await openDisplaySettings(page, { platform });
 
 		await expect(hapticSwitch(page)).toHaveAccessibleName(
 			new RegExp(DESCRIPTION.replaceAll(".", "\\.")),
@@ -35,7 +35,7 @@ for (const platform of ["android", "ios", "macos"] as const) {
 }
 
 test("Linux offers no haptic feedback setting", async ({ page }) => {
-	await openAppSettings(page, { platform: "linux" });
+	await openDisplaySettings(page, { platform: "linux" });
 
 	await expect(hapticSwitch(page)).toHaveCount(0);
 });

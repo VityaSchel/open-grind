@@ -5,9 +5,11 @@ import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
+import { uploadRefusalMessage } from "#lib/api/methods.ts";
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import {
 	CHAT_MEDIA_MAX_BYTES,
-	CHAT_MEDIA_MAX_LABEL,
+	chatMediaMaxLabel,
 } from "#lib/model/messaging/chat-media-limits.ts";
 import {
 	discardStagedMedia,
@@ -30,28 +32,19 @@ const DRAG_IDLE_MS = 1_000;
 const LINK = /^https?:\/\//i;
 const SECURE_LINK = /^https:\/\//i;
 
-const UNREADABLE_MESSAGE = "Couldn't read that file";
-const LINK_FAILED_MESSAGE = "Couldn't download that image";
-const TOO_LARGE_MESSAGE = `Larger than the ${CHAT_MEDIA_MAX_LABEL} limit`;
-
 const stagedLinkSchema = z.object({ id: z.string(), mimeType: z.string() });
 
-const mediaRefusalSchema = z.object({
-	kind: z.literal("Media"),
-	message: z.string(),
-});
+const rejectionMessageKeys = {
+	unsupported: "common.media.errors.unsupportedFile",
+	video: "common.media.errors.videosNotAllowed",
+} as const satisfies Record<string, PlainMessageKey>;
 
-const rejections = {
-	unsupported: "That file isn't a photo or video",
-	video: "Videos can't be added here",
-} as const;
+type Rejection = keyof typeof rejectionMessageKeys;
 
-type Rejection = keyof typeof rejections;
-
-const dragRefusals = {
-	unsupported: "Only photos and videos can be dropped here",
-	video: "Only photos can be dropped here",
-} as const satisfies Record<Rejection, string>;
+const dragRefusalKeys = {
+	unsupported: "common.media.drop.onlyPhotosAndVideos",
+	video: "common.media.drop.onlyPhotos",
+} as const satisfies Record<Rejection, PlainMessageKey>;
 
 const MEDIA_PATH =
 	/\.(jpe?g|jfif|png|webp|gif|heic|heif|bmp|tiff?|mp4|mov|m4v|3gp)$/i;
@@ -98,7 +91,7 @@ export const mediaDrop = {
 			kinds: draggedKinds,
 			videos: target.videos,
 		});
-		return rejection === null ? null : dragRefusals[rejection];
+		return rejection === null ? null : t(dragRefusalKeys[rejection]);
 	},
 };
 
@@ -193,13 +186,17 @@ function onPaste(event: ClipboardEvent) {
 		target,
 		items: withinSizeLimit(files),
 		stage: stageFile,
-		failure: () => UNREADABLE_MESSAGE,
+		failure: () => t("common.media.errors.readFailed"),
 	});
 }
 
 function withinSizeLimit(files: File[]): File[] {
 	const fitting = files.filter((file) => file.size <= CHAT_MEDIA_MAX_BYTES);
-	if (fitting.length < files.length) toast.error(TOO_LARGE_MESSAGE);
+	if (fitting.length < files.length) {
+		toast.error(
+			t("feedback.appError.overLimit", { limit: chatMediaMaxLabel() }),
+		);
+	}
 	return fitting;
 }
 
@@ -216,7 +213,7 @@ function draggedTypes(event: DragEvent): readonly string[] {
 }
 
 function carriesFiles(event: DragEvent): boolean {
-	return draggedTypes(event).includes("Files");
+	return draggedTypes(event).some((type) => type === "Files");
 }
 
 function carriesMarkup(event: DragEvent): boolean {
@@ -273,7 +270,7 @@ function onDrop(event: DragEvent) {
 		if (target === undefined || source === undefined) return;
 		event.preventDefault();
 		if (source === null) {
-			toast.error(LINK_FAILED_MESSAGE);
+			toast.error(t("common.media.errors.linkFailed"));
 			return;
 		}
 		void deliver({
@@ -293,7 +290,7 @@ function onDrop(event: DragEvent) {
 		target,
 		items: withinSizeLimit(files),
 		stage: stageFile,
-		failure: () => UNREADABLE_MESSAGE,
+		failure: () => t("common.media.errors.readFailed"),
 	});
 }
 
@@ -349,8 +346,10 @@ function onNativeDrag({ payload }: Event<DragDropEvent>) {
 }
 
 function linkFailure(error: unknown): string {
-	const refusal = mediaRefusalSchema.safeParse(error);
-	return refusal.success ? refusal.data.message : LINK_FAILED_MESSAGE;
+	return (
+		uploadRefusalMessage({ error, limitLabel: chatMediaMaxLabel() }) ??
+		t("common.media.errors.linkFailed")
+	);
 }
 
 async function stageLink(url: string): Promise<PickedMedia> {
@@ -463,9 +462,9 @@ export async function screenMedia({
 		}
 		refused.push({ media: item, rejection: rejection ?? "unsupported" });
 	}
-	for (const [rejection, message] of Object.entries(rejections)) {
+	for (const [rejection, key] of Object.entries(rejectionMessageKeys)) {
 		if (refused.some((item) => item.rejection === rejection)) {
-			toast.error(message);
+			toast.error(t(key));
 		}
 	}
 	await discardStagedMedia(refused.map((item) => item.media));

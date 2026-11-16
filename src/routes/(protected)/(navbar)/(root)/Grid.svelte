@@ -2,6 +2,7 @@
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import PagingSentinel from "#lib/components/shared/PagingSentinel.svelte";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { virtualGrid } from "#lib/util/virtual-grid.svelte.ts";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridCellSkeleton from "./GridCellSkeleton.svelte";
@@ -75,6 +76,7 @@
 						isFavorite={item.isFavorite}
 						isVisiting={item.isVisiting}
 						hadRecentChat={item.hasChattedInLast24Hrs}
+						rightNow={item.rightNow}
 						medias={item.profilePhotosHashes?.map((mediaHash) => ({
 							mediaHash,
 						})) ?? []}
@@ -96,9 +98,9 @@
 	</div>
 	<div role="status" class="sr-only">
 		{gridState.paging.running
-			? "Loading more profiles"
+			? t("browse.grid.a11y.loadingMore")
 			: gridState.paging.failure
-				? "Failed to load more profiles"
+				? t("browse.grid.errors.loadMoreFailed")
 				: ""}
 	</div>
 	{#if gridState.nextPage !== 0 && gridState.nextPage !== null}

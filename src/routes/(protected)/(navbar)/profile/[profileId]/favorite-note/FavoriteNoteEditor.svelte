@@ -12,6 +12,7 @@
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import {
 		type FavoriteNote,
 		favoriteNoteLimits,
@@ -60,10 +61,17 @@
 			else await putFavoriteNote({ profileId, note: next });
 			onSave(next);
 			open = false;
-			toast.success(emptied ? "Note deleted" : "Note saved");
+			toast.success(
+				emptied
+					? t("profile.favoriteNote.deleted")
+					: t("profile.favoriteNote.saved"),
+			);
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to save note", error });
+			showErrorToast({
+				label: t("profile.favoriteNote.errors.saveFailed"),
+				error,
+			});
 		} finally {
 			saving = false;
 		}
@@ -77,9 +85,11 @@
 		dialogProps={{ showCloseButton: true }}
 	>
 		<ResponsiveDialog.Header drawerClass="p-0">
-			<ResponsiveDialog.Title>Note</ResponsiveDialog.Title>
+			<ResponsiveDialog.Title>
+				{t("profile.favoriteNote.title")}
+			</ResponsiveDialog.Title>
 			<ResponsiveDialog.Description class="sr-only">
-				A private note about this profile. Only you can see it.
+				{t("profile.favoriteNote.a11y.description")}
 			</ResponsiveDialog.Description>
 		</ResponsiveDialog.Header>
 		<fieldset disabled={saving} class="contents">
@@ -90,14 +100,16 @@
 				<MultilineField
 					bind:value={notes}
 					maxLength={favoriteNoteLimits.notes}
-					placeholder="Note for this profile..."
+					placeholder={t("profile.favoriteNote.placeholder")}
 				/>
 				<TextField
-					label="Phone number"
+					label={t("profile.favoriteNote.phoneNumber.label")}
 					bind:value={phoneNumber}
 					maxLength={favoriteNoteLimits.phoneNumber}
 					type="tel"
-					placeholder="Optional"
+					placeholder={t(
+						"profile.favoriteNote.phoneNumber.placeholder",
+					)}
 				/>
 			</ResponsiveDialog.Body>
 			<ResponsiveDialog.Footer drawerClass="pt-0">
@@ -109,7 +121,7 @@
 					{#if saving}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Save
+					{t("common.actions.save")}
 				</Button>
 			</ResponsiveDialog.Footer>
 		</fieldset>

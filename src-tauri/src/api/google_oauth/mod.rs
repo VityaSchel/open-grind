@@ -13,9 +13,7 @@ use std::sync::Arc;
 
 pub struct Google;
 
-impl OauthProvider for Google {
-	const NAME: &'static str = "Google";
-}
+impl OauthProvider for Google {}
 
 pub type GoogleOauthBridge = OauthBridge<Google>;
 

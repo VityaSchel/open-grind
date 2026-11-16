@@ -10,7 +10,7 @@ import {
 import PositionQuickFilter from "./PositionQuickFilter.svelte";
 
 function filterSwitch(): HTMLElement {
-	return screen.getByRole("switch", { name: "Filter by position" });
+	return screen.getByRole("switch", { name: "Filter by Position" });
 }
 
 function button(name: string): HTMLElement {
@@ -66,7 +66,7 @@ describe("PositionQuickFilter", () => {
 		const { onapply } = await renderOpened({ positions: [] });
 
 		await fireEvent.click(button("Side"));
-		await fireEvent.click(button("Not specified"));
+		await fireEvent.click(button("Not Specified"));
 		await fireEvent.click(button("Top"));
 
 		expect(filterSwitch().getAttribute("aria-checked")).toBe("true");

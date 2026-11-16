@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+
 const {
 	canOpenAppSettingsMock,
 	openAppSettingsMock,
@@ -38,8 +41,9 @@ describe("reportLocationFailure for a denial", () => {
 		canOpenAppSettingsMock.mockReturnValue(true);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		vi.resetAllMocks();
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("offers a shortcut into the system settings", () => {
@@ -49,6 +53,14 @@ describe("reportLocationFailure for a denial", () => {
 		expect(options.action?.label).toBe("Settings");
 		options.action?.onClick();
 		expect(openAppSettingsMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("words the toast and its shortcut in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+		reportLocationFailure(PERMISSION_MISSING);
+
+		expect(toastMock.error.mock.calls.at(-1)?.[0]).toMatch(PSEUDO_MESSAGE);
+		expect(optionsOfLastToast().action?.label).toMatch(PSEUDO_MESSAGE);
 	});
 
 	it("omits the shortcut where settings cannot be opened", () => {

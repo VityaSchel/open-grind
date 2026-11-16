@@ -184,7 +184,7 @@ export function openAlbumLightbox({
 		configure: (lightbox) => {
 			if (onreply || onreact)
 				applyPhotoSwipeReply(lightbox, {
-					label: "Reply to album item",
+					label: "media.lightbox.reply.a11y.albumItem",
 					signal,
 					canReply: (pswp) => {
 						const slide = slides[pswp.currIndex];

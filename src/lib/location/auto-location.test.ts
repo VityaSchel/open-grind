@@ -309,7 +309,7 @@ describe("autoLocation.resolveGeohash", () => {
 		runMock.mockResolvedValue(disabled);
 		await autoLocation.resolveGeohash(CURRENT);
 		expect(reportFailureMock).toHaveBeenCalledExactlyOnceWith(disabled, {
-			label: "Failed to update your location automatically",
+			label: "Couldn’t update your location automatically",
 		});
 		expect(setPreferencesMock).not.toHaveBeenCalled();
 	});

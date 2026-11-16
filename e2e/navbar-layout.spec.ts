@@ -1,48 +1,105 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { fontLoaded, installTauriShim } from "./support/app";
+import { DEV_SERVER_URL } from "../playwright.config";
+import {
+	FIRST_ROUTE_COMPILE_MS,
+	fontLoaded,
+	installTauriShim,
+} from "./support/app";
+
+const TAB_LABEL = '[data-slot="navbar-tab-label"]';
+const NAVBAR_ITEMS = 5;
 
 test.use({ viewport: { width: 360, height: 800 }, deviceScaleFactor: 3 });
 
-test("the bottom navbar fits a 1080px physical-width screen", async ({
+async function openNavbar({
+	page,
+	query = "",
+}: {
+	page: Page;
+	query?: string;
+}): Promise<Locator> {
+	await installTauriShim(page, { platform: "macos" });
+	await page.goto(`/right-now${query}`);
+	const navbar = page.getByRole("navigation");
+	const items = navbar.getByRole("link");
+	await expect(items).toHaveCount(NAVBAR_ITEMS, {
+		timeout: FIRST_ROUTE_COMPILE_MS,
+	});
+	for (const item of await items.all()) await fontLoaded(item);
+	return navbar;
+}
+
+function measure(navbar: Locator) {
+	return navbar.evaluate(
+		(element, labelSelector) => ({
+			viewportWidth: window.innerWidth,
+			physicalWidth: window.innerWidth * window.devicePixelRatio,
+			pageOverflow:
+				document.documentElement.scrollWidth -
+				document.documentElement.clientWidth,
+			items: [...element.querySelectorAll("a")].map((item) => {
+				const { left, right } = item.getBoundingClientRect();
+				return { left, right };
+			}),
+			labels: [...element.querySelectorAll(labelSelector)].map(
+				(label) => ({
+					cut: label.scrollWidth > label.clientWidth,
+					ellipsis:
+						getComputedStyle(label).textOverflow === "ellipsis",
+				}),
+			),
+		}),
+		TAB_LABEL,
+	);
+}
+
+type Layout = Awaited<ReturnType<typeof measure>>;
+
+function expectEveryItemOnScreen(layout: Layout): void {
+	expect(layout.pageOverflow).toBeLessThanOrEqual(0);
+	expect(layout.items).toHaveLength(NAVBAR_ITEMS);
+	for (const { left, right } of layout.items) {
+		expect(left).toBeGreaterThanOrEqual(0);
+		expect(right).toBeLessThanOrEqual(layout.viewportWidth);
+	}
+}
+
+function cutLabels(layout: Layout): Layout["labels"] {
+	expect(layout.labels).toHaveLength(NAVBAR_ITEMS - 1);
+	return layout.labels.filter(({ cut }) => cut);
+}
+
+function expectCutLabelsToEndInEllipsis(layout: Layout): void {
+	const cut = cutLabels(layout);
+	expect(cut.length).toBeGreaterThan(0);
+	expect(cut).not.toContainEqual({ cut: true, ellipsis: false });
+}
+
+test("the bottom navbar fits a 1080px physical-width screen without cutting a label", async ({
 	page,
 }) => {
-	await installTauriShim(page, { platform: "macos" });
-	await page.goto("/right-now");
+	const navbar = await openNavbar({ page });
+	const layout = await measure(navbar);
 
-	const navbar = page.getByRole("navigation");
-	const links = navbar.locator(".links");
-	const rightNow = navbar.getByRole("link", { name: "Right Now" });
-	await expect(rightNow).toHaveAttribute("data-active", "true");
-
-	const layout = await links.evaluate((linksElement) => {
-		const content = linksElement.parentElement;
-		const avatar = content?.querySelector('a[aria-label="Me"]');
-		if (!content || !avatar) throw new Error("Navbar structure not found");
-
-		const bounds = (element: Element) => {
-			const rect = element.getBoundingClientRect();
-			return { left: rect.left, right: rect.right };
-		};
-
-		return {
-			cssViewportWidth: window.innerWidth,
-			physicalViewportWidth: window.innerWidth * window.devicePixelRatio,
-			clientWidth: content.clientWidth,
-			scrollWidth: content.scrollWidth,
-			links: bounds(linksElement),
-			avatar: bounds(avatar),
-		};
-	});
-
-	expect(layout.cssViewportWidth).toBe(360);
-	expect(layout.physicalViewportWidth).toBe(1080);
-	expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth);
-	for (const bounds of [layout.links, layout.avatar]) {
-		expect(bounds.left).toBeGreaterThanOrEqual(0);
-		expect(bounds.right).toBeLessThanOrEqual(layout.cssViewportWidth);
-	}
+	expect(layout.physicalWidth).toBe(1080);
+	expectEveryItemOnScreen(layout);
+	expect(cutLabels(layout)).toEqual([]);
 });
+
+for (const width of [412, 1280]) {
+	test.describe(`in a ${width} px wide window`, () => {
+		test.use({ viewport: { width, height: 800 } });
+
+		test("the bottom navbar cuts no English label", async ({ page }) => {
+			const navbar = await openNavbar({ page });
+			const layout = await measure(navbar);
+
+			expectEveryItemOnScreen(layout);
+			expect(cutLabels(layout)).toEqual([]);
+		});
+	});
+}
 
 test("tab widths don't change when selecting a tab", async ({ page }) => {
 	await installTauriShim(page, { platform: "macos" });
@@ -74,40 +131,38 @@ test("tab widths don't change when selecting a tab", async ({ page }) => {
 test.describe("in a 308 × 404 pop-up window", () => {
 	test.use({ viewport: { width: 308, height: 404 } });
 
-	test("the bottom navbar scrolls to both of its ends", async ({ page }) => {
-		await installTauriShim(page, { platform: "macos" });
-		await page.goto("/right-now");
+	test("the bottom navbar keeps every tab and Me on screen and cuts labels with an ellipsis", async ({
+		page,
+	}) => {
+		const navbar = await openNavbar({ page });
+		const layout = await measure(navbar);
 
-		const links = page.getByRole("navigation").locator(".links");
-		await expect(links).toBeVisible();
-
-		const ends = await links.evaluate((linksElement) => {
-			const content = linksElement.parentElement;
-			const avatar = content?.querySelector('a[aria-label="Me"]');
-			if (!content || !avatar)
-				throw new Error("Navbar structure not found");
-
-			content.scrollLeft = 0;
-			const atStart = {
-				content: content.getBoundingClientRect().left,
-				links: linksElement.getBoundingClientRect().left,
-			};
-			content.scrollLeft = content.scrollWidth;
-			const atEnd = {
-				content: content.getBoundingClientRect().right,
-				avatar: avatar.getBoundingClientRect().right,
-			};
-			return {
-				overflow: content.scrollWidth - content.clientWidth,
-				atStart,
-				atEnd,
-			};
-		});
-
-		expect(ends.overflow).toBeGreaterThan(0);
-		expect(ends.atStart.links).toBeGreaterThanOrEqual(ends.atStart.content);
-		expect(ends.atEnd.avatar).toBeLessThanOrEqual(ends.atEnd.content);
+		expectEveryItemOnScreen(layout);
+		expectCutLabelsToEndInEllipsis(layout);
 	});
+});
+
+test.describe("under the en-XA pseudo-locale", () => {
+	test.use({ baseURL: DEV_SERVER_URL });
+
+	for (const width of [412, 360, 320]) {
+		test.describe(`on a ${width} px wide screen`, () => {
+			test.use({ viewport: { width, height: 800 } });
+
+			test("the bottom navbar keeps every tab and Me on screen and cuts labels with an ellipsis", async ({
+				page,
+			}) => {
+				const navbar = await openNavbar({
+					page,
+					query: "?locale=en-XA",
+				});
+				const layout = await measure(navbar);
+
+				expectEveryItemOnScreen(layout);
+				expectCutLabelsToEndInEllipsis(layout);
+			});
+		});
+	}
 });
 
 test.describe("on a 412 × 920 phone with 64 px system bars", () => {

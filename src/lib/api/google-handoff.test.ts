@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+
 const mocks = vi.hoisted(() => ({
 	invoke: vi.fn(),
 	signedInProfileId: vi.fn(),
@@ -44,6 +47,9 @@ import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 const SIGNED_IN_AS = 42;
 const NEW_ACCOUNT = { profileId: 7, restriction: null };
 const GOOGLE_SIGN_IN = "/auth/sign-in/google";
+const EXPIRED = "That Google sign-in expired. Try again.";
+const FAILURE_LABEL = "Couldn’t sign in with Google";
+const REFUSAL = new Error("banned");
 
 function backend({
 	exchange,
@@ -72,6 +78,26 @@ function answerSwitch(accepted: boolean) {
 	mocks.confirmAccountSwitch.mockImplementation(() => {
 		mocks.handoff.phase = accepted ? "switchingAccount" : "idle";
 		return Promise.resolve(accepted);
+	});
+}
+
+function expireWhileConfirming() {
+	answerSwitch(true);
+	let checks = 0;
+	backend({ exchange: () => NEW_ACCOUNT, pending: () => ++checks === 1 });
+}
+
+function expireAfterSwitch() {
+	answerSwitch(true);
+	backend({ exchange: () => null });
+}
+
+function refuseSignIn() {
+	answerSwitch(true);
+	backend({
+		exchange: () => {
+			throw REFUSAL;
+		},
 	});
 }
 
@@ -127,39 +153,35 @@ describe("switching accounts through a Google handoff", () => {
 	});
 
 	it("leaves a refused sign-in's dialog in place instead of clearing it", async () => {
-		answerSwitch(true);
-		backend({
-			exchange: () => {
-				throw new Error("banned");
-			},
-		});
+		refuseSignIn();
 
 		await consumeGoogleHandoff();
 
 		expect(mocks.events.at(-1)).toBe("reportSignInFailure");
 		expect(mocks.finishSignIn).not.toHaveBeenCalled();
+		expect(mocks.reportSignInFailure).toHaveBeenCalledExactlyOnceWith({
+			error: REFUSAL,
+			label: FAILURE_LABEL,
+		});
 	});
 
 	it("keeps the current account when the handoff expires while the switch is being confirmed", async () => {
-		answerSwitch(true);
-		let checks = 0;
-		backend({ exchange: () => NEW_ACCOUNT, pending: () => ++checks === 1 });
+		expireWhileConfirming();
 
 		await consumeGoogleHandoff();
 
 		expect(mocks.signOut).not.toHaveBeenCalled();
 		expect(mocks.events).not.toContain("sign_in_with_google_handoff");
-		expect(mocks.toastError).toHaveBeenCalledOnce();
+		expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith(EXPIRED);
 		expect(mocks.handoff.phase).toBe("idle");
 	});
 
 	it("stays on the Google sign-in page when the handoff expired after the switch", async () => {
-		answerSwitch(true);
-		backend({ exchange: () => null });
+		expireAfterSwitch();
 
 		await consumeGoogleHandoff();
 
-		expect(mocks.toastError).toHaveBeenCalledOnce();
+		expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith(EXPIRED);
 		expect(mocks.finishSignIn).not.toHaveBeenCalled();
 		expect(mocks.goto).not.toHaveBeenCalled();
 	});
@@ -181,6 +203,43 @@ describe("signing in through a Google handoff with no account", () => {
 			"sign_in_with_google_handoff",
 			"finishSignIn",
 		]);
+	});
+});
+
+describe("Google handoff failures in the active locale", () => {
+	beforeEach(async () => {
+		await setLocale({ locale: "en-XA" });
+	});
+
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it.each([
+		{
+			moment: "while the switch is being confirmed",
+			expire: expireWhileConfirming,
+		},
+		{ moment: "after the switch", expire: expireAfterSwitch },
+	])("explains a handoff that expired $moment", async ({ expire }) => {
+		expire();
+
+		await consumeGoogleHandoff();
+
+		expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith(
+			expect.stringMatching(PSEUDO_MESSAGE),
+		);
+	});
+
+	it("labels a refused sign-in's fallback toast", async () => {
+		refuseSignIn();
+
+		await consumeGoogleHandoff();
+
+		expect(mocks.reportSignInFailure).toHaveBeenCalledExactlyOnceWith({
+			error: REFUSAL,
+			label: expect.stringMatching(PSEUDO_MESSAGE),
+		});
 	});
 });
 
@@ -224,5 +283,20 @@ describe("watching for a Google handoff", () => {
 
 		expect(listen).not.toHaveBeenCalled();
 		expect(mocks.invoke).not.toHaveBeenCalled();
+	});
+
+	it("still picks up the scripted handoff in the translator screenshots", async () => {
+		vi.stubGlobal("__DEMO__", true);
+		vi.stubGlobal("__SCREENSHOTS__", true);
+
+		await startGoogleHandoffWatch();
+
+		expect(listen).toHaveBeenCalledWith(
+			"google-oauth:handoff",
+			expect.any(Function),
+		);
+		await vi.waitFor(() =>
+			expect(mocks.events).toContain("google_handoff_pending"),
+		);
 	});
 });

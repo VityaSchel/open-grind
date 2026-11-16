@@ -3,6 +3,7 @@
 
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 
 	let {
@@ -60,7 +61,7 @@
 	{#if selected}
 		<div role="status" class="sr-only">
 			{selected.size === selected.max
-				? `Maximum ${selected.max} selected`
+				? t("media.grid.a11y.maxSelected", { count: selected.max })
 				: ""}
 		</div>
 	{/if}

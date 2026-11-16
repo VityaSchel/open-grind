@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
 
 const lightbox = vi.hoisted(() => ({
 	loadAlbumSlides: vi.fn(),
@@ -12,21 +10,23 @@ const lightbox = vi.hoisted(() => ({
 const sonner = vi.hoisted(() => ({
 	toast: { info: vi.fn(), error: vi.fn(), message: vi.fn() },
 }));
-const warning = vi.hoisted(() => ({
-	albumWarningDue: vi.fn(() => false),
-	markAlbumWarningSeen: vi.fn(),
-}));
 
 vi.mock("./album-lightbox", () => lightbox);
-vi.mock("./album-warning", () => warning);
 vi.mock("svelte-sonner", () => sonner);
+vi.mock("#lib/api/current-session.ts", () => ({
+	signedInProfileIdSnapshot: () => 858049792,
+	signedInProfileId: () => Promise.resolve(858049792),
+}));
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
+const PREVIEW = '[data-slot="album-preview"]';
 
 function previewWithCover(
 	coverUrl: string | null,
@@ -41,18 +41,46 @@ function previewWithCover(
 			attach: chat ? singleClick : undefined,
 		},
 	});
-	const preview = container.querySelector('[data-slot="album-preview"]');
+	const preview = container.querySelector(PREVIEW);
 	if (preview === null) throw new Error("no album preview");
 	return preview;
+}
+
+function renderPreview(label?: string): HTMLButtonElement {
+	const { container } = render(AlbumPreview, {
+		props: {
+			albumId: 900,
+			coverUrl: null,
+			hasPhoto: true,
+			hasVideo: false,
+			label,
+		},
+	});
+	const preview = container.querySelector<HTMLButtonElement>(PREVIEW);
+	if (preview === null) throw new Error("no album preview");
+	return preview;
+}
+
+async function failedToastLabel(preview: HTMLButtonElement): Promise<unknown> {
+	const consoleError = vi
+		.spyOn(console, "error")
+		.mockImplementation(() => {});
+	await fireEvent.click(preview);
+	await vi.waitFor(() => expect(sonner.toast.error).toHaveBeenCalledOnce());
+	await vi.waitFor(() => expect(preview.disabled).toBe(false));
+	expect(consoleError).toHaveBeenCalledOnce();
+	return sonner.toast.error.mock.calls[0]?.[0];
 }
 
 beforeEach(() => {
 	runningOn("windows");
 });
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.clearAllMocks();
+	vi.restoreAllMocks();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("album preview", () => {
@@ -103,77 +131,83 @@ describe("album preview", () => {
 		expect(sonner.toast.error).not.toHaveBeenCalled();
 		expect(sonner.toast.message).not.toHaveBeenCalled();
 	});
-});
 
-describe("album warning", () => {
-	const WARNING = "Albums may contain nudity or NSFW content";
+	it("says when the album fails to load", async () => {
+		lightbox.loadAlbumSlides.mockRejectedValue(new Error("offline"));
 
-	afterEach(() => {
-		warning.albumWarningDue.mockReturnValue(false);
+		expect(await failedToastLabel(renderPreview())).toBe(
+			"Couldn’t load album",
+		);
+		expect(lightbox.openAlbumLightbox).not.toHaveBeenCalled();
 	});
 
-	function renderAlbum({ ourAlbum = false } = {}) {
-		warning.albumWarningDue.mockReturnValue(true);
-		lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
-		render(AlbumPreview, {
+	it("says when the loaded album fails to open", async () => {
+		lightbox.loadAlbumSlides.mockResolvedValue([{ contentId: 1 }]);
+		lightbox.openAlbumLightbox.mockRejectedValue(new Error("no viewer"));
+
+		expect(await failedToastLabel(renderPreview())).toBe(
+			"Couldn’t open album",
+		);
+	});
+
+	it("words its failure toasts in the locale active when they show", async () => {
+		lightbox.loadAlbumSlides.mockRejectedValue(new Error("offline"));
+		const preview = renderPreview();
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(await failedToastLabel(preview)).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("names itself in the active locale unless the caller names it", async () => {
+		const named = renderPreview();
+		const custom = renderPreview("Studio");
+		expect(named.getAttribute("aria-label")).toBe("Open album");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(named.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(custom.getAttribute("aria-label")).toBe("Studio");
+	});
+});
+
+describe("album preview on Google Play", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	function renderOnPlay({ ourAlbum }: { ourAlbum: boolean }) {
+		vi.stubEnv("OPEN_GRIND_STORE", "play");
+		return render(AlbumPreview, {
 			props: {
 				albumId: 900,
-				coverUrl: null,
+				coverUrl: "https://example.invalid/cover",
 				hasPhoto: true,
 				hasVideo: false,
 				ourAlbum,
 			},
 		});
-		return screen.getByRole<HTMLButtonElement>("button", {
-			name: "Open album",
-		});
 	}
 
-	it("asks before loading someone else's album and opens it after View", async () => {
-		await fireEvent.click(renderAlbum());
+	it("covers someone else's album and offers only the mature content setting", () => {
+		const { getByRole, queryByRole } = renderOnPlay({ ourAlbum: false });
 
-		await vi.waitFor(() => screen.getByText(WARNING));
-		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
-
-		await fireEvent.click(screen.getByRole("button", { name: "View" }));
-
-		expect(warning.markAlbumWarningSeen).toHaveBeenCalledOnce();
-		await vi.waitFor(() =>
-			expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900),
+		expect(queryByRole("button", { name: "Open album" })).toBeNull();
+		const album = getByRole("group", { name: "Open album" });
+		expect(
+			album.contains(getByRole("link", { name: "Show mature content" })),
+		).toBe(true);
+		expect(album.querySelector("img")?.getAttribute("src")).toBe(
+			proxyMediaUrl("https://example.invalid/cover"),
 		);
-	});
-
-	it("leaves the album closed and the warning unseen after Cancel", async () => {
-		const button = renderAlbum();
-		await fireEvent.click(button);
-		await vi.waitFor(() => screen.getByText(WARNING));
-
-		await fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-		await vi.waitFor(() => expect(screen.queryByText(WARNING)).toBeNull());
-		expect(button.disabled).toBe(false);
 		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
-		expect(warning.markAlbumWarningSeen).not.toHaveBeenCalled();
 	});
 
-	it("closes the warning on the back gesture without opening the album", async () => {
-		await fireEvent.click(renderAlbum());
-		await vi.waitFor(() => screen.getByText(WARNING));
+	it("opens our own album", async () => {
+		lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
+		const { getByRole } = renderOnPlay({ ourAlbum: true });
 
-		for (const handler of backGestureEventHandlers.keys()) handler();
+		await fireEvent.click(getByRole("button", { name: "Open album" }));
 
-		await vi.waitFor(() => expect(screen.queryByText(WARNING)).toBeNull());
-		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
-		expect(warning.markAlbumWarningSeen).not.toHaveBeenCalled();
-	});
-
-	it("opens our own album without the warning", async () => {
-		await fireEvent.click(renderAlbum({ ourAlbum: true }));
-
-		await vi.waitFor(() =>
-			expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900),
-		);
-		expect(screen.queryByText(WARNING)).toBeNull();
+		expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900);
 	});
 });
 

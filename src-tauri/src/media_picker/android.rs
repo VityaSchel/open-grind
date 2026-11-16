@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 
 struct AndroidMediaPicker {
 	handle: PluginHandle<Wry>,
@@ -50,7 +50,9 @@ pub async fn pick_android_media(
 		)
 		.await
 		.map_err(|error| {
-			AppError::Media(format!("Could not open the photo picker: {error}"))
+			AppError::Media(MediaError::PickerFailed {
+				detail: error.to_string(),
+			})
 		})?;
 	Ok(response.uris)
 }

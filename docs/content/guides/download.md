@@ -11,7 +11,7 @@ titleTemplate: ':title — free & open source Grindr client'
 
 # Download Open Grind
 
-Never download Open Grind from unofficial sources. The only official sources of Open Grind are https://git.opengrind.org/open-grind/open-grind/releases and [Google Play](https://play.google.com/store/apps/details?id=org.opengrind). All releases are signed and reproducible.
+Never download Open Grind from unofficial sources. The only official sources of Open Grind are https://git.opengrind.org/open-grind/open-grind/releases, [Google Play](https://play.google.com/store/apps/details?id=org.opengrind) and [F-Droid](https://f-droid.org/packages/org.opengrind/). All releases are signed and reproducible.
 
 > [!Warning] 🚧&nbsp;&nbsp;Open Grind is in active development.&nbsp;&nbsp;🚧
 > [Contribute to the project](https://git.opengrind.org/open-grind/open-grind/) or [join the discussion](https://matrix.to/#/#opengrind:opengrind.org) to help us prioritize features and improvements.
@@ -21,13 +21,15 @@ Never download Open Grind from unofficial sources. The only official sources of 
 <div class="vpbuttons-row">
     <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-rc.1.1/open-grind-v0.1.0-rc.1.1-android.apk" size="medium">Download for Android (apk)</VPButton>
     <VPButton href="https://play.google.com/store/apps/details?id=org.opengrind" size="medium" theme="alt">Install from Google Play</VPButton>
+    <VPButton href="https://f-droid.org/packages/org.opengrind/" size="medium" theme="alt">Get it on F-Droid</VPButton>
 </div>
 
 To install the APK, use your system's APK installer and optionally enable auto updates.
 
 - **Smaller APKs** for one processor type: [arm64-v8a](https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-rc.1.1/open-grind-v0.1.0-rc.1.1-android-arm64-v8a.apk) (most phones), [armeabi-v7a](https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-rc.1.1/open-grind-v0.1.0-rc.1.1-android-armeabi-v7a.apk), [x86_64](https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-rc.1.1/open-grind-v0.1.0-rc.1.1-android-x86_64.apk), [x86](https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-rc.1.1/open-grind-v0.1.0-rc.1.1-android-x86.apk).
-- **Switching between Google Play and the APK** (or F-Droid) requires uninstalling first, because Google signs its version with its own key. Uninstalling signs you out and resets app settings.
-- **Add-ons** (Google sign-in, fast notifications, reCAPTCHA helper) can't be installed by the Google Play version. Install them from their pages: [Sign in with Google](/guides/sign-in-with-google#installed-from-google-play), [Notifications](/guides/notifications).
+- **F-Droid** builds the same APK from source and ships it with the official signature, so you can switch from the APK to F-Droid without uninstalling. F-Droid updates it, usually 2-5 days after each release.
+- **Switching to or from Google Play** requires uninstalling first, because Google signs its version with its own key. Uninstalling signs you out and resets app settings.
+- **Add-ons** (Google sign-in, fast notifications, reCAPTCHA helper) can't be installed by the Google Play version. Install them from their pages: [Sign in with Google](/guides/sign-in-with-google#installed-from-google-play), [Notifications](/guides/notifications), [reCAPTCHA helper](/guides/recaptcha-helper#installed-from-google-play).
 - **To verify the Google Play version**, follow [Verify Google Play install](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md#verify-google-play-install).
 
 ## Windows

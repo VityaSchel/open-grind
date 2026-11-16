@@ -6,6 +6,7 @@
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	const switching = $derived(googleHandoffState.phase === "switchingAccount");
@@ -29,15 +30,18 @@
 >
 	<AlertDialog.Content interactOutsideBehavior="close">
 		<AlertDialog.Header>
-			<AlertDialog.Title>Switch Google account?</AlertDialog.Title>
+			<AlertDialog.Title>
+				{t("auth.googleHandoff.switchAccount.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
-				You have signed in to another Google account using the Google
-				OAuth app.
+				{t("auth.googleHandoff.switchAccount.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={switching} class="contents">
-				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel
+					>{t("common.actions.cancel")}</AlertDialog.Cancel
+				>
 				<Button
 					onclick={() => answerAccountSwitch(true)}
 					aria-busy={switching}
@@ -45,7 +49,7 @@
 					{#if switching}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Continue
+					{t("common.actions.continue")}
 				</Button>
 			</fieldset>
 		</AlertDialog.Footer>

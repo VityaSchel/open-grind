@@ -3,6 +3,8 @@
 	import { getPronouns } from "#lib/api/users/pronouns.ts";
 	import Separator from "#lib/components/ui/separator/separator.svelte";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { formatList } from "#lib/i18n/format.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import ProfileField from "./ProfileField.svelte";
 
 	const allGenders = $derived(getGenders());
@@ -44,17 +46,21 @@
 					<Spinner />
 				{:then allGenders}
 					<span>
-						{genders
-							.map(
-								(genderId) =>
-									allGenders.find(
-										(g) => g.genderId === genderId,
-									)?.gender,
-							)
-							.join(", ")}
+						{formatList(
+							genders
+								.map(
+									(genderId) =>
+										allGenders.find(
+											(g) => g.genderId === genderId,
+										)?.gender,
+								)
+								.filter((gender) => gender !== undefined),
+						)}
 					</span>
 				{:catch}
-					<span class="load-fail">Failed to load genders</span>
+					<span class="load-fail"
+						>{t("common.genders.errors.loadFailed")}</span
+					>
 				{/await}
 			{/if}
 			{#if genders !== null && genders.length > 0 && pronouns !== null && pronouns.length > 0}
@@ -65,17 +71,21 @@
 					<Spinner />
 				{:then allPronouns}
 					<span>
-						{pronouns
-							.map(
-								(pronounId) =>
-									allPronouns.find(
-										(p) => p.pronounId === pronounId,
-									)?.pronoun,
-							)
-							.join(", ")}
+						{formatList(
+							pronouns
+								.map(
+									(pronounId) =>
+										allPronouns.find(
+											(p) => p.pronounId === pronounId,
+										)?.pronoun,
+								)
+								.filter((pronoun) => pronoun !== undefined),
+						)}
 					</span>
 				{:catch}
-					<span class="load-fail">Failed to load pronouns</span>
+					<span class="load-fail"
+						>{t("profile.fields.pronouns.errors.loadFailed")}</span
+					>
 				{/await}
 			{/if}
 		</span>

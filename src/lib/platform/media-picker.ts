@@ -1,12 +1,23 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "svelte-sonner";
-import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
+import {
+	AndroidFs,
+	type AndroidFsUri,
+	type AndroidOpenFilePickerOptions,
+} from "tauri-plugin-android-fs-api";
 import z from "zod";
 
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
 
-type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
+export type MediaKind = "image" | "video" | "media";
+
+type MediaFilter = {
+	name: PlainMessageKey;
+	extensions: string[];
+	mimeTypes: string[];
+};
 
 const mimeTypesByExtension: Record<string, string> = {
 	heic: "image/heic",
@@ -27,23 +38,24 @@ const videoExtensions = ["mp4", "mov"];
 
 const filtersByKind = {
 	image: {
-		name: "Images",
+		name: "media.picker.filters.image",
 		extensions: imageExtensions,
 		mimeTypes: ["image/*"],
 	},
 	video: {
-		name: "Videos",
+		name: "media.picker.filters.video",
 		extensions: videoExtensions,
 		mimeTypes: ["video/*"],
 	},
 	media: {
-		name: "Media",
+		name: "media.picker.filters.media",
 		extensions: [...imageExtensions, ...videoExtensions],
 		mimeTypes: ["image/*", "video/*"],
 	},
-} satisfies Record<string, MediaFilter>;
+} satisfies Record<MediaKind, MediaFilter>;
 
-export type MediaKind = keyof typeof filtersByKind;
+const galleryPicker =
+	"Gallery" satisfies AndroidOpenFilePickerOptions["pickerType"];
 
 const iosPicksSchema = z.object({
 	ids: z.array(z.string()),
@@ -98,7 +110,11 @@ async function pickIosMedia({
 	const { ids, failed } = iosPicksSchema.parse(
 		await invoke("pick_ios_media", { kind, multiple }),
 	);
-	if (failed > 0) toast.error(`Couldn't load ${failed} of the picked items`);
+	if (failed > 0) {
+		toast.error(
+			t("common.media.errors.pickedItemsLoadFailed", { count: failed }),
+		);
+	}
 	return ids.map(
 		(id): PickedMedia => ({
 			source: "staged",
@@ -123,7 +139,7 @@ async function pickWithDialog({
 		decodesHeif && kind !== "video"
 			? [...extensions, ...heifExtensions]
 			: extensions;
-	const filters = [{ name, extensions: offered }];
+	const filters = [{ name: t(name), extensions: offered }];
 	const selection = multiple
 		? await open({ filters, multiple: true })
 		: await open({ filters, multiple: false });
@@ -158,7 +174,7 @@ async function pickAndroidMedia({
 	const uris =
 		picked === null
 			? await AndroidFs.showOpenFilePicker({
-					pickerType: "Gallery",
+					pickerType: galleryPicker,
 					mimeTypes,
 					multiple,
 				})

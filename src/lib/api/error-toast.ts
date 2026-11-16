@@ -2,13 +2,14 @@ import { toast } from "svelte-sonner";
 
 import { ApiError } from "#lib/api/api-error.ts";
 import { promptCopyError } from "#lib/api/error-copy.ts";
+import { t } from "#lib/i18n/index.ts";
 
 function isSessionGone({ kind }: ApiError): boolean {
 	return kind === "SessionCleared" || kind === "NotSignedIn";
 }
 
 export function showErrorToast({
-	label = "An error occurred",
+	label = t("feedback.appError.unknown"),
 	error,
 	onRetry,
 	id,
@@ -19,22 +20,17 @@ export function showErrorToast({
 	id?: string;
 }) {
 	if (error instanceof ApiError && isSessionGone(error)) return;
+	const copyDetails = {
+		label: t("common.actions.copyError"),
+		onClick: () => void promptCopyError(error).catch(() => {}),
+	};
 	if (onRetry) {
 		toast.error(label, {
 			id,
-			action: { label: "Retry", onClick: onRetry },
-			cancel: {
-				label: "Copy details",
-				onClick: () => void promptCopyError(error).catch(() => {}),
-			},
+			action: { label: t("common.actions.retry"), onClick: onRetry },
+			cancel: copyDetails,
 		});
 		return;
 	}
-	toast.error(label, {
-		id,
-		action: {
-			label: "Copy details",
-			onClick: () => void promptCopyError(error).catch(() => {}),
-		},
-	});
+	toast.error(label, { id, action: copyDetails });
 }

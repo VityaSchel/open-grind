@@ -80,7 +80,7 @@ describe("recordProfileVisit", () => {
 		).resolves.toBeUndefined();
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to record profile view preference or action",
+			label: "Couldn’t record your view of this profile",
 			error: failure,
 		});
 	});
@@ -97,7 +97,7 @@ describe("recordProfileVisit", () => {
 
 		expect(recordProfileViewMock).not.toHaveBeenCalled();
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to record profile view preference or action",
+			label: "Couldn’t record your view of this profile",
 			error: failure,
 		});
 	});

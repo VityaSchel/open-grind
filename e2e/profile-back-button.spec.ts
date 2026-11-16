@@ -73,7 +73,7 @@ test("opens Browse after coming back to a profile that was the first screen", as
 	page,
 }) => {
 	await openProfileDirectly(page);
-	await page.getByRole("link", { name: "Write a message..." }).click();
+	await page.getByRole("link", { name: "Write a message…" }).click();
 	await expect(page).toHaveURL(/\/chat\//);
 	await page.goBack();
 	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });
@@ -159,8 +159,8 @@ test("clears a side cutout", async ({ page }) => {
 test("goes back from the hidden version of the profile", async ({ page }) => {
 	await openProfileDirectly(page);
 	await page.getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Hide profile" }).click();
-	await expect(page.getByText("You hid this profile.")).toBeVisible();
+	await page.getByRole("menuitem", { name: "Hide user" }).click();
+	await expect(page.getByText("You have hidden this user")).toBeVisible();
 
 	await backLink(page).click();
 

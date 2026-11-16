@@ -1,6 +1,6 @@
-import { unsupportedIsFixable, unsupportedText } from "./error-copy";
+import { unsupportedIsFixable } from "./error-copy";
 import { getUpdateCapability, updatesAvailableHere } from "./index";
-import type { Capability } from "./types";
+import type { Capability, Unsupported } from "./types";
 
 const undetermined = {
 	state: "unsupported",
@@ -48,10 +48,10 @@ export function buildSignedByOpenGrind(): boolean {
 	);
 }
 
-export function updatesUnsupportedReason(): string | null {
+export function updatesUnsupportedReason(): Unsupported["reason"] | null {
 	if (!updatesAvailableHere() || capability?.state !== "unsupported") {
 		return null;
 	}
 	if (!unsupportedIsFixable(capability.detail)) return null;
-	return unsupportedText(capability.detail);
+	return capability.detail.reason;
 }

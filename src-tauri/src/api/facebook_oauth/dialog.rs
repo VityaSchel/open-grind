@@ -13,6 +13,7 @@ const REDIRECT_PATH: &str = "/";
 /// Matched verbatim by the frontend; Meta's own wording only reaches the log.
 pub const DIALOG_ERROR: &str = "facebook-dialog-error";
 pub const HANDOFF_REFUSED: &str = "facebook-handoff-refused";
+pub const UNVERIFIED: &str = "facebook-unverified";
 
 pub fn dialog_url(state: &str) -> Result<Url, AppError> {
 	Url::parse_with_params(
@@ -71,7 +72,7 @@ pub fn result_from_redirect(
 
 	let token = field("access_token")?;
 	if field("state").as_deref() != Some(state) {
-		return Some(Err("Sign-in could not be verified".to_owned()));
+		return Some(Err(UNVERIFIED.to_owned()));
 	}
 	Some(Ok(token))
 }
@@ -123,19 +124,19 @@ mod tests {
 	fn a_mismatched_state_is_refused_even_with_a_token() {
 		let redirect =
 			url("https://web.grindr.com/#access_token=EAAtok&state=other");
-		assert!(matches!(
+		assert_eq!(
 			result_from_redirect(&redirect, "st4te"),
-			Some(Err(_))
-		));
+			Some(Err(UNVERIFIED.into()))
+		);
 	}
 
 	#[test]
 	fn a_missing_state_is_refused() {
 		let redirect = url("https://web.grindr.com/#access_token=EAAtok");
-		assert!(matches!(
+		assert_eq!(
 			result_from_redirect(&redirect, "st4te"),
-			Some(Err(_))
-		));
+			Some(Err(UNVERIFIED.into()))
+		);
 	}
 
 	#[test]
@@ -158,6 +159,19 @@ mod tests {
 			result_from_redirect(&redirect, "st4te"),
 			Some(Err(DIALOG_ERROR.into()))
 		);
+	}
+
+	#[test]
+	fn the_sign_in_form_explains_every_marker() {
+		let form = include_str!(
+			"../../../../src/routes/auth/sign-in/SignInForm.svelte"
+		);
+		for marker in [DIALOG_ERROR, HANDOFF_REFUSED, UNVERIFIED] {
+			assert!(
+				form.contains(&format!("\"{marker}\": () =>")),
+				"SignInForm.svelte has no Facebook failure for {marker}"
+			);
+		}
 	}
 
 	#[test]

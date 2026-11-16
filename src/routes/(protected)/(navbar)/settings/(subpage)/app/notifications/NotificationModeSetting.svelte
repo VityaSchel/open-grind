@@ -1,33 +1,33 @@
 <script lang="ts">
+	import RadioList from "#lib/components/shared/RadioList.svelte";
+	import RadioListItem from "#lib/components/shared/RadioListItem.svelte";
+	import RadioMark from "#lib/components/shared/RadioMark.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
-	import * as RadioGroup from "#lib/components/ui/radio-group/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
+	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 	import { selectNotificationMode } from "#lib/push/delivery.svelte.ts";
 	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
-	import { cn } from "#lib/util/utils.ts";
 	import type { NotificationMode } from "#lib/push/types.ts";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
 
-	const modes: {
-		mode: NotificationMode;
-		title: string;
-		description: string;
-		recommended?: boolean;
-	}[] = [
-		{
-			mode: "fast",
-			title: "Fast mode",
-			description:
-				"Use Google's Firebase proprietary service to receive push notifications instantly",
-			recommended: true,
+	const modeKeys = {
+		fast: {
+			title: "settings.notifications.mode.fast.title",
+			description: "settings.notifications.mode.fast.description",
 		},
-		{
-			mode: "slow",
-			title: "Slow mode",
-			description:
-				"Poll for new notifications periodically in the background using Android's native scheduler",
+		slow: {
+			title: "settings.notifications.mode.slow.title",
+			description: "settings.notifications.mode.slow.description",
 		},
+	} as const satisfies Record<
+		NotificationMode,
+		Record<"title" | "description", PlainMessageKey>
+	>;
+
+	const modes: { mode: NotificationMode; recommended: boolean }[] = [
+		{ mode: "fast", recommended: true },
+		{ mode: "slow", recommended: false },
 	];
 
 	let group = $state<HTMLElement | null>(null);
@@ -40,66 +40,46 @@
 	}
 </script>
 
-<RadioGroup.Root
+<RadioList
 	bind:ref={group}
-	aria-label="Delivery mode"
+	aria-label={t("settings.notifications.mode.a11y.group")}
 	disabled={notificationSettings.busy || !notificationSettings.enabled}
-	class="overflow-hidden rounded-2xl border border-border transition-opacity data-disabled:opacity-60"
+	class="transition-opacity data-disabled:opacity-60"
 	bind:value={
 		() => notificationSettings.mode,
 		(next) => void selectNotificationMode(next as NotificationMode)
 	}
 >
-	{#each modes as { mode, title, description, recommended } (mode)}
+	{#each modes as { mode, recommended } (mode)}
 		{@const enabling =
 			mode === "fast" && notificationSettings.phase === "enablingFast"}
-		<RadioGroup.Item
-			value={mode}
-			aria-busy={enabling}
-			class={cn(
-				Item.itemVariants(),
-				"items-start rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset",
-			)}
-		>
+		<RadioListItem value={mode} aria-busy={enabling} class="items-start">
 			{#snippet children({ checked })}
 				<Item.Content>
 					<Item.Title>
-						{title}
+						{t(modeKeys[mode].title)}
 						{#if recommended}
 							<Badge
 								variant="secondary"
 								class="font-normal text-primary"
 							>
-								Recommended
+								{t("settings.notifications.mode.recommended")}
 							</Badge>
 						{/if}
 					</Item.Title>
 					<Item.Description class="line-clamp-none text-wrap">
-						{description}
+						{t(modeKeys[mode].description)}
 					</Item.Description>
 				</Item.Content>
 				<Item.Actions class="self-start pt-0.5">
 					{#if enabling}
 						<Spinner aria-hidden="true" />
 					{:else}
-						<span
-							class={[
-								"flex size-5 items-center justify-center rounded-full border-2",
-								{
-									"border-primary": checked,
-									"border-muted-foreground/70": !checked,
-								},
-							]}
-						>
-							{#if checked}
-								<span class="size-2.5 rounded-full bg-primary"
-								></span>
-							{/if}
-						</span>
+						<RadioMark {checked} />
 					{/if}
 				</Item.Actions>
 			{/snippet}
-		</RadioGroup.Item>
+		</RadioListItem>
 	{/each}
-</RadioGroup.Root>
+</RadioList>
 <PushAddonAlert onCloseAutoFocus={focusSelectedMode} />

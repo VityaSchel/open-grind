@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getMyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { receiveMedia } from "#lib/platform/media-intake.svelte.ts";
 	import type { PickedMedia } from "#lib/platform/media-picker.ts";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
@@ -33,16 +34,12 @@
 		creating
 			? null
 			: {
-					label: "Drop to start an album",
+					label: t("media.albums.new.dropToStart"),
 					videos: true,
 					receive: (media) => void add(media),
 				},
 	);
 </script>
-
-<svelte:head>
-	<title>New album</title>
-</svelte:head>
 
 <AlbumHeaderLayout>
 	{#snippet preview()}
@@ -51,8 +48,8 @@
 	<AlbumNameField bind:value={albumName} disabled={creating} />
 </AlbumHeaderLayout>
 <AlbumMediaEmpty
-	title="Add a photo to start your album"
-	description="The album is created once you add its first photo or video."
+	title={t("media.albums.new.empty.title")}
+	description={t("media.albums.new.empty.description")}
 	disabled={creating}
 	onAdd={() => void add()}
 />

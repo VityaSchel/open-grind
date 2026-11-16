@@ -148,7 +148,7 @@ test("a toast over the report sheet stays in front and takes a tap", async ({
 }) => {
 	await page.goto(DEMO_PROFILE);
 	const menu = await openMenu({ page, trigger: "Profile menu" });
-	await menu.getByRole("menuitem", { name: "Report profile" }).click();
+	await menu.getByRole("menuitem", { name: "Report user" }).click();
 	const sheet = page.locator(DRAWER);
 	await sheet.waitFor();
 	await animationsFinished(sheet);
@@ -163,7 +163,7 @@ test("a toast over the report sheet stays in front and takes a tap", async ({
 		TOAST,
 	);
 
-	await toast.getByRole("button", { name: "Copy details" }).tap();
+	await toast.getByRole("button", { name: "Copy error details" }).tap();
 
 	await expect(
 		page.getByRole("alertdialog", { name: "Copy error details?" }),

@@ -2,6 +2,7 @@ import { toast } from "svelte-sonner";
 
 import { BlockDidNotStickError } from "#lib/api/browse/blocks.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
+import { t } from "#lib/i18n/index.ts";
 import { openExternalLink } from "#lib/platform/link-opener.ts";
 
 const WHY_BLOCKING_FAILS_URL =
@@ -9,13 +10,16 @@ const WHY_BLOCKING_FAILS_URL =
 
 export function showBlockFailure(error: unknown): void {
 	if (error instanceof BlockDidNotStickError) {
-		toast.error("Blocking this profile failed. Try hiding instead.", {
+		toast.error(t("profile.viewability.errors.blockIgnored"), {
 			action: {
-				label: "Learn more",
+				label: t("common.actions.learnMore"),
 				onClick: () => openExternalLink(WHY_BLOCKING_FAILS_URL),
 			},
 		});
 		return;
 	}
-	showErrorToast({ label: "Failed to block user", error });
+	showErrorToast({
+		label: t("common.viewability.errors.blockFailed"),
+		error,
+	});
 }

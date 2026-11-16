@@ -3,6 +3,7 @@
 	import UserCircleIcon from "phosphor-svelte/lib/UserCircleIcon";
 
 	import * as Item from "#lib/components/ui/item/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 </script>
 
 <Item.Root variant="outline">
@@ -15,7 +16,7 @@
 				<Item.Title
 					class="inline-block w-full min-w-0 truncate text-left"
 				>
-					Account Settings
+					{t("settings.subpage.titles.account")}
 				</Item.Title>
 			</Item.Content>
 			<Item.Actions>

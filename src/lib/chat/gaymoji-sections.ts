@@ -1,3 +1,8 @@
+import {
+	FEATURED_ORIGINAL_IDS,
+	GAYMOJI_SECTION_ICON_IDS,
+} from "#lib/chat/gaymoji-ids.ts";
+import { type MessageKey, t } from "#lib/i18n/index.ts";
 import type {
 	GaymojiCategory,
 	GaymojiItem,
@@ -6,48 +11,84 @@ import type {
 export type GaymojiSection = {
 	key: string;
 	title: string;
+	titleFromCategory: boolean;
 	icon: GaymojiItem;
 	items: GaymojiItem[];
 };
 
-type SectionLook = { title: string; iconId: string };
+const sectionTitleKeys = {
+	wenChing: "chat.composer.stickers.gaymoji.sections.wenChing",
+	datingAndSex: "chat.composer.stickers.gaymoji.sections.datingAndSex",
+	body: "chat.composer.stickers.gaymoji.sections.body",
+	profile: "chat.composer.stickers.gaymoji.sections.profile",
+	holidays: "chat.composer.stickers.gaymoji.sections.holidays",
+	objects: "chat.composer.stickers.gaymoji.sections.objects",
+	mood: "chat.composer.stickers.gaymoji.sections.mood",
+	other: "chat.composer.stickers.gaymoji.sections.other",
+} as const satisfies Record<string, MessageKey>;
+
+type SectionLook = {
+	titleKey: (typeof sectionTitleKeys)[keyof typeof sectionTitleKeys];
+	iconId: string;
+};
 
 export const KNOWN_GAYMOJI_CATEGORIES = new Map<string, SectionLook>([
 	[
 		"wen_ching_taiwan_stickers",
-		{ title: "Wen Ching", iconId: "wen_ching_05_type.png" },
+		{
+			titleKey: sectionTitleKeys.wenChing,
+			iconId: GAYMOJI_SECTION_ICON_IDS.wenChing,
+		},
 	],
-	["dating+sex", { title: "Dating & Sex", iconId: "2_1_Eggplant_1.png" }],
-	["body", { title: "Body", iconId: "Bicep_with_medium_skin_tone.png" }],
+	[
+		"dating+sex",
+		{
+			titleKey: sectionTitleKeys.datingAndSex,
+			iconId: GAYMOJI_SECTION_ICON_IDS.datingAndSex,
+		},
+	],
+	[
+		"body",
+		{
+			titleKey: sectionTitleKeys.body,
+			iconId: GAYMOJI_SECTION_ICON_IDS.body,
+		},
+	],
 	[
 		"profile",
 		{
-			title: "Profile",
-			iconId: "Man_with_dark_skin_tone_and_short_hair.png",
+			titleKey: sectionTitleKeys.profile,
+			iconId: GAYMOJI_SECTION_ICON_IDS.profile,
 		},
 	],
 	[
 		"holiday",
-		{ title: "Holidays", iconId: "1_1_0_Pride_02_PrideHeartStripe.png" },
+		{
+			titleKey: sectionTitleKeys.holidays,
+			iconId: GAYMOJI_SECTION_ICON_IDS.holidays,
+		},
 	],
-	["objects", { title: "Objects", iconId: "f_ice_cream_Rainbow.png" }],
-	["mood", { title: "Mood", iconId: "4_Happy_Mask.png" }],
+	[
+		"objects",
+		{
+			titleKey: sectionTitleKeys.objects,
+			iconId: GAYMOJI_SECTION_ICON_IDS.objects,
+		},
+	],
+	[
+		"mood",
+		{
+			titleKey: sectionTitleKeys.mood,
+			iconId: GAYMOJI_SECTION_ICON_IDS.mood,
+		},
+	],
 ]);
 
 export const FEATURED_CATEGORY = "featured";
 
-export const FEATURED_ORIGINAL_IDS = new Set([
-	"Pinky_up.png",
-	"2_6_Three_girls_sitting_at_table.png",
-	"2_0_rainingMen2tiny.png",
-	"1_6_2_WGbed.png",
-	"1_6_2_WGgaysRule.png",
-	"1_6_2_WGgrace.png",
-]);
-
 const OTHER_SECTION: SectionLook = {
-	title: "Other",
-	iconId: "1_6_2_WGgaysRule.png",
+	titleKey: sectionTitleKeys.other,
+	iconId: GAYMOJI_SECTION_ICON_IDS.other,
 };
 
 function titleFromCategory(category: string): string {
@@ -82,7 +123,16 @@ export function gaymojiSections(
 		const icon =
 			(look === undefined ? undefined : byId.get(look.iconId)) ?? first;
 		return [
-			{ key, title: look?.title ?? titleFromCategory(key), icon, items },
+			{
+				key,
+				title:
+					look === undefined
+						? titleFromCategory(key)
+						: t(look.titleKey),
+				titleFromCategory: look === undefined,
+				icon,
+				items,
+			},
 		];
 	}
 

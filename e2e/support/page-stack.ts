@@ -69,6 +69,22 @@ export async function openCredits(page: Page) {
 	await stackSettled(page);
 }
 
+export const APP_SUBSCREENS = [
+	{ row: "Display", path: `${APP_SETTINGS}/display` },
+	{ row: "Notifications", path: `${APP_SETTINGS}/notifications` },
+	{ row: "Privacy", path: `${APP_SETTINGS}/privacy` },
+	{ row: "Security", path: `${APP_SETTINGS}/security` },
+];
+
+export async function openAppSubscreen(
+	page: Page,
+	{ row, path }: { row: string; path: string },
+) {
+	await page.getByRole("link", { name: row, exact: true }).click();
+	await expect(page).toHaveURL(new RegExp(`${path}$`));
+	await stackSettled(page);
+}
+
 const currentEntry = (page: Page) =>
 	page.evaluate(() => navigation.currentEntry!.id);
 

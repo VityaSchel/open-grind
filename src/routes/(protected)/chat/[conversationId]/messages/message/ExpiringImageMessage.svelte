@@ -4,6 +4,12 @@
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { getSingleMessage } from "#lib/api/messaging/messages.ts";
 	import {
+		MATURE_CONTENT_SETTING_HREF,
+		matureContentCovered,
+	} from "#lib/components/mature-content/mature-content.ts";
+	import MatureContentBadge from "#lib/components/mature-content/MatureContentBadge.svelte";
+	import { t } from "#lib/i18n/index.ts";
+	import {
 		type ExpiringImageMessage,
 		expiringImageMessageSchema,
 	} from "#lib/model/messaging/messages.ts";
@@ -29,6 +35,7 @@
 	} = $props();
 
 	const media = new MessageMediaState();
+	const covered = $derived(!isOut && matureContentCovered());
 
 	const className: import("svelte/elements").ClassValue = $derived([
 		"relative",
@@ -104,7 +111,7 @@
 			} catch (error) {
 				console.error(error);
 				showErrorToast({
-					label: "Failed to load expiring image",
+					label: t("chat.message.expiringImage.errors.loadFailed"),
 					error,
 				});
 				imageState = { status: "idle" };
@@ -131,7 +138,10 @@
 		}).catch((error: unknown) => {
 			if (controller.signal.aborted) return;
 			console.error(error);
-			showErrorToast({ label: "Failed to open expiring image", error });
+			showErrorToast({
+				label: t("chat.message.expiringImage.errors.openFailed"),
+				error,
+			});
 			imageState = { status: "idle" };
 		});
 		return () => controller.abort();
@@ -140,11 +150,23 @@
 
 {#snippet bubbleContent()}
 	<ImagesIcon size={24} weight="fill" class="shrink-0" />
-	<span>Expiring image</span>
+	<span>{t("chat.messagePreview.expiringPhoto")}</span>
+	{#if covered}
+		<MatureContentBadge />
+	{/if}
 	{@render media.adornments?.()}
 {/snippet}
 
-{#if viewable}
+{#if viewable && covered}
+	<a
+		data-slot="expiring-image-message-covered"
+		href={MATURE_CONTENT_SETTING_HREF}
+		class={bubbleClass}
+		{@attach media.attach}
+	>
+		{@render bubbleContent()}
+	</a>
+{:else if viewable}
 	<button
 		data-slot="expiring-image-message"
 		class={[
@@ -181,7 +203,7 @@
 			]}
 			size="sm"
 		>
-			Expired image
+			{t("chat.message.expiringImage.expired")}
 		</LockedMedia>
 		{@render media.adornments?.()}
 	</div>

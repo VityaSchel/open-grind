@@ -17,6 +17,8 @@ vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { pickMedia, pickMultipleMedia } from "#lib/platform/media-picker.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type { SupportedPlatform } from "#lib/platform/os.ts";
@@ -42,8 +44,9 @@ beforeEach(() => {
 	runningOn("macos");
 });
 
-afterEach(() => {
+afterEach(async () => {
 	vi.restoreAllMocks();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("pickMedia", () => {
@@ -197,6 +200,23 @@ describe("pickMultipleMedia", () => {
 		]);
 	});
 
+	it("names the desktop filter in the app language", async () => {
+		await setLocale({ locale: "en-XA" });
+		openMock.mockResolvedValue([]);
+
+		await pickMultipleMedia("video");
+
+		expect(openMock).toHaveBeenCalledWith({
+			filters: [
+				{
+					name: expect.stringMatching(PSEUDO_MESSAGE),
+					extensions: ["mp4", "mov"],
+				},
+			],
+			multiple: true,
+		});
+	});
+
 	it("narrows the desktop filter to videos for the video kind", async () => {
 		openMock.mockResolvedValue([]);
 
@@ -312,7 +332,7 @@ describe("pickMultipleMedia", () => {
 		]);
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			"Couldn't load 2 of the picked items",
+			"Couldn’t load 2 of the picked items",
 		);
 	});
 

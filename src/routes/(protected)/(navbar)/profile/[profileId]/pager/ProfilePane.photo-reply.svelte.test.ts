@@ -128,7 +128,7 @@ describe("profile photo reply delivery", () => {
 		await onreply(reply);
 		await vi.waitFor(() =>
 			expect(mocks.showErrorToast).toHaveBeenCalledWith({
-				label: "Failed to send message",
+				label: "Couldn’t send message",
 				error,
 				onRetry: expect.any(Function),
 			}),
@@ -170,7 +170,7 @@ describe("profile photo reply delivery", () => {
 			response.reject(error);
 			await delivery;
 			expect(mocks.showErrorToast).toHaveBeenCalledExactlyOnceWith({
-				label: "Failed to send message",
+				label: "Couldn’t send message",
 				error,
 				onRetry: expect.any(Function),
 			});

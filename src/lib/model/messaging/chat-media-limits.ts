@@ -1,2 +1,11 @@
-export const CHAT_MEDIA_MAX_BYTES = 120 * 1024 * 1024;
-export const CHAT_MEDIA_MAX_LABEL = "120.00 MB";
+import { formatNumber } from "#lib/i18n/format.ts";
+
+const CHAT_MEDIA_MAX_MEGABYTES = 120;
+export const CHAT_MEDIA_MAX_BYTES = CHAT_MEDIA_MAX_MEGABYTES * 1024 * 1024;
+
+export function chatMediaMaxLabel(): string {
+	return formatNumber({
+		value: CHAT_MEDIA_MAX_MEGABYTES,
+		preset: "sizeMegabytes",
+	});
+}

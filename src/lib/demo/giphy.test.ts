@@ -79,6 +79,17 @@ describe("demo GIPHY", () => {
 		}
 	});
 
+	it("draws the GIF label as a path so no font decides where its edges land", () => {
+		const [gif] = trending(0).data;
+		if (gif === undefined) throw new Error("no trending GIF");
+		const svg = decodeURIComponent(
+			demoGiphyMediaUrl(gif.images.fixed_height_still.url),
+		);
+
+		expect(svg).not.toContain("<text");
+		expect(svg).toMatch(/<path transform="translate\([\d.]+ [\d.]+\)"/);
+	});
+
 	it("puts GIFs in demo chats whose media matches the size they were sent with", () => {
 		const body = demoGiphyMessageBody("message-100001-3");
 		const svg = decodeURIComponent(demoGiphyMediaUrl(body.urlPath));

@@ -6,6 +6,7 @@ import {
 } from "#lib/api/account-caches.ts";
 import { showErrorToast } from "#lib/api/error-toast.ts";
 import { sendMessage } from "#lib/api/messaging/messages.ts";
+import { getProfileRightNowPost } from "#lib/api/right-now/post.ts";
 import {
 	getFavoriteNote,
 	invalidateFavoriteNote,
@@ -22,8 +23,10 @@ import {
 } from "#lib/api/users/profiles.ts";
 import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
+import { t } from "#lib/i18n/index.ts";
 import { Generation } from "#lib/util/generation.ts";
 import type { TapType } from "#lib/model/interest/taps.ts";
+import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
 import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
 
@@ -59,6 +62,7 @@ export async function applyViewabilityChange(
 export class ProfileState {
 	profile: Profile | null = $state(null);
 	note: FavoriteNote | null = $state(null);
+	rightNowPost: RightNowPostDetails | null = $state.raw(null);
 	loading = $state(true);
 	refreshing = $state(false);
 	refreshFailed = $state(false);
@@ -73,6 +77,7 @@ export class ProfileState {
 	#viewabilityChanges = new Generation();
 	#destroyed = false;
 	#active = false;
+	#rightNowPostGeneration = -1;
 
 	constructor({
 		profileId,
@@ -127,11 +132,11 @@ export class ProfileState {
 				);
 				conversations.invalidateConversation(conversationId);
 				void conversations.ensureLoaded(conversationId);
-				toast.success("Message sent");
+				toast.success(t("profile.imageCarousel.reply.sent"));
 			} catch (error) {
 				if (this.#current)
 					showErrorToast({
-						label: "Failed to send message",
+						label: t("chat.composer.errors.sendFailed"),
 						error,
 						onRetry: () => void send(),
 					});
@@ -156,6 +161,7 @@ export class ProfileState {
 		if (this.#active) return;
 		this.#active = true;
 		if (this.profile?.isFavorite && !this.note) void this.#loadNote();
+		if (!this.refreshing) void this.#loadRightNowPost();
 	}
 
 	deactivate(): void {
@@ -260,6 +266,7 @@ export class ProfileState {
 			this.error = null;
 			this.profile = null;
 			this.note = null;
+			this.rightNowPost = null;
 		}
 		const generation = this.#generation.next();
 		const errorBeforeLoad = this.error;
@@ -271,16 +278,18 @@ export class ProfileState {
 			this.profile = profile;
 			if (this.error === errorBeforeLoad) this.error = null;
 			if (profile.isFavorite) void this.#loadNote();
+			void this.#loadRightNowPost();
 		} catch (error) {
 			if (this.#superseded(generation)) return;
 			this.refreshFailed = true;
 			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
 				showErrorToast({
-					label: "Failed to refresh profile",
+					label: t("profile.page.errors.refreshFailed"),
 					error,
 					onRetry: () => void this.refresh(),
 				});
+				void this.#loadRightNowPost();
 				return;
 			}
 			this.error =
@@ -303,6 +312,33 @@ export class ProfileState {
 			this.note = note;
 		} catch (error) {
 			console.error(error);
+		}
+	}
+
+	async #loadRightNowPost(): Promise<void> {
+		const generation = this.#generation.current;
+		if (
+			!this.#active ||
+			this.profile === null ||
+			this.#rightNowPostGeneration === generation
+		)
+			return;
+		this.#rightNowPostGeneration = generation;
+		const { rightNow } = this.profile;
+		if (rightNow !== "HOSTING" && rightNow !== "NOT_HOSTING") {
+			this.rightNowPost = null;
+			return;
+		}
+		try {
+			const post = await getProfileRightNowPost({
+				profileId: this.profileId,
+			});
+			if (this.#superseded(generation)) return;
+			this.rightNowPost = post;
+		} catch (error) {
+			console.error(error);
+			if (this.#rightNowPostGeneration === generation)
+				this.#rightNowPostGeneration = -1;
 		}
 	}
 

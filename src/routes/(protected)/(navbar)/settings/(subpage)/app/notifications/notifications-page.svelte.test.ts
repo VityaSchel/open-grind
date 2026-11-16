@@ -10,6 +10,9 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { failureLabels } from "#lib/push/push-test-helpers.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type { PushToken } from "#lib/push/types.ts";
 import type * as Capability from "#lib/updates/capability.svelte.ts";
@@ -73,6 +76,11 @@ const NotificationsPage = (await import("./+page.svelte")).default;
 const { reconcileNotifications } =
 	await import("#lib/push/notifications.svelte.ts");
 
+const FAST_DESCRIPTION =
+	"Use Google’s Firebase proprietary service to receive push notifications instantly.";
+const SLOW_DESCRIPTION =
+	"Poll for new notifications periodically in the background using Android’s native scheduler.";
+
 beforeEach(resetNotificationsPage);
 
 afterEach(() => {
@@ -81,14 +89,14 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it("says on iOS that notifications are not supported on this platform yet", () => {
+	it("says on iOS that notifications aren’t supported on this platform yet", () => {
 		runningOn("ios");
 
 		render(NotificationsPage);
 
 		expect(
 			screen.getByText(
-				"Notifications are not supported on this platform yet.",
+				"Notifications aren’t supported on this platform yet.",
 			),
 		).toBeTruthy();
 		expect(screen.queryByRole("switch")).toBeNull();
@@ -211,7 +219,7 @@ describe("choosing Fast mode", () => {
 		await waitFor(() =>
 			expect(showErrorToast).toHaveBeenCalledWith(
 				expect.objectContaining({
-					label: "Couldn't enable the fast mode for push notifications",
+					label: failureLabels.enableFastMode,
 				}),
 			),
 		);
@@ -254,7 +262,7 @@ describe("a missing FCM service", () => {
 		});
 
 		expect(dialog.textContent.replace(/\s+/g, " ")).toContain(
-			"To enable the fast mode, download and install FCM service add-on for Open Grind. It includes Google's proprietary Firebase library and needs Google Play services or microG, so it's not installed by default.",
+			"To enable Fast Mode, install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it isn’t installed by default.",
 		);
 		expect(checked(slow)).toBe("true");
 		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
@@ -271,7 +279,8 @@ describe("a missing FCM service", () => {
 	});
 
 	it("says the add-on bypasses F-Droid's checks only on an F-Droid install", async () => {
-		const notice = "This add-on bypasses F-Droid's checks.";
+		const notice =
+			"By installing it, you choose to bypass F-Droid’s checks.";
 		installedFromFdroid.mockReturnValue(true);
 		const { fast } = await opened(NotificationsPage);
 
@@ -281,7 +290,7 @@ describe("a missing FCM service", () => {
 		});
 
 		expect(dialog.textContent.replace(/\s+/g, " ")).toContain(
-			`so it's not installed by default. ${notice}`,
+			`so it isn’t installed by default. ${notice}`,
 		);
 	});
 
@@ -364,4 +373,67 @@ describe("a missing FCM service", () => {
 			expect(checked(slow)).toBe("true");
 		},
 	);
+});
+
+describe("the notifications copy", () => {
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it("describes both delivery modes and recommends only Fast Mode", async () => {
+		const { fast, slow } = await opened(NotificationsPage);
+
+		expect(within(fast).getByText(FAST_DESCRIPTION)).toBeTruthy();
+		expect(within(fast).getByText("Recommended")).toBeTruthy();
+		expect(within(slow).getByText(SLOW_DESCRIPTION)).toBeTruthy();
+		expect(within(slow).queryByText("Recommended")).toBeNull();
+	});
+
+	it("follows the active locale", async () => {
+		const { master, delivery, fast, slow, messages, taps } =
+			await opened(NotificationsPage);
+		const copy = [
+			...[master, messages, taps].map((control) =>
+				control.closest("label"),
+			),
+			within(fast).getByText("Fast Mode"),
+			within(fast).getByText("Recommended"),
+			within(fast).getByText(FAST_DESCRIPTION),
+			within(slow).getByText("Slow Mode"),
+			within(slow).getByText(SLOW_DESCRIPTION),
+		];
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(delivery.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		for (const element of copy)
+			expect(element?.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("words the add-on dialog in the active locale", async () => {
+		push.fcmServiceInstalled.mockResolvedValue(false);
+		installedFromFdroid.mockReturnValue(true);
+		await fireEvent.click((await opened(NotificationsPage)).fast);
+		const dialog = await screen.findByRole("alertdialog", {
+			name: "Install push notifications add-on",
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(
+			screen.getByRole("alertdialog", {
+				name: PSEUDO_MESSAGE,
+				description: PSEUDO_MESSAGE,
+			}),
+		).toBe(dialog);
+		for (const button of within(dialog).getAllByRole("button"))
+			expect(button.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("says on iOS that notifications are unsupported in the active locale", async () => {
+		runningOn("ios");
+		render(NotificationsPage);
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByText(PSEUDO_MESSAGE)).toBeTruthy();
+	});
 });

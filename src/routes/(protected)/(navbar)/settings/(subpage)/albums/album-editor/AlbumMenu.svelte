@@ -9,6 +9,7 @@
 	import * as AlertDialog from "#lib/components/ui/alert-dialog/index.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { leaveDeletedPages } from "#lib/util/deleted-pages.ts";
 
@@ -31,14 +32,17 @@
 		try {
 			await deleteAlbum({ albumId });
 			getMyAlbumsState(ourProfileId).remove(albumId);
-			toast.success("Your album has been deleted");
+			toast.success(t("media.albums.editor.menu.deleted"));
 			leaveDeletedPages({
 				pathnames: [`/settings/albums/${albumId}`],
 				parent: "/settings/albums",
 			});
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Couldn't delete album", error });
+			showErrorToast({
+				label: t("media.albums.editor.menu.errors.deleteFailed"),
+				error,
+			});
 		} finally {
 			deleting = false;
 		}
@@ -53,7 +57,7 @@
 				variant="ghost"
 				size="icon-lg"
 				class="size-12"
-				aria-label="Album menu"
+				aria-label={t("media.albums.editor.menu.a11y.trigger")}
 				disabled={deleting || saving}
 			>
 				<DotsThreeVerticalIcon class="size-6" />
@@ -66,21 +70,24 @@
 			onSelect={() => (confirming = true)}
 		>
 			<TrashIcon class="size-5" />
-			Delete album
+			{t("media.albums.editor.menu.delete")}
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 <AlertDialog.Root bind:open={confirming}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Delete album?</AlertDialog.Title>
+			<AlertDialog.Title>
+				{t("media.albums.editor.menu.confirm.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description>
-				This album and everything in it will be deleted, and anyone you
-				shared it with will lose access. This cannot be undone.
+				{t("media.albums.editor.menu.confirm.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel size="lg">
+				{t("common.actions.cancel")}
+			</AlertDialog.Cancel>
 			<AlertDialog.Action
 				variant="destructive"
 				size="lg"
@@ -89,7 +96,7 @@
 					void remove();
 				}}
 			>
-				Delete
+				{t("common.actions.delete")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

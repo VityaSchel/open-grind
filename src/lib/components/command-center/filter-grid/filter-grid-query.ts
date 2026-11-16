@@ -27,15 +27,20 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 		if (!handler) {
 			parsed.push({
 				key,
-				valueText: value,
+				valueParts: [{ text: value, verbatim: true }],
 				valid: false,
-				error: "Unknown filter",
+				error: { kind: "unknownFilter" },
 			});
 			continue;
 		}
 		let badge = badges.get(handler.filter);
 		if (!badge) {
-			badge = { key: handler.filter.label, valueText: "", valid: true };
+			badge = {
+				key: handler.filter.id,
+				label: handler.filter.label,
+				valueParts: [],
+				valid: true,
+			};
 			badges.set(handler.filter, badge);
 			parsed.push(badge);
 		}
@@ -47,7 +52,7 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 	}
 
 	for (const [filter, badge] of badges)
-		if (badge.valid) badge.valueText = filter.render(draft);
+		if (badge.valid) badge.valueParts = filter.render(draft);
 
 	const validCount = parsed.filter((badge) => badge.valid).length;
 	return {

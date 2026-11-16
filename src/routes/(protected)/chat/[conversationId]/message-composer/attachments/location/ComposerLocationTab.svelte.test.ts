@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PIN_ZOOM } from "#lib/components/location-chooser/constants.ts";
 import { stubMapResizeObserver } from "#lib/components/location-chooser/map-test-helpers.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { decodeGeohash, encodeGeohash } from "#lib/model/geohash.ts";
 import { runningOn } from "#lib/test/platform.ts";
 
@@ -60,11 +62,12 @@ beforeEach(() => {
 	mocks.send.mockReturnValue(undefined);
 	mocks.run.mockResolvedValue({ status: "ok", coords: mocks.lastFix });
 });
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	vi.useRealTimers();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 function open(
@@ -115,7 +118,7 @@ describe("location attachment", () => {
 		const message = { type: "Location", body: { lat, lon } };
 		expect(onSelectionChange).toHaveBeenLastCalledWith({
 			count: 1,
-			label: "Send location",
+			action: "sendLocation",
 		});
 		component.submitSelection();
 		expect(onClose).toHaveBeenCalledOnce();
@@ -129,7 +132,7 @@ describe("location attachment", () => {
 		first.component.submitSelection();
 		expect(first.onSelectionChange).toHaveBeenLastCalledWith({
 			count: 0,
-			label: "Send location",
+			action: "sendLocation",
 		});
 		first.unmount();
 		mocks.disabled = true;
@@ -144,7 +147,9 @@ describe("location attachment", () => {
 		async (longitude) => {
 			const setView = vi.spyOn(Map.prototype, "setView");
 			const { component } = open();
-			await screen.findByRole("button", { name: "Locate me" });
+			await screen.findByRole("button", {
+				name: "Go to current location",
+			});
 			const map = setView.mock.instances[0];
 			if (!(map instanceof Map)) throw new Error("Map was not mounted");
 			const initial = decodeGeohash(geohash);
@@ -176,7 +181,7 @@ describe("location attachment", () => {
 	it("wraps longitude when clicking the map and keeps the pin fixed against dragging", async () => {
 		const setView = vi.spyOn(Map.prototype, "setView");
 		const { component } = open();
-		await screen.findByRole("button", { name: "Locate me" });
+		await screen.findByRole("button", { name: "Go to current location" });
 		const map = setView.mock.instances[0];
 		if (!(map instanceof Map)) throw new Error("Map was not mounted");
 		flushSync(() => map.fire("click", { latlng: latLng(52, 373) }));
@@ -195,7 +200,9 @@ describe("location attachment", () => {
 	it("sends the pin selected through the map's locate button", async () => {
 		const { component } = open();
 		await fireEvent.click(
-			await screen.findByRole("button", { name: "Locate me" }),
+			await screen.findByRole("button", {
+				name: "Go to current location",
+			}),
 		);
 		component.submitSelection();
 		const message = {
@@ -212,7 +219,7 @@ describe("location attachment", () => {
 	it("does not report a selection change for every pan frame", async () => {
 		const setView = vi.spyOn(Map.prototype, "setView");
 		const { onSelectionChange } = open();
-		await screen.findByRole("button", { name: "Locate me" });
+		await screen.findByRole("button", { name: "Go to current location" });
 		const map = setView.mock.instances[0] as Map;
 		onSelectionChange.mockClear();
 		for (const lon of [13, 14, 15]) {
@@ -231,13 +238,13 @@ describe("location attachment", () => {
 				return this.fire("move");
 			});
 		const { component, onSelectionChange } = open({ pinPos: undefined });
-		await screen.findByRole("button", { name: "Locate me" });
+		await screen.findByRole("button", { name: "Go to current location" });
 		flushSync(() => resize());
 		expect(invalidateSize).toHaveBeenCalledWith();
 		component.submitSelection();
 		expect(onSelectionChange).toHaveBeenLastCalledWith({
 			count: 0,
-			label: "Send location",
+			action: "sendLocation",
 		});
 		expect(mocks.send).not.toHaveBeenCalled();
 	});
@@ -255,7 +262,7 @@ describe("location attachment", () => {
 			const setView = vi.spyOn(Map.prototype, "setView");
 			const { component } = open();
 			const locate = await screen.findByRole("button", {
-				name: "Locate me",
+				name: "Go to current location",
 			});
 			const map = setView.mock.instances[0] as Map;
 			let height = 400;
@@ -316,4 +323,22 @@ describe("location attachment", () => {
 			]);
 		},
 	);
+});
+
+describe("location attachment text", () => {
+	it("describes the map in the active locale", async () => {
+		render(ComposerLocationTab, {
+			onClose: vi.fn(),
+			onSelectionChange: vi.fn(),
+			hintId: "location-hint",
+		});
+		const hint = document.getElementById("location-hint");
+		expect(hint?.textContent).toBe(
+			"Drag the map to place the pin on the location you want to share.",
+		);
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(hint?.textContent).toMatch(PSEUDO_MESSAGE);
+	});
 });

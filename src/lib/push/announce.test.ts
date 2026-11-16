@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import type { Announcement } from "./types";
@@ -98,6 +100,45 @@ describe("announcing on desktop", () => {
 			body: "Tapped you",
 			deeplink: "grindr://taps-inbox",
 		});
+	});
+});
+
+describe("announcing in the app's language", () => {
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("words an unnamed sender and the kind of a message in it", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		announceMessage({
+			message: message("Image", { imageHash: "a" }),
+			sender: "",
+		});
+
+		expect(announced()?.title).toMatch(PSEUDO_MESSAGE);
+		expect(announced()?.body).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("words a tap in it", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		announceTap({ senderId: 42, senderName: null });
+
+		expect(announced()?.title).toMatch(PSEUDO_MESSAGE);
+		expect(announced()?.body).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("keeps the words a message says", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		announceMessage({
+			message: message("Text", { text: "hey there" }),
+			sender: "James",
+		});
+
+		expect(announced()?.title).toBe("James");
+		expect(announced()?.body).toBe("hey there");
 	});
 });
 

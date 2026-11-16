@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { holdInHondurasMock, showErrorToastMock, toastMock, preferencesMock } =
 	vi.hoisted(() => ({
@@ -18,6 +18,8 @@ vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 vi.mock("./honduras-hold", () => ({ holdInHonduras: holdInHondurasMock }));
 
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import {
 	dismissEntitlementBypass,
 	entitlementBypassState,
@@ -28,7 +30,8 @@ import {
 import type { LocationLease } from "./honduras-hold";
 
 const HOME = "u33dc0cpnp0m";
-const REASON = "Unsending a message requires a Grindr subscription.";
+const REASON = "chat.conversation.bypassReason.unsend";
+const LATER_REASON = "chat.conversation.bypassReason.expiringPhotoLimit";
 
 function fakeHold() {
 	const ended = Promise.withResolvers<void>();
@@ -77,7 +80,7 @@ describe("offerEntitlementBypass", () => {
 
 	it("puts a batch of failures behind one prompt and one hold", async () => {
 		const first = offerEntitlementBypass({ reason: REASON });
-		const second = offerEntitlementBypass({ reason: "another feature" });
+		const second = offerEntitlementBypass({ reason: LATER_REASON });
 		expect(entitlementBypassState.reason).toBe(REASON);
 
 		const running = runEntitlementBypass();
@@ -185,7 +188,7 @@ describe("runEntitlementBypass", () => {
 		await expect(first).resolves.toBeNull();
 		await expect(second).resolves.toBeNull();
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
+			label: "Couldn’t bypass this paid feature",
 			error: failure,
 			id: "entitlement-bypass",
 		});
@@ -208,7 +211,7 @@ describe("runEntitlementBypass", () => {
 		const running = runEntitlementBypass();
 		const lease = await granted(offer);
 		let lateAnswered = false;
-		void offerEntitlementBypass({ reason: "a later limit" }).then(() => {
+		void offerEntitlementBypass({ reason: LATER_REASON }).then(() => {
 			lateAnswered = true;
 		});
 
@@ -227,13 +230,13 @@ describe("runEntitlementBypass", () => {
 		const running = runEntitlementBypass();
 		const lease = await granted(first);
 
-		const late = offerEntitlementBypass({ reason: "a later limit" });
+		const late = offerEntitlementBypass({ reason: LATER_REASON });
 		await lease.release();
 		await running;
 
 		expect(entitlementBypassState.open).toBe(true);
 		expect(entitlementBypassState.busy).toBe(false);
-		expect(entitlementBypassState.reason).toBe("a later limit");
+		expect(entitlementBypassState.reason).toBe(LATER_REASON);
 		expect(holdInHondurasMock).toHaveBeenCalledOnce();
 
 		const second = runEntitlementBypass();
@@ -251,7 +254,7 @@ describe("reportRefusedDespiteBypass", () => {
 		reportRefusedDespiteBypass(refusal);
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
+			label: "Couldn’t bypass this paid feature",
 			error: refusal,
 			id: "entitlement-bypass",
 		});
@@ -259,5 +262,41 @@ describe("reportRefusedDespiteBypass", () => {
 			"Entitlement bypass failed: the action was still refused",
 			refusal,
 		);
+	});
+});
+
+describe("runEntitlementBypass in another locale", () => {
+	beforeEach(async () => {
+		await setLocale({ locale: "en-XA" });
+	});
+
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("asks for a location in the active locale", async () => {
+		preferencesMock.mockReturnValue({ geohash: null });
+		void offerEntitlementBypass({ reason: REASON });
+
+		await runEntitlementBypass();
+
+		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+			expect.stringMatching(PSEUDO_MESSAGE),
+			{ id: "entitlement-bypass" },
+		);
+	});
+
+	it("labels a failed bypass in the active locale", async () => {
+		const failure = new Error("offline");
+		holdInHondurasMock.mockRejectedValue(failure);
+		void offerEntitlementBypass({ reason: REASON });
+
+		await runEntitlementBypass();
+
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: expect.stringMatching(PSEUDO_MESSAGE),
+			error: failure,
+			id: "entitlement-bypass",
+		});
 	});
 });

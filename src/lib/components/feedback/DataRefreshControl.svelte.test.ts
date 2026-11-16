@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import {
 	BUTTON_REST_HEIGHT,
@@ -11,6 +13,7 @@ import {
 	MIN_REFRESHING_MS,
 	mountAtRest,
 	outroEvents,
+	settle,
 	STALE_KEY_MS,
 	TWEEN_FRAMES,
 	TWEEN_MS,
@@ -29,6 +32,9 @@ beforeEach(() => {
 });
 
 describe("the refresh control", () => {
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
 	useRefreshControlHarness({ reducedMotion });
 
 	it("shows the pull hint at the band's own height while the disc is still leaving", async () => {
@@ -289,5 +295,35 @@ describe("the refresh control", () => {
 		expect(distinctInsets(afterKeyIntoContent)).toEqual(["0px"]);
 		expect(view.button()).not.toBeNull();
 		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
+	});
+
+	it("rewords the pull and release hints when the locale changes", async () => {
+		const view = await mountAtRest("top");
+		await view.moveBandTo({ px: 6, pulledByWheel: true });
+
+		await setLocale({ locale: "en-XA" });
+		await settle();
+		const pulling = view.bandText();
+		await view.moveBandTo({ px: 22, pulledByWheel: true });
+		const armed = view.bandText();
+
+		expect(pulling).toBe(t("shell.dataRefreshControl.pullHint"));
+		expect(armed).toBe(t("shell.dataRefreshControl.releaseHint"));
+		for (const hint of [pulling, armed])
+			expect(hint).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("renames the resting button when the locale changes", async () => {
+		const view = await mountAtRest("top");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+
+		await setLocale({ locale: "en-XA" });
+		await settle();
+
+		expect(view.bandText()).toBe(
+			t("shell.dataRefreshControl.refreshButton"),
+		);
+		expect(view.bandText()).toMatch(PSEUDO_MESSAGE);
 	});
 });

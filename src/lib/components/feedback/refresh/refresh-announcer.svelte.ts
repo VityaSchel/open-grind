@@ -1,3 +1,5 @@
+import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
+
 export const REFRESHED_HELD_MS = 3000;
 
 const ON_SCREEN_RATIO = 0.5;
@@ -15,6 +17,13 @@ export type TrackedRefresh = {
 	stop: () => void;
 };
 
+type Announcement = "refreshing" | "refreshed";
+
+const announcementKeys = {
+	refreshing: "shell.dataRefreshControl.a11y.refreshing",
+	refreshed: "shell.dataRefreshControl.a11y.refreshed",
+} as const satisfies Record<Announcement, PlainMessageKey>;
+
 type TrackedList = {
 	list: HTMLElement;
 	onScreen: boolean;
@@ -24,12 +33,18 @@ type TrackedList = {
 };
 
 export class RefreshAnnouncer {
-	text = $state("");
+	#announcement = $state<Announcement | null>(null);
 
 	#tracking = 0;
 	#speaking = 0;
 	#allRefreshed = true;
 	#clearing: ReturnType<typeof setTimeout> | undefined;
+
+	get text(): string {
+		return this.#announcement === null
+			? ""
+			: t(announcementKeys[this.#announcement]);
+	}
 
 	track(list: HTMLElement): TrackedRefresh {
 		const tracked: TrackedList = {
@@ -83,7 +98,7 @@ export class RefreshAnnouncer {
 		if (!this.#heard(tracked)) return;
 		if (this.#speaking === 0) {
 			this.#allRefreshed = true;
-			this.#show("Refreshing");
+			this.#show("refreshing");
 		}
 		tracked.spoken = true;
 		this.#speaking += 1;
@@ -100,17 +115,20 @@ export class RefreshAnnouncer {
 		this.#allRefreshed &&= refreshed && this.#heard(tracked);
 		if (this.#speaking > 0) return;
 		if (!this.#allRefreshed) {
-			this.#show("");
+			this.#show(null);
 			return;
 		}
-		this.#show("Refreshed");
-		this.#clearing = setTimeout(() => (this.text = ""), REFRESHED_HELD_MS);
+		this.#show("refreshed");
+		this.#clearing = setTimeout(
+			() => (this.#announcement = null),
+			REFRESHED_HELD_MS,
+		);
 	}
 
 	#stop(tracked: TrackedList): void {
 		this.#tracking -= 1;
 		const endsUnheard = this.#hush(tracked) && this.#speaking === 0;
-		if (endsUnheard || this.#tracking === 0) this.#show("");
+		if (endsUnheard || this.#tracking === 0) this.#show(null);
 	}
 
 	#hush(tracked: TrackedList): boolean {
@@ -120,9 +138,9 @@ export class RefreshAnnouncer {
 		return true;
 	}
 
-	#show(words: string): void {
+	#show(announcement: Announcement | null): void {
 		clearTimeout(this.#clearing);
-		this.text = words;
+		this.#announcement = announcement;
 	}
 
 	#heard({ list, onScreen }: TrackedList): boolean {
