@@ -355,6 +355,32 @@ describe("entering the verification code", () => {
 		expect(code.getAttribute("aria-invalid")).toBe("false");
 	});
 
+	it("marks every cell red on a wrong code, the focused one included, with its ring kept inside the cell", async () => {
+		push.commitRelay.mockResolvedValue({ matched: false });
+		const { alert, code } = await verifyScreen();
+
+		await typeCode(code, "123456");
+		await within(alert).findByText("Incorrect verification code");
+
+		const cells = alert.querySelectorAll<HTMLElement>(
+			'[data-slot="input-otp-slot"]',
+		);
+		for (const cell of cells) {
+			expect(cell.getAttribute("aria-invalid")).toBe("true");
+			expect(cell.classList).toContain(
+				"data-[active=true]:aria-invalid:border-destructive",
+			);
+			expect(cell.classList).toContain("data-[active=true]:inset-ring-3");
+			expect(
+				[...cell.classList].filter((name) =>
+					/^(dark:)?data-\[active=true\]:(aria-invalid:)?ring-/.test(
+						name,
+					),
+				),
+			).toEqual([]);
+		}
+	});
+
 	it("locks the code and Cancel while the code is checked", async () => {
 		const commit = Promise.withResolvers<RelayCommit>();
 		push.commitRelay.mockReturnValueOnce(commit.promise);

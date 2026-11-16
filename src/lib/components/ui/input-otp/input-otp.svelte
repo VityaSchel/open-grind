@@ -19,7 +19,7 @@
 	data-slot="input-otp"
 	spellcheck={false}
 	class={cn(
-		"cn-input-otp flex items-center has-disabled:opacity-50",
+		"cn-input-otp flex items-center gap-2 has-disabled:opacity-50",
 		"disabled:cursor-not-allowed",
 		className,
 	)}
