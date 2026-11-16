@@ -176,7 +176,7 @@
 		"mode": {
 			"fast": {
 				"title": "Fast Mode",
-				"description": "Use Google’s Firebase proprietary service to receive push notifications instantly."
+				"sourcesDescription": "Receive push notifications instantly through the FCM service add-on or your own fcm-relay."
 			},
 			"slow": {
 				"title": "Slow Mode",
@@ -198,6 +198,31 @@
 		"addon": {
 			"title": "Install push notifications add-on",
 			"description": "To enable Fast Mode, install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it isn’t installed by default."
+		},
+		"fastConfig": {
+			"title": "Configure Fast Mode",
+			"field": {
+				"unconfigured": "Configure",
+				"addon": "FCM service",
+				"relay": "fcm-relay"
+			},
+			"addon": {
+				"title": "FCM service add-on",
+				"description": "Includes Google’s proprietary Firebase library and needs Google Play services or microG.",
+				"unavailable": "Not Available"
+			},
+			"relay": {
+				"title": "fcm-relay + UnifiedPush",
+				"description": "For advanced users. Requires a <distributorsLink>UnifiedPush distributor app</distributorsLink>, such as <ntfyLink>ntfy</ntfyLink>, and a <relayLink>self-hosted fcm-relay</relayLink>."
+			},
+			"relaySetup": {
+				"title": "fcm-relay config",
+				"saveConfig": "Save this file as the fcm-relay config on the machine you use to host fcm-relay and restart the fcm-relay, then tap “{{button}}”.",
+				"waiting": "Waiting for fcm-relay connection…",
+				"waitingHint": "If you’re stuck on this stage for a while, ensure fcm-relay is running with no errors in the logs.",
+				"enterCode": "Enter verification code",
+				"incorrectCode": "Incorrect verification code"
+			}
 		}
 	},
 	"credits": {

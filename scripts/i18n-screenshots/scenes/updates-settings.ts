@@ -13,6 +13,7 @@ const NOTIFICATIONS_ALLOWED: NativeOverrides = {
 	push_notification_permission: { answer: GRANTED },
 	push_request_notification_permission: { answer: GRANTED },
 };
+const ADDON_SOURCE: NativeOverrides = { push_fast_source: { answer: "addon" } };
 const LIVE_TOAST = `${SHOWN_TOAST}:not([data-removed="true"])`;
 const STAGE_PROGRESS = `${LIVE_TOAST} [data-slot="progress"]`;
 const TAPPABLE_TOAST = `${LIVE_TOAST} [role="button"]`;
@@ -184,7 +185,7 @@ export const addonUpdateSettings: Scene = {
 export const fdroidAddonAlert: Scene = {
 	platform: "phone",
 	demo: { updates: true },
-	native: { ...FDROID_MANAGED, ...NOTIFICATIONS_ALLOWED },
+	native: { ...FDROID_MANAGED, ...NOTIFICATIONS_ALLOWED, ...ADDON_SOURCE },
 	views: [
 		{
 			id: "settings/notifications/fdroid-addon",
@@ -249,6 +250,7 @@ export const pushFailures: Scene = {
 					page,
 					overrides: {
 						...NOTIFICATIONS_ALLOWED,
+						...ADDON_SOURCE,
 						push_mode: { answer: "fast" },
 						push_token: { reject: PUSH_FAILED },
 						push_set_mode: { reject: PUSH_FAILED },
@@ -281,6 +283,7 @@ export const fastModeFailure: Scene = {
 				await overrideNative({
 					page,
 					overrides: {
+						...ADDON_SOURCE,
 						updater_installed_version: { answer: "1.0.0" },
 						push_addon_ready: { reject: PUSH_FAILED },
 					},

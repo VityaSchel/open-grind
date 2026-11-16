@@ -248,9 +248,16 @@ import {
 } from "./settings-discreet";
 import {
 	androidNotifications,
+	fastModeWithoutPlayServices,
+	fcmRelaySource,
+	fcmServiceSource,
 	iosNotifications,
 	macosNotifications,
 	notificationCategoryFailure,
+	relayCodeCheckFailure,
+	relayConfigFailures,
+	relaySetupFailures,
+	relayStopped,
 } from "./settings-notifications";
 import {
 	previousProfilePhotos,
@@ -482,6 +489,13 @@ export const scenes: Scene[] = [
 	settingSaveFailed,
 	preferencesLoadFailed,
 	androidNotifications,
+	fastModeWithoutPlayServices,
+	fcmServiceSource,
+	fcmRelaySource,
+	relaySetupFailures,
+	relayConfigFailures,
+	relayCodeCheckFailure,
+	relayStopped,
 	notificationCategoryFailure,
 	macosNotifications,
 	iosNotifications,

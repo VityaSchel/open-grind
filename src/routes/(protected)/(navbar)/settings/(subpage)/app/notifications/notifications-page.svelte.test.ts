@@ -87,7 +87,7 @@ const { reconcileNotifications } =
 	await import("#lib/push/notifications.svelte.ts");
 
 const FAST_DESCRIPTION =
-	"Use Google’s Firebase proprietary service to receive push notifications instantly.";
+	"Receive push notifications instantly through the FCM service add-on or your own fcm-relay.";
 const SLOW_DESCRIPTION =
 	"Poll for new notifications periodically in the background using Android’s native scheduler.";
 
@@ -401,12 +401,13 @@ describe("the notifications copy", () => {
 	});
 
 	it("follows the active locale", async () => {
-		const { master, delivery, fast, slow, messages, taps } =
+		const { master, delivery, fast, slow, configure, messages, taps } =
 			await opened(NotificationsPage);
 		const copy = [
 			...[master, messages, taps].map((control) =>
 				control.closest("label"),
 			),
+			configure,
 			within(fast).getByText("Fast Mode"),
 			within(fast).getByText("Recommended"),
 			within(fast).getByText(FAST_DESCRIPTION),
