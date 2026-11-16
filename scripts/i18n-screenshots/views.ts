@@ -71,7 +71,7 @@ async function openSession({
 		}
 	});
 	const platform = scene.shim ?? displays[scene.platform].shimPlatform;
-	await installTauriShim(page, { platform });
+	await installTauriShim(page, { platform, demoImages: false });
 	await pinNavigatorPlatform({ page, platform });
 	await installEventInjection(page);
 	await installNativeStubs({ page, overrides: scene.native });

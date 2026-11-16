@@ -323,9 +323,9 @@ export async function runPaletteCommand(
 // default) runs the gesture-phase bridge.
 export async function installTauriShim(
 	page: Page,
-	{ platform = "macos" } = {},
+	{ platform = "macos", demoImages = true } = {},
 ): Promise<void> {
-	await serveDemoImages(page.context());
+	if (demoImages) await serveDemoImages(page.context());
 	await page.addInitScript((platformName: string) => {
 		interface AppDataArgs {
 			file?: string;
