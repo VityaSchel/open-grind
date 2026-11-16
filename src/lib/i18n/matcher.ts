@@ -17,13 +17,13 @@ const POSIX_LOCALE = /^([^.@]*)(?:\.[^@]*)?(?:@(.*))?$/;
 
 const UNSPECIFIED_LANGUAGES = new Set(["posix", "und"]);
 
-const LANGUAGE_ALIASES = new Map([
+export const LANGUAGE_ALIASES = new Map([
 	["cmn", "zh"],
 	["sh", "sr-Latn"],
 	["tl", "fil"],
 ]);
 
-const LIKELY_SUBTAGS = new Map([
+export const LIKELY_SUBTAGS = new Map([
 	["en", "en-Latn-US"],
 	["es", "es-Latn-ES"],
 	["pt", "pt-Latn-BR"],
@@ -48,7 +48,7 @@ function children({
 		.map((region) => [`${language}-${region}`, parent]);
 }
 
-const PARENT_LOCALES = new Map([
+export const PARENT_LOCALES = new Map([
 	...children({
 		language: "es",
 		regions:
@@ -123,7 +123,7 @@ function withLikelySubtags({ language, script, region }: Subtags): Subtags {
 
 const likelyScripts = new Map<string, string | undefined>();
 
-function likelyScript(language: string): string | undefined {
+export function likelyScript(language: string): string | undefined {
 	if (!likelyScripts.has(language)) {
 		const known = LIKELY_SUBTAGS.get(language);
 		const likely =

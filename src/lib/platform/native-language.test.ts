@@ -120,8 +120,21 @@ describe("publishNativeLanguage", () => {
 		expect(sent()).toEqual([{ tag }]);
 	});
 
+	it.each(["macos", "windows", "linux"])(
+		"sends the tag on %s, where native windows show text too",
+		async (platform) => {
+			os.platform = platform;
+			const { setLocale, publishNativeLanguage } = await load();
+			await setLocale({ locale: "es-MX" });
+
+			await publishNativeLanguage();
+
+			expect(sent()).toEqual([{ tag: "es-419" }]);
+		},
+	);
+
 	it.each([
-		["the desktop app", true, "macos"],
+		["the iOS app", true, "ios"],
 		["a browser", false, "android"],
 	])("sends nothing in %s", async (_, enabled, platform) => {
 		tauri.enabled = enabled;

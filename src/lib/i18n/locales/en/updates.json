@@ -223,5 +223,10 @@
 	},
 	"transfers": {
 		"channel": "Transfers"
+	},
+	"location": {
+		"title": "Move Open Grind to Applications",
+		"description": "Open Grind updates itself in place, so it has to run from {{folder}}.",
+		"quit": "Quit"
 	}
 }

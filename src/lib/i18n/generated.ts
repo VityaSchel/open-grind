@@ -31,6 +31,7 @@ export interface Messages {
 	"auth.signIn.facebook.errors.handoffRefused": undefined;
 	"auth.signIn.facebook.errors.timedOut": undefined;
 	"auth.signIn.facebook.errors.unverified": undefined;
+	"auth.signIn.facebook.title": undefined;
 	"auth.signIn.forgotPassword": undefined;
 	"auth.signIn.google.goBack": undefined;
 	"auth.signIn.google.installButton.downloading": undefined;
@@ -1131,6 +1132,9 @@ export interface Messages {
 	"shell.onboarding.start": undefined;
 	"shell.onboarding.tagline": undefined;
 	"shell.onboarding.title": undefined;
+	"shell.predecessor.description": undefined;
+	"shell.predecessor.quit": undefined;
+	"shell.predecessor.title": undefined;
 	"shell.saveChangesBar.save": undefined;
 	"shell.scrollToTopButton.a11y.label": undefined;
 	"shell.scrollToTopButton.a11y.labelWithText": { text: string };
@@ -1139,6 +1143,11 @@ export interface Messages {
 	"shell.toaster.a11y.region": undefined;
 	"shell.webViewWarning.continue": undefined;
 	"shell.webViewWarning.description": { minimumVersion: string };
+	"shell.webViewWarning.desktop.title": undefined;
+	"shell.webViewWarning.desktop.webKitGtk.description": { minimumVersion: string; version: string };
+	"shell.webViewWarning.desktop.webKitGtk.update": undefined;
+	"shell.webViewWarning.desktop.webView2.description": { minimumVersion: string; version: string };
+	"shell.webViewWarning.desktop.webView2.update": undefined;
 	"shell.webViewWarning.detected": { provider: string; version: string };
 	"shell.webViewWarning.title": undefined;
 	"shell.webViewWarning.unknownProvider": undefined;
@@ -1276,6 +1285,9 @@ export interface Messages {
 	"updates.flow.errors.startDownloadFailed": undefined;
 	"updates.flow.errors.stopDownloadFailed": undefined;
 	"updates.flow.finishOtherInstall": undefined;
+	"updates.location.description": { folder: string };
+	"updates.location.quit": undefined;
+	"updates.location.title": undefined;
 	"updates.push.errors.disableFailed": undefined;
 	"updates.push.errors.enableFailed": undefined;
 	"updates.push.errors.enableFastModeFailed": undefined;
@@ -1432,6 +1444,8 @@ export interface RichMessages {
 	"shell.documentTitle": { page: "placeholder" };
 	"shell.scrollToTopButton.a11y.labelWithText": { text: "placeholder" };
 	"shell.webViewWarning.description": { minimumVersion: "placeholder" };
+	"shell.webViewWarning.desktop.webKitGtk.description": { minimumVersion: "placeholder"; version: "placeholder" };
+	"shell.webViewWarning.desktop.webView2.description": { minimumVersion: "placeholder"; version: "placeholder" };
 	"shell.webViewWarning.detected": { provider: "placeholder"; version: "placeholder" };
 	"updates.addons.fcm.installedVersion": { tag: "placeholder" };
 	"updates.addons.fcm.updatedVersion": { tag: "placeholder" };
@@ -1439,6 +1453,7 @@ export interface RichMessages {
 	"updates.addons.googleOauth.updatedVersion": { tag: "placeholder" };
 	"updates.addons.recaptcha.installedVersion": { tag: "placeholder" };
 	"updates.addons.recaptcha.updatedVersion": { tag: "placeholder" };
+	"updates.location.description": { folder: "placeholder" };
 	"updates.settings.automaticChecks.description.addonsOnlyWithReason": { reason: "placeholder" };
 	"updates.toasts.updatedTo": { tag: "placeholder" };
 }

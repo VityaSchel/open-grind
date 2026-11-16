@@ -12,6 +12,16 @@ import {
 	renderAndroidStrings,
 	stringsFileOf,
 } from "./i18n/android-strings";
+import {
+	checkDesktopManifest,
+	DESKTOP_MANIFEST,
+	DESKTOP_STRINGS,
+	desktopDrift,
+	MATCHER_CASES,
+	matchingData,
+	renderDesktopTexts,
+	renderMatcherCases,
+} from "./i18n/desktop-strings";
 import { LOCALES, readLocaleFiles, SHIPPED } from "./i18n/locale-files";
 import {
 	GRADLE_PROPERTIES,
@@ -98,6 +108,11 @@ const android = checkAndroidManifest({
 	),
 });
 
+const desktop = checkDesktopManifest({
+	text: await readText(DESKTOP_MANIFEST),
+	messages,
+});
+
 const english = catalogTexts(source);
 
 const renderStrings = ({
@@ -128,6 +143,18 @@ const translatedStrings = shipped.languages.map((locale) =>
 	}),
 );
 
+const desktopTexts = [SOURCE_LOCALE, ...shipped.languages].map((locale) => ({
+	locale,
+	...renderDesktopTexts({
+		manifest: desktop.manifest,
+		texts:
+			locale === SOURCE_LOCALE
+				? english
+				: catalogTexts(catalogs.get(locale) ?? []),
+		english,
+	}),
+}));
+
 const problems = [
 	...errors,
 	...checkPluralPlaceholders({
@@ -137,8 +164,10 @@ const problems = [
 	...reports.flatMap((report) => report.errors),
 	...shipped.errors,
 	...android.errors,
-	...[englishStrings, ...translatedStrings].flatMap((rendered) =>
-		rendered.errors.map((error) => `${rendered.locale}/${error}`),
+	...desktop.errors,
+	...[englishStrings, ...translatedStrings, ...desktopTexts].flatMap(
+		(rendered) =>
+			rendered.errors.map((error) => `${rendered.locale}/${error}`),
 	),
 ];
 
@@ -168,6 +197,7 @@ const outputs = [
 			shipped: shipped.languages,
 		}),
 	},
+	{ file: MATCHER_CASES, text: renderMatcherCases() },
 ];
 
 const changed: typeof outputs = [];
@@ -188,17 +218,34 @@ const drift = androidDrift({
 	release,
 });
 
+const existingDesktop = await readText(DESKTOP_STRINGS);
+
+const desktopStrings = desktopDrift({
+	rendered: {
+		matching: matchingData([SOURCE_LOCALE, ...shipped.languages]),
+		catalogs: Object.fromEntries(
+			desktopTexts.map(({ locale, texts }) => [locale, texts]),
+		),
+	},
+	existing: existingDesktop === "" ? undefined : existingDesktop,
+	release,
+});
+
 if (
 	changed.length === 0 &&
 	drift.writes.length === 0 &&
-	drift.deletes.length === 0
+	drift.deletes.length === 0 &&
+	desktopStrings.write === undefined
 ) {
 	console.log(`i18n files up to date (${messages.length} messages)`);
 } else if (check) {
-	for (const warning of drift.warnings) console.warn(`warning: ${warning}`);
+	for (const warning of [...drift.warnings, ...desktopStrings.warnings]) {
+		console.warn(`warning: ${warning}`);
+	}
 	const stale = [
 		...changed.map(({ file }) => `${file} is out of date.`),
 		...drift.errors,
+		...desktopStrings.errors,
 	];
 	if (stale.length > 0) {
 		console.error(stale.join("\n"));
@@ -206,7 +253,15 @@ if (
 		process.exit(1);
 	}
 } else {
-	for (const { file, text } of [...changed, ...drift.writes]) {
+	const desktopWrites =
+		desktopStrings.write === undefined
+			? []
+			: [{ file: DESKTOP_STRINGS, text: desktopStrings.write }];
+	for (const { file, text } of [
+		...changed,
+		...drift.writes,
+		...desktopWrites,
+	]) {
 		await Bun.write(path.join(ROOT, file), text);
 		console.log(`wrote ${file}`);
 	}

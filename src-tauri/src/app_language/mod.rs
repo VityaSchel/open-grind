@@ -20,10 +20,12 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri::Wry;
 
+#[cfg(target_os = "macos")]
+pub use desktop::native_strings_before_launch;
 #[cfg(desktop)]
-pub use desktop::refresh_on_focus;
+pub use desktop::{native_strings, refresh_on_focus};
 #[cfg(desktop)]
-use desktop::{AppLanguages, LastRead};
+use desktop::{AppLanguages, LastRead, ShownLanguage};
 
 #[cfg(any(desktop, target_os = "android"))]
 const CHANGED_EVENT: &str = "app-language-changed";
@@ -32,15 +34,17 @@ const CHANGED_EVENT: &str = "app-language-changed";
 const NO_PER_APP_SETTING: &str =
 	"this platform has no per-app language setting";
 
-#[cfg(not(target_os = "android"))]
+#[cfg(target_os = "ios")]
 const NO_NATIVE_TEXT: &str =
-	"only Android shows native text in a language of its own";
+	"only Android and the desktop apps show native text in a language of their own";
 
 pub fn plugin() -> TauriPlugin<Wry> {
 	Builder::new("app-language")
 		.setup(|_app, _api| {
 			#[cfg(desktop)]
 			_app.manage(LastRead::default());
+			#[cfg(desktop)]
+			_app.manage(ShownLanguage::default());
 			#[cfg(target_os = "android")]
 			android::register(_app, &_api)?;
 			Ok(())
@@ -99,7 +103,17 @@ pub async fn set_native_language(
 	android::set_native(&app, tag).await
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(desktop)]
+#[tauri::command]
+pub async fn set_native_language(
+	app: AppHandle,
+	tag: Option<String>,
+) -> Result<(), String> {
+	desktop::set_native(&app, tag);
+	Ok(())
+}
+
+#[cfg(target_os = "ios")]
 #[tauri::command]
 pub async fn set_native_language() -> Result<(), String> {
 	Err(NO_NATIVE_TEXT.into())

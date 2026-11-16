@@ -4,6 +4,8 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
 use crate::error::AppError;
+#[cfg(desktop)]
+use crate::native_strings::NativeText;
 
 use crate::api::oauth::{
 	is_allowed_target, new_nonce, without_secrets, CANCELED,
@@ -60,7 +62,6 @@ async fn run_flow(
 		WINDOW_LABEL,
 		WebviewUrl::External(dialog_url(&state)?),
 	)
-	.title("Sign In with Facebook")
 	.inner_size(window_width, window_height)
 	.incognito(true)
 	.general_autofill_enabled(false)
@@ -83,6 +84,12 @@ async fn run_flow(
 	#[cfg(not(target_os = "android"))]
 	{
 		builder = builder.user_agent(DESKTOP_USER_AGENT);
+	}
+
+	#[cfg(desktop)]
+	{
+		let strings = crate::app_language::native_strings(app);
+		builder = builder.title(strings.text(NativeText::FacebookSignInTitle));
 	}
 
 	#[cfg(target_os = "android")]

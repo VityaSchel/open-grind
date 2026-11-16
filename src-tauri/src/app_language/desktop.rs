@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
 #[cfg(target_os = "macos")]
@@ -10,6 +10,7 @@ use super::linux as platform;
 #[cfg(target_os = "windows")]
 use super::windows as platform;
 use super::CHANGED_EVENT;
+use crate::native_strings::NativeStrings;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -48,6 +49,51 @@ impl LastRead {
 		*last = Some(languages.clone());
 		true
 	}
+}
+
+#[derive(Default)]
+pub struct ShownLanguage(Mutex<Option<String>>);
+
+#[derive(Deserialize)]
+struct StoredLanguage {
+	#[serde(default)]
+	language: Option<String>,
+}
+
+fn stored_language(preferences: &[u8]) -> Option<String> {
+	rmp_serde::from_slice::<StoredLanguage>(preferences)
+		.ok()?
+		.language
+}
+
+fn languages_before_the_interface(stored: Option<String>) -> Vec<String> {
+	let languages = platform::read();
+	stored
+		.into_iter()
+		.chain(languages.app)
+		.chain(languages.system)
+		.collect()
+}
+
+#[cfg(target_os = "macos")]
+pub fn native_strings_before_launch() -> NativeStrings {
+	NativeStrings::pick(languages_before_the_interface(None))
+}
+
+pub fn native_strings(app: &AppHandle) -> NativeStrings {
+	let shown = app.state::<ShownLanguage>().0.lock().unwrap().clone();
+	match shown {
+		Some(tag) => NativeStrings::pick([tag]),
+		None => NativeStrings::pick(languages_before_the_interface(
+			crate::app_data::read_preferences(app)
+				.as_deref()
+				.and_then(stored_language),
+		)),
+	}
+}
+
+pub fn set_native(app: &AppHandle, tag: Option<String>) {
+	*app.state::<ShownLanguage>().0.lock().unwrap() = tag;
 }
 
 pub fn current(app: &AppHandle) -> AppLanguages {
@@ -125,6 +171,48 @@ mod tests {
 				"language-sync.ts does not list {name}, so the app reads every report as tier none"
 			);
 		}
+	}
+
+	#[test]
+	fn the_stored_choice_is_read_from_the_preferences_the_app_writes() {
+		let preferences = rmp_serde::to_vec(&serde_json::json!({
+			"autoUpdateLocation": false,
+			"backdropBlurCalibration": null,
+			"gridSearchFilters": { "ageMin": 18, "tribes": [1, 2] },
+			"language": "es-MX",
+			"languageSync": { "native": null },
+			"units": "metric",
+		}))
+		.unwrap();
+		assert_eq!(stored_language(&preferences).as_deref(), Some("es-MX"));
+		let following = rmp_serde::to_vec(&serde_json::json!({
+			"language": null,
+			"units": "imperial",
+		}))
+		.unwrap();
+		assert_eq!(stored_language(&following), None);
+		let older =
+			rmp_serde::to_vec(&serde_json::json!({ "units": "metric" }))
+				.unwrap();
+		assert_eq!(stored_language(&older), None);
+		assert_eq!(stored_language(b"not msgpack"), None);
+	}
+
+	#[test]
+	fn the_preferences_still_store_the_choice_where_native_code_reads_it() {
+		const PREFERENCES: &str =
+			include_str!("../../../src/lib/app-data/preferences.svelte.ts");
+		const APP_DATA: &str =
+			include_str!("../../../src/lib/app-data/index.ts");
+		assert!(
+			PREFERENCES.contains("\tlanguage: languageTagSchema")
+				&& PREFERENCES.contains("path: \"preferences.data\",\n\t\tcontent: encode(preferences),"),
+			"preferences.svelte.ts no longer writes the language choice as a msgpack field of preferences.data, so native text misses the choice"
+		);
+		assert!(
+			APP_DATA.contains("\"preferences.data\": \"preferences\""),
+			"app-data/index.ts no longer stores preferences.data as the native preferences file"
+		);
 	}
 
 	#[test]
