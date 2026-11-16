@@ -842,12 +842,54 @@
 			]
 		},
 		{
+			"id": "com.google.code.findbugs:jsr305",
+			"name": "com.google.code.findbugs:jsr305",
+			"ecosystem": "android",
+			"platform": "android",
+			"versions": [
+				"3.0.2"
+			],
+			"spdx": "Apache-2.0",
+			"url": "https://github.com/findbugsproject/findbugs",
+			"textHashes": [
+				"283ea6cc2997a1a7"
+			]
+		},
+		{
+			"id": "com.google.code.gson:gson",
+			"name": "com.google.code.gson:gson",
+			"ecosystem": "android",
+			"platform": "android",
+			"versions": [
+				"2.13.2"
+			],
+			"spdx": "Apache-2.0",
+			"url": "https://github.com/google/gson",
+			"textHashes": [
+				"283ea6cc2997a1a7"
+			]
+		},
+		{
+			"id": "com.google.crypto.tink:tink",
+			"name": "com.google.crypto.tink:tink",
+			"ecosystem": "android",
+			"platform": "android",
+			"versions": [
+				"1.23.0"
+			],
+			"spdx": "Apache-2.0",
+			"url": "https://github.com/tink-crypto/tink-java",
+			"textHashes": [
+				"283ea6cc2997a1a7"
+			]
+		},
+		{
 			"id": "com.google.errorprone:error_prone_annotations",
 			"name": "com.google.errorprone:error_prone_annotations",
 			"ecosystem": "android",
 			"platform": "android",
 			"versions": [
-				"2.15.0"
+				"2.41.0"
 			],
 			"spdx": "Apache-2.0",
 			"url": "https://github.com/google/error-prone",
@@ -870,6 +912,20 @@
 			]
 		},
 		{
+			"id": "com.google.protobuf:protobuf-java",
+			"name": "com.google.protobuf:protobuf-java",
+			"ecosystem": "android",
+			"platform": "android",
+			"versions": [
+				"4.33.6"
+			],
+			"spdx": "BSD-3-Clause",
+			"url": "https://github.com/protocolbuffers/protobuf",
+			"textHashes": [
+				"95bc0839fe9ffb3b"
+			]
+		},
+		{
 			"id": "fastdoubleparser",
 			"name": "FastDoubleParser (shaded into jackson-core)",
 			"ecosystem": "android",
@@ -887,7 +943,7 @@
 			"ecosystem": "android",
 			"platform": "android",
 			"versions": [
-				"2.0.21"
+				"2.2.10"
 			],
 			"spdx": "Apache-2.0",
 			"url": "https://github.com/JetBrains/kotlin",
@@ -961,6 +1017,20 @@
 			],
 			"spdx": "Apache-2.0",
 			"url": "https://jspecify.dev",
+			"textHashes": [
+				"283ea6cc2997a1a7"
+			]
+		},
+		{
+			"id": "org.unifiedpush.android:connector",
+			"name": "org.unifiedpush.android:connector",
+			"ecosystem": "android",
+			"platform": "android",
+			"versions": [
+				"3.3.5"
+			],
+			"spdx": "Apache-2.0",
+			"url": "https://codeberg.org/UnifiedPush/android-connector",
 			"textHashes": [
 				"283ea6cc2997a1a7"
 			]
@@ -10718,6 +10788,10 @@
 		{
 			"hash": "9599127e421e1659",
 			"text": "MIT License\n\nCopyright (c) 2018 Sam Rijs, Alex Crichton and contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+		},
+		{
+			"hash": "95bc0839fe9ffb3b",
+			"text": "Copyright 2008 Google Inc.  All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n    * Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n    * Redistributions in binary form must reproduce the above\ncopyright notice, this list of conditions and the following disclaimer\nin the documentation and/or other materials provided with the\ndistribution.\n    * Neither the name of Google Inc. nor the names of its\ncontributors may be used to endorse or promote products derived from\nthis software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nOWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\nCode generated by the Protocol Buffer compiler is owned by the owner\nof the input file used when generating it.  This code is not\nstandalone and requires a support library to be linked with it.  This\nsupport library is itself covered by the above license."
 		},
 		{
 			"hash": "988b2ce6b5e93eea",

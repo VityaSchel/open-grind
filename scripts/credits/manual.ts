@@ -16,6 +16,7 @@ const textFiles = [
 	"noto-emoji-notice.txt",
 	"phosphor-icons-license.txt",
 	"pictogrammers-free-license.txt",
+	"protobuf-license.txt",
 	"shadcn-svelte-license.txt",
 	"tabler-icons-license.txt",
 ] as const;
@@ -92,14 +93,19 @@ export const universalReleaseApk: Record<string, string> = {
 	"com.fasterxml.jackson.core:jackson-core": "2.15.3",
 	"com.fasterxml.jackson.core:jackson-databind": "2.15.3",
 	"com.google.android.material:material": "1.12.0",
-	"com.google.errorprone:error_prone_annotations": "2.15.0",
+	"com.google.code.findbugs:jsr305": "3.0.2",
+	"com.google.code.gson:gson": "2.13.2",
+	"com.google.crypto.tink:tink": "1.23.0",
+	"com.google.errorprone:error_prone_annotations": "2.41.0",
 	"com.google.guava:listenablefuture": "1.0",
-	"org.jetbrains.kotlin:kotlin-stdlib": "2.0.21",
+	"com.google.protobuf:protobuf-java": "4.33.6",
+	"org.jetbrains.kotlin:kotlin-stdlib": "2.2.10",
 	"org.jetbrains.kotlinx:kotlinx-coroutines-android": "1.9.0",
 	"org.jetbrains.kotlinx:kotlinx-coroutines-core": "1.9.0",
 	"org.jetbrains.kotlinx:kotlinx-serialization-core": "1.7.3",
 	"org.jetbrains:annotations": "23.0.0",
 	"org.jspecify:jspecify": "1.0.0",
+	"org.unifiedpush.android:connector": "3.3.5",
 };
 
 const jetpack = "https://developer.android.com/jetpack/androidx";
@@ -113,9 +119,15 @@ const androidHomepages: Record<string, string> = {
 		"https://github.com/FasterXML/jackson-databind",
 	"com.google.android.material:material":
 		"https://github.com/material-components/material-components-android",
+	"com.google.code.findbugs:jsr305":
+		"https://github.com/findbugsproject/findbugs",
+	"com.google.code.gson:gson": "https://github.com/google/gson",
+	"com.google.crypto.tink:tink": "https://github.com/tink-crypto/tink-java",
 	"com.google.errorprone:error_prone_annotations":
 		"https://github.com/google/error-prone",
 	"com.google.guava:listenablefuture": "https://github.com/google/guava",
+	"com.google.protobuf:protobuf-java":
+		"https://github.com/protocolbuffers/protobuf",
 	"org.jetbrains.kotlin:kotlin-stdlib": "https://github.com/JetBrains/kotlin",
 	"org.jetbrains.kotlinx:kotlinx-coroutines-android":
 		"https://github.com/Kotlin/kotlinx.coroutines",
@@ -126,6 +138,8 @@ const androidHomepages: Record<string, string> = {
 	"org.jetbrains:annotations":
 		"https://github.com/JetBrains/java-annotations",
 	"org.jspecify:jspecify": "https://jspecify.dev",
+	"org.unifiedpush.android:connector":
+		"https://codeberg.org/UnifiedPush/android-connector",
 };
 
 const homepageOf = (coordinate: string) => {
@@ -143,6 +157,23 @@ const androidNotices: Record<string, TextId> = {
 	"com.fasterxml.jackson.core:jackson-core": "jackson-core-notice.txt",
 	"com.fasterxml.jackson.core:jackson-databind": "jackson-notice.txt",
 };
+
+type AndroidLicense = Pick<ManualEntry, "spdx" | "texts">;
+
+const androidLicenseOverrides: Record<string, AndroidLicense> = {
+	"com.google.protobuf:protobuf-java": {
+		spdx: "BSD-3-Clause",
+		texts: ["protobuf-license.txt"],
+	},
+};
+
+const androidLicenseOf = (coordinate: string): AndroidLicense =>
+	androidLicenseOverrides[coordinate] ?? {
+		spdx: "Apache-2.0",
+		texts: ["apache-2.0.txt" as const, androidNotices[coordinate]].filter(
+			(id) => id !== undefined,
+		),
+	};
 
 const bundledOutsideNodeModules: ManualEntry[] = [
 	{
@@ -288,12 +319,8 @@ export const collectManualCredits = async (): Promise<CreditsChunk> => {
 			version,
 			ecosystem: "android",
 			platform: "android",
-			spdx: "Apache-2.0",
 			url: homepageOf(coordinate),
-			texts: [
-				"apache-2.0.txt" as const,
-				androidNotices[coordinate],
-			].filter((id) => id !== undefined),
+			...androidLicenseOf(coordinate),
 		}),
 	);
 
