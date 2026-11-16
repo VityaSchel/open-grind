@@ -24,7 +24,7 @@ Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. E
 
 ## Message syntax
 
-`{{name}}` is something the app supplies whole, such as a number, a name or an icon. `<name>…</name>` wraps text that translators write, such as a link label. Name tags and placeholders after what they hold, such as `<gridLink>` or `{{menuIcon}}`, never a generic `<link>`. Plurals are `key_one` and `key_other`, picked by `{{count}}`, and text for zero needs its own key.
+`{{name}}` is something the app supplies whole, such as a number, a name or an icon. `<name>…</name>` wraps text that translators write, such as a link label. Name tags and placeholders after what they hold, such as `<gridLink>` or `{{menuIcon}}`, never a generic `<link>`. Plurals are `key_one` and `key_other`, picked by `{{count}}`, and text for zero needs its own key. Plural forms follow `{{count}}` alone, so a second number that words agree with needs its own plural message, and `bun run check:i18n` fails on any other placeholder in a plural message unless `scripts/i18n/plural-placeholders.ts` allows it with the reason.
 
 ## Rich text
 
