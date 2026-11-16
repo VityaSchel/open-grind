@@ -26,6 +26,8 @@
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
 	--ring: oklch(0.556 0 0);
+	--focus-ring: color-mix(in oklab, var(--foreground) 40%, transparent);
+	--focus-ring-offset: 0px;
 	--chart-1: oklch(0.905 0.182 98.111);
 	--chart-2: oklch(86.521% 0.17664 90.372);
 	--chart-3: oklch(0.681 0.162 75.834);
@@ -69,6 +71,7 @@
 	--color-chart-2: var(--chart-2);
 	--color-chart-1: var(--chart-1);
 	--color-ring: var(--ring);
+	--color-focus-ring: var(--focus-ring);
 	--color-input: var(--input);
 	--color-border: var(--border);
 	--color-destructive: var(--destructive);
@@ -172,6 +175,15 @@
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
+	}
+	:focus-visible {
+		@apply focus-ring;
+	}
+	:root:not([data-hover-pointer]) :is(input, textarea):focus-visible {
+		outline-style: none;
+	}
+	:where(p, li) :where(a):focus-visible {
+		@apply rounded-sm;
 	}
 	body {
 		@apply bg-background text-foreground;
@@ -358,6 +370,29 @@ a {
 }
 @utility bottom-nav-clear {
 	bottom: calc(var(--nav-clear) + var(--safe-area-bottom));
+}
+@utility focus-ring {
+	@apply outline-2 outline-offset-(--focus-ring-offset) outline-focus-ring outline-solid;
+}
+@utility focus-ring-icon {
+	&:focus-visible {
+		outline-style: none;
+	}
+	&:focus-visible::after {
+		@apply focus-ring;
+		content: "";
+		position: absolute;
+		top: 50%;
+		inset-inline-start: calc(
+			var(--icon-start, 0px) + var(--icon-size, 1.25rem) / 2
+		);
+		width: var(--icon-ring, 2.25rem);
+		height: var(--icon-ring, 2.25rem);
+		margin-top: calc(var(--icon-ring, 2.25rem) / -2);
+		margin-inline-start: calc(var(--icon-ring, 2.25rem) / -2);
+		border-radius: 9999px;
+		pointer-events: none;
+	}
 }
 @utility max-h-photo {
 	max-height: min(70vh, 500px);

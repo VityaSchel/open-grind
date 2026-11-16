@@ -90,6 +90,7 @@
 		<MediaSheetBody bind:this={sheetBody} {fullsize}>
 			<Tabs.Content
 				value="gifs"
+				tabindex={-1}
 				class="flex-1 flex-col data-[state=active]:flex"
 			>
 				<ComposerGifTab
@@ -102,6 +103,7 @@
 			</Tabs.Content>
 			<Tabs.Content
 				value="gaymoji"
+				tabindex={-1}
 				class="flex-1 flex-col data-[state=active]:flex"
 			>
 				<ComposerGaymojiTab

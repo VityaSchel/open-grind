@@ -176,7 +176,7 @@
 		(unit ? `${formatInteger(value)} ${unit}` : undefined)}
 	aria-disabled={disabled}
 	class={cn(
-		"relative mx-auto flex h-44 w-full touch-pan-x items-center justify-center overflow-hidden select-none",
+		"relative mx-auto flex h-44 w-full touch-pan-x items-center justify-center overflow-hidden rounded-xl select-none",
 		disabled && "pointer-events-none opacity-50",
 		className,
 	)}

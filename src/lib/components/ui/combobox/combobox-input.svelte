@@ -27,7 +27,7 @@
 	bind:ref
 	data-slot="combobox-input"
 	class={cn(
-		"h-9 w-full min-w-0 rounded-3xl border border-transparent bg-input/50 py-1 pr-9 pl-3 text-base transition-[color,box-shadow,background-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm",
+		"h-9 w-full min-w-0 rounded-3xl border border-transparent bg-input/50 py-1 pr-9 pl-3 text-base transition-[color,box-shadow,background-color] placeholder:text-muted-foreground not-can-hover:focus-visible:border-ring not-can-hover:focus-visible:ring-3 not-can-hover:focus-visible:ring-ring/30 md:text-sm",
 		className,
 	)}
 	onkeydown={(event) => {

@@ -143,7 +143,7 @@
 	{#if onToggleSelected}
 		<button
 			type="button"
-			class="absolute inset-0 z-2 rounded-[inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+			class="absolute inset-0 z-2 rounded-[inherit]"
 			aria-pressed={selected ?? false}
 			aria-label={accessibleName}
 			onclick={onToggleSelected}

@@ -65,10 +65,7 @@
 			href={fullSrc}
 			rel="noreferrer"
 			aria-label={t("browse.rightNow.photo.a11y.open")}
-			class={[
-				frameClass,
-				"item outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-			]}
+			class={[frameClass, "item"]}
 		>
 			{@render photo()}
 		</a>

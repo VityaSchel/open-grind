@@ -12,6 +12,7 @@
 <PrimaryComposerButton
 	type="submit"
 	aria-label={t("chat.composer.a11y.send")}
+	class="focus-ring-icon ps-(--icon-start) [--icon-start:--spacing(2)]"
 	{disabled}
 	onpointerdown={(event) => {
 		if (softKeyboardVisibility() !== false) event.preventDefault();

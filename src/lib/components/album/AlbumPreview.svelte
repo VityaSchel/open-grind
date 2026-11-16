@@ -170,7 +170,7 @@
 	<button
 		data-slot="album-preview"
 		class={[
-			"relative",
+			"focus-ring-overlay relative",
 			className,
 			contentClass,
 			{

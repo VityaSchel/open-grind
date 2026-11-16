@@ -22,7 +22,7 @@
 >
 	<ComposerButton
 		bind:ref
-		class="static pe-1.5"
+		class="focus-ring-icon static ps-(--icon-start) pe-1.5 [--icon-size:--spacing(5.5)] [--icon-start:--spacing(2)]"
 		aria-label={t("chat.composer.attachments.a11y.add")}
 		onclick={() => {
 			onClick?.();

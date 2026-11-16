@@ -108,7 +108,7 @@
 		class="mt-6"
 	>
 		<Card.Root
-			class="relative isolate gap-3 transition-colors has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-ring/50 can-hover:has-[button:hover]:bg-muted"
+			class="relative isolate gap-3 transition-colors has-[button:focus-visible]:focus-ring can-hover:has-[button:hover]:bg-muted"
 		>
 			<p
 				class="flex min-w-0 items-center gap-1.5 px-6 text-muted-foreground"

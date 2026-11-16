@@ -20,7 +20,7 @@
 			},
 		});
 	}}
-	class="ps-0"
+	class="focus-ring-icon ps-(--icon-start) [--icon-start:0px]"
 	{disabled}
 >
 	{#snippet icon({ ...props })}

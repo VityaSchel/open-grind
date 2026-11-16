@@ -72,7 +72,7 @@
 {#if revealed.count === batchCount}
 	<Link
 		href="https://git.opengrind.org/open-grind/open-grind/issues/new"
-		class="mt-4 inline-flex items-center gap-1 self-start px-1 text-sm text-primary hover:underline"
+		class="mt-4 inline-flex items-center gap-1 self-start rounded-sm px-1 text-sm text-primary hover:underline"
 	>
 		{t("settings.credits.suggestEdit")}
 		<ArrowSquareOutIcon class="size-3.5" />

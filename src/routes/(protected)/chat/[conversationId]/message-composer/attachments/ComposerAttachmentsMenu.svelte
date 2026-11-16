@@ -73,7 +73,7 @@
 		class={["min-h-0 gap-0", { "h-full": isFullsizeTab }]}
 	>
 		<MediaSheetBody fullsize={isFullsizeTab}>
-			<Tabs.Content value="media">
+			<Tabs.Content value="media" tabindex={-1}>
 				<ComposerMediaTab
 					bind:this={tabs.media}
 					{expiring}
@@ -82,7 +82,7 @@
 					onClose={() => (open = false)}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value="albums">
+			<Tabs.Content value="albums" tabindex={-1}>
 				<ComposerAlbumsTab
 					bind:this={tabs.albums}
 					onSelectionChange={(albumSelection) =>
@@ -90,7 +90,11 @@
 					onClose={() => (open = false)}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value="location" aria-describedby={locationHintId}>
+			<Tabs.Content
+				value="location"
+				tabindex={-1}
+				aria-describedby={locationHintId}
+			>
 				{#if selectedTab === "location"}
 					<ComposerLocationTab
 						bind:this={tabs.location}
