@@ -54,7 +54,7 @@ const ABOUT = [
 const fake = updateApiFake();
 const { capabilityApi, platform, linkOpener } = vi.hoisted(() => ({
 	capabilityApi: { getUpdateCapability: vi.fn<() => Promise<Capability>>() },
-	platform: { isAndroidPlatform: vi.fn(() => true) },
+	platform: { current: "android" },
 	linkOpener: { openExternalLink: vi.fn() },
 }));
 
@@ -66,7 +66,9 @@ vi.mock("#lib/updates/index.ts", async () => ({
 }));
 vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	...platform,
+	currentPlatform: () => platform.current,
+	isAndroidPlatform: () => platform.current === "android",
+	isMacosPlatform: () => platform.current === "macos",
 }));
 vi.mock("#lib/platform/link-opener.ts", () => linkOpener);
 
@@ -75,12 +77,14 @@ let testing: typeof import("@testing-library/svelte");
 async function opened({
 	capability,
 	android = true,
+	os = android ? "android" : "linux",
 }: {
 	capability: Capability;
 	android?: boolean;
+	os?: string;
 }) {
 	capabilityApi.getUpdateCapability.mockResolvedValue(capability);
-	platform.isAndroidPlatform.mockReturnValue(android);
+	platform.current = os;
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
 		await import("#lib/updates/capability.svelte.ts");
@@ -90,11 +94,21 @@ async function opened({
 	return testing.screen;
 }
 
+function rowName(link: Element): string {
+	return [
+		...link.querySelectorAll(
+			'[data-slot="item-title"], [data-slot="language-setting-current"]',
+		),
+	]
+		.map((part) => part.textContent.trim())
+		.join(" ");
+}
+
 function rows(): { name: string; href: string | null }[] {
 	return testing.screen
 		.getAllByRole("link")
 		.map((link) => ({
-			name: link.textContent.replace(/\s+/g, " ").trim(),
+			name: rowName(link),
 			href: link.getAttribute("href"),
 		}));
 }
@@ -103,10 +117,22 @@ function groups(): string[][] {
 	const found: string[][] = [[]];
 	for (const element of document.querySelectorAll('a, [role="separator"]')) {
 		if (element.getAttribute("role") === "separator") found.push([]);
-		else
-			found.at(-1)!.push(element.textContent.replace(/\s+/g, " ").trim());
+		else found.at(-1)!.push(rowName(element));
 	}
 	return found;
+}
+
+function descriptions(): Record<string, string> {
+	return Object.fromEntries(
+		testing.screen.getAllByRole("link").flatMap((link) => {
+			const description = link.querySelector(
+				'[data-slot="item-description"]',
+			);
+			return description
+				? [[rowName(link), description.textContent.trim()]]
+				: [];
+		}),
+	);
 }
 
 beforeAll(async () => {
@@ -213,6 +239,76 @@ describe("the app settings menu", () => {
 		);
 	}, 60_000);
 
+	it.each([
+		{
+			os: "android",
+			display: "Units, blur level, haptics",
+			notifications: "Push notifications, categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			os: "macos",
+			display: "Units, blur level, haptics",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			os: "windows",
+			display: "Units, blur level",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			os: "linux",
+			display: "Units, blur level",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+	])(
+		"describes Display, Notifications, Privacy and Security on $os",
+		async ({ os, display, notifications, security }) => {
+			const screen = await opened({ capability: FOREIGN_SIGNER, os });
+			const expected = {
+				Display: display,
+				Notifications: notifications,
+				Privacy: "Message reads, profile views, GIPHY",
+				Security: security,
+			};
+
+			expect(descriptions()).toEqual(expected);
+			for (const [name, description] of Object.entries(expected)) {
+				expect(
+					screen.getByRole("link", { name, description }),
+				).toBeTruthy();
+			}
+		},
+		60_000,
+	);
+
+	it.each(["ios", "freebsd", "web"])(
+		"leaves out the Notifications row on %s, where notifications aren’t supported",
+		async (os) => {
+			const screen = await opened({ capability: FOREIGN_SIGNER, os });
+
+			expect(rows()).toEqual([
+				...SUBSCREENS.filter(({ name }) => name !== "Notifications"),
+				...ABOUT,
+			]);
+			expect(descriptions()).toEqual({
+				Display: "Units, blur level",
+				Privacy: "Message reads, profile views, GIPHY",
+				Security: "App icon, PIN",
+			});
+			expect(
+				screen.getByRole("link", {
+					name: "Security",
+					description: "App icon, PIN",
+				}),
+			).toBeTruthy();
+		},
+		60_000,
+	);
+
 	it("follows the active locale", async () => {
 		const screen = await opened({ capability: FDROID_BUILD });
 		const titles = screen
@@ -230,6 +326,13 @@ describe("the app settings menu", () => {
 		expect(titles).toHaveLength(SUBSCREENS.length + 1 + ABOUT.length);
 		for (const title of titles) {
 			expect(title.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
+		const described = document.querySelectorAll(
+			'[data-slot="item-description"]',
+		);
+		expect(described).toHaveLength(4);
+		for (const description of described) {
+			expect(description.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 		}
 	}, 60_000);
 });

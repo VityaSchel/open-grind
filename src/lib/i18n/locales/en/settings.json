@@ -91,6 +91,21 @@
 			"security": "Security",
 			"updates": "Updates"
 		},
+		"sectionDescriptions": {
+			"display": {
+				"withHaptics": "Units, blur level, haptics",
+				"withoutHaptics": "Units, blur level"
+			},
+			"notifications": {
+				"android": "Push notifications, categories",
+				"desktop": "Notification categories"
+			},
+			"privacy": "Message reads, profile views, GIPHY",
+			"security": {
+				"iconAndName": "App icon & name, PIN",
+				"iconOnly": "App icon, PIN"
+			}
+		},
 		"language": {
 			"helpTranslate": "Help translate Open Grind"
 		},
