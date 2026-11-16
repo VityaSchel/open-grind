@@ -16,20 +16,20 @@ async function send(tag: string): Promise<void> {
 	}
 }
 
-function drawsNativeText(): boolean {
+function showsNativeText(): boolean {
 	switch (currentPlatform()) {
 		case "android":
-			return true;
-		case "ios":
 		case "linux":
 		case "macos":
 		case "windows":
+			return true;
+		case "ios":
 			return false;
 	}
 }
 
 export function publishNativeLanguage(): Promise<void> {
-	if (!drawsNativeText()) return sending;
+	if (!showsNativeText()) return sending;
 	const tag = pickerTag(getCatalogLocale());
 	sending = sending.then(() => send(tag));
 	return sending;

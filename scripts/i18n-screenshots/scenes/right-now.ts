@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { ACTIVE_PANE } from "../../../e2e/support/profile-pager";
+import { stopClock } from "../../store-screenshots/clock";
 import type { Scene } from ".";
 import { chooseNeutralLocation } from "./browse";
 import { ALERT } from "./drive";
@@ -129,6 +130,7 @@ export const rightNowJoin: Scene = {
 					.locator(POST)
 					.getByRole("button", { name: "Edit your post" })
 					.waitFor();
+				await stopClock(page);
 			},
 		},
 	],

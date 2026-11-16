@@ -4,6 +4,9 @@ use std::path::{Path, PathBuf};
 use objc2_app_kit::NSRunningApplication;
 use objc2_foundation::{NSBundle, NSString};
 
+use crate::app_language::native_strings_before_launch;
+use crate::native_strings::NativeText;
+
 const PER_APP_FOLDERS: [&str; 3] = [
 	"Library/Application Support",
 	"Library/WebKit",
@@ -66,13 +69,14 @@ fn is_running(identifier: &str) -> bool {
 }
 
 fn ask_to_quit() -> ! {
+	let strings = native_strings_before_launch();
 	rfd::MessageDialog::new()
 		.set_level(rfd::MessageLevel::Warning)
-		.set_title("Quit the older Open Grind")
-		.set_description(
-			"An older version of Open Grind is still open. Quit it, then open Open Grind again.",
-		)
-		.set_buttons(rfd::MessageButtons::OkCustom("Quit".to_owned()))
+		.set_title(strings.text(NativeText::PredecessorTitle))
+		.set_description(strings.text(NativeText::PredecessorDescription))
+		.set_buttons(rfd::MessageButtons::OkCustom(
+			strings.text(NativeText::PredecessorQuit).to_owned(),
+		))
 		.show();
 	std::process::exit(1);
 }

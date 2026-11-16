@@ -8,6 +8,8 @@ use crate::api::oauth::{
 	await_sign_in, is_allowed_target, new_nonce, without_secrets, SignInWait,
 };
 use crate::error::AppError;
+#[cfg(desktop)]
+use crate::native_strings::NativeText;
 
 use super::GoogleOauthBridge;
 
@@ -94,7 +96,6 @@ async fn run_flow(
 
 	let builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
-			.title(WINDOW_TITLE)
 			.inner_size(window_width, window_height)
 			.user_agent(MAC_SAFARI)
 			.initialization_script(init_script(&nonce))
@@ -120,6 +121,12 @@ async fn run_flow(
 				}
 				false
 			});
+
+	#[cfg(desktop)]
+	let builder = builder.title(
+		crate::app_language::native_strings(app)
+			.text(NativeText::GoogleSignInTitle),
+	);
 
 	#[cfg(target_os = "windows")]
 	let builder =

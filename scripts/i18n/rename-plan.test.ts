@@ -7,6 +7,7 @@ import { type FileText, planRename } from "./rename-plan";
 
 const UNCAPTURABLE = "scripts/i18n-screenshots/uncapturable.json";
 const ANDROID_STRINGS = "src/lib/i18n/android-strings.json";
+const DESKTOP_STRINGS = "src/lib/i18n/desktop-strings.json";
 
 const json = (tree: object) => `${JSON.stringify(tree, null, "\t")}\n`;
 
@@ -38,6 +39,7 @@ function repo(uncapturable: object = {}): string {
 			push_close: "common.actions.close",
 			push_retry: "common.actions.retry",
 		}),
+		[DESKTOP_STRINGS]: json({ location_quit: "common.actions.close" }),
 		[UNCAPTURABLE]: json(uncapturable),
 		"src/routes/Page.svelte": `{t("common.actions.close")} {t("chat.unread", { count })}\n`,
 		"e2e/close.spec.ts": `await marker(page, "common.actions.close").click();\n`,
@@ -58,7 +60,7 @@ afterEach(() => {
 });
 
 describe("planRename", () => {
-	it("moves the key in every catalog and rewrites its uses in src, e2e, the screenshot scenes and the Android map", () => {
+	it("moves the key in every catalog and rewrites its uses in src, e2e, the screenshot scenes and the Android and desktop maps", () => {
 		const plan = planRename({
 			root: repo(),
 			from: "common.actions.close",
@@ -76,6 +78,9 @@ describe("planRename", () => {
 			[ANDROID_STRINGS]: json({
 				push_close: "common.actions.dismiss",
 				push_retry: "common.actions.retry",
+			}),
+			[DESKTOP_STRINGS]: json({
+				location_quit: "common.actions.dismiss",
 			}),
 			"e2e/close.spec.ts": `await marker(page, "common.actions.dismiss").click();\n`,
 			"scripts/i18n-screenshots/scenes/close.ts": `export const keys = ["common.actions.dismiss"];\n`,

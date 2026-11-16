@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { TRANSPARENT_PIXEL } from "../../src/lib/util/load-when-visible";
+
 const COVERING_SELECTOR = "vite-error-overlay, [data-sonner-toast]";
 const INTEREST_BADGE_SELECTOR = 'nav a[href="/interest"] [data-slot="badge"]';
 
@@ -7,7 +9,11 @@ export async function brokenImagesOnceReady(
 	page: Page,
 	{ waitForLoading = true }: { waitForLoading?: boolean } = {},
 ): Promise<string[]> {
-	const ready = await page.waitForFunction((waitsForLoading) => {
+	const pageArgs = {
+		waitsForLoading: waitForLoading,
+		placeholder: TRANSPARENT_PIXEL,
+	};
+	const ready = await page.waitForFunction((args) => {
 		const inViewport = (element: Element) => {
 			const rect = element.getBoundingClientRect();
 			return (
@@ -20,7 +26,27 @@ export async function brokenImagesOnceReady(
 				rect.left < innerWidth
 			);
 		};
-		const loading = waitsForLoading
+		const unclipped = (element: Element) => {
+			let { left, top, right, bottom } = element.getBoundingClientRect();
+			for (
+				let ancestor = element.parentElement;
+				ancestor !== null;
+				ancestor = ancestor.parentElement
+			) {
+				const { overflowX, overflowY } = getComputedStyle(ancestor);
+				const clip = ancestor.getBoundingClientRect();
+				if (overflowX !== "visible") {
+					left = Math.max(left, clip.left);
+					right = Math.min(right, clip.right);
+				}
+				if (overflowY !== "visible") {
+					top = Math.max(top, clip.top);
+					bottom = Math.min(bottom, clip.bottom);
+				}
+			}
+			return left < right && top < bottom;
+		};
+		const loading = args.waitsForLoading
 			? document.querySelectorAll(
 					'[data-slot="skeleton"], [role="status"][aria-label="Loading"]',
 				)
@@ -34,17 +60,21 @@ export async function brokenImagesOnceReady(
 						Infinity,
 			);
 		const images = [...document.images].filter(inViewport);
+		const placeholders = images.filter(
+			(image) => image.getAttribute("src") === args.placeholder,
+		);
 		if (
 			[...loading].some(inViewport) ||
 			animating ||
-			!images.every((image) => image.complete)
+			!images.every((image) => image.complete) ||
+			placeholders.some(unclipped)
 		) {
 			return false;
 		}
 		return images
 			.filter((image) => image.naturalWidth === 0)
 			.map((image) => image.currentSrc || image.src);
-	}, waitForLoading);
+	}, pageArgs);
 	return ready.jsonValue() as Promise<string[]>;
 }
 

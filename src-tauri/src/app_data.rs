@@ -104,6 +104,15 @@ impl AppDataDir {
 	}
 }
 
+#[cfg(desktop)]
+pub(crate) fn read_preferences(app: &AppHandle) -> Option<Vec<u8>> {
+	AppDataDir::of(app)
+		.ok()?
+		.read(AppDataFile::Preferences)
+		.ok()
+		.flatten()
+}
+
 fn exclusive() -> MutexGuard<'static, ()> {
 	APP_DATA_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
 }

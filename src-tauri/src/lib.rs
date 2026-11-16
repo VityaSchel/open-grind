@@ -28,6 +28,8 @@ pub mod media;
 mod media_drag;
 #[cfg(mobile)]
 mod media_picker;
+#[cfg(desktop)]
+mod native_strings;
 #[cfg(any(target_os = "ios", test))]
 mod page_point;
 mod photo;
@@ -62,6 +64,8 @@ use std::sync::OnceLock;
 
 use tauri::Manager;
 
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+use crate::native_strings::NativeText;
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
@@ -96,41 +100,67 @@ fn open_grind_platform_plugin<R: tauri::Runtime>(
 }
 
 // macOS reports a WebKit build number that doesn't track Safari versions
-#[cfg(desktop)]
-fn outdated_webview_notice() -> Option<String> {
-	#[cfg(target_os = "windows")]
-	{
-		let version = tauri::webview_version().ok()?;
-		if version.split('.').next()?.parse::<u32>().ok()? < MIN_CHROMIUM_MAJOR
-		{
-			return Some(format!(
-                "Open Grind needs Microsoft Edge WebView2 {MIN_CHROMIUM_MAJOR} or newer to \
-                 display correctly (found {version}).\n\nUpdate the WebView2 Runtime, then \
-                 restart the app."
-            ));
-		}
-	}
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+struct OutdatedWebView {
+	description: NativeText,
+	update: NativeText,
+	minimum: String,
+	found: String,
+}
 
-	#[cfg(target_os = "linux")]
-	{
-		let version = tauri::webview_version().ok()?;
-		let mut parts = version.split('.');
-		let major = parts.next()?.parse::<u32>().ok()?;
-		let minor = parts
-			.next()
-			.and_then(|p| p.parse::<u32>().ok())
-			.unwrap_or(0);
-		if (major, minor) < MIN_WEBKITGTK {
-			let (min_major, min_minor) = MIN_WEBKITGTK;
-			return Some(format!(
-                "Open Grind needs WebKitGTK {min_major}.{min_minor} or newer to display \
-                 correctly (found {version}).\n\nUpdate webkit2gtk / your distribution, \
-                 then restart the app."
-            ));
-		}
-	}
+#[cfg(target_os = "windows")]
+fn outdated_webview() -> Option<OutdatedWebView> {
+	let version = tauri::webview_version().ok()?;
+	let major = version.split('.').next()?.parse::<u32>().ok()?;
+	(major < MIN_CHROMIUM_MAJOR).then(|| OutdatedWebView {
+		description: NativeText::WebView2Description,
+		update: NativeText::WebView2Update,
+		minimum: MIN_CHROMIUM_MAJOR.to_string(),
+		found: version,
+	})
+}
 
-	None
+#[cfg(target_os = "linux")]
+fn outdated_webview() -> Option<OutdatedWebView> {
+	let version = tauri::webview_version().ok()?;
+	let mut parts = version.split('.');
+	let major = parts.next()?.parse::<u32>().ok()?;
+	let minor = parts
+		.next()
+		.and_then(|p| p.parse::<u32>().ok())
+		.unwrap_or(0);
+	let (min_major, min_minor) = MIN_WEBKITGTK;
+	((major, minor) < MIN_WEBKITGTK).then(|| OutdatedWebView {
+		description: NativeText::WebKitGtkDescription,
+		update: NativeText::WebKitGtkUpdate,
+		minimum: format!("{min_major}.{min_minor}"),
+		found: version,
+	})
+}
+
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+fn warn_about_outdated_webview(app: &tauri::AppHandle) {
+	use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+
+	let Some(outdated) = outdated_webview() else {
+		return;
+	};
+	let strings = app_language::native_strings(app);
+	let description = strings.fill(
+		outdated.description,
+		&[
+			("minimumVersion", &outdated.minimum),
+			("version", &outdated.found),
+		],
+	);
+	app.dialog()
+		.message(format!(
+			"{description}\n\n{}",
+			strings.text(outdated.update)
+		))
+		.title(strings.text(NativeText::WebViewWarningTitle))
+		.kind(MessageDialogKind::Warning)
+		.show(|_| {});
 }
 
 #[cfg(desktop)]
@@ -435,15 +465,8 @@ pub fn run() {
                 disguise::desktop::restore(app.handle(), &window);
             }
 
-            #[cfg(desktop)]
-            if let Some(message) = outdated_webview_notice() {
-                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-                app.dialog()
-                    .message(message)
-                    .title("WebView may be too old")
-                    .kind(MessageDialogKind::Warning)
-                    .show(|_| {});
-            }
+            #[cfg(any(target_os = "windows", target_os = "linux"))]
+            warn_about_outdated_webview(app.handle());
 
             #[cfg(any(
                 target_os = "linux",

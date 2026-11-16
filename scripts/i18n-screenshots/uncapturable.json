@@ -1,4 +1,8 @@
 {
+	"auth.signIn.facebook.title": {
+		"reason": "Only the title of the native window that the desktop apps open for signing in with Facebook, which the system draws outside the page, so no page screenshot shows it.",
+		"explanation": "Title of the window that the desktop apps open for signing in with Facebook; the system draws the window’s title bar, so no screenshot shows it."
+	},
 	"chat.composer.errors.sendFailed": {
 		"reason": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
 		"explanation": "Error toast for a chat message that couldn’t be sent; today a message that fails to send shows “Not sent” on it instead, so this toast never appears."
@@ -55,9 +59,21 @@
 		"reason": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
 		"explanation": "Part of the hidden Clippy joke on the “Page not found” page, shown by pressing and holding the “?”, where each list item finishes “Don’t worry, Clippy would never”; screenshots leave it out because the Clippy image has no license."
 	},
+	"shell.predecessor.*": {
+		"reason": "Only in the native dialog that the macOS app shows before its window opens, while an Open Grind from before the bundle identifier change still runs, so no page screenshot shows it.",
+		"explanation": "Part of the dialog that the macOS app shows as it opens while an older version of Open Grind is still running; macOS draws the dialog before the app’s window opens, so no screenshot shows it."
+	},
 	"shell.webViewWarning.*": {
 		"reason": "Only in the native dialog that the Android app shows over the page when the system WebView is older than the app supports, so no page screenshot shows it.",
 		"explanation": "Part of the warning dialog that the Android app shows as it opens when the phone’s Android System WebView is older than the app supports; Android draws the dialog, so no screenshot shows it."
+	},
+	"shell.webViewWarning.desktop.*": {
+		"reason": "Only in the native dialog that the Windows and Linux apps show as they open when WebView2 or WebKitGTK is older than the app supports, so no page screenshot shows it.",
+		"explanation": "Part of the warning dialog that the Windows and Linux apps show as they open when the system’s WebView2 or WebKitGTK is older than the app supports; the system draws the dialog, so no screenshot shows it."
+	},
+	"updates.location.*": {
+		"reason": "Only in the native dialog that a macOS release build shows before its window opens when it runs from outside an Applications folder, so no page screenshot shows it.",
+		"explanation": "Part of the dialog that the macOS app shows as it opens from outside the Applications folder, where it can’t update itself; macOS draws the dialog before the app’s window opens, so no screenshot shows it."
 	},
 	"updates.transfers.channel": {
 		"reason": "Only the name of the Android notification channel for downloads and uploads, which the system notification settings show, so no page screenshot shows it.",
