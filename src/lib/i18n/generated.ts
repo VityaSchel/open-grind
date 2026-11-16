@@ -1279,6 +1279,14 @@ export interface Messages {
 	"updates.push.errors.disableFailed": undefined;
 	"updates.push.errors.enableFailed": undefined;
 	"updates.push.errors.enableFastModeFailed": undefined;
+	"updates.push.errors.relayActionRequired": undefined;
+	"updates.push.errors.relayCodeCheckFailed": undefined;
+	"updates.push.errors.relayNoDistributor": undefined;
+	"updates.push.errors.relaySaveFailed": undefined;
+	"updates.push.errors.relaySetupFailed": undefined;
+	"updates.push.errors.relayShareFailed": undefined;
+	"updates.push.errors.relayStopped": undefined;
+	"updates.push.errors.relayStoppedAction": undefined;
 	"updates.push.errors.switchToSlowModeFailed": undefined;
 	"updates.settings.automaticChecks.addonsTitle": undefined;
 	"updates.settings.automaticChecks.description.addonsOnly": undefined;

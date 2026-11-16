@@ -21,9 +21,12 @@ const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 	files: new Map<string, number[]>(),
 	push: {
 		pushAvailableHere: () => true,
+		fastModeOptions: () => ["addon", "relay"],
 		fcmServiceInstalled: () => Promise.resolve(true),
 		setNotificationsEnabled: vi.fn(async () => {}),
 		deletePushToken: vi.fn(async () => {}),
+		forgetRelay: vi.fn(async () => {}),
+		dropRelayOrphans: vi.fn(async () => {}),
 		shownPushConversations: vi.fn(() => Promise.resolve([])),
 	},
 	toast: {

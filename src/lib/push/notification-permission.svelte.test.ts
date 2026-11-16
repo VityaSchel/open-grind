@@ -9,6 +9,7 @@ import {
 	preferences,
 	push,
 	resetPushMocks,
+	sonner,
 	toasts,
 	token,
 } from "./push-test-helpers";
@@ -19,6 +20,7 @@ vi.mock("#lib/updates/addon.svelte.ts", () => addon);
 vi.mock("#lib/api/settings/account.ts", () => account);
 vi.mock("#lib/api/error-toast.ts", () => toasts);
 vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
+vi.mock("svelte-sonner", () => sonner);
 
 const unasked: NotificationPermission = { granted: false, state: "prompt" };
 const refusedOnce: NotificationPermission = {

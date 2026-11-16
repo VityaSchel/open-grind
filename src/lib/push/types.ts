@@ -4,6 +4,21 @@ export const notificationModeSchema = z.enum(["slow", "fast"]);
 
 export type NotificationMode = z.infer<typeof notificationModeSchema>;
 
+export const fastSourceSchema = z.enum(["addon", "relay"]);
+
+export type FastSource = z.infer<typeof fastSourceSchema>;
+
+export const relayStatusSchema = z.object({
+	paired: z.boolean(),
+	broken: z.boolean(),
+});
+
+export type RelayStatus = z.infer<typeof relayStatusSchema>;
+
+export const relayCommitSchema = z.object({ matched: z.boolean() });
+
+export type RelayCommit = z.infer<typeof relayCommitSchema>;
+
 export const pushCategorySchema = z.object({
 	category: z.enum(["messages", "taps"]),
 	enabled: z.boolean(),
@@ -69,6 +84,22 @@ export const pushErrorSchema = z.object({
 		"tokenFailed",
 		"deleteFailed",
 		"malformedToken",
+		"fastUnconfigured",
+		"relayNoDistributor",
+		"relayDistributorUnavailable",
+		"relayActionRequired",
+		"relayVapidRequired",
+		"relayNetwork",
+		"relayRegistrationFailed",
+		"relayTimedOut",
+		"relayCancelled",
+		"relaySetupLost",
+		"relayNoSetup",
+		"relayUnpaired",
+		"relayRegisterFailed",
+		"relayAccountChanged",
+		"relaySaveFailed",
+		"relayShareFailed",
 		"failed",
 	]),
 	detail: z.string().nullish(),

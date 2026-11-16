@@ -218,7 +218,15 @@
 			"enableFailed": "Couldn’t enable notifications",
 			"disableFailed": "Couldn’t disable notifications",
 			"enableFastModeFailed": "Couldn’t enable Fast Mode for push notifications",
-			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode"
+			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode",
+			"relayNoDistributor": "Install a UnifiedPush distributor app, such as ntfy, to use fcm-relay",
+			"relayActionRequired": "Finish setting up your UnifiedPush distributor app, then try again",
+			"relaySetupFailed": "Couldn’t set up fcm-relay",
+			"relaySaveFailed": "Couldn’t save the fcm-relay config",
+			"relayShareFailed": "Couldn’t share the fcm-relay config",
+			"relayCodeCheckFailed": "Couldn’t check the verification code",
+			"relayStopped": "fcm-relay stopped working. Configure Fast Mode again.",
+			"relayStoppedAction": "Configure"
 		}
 	},
 	"transfers": {

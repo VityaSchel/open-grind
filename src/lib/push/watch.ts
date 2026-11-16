@@ -7,20 +7,26 @@ import { isDesktopPlatform } from "#lib/platform/os.ts";
 import { loadNotificationCategories } from "./categories.svelte";
 import { watchChatWithdrawals } from "./chat-withdrawals";
 import { routeForDeeplink } from "./deeplink";
-import { fastDeliveryDead } from "./delivery-dead";
-import { fallBackToSlow } from "./delivery.svelte";
+import { fastDeliveryDead, relayGone } from "./delivery-dead";
+import { fallBackToSlow, stopBrokenRelay } from "./delivery.svelte";
 import {
+	currentFastSource,
+	fastModeOptions,
 	inFastMode,
 	mintPushToken,
 	notificationsEnabled,
 	pushAvailableHere,
+	registerRelay,
 	takePushDeeplink,
 	watchPush,
 } from "./index";
 import { reconcileNotifications } from "./notifications.svelte";
 import { whileOpeningPushDeeplink } from "./opening-deeplink";
 import { recheckReadsWhileAway, resyncWhileShown } from "./read-sync";
-import { forgetPushRegistration } from "./teardown";
+import {
+	forgetFastAddonRegistration,
+	forgetRelayRegistration,
+} from "./teardown";
 
 export async function startPushWatch(): Promise<void> {
 	if (!pushAvailableHere()) return;
@@ -49,8 +55,10 @@ function recheckWhenFocused(): Promise<() => void> {
 }
 
 async function releaseRegistration(): Promise<void> {
-	if (await notificationsEnabled().catch(() => false))
-		await forgetPushRegistration();
+	if (fastModeOptions().includes("relay")) await forgetRelayRegistration();
+	if (!(await notificationsEnabled().catch(() => false))) return;
+	if ((await currentFastSource().catch(() => null)) === "addon")
+		await forgetFastAddonRegistration();
 }
 
 function openPendingDeeplink(): Promise<void> {
@@ -67,11 +75,37 @@ function openPendingDeeplink(): Promise<void> {
 async function syncPushToken({ rotated }: { rotated: boolean }): Promise<void> {
 	if (!(await notificationsEnabled().catch(() => false))) return;
 	if (!(await inFastMode())) return;
+	switch (await currentFastSource().catch(() => null)) {
+		case "addon":
+			await syncAddonToken({ rotated });
+			return;
+		case "relay":
+			await syncRelayToken();
+			return;
+		case null:
+			return;
+	}
+}
+
+async function syncAddonToken({
+	rotated,
+}: {
+	rotated: boolean;
+}): Promise<void> {
 	try {
 		await registerPushToken(await mintPushToken());
 	} catch (error) {
 		console.error("Failed to register the push token", error);
 		if (rotated || (await fastDeliveryDead(error)))
 			await fallBackToSlow({ error });
+	}
+}
+
+async function syncRelayToken(): Promise<void> {
+	try {
+		await registerRelay();
+	} catch (error) {
+		console.error("Failed to register the fcm-relay token", error);
+		if (relayGone(error)) await stopBrokenRelay();
 	}
 }

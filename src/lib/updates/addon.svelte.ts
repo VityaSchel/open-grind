@@ -122,8 +122,12 @@ export function onAddonInstalled({
 }: {
 	component: AddonKey;
 	listener: InstallListener;
-}): void {
-	runtimeOf(component).installListeners.add(listener);
+}): () => void {
+	const { installListeners } = runtimeOf(component);
+	installListeners.add(listener);
+	return () => {
+		installListeners.delete(listener);
+	};
 }
 
 export const addonUpdates = addonFlow(GOOGLE_OAUTH_COMPONENT);

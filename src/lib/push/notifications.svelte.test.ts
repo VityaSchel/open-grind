@@ -13,6 +13,7 @@ import {
 	push,
 	recordOrder,
 	resetPushMocks,
+	sonner,
 	switchedOn,
 	toastDetails,
 	toastLabel,
@@ -26,6 +27,7 @@ vi.mock("#lib/updates/addon.svelte.ts", () => addon);
 vi.mock("#lib/api/settings/account.ts", () => account);
 vi.mock("#lib/api/error-toast.ts", () => toasts);
 vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
+vi.mock("svelte-sonner", () => sonner);
 
 beforeEach(resetPushMocks);
 

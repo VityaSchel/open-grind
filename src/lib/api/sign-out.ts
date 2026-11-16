@@ -7,7 +7,10 @@ import { inboxLastViewed } from "#lib/chat/inbox-last-viewed.svelte.ts";
 import { tapsLastViewed } from "#lib/interest/taps-last-viewed.ts";
 import {
 	deletePushToken,
+	dropRelayOrphans,
+	fastModeOptions,
 	fcmServiceInstalled,
+	forgetRelay,
 	pushAvailableHere,
 	setNotificationsEnabled,
 } from "#lib/push/index.ts";
@@ -51,6 +54,18 @@ export async function clearAccountState(): Promise<void> {
 				error,
 			);
 		});
+
+		if (fastModeOptions().includes("relay")) {
+			await forgetRelay().catch((error: unknown) => {
+				console.error("Failed to forget the fcm-relay pairing", error);
+			});
+			await dropRelayOrphans().catch((error: unknown) => {
+				console.error(
+					"Failed to drop the leftover fcm-relay tokens",
+					error,
+				);
+			});
+		}
 
 		if (await fcmServiceInstalled()) {
 			await deletePushToken().catch((error: unknown) => {

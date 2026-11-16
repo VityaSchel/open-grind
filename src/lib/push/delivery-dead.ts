@@ -21,6 +21,11 @@ const ADDON_GONE: ReadonlySet<PushErrorReason> = new Set<PushErrorReason>([
 	"addonBlocked",
 ]);
 
+const RELAY_GONE: ReadonlySet<PushErrorReason> = new Set<PushErrorReason>([
+	"relayUnpaired",
+	"relayAccountChanged",
+]);
+
 export async function fastDeliveryDead(error: unknown): Promise<boolean> {
 	const reason = pushErrorReason(error);
 	if (reason === "addonUnavailable") return !(await fcmServiceInstalled());
@@ -30,4 +35,9 @@ export async function fastDeliveryDead(error: unknown): Promise<boolean> {
 export function addonGone(error: unknown): boolean {
 	const reason = pushErrorReason(error);
 	return reason !== null && ADDON_GONE.has(reason);
+}
+
+export function relayGone(error: unknown): boolean {
+	const reason = pushErrorReason(error);
+	return reason !== null && RELAY_GONE.has(reason);
 }

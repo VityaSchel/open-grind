@@ -36,6 +36,13 @@ const explanations: [reason: string, message: string][] = [
 		"addonUntrusted",
 		"The installed Open Grind FCM service isn’t signed by Open Grind. Uninstall it to install the official one.",
 	],
+	["relayNoDistributor", "No UnifiedPush distributor app is installed."],
+	["relayTimedOut", "The UnifiedPush distributor app didn't answer in time."],
+	[
+		"relayAccountChanged",
+		"The fcm-relay pairing belongs to another Grindr account.",
+	],
+	["relaySaveFailed", "Android couldn't write the config file."],
 ];
 
 describe("explainedPushError", () => {

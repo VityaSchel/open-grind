@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { PushErrorReason, PushToken } from "./types";
+import type { FastSource, PushErrorReason, PushToken } from "./types";
 
 type PushWatcher = (event: {
 	deeplinkPending: boolean;
@@ -15,13 +15,16 @@ const account = vi.hoisted(() => ({
 	registerPushToken: vi.fn<(token: PushToken) => Promise<void>>(),
 }));
 const teardown = vi.hoisted(() => ({
+	forgetFastAddonRegistration: vi.fn<() => Promise<void>>(),
 	forgetPushRegistration: vi.fn<() => Promise<void>>(),
+	forgetRelayRegistration: vi.fn<() => Promise<void>>(),
 }));
 const notifications = vi.hoisted(() => ({
 	reconcileNotifications: vi.fn<() => Promise<void>>(),
 }));
 const delivery = vi.hoisted(() => ({
 	fallBackToSlow: vi.fn<(args: { error: unknown }) => Promise<void>>(),
+	stopBrokenRelay: vi.fn<() => Promise<void>>(),
 }));
 const categories = vi.hoisted(() => ({
 	loadNotificationCategories: vi.fn<() => Promise<void>>(),
@@ -38,12 +41,15 @@ const focusListeners = vi.hoisted(
 	() => [] as ((event: { payload: boolean }) => void)[],
 );
 const push = vi.hoisted(() => ({
+	currentFastSource: vi.fn<() => Promise<FastSource | null>>(),
+	fastModeOptions: vi.fn<() => FastSource[]>(),
 	fcmServiceInstalled: vi.fn<() => Promise<boolean>>(),
 	inFastMode: vi.fn<() => Promise<boolean>>(),
 	mintPushToken: vi.fn<() => Promise<PushToken>>(),
 	notificationsEnabled: vi.fn<() => Promise<boolean>>(),
 	pushAvailableHere: vi.fn(() => true),
 	pushErrorReason: vi.fn<(error: unknown) => PushErrorReason | null>(),
+	registerRelay: vi.fn<() => Promise<void>>(),
 	takePushDeeplink: vi.fn<() => Promise<string | null>>(),
 	watchPush: vi.fn<(watcher: PushWatcher) => Promise<void>>(),
 }));
@@ -94,6 +100,9 @@ beforeEach(() => {
 	goto.mockResolvedValue(undefined);
 	push.pushAvailableHere.mockReturnValue(true);
 	push.inFastMode.mockResolvedValue(true);
+	push.currentFastSource.mockResolvedValue("addon");
+	push.fastModeOptions.mockReturnValue(["addon", "relay"]);
+	push.registerRelay.mockResolvedValue(undefined);
 	push.fcmServiceInstalled.mockResolvedValue(true);
 	push.mintPushToken.mockResolvedValue(token);
 	push.notificationsEnabled.mockResolvedValue(true);
@@ -101,8 +110,11 @@ beforeEach(() => {
 	push.watchPush.mockResolvedValue(undefined);
 	push.pushErrorReason.mockReturnValue("failed");
 	account.registerPushToken.mockResolvedValue(undefined);
+	teardown.forgetFastAddonRegistration.mockResolvedValue(undefined);
 	teardown.forgetPushRegistration.mockResolvedValue(undefined);
+	teardown.forgetRelayRegistration.mockResolvedValue(undefined);
 	delivery.fallBackToSlow.mockResolvedValue(undefined);
+	delivery.stopBrokenRelay.mockResolvedValue(undefined);
 	notifications.reconcileNotifications.mockResolvedValue(undefined);
 	categories.loadNotificationCategories.mockResolvedValue(undefined);
 	chatWithdrawals.watchChatWithdrawals.mockResolvedValue([]);
@@ -344,13 +356,85 @@ describe("losing Fast mode", () => {
 	});
 });
 
+describe("keeping the fcm-relay token registered", () => {
+	beforeEach(() => {
+		push.currentFastSource.mockResolvedValue("relay");
+	});
+
+	it("registers the fcm-relay token instead of minting an add-on one", async () => {
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(push.registerRelay).toHaveBeenCalledOnce();
+		expect(push.mintPushToken).not.toHaveBeenCalled();
+		expect(account.registerPushToken).not.toHaveBeenCalled();
+	});
+
+	it("registers again when Android reports a changed token", async () => {
+		const module = await freshModule();
+		await module.startPushWatch();
+		push.registerRelay.mockClear();
+
+		const [watcher] = push.watchPush.mock.calls[0] ?? [];
+		watcher?.({ deeplinkPending: false, tokenChanged: true });
+		await vi.waitFor(() => {
+			expect(push.registerRelay).toHaveBeenCalledOnce();
+		});
+	});
+
+	it.each(["relayUnpaired", "relayAccountChanged"] as const)(
+		"resets a pairing that stopped working (%s)",
+		async (reason) => {
+			push.registerRelay.mockRejectedValue(new Error(reason));
+			push.pushErrorReason.mockReturnValue(reason);
+			const module = await freshModule();
+
+			await module.startPushWatch();
+
+			expect(delivery.stopBrokenRelay).toHaveBeenCalledOnce();
+			expect(delivery.fallBackToSlow).not.toHaveBeenCalled();
+		},
+	);
+
+	it("keeps Fast Mode through a failed registration it can retry", async () => {
+		push.registerRelay.mockRejectedValue(new Error("offline"));
+		push.pushErrorReason.mockReturnValue("relayRegisterFailed");
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(delivery.stopBrokenRelay).not.toHaveBeenCalled();
+		expect(delivery.fallBackToSlow).not.toHaveBeenCalled();
+	});
+
+	it("registers nothing when Fast Mode has no source", async () => {
+		push.currentFastSource.mockResolvedValue(null);
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(push.registerRelay).not.toHaveBeenCalled();
+		expect(push.mintPushToken).not.toHaveBeenCalled();
+	});
+
+	it("does not register while notifications are off", async () => {
+		push.notificationsEnabled.mockResolvedValue(false);
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(push.registerRelay).not.toHaveBeenCalled();
+	});
+});
+
 describe("the sign-out release", () => {
-	it("drops the registration while notifications are on", async () => {
+	it("drops the add-on registration while notifications are on", async () => {
 		const release = await signOutRelease();
 
 		await release();
 
-		expect(teardown.forgetPushRegistration).toHaveBeenCalled();
+		expect(teardown.forgetFastAddonRegistration).toHaveBeenCalledOnce();
 	});
 
 	it("does not mint a fresh token when notifications are off", async () => {
@@ -359,8 +443,39 @@ describe("the sign-out release", () => {
 
 		await release();
 
-		expect(teardown.forgetPushRegistration).not.toHaveBeenCalled();
+		expect(teardown.forgetFastAddonRegistration).not.toHaveBeenCalled();
 		expect(push.mintPushToken).not.toHaveBeenCalled();
+	});
+
+	it("unregisters fcm-relay tokens whatever the mode or notification state", async () => {
+		const release = await signOutRelease();
+		push.notificationsEnabled.mockResolvedValue(false);
+		push.inFastMode.mockResolvedValue(false);
+		push.currentFastSource.mockResolvedValue(null);
+
+		await release();
+
+		expect(teardown.forgetRelayRegistration).toHaveBeenCalledOnce();
+	});
+
+	it("unregisters fcm-relay tokens once when fcm-relay delivers Fast Mode", async () => {
+		const release = await signOutRelease();
+		push.currentFastSource.mockResolvedValue("relay");
+
+		await release();
+
+		expect(teardown.forgetRelayRegistration).toHaveBeenCalledOnce();
+		expect(teardown.forgetFastAddonRegistration).not.toHaveBeenCalled();
+		expect(teardown.forgetPushRegistration).not.toHaveBeenCalled();
+	});
+
+	it("leaves fcm-relay alone where Fast Mode cannot use it", async () => {
+		const release = await signOutRelease();
+		push.fastModeOptions.mockReturnValue([]);
+
+		await release();
+
+		expect(teardown.forgetRelayRegistration).not.toHaveBeenCalled();
 	});
 
 	it("is the same release however often the watch starts", async () => {

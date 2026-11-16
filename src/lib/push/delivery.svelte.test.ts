@@ -14,6 +14,7 @@ import {
 	push,
 	recordOrder,
 	resetPushMocks,
+	sonner,
 	toastDetails,
 	toastLabel,
 	toasts,
@@ -25,6 +26,7 @@ vi.mock("#lib/updates/addon.svelte.ts", () => addon);
 vi.mock("#lib/api/settings/account.ts", () => account);
 vi.mock("#lib/api/error-toast.ts", () => toasts);
 vi.mock("#lib/app-data/preferences.svelte.ts", () => preferences);
+vi.mock("svelte-sonner", () => sonner);
 
 beforeEach(resetPushMocks);
 
@@ -38,6 +40,17 @@ describe("turning Fast mode on", () => {
 		expect(account.registerPushToken).toHaveBeenCalledWith(token);
 		expect(order).toEqual(["delete", "register", "enable"]);
 		expect(module.notificationSettings.mode).toBe("fast");
+	});
+
+	it("does nothing while notifications are off", async () => {
+		preferences.stored.notificationsEnabled = false;
+		const module = await freshModule();
+
+		await module.selectNotificationMode("fast");
+
+		expect(push.setMode).not.toHaveBeenCalled();
+		expect(account.registerPushToken).not.toHaveBeenCalled();
+		expect(module.notificationSettings.mode).toBe("slow");
 	});
 
 	it("still switches Fast mode on when the old token cannot be deleted", async () => {

@@ -13,8 +13,11 @@ const { goto, callMethod, caches, preferences, markers, push } = vi.hoisted(
 		markers: { clearStored: vi.fn() },
 		push: {
 			pushAvailableHere: vi.fn(() => true),
+			fastModeOptions: vi.fn((): string[] => ["addon", "relay"]),
 			fcmServiceInstalled: vi.fn(() => Promise.resolve(false)),
 			deletePushToken: vi.fn(() => Promise.resolve()),
+			dropRelayOrphans: vi.fn(() => Promise.resolve()),
+			forgetRelay: vi.fn(() => Promise.resolve()),
 			setNotificationsEnabled: vi.fn(() => Promise.resolve()),
 		},
 	}),
@@ -41,6 +44,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	order.length = 0;
 	push.pushAvailableHere.mockReturnValue(true);
+	push.fastModeOptions.mockReturnValue(["addon", "relay"]);
 	push.fcmServiceInstalled.mockResolvedValue(false);
 	callMethod.mockImplementation(() => {
 		order.push("sign_out");
@@ -145,6 +149,72 @@ describe("signing out", () => {
 		expect(push.deletePushToken).toHaveBeenCalled();
 	});
 
+	it("forgets the fcm-relay pairing whatever the mode or add-on", async () => {
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.forgetRelay).toHaveBeenCalledOnce();
+	});
+
+	it("drops the leftover fcm-relay tokens after it forgets the pairing", async () => {
+		push.forgetRelay.mockImplementation(() => {
+			order.push("forgetRelay");
+			return Promise.resolve();
+		});
+		push.dropRelayOrphans.mockImplementation(() => {
+			order.push("dropRelayOrphans");
+			return Promise.resolve();
+		});
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(order).toEqual(["forgetRelay", "dropRelayOrphans"]);
+	});
+
+	it("drops the leftover fcm-relay tokens even when the pairing cannot be forgotten", async () => {
+		push.forgetRelay.mockRejectedValueOnce(new Error("ipc"));
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.dropRelayOrphans).toHaveBeenCalledOnce();
+	});
+
+	it("clears the account even when the leftover fcm-relay tokens cannot be dropped", async () => {
+		push.dropRelayOrphans.mockRejectedValueOnce(new Error("ipc"));
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.deletePushToken).toHaveBeenCalled();
+		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
+	});
+
+	it("clears the account even when the fcm-relay pairing cannot be forgotten", async () => {
+		push.forgetRelay.mockRejectedValueOnce(new Error("ipc"));
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.deletePushToken).toHaveBeenCalled();
+		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
+	});
+
+	it("leaves fcm-relay alone where Fast Mode cannot use it", async () => {
+		push.fastModeOptions.mockReturnValue([]);
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.forgetRelay).not.toHaveBeenCalled();
+		expect(push.dropRelayOrphans).not.toHaveBeenCalled();
+		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(false);
+	});
+
 	it("makes no push calls where push is unavailable", async () => {
 		push.pushAvailableHere.mockReturnValue(false);
 		push.fcmServiceInstalled.mockResolvedValue(true);
@@ -155,6 +225,8 @@ describe("signing out", () => {
 		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
 		expect(push.fcmServiceInstalled).not.toHaveBeenCalled();
 		expect(push.deletePushToken).not.toHaveBeenCalled();
+		expect(push.forgetRelay).not.toHaveBeenCalled();
+		expect(push.dropRelayOrphans).not.toHaveBeenCalled();
 		expect(console.error).not.toHaveBeenCalled();
 		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
 	});
@@ -168,6 +240,8 @@ describe("signing out", () => {
 
 		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
 		expect(push.deletePushToken).not.toHaveBeenCalled();
+		expect(push.forgetRelay).not.toHaveBeenCalled();
+		expect(push.dropRelayOrphans).not.toHaveBeenCalled();
 		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
 	});
 });

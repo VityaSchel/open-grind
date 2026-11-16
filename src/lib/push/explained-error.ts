@@ -19,6 +19,30 @@ const reasons = (addon: string): Record<PushErrorReason, string | null> => ({
 	tokenFailed: "Firebase couldn't register this device.",
 	deleteFailed: "Firebase couldn't unregister this device.",
 	malformedToken: "Firebase returned an unusable registration.",
+	fastUnconfigured: "Fast Mode has no delivery method set up yet.",
+	relayNoDistributor: "No UnifiedPush distributor app is installed.",
+	relayDistributorUnavailable:
+		"No UnifiedPush distributor app was chosen, or the chosen one is gone.",
+	relayActionRequired:
+		"The UnifiedPush distributor app needs you to finish its own setup first.",
+	relayVapidRequired:
+		"The UnifiedPush distributor app refused the registration because it requires VAPID.",
+	relayNetwork:
+		"The UnifiedPush distributor app couldn't reach its server. Check your connection.",
+	relayRegistrationFailed:
+		"The UnifiedPush distributor app couldn't register Open Grind.",
+	relayTimedOut: "The UnifiedPush distributor app didn't answer in time.",
+	relayCancelled: "The fcm-relay setup was canceled.",
+	relaySetupLost:
+		"The UnifiedPush distributor app dropped the fcm-relay setup before it finished.",
+	relayNoSetup: "No fcm-relay setup is in progress.",
+	relayUnpaired: "No fcm-relay is paired with this account.",
+	relayRegisterFailed:
+		"Grindr didn't accept the fcm-relay registration. Try again later.",
+	relayAccountChanged:
+		"The fcm-relay pairing belongs to another Grindr account.",
+	relaySaveFailed: "Android couldn't write the config file.",
+	relayShareFailed: "Android couldn't share the config file.",
 	failed: null,
 });
 
