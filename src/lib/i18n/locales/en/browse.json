@@ -221,12 +221,6 @@
 				"underage": "Content with minors",
 				"other": "Other"
 			},
-			"discard": {
-				"title": "Discard changes?",
-				"description": "You have unsaved changes.",
-				"keepEditing": "Keep editing",
-				"discard": "Discard"
-			},
 			"location": {
 				"showOnMap": "Show me on map",
 				"accuracy": "Location accuracy",

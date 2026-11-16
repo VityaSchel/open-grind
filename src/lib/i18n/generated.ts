@@ -164,10 +164,6 @@ export interface Messages {
 	"browse.rightNow.post.message": undefined;
 	"browse.rightNow.post.underReview": undefined;
 	"browse.rightNow.sheet.a11y.visible": undefined;
-	"browse.rightNow.sheet.discard.description": undefined;
-	"browse.rightNow.sheet.discard.discard": undefined;
-	"browse.rightNow.sheet.discard.keepEditing": undefined;
-	"browse.rightNow.sheet.discard.title": undefined;
 	"browse.rightNow.sheet.hosting": undefined;
 	"browse.rightNow.sheet.location.accuracy": undefined;
 	"browse.rightNow.sheet.location.radius": { distance: string };
@@ -1087,6 +1083,10 @@ export interface Messages {
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;
+	"shell.discardChangesDialog.description": undefined;
+	"shell.discardChangesDialog.discard": undefined;
+	"shell.discardChangesDialog.keepEditing": undefined;
+	"shell.discardChangesDialog.title": undefined;
 	"shell.documentTitle": { page: string };
 	"shell.error.description": undefined;
 	"shell.error.goHome": undefined;

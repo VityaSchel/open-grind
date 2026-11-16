@@ -20,6 +20,12 @@
 	"saveChangesBar": {
 		"save": "Save changes"
 	},
+	"discardChangesDialog": {
+		"title": "Discard changes?",
+		"description": "You have unsaved changes.",
+		"keepEditing": "Keep editing",
+		"discard": "Discard"
+	},
 	"dataRefreshControl": {
 		"pullHint": "Pull to refresh",
 		"releaseHint": "Release to refresh",

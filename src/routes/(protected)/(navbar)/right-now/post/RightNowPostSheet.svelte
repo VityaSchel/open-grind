@@ -3,6 +3,7 @@
 	import { untrack } from "svelte";
 
 	import MultilineField from "#lib/components/fields/MultilineField.svelte";
+	import DiscardChangesDialog from "#lib/components/shared/DiscardChangesDialog.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as ResponsiveDialog from "#lib/components/ui/responsive-dialog/index.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
@@ -11,7 +12,6 @@
 	import { t } from "#lib/i18n/index.ts";
 	import { rejectedParts } from "../right-now-post-fields";
 	import type { RightNowPostState } from "../right-now-post-state.svelte";
-	import DiscardChangesDialog from "./DiscardChangesDialog.svelte";
 	import {
 		LEAST_PRECISE_RADIUS,
 		POST_TEXT_MAX_LENGTH,
