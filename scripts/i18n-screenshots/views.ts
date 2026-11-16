@@ -32,6 +32,7 @@ import {
 	installNativeStubs,
 	installNeutralGeolocation,
 	pinNavigatorPlatform,
+	seedPreferences,
 	seedScene,
 } from "./stubs";
 
@@ -75,6 +76,8 @@ async function openSession({
 	await pinNavigatorPlatform({ page, platform });
 	await installEventInjection(page);
 	await installNativeStubs({ page, overrides: scene.native });
+	if (scene.preferences)
+		await seedPreferences({ page, preferences: scene.preferences });
 	await installNeutralGeolocation(page);
 	if (scene.demo) await seedScene({ page, scene: scene.demo });
 	await freezeClockOnEveryLoad(page);

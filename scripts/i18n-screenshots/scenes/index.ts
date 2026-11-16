@@ -320,6 +320,7 @@ export type Scene = {
 	platform: Platform;
 	shim?: "linux" | "windows" | "ios";
 	native?: NativeOverrides;
+	preferences?: Record<string, unknown>;
 	demo?: Partial<ScreenshotScene>;
 	views: [SceneView, ...SceneView[]];
 };

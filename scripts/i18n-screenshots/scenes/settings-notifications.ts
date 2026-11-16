@@ -5,6 +5,7 @@ import {
 	type NativeOverrides,
 	overrideNative,
 } from "../stubs";
+import { showsLoading } from "../settle";
 import type { Scene } from ".";
 import { press } from "./press";
 import { addingToast, holdToast, waitForNewToast } from "./toast";
@@ -17,6 +18,7 @@ const CATEGORIES = [
 	{ category: "taps", enabled: true, systemBlocked: false },
 ];
 const WRONG_CODE = "123456";
+const ONBOARDED = { onboardingComplete: true };
 
 function pushRejection(reason: string): NativeOverride {
 	return { reject: { kind: "Push", message: { reason } } };
@@ -123,6 +125,7 @@ async function openFastModeConfig(page: Page): Promise<void> {
 async function chooseRelay(page: Page): Promise<void> {
 	await press(relayOption(page));
 	await relayConfig(page).waitFor();
+	showsLoading(page);
 }
 
 async function startRelaySetup(page: Page): Promise<void> {
@@ -134,6 +137,7 @@ async function startRelaySetup(page: Page): Promise<void> {
 export const androidNotifications: Scene = {
 	platform: "phone",
 	native: RELAY_SETUP,
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications",
@@ -231,6 +235,7 @@ export const androidNotifications: Scene = {
 export const fastModeWithoutPlayServices: Scene = {
 	platform: "phone",
 	native: { ...ANDROID_PUSH, push_play_services: { answer: false } },
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/fast-mode-config-unavailable",
@@ -247,6 +252,7 @@ export const fastModeWithoutPlayServices: Scene = {
 export const fcmServiceSource: Scene = {
 	platform: "phone",
 	native: { ...ANDROID_PUSH, push_fast_source: { answer: "addon" } },
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/fcm-service",
@@ -261,6 +267,7 @@ export const fcmServiceSource: Scene = {
 export const fcmRelaySource: Scene = {
 	platform: "phone",
 	native: RELAY_PAIRED,
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/fcm-relay",
@@ -284,6 +291,7 @@ export const relaySetupFailures: Scene = {
 			],
 		},
 	},
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/relay-setup-failed",
@@ -311,6 +319,7 @@ export const relayConfigFailures: Scene = {
 		push_relay_save_config: pushRejection("relaySaveFailed"),
 		push_relay_share_config: pushRejection("relayShareFailed"),
 	},
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/relay-config-failed",
@@ -339,6 +348,7 @@ export const relayCodeCheckFailure: Scene = {
 		...RELAY_CONNECTED,
 		push_relay_commit: pushRejection("relayNetwork"),
 	},
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/relay-code-check-failed",
@@ -361,6 +371,7 @@ export const relayStopped: Scene = {
 		...RELAY_PAIRED,
 		push_relay_register: pushRejection("relayUnpaired"),
 	},
+	preferences: ONBOARDED,
 	views: [
 		{
 			id: "settings/notifications/relay-stopped",

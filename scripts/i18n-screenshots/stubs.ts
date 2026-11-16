@@ -1,3 +1,4 @@
+import { encode } from "@msgpack/msgpack";
 import type { Page } from "@playwright/test";
 
 import { installGeolocationShim } from "../../e2e/support/geolocation";
@@ -16,6 +17,7 @@ const NAVIGATOR_PLATFORMS = {
 
 type ShimPlatform = keyof typeof NAVIGATOR_PLATFORMS;
 
+const PREFERENCES_FILE = "preferences";
 const APP_VERSION = "1.2.0";
 const NEXT_CHECK_AT = Date.parse("2026-07-22T13:12:00Z");
 
@@ -157,6 +159,33 @@ export async function overrideNative({
 	await page.evaluate((changed) => {
 		Object.assign(window.__openGrindNativeOverrides ?? {}, changed);
 	}, overrides);
+}
+
+export async function seedPreferences({
+	page,
+	preferences,
+}: {
+	page: Page;
+	preferences: Record<string, unknown>;
+}): Promise<void> {
+	await page.addInitScript(
+		({ file, content }) => {
+			void (
+				window as unknown as {
+					__TAURI_INTERNALS__: {
+						invoke: (
+							cmd: string,
+							args: unknown,
+						) => Promise<unknown>;
+					};
+				}
+			).__TAURI_INTERNALS__.invoke("write_app_data", { file, content });
+		},
+		{
+			file: PREFERENCES_FILE,
+			content: Buffer.from(encode(preferences)).toString("base64"),
+		},
+	);
 }
 
 export async function seedScene({
