@@ -14,6 +14,7 @@
 
 	let gridElement: HTMLElement | null = $state(null);
 
+	const empty = $derived(gridState.profiles.length === 0);
 	const pendingSkeletons = $derived(
 		gridState.paging.running ? PAGE_SKELETONS : 0,
 	);
@@ -40,62 +41,63 @@
 </script>
 
 <div class="relative flex flex-1 flex-col">
-	<div
-		bind:this={gridElement}
-		data-slot="grid-cells"
-		class="photo-grid"
-		style:padding-top="{view.paddingTopPx}px"
-		style:padding-bottom="{view.paddingBottomPx}px"
-		data-rows-above={view.hasRowsAbove || undefined}
-		data-rows-below={view.hasRowsBelow || undefined}
-	>
-		{#if gridState.loading && gridState.profiles.length === 0}
-			{#each Array.from({ length: PAGE_SKELETONS })}
-				<GridCellSkeleton />
-			{/each}
-		{:else if gridState.error && gridState.profiles.length === 0}
-			<div class="col-span-full flex p-4">
-				<ApiErrorDisplay
-					error={gridState.error}
-					onRetry={() => gridState.retry()}
-					class="m-auto"
-				/>
-			</div>
-		{:else}
-			{#if gridState.profiles.length === 0}
-				<EmptyGrid />
+	{#if empty && !gridState.loading && gridState.error}
+		<div class="flex flex-1 p-4">
+			<ApiErrorDisplay
+				error={gridState.error}
+				onRetry={() => gridState.retry()}
+				class="m-auto"
+			/>
+		</div>
+	{:else if empty && !gridState.loading && !gridState.paging.running}
+		<EmptyGrid />
+	{:else}
+		<div
+			bind:this={gridElement}
+			data-slot="grid-cells"
+			class="photo-grid"
+			style:padding-top="{view.paddingTopPx}px"
+			style:padding-bottom="{view.paddingBottomPx}px"
+			data-rows-above={view.hasRowsAbove || undefined}
+			data-rows-below={view.hasRowsBelow || undefined}
+		>
+			{#if empty && gridState.loading}
+				{#each Array.from({ length: PAGE_SKELETONS })}
+					<GridCellSkeleton />
+				{/each}
+			{:else}
+				{#each visibleProfiles as item (item.id)}
+					{#if item.type === "rendered"}
+						<GridProfileMiniCard
+							id={item.id}
+							displayName={item.displayName}
+							distance={item.distance}
+							unread={item.unread}
+							onlineUntil={item.onlineUntil}
+							isFavorite={item.isFavorite}
+							isVisiting={item.isVisiting}
+							hadRecentChat={item.hasChattedInLast24Hrs}
+							rightNow={item.rightNow}
+							medias={item.profilePhotosHashes?.map(
+								(mediaHash) => ({ mediaHash }),
+							) ?? []}
+						/>
+					{:else}
+						<GridCellSkeleton
+							onVisible={() => {
+								gridState
+									.resolveProfile(item.id)
+									.catch((error) => console.error(error));
+							}}
+						/>
+					{/if}
+				{/each}
+				{#each Array.from({ length: visibleSkeletons })}
+					<GridCellSkeleton />
+				{/each}
 			{/if}
-			{#each visibleProfiles as item (item.id)}
-				{#if item.type === "rendered"}
-					<GridProfileMiniCard
-						id={item.id}
-						displayName={item.displayName}
-						distance={item.distance}
-						unread={item.unread}
-						onlineUntil={item.onlineUntil}
-						isFavorite={item.isFavorite}
-						isVisiting={item.isVisiting}
-						hadRecentChat={item.hasChattedInLast24Hrs}
-						rightNow={item.rightNow}
-						medias={item.profilePhotosHashes?.map((mediaHash) => ({
-							mediaHash,
-						})) ?? []}
-					/>
-				{:else}
-					<GridCellSkeleton
-						onVisible={() => {
-							gridState
-								.resolveProfile(item.id)
-								.catch((error) => console.error(error));
-						}}
-					/>
-				{/if}
-			{/each}
-			{#each Array.from({ length: visibleSkeletons })}
-				<GridCellSkeleton />
-			{/each}
-		{/if}
-	</div>
+		</div>
+	{/if}
 	<div role="status" class="sr-only">
 		{gridState.paging.running
 			? t("browse.grid.a11y.loadingMore")
