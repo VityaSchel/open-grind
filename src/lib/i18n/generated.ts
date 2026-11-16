@@ -928,6 +928,7 @@ export interface Messages {
 	"settings.app.giphy.title": undefined;
 	"settings.app.hapticFeedback.description": undefined;
 	"settings.app.hapticFeedback.title": undefined;
+	"settings.app.language.helpTranslate": undefined;
 	"settings.app.pin.title": undefined;
 	"settings.app.pin.unimplemented": { issueLink: string };
 	"settings.app.privacyPolicy": undefined;

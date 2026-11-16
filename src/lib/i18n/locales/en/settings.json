@@ -91,6 +91,9 @@
 			"security": "Security",
 			"updates": "Updates"
 		},
+		"language": {
+			"helpTranslate": "Help translate Open Grind"
+		},
 		"units": {
 			"title": "Units",
 			"description": "Choose how distance, height, and weight are displayed.",

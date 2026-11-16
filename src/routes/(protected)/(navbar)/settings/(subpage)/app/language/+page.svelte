@@ -1,17 +1,25 @@
 <script lang="ts">
 	import { afterNavigate } from "$app/navigation";
 	import { ToggleGroup } from "bits-ui";
+	import ArrowSquareOutIcon from "phosphor-svelte/lib/ArrowSquareOutIcon";
 
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
+	import Link from "#lib/components/ui/link/Link.svelte";
+	import { helpTranslateUrl } from "#lib/i18n/help-translate.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import {
 		getListedLanguage,
 		listedLanguages,
 	} from "#lib/i18n/listed-languages.ts";
 	import { pickerTag } from "#lib/i18n/matcher.ts";
-	import { chooseLanguage } from "#lib/platform/app-language.ts";
+	import {
+		chooseLanguage,
+		getSystemLanguages,
+	} from "#lib/platform/app-language.ts";
 	import { cn } from "#lib/util/utils.ts";
+
+	const translateUrl = helpTranslateUrl({ system: getSystemLanguages() });
 
 	let pending = $state<string | null>(null);
 	let latestChoice = 0;
@@ -104,3 +112,11 @@
 		</ToggleGroup.Item>
 	{/each}
 </ToggleGroup.Root>
+<Link
+	href={translateUrl}
+	data-slot="help-translate"
+	class="inline-flex items-center gap-1 self-start px-4 text-sm text-muted-foreground hover:text-foreground"
+>
+	{t("settings.app.language.helpTranslate")}
+	<ArrowSquareOutIcon class="size-3.5" />
+</Link>
