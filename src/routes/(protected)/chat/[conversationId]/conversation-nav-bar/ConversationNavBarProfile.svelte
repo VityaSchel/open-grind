@@ -11,7 +11,10 @@
 	let { profile }: { profile: ConversationProfile } = $props();
 </script>
 
-<a href="/profile/{profile.profileId}" class="flex-1 py-4 ps-0 pe-4">
+<a
+	href="/profile/{profile.profileId}"
+	class="flex-1 rounded-s-[--spacing(9.5)] rounded-e-chat-panel py-4 ps-2 pe-4 -outline-offset-2"
+>
 	<Card.Header class="flex items-center gap-4 px-0">
 		<Avatar.Root class="size-avatar after:rounded-full">
 			<UserAvatar

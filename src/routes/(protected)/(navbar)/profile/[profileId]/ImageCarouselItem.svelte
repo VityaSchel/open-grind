@@ -27,7 +27,7 @@
 
 <svelte:element
 	this={covered ? "div" : "a"}
-	class="item relative block aspect-auto h-full max-h-[inherit] w-full shrink-0 bg-stone-700"
+	class="item focus-ring-overlay relative block aspect-auto h-full max-h-[inherit] w-full shrink-0 bg-stone-700"
 	data-cropped="true"
 	data-pswp-width={width}
 	data-pswp-height={height}

@@ -22,7 +22,7 @@
 	<div
 		data-scroll-intent="x"
 		class={[
-			"scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0",
+			"scrollbar-thin -mt-1 flex gap-0.5 overflow-x-auto p-4 pt-1",
 			contentClass,
 		]}
 	>

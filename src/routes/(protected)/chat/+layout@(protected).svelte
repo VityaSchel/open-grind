@@ -115,7 +115,7 @@
 				<ConversationsList class="pe-0.75" />
 			</Resizable.Pane>
 			<Resizable.Handle
-				class="cursor-col-resize! bg-transparent px-2"
+				class="cursor-col-resize! rounded-full bg-transparent px-2 -outline-offset-2"
 				withHandle
 			/>
 			<Resizable.Pane

@@ -12,7 +12,7 @@
 <RadioGroup.Item
 	class={cn(
 		Item.itemVariants(),
-		"rounded-none border-0 text-left -outline-offset-2 not-first:border-t not-first:border-border",
+		"rounded-none border-0 text-left -outline-offset-2 not-first:border-t not-first:border-border first:rounded-t-[inherit] last:rounded-b-[inherit]",
 		className,
 	)}
 	{...restProps}

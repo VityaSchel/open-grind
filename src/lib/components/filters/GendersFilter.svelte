@@ -27,7 +27,7 @@
 			return {
 				duration: 400,
 				css: (t: number, u: number) =>
-					`width: calc(${t} * ${width}px); opacity: ${t}; margin-left: calc(${u} * -4px)`,
+					`overflow: clip; width: calc(${t} * ${width}px); opacity: ${t}; margin-left: calc(${u} * -4px)`,
 				easing: expoOut,
 			};
 		},
@@ -68,7 +68,7 @@
 						expanded,
 					})}
 					{#if shown}
-						<div transition:hide class="overflow-clip">
+						<div transition:hide>
 							<ToggleGroup.Item value={String(gender.genderId)}>
 								{gender.genderPlural ?? gender.gender}
 							</ToggleGroup.Item>

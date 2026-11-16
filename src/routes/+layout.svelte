@@ -29,6 +29,7 @@
 	import { trackHoverPointer } from "#lib/platform/hover-pointer.ts";
 	import { keepLinksInApp } from "#lib/platform/in-app-links.ts";
 	import { isAndroidPlatform } from "#lib/platform/os.ts";
+	import { revealKeyboardFocus } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { installScrollGestureBridge } from "#lib/platform/scroll-gesture.ts";
 	import { reconcileNotifications } from "#lib/push/notifications.svelte.ts";
 	import { startPushWatch } from "#lib/push/watch.ts";
@@ -67,6 +68,7 @@
 		const releaseNativeMenuBlock = blockNativeMenu();
 		const releaseHoverPointer = trackHoverPointer();
 		const releaseInAppLinks = keepLinksInApp();
+		const releaseKeyboardFocusReveal = revealKeyboardFocus();
 		if (isAndroidPlatform()) {
 			void registerAndroidBackButtonListener().catch((error) => {
 				console.error("Failed to register back button listener", error);
@@ -83,6 +85,7 @@
 			releaseNativeMenuBlock();
 			releaseHoverPointer();
 			releaseInAppLinks();
+			releaseKeyboardFocusReveal();
 		};
 	});
 

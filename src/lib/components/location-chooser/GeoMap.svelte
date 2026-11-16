@@ -227,7 +227,9 @@
 	});
 </script>
 
-<div class="relative isolate h-full w-full">
+<div
+	class="relative isolate h-full w-full [--focus-ring:var(--background)] [&_.leaflet-container]:-outline-offset-2! [&_.leaflet-control-attribution_a]:-outline-offset-2"
+>
 	<Map
 		options={{
 			center: initial

@@ -24,7 +24,7 @@
 	<BackLink
 		href="/chat"
 		label={t("chat.conversation.navBar.a11y.back")}
-		class="flex h-full w-19 items-center justify-center"
+		class="-me-2 flex h-full w-19 items-center justify-center rounded-full -outline-offset-2"
 	>
 		<ArrowLeftIcon size={32} />
 	</BackLink>
@@ -33,7 +33,7 @@
 	{:else if conversationState.error}
 		<span class="flex-1">{t("chat.conversation.errors.loadFailed")}</span>
 	{:else}
-		<div class="flex flex-1 items-center gap-3 py-4 ps-0">
+		<div class="flex flex-1 items-center gap-3 py-4 ps-2">
 			<Skeleton class="size-avatar rounded-full" />
 			<div class="flex flex-col gap-2">
 				<Skeleton class="h-4 w-20 rounded-md" />

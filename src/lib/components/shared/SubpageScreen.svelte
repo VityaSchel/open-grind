@@ -80,7 +80,7 @@
 >
 	<BackLink
 		href={current.back}
-		class="flex h-full w-19 shrink-0 items-center justify-center"
+		class="flex h-full w-19 shrink-0 items-center justify-center rounded-full -outline-offset-2"
 	>
 		<ArrowLeftIcon size={32} />
 	</BackLink>
