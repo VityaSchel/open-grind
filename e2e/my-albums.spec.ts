@@ -257,7 +257,9 @@ test.describe("my albums", () => {
 		).toHaveCount(2, { timeout: 30_000 });
 	});
 
-	test("leaving the editor abandons pending edits", async ({ page }) => {
+	test("leaving the editor asks first, then abandons pending edits", async ({
+		page,
+	}) => {
 		await openSharedAlbum(page);
 		await page
 			.getByRole("button", { name: /^Remove album photo in slot 1$/ })
@@ -267,6 +269,10 @@ test.describe("my albums", () => {
 			.fill("Scrapped");
 
 		await back(page);
+		await expect(
+			page.getByRole("alertdialog", { name: "Discard changes?" }),
+		).toBeVisible();
+		await page.getByRole("button", { name: "Discard" }).click();
 		await page.locator(SHARED_ALBUM).click();
 
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3, {

@@ -9,6 +9,7 @@
 	} from "#lib/api/messaging/albums.ts";
 	import SaveChangesBar from "#lib/components/shared/SaveChangesBar.svelte";
 	import { setSubpageActions } from "#lib/components/shared/subpage-actions-context.svelte.ts";
+	import { guardUnsavedChanges } from "#lib/components/shared/unsaved-changes-guard.svelte.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import {
 		getAlbumUploads,
@@ -52,6 +53,7 @@
 	const pending = $derived(uploads.pending(draft.albumId));
 
 	setSubpageActions(menu);
+	guardUnsavedChanges(() => draft.dirty && !draft.saving);
 
 	getAlbumStorageLimits()
 		.then((resolved) => (limits = resolved))

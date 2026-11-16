@@ -27,6 +27,11 @@ export function returnTo(pathname: string): void {
 	if (!traverseBackTo(pathname)) void goto(pathname, { replace: true });
 }
 
+export function goBack({ fallback }: { fallback: string }): void {
+	if (canGoBack()) history.back();
+	else returnTo(fallback);
+}
+
 export function navigationPending({
 	owns,
 }: {

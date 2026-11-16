@@ -16,6 +16,7 @@ const { afterNavigateCallbacks, gotoMock } = vi.hoisted(() => ({
 vi.mock("$app/navigation", () => ({
 	afterNavigate: (callback: () => void) =>
 		afterNavigateCallbacks.push(callback),
+	beforeNavigate: vi.fn(),
 	goto: gotoMock,
 }));
 

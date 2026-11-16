@@ -16,7 +16,7 @@ function pageKey(pathname: string): string {
 	}
 }
 
-function isDeleted(pathname: string | null): boolean {
+export function isDeleted(pathname: string | null): boolean {
 	return pathname !== null && parentsOfDeleted.has(pageKey(pathname));
 }
 

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { afterNavigate } from "$app/navigation";
+	import { afterNavigate, beforeNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 
 	import { t } from "#lib/i18n/index.ts";
 	import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
-	import { canGoBack, returnTo } from "#lib/util/history.ts";
+	import { goBack } from "#lib/util/history.ts";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
 	import { escapeMeansBack } from "./escape-back";
 
@@ -25,6 +25,12 @@
 
 	afterNavigate(() => {
 		leaving = false;
+	});
+
+	beforeNavigate(({ complete }) => {
+		complete.catch(() => {
+			leaving = false;
+		});
 	});
 
 	onMount(() =>
@@ -49,9 +55,7 @@
 		event.preventDefault();
 		if (leaving) return;
 		leaving = true;
-
-		if (canGoBack()) history.back();
-		else returnTo(href);
+		goBack({ fallback: href });
 	}}
 >
 	{@render children?.()}

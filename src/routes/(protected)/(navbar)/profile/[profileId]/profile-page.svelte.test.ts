@@ -52,7 +52,11 @@ const {
 	grid: { source: null as ReturnType<typeof gridSource> | null },
 }));
 
-vi.mock("$app/navigation", () => ({ goto, afterNavigate }));
+vi.mock("$app/navigation", () => ({
+	goto,
+	afterNavigate,
+	beforeNavigate: vi.fn(),
+}));
 vi.mock("$app/state", () => ({ navigating, page }));
 vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 	get gridState() {
