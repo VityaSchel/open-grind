@@ -1,5 +1,5 @@
 plugins {
-	kotlin("jvm") version "1.9.25"
+	kotlin("jvm") version "2.1.21"
 }
 
 repositories {
@@ -7,6 +7,8 @@ repositories {
 }
 
 dependencies {
+	compileOnly("org.json:json:20250517")
+	testImplementation("org.json:json:20250517")
 	testImplementation("junit:junit:4.13.2")
 }
 
