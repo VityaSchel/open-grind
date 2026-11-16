@@ -3,8 +3,8 @@ use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
 use super::{
-	Announcement, NotificationPermission, PushCategory, PushError, PushMode,
-	PushSignal,
+	Announcement, FastSource, NotificationPermission, PushCategory, PushError,
+	PushMode, PushSignal, RelayCommit, RelayStatus,
 };
 use crate::plugin_rejection::classify;
 
@@ -88,6 +88,33 @@ struct DeeplinkPendingResponse {
 	pending: bool,
 }
 
+#[derive(Serialize)]
+struct SourceRequest {
+	source: FastSource,
+}
+
+#[derive(Deserialize)]
+struct SourceResponse {
+	source: Option<FastSource>,
+}
+
+#[derive(Deserialize)]
+struct AvailableResponse {
+	available: bool,
+}
+
+#[derive(Deserialize)]
+struct SavedResponse {
+	saved: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CommitRequest {
+	code: String,
+	profile_id: String,
+}
+
 pub async fn addon_ready(app: &AppHandle) -> Result<(), PushError> {
 	run(app, "addonReady", ()).await
 }
@@ -158,6 +185,77 @@ pub async fn set_mode(
 	mode: PushMode,
 ) -> Result<(), PushError> {
 	run(app, "setMode", ModePayload { mode }).await
+}
+
+pub async fn fast_source(
+	app: &AppHandle,
+) -> Result<Option<FastSource>, PushError> {
+	call::<SourceResponse>(app, "fastSource", ())
+		.await
+		.map(|response| response.source)
+}
+
+pub async fn set_fast_source(
+	app: &AppHandle,
+	source: FastSource,
+) -> Result<(), PushError> {
+	run(app, "setFastSource", SourceRequest { source }).await
+}
+
+pub async fn play_services(app: &AppHandle) -> Result<bool, PushError> {
+	call::<AvailableResponse>(app, "playServicesAvailable", ())
+		.await
+		.map(|response| response.available)
+}
+
+pub async fn relay_begin(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "beginRelay", ()).await
+}
+
+pub async fn relay_save_config(app: &AppHandle) -> Result<bool, PushError> {
+	call::<SavedResponse>(app, "saveRelayConfig", ())
+		.await
+		.map(|response| response.saved)
+}
+
+pub async fn relay_share_config(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "shareRelayConfig", ()).await
+}
+
+pub async fn relay_await(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "awaitRelay", ()).await
+}
+
+pub async fn relay_commit(
+	app: &AppHandle,
+	code: String,
+	profile_id: String,
+) -> Result<RelayCommit, PushError> {
+	call(app, "commitRelay", CommitRequest { code, profile_id }).await
+}
+
+pub async fn relay_register(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "registerRelay", ()).await
+}
+
+pub async fn relay_unregister(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "unregisterRelay", ()).await
+}
+
+pub async fn relay_cancel(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "cancelRelay", ()).await
+}
+
+pub async fn relay_forget(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "forgetRelay", ()).await
+}
+
+pub async fn relay_drop_orphans(app: &AppHandle) -> Result<(), PushError> {
+	run(app, "dropOrphans", ()).await
+}
+
+pub async fn relay_status(app: &AppHandle) -> Result<RelayStatus, PushError> {
+	call(app, "relayStatus", ()).await
 }
 
 pub async fn categories(

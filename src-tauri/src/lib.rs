@@ -25,6 +25,8 @@ mod plugin_rejection;
 mod predecessor;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
+#[cfg(any(target_os = "android", test))]
+mod push_relay;
 mod regional;
 mod scroll_phase;
 mod state;
@@ -216,6 +218,20 @@ pub fn run() {
             api::push::push_open_notification_settings,
             api::push::push_mode,
             api::push::push_set_mode,
+            api::push::push_fast_source,
+            api::push::push_set_fast_source,
+            api::push::push_play_services,
+            api::push::push_relay_begin,
+            api::push::push_relay_save_config,
+            api::push::push_relay_share_config,
+            api::push::push_relay_await,
+            api::push::push_relay_commit,
+            api::push::push_relay_register,
+            api::push::push_relay_unregister,
+            api::push::push_relay_cancel,
+            api::push::push_relay_forget,
+            api::push::push_relay_drop_orphans,
+            api::push::push_relay_status,
             api::push::push_categories,
             api::push::push_set_category,
             api::push::push_open_category_settings,

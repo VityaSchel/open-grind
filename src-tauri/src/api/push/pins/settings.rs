@@ -1,8 +1,10 @@
 use std::collections::BTreeSet;
 
-use super::{CATEGORIES, EVENTS, MODE, NOTIFIER, PLUGIN, TYPES_TS};
-use crate::api::push::{Category, PushMode, PushSignal};
-use crate::pin_support::squashed;
+use super::{
+	CATEGORIES, EVENTS, FAST_SOURCE, MODE, NOTIFIER, PLUGIN, TYPES_TS,
+};
+use crate::api::push::{Category, FastSource, PushMode, PushSignal};
+use crate::pin_support::{braced_block, squashed};
 
 #[test]
 fn every_notification_mode_is_spelled_the_same_in_all_three_languages() {
@@ -22,6 +24,54 @@ fn every_notification_mode_is_spelled_the_same_in_all_three_languages() {
 			"types.ts no longer offers the {wire} mode"
 		);
 	}
+}
+
+#[test]
+fn every_fast_source_is_spelled_the_same_in_all_three_languages() {
+	let rust: BTreeSet<String> =
+		FastSource::ALL.into_iter().map(FastSource::wire).collect();
+	let enum_body = squashed(braced_block(
+		FAST_SOURCE,
+		"FastSource.kt",
+		"enum class FastSource",
+	));
+	let kotlin: BTreeSet<String> = enum_body
+		.split_once(';')
+		.map_or(enum_body.as_str(), |(entries, _)| entries)
+		.split(',')
+		.filter(|entry| !entry.is_empty())
+		.map(|entry| {
+			entry
+				.split_once("(\"")
+				.and_then(|(name, rest)| {
+					let wire = rest.strip_suffix("\")")?;
+					let mut expected = wire.to_owned();
+					expected[..1].make_ascii_uppercase();
+					(name == expected).then(|| wire.to_owned())
+				})
+				.unwrap_or_else(|| {
+					panic!("FastSource.kt entry {entry} is not Name(\"name\")")
+				})
+		})
+		.collect();
+	assert_eq!(
+		kotlin, rust,
+		"FastSource.kt and the Rust FastSource offer different sources"
+	);
+	let types = squashed(TYPES_TS);
+	let offered: BTreeSet<String> = types
+		.split_once("exportconstfastSourceSchema=z.enum([")
+		.and_then(|(_, rest)| rest.split_once("])"))
+		.expect("types.ts no longer declares fastSourceSchema as a z.enum")
+		.0
+		.split(',')
+		.filter(|wire| !wire.is_empty())
+		.map(|wire| wire.trim_matches('"').to_owned())
+		.collect();
+	assert_eq!(
+		offered, rust,
+		"fastSourceSchema and the Rust FastSource offer different sources, so the frontend would refuse a configured source"
+	);
 }
 
 #[test]

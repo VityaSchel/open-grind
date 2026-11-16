@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 use crate::error::AppError;
+use crate::state::AppState;
 
 const MINT_ATTEMPTS: usize = 3;
 const MINT_RETRY: Duration = Duration::from_secs(2);
@@ -87,6 +88,37 @@ impl PushMode {
 			.unwrap()
 			.to_owned()
 	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum FastSource {
+	Addon,
+	Relay,
+}
+
+#[cfg(test)]
+impl FastSource {
+	pub const ALL: [Self; 2] = [Self::Addon, Self::Relay];
+
+	pub fn wire(self) -> String {
+		serde_json::to_value(self)
+			.unwrap()
+			.as_str()
+			.unwrap()
+			.to_owned()
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RelayStatus {
+	pub paired: bool,
+	pub broken: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RelayCommit {
+	pub matched: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -176,6 +208,88 @@ pub async fn push_set_mode(
 }
 
 #[tauri::command]
+pub async fn push_fast_source(
+	app: AppHandle,
+) -> Result<Option<FastSource>, AppError> {
+	Ok(backend::fast_source(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_set_fast_source(
+	app: AppHandle,
+	source: FastSource,
+) -> Result<(), AppError> {
+	Ok(backend::set_fast_source(&app, source).await?)
+}
+
+#[tauri::command]
+pub async fn push_play_services(app: AppHandle) -> Result<bool, AppError> {
+	Ok(backend::play_services(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_begin(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_begin(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_save_config(app: AppHandle) -> Result<bool, AppError> {
+	Ok(backend::relay_save_config(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_share_config(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_share_config(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_await(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_await(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_commit(
+	app: AppHandle,
+	state: tauri::State<'_, AppState>,
+	code: String,
+) -> Result<RelayCommit, AppError> {
+	let profile_id = signed_in_profile(state.client()?)?;
+	Ok(backend::relay_commit(&app, code, profile_id).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_register(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_register(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_unregister(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_unregister(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_cancel(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_cancel(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_forget(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_forget(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_drop_orphans(app: AppHandle) -> Result<(), AppError> {
+	Ok(backend::relay_drop_orphans(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_relay_status(
+	app: AppHandle,
+) -> Result<RelayStatus, AppError> {
+	Ok(backend::relay_status(&app).await?)
+}
+
+#[tauri::command]
 pub async fn push_categories(
 	app: AppHandle,
 ) -> Result<Vec<PushCategory>, AppError> {
@@ -239,6 +353,18 @@ pub fn push_watch(
 	on_event: tauri::ipc::Channel<PushSignal>,
 ) -> Result<(), AppError> {
 	Ok(backend::watch(&app, on_event)?)
+}
+
+fn signed_in_profile(
+	client: &grindr::GrindrClient,
+) -> Result<String, AppError> {
+	let profile_id = client
+		.session_receiver()
+		.borrow()
+		.as_ref()
+		.and_then(|session| session.credentials.profile_id.clone())
+		.filter(|profile_id| !profile_id.is_empty());
+	profile_id.ok_or(AppError::NotSignedIn)
 }
 
 fn split_token(token: String) -> Result<PushToken, PushError> {
@@ -318,6 +444,86 @@ mod tests {
 				"{wire:?} was accepted as a mode"
 			);
 		}
+	}
+
+	#[test]
+	fn every_fast_source_survives_the_trip_to_the_frontend_and_back() {
+		for (source, wire) in
+			[(FastSource::Addon, "addon"), (FastSource::Relay, "relay")]
+		{
+			assert_eq!(serde_json::to_value(source).unwrap(), wire);
+			assert_eq!(decoded::<FastSource>(wire), source);
+		}
+	}
+
+	#[test]
+	fn a_fast_source_open_grind_does_not_know_is_refused_rather_than_guessed() {
+		for wire in ["", "fcm", "Addon", "RELAY", "unifiedpush"] {
+			assert!(
+				serde_json::from_value::<FastSource>(serde_json::json!(wire))
+					.is_err(),
+				"{wire:?} was accepted as a fast source"
+			);
+		}
+	}
+
+	fn client_signed_in_as(profile_id: Option<&str>) -> grindr::GrindrClient {
+		grindr::GrindrClient::new(
+			grindr::DeviceInfo::generate(),
+			Some(grindr::Session {
+				credentials: grindr::Credentials {
+					email: "user@example.com".to_owned(),
+					profile_id: profile_id.map(str::to_owned),
+					auth_token: "auth-token".to_owned(),
+					kind: grindr::SessionKind::Email,
+					third_party_user_id: None,
+				},
+				token: None,
+			}),
+		)
+		.unwrap()
+	}
+
+	#[test]
+	fn a_relay_commit_pairs_the_signed_in_profile() {
+		assert_eq!(
+			signed_in_profile(&client_signed_in_as(Some("42"))).unwrap(),
+			"42"
+		);
+		for profile_id in [None, Some("")] {
+			assert!(matches!(
+				signed_in_profile(&client_signed_in_as(profile_id)),
+				Err(AppError::NotSignedIn)
+			));
+		}
+		let signed_out =
+			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
+				.unwrap();
+		assert!(matches!(
+			signed_in_profile(&signed_out),
+			Err(AppError::NotSignedIn)
+		));
+	}
+
+	#[test]
+	fn the_relay_answers_decode_whole() {
+		assert_eq!(
+			serde_json::from_value::<RelayStatus>(
+				serde_json::json!({ "paired": true, "broken": false })
+			)
+			.unwrap(),
+			RelayStatus {
+				paired: true,
+				broken: false,
+			}
+		);
+		assert_eq!(
+			serde_json::from_value::<RelayCommit>(
+				serde_json::json!({ "matched": true })
+			)
+			.unwrap(),
+			RelayCommit { matched: true }
+		);
 	}
 
 	#[test]

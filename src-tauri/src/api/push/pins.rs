@@ -37,12 +37,20 @@ const EVENTS: &str = include_str!(
 	"../../../gen/android/app/src/main/java/org/opengrind/push/PushEvents.kt"
 );
 
+const RELAY_CONTRACT: &str = include_str!(
+	"../../../gen/android/app/src/main/java/org/opengrind/push/RelayContract.kt"
+);
+
 const MODE: &str = include_str!(
 	"../../../android-logic/src/main/kotlin/org/opengrind/push/PushMode.kt"
 );
 
 const CATEGORIES: &str = include_str!(
 	"../../../android-logic/src/main/kotlin/org/opengrind/push/PushCategories.kt"
+);
+
+const FAST_SOURCE: &str = include_str!(
+	"../../../android-logic/src/main/kotlin/org/opengrind/push/FastSource.kt"
 );
 
 const TYPES_TS: &str = include_str!("../../../../src/lib/push/types.ts");

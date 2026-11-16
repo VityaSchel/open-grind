@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use super::{BRIDGE, CONTRACT, FCM_REQUEST, PLUGIN};
+use super::{BRIDGE, CONTRACT, FCM_REQUEST, PLUGIN, RELAY_CONTRACT, TYPES_TS};
 use crate::api::push::PushError;
 use crate::pin_support::{
 	addon_gate_verdicts, assert_rejections_classify_as, kotlin_constant,
@@ -8,6 +8,7 @@ use crate::pin_support::{
 };
 
 const CONTRACT_FILE: &str = "PushContract.kt";
+const RELAY_CONTRACT_FILE: &str = "RelayContract.kt";
 
 fn kotlin_integer(source: &str, file: &str, name: &str) -> i64 {
 	let start = spaced_match(source, &format!("const val {name} ="))
@@ -169,4 +170,82 @@ fn every_fcm_rejection_classifies_to_its_reason() {
 	}
 
 	assert_rejections_classify_as("push/android.rs", BRIDGE, "PushError");
+}
+
+fn relay_markers() -> BTreeSet<&'static str> {
+	RELAY_CONTRACT
+		.lines()
+		.filter_map(|line| {
+			let (name, value) =
+				line.trim().strip_prefix("const val ")?.split_once('=')?;
+			let name = name.trim();
+			(name.starts_with("ERROR_") && value.trim().starts_with('"'))
+				.then_some(name)
+		})
+		.collect()
+}
+
+#[test]
+fn every_fast_mode_rejection_classifies_to_its_reason() {
+	let reasons = [
+		("ERROR_FAST_UNCONFIGURED", PushError::FastUnconfigured),
+		("ERROR_NO_DISTRIBUTOR", PushError::RelayNoDistributor),
+		(
+			"ERROR_DISTRIBUTOR_UNAVAILABLE",
+			PushError::RelayDistributorUnavailable,
+		),
+		("ERROR_ACTION_REQUIRED", PushError::RelayActionRequired),
+		("ERROR_VAPID_REQUIRED", PushError::RelayVapidRequired),
+		("ERROR_NETWORK", PushError::RelayNetwork),
+		(
+			"ERROR_REGISTRATION_FAILED",
+			PushError::RelayRegistrationFailed,
+		),
+		("ERROR_TIMED_OUT", PushError::RelayTimedOut),
+		("ERROR_CANCELLED", PushError::RelayCancelled),
+		("ERROR_SETUP_LOST", PushError::RelaySetupLost),
+		("ERROR_NO_SETUP", PushError::RelayNoSetup),
+		("ERROR_UNPAIRED", PushError::RelayUnpaired),
+		(
+			"ERROR_REGISTER_FAILED",
+			PushError::RelayRegisterFailed(None),
+		),
+		("ERROR_ACCOUNT_CHANGED", PushError::RelayAccountChanged),
+		("ERROR_SAVE_FAILED", PushError::RelaySaveFailed(None)),
+		("ERROR_SHARE_FAILED", PushError::RelayShareFailed(None)),
+	];
+	assert_eq!(
+		relay_markers(),
+		reasons.iter().map(|(constant, _)| *constant).collect(),
+		"{RELAY_CONTRACT_FILE} declares an ERROR_ marker this pin does not classify"
+	);
+	let types = squashed(TYPES_TS);
+	let parsed_reasons: BTreeSet<String> = types
+		.split_once("exportconstpushErrorSchema=z.object({reason:z.enum([")
+		.and_then(|(_, rest)| rest.split_once("])"))
+		.expect(
+			"types.ts no longer declares pushErrorSchema's reason as a z.enum",
+		)
+		.0
+		.split(',')
+		.filter(|reason| !reason.is_empty())
+		.map(|reason| reason.trim_matches('"').to_owned())
+		.collect();
+	for (constant, expected) in reasons {
+		let marker =
+			kotlin_constant(RELAY_CONTRACT, RELAY_CONTRACT_FILE, constant);
+		let classified = PushError::from_rejection(Some(marker), None);
+		assert_eq!(
+			classified, expected,
+			"{RELAY_CONTRACT_FILE} {constant} = {marker} is not classified as {expected:?}"
+		);
+		let reason = serde_json::to_value(&expected).unwrap()["reason"]
+			.as_str()
+			.map(str::to_owned)
+			.expect("a PushError serializes with its reason");
+		assert!(
+			parsed_reasons.contains(&reason),
+			"pushErrorSchema in types.ts has no {reason}, so the frontend would read {expected:?} as a generic failure"
+		);
+	}
 }

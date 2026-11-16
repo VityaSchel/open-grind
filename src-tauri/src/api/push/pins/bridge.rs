@@ -30,6 +30,7 @@ fn every_command_the_bridge_sends_is_one_the_android_plugin_answers() {
 	assert!(
 		bridge.contains("dismissConversation")
 			&& bridge.contains("watchPush")
+			&& bridge.contains("commitRelay")
 			&& bridge.len() > 10,
 		"the bridge commands were not parsed: {bridge:?}"
 	);
@@ -86,9 +87,16 @@ fn read_arguments() -> BTreeSet<String> {
 fn every_argument_the_bridge_sends_is_named_as_the_android_plugin_reads_it() {
 	let sent = sent_arguments();
 	assert!(
-		["conversationId", "dedupeKey", "onEvent", "category"]
-			.iter()
-			.all(|name| sent.contains(*name)),
+		[
+			"conversationId",
+			"dedupeKey",
+			"onEvent",
+			"category",
+			"source",
+			"profileId",
+		]
+		.iter()
+		.all(|name| sent.contains(*name)),
 		"the bridge arguments were not parsed: {sent:?}"
 	);
 	let read = read_arguments();

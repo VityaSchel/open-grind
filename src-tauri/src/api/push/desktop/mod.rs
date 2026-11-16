@@ -18,8 +18,8 @@ use tauri::{AppHandle, Manager, Wry};
 use tauri_plugin_opener::OpenerExt;
 
 use super::{
-	Announcement, Category, NotificationPermission, PushCategory, PushError,
-	PushMode, PushSignal,
+	Announcement, Category, FastSource, NotificationPermission, PushCategory,
+	PushError, PushMode, PushSignal, RelayCommit, RelayStatus,
 };
 use state::DesktopPush;
 
@@ -119,6 +119,74 @@ pub async fn set_mode(
 	_mode: PushMode,
 ) -> Result<(), PushError> {
 	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn fast_source(
+	_app: &AppHandle,
+) -> Result<Option<FastSource>, PushError> {
+	Ok(None)
+}
+
+pub async fn set_fast_source(
+	_app: &AppHandle,
+	_source: FastSource,
+) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn play_services(_app: &AppHandle) -> Result<bool, PushError> {
+	Ok(false)
+}
+
+pub async fn relay_begin(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_save_config(_app: &AppHandle) -> Result<bool, PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_share_config(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_await(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_commit(
+	_app: &AppHandle,
+	_code: String,
+	_profile_id: String,
+) -> Result<RelayCommit, PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_register(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_unregister(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_cancel(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_forget(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_drop_orphans(_app: &AppHandle) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
+pub async fn relay_status(_app: &AppHandle) -> Result<RelayStatus, PushError> {
+	Ok(RelayStatus {
+		paired: false,
+		broken: false,
+	})
 }
 
 pub async fn categories(
