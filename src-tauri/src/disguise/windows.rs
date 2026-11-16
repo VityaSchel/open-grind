@@ -42,7 +42,7 @@ const BUTTON_GAP: Duration = Duration::from_millis(300);
 
 impl From<windows::core::Error> for DisguiseError {
 	fn from(error: windows::core::Error) -> Self {
-		Self(error.message())
+		Self::new(error.message())
 	}
 }
 
