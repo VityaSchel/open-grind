@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends unknown">
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {
@@ -32,6 +33,12 @@
 				]
 			: items,
 	);
+
+	const chips = new RovingFocusState({
+		keys: () => allItems.map(({ value }) => String(value)),
+		orientation: "horizontal",
+		wrap: "loop",
+	});
 </script>
 
 <div class="flex min-w-0 flex-col">
@@ -41,6 +48,9 @@
 			variant="outline"
 			spacing={2}
 			class="w-full flex-wrap gap-1"
+			rovingFocus={false}
+			aria-label={label}
+			{@attach chips.container}
 			bind:value={
 				() => value.map(String),
 				(v: string[]) => (
@@ -50,7 +60,9 @@
 			}
 		>
 			{#each allItems as { value, label } (value)}
-				<ToggleGroup.Item value={String(value)}
+				<ToggleGroup.Item
+					value={String(value)}
+					{@attach chips.item(String(value))}
 					>{label}</ToggleGroup.Item
 				>
 			{/each}

@@ -77,6 +77,7 @@ export interface Messages {
 	"browse.filters.weight.a11y.minimum": undefined;
 	"browse.filters.withinDistance": { distance: string };
 	"browse.grid.a11y.loadingMore": undefined;
+	"browse.grid.a11y.loadingProfile": undefined;
 	"browse.grid.empty.noFavorites.description": undefined;
 	"browse.grid.empty.noFavorites.title": undefined;
 	"browse.grid.empty.noMatchingFavorites.description": undefined;
@@ -97,6 +98,7 @@ export interface Messages {
 	"browse.locationChange.a11y.change": undefined;
 	"browse.locationChooser.a11y.description": undefined;
 	"browse.locationChooser.a11y.locateMe": undefined;
+	"browse.locationChooser.a11y.results": undefined;
 	"browse.locationChooser.a11y.title": undefined;
 	"browse.locationChooser.autoUpdate": undefined;
 	"browse.locationChooser.map.attribution": undefined;
@@ -109,6 +111,7 @@ export interface Messages {
 	"browse.locationEmpty.title": undefined;
 	"browse.locationEmpty.useCurrentLocation": undefined;
 	"browse.quickFilters.a11y.allFilters": undefined;
+	"browse.quickFilters.a11y.toolbar": undefined;
 	"browse.rightNow.empty.noPosts.description": undefined;
 	"browse.rightNow.empty.noPosts.joinFirst": undefined;
 	"browse.rightNow.empty.noPosts.noOneElse": undefined;
@@ -277,6 +280,7 @@ export interface Messages {
 	"chat.conversations.errors.syncFailed": undefined;
 	"chat.conversations.errors.unmuteFailed": { count: number };
 	"chat.conversations.errors.unpinFailed": { count: number };
+	"chat.conversations.row.a11y.actions": undefined;
 	"chat.conversations.row.actions.mute": undefined;
 	"chat.conversations.row.actions.pin": undefined;
 	"chat.conversations.row.actions.unmute": undefined;
@@ -296,6 +300,7 @@ export interface Messages {
 	"chat.deleteConversations.one.description": undefined;
 	"chat.deleteConversations.one.title": undefined;
 	"chat.filters.a11y.favoritesOnly": undefined;
+	"chat.filters.a11y.toolbar": undefined;
 	"chat.filters.unread": undefined;
 	"chat.giphy.badge": undefined;
 	"chat.giphy.consent.description": undefined;
@@ -304,6 +309,7 @@ export interface Messages {
 	"chat.giphy.consent.title": undefined;
 	"chat.keyboardMedia.errors.notInChat": undefined;
 	"chat.keyboardMedia.errors.readFailed": undefined;
+	"chat.layout.a11y.resizeList": undefined;
 	"chat.layout.selectConversation": undefined;
 	"chat.message.a11y.actions": undefined;
 	"chat.message.albumContent.a11y.openReacted": undefined;
@@ -421,6 +427,7 @@ export interface Messages {
 	"common.commandDialog.a11y.title": undefined;
 	"common.desktopEntry.errors.addFailed": undefined;
 	"common.desktopEntry.errors.removeFailed": undefined;
+	"common.filters.a11y.applied": undefined;
 	"common.filters.age.label": undefined;
 	"common.filters.distance.a11y.toggle": undefined;
 	"common.filters.distance.label": undefined;
@@ -468,8 +475,15 @@ export interface Messages {
 	"common.media.errors.unsupportedFile": undefined;
 	"common.media.errors.videoUnreadable": undefined;
 	"common.media.errors.videosNotAllowed": undefined;
+	"common.media.slots.a11y.cancelled": undefined;
+	"common.media.slots.a11y.dropped": { position: string; total: string };
+	"common.media.slots.a11y.lifted": { position: string; total: string };
+	"common.media.slots.a11y.moved": { position: string; total: string };
+	"common.media.slots.a11y.removed": { label: string };
+	"common.media.slots.a11y.reorderHint": undefined;
 	"common.media.uploadPhotosOrVideos": undefined;
 	"common.profileFields.healthPractices": undefined;
+	"common.profileList.a11y.loadingProfile": undefined;
 	"common.profileList.a11y.profileId": { id: string };
 	"common.profileList.a11y.toggle": { label: string; name: string };
 	"common.profileList.errors.loadFailed": undefined;
@@ -704,6 +718,8 @@ export interface Messages {
 	"media.sheet.tile.a11y.photo": { position: string };
 	"media.sheet.tile.a11y.video": { position: string };
 	"media.sheet.tileMenu.a11y.photoOptions": undefined;
+	"media.sheet.tileMenu.a11y.trigger.photo": { position: string };
+	"media.sheet.tileMenu.a11y.trigger.video": { position: string };
 	"media.sheet.tileMenu.a11y.videoOptions": undefined;
 	"media.sheet.tileMenu.deletePermanently": undefined;
 	"media.uploads.notification": undefined;
@@ -850,9 +866,11 @@ export interface Messages {
 	"profile.sexualPosition.versBottom": undefined;
 	"profile.sexualPosition.versTop": undefined;
 	"profile.sexualPosition.versatile": undefined;
+	"profile.tap.a11y.chooseTap": undefined;
 	"profile.tap.a11y.icon.friendly": undefined;
 	"profile.tap.a11y.icon.hot": undefined;
 	"profile.tap.a11y.icon.looking": undefined;
+	"profile.tap.a11y.otherTapsHint": undefined;
 	"profile.tap.a11y.send.friendly": undefined;
 	"profile.tap.a11y.send.hot": undefined;
 	"profile.tap.a11y.send.looking": undefined;
@@ -1007,6 +1025,7 @@ export interface Messages {
 	"settings.profile.age.a11y.value": { count: number };
 	"settings.profile.age.unit": { count: number };
 	"settings.profile.combo.a11y.remove": { label: string };
+	"settings.profile.combo.a11y.removed": { label: string };
 	"settings.profile.combo.a11y.toggleList": undefined;
 	"settings.profile.combo.noMatches": undefined;
 	"settings.profile.combo.selected": { count: number; max: string };
@@ -1115,6 +1134,7 @@ export interface Messages {
 	"shell.menuBar.zoom": undefined;
 	"shell.navBar.a11y.me": undefined;
 	"shell.navBar.a11y.navigation": undefined;
+	"shell.navBar.a11y.sections": undefined;
 	"shell.navBar.tabs.browse": undefined;
 	"shell.navBar.tabs.inbox": undefined;
 	"shell.navBar.tabs.rightNow": undefined;
@@ -1371,6 +1391,10 @@ export interface RichMessages {
 	"commands.setLocationByGeohash.hint": { length: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
+	"common.media.slots.a11y.dropped": { position: "placeholder"; total: "placeholder" };
+	"common.media.slots.a11y.lifted": { position: "placeholder"; total: "placeholder" };
+	"common.media.slots.a11y.moved": { position: "placeholder"; total: "placeholder" };
+	"common.media.slots.a11y.removed": { label: "placeholder" };
 	"common.profileList.a11y.profileId": { id: "placeholder" };
 	"common.profileList.a11y.toggle": { label: "placeholder"; name: "placeholder" };
 	"common.profileList.profileId": { id: "placeholder" };
@@ -1402,6 +1426,8 @@ export interface RichMessages {
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
 	"media.sheet.tile.a11y.photo": { position: "placeholder" };
 	"media.sheet.tile.a11y.video": { position: "placeholder" };
+	"media.sheet.tileMenu.a11y.trigger.photo": { position: "placeholder" };
+	"media.sheet.tileMenu.a11y.trigger.video": { position: "placeholder" };
 	"profile.blocked.bugHint": { reportIssueLink: "tag" };
 	"profile.imageCarousel.a11y.photo": { position: "placeholder"; total: "placeholder" };
 	"profile.item.a11y.profileLink": { name: "placeholder" };
@@ -1433,6 +1459,7 @@ export interface RichMessages {
 	"settings.credits.sections.platformLibraries": { platform: "placeholder" };
 	"settings.privacy.showDistance.description": { distance: "placeholder" };
 	"settings.profile.combo.a11y.remove": { label: "placeholder" };
+	"settings.profile.combo.a11y.removed": { label: "placeholder" };
 	"settings.profile.combo.selected": { count: "count"; max: "placeholder" };
 	"settings.profile.combo.selectedAtMax": { count: "count"; max: "placeholder" };
 	"settings.profile.errors.bannedTermsEntries": { entries: "placeholder"; entry: "placeholder" };

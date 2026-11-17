@@ -117,6 +117,37 @@ describe("NavBar", () => {
 		expect(links).toHaveLength(5);
 		for (const link of links) expect(link).toMatch(PSEUDO_MESSAGE);
 	});
+
+	describe("with a conversation open in the split view", () => {
+		beforeEach(() => {
+			page.route.id = "/(protected)/chat/[conversationId]";
+		});
+
+		afterEach(() => {
+			page.route.id = "/(protected)/(navbar)/settings/(me)";
+		});
+
+		it("keeps Inbox as the current section and the resting Tab stop without lighting it up", async () => {
+			render(NavBar, { props: { ourProfileId: OUR_ID } });
+			const inbox = screen.getByRole("link", { name: "Inbox" });
+
+			expect(
+				screen
+					.getAllByRole("link")
+					.filter((link) => link.hasAttribute("aria-current")),
+			).toEqual([inbox]);
+			expect(inbox.getAttribute("aria-current")).toBe("page");
+			expect(inbox.dataset.active).toBe("false");
+			await vi.waitFor(() =>
+				expect(inbox.getAttribute("tabindex")).toBe("0"),
+			);
+			expect(
+				screen
+					.getByRole("link", { name: "Browse" })
+					.getAttribute("tabindex"),
+			).toBe("-1");
+		});
+	});
 });
 
 describe("navbar avatar", () => {

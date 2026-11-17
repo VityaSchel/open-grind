@@ -1,6 +1,10 @@
 <script lang="ts">
 	import TerminalIcon from "phosphor-svelte/lib/TerminalIcon";
 
+	import {
+		insideQuickFilterBar,
+		quickFilterChips,
+	} from "#lib/components/filters/quick-filter-chips.svelte.ts";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as Kbd from "#lib/components/ui/kbd/index.ts";
 	import { t } from "#lib/i18n/index.ts";
@@ -12,6 +16,7 @@
 	import { commandCenterState } from "./command-center-state.svelte";
 
 	const isMobile = isMobilePlatform();
+	const chips = insideQuickFilterBar() ? quickFilterChips() : undefined;
 	const shortcut = parseShortcut(commandCenterKeybinding);
 	const modifierKey = $derived(
 		shortcut.modifier === "meta" ? "⌘" : t("commands.trigger.controlKey"),
@@ -24,6 +29,7 @@
 	aria-label={t("common.commandDialog.a11y.title")}
 	onclick={() => (commandCenterState.open = true)}
 	class={{ "pe-1.5": !isMobile }}
+	{@attach chips?.chip("commands")}
 >
 	<TerminalIcon />
 	{#if !isMobile}

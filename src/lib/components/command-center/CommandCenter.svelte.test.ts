@@ -1,7 +1,17 @@
 // @vitest-environment jsdom
 
-import { screen, within } from "@testing-library/svelte";
+import { fireEvent, screen, within } from "@testing-library/svelte";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const { currentPlatformMock } = vi.hoisted(() => ({
+	currentPlatformMock: vi.fn(() => "web"),
+}));
+
+vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
+	currentPlatform: currentPlatformMock,
+}));
 
 import { slot } from "#lib/i18n/fixtures/dom.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
@@ -20,8 +30,19 @@ import {
 
 const GO_TO_TOKENS = ["/grid", "/chat", "/taps", "/views", "/right-now"];
 
+function selectedText(): string {
+	return textOf(screen.getByRole("option", { selected: true }));
+}
+
+async function openGoToWithFirstSelected() {
+	await openWith("/");
+	await vi.waitFor(() => expect(selectedText()).toBe("/grid"));
+	await tick();
+}
+
 afterEach(async () => {
 	resetCommandCenter();
+	currentPlatformMock.mockReset();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -128,5 +149,34 @@ describe("CommandCenter", () => {
 
 		expectCommandGroup({ name: PSEUDO_MESSAGE, value: "quick-go-to" });
 		expect(options().map(textOf)).toEqual(GO_TO_TOKENS);
+	});
+
+	it.each(["macos", "ios"] as const)(
+		"leaves Control+J to the text field on %s",
+		async (textFieldPlatform) => {
+			currentPlatformMock.mockReturnValue(textFieldPlatform);
+			await openGoToWithFirstSelected();
+
+			const reachesTextField = await fireEvent.keyDown(
+				screen.getByRole("combobox"),
+				{ key: "j", ctrlKey: true },
+			);
+
+			expect(reachesTextField).toBe(true);
+			expect(selectedText()).toBe("/grid");
+		},
+	);
+
+	it("moves the selection with Control+J on Windows", async () => {
+		currentPlatformMock.mockReturnValue("windows");
+		await openGoToWithFirstSelected();
+
+		const reachesTextField = await fireEvent.keyDown(
+			screen.getByRole("combobox"),
+			{ key: "j", ctrlKey: true },
+		);
+
+		expect(reachesTextField).toBe(false);
+		await vi.waitFor(() => expect(selectedText()).toBe("/chat"));
 	});
 });

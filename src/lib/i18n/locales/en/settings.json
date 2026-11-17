@@ -314,6 +314,7 @@
 			"noMatches": "No matches",
 			"a11y": {
 				"remove": "Remove {{label}}",
+				"removed": "Removed {{label}}",
 				"toggleList": "Toggle list"
 			}
 		},

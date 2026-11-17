@@ -9,6 +9,8 @@
 	import { t } from "#lib/i18n/index.ts";
 	import { compareFilterGenders } from "#lib/model/browse/grid/filters.ts";
 	import { instantWhenReducedMotion } from "#lib/util/reduced-motion.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
+	import type { Gender } from "#lib/model/users/genders.ts";
 	import FilterBoolean from "./FilterBoolean.svelte";
 	import { isGenderChipShown, selectGenders } from "./gender-chips";
 
@@ -17,8 +19,11 @@
 		value = $bindable(),
 	}: { checked: boolean; value: number[] } = $props();
 
-	const genders = $derived(
-		getGenders().then((genders) => genders.toSorted(compareFilterGenders)),
+	const NOT_SPECIFIED = -1;
+
+	let catalog: Gender[] = $state.raw([]);
+	const genders = getGenders().then(
+		(loaded) => (catalog = loaded.toSorted(compareFilterGenders)),
 	);
 
 	const hide = instantWhenReducedMotion(
@@ -34,6 +39,19 @@
 	);
 
 	let expanded = $state(false);
+
+	const chips = new RovingFocusState({
+		keys: () => [
+			...catalog
+				.filter((gender) =>
+					isGenderChipShown({ gender, selected: value, expanded }),
+				)
+				.map((gender) => gender.genderId),
+			NOT_SPECIFIED,
+		],
+		orientation: "horizontal",
+		wrap: "loop",
+	});
 </script>
 
 <div data-slot="gender-filter" class="flex min-w-0 flex-col gap-2">
@@ -49,6 +67,9 @@
 				variant="outline"
 				spacing={2}
 				class="w-full flex-wrap gap-1"
+				rovingFocus={false}
+				aria-label={t("common.filters.genders.label")}
+				{@attach chips.container}
 				bind:value={
 					() => value.map(String),
 					(next: string[]) => {
@@ -69,13 +90,19 @@
 					})}
 					{#if shown}
 						<div transition:hide>
-							<ToggleGroup.Item value={String(gender.genderId)}>
+							<ToggleGroup.Item
+								value={String(gender.genderId)}
+								{@attach chips.item(gender.genderId)}
+							>
 								{gender.genderPlural ?? gender.gender}
 							</ToggleGroup.Item>
 						</div>
 					{/if}
 				{/each}
-				<ToggleGroup.Item value="-1">
+				<ToggleGroup.Item
+					value={String(NOT_SPECIFIED)}
+					{@attach chips.item(NOT_SPECIFIED)}
+				>
 					{t("common.filters.notSpecified")}
 				</ToggleGroup.Item>
 				<Button
