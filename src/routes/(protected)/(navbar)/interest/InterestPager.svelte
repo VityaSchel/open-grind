@@ -105,6 +105,7 @@
 <main
 	data-slot="interest-pager"
 	data-scroll-intent="x"
+	tabindex="-1"
 	ontouchstart={onUnsettle}
 	onclickcapture={swallowClickOutsideHeadingPane}
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"

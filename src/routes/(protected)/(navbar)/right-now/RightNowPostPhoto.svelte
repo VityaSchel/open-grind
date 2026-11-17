@@ -59,6 +59,7 @@
 	<div
 		data-slot="right-now-post-photo"
 		class="w-full max-w-3xs"
+		tabindex="-1"
 		{@attach attachLightbox}
 	>
 		<a

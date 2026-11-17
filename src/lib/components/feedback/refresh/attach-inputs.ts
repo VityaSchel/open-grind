@@ -96,6 +96,8 @@ export function attachPullInputs(
 	};
 
 	const onKeyDown = (event: KeyboardEvent) => {
+		if (!(event.target instanceof Node) || !target.contains(event.target))
+			return;
 		if (event.defaultPrevented) return;
 		if (!scrollKeysToward[position].has(event.key)) return;
 		if (consumesScrollKeys(event.target)) return;
@@ -121,7 +123,7 @@ export function attachPullInputs(
 	target.addEventListener("wheel", onWheel as EventListener, {
 		passive: true,
 	});
-	target.addEventListener("keydown", onKeyDown);
+	window.addEventListener("keydown", onKeyDown);
 	target.addEventListener("touchmove", noteTouch, { passive: true });
 	window.addEventListener("keydown", noteScrollKey, onWindowCapture);
 	window.addEventListener("keyup", noteScrollKey, onWindowCapture);
@@ -162,7 +164,7 @@ export function attachPullInputs(
 	return () => {
 		target.removeEventListener("scroll", onScroll);
 		target.removeEventListener("wheel", onWheel as EventListener);
-		target.removeEventListener("keydown", onKeyDown);
+		window.removeEventListener("keydown", onKeyDown);
 		target.removeEventListener("touchmove", noteTouch);
 		window.removeEventListener("keydown", noteScrollKey, onWindowCapture);
 		window.removeEventListener("keyup", noteScrollKey, onWindowCapture);

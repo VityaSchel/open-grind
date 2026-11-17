@@ -227,6 +227,7 @@
 >
 	<div
 		class="h-8 w-full touch-pan-x overflow-visible overscroll-contain [-webkit-tap-highlight-color:transparent] perspective-[1000px]"
+		tabindex="-1"
 		use:emblaCarouselSvelte={{ options, plugins: [] }}
 		onemblaInit={onInit}
 	>
