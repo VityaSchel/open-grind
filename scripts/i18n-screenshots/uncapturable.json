@@ -31,6 +31,10 @@
 		"reason": "Only in the location permission prompt that iOS draws over the app, so no page screenshot shows it.",
 		"explanation": "Reason that iOS shows in its prompt when Open Grind first asks for your location; iOS draws the prompt over the app, so no screenshot shows it."
 	},
+	"common.media.errors.pickedItemsLoadFailed": {
+		"reason": "Only the iOS photo picker reports picked items that never loaded, and demo builds pick from a file input instead, so no page screenshot shows it.",
+		"explanation": "Error toast that the iOS app shows after you pick photos or videos when some of them couldn’t be loaded from the photo library; screenshots come from a build without the iOS photo picker, so none shows it."
+	},
 	"feedback.appError.contentTooLarge": {
 		"reason": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
 		"explanation": "Error message for a file larger than the upload limit, shown in an error toast; files that are too large name the limit in their own message instead, so this text never appears today."

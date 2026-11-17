@@ -187,6 +187,16 @@ export const signInRefusals: Scene = {
 				}),
 			],
 		}),
+		failingView({
+			id: "auth/sign-in/page-unavailable",
+			attempts: [
+				authFailing({
+					button: "facebook",
+					message:
+						"sign-in-page-unavailable: the main window is gone",
+				}),
+			],
+		}),
 	],
 };
 

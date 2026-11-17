@@ -25,6 +25,37 @@ const LAZY_CASCADE = {
 	hiddenProfiles: null,
 	hiddenProfileInfo: null,
 };
+const REFRESHED_HELD_MS = 3_000;
+
+function refreshAnnouncement({ page, text }: { page: Page; text: string }) {
+	return page.getByRole("status").getByText(text);
+}
+
+async function holdRefreshedAnnouncement(page: Page): Promise<void> {
+	await page.evaluate((held) => {
+		const wait = window.setTimeout;
+		window.setTimeout = ((
+			handler: TimerHandler,
+			timeout?: number,
+			...args: unknown[]
+		) =>
+			wait(
+				timeout === held ? () => undefined : handler,
+				timeout,
+				...args,
+			)) as typeof setTimeout;
+	}, REFRESHED_HELD_MS);
+}
+
+async function refreshGrid(page: Page): Promise<void> {
+	await press(
+		await revealRefreshButton({
+			page,
+			scroller: GRID_SCROLLER,
+			towardTop: true,
+		}),
+	);
+}
 
 export async function showGrid(page: Page): Promise<void> {
 	await chooseNeutralLocation(page);
@@ -169,6 +200,41 @@ export const gridRefreshFailures: Scene = {
 						await press(refresh);
 					},
 				});
+			},
+		},
+	],
+};
+
+export const gridRefreshAnnouncements: Scene = {
+	platform: "desktop",
+	shim: "linux",
+	views: [
+		{
+			id: "browse/grid/refreshed",
+			drive: async (page) => {
+				await showGrid(page);
+				await holdRefreshedAnnouncement(page);
+				await refreshGrid(page);
+				await refreshAnnouncement({ page, text: "Refreshed" }).waitFor({
+					state: "attached",
+				});
+			},
+		},
+		{
+			id: "browse/grid/refreshing",
+			drive: async (page) => {
+				await changeScene({
+					page,
+					scene: {
+						restFaults: [
+							{ method: "GET", path: CASCADE, pending: true },
+						],
+					},
+				});
+				await refreshGrid(page);
+				await refreshAnnouncement({ page, text: "Refreshing" }).waitFor(
+					{ state: "attached" },
+				);
 			},
 		},
 	],
