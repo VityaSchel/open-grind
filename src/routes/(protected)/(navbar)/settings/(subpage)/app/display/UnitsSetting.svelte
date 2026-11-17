@@ -39,10 +39,16 @@
 			}
 		}
 	>
-		<ToggleGroup.Item value="metric" class="flex-1 justify-center">
+		<ToggleGroup.Item
+			value="metric"
+			class="flex-1 justify-center rounded-l-[calc(var(--radius-2xl)_-_--spacing(4)_-_1px)]!"
+		>
 			{t("settings.app.units.metric")}
 		</ToggleGroup.Item>
-		<ToggleGroup.Item value="imperial" class="flex-1 justify-center">
+		<ToggleGroup.Item
+			value="imperial"
+			class="flex-1 justify-center rounded-r-[calc(var(--radius-2xl)_-_--spacing(4)_-_1px)]!"
+		>
 			{t("settings.app.units.imperial")}
 		</ToggleGroup.Item>
 	</ToggleGroup.Root>

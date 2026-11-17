@@ -66,7 +66,7 @@
 			data-slot="language-option"
 			class={cn(
 				Item.itemVariants(),
-				"flex-nowrap rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset",
+				"flex-nowrap rounded-none border-0 text-left not-first:border-t not-first:border-border first:rounded-t-[calc(var(--radius-2xl)_-_1px)] last:rounded-b-[calc(var(--radius-2xl)_-_1px)] focus-visible:ring-inset",
 			)}
 		>
 			{#snippet children({ pressed })}
