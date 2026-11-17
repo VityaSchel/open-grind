@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { Tabs } from "bits-ui";
 	import { onDestroy } from "svelte";
 
 	import PageTitle from "#lib/components/shared/PageTitle.svelte";
@@ -18,15 +19,19 @@
 	let { data }: import("./$types").LayoutProps = $props();
 
 	const chipDetachesAtRest = isAndroidPlatform();
+	const uid = $props.id();
+	const tabs = INTEREST_TABS.map(({ href, label }, index) => ({
+		href,
+		label,
+		ids: { tab: `${uid}-tab-${index}`, panel: `${uid}-panel-${index}` },
+	}));
 
 	let pagerUnsettled = $state(false);
 	let restingTab = $state<number>();
 	let settling = 0;
 
 	const routedTab = $derived(interestTabIndex(page.url.pathname));
-	const routedLabel = $derived(
-		(INTEREST_TABS[routedTab] ?? INTEREST_TABS[0]).label,
-	);
+	const routed = $derived(INTEREST_TABS[routedTab] ?? INTEREST_TABS[0]);
 	const chipFollows = $derived(
 		!chipDetachesAtRest ||
 			pagerUnsettled ||
@@ -48,58 +53,72 @@
 		});
 	}
 
+	function selectTab(href: string) {
+		void goto(href, { replace: true, reset: false });
+	}
+
 	onDestroy(() => cancelAnimationFrame(settling));
 </script>
 
-{#snippet tab(href: string, label: string)}
-	<Button
-		{href}
-		onclick={(event: MouseEvent) => {
-			if (!isPlainClick(event)) return;
-			event.preventDefault();
-			void goto(href, { replace: true, reset: false });
-		}}
-		class={cn(
-			toggleVariants({ variant: "default" }),
-			"text-muted-foreground hover:bg-transparent",
-		)}
-	>
-		{label}
-	</Button>
-{/snippet}
-<PageTitle page={t(routedLabel)} />
-<div class="interest">
-	<ProgressiveBlur
-		direction="topToBottom"
-		tag="nav"
-		aria-label={t("common.sections.interest")}
-		data-fixed-header
-		class="fixed top-0 left-0 z-10 w-full px-4 pt-fixed-header pb-2"
-		bgClass="bg-linear-to-b from-background to-transparent"
-		contentClass="flex items-center w-full *:flex-1 max-w-120 mx-auto"
-		{@attach topChrome}
-	>
-		<span
-			data-slot="interest-tab-chip"
-			aria-hidden="true"
-			class={[
-				"tab-chip pointer-events-none absolute inset-y-0 left-0 -z-10 rounded-3xl bg-muted-foreground/15",
-				{ "tab-chip-following": chipFollows },
-			]}
-			style:width="{100 / INTEREST_TABS.length}%"
-			style:--routed-tab={routedTab}
-			style:--last-tab={INTEREST_TABS.length - 1}
-		></span>
-		{#each INTEREST_TABS as { href, label } (href)}
-			{@render tab(href, t(label))}
-		{/each}
-	</ProgressiveBlur>
-	<InterestPager
-		ourProfileId={data.ourProfileId}
-		onUnsettle={unsettle}
-		onSettle={settle}
-	/>
-</div>
+<PageTitle page={t(routed.label)} />
+<Tabs.Root activationMode="manual" bind:value={() => routed.href, selectTab}>
+	{#snippet child({ props })}
+		<div {...props} class="interest">
+			<ProgressiveBlur
+				direction="topToBottom"
+				tag="nav"
+				aria-label={t("common.sections.interest")}
+				data-fixed-header
+				class="fixed top-0 left-0 z-10 w-full px-4 pt-fixed-header pb-2"
+				bgClass="bg-linear-to-b from-background to-transparent"
+				contentClass="w-full max-w-120 mx-auto"
+				{@attach topChrome}
+			>
+				<Tabs.List class="flex w-full items-center *:flex-1">
+					<span
+						data-slot="interest-tab-chip"
+						aria-hidden="true"
+						class={[
+							"tab-chip pointer-events-none absolute inset-y-0 left-0 -z-10 rounded-3xl bg-muted-foreground/15",
+							{ "tab-chip-following": chipFollows },
+						]}
+						style:width="{100 / INTEREST_TABS.length}%"
+						style:--routed-tab={routedTab}
+						style:--last-tab={INTEREST_TABS.length - 1}
+					></span>
+					{#each tabs as { href, label, ids } (href)}
+						<Tabs.Trigger value={href} id={ids.tab}>
+							{#snippet child({ props: tabProps })}
+								<Button
+									{...tabProps}
+									{href}
+									aria-controls={ids.panel}
+									onclick={(event: MouseEvent) => {
+										if (!isPlainClick(event)) return;
+										event.preventDefault();
+										selectTab(href);
+									}}
+									class={cn(
+										toggleVariants({ variant: "default" }),
+										"text-muted-foreground hover:bg-transparent",
+									)}
+								>
+									{t(label)}
+								</Button>
+							{/snippet}
+						</Tabs.Trigger>
+					{/each}
+				</Tabs.List>
+			</ProgressiveBlur>
+			<InterestPager
+				ourProfileId={data.ourProfileId}
+				tabIds={tabs.map(({ ids }) => ids)}
+				onUnsettle={unsettle}
+				onSettle={settle}
+			/>
+		</div>
+	{/snippet}
+</Tabs.Root>
 
 <style>
 	.interest {

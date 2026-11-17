@@ -47,7 +47,6 @@
 
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
-	let contextMenuItems: HTMLDivElement | null = $state(null);
 	let contextMenuListPosition = $state({ x: 0, y: 0 });
 	let liftedBox = $state(untrack(() => anchor.getBoundingClientRect()));
 
@@ -80,7 +79,11 @@
 						alignmentAxis:
 							placement.startsWith("left") ||
 							placement.startsWith("right")
-								? -(contextMenuItems?.offsetTop ?? 0)
+								? -(
+										list.querySelector<HTMLElement>(
+											"[data-slot='context-menu-panel']",
+										)?.offsetTop ?? 0
+									)
 								: 0,
 					})),
 					flip({
@@ -104,14 +107,20 @@
 		});
 	});
 
+	function focusFirstShownItem(dialog: HTMLDialogElement) {
+		const items = dialog.querySelectorAll<HTMLElement>("[role='menuitem']");
+		[...items]
+			.find(
+				(item) =>
+					!("checkVisibility" in item) || item.checkVisibility(),
+			)
+			?.focus();
+	}
+
 	$effect(() => {
 		if (contextMenuDialog instanceof HTMLDialogElement) {
 			contextMenuDialog.showModal();
-			contextMenuDialog
-				.querySelector<HTMLElement>(
-					"[data-slot='context-menu-trigger']",
-				)
-				?.focus();
+			focusFirstShownItem(contextMenuDialog);
 		}
 	});
 </script>
@@ -129,6 +138,11 @@
 	}}
 	onclose={(event) => {
 		if (event.currentTarget.isConnected) onClose();
+	}}
+	onkeydown={(event) => {
+		if (event.key !== "Tab") return;
+		event.preventDefault();
+		event.currentTarget.close();
 	}}
 >
 	<div
@@ -150,8 +164,6 @@
 		style:top="{contextMenuListPosition.y}px"
 	>
 		{@render header?.()}
-		<div bind:this={contextMenuItems}>
-			{@render children?.()}
-		</div>
+		{@render children?.()}
 	</div>
 </dialog>

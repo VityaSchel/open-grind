@@ -11,6 +11,10 @@ import InterestPager from "./InterestPager.svelte";
 const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
 const REPLACE = { replace: true, reset: false };
+const TAB_IDS = [
+	{ tab: "tab-views", panel: "panel-views" },
+	{ tab: "tab-taps", panel: "panel-taps" },
+];
 
 const { goto, afterNavigate, navigating } = vi.hoisted(() => ({
 	goto: vi.fn(),
@@ -43,6 +47,7 @@ function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
 			const { container } = render(InterestPager, {
 				props: {
 					ourProfileId: 1,
+					tabIds: TAB_IDS,
 					onUnsettle: () => {
 						settling.unsettled = true;
 					},
@@ -97,25 +102,37 @@ function clickSwallowed(pane: Element) {
 	return unheard;
 }
 
+function isInert(element: Element): boolean {
+	return (
+		element.hasAttribute("inert") ||
+		(element instanceof HTMLElement && element.inert === true)
+	);
+}
+
 function markup(pager: { node: HTMLElement }) {
 	flushSync();
 	return [pager.node, ...pager.node.children].map((element) => ({
 		attributes: element
 			.getAttributeNames()
 			.map((name) => `${name}=${element.getAttribute(name)}`),
-		inert:
-			element.hasAttribute("inert") ||
-			(element instanceof HTMLElement && element.inert === true),
+		inert: isInert(element),
 	}));
 }
 
-function panesSwallowingClicks(pager: { node: HTMLElement }) {
-	expect(
-		markup(pager).filter(({ inert }) => inert),
-		"no pane is made inert",
-	).toEqual([]);
+function hiddenPanes(pager: { node: HTMLElement }) {
+	flushSync();
 	return [...pager.node.children]
-		.filter(clickSwallowed)
+		.filter(
+			(pane) =>
+				isInert(pane) && pane.getAttribute("aria-hidden") === "true",
+		)
+		.map((pane) => pane.getAttribute("data-slot"));
+}
+
+function panesSwallowingClicks(pager: { node: HTMLElement }) {
+	flushSync();
+	return [...pager.node.children]
+		.filter((pane) => !isInert(pane) && clickSwallowed(pane))
 		.map((pane) => pane.getAttribute("data-slot"));
 }
 
@@ -384,23 +401,47 @@ describe("InterestPager", () => {
 		expect(panesSwallowingClicks(pager)).toEqual([]);
 	});
 
-	it("leaves the attributes of the pager and its tabs as they were through a drag and the glide after it", () => {
+	it("leaves the attributes of the pager and its tabs as they were through a drag and the glide after it, once both are on screen", () => {
 		const pager = mountPager();
-		const resting = markup(pager);
 
 		pager.touch("touchstart");
 		pager.scroll(0.6 * WIDTH);
-		expect(markup(pager)).toEqual(resting);
+		const paging = markup(pager);
 
 		pager.scroll(0.4 * WIDTH);
-		expect(markup(pager)).toEqual(resting);
+		expect(markup(pager)).toEqual(paging);
 
 		pager.touch("touchend");
 		pager.scroll(0.2 * WIDTH);
-		expect(markup(pager)).toEqual(resting);
+		expect(markup(pager)).toEqual(paging);
+	});
 
+	it("hides only a tab panel that is wholly off screen from focus and assistive technology", () => {
+		const pager = mountPager();
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-views"]);
+
+		pager.touch("touchstart");
+		pager.scroll(0.6 * WIDTH);
+		expect(hiddenPanes(pager)).toEqual([]);
+
+		pager.touch("touchend");
 		pager.scroll(0);
-		expect(markup(pager)).toEqual(resting);
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("labels each pane as the tab panel its tab controls", () => {
+		const pager = mountPager();
+
+		expect(
+			[...pager.node.children].map((pane) => ({
+				role: pane.getAttribute("role"),
+				id: pane.id,
+				labelledBy: pane.getAttribute("aria-labelledby"),
+			})),
+		).toEqual([
+			{ role: "tabpanel", id: "panel-views", labelledBy: "tab-views" },
+			{ role: "tabpanel", id: "panel-taps", labelledBy: "tab-taps" },
+		]);
 	});
 
 	it("is unsettled from the moment a finger lands on it until that finger lifts on a tab", () => {

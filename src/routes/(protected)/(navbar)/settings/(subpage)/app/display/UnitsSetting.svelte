@@ -5,9 +5,16 @@
 		setPreferences,
 	} from "#lib/app-data/preferences.svelte.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
-	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.ts";
+	import * as RadioGroup from "#lib/components/ui/radio-group/index.ts";
+	import { toggleVariants } from "#lib/components/ui/toggle/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import type { UnitSystem } from "#lib/util/units.ts";
+
+	const optionClass = cn(
+		toggleVariants({ variant: "outline" }),
+		"flex-1 shrink-0 justify-center rounded-none border-l-0 px-3 shadow-none first:rounded-l-3xl first:border-l last:rounded-r-3xl focus-visible:z-10 data-[state=checked]:bg-popover-foreground data-[state=checked]:text-popover",
+	);
 
 	let pending = $state<UnitSystem | null>(null);
 	const value = $derived(pending ?? preferencesSnapshot().units);
@@ -20,14 +27,15 @@
 			{t("settings.app.units.description")}
 		</Item.Description>
 	</Item.Content>
-	<ToggleGroup.Root
-		type="single"
-		variant="outline"
-		class="w-full"
+	<RadioGroup.Root
+		orientation="horizontal"
+		loop
+		aria-label={t("settings.app.units.title")}
+		class="flex-row items-center rounded-3xl"
 		bind:value={
 			() => value,
 			(next: string) => {
-				const units = (next || "metric") as UnitSystem;
+				const units = next as UnitSystem;
 				pending = units;
 				setPreferences({ units }).catch((error) => {
 					pending = null;
@@ -39,11 +47,11 @@
 			}
 		}
 	>
-		<ToggleGroup.Item value="metric" class="flex-1 justify-center">
+		<RadioGroup.Item value="metric" class={optionClass}>
 			{t("settings.app.units.metric")}
-		</ToggleGroup.Item>
-		<ToggleGroup.Item value="imperial" class="flex-1 justify-center">
+		</RadioGroup.Item>
+		<RadioGroup.Item value="imperial" class={optionClass}>
 			{t("settings.app.units.imperial")}
-		</ToggleGroup.Item>
-	</ToggleGroup.Root>
+		</RadioGroup.Item>
+	</RadioGroup.Root>
 </Item.Root>

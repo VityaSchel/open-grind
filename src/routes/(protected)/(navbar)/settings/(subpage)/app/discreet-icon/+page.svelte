@@ -16,6 +16,10 @@
 		selectDisguise,
 	} from "#lib/platform/disguise.svelte.ts";
 	import { currentPlatform } from "#lib/platform/os.ts";
+	import {
+		gridColumns,
+		RovingFocusState,
+	} from "#lib/util/roving-focus-state.svelte.ts";
 
 	let { data }: import("./$types").PageProps = $props();
 
@@ -27,6 +31,17 @@
 	let pending = $state<DisguisePreset | null>(null);
 	let applying = $state(false);
 	let alertOpen = $state(false);
+	let presetGrid = $state<HTMLElement | null>(null);
+
+	const roving = new RovingFocusState({
+		keys: () => [original.id, ...disguisePresets().map(({ id }) => id)],
+		orientation: "grid",
+		columns: () => (presetGrid === null ? 1 : gridColumns(presetGrid)),
+		sectionStarts: () => [0, 1],
+		wrap: "rows",
+		restingKey: () => currentDisguise(),
+		stopTabindex: "explicit",
+	});
 
 	const escapeKeydownBehavior = $derived(applying ? "ignore" : "close");
 
@@ -124,9 +139,10 @@
 	<button
 		type="button"
 		aria-pressed={selected}
-		disabled={applying}
+		aria-disabled={applying}
 		onclick={() => choose(choice)}
-		class="flex w-26 flex-col items-center gap-1.5 rounded-lg p-2 transition-colors disabled:opacity-60 can-hover:hover:bg-muted"
+		class="flex w-26 flex-col items-center gap-1.5 rounded-lg p-2 transition-colors aria-disabled:opacity-60 can-hover:hover:bg-muted"
+		{@attach roving.item(choice.id)}
 	>
 		<img
 			src={data.previews[choice.id]}
@@ -162,9 +178,11 @@
 <div
 	class="@container/disguise-choices mt-4 flex flex-col items-center gap-2"
 	data-slot="disguise-choices"
+	{@attach roving.container}
 >
 	{@render choiceButton(original)}
 	<div
+		bind:this={presetGrid}
 		class="grid w-fit grid-cols-3 gap-x-1 gap-y-2 @2xl/disguise-choices:grid-cols-6"
 	>
 		{#each disguisePresets() as choice (choice.id)}
@@ -184,7 +202,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={applying} class="contents">
-				<AlertDialog.Cancel size="lg">
+				<AlertDialog.Cancel size="lg" data-autofocus>
 					{t("common.actions.cancel")}
 				</AlertDialog.Cancel>
 				<AlertDialog.Action

@@ -112,7 +112,7 @@ describe("the notifications page", () => {
 				),
 			).toBeTruthy();
 			expect(screen.queryByRole("switch")).toBeNull();
-			expect(screen.queryByRole("radiogroup")).toBeNull();
+			expect(screen.queryByRole("listbox")).toBeNull();
 		},
 	);
 
@@ -130,7 +130,7 @@ describe("the notifications page", () => {
 			expect(
 				screen.getByRole("switch", { name: "New messages" }),
 			).toBeTruthy();
-			expect(screen.queryByRole("radiogroup")).toBeNull();
+			expect(screen.queryByRole("listbox")).toBeNull();
 		},
 	);
 

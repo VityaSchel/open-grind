@@ -159,7 +159,7 @@ for (const delay of [40, 80]) {
 			.locator(`${MESSAGE} ${MESSAGE_ROW}`)
 			.last()
 			.click({ button: "right" });
-		await page.getByRole("button", { name: "Reply" }).click();
+		await page.getByRole("menuitem", { name: "Reply" }).click();
 		await page.waitForTimeout(delay);
 		await switchKeyboardAtOnce(page, KEYBOARD_OPEN);
 

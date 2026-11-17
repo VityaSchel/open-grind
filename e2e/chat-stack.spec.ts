@@ -275,7 +275,7 @@ test.describe("the chat stack on a phone", () => {
 		await openInbox(page, { platform: "android" });
 		await openConversation(page, { href: DEMO_CONVERSATION });
 		await messageRow(page).click({ button: "right" });
-		await page.getByRole("button", { name: "Reply" }).click();
+		await page.getByRole("menuitem", { name: "Reply" }).click();
 		await expect(page.getByLabel("Cancel reply")).toBeVisible();
 
 		await backToInbox(page).click();
@@ -295,7 +295,7 @@ test.describe("the chat stack on a phone", () => {
 		await openInbox(page, { platform: "android" });
 		const href = await openConversation(page);
 		await page.locator(MESSAGE_ROW).first().click({ button: "right" });
-		const reply = page.getByRole("button", { name: "Reply" });
+		const reply = page.getByRole("menuitem", { name: "Reply" });
 		await expect(reply).toBeVisible();
 
 		expect(await startSystemBack(page)).toBe(false);

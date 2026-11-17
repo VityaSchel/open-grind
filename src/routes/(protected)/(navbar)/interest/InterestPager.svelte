@@ -4,17 +4,19 @@
 	import { untrack } from "svelte";
 
 	import { navigationPending } from "#lib/util/history.ts";
-	import { SnapPager } from "#lib/util/snap-pager.ts";
+	import { SnapPager, type VisiblePositions } from "#lib/util/snap-pager.ts";
 	import { INTEREST_TABS, interestTabIndex } from "./tabs";
 	import TapsReceivedList from "./taps/TapsReceivedList.svelte";
 	import ViewsGrid from "./views/ViewsGrid.svelte";
 
 	let {
 		ourProfileId,
+		tabIds,
 		onUnsettle,
 		onSettle,
 	}: {
 		ourProfileId: number;
+		tabIds: readonly { tab: string; panel: string }[];
 		onUnsettle: () => void;
 		onSettle: (tab: number) => void;
 	} = $props();
@@ -22,17 +24,27 @@
 	const TABS = INTEREST_TABS.map((tab) => tab.href);
 
 	let mounted = $state([false, false]);
+	let onScreen = $state<VisiblePositions | null>(null);
 	let paging = false;
 	let heading: number | null = null;
 	let restedPane: number | null = null;
 
 	const routed = $derived(interestTabIndex(page.url.pathname));
+	const offScreen = $derived(
+		TABS.map(
+			(_, pane) =>
+				onScreen !== null &&
+				(pane < onScreen.first || pane > onScreen.last),
+		),
+	);
 
 	const snap = new SnapPager({
 		count: () => TABS.length,
-		onVisible: ({ first, last }) => {
+		onVisible: (visible) => {
+			const { first, last } = visible;
 			for (let pane = first; pane <= last; pane += 1)
 				mounted[pane] = true;
+			onScreen = visible;
 			paging = first !== last;
 			if (paging) onUnsettle();
 		},
@@ -98,12 +110,28 @@
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
 >
-	<div data-slot="interest-pane-views" class="w-full shrink-0 snap-start">
+	<div
+		id={tabIds[0]?.panel}
+		role="tabpanel"
+		aria-labelledby={tabIds[0]?.tab}
+		inert={offScreen[0]}
+		aria-hidden={offScreen[0] ? "true" : undefined}
+		data-slot="interest-pane-views"
+		class="w-full shrink-0 snap-start"
+	>
 		{#if mounted[0]}
 			<ViewsGrid {ourProfileId} />
 		{/if}
 	</div>
-	<div data-slot="interest-pane-taps" class="w-full shrink-0 snap-start">
+	<div
+		id={tabIds[1]?.panel}
+		role="tabpanel"
+		aria-labelledby={tabIds[1]?.tab}
+		inert={offScreen[1]}
+		aria-hidden={offScreen[1] ? "true" : undefined}
+		data-slot="interest-pane-taps"
+		class="w-full shrink-0 snap-start"
+	>
 		{#if mounted[1]}
 			<TapsReceivedList {ourProfileId} active={routed === 1} />
 		{/if}

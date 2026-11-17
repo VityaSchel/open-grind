@@ -69,3 +69,29 @@ describe("the discreet app icon page", () => {
 		);
 	});
 });
+
+describe("choosing an icon from the keyboard", () => {
+	it("keeps focus on the chosen icon while it applies", async () => {
+		const applying = Promise.withResolvers<void>();
+		select.mockReturnValue(applying.promise);
+		render(DiscreetIconPage, {
+			props: { data: { ourProfileId: 1, previews: {} }, params: {} },
+		});
+		const papizza = screen.getByRole("button", { name: "Papizza" });
+		papizza.focus();
+
+		await fireEvent.click(papizza, { detail: 0 });
+		await fireEvent.click(papizza, { detail: 0 });
+
+		expect(select).toHaveBeenCalledOnce();
+		expect(document.activeElement).toBe(papizza);
+		for (const choice of screen.getAllByRole("button")) {
+			expect(choice.getAttribute("aria-disabled")).toBe("true");
+			expect(choice.hasAttribute("disabled")).toBe(false);
+		}
+		applying.resolve();
+		await vi.waitFor(() =>
+			expect(papizza.getAttribute("aria-disabled")).toBe("false"),
+		);
+	});
+});

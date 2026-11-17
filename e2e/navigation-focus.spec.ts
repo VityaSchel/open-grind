@@ -37,7 +37,7 @@ async function expectFocusKept(page: Page, target: Locator): Promise<void> {
 
 test("a tab tap keeps focus on the pressed tab", async ({ page }) => {
 	await openTaps(page);
-	const views = page.getByRole("link", { name: "Views" });
+	const views = page.getByRole("tab", { name: "Views" });
 	await views.focus();
 	await watchBlur(views);
 
@@ -52,7 +52,7 @@ test("a tab tap keeps focus on the pressed tab", async ({ page }) => {
 
 test("an interest pager swipe keeps focus where it was", async ({ page }) => {
 	await openTaps(page);
-	const taps = page.getByRole("link", { name: "Taps" });
+	const taps = page.getByRole("tab", { name: "Taps" });
 	await taps.focus();
 	await watchBlur(taps);
 	const width = await page.locator(PAGER).evaluate((el) => el.clientWidth);

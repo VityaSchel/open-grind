@@ -83,7 +83,7 @@ test.describe("every control has an accessible name", () => {
 			.getByPlaceholder("Search places…")
 			.waitFor({ timeout: 180_000 });
 		await page
-			.getByRole("button", { name: "Selected location" })
+			.getByRole("img", { name: "Selected location" })
 			.waitFor({ timeout: 60_000 });
 		await expectEveryControlNamed(page, "location picker");
 	});

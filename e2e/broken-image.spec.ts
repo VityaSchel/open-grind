@@ -64,9 +64,9 @@ test.describe("broken images", () => {
 			.first()
 			.waitFor({ timeout: FIRST_LOAD_TIMEOUT });
 
-		await page.getByRole("link", { name: "Views" }).click();
+		await page.getByRole("tab", { name: "Views" }).click();
 		await expect(page).toHaveURL(/\/interest\/views$/);
-		await page.getByRole("link", { name: "Taps" }).click();
+		await page.getByRole("tab", { name: "Taps" }).click();
 		await expect(page).toHaveURL(/\/interest\/taps$/);
 
 		await page.locator(BROKEN).first().waitFor({ timeout: 60_000 });

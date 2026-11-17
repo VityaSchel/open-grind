@@ -1,6 +1,4 @@
 <script lang="ts">
-	import RadioList from "#lib/components/shared/RadioList.svelte";
-	import RadioListItem from "#lib/components/shared/RadioListItem.svelte";
 	import RadioMark from "#lib/components/shared/RadioMark.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
@@ -8,6 +6,8 @@
 	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 	import { selectNotificationMode } from "#lib/push/delivery.svelte.ts";
 	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
+	import { cn } from "#lib/util/utils.ts";
 	import type { NotificationMode } from "#lib/push/types.ts";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
 
@@ -30,56 +30,74 @@
 		{ mode: "slow", recommended: false },
 	];
 
-	let group = $state<HTMLElement | null>(null);
+	const roving = new RovingFocusState({
+		keys: () => modes.map(({ mode }) => mode),
+		orientation: "vertical",
+		wrap: "loop",
+		restingKey: () => notificationSettings.mode,
+		stopTabindex: "explicit",
+	});
+
+	const locked = $derived(
+		notificationSettings.busy || !notificationSettings.enabled,
+	);
 
 	function focusSelectedMode(event: Event): void {
 		event.preventDefault();
-		group
-			?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')
-			?.focus();
+		void roving.focus({ key: notificationSettings.mode });
 	}
 </script>
 
-<RadioList
-	bind:ref={group}
+<div
+	role="listbox"
 	aria-label={t("settings.notifications.mode.a11y.group")}
-	disabled={notificationSettings.busy || !notificationSettings.enabled}
-	class="transition-opacity data-disabled:opacity-60"
-	bind:value={
-		() => notificationSettings.mode,
-		(next) => void selectNotificationMode(next as NotificationMode)
-	}
+	data-disabled={locked ? "" : undefined}
+	class="flex w-full flex-col overflow-hidden rounded-2xl border border-border transition-opacity data-disabled:opacity-60"
+	{@attach roving.container}
 >
 	{#each modes as { mode, recommended } (mode)}
 		{@const enabling =
 			mode === "fast" && notificationSettings.phase === "enablingFast"}
-		<RadioListItem value={mode} aria-busy={enabling} class="items-start">
-			{#snippet children({ checked })}
-				<Item.Content>
-					<Item.Title>
-						{t(modeKeys[mode].title)}
-						{#if recommended}
-							<Badge
-								variant="secondary"
-								class="font-normal text-primary"
-							>
-								{t("settings.notifications.mode.recommended")}
-							</Badge>
-						{/if}
-					</Item.Title>
-					<Item.Description class="line-clamp-none text-wrap">
-						{t(modeKeys[mode].description)}
-					</Item.Description>
-				</Item.Content>
-				<Item.Actions class="self-start pt-0.5">
-					{#if enabling}
-						<Spinner aria-hidden="true" />
-					{:else}
-						<RadioMark {checked} />
+		{@const selected = notificationSettings.mode === mode}
+		<button
+			type="button"
+			role="option"
+			aria-selected={selected}
+			aria-disabled={locked}
+			aria-busy={enabling}
+			class={cn(
+				Item.itemVariants(),
+				"items-start rounded-none border-0 text-left -outline-offset-2 not-first:border-t not-first:border-border first:rounded-t-[inherit] last:rounded-b-[inherit]",
+			)}
+			onclick={() => {
+				if (!locked) void selectNotificationMode(mode);
+			}}
+			{@attach roving.item(mode)}
+		>
+			<Item.Content>
+				<Item.Title>
+					{t(modeKeys[mode].title)}
+					{#if recommended}
+						<Badge
+							variant="secondary"
+							class="font-normal text-primary"
+						>
+							{t("settings.notifications.mode.recommended")}
+						</Badge>
 					{/if}
-				</Item.Actions>
-			{/snippet}
-		</RadioListItem>
+				</Item.Title>
+				<Item.Description class="line-clamp-none text-wrap">
+					{t(modeKeys[mode].description)}
+				</Item.Description>
+			</Item.Content>
+			<Item.Actions class="self-start pt-0.5">
+				{#if enabling}
+					<Spinner aria-hidden="true" />
+				{:else}
+					<RadioMark checked={selected} />
+				{/if}
+			</Item.Actions>
+		</button>
 	{/each}
-</RadioList>
+</div>
 <PushAddonAlert onCloseAutoFocus={focusSelectedMode} />

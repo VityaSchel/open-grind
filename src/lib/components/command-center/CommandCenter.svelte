@@ -11,6 +11,7 @@
 	import * as Command from "#lib/components/ui/command/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { commandCenterKeybinding } from "#lib/platform/keybindings.ts";
+	import { currentPlatform } from "#lib/platform/os.ts";
 	import {
 		commandCenterClose,
 		commandCenterState,
@@ -20,6 +21,23 @@
 	import QuickGoToCommandGroup from "./quick-go-to/QuickGoToCommandGroup.svelte";
 
 	const suggestionsId = $props.id();
+
+	const controlLettersEditText: Record<
+		ReturnType<typeof currentPlatform>,
+		boolean
+	> = {
+		macos: true,
+		ios: true,
+		windows: false,
+		linux: false,
+		android: false,
+		freebsd: false,
+		dragonfly: false,
+		netbsd: false,
+		openbsd: false,
+		solaris: false,
+		web: false,
+	};
 
 	onMount(() => {
 		return tinykeys(window, {
@@ -44,12 +62,18 @@
 	}
 	bind:value={commandCenterState.value}
 	shouldFilter={commandCenterState.query.length > 0}
+	vimBindings={!controlLettersEditText[currentPlatform()]}
 	class="max-xs:max-w-full p-3.5"
 >
 	<Command.Input
 		placeholder={t("commands.commandCenter.placeholder")}
 		aria-controls={suggestionsId}
 		bind:value={commandCenterState.query}
+		onkeydown={(event) => {
+			if (event.key === "Home" || event.key === "End") {
+				event.stopPropagation();
+			}
+		}}
 	/>
 	<Command.List
 		id={suggestionsId}

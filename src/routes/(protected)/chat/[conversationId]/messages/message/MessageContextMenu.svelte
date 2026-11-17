@@ -35,13 +35,24 @@
 		onReport?: () => void;
 		onReact?: (reactionId: number) => void;
 	} = $props();
+
+	const openedByKeyboard =
+		document.activeElement?.matches(
+			":focus-visible:not(input, textarea, select, [contenteditable])",
+		) ?? false;
 </script>
 
 <ContextMenu {...props}>
 	{#snippet header()}
 		{#if reactionAvailable}
 			<span
-				class="mt-1 mb-2 block w-45 text-center text-foreground/50 text-shadow-sm can-hover:hidden"
+				class={[
+					"mt-1 mb-2 block w-45 text-center text-foreground/50 text-shadow-sm",
+					{
+						hidden: openedByKeyboard,
+						"can-hover:hidden": !openedByKeyboard,
+					},
+				]}
 			>
 				<Rich key="chat.message.contextMenu.doubleTapToReact">
 					{#snippet fireIcon(text)}<img
@@ -54,30 +65,41 @@
 						/>{/snippet}
 				</Rich>
 			</span>
-			<Button
-				variant="ghost"
-				size="icon-lg"
-				aria-label={t("chat.message.contextMenu.a11y.reactWithFire")}
-				class="mt-1 mb-2 hidden self-start rounded-full bg-black/80 can-hover:inline-flex"
-				onclick={() => {
-					onReact?.(1);
-					props.onClose();
-				}}
-			>
-				<img
-					src={fireEmoji}
-					alt=""
-					width="20"
-					height="20"
-					draggable="false"
-				/>
-			</Button>
 		{/if}
 	{/snippet}
-	<ContextMenuPanel>
+	<ContextMenuPanel label={t("chat.message.a11y.actions")}>
+		{#snippet leading()}
+			{#if reactionAvailable}
+				<Button
+					variant="ghost"
+					size="icon-lg"
+					role="menuitem"
+					aria-label={t(
+						"chat.message.contextMenu.a11y.reactWithFire",
+					)}
+					class={[
+						"mt-1 mb-2 self-start rounded-full bg-black/80",
+						{ "hidden can-hover:inline-flex": !openedByKeyboard },
+					]}
+					onclick={() => {
+						onReact?.(1);
+						props.onClose();
+					}}
+				>
+					<img
+						src={fireEmoji}
+						alt=""
+						width="20"
+						height="20"
+						draggable="false"
+					/>
+				</Button>
+			{/if}
+		{/snippet}
 		{#if onReply}
 			<Button
 				variant="ghost"
+				role="menuitem"
 				onclick={() => {
 					onReply();
 					props.onClose();
@@ -90,6 +112,7 @@
 		{#if textContent !== undefined}
 			<Button
 				variant="ghost"
+				role="menuitem"
 				onclick={() => {
 					void copyToClipboard({
 						text: textContent,
@@ -104,6 +127,7 @@
 		{#if onCopyError}
 			<Button
 				variant="ghost"
+				role="menuitem"
 				onclick={() => {
 					onCopyError();
 					props.onClose();
@@ -116,6 +140,7 @@
 		{#if onDelete}
 			<Button
 				variant="ghost"
+				role="menuitem"
 				onclick={() => {
 					onDelete();
 					props.onClose();
@@ -128,6 +153,7 @@
 		{#if onUnsend}
 			<Button
 				variant="ghost"
+				role="menuitem"
 				onclick={() => {
 					onUnsend();
 					props.onClose();
@@ -140,6 +166,7 @@
 		{#if onReport}
 			<Button
 				variant="ghost"
+				role="menuitem"
 				onclick={() => {
 					props.onClose();
 					onReport();

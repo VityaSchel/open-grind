@@ -117,7 +117,7 @@ export function rowsOnScreen(page: Page, { pane }: { pane: string }) {
 
 export async function tabTrack(page: Page) {
 	const left = async (name: string) =>
-		(await page.getByRole("link", { name }).boundingBox())!.x;
+		(await page.getByRole("tab", { name }).boundingBox())!.x;
 	const views = await left("Views");
 	return { views, span: (await left("Taps")) - views };
 }
@@ -144,7 +144,7 @@ export async function glideToViews(page: Page) {
 		[PAGER, CHIP],
 	);
 
-	await page.getByRole("link", { name: "Views" }).click();
+	await page.getByRole("tab", { name: "Views" }).click();
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
 	await expect
 		.poll(() => page.locator(PAGER).evaluate((el) => el.scrollLeft))
