@@ -1,17 +1,14 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, listenMock, isTauriMock } = vi.hoisted(() => ({
+const { invokeMock, listenMock } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
 	listenMock: vi.fn(),
-	isTauriMock: vi.fn(() => true),
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: invokeMock,
-	isTauri: isTauriMock,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	asUpdateError,
 	cancelUpdateDownload,
@@ -26,6 +23,7 @@ import {
 	onUpdateProgress,
 	setAutomaticUpdateChecks,
 	startUpdateDownload,
+	updatesAvailableHere,
 } from "#lib/updates/index.ts";
 import { stageOf } from "#lib/updates/stage.ts";
 import type { Progress } from "#lib/updates/types.ts";
@@ -54,7 +52,58 @@ const release = {
 beforeEach(() => {
 	invokeMock.mockReset();
 	listenMock.mockReset();
-	isTauriMock.mockReturnValue(true);
+	runningOn("android");
+});
+
+afterEach(() => {
+	resetPlatform();
+	vi.unstubAllGlobals();
+});
+
+describe("where updates exist", () => {
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"updates %s",
+		(platform) => {
+			runningOn(platform);
+			expect(updatesAvailableHere()).toBe(true);
+		},
+	);
+
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"leaves %s alone in the demo",
+		(platform) => {
+			runningOn(platform);
+			vi.stubGlobal("__DEMO__", true);
+			expect(updatesAvailableHere()).toBe(false);
+		},
+	);
+
+	it("never updates iOS, whose app ships no updater", () => {
+		runningOn("ios");
+		expect(updatesAvailableHere()).toBe(false);
+	});
+});
+
+describe("on iOS", () => {
+	beforeEach(() => {
+		runningOn("ios");
+	});
+
+	it("reports no capability or readiness for iOS without asking the backend", async () => {
+		const unsupported = {
+			state: "unsupported",
+			detail: { reason: "noReleaseArtifacts", detail: { target: "ios" } },
+		};
+		expect(await getUpdateCapability()).toEqual(unsupported);
+		expect(await getUpdateReadiness("google-oauth")).toEqual(unsupported);
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("reports no install state without asking the backend", async () => {
+		expect(await installPending()).toBe(false);
+		expect(await getInstalledVersion("fcm")).toBeNull();
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
 });
 
 describe("update checks", () => {
@@ -95,12 +144,15 @@ describe("update checks", () => {
 });
 
 describe("capability and readiness", () => {
-	it("never reaches the backend outside a Tauri build", async () => {
-		isTauriMock.mockReturnValue(false);
+	it("never reaches the backend in the demo", async () => {
+		vi.stubGlobal("__DEMO__", true);
 
 		expect(await getUpdateCapability()).toEqual({
 			state: "unsupported",
-			detail: { reason: "noReleaseArtifacts", detail: { target: "web" } },
+			detail: {
+				reason: "noReleaseArtifacts",
+				detail: { target: "demo" },
+			},
 		});
 		expect(await getUpdateReadiness()).toMatchObject({
 			state: "unsupported",
@@ -171,8 +223,8 @@ describe("capability and readiness", () => {
 });
 
 describe("local install state", () => {
-	it("never reaches the backend outside a Tauri build", async () => {
-		isTauriMock.mockReturnValue(false);
+	it("never reaches the backend in the demo", async () => {
+		vi.stubGlobal("__DEMO__", true);
 
 		expect(await installPending()).toBe(false);
 		expect(await getInstalledVersion("google-oauth")).toBeNull();

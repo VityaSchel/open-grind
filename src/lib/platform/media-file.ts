@@ -24,7 +24,7 @@ export function mediaFileKindOf(mimeType: string | null): MediaFileKind {
 }
 
 export function localFileOf(media: PickedMedia): File | null {
-	if (media.source === "web") return media.file;
+	if (media.source === "demo") return media.file;
 	if (media.source === "staged") return media.file ?? null;
 	return null;
 }
@@ -32,7 +32,7 @@ export function localFileOf(media: PickedMedia): File | null {
 export function demoPickedFile(media: PickedMedia): File {
 	const file = localFileOf(media);
 	if (file === null) {
-		throw new Error("The demo only reads files picked in the browser");
+		throw new Error("The demo only reads files it holds in the page");
 	}
 	return file;
 }
@@ -53,7 +53,7 @@ async function photoSizeOf(
 export async function inspectMediaFile(
 	media: PickedMedia,
 ): Promise<MediaFileInspection> {
-	if (media.source === "web") {
+	if (media.source === "demo") {
 		const kind = mediaFileKindOf(media.file.type);
 		return {
 			kind,
@@ -91,7 +91,7 @@ function readDataUrl(file: File): Promise<string> {
 	});
 }
 
-async function previewWebFile(file: File): Promise<MediaPreview | null> {
+async function previewDemoFile(file: File): Promise<MediaPreview | null> {
 	if (mediaFileKindOf(file.type) !== "photo") return null;
 	const dataUrl = await readDataUrl(file);
 	const image = new Image();
@@ -107,7 +107,7 @@ async function previewWebFile(file: File): Promise<MediaPreview | null> {
 export async function previewMedia(
 	media: PickedMedia,
 ): Promise<MediaPreview | null> {
-	if (media.source === "web") return previewWebFile(media.file);
+	if (media.source === "demo") return previewDemoFile(media.file);
 	if (__DEMO__) return null;
 	return mediaPreviewSchema
 		.nullable()
@@ -148,7 +148,7 @@ export function mediaFileDescriptor(media: PickedMedia) {
 			return { source: media.source, path: media.path };
 		case "staged":
 			return { source: media.source, id: media.id };
-		case "web":
-			throw new Error("A file picked in the browser has no native path");
+		case "demo":
+			throw new Error("A demo file has no native path");
 	}
 }

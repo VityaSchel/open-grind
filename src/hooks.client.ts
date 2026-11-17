@@ -1,7 +1,7 @@
 import type { ClientInit, HandleClientError } from "@sveltejs/kit/hooks";
 
 import { startLanguage } from "#lib/platform/app-language.ts";
-import { isMacosPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { startRegionalSettings } from "#lib/platform/regional-settings.ts";
 import { ws } from "#lib/ws.svelte.ts";
 
@@ -13,10 +13,17 @@ export const init: ClientInit = async () => {
 	}
 	ws.connect();
 	await Promise.all([startRegionalSettings(), startLanguage()]);
-	if (isMacosPlatform()) {
-		void import("#lib/platform/app-menu.ts")
-			.then(({ startAppMenu }) => startAppMenu())
-			.catch(console.error);
+	switch (currentPlatform()) {
+		case "macos":
+			void import("#lib/platform/app-menu.ts")
+				.then(({ startAppMenu }) => startAppMenu())
+				.catch(console.error);
+			break;
+		case "android":
+		case "ios":
+		case "linux":
+		case "windows":
+			break;
 	}
 };
 

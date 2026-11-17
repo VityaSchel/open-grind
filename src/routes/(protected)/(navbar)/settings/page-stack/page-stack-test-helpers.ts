@@ -1,6 +1,9 @@
 import { vi } from "vitest";
 
-import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
+import {
+	type StackMotion,
+	stackMotion,
+} from "#lib/components/navigation/stack/motion.ts";
 import {
 	fakeSurface,
 	navigationEvent,
@@ -8,18 +11,25 @@ import {
 } from "#lib/components/navigation/stack/stack-test-helpers.ts";
 import { PageStackState } from "./page-stack-state.svelte";
 
-export const motion = stackMotion({ platform: "android" });
+export const androidMotion = stackMotion({ platform: "android" });
 
 export function makeStack({
 	reducedMotion = false,
 	canGoBack = true,
 	pushedFrom = [],
+	motion = androidMotion,
 }: {
 	reducedMotion?: boolean;
 	canGoBack?: boolean;
 	pushedFrom?: { path: string }[];
+	motion?: StackMotion;
 } = {}) {
-	vi.stubGlobal("navigation", { canGoBack });
+	const index = canGoBack ? 1 : 0;
+	vi.stubGlobal("navigation", {
+		currentEntry: { index },
+		entries: () =>
+			Array.from({ length: index + 1 }, () => ({ url: location.href })),
+	});
 
 	const pane = document.createElement("div");
 	pane.innerHTML = "<p>live</p>";

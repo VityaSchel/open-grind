@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { backGestureEventHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { HISTORY_METADATA_KEY } from "#lib/util/history-index.ts";
+import { historyLog } from "#lib/util/history-log.svelte.ts";
 import BackButton from "./BackButton.svelte";
 
 const { afterNavigateCallbacks, gotoMock } = vi.hoisted(() => ({
@@ -20,12 +22,29 @@ vi.mock("$app/navigation", () => ({
 	goto: gotoMock,
 }));
 
+const LAUNCH = 1_762_200_000_000;
+let seededLogs = 0;
+
+function seedHistoryLog(pathnames: string[]): number {
+	const first = LAUNCH + 1000 * seededLogs++;
+	for (const [step, pathname] of pathnames.entries())
+		historyLog.record({
+			index: first + step,
+			pathname,
+			type: step === 0 ? "enter" : "link",
+			length: step + 1,
+		});
+	return first + pathnames.length - 1;
+}
+
 function renderBackLink({
 	canGoBack,
 	historyLength = 1,
+	historyIndex,
 }: {
 	canGoBack?: boolean;
 	historyLength?: number;
+	historyIndex?: number;
 }) {
 	const back = vi.fn();
 	const index = canGoBack ? 1 : 0;
@@ -34,7 +53,6 @@ function renderBackLink({
 		canGoBack === undefined
 			? undefined
 			: {
-					canGoBack,
 					currentEntry: { index },
 					entries: () =>
 						Array.from({ length: index + 1 }, () => ({
@@ -42,7 +60,14 @@ function renderBackLink({
 						})),
 				},
 	);
-	vi.stubGlobal("history", { length: historyLength, back });
+	vi.stubGlobal("history", {
+		length: historyLength,
+		back,
+		state:
+			historyIndex === undefined
+				? null
+				: { [HISTORY_METADATA_KEY]: { historyIndex } },
+	});
 	return {
 		back,
 		link: render(BackButton).getByRole("link", { name: "Back" }),
@@ -90,7 +115,12 @@ function completeNavigation() {
 }
 
 describe("BackButton", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
 	afterEach(async () => {
+		vi.useRealTimers();
 		cleanup();
 		document.body.replaceChildren();
 		vi.unstubAllGlobals();
@@ -138,16 +168,6 @@ describe("BackButton", () => {
 		expect(back).not.toHaveBeenCalled();
 	});
 
-	it("replaces a lone entry with Browse where the Navigation API is missing", () => {
-		const { back, link } = renderBackLink({ historyLength: 1 });
-
-		expect(clickFollowsLink(link)).toBe(false);
-		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
-			replace: true,
-		});
-		expect(back).not.toHaveBeenCalled();
-	});
-
 	it("replaces once for a double tap on the first screen", () => {
 		const { link } = renderBackLink({ canGoBack: false });
 
@@ -168,11 +188,56 @@ describe("BackButton", () => {
 		expect(back).not.toHaveBeenCalled();
 	});
 
-	it("goes back on a longer history where the Navigation API is missing", () => {
+	it("replaces the profile with Browse where the Navigation API is missing, however deep history is", () => {
 		const { back, link } = renderBackLink({ historyLength: 2 });
 
 		expect(clickFollowsLink(link)).toBe(false);
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replace: true,
+		});
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("goes back where the Navigation API is missing and the history log has a screen behind", () => {
+		const { back, link } = renderBackLink({
+			historyLength: 2,
+			historyIndex: seedHistoryLog(["/", "/profile/7"]),
+		});
+
+		expect(clickFollowsLink(link)).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
+	});
+
+	it("replaces the profile with Browse when Back has not left it within a second", () => {
+		const { back, link } = renderBackLink({
+			historyLength: 2,
+			historyIndex: seedHistoryLog(["/settings/profile", "/profile/7"]),
+		});
+
+		clickFollowsLink(link);
+		expect(back).toHaveBeenCalledOnce();
+		vi.advanceTimersByTime(999);
+		expect(gotoMock).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(1);
+
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replace: true,
+		});
+	});
+
+	it("lets a Back that has started leaving finish on its own", () => {
+		const { back, link } = renderBackLink({
+			historyLength: 2,
+			historyIndex: seedHistoryLog(["/settings/profile", "/profile/7"]),
+		});
+
+		clickFollowsLink(link);
+		window.dispatchEvent(new PopStateEvent("popstate"));
+		vi.advanceTimersByTime(1000);
+
+		expect(back).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
 	});
 
 	it("pops once for a double tap before the navigation lands", () => {

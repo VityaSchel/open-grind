@@ -112,7 +112,7 @@ function uploadedContentType({
 }): string {
 	const fallback =
 		inspection.kind === "video" ? VIDEO_CONTENT_TYPE : PHOTO_CONTENT_TYPE;
-	return media.source === "web" ? (media.mimeType ?? fallback) : fallback;
+	return media.source === "demo" ? (media.mimeType ?? fallback) : fallback;
 }
 
 export type UploadedChatMedia = MediaUploadResponse & {

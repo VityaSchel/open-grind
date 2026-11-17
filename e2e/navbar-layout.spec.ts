@@ -19,7 +19,7 @@ async function openNavbar({
 	page: Page;
 	query?: string;
 }): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(`/right-now${query}`);
 	const navbar = page.getByRole("navigation");
 	const items = navbar.getByRole("link");
@@ -102,7 +102,7 @@ for (const width of [412, 1280]) {
 }
 
 test("tab widths don't change when selecting a tab", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/right-now");
 
 	const navbar = page.getByRole("navigation", { name: "Main" });
@@ -169,7 +169,7 @@ test.describe("on a 412 × 920 phone with 64 px system bars", () => {
 	test.use({ viewport: { width: 412, height: 920 } });
 
 	test("the Me screen fits without scrolling", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings");
 		const scroller = page.locator('[data-slot="me-scroller"]');
 		await expect(
@@ -189,7 +189,7 @@ test.describe("on a 360 × 640 phone with 64 px system bars", () => {
 	test("the Me screen's version label ends no closer to the navbar than to the link above it", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings");
 		const scroller = page.locator('[data-slot="me-scroller"]');
 		await expect(

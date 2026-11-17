@@ -5,6 +5,7 @@ import { callMethod } from "#lib/api/methods.ts";
 import { requestBlockedAlertState } from "#lib/api/request-blocked-state.svelte.ts";
 import { fetchRest } from "#lib/api/transport.ts";
 import { isPlayBuild } from "#lib/platform/store.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { updatesAvailableHere } from "#lib/updates/index.ts";
 import { load } from "../../routes/+layout";
 import { demoMeProfileId } from "./config";
@@ -26,12 +27,13 @@ function setScene(scene: Partial<ScreenshotScene>): void {
 beforeEach(() => {
 	vi.stubGlobal("__DEMO__", true);
 	vi.stubGlobal("__SCREENSHOTS__", true);
+	runningOn("android");
 });
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));
 	requestBlockedAlertState.open = false;
-	delete (window as { isTauri?: boolean }).isTauri;
+	resetPlatform();
 	vi.unstubAllGlobals();
 });
 
@@ -318,7 +320,6 @@ describe("empty lists", () => {
 
 describe("updates", () => {
 	it("offers updates in a scene that asks for them", () => {
-		(window as { isTauri?: boolean }).isTauri = true;
 		expect(updatesAvailableHere()).toBe(false);
 		setScene({ updates: true });
 		expect(updatesAvailableHere()).toBe(true);

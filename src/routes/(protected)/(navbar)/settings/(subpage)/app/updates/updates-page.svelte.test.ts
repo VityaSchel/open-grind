@@ -12,6 +12,7 @@ import {
 } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	installedBy,
 	toastsFake,
@@ -27,13 +28,12 @@ const FDROID_BUILD = installedBy("org.fdroid.fdroid");
 
 const fake = updateApiFake();
 const toasts = toastsFake();
-const { updateSettings, platform } = vi.hoisted(() => ({
+const { updateSettings } = vi.hoisted(() => ({
 	updateSettings: {
 		getUpdateCapability: vi.fn<() => Promise<Capability>>(),
 		getUpdateSettings: vi.fn(),
 		setAutomaticUpdateChecks: vi.fn(),
 	},
-	platform: { isAndroidPlatform: vi.fn(() => true) },
 }));
 
 vi.mock("#lib/app-data/index.ts", () => ({
@@ -50,10 +50,6 @@ vi.mock("#lib/updates/index.ts", async () => ({
 	...updateSettings,
 }));
 vi.mock("#lib/updates/toasts.ts", () => toasts);
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	...platform,
-}));
 
 let testing: typeof import("@testing-library/svelte");
 
@@ -77,12 +73,13 @@ beforeEach(() => {
 	vi.resetModules();
 	vi.clearAllMocks();
 	fake.reset();
-	platform.isAndroidPlatform.mockReturnValue(true);
+	runningOn("android");
 	updateSettings.getUpdateSettings.mockResolvedValue({ autoCheck: false });
 });
 
 afterEach(() => {
 	testing.cleanup();
+	resetPlatform();
 });
 
 describe("the Updates settings on Android", () => {

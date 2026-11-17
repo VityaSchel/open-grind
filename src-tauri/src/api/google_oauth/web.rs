@@ -3,8 +3,9 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
+use crate::api::oauth::user_agent::MAC_SAFARI;
 use crate::api::oauth::{
-	delivered, is_allowed_target, new_nonce, without_secrets, CANCELED,
+	await_sign_in, is_allowed_target, new_nonce, without_secrets, SignInWait,
 };
 use crate::error::AppError;
 #[cfg(desktop)]
@@ -15,14 +16,12 @@ use super::GoogleOauthBridge;
 const HELPER_URL: &str = "https://web.grindr.com/";
 const HELPER_HOST: &str = "web.grindr.com";
 const WINDOW_LABEL: &str = "google-oauth";
+const WINDOW_TITLE: &str = "Sign In with Google";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
-#[cfg(mobile)]
+#[cfg(target_os = "ios")]
 const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
-
-const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
-     AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
 const RESULT_PATH: &str = "/__open_grind_oauth__";
 
@@ -95,11 +94,10 @@ async fn run_flow(
 	let bridge_for_nav = bridge.clone();
 	let nonce_for_nav = nonce.clone();
 
-	#[allow(unused_mut)]
-	let mut builder =
+	let builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
 			.inner_size(window_width, window_height)
-			.user_agent(USER_AGENT)
+			.user_agent(MAC_SAFARI)
 			.initialization_script(init_script(&nonce))
 			.incognito(true)
 			.general_autofill_enabled(false)
@@ -125,29 +123,29 @@ async fn run_flow(
 			});
 
 	#[cfg(desktop)]
-	{
-		let strings = crate::app_language::native_strings(app);
-		builder = builder.title(strings.text(NativeText::GoogleSignInTitle));
-	}
+	let builder = builder.title(
+		crate::app_language::native_strings(app)
+			.text(NativeText::GoogleSignInTitle),
+	);
 
 	#[cfg(target_os = "windows")]
-	{
-		builder = builder
-			.data_directory(crate::api::oauth::oauth_data_dir(app, &nonce)?);
-	}
+	let builder =
+		builder.data_directory(crate::api::oauth::oauth_data_dir(app, &nonce)?);
+
+	#[cfg(target_os = "ios")]
+	let builder = crate::api::oauth::sheet::prepare(builder);
 
 	let window = builder.build().map_err(|e| {
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
-	let bridge_for_close = bridge.clone();
-	window.on_window_event(move |event| {
-		if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
-			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
-		}
-	});
-
-	let result = delivered(rx).await;
+	let result = await_sign_in(SignInWait {
+		window: &window,
+		bridge,
+		answer: rx,
+		title: WINDOW_TITLE,
+	})
+	.await;
 
 	let _ = window.clear_all_browsing_data();
 	let _ = window.close();

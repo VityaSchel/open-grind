@@ -7,12 +7,33 @@ mod fallback;
 	all(target_os = "macos", not(feature = "keychain"))
 ))]
 mod file_store;
+#[cfg(any(
+	target_os = "ios",
+	all(
+		test,
+		any(
+			target_os = "linux",
+			all(target_os = "macos", not(feature = "keychain"))
+		)
+	)
+))]
+mod install_key;
 mod keyring;
 #[cfg(any(test, all(target_os = "macos", feature = "keychain")))]
 mod legacy;
+#[cfg(any(
+	target_os = "ios",
+	target_os = "linux",
+	all(target_os = "macos", not(feature = "keychain"))
+))]
+mod private_file;
+#[cfg(any(target_os = "ios", test))]
+mod sealed;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
 pub use fallback::remember_sign_out;
+#[cfg(target_os = "ios")]
+pub use install_key::init_install_key;
 pub(crate) use keyring::{entry, Entry};
 #[cfg(all(target_os = "macos", feature = "keychain"))]
 pub use legacy::adopt_legacy_items;
@@ -37,6 +58,18 @@ pub enum StorageBackend {
 }
 
 const STARTUP_PROBE: &str = "startup-probe";
+
+#[cfg(any(
+	test,
+	target_os = "ios",
+	all(target_os = "macos", feature = "keychain")
+))]
+const ACCOUNTS: [&str; 4] = [
+	entries::SESSION,
+	entries::DEVICE_INFO,
+	entries::SIGNING_KEY,
+	STARTUP_PROBE,
+];
 
 const HAS_FILE_STORE: bool = cfg!(any(
 	target_os = "linux",
@@ -110,9 +143,9 @@ fn probe_keyring(
 
 #[cfg(target_os = "ios")]
 fn install_platform_store() -> Result<(), String> {
-	let store = apple_native_keyring_store::protected::Store::new()
+	let keychain = apple_native_keyring_store::protected::Store::new()
 		.map_err(|e| e.to_string())?;
-	keyring_core::set_default_store(store);
+	keyring_core::set_default_store(install_key::seal(keychain)?);
 	Ok(())
 }
 
@@ -184,7 +217,8 @@ pub(crate) mod test_support {
 	use keyring_core::api::CredentialStoreApi;
 	use keyring_core::mock;
 
-	use super::{file_store, init_file_store, keyring};
+	use super::{init_file_store, keyring};
+	use crate::scratch_dir::ScratchDir;
 
 	static DEFAULT_STORE: Mutex<()> = Mutex::new(());
 
@@ -194,10 +228,9 @@ pub(crate) mod test_support {
 
 	pub(crate) fn with_file_store(test: impl FnOnce(&Path)) {
 		let _guard = lock();
-		let base = file_store::scratch_dir();
-		init_file_store(base.clone());
+		let base = ScratchDir::new();
+		init_file_store(base.to_path_buf());
 		test(&base);
-		std::fs::remove_dir_all(&base).ok();
 	}
 
 	pub(crate) fn install_mock(
@@ -298,6 +331,16 @@ mod tests {
 
 	fn session_file_exists(base: &std::path::Path) -> bool {
 		base.join("credentials").join("session").exists()
+	}
+
+	#[test]
+	fn a_fresh_ios_install_erases_every_keyring_entry() {
+		for name in PERSISTED_ENTRIES.into_iter().chain([STARTUP_PROBE]) {
+			assert!(
+				ACCOUNTS.contains(&name),
+				"a reinstall keeps {name} from the previous install"
+			);
+		}
 	}
 
 	#[test]

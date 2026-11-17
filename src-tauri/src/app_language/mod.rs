@@ -27,7 +27,7 @@ pub use desktop::{native_strings, refresh_on_focus};
 #[cfg(desktop)]
 use desktop::{AppLanguages, LastRead, ShownLanguage};
 
-#[cfg(any(desktop, target_os = "android"))]
+#[cfg(any(desktop, target_os = "android", test))]
 const CHANGED_EVENT: &str = "app-language-changed";
 
 #[cfg(any(desktop, target_os = "ios"))]

@@ -5,7 +5,6 @@ import { screenshotScene } from "#lib/demo/screenshot-scene.ts";
 import { hydrateDesktopEntryState } from "#lib/platform/desktop-entry.svelte.ts";
 import { hydrateDisguiseState } from "#lib/platform/disguise.svelte.ts";
 import { hydrateUpdateCapability } from "#lib/updates/capability.svelte.ts";
-import { updatesAvailableHere } from "#lib/updates/index.ts";
 import type { LayoutLoad } from "./$types";
 
 export const ssr = false;
@@ -17,7 +16,7 @@ export const load: LayoutLoad = async ({ url }) => {
 	await hydrateDisguiseState();
 	const onboardingComplete = __SCREENSHOTS__
 		? !screenshotScene.onboarding
-		: !updatesAvailableHere() ||
+		: __DEMO__ ||
 			(await getPreferences()
 				.then((preferences) => preferences.onboardingComplete)
 				.catch(() => true));

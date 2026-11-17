@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	backGestureEventHandlers,
 	type BackGestureLayer,
+	overlayOpen,
 	runBackGestureHandlers,
 	topBackGestureHandler,
 } from "./back-gesture-event.svelte";
@@ -44,6 +45,19 @@ describe("back gesture layers", () => {
 		expect(topBackGestureHandler()).toBe(screen);
 		expect(runBackGestureHandlers()).toBe(true);
 		expect(screen).toHaveBeenCalledOnce();
+		expect(stack).not.toHaveBeenCalled();
+	});
+
+	it("runs a guard on leaving the screen below the screen's own handlers and above the stack", () => {
+		const stack = register({ layer: "stack" });
+		const guard = register({ layer: "guard" });
+		const screen = register({ layer: "screen" });
+
+		expect(topBackGestureHandler()).toBe(screen);
+		backGestureEventHandlers.delete(screen);
+		expect(topBackGestureHandler()).toBe(guard);
+		expect(runBackGestureHandlers()).toBe(true);
+		expect(guard).toHaveBeenCalledOnce();
 		expect(stack).not.toHaveBeenCalled();
 	});
 
@@ -93,6 +107,16 @@ describe("back gesture layers", () => {
 		expect(topBackGestureHandler()).toBeUndefined();
 	});
 
+	it("skips the layers a caller passes over", () => {
+		const stack = register({ layer: "stack" });
+		register({ layer: "screen" });
+
+		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(stack);
+
+		const overlay = register({ layer: "overlay" });
+		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(overlay);
+	});
+
 	it("tracks the top handler reactively", () => {
 		const tops: unknown[] = [];
 		const stop = $effect.root(() => {
@@ -108,5 +132,17 @@ describe("back gesture layers", () => {
 
 		expect(tops).toEqual([undefined, stack, overlay]);
 		stop();
+	});
+
+	it("reports an overlay open only while an overlay-layer handler is registered", () => {
+		register({ layer: "stack" });
+		register({ layer: "screen" });
+		expect(overlayOpen()).toBe(false);
+
+		const overlay = register({ layer: "overlay" });
+		expect(overlayOpen()).toBe(true);
+
+		backGestureEventHandlers.delete(overlay);
+		expect(overlayOpen()).toBe(false);
 	});
 });

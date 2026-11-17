@@ -1,10 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import {
-	DEMO_CONVERSATION,
-	ensureGridLocation,
-	installTauriShim,
-} from "./support/app";
+import { DEMO_CONVERSATION, installTauriShim, openGrid } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const DEMO_PROFILE = "/profile/100001";
@@ -41,13 +37,11 @@ test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, AVATAR_HOST);
 	await serveImages(page, CHAT_MEDIA_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("cancels the browser menu on a Browse profile link", async ({ page }) => {
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	const profileLink = page.locator('a[href^="/profile/"]').first();
 	await profileLink.waitFor();
 

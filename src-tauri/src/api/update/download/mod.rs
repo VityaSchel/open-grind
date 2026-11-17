@@ -13,9 +13,10 @@ use tauri::{AppHandle, Emitter, Runtime};
 use tokio::sync::watch;
 
 use super::baseline::InstallKind;
+use super::component::{self, Component};
 use super::error::UpdateError;
-use super::install::{TransferHold, TransferProgress};
 use super::release::Candidate;
+use crate::transfer::{TransferHold, TransferProgress, TransferPurpose};
 pub use queue::Downloads;
 
 pub(super) const PROGRESS_EVENT: &str = "updater:progress";
@@ -88,10 +89,18 @@ impl<'a, R: Runtime> ProgressFeed<'a, R> {
 		sender: &'a watch::Sender<Progress>,
 		candidate: &Candidate,
 	) -> Self {
+		let package_name = component::by_key(&candidate.component)
+			.map_or(component::SELF_PACKAGE, Component::install_target);
 		Self {
 			app,
 			sender,
-			hold: TransferHold::update(app, candidate),
+			hold: TransferHold::begin(
+				app,
+				TransferPurpose::Update {
+					package_name,
+					kind: candidate.kind,
+				},
+			),
 		}
 	}
 

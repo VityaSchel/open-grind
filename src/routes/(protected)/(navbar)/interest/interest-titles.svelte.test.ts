@@ -3,7 +3,7 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { page } from "$app/state";
 import { createRawSnippet, flushSync } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("$app/state", async () => {
@@ -14,6 +14,7 @@ vi.mock("./InterestPager.svelte", () => ({ default: () => {} }));
 
 import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import InterestLayout from "./+layout.svelte";
 
 function openInterest(pathname: string) {
@@ -27,8 +28,11 @@ function openInterest(pathname: string) {
 	});
 }
 
+beforeEach(() => runningOn("android"));
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	document.title = "";
 	await setLocale({ locale: SOURCE_LOCALE });
 });

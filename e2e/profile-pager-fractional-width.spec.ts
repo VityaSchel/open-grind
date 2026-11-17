@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import {
 	afterTwoFrames,
+	GRID_SCROLLER,
 	installTauriShim,
 	openGrid,
 	TrustedTouch,
@@ -18,7 +19,6 @@ import {
 
 const DEVICE_PIXEL_RATIO = 2.6875;
 const WINDOW = { width: 452, height: 800 };
-const GRID_SCROLLER = ".pull-scroller";
 const GRID_CONTENT = '[data-slot="grid-content"]';
 const GRID_TILE = '.photo-grid a[href^="/profile/"]';
 const GRID_PAGES_TO_LOAD = 3;
@@ -42,7 +42,7 @@ test.use({
 
 async function openDeepGridProfile(page: Page): Promise<number> {
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await openGrid(page);
 	const scroller = page.locator(GRID_SCROLLER);
 	const loadingMore = page.getByText("Loading more profiles");

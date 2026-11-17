@@ -29,7 +29,11 @@
 	"dataRefreshControl": {
 		"pullHint": "Pull to refresh",
 		"releaseHint": "Release to refresh",
-		"refreshButton": "Refresh"
+		"refreshButton": "Refresh",
+		"a11y": {
+			"refreshing": "Refreshing",
+			"refreshed": "Refreshed"
+		}
 	},
 	"scrollToTopButton": {
 		"a11y": {

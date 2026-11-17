@@ -83,22 +83,12 @@ fn ask_to_quit() -> ! {
 
 #[cfg(test)]
 mod tests {
-	use std::sync::atomic::{AtomicUsize, Ordering};
-
 	use super::*;
+	use crate::scratch_dir::ScratchDir;
 
-	struct ScratchHome(PathBuf);
+	struct ScratchHome(ScratchDir);
 
 	impl ScratchHome {
-		fn new() -> Self {
-			static NEXT: AtomicUsize = AtomicUsize::new(0);
-			Self(std::env::temp_dir().join(format!(
-				"open-grind-predecessor-{}-{}",
-				std::process::id(),
-				NEXT.fetch_add(1, Ordering::Relaxed)
-			)))
-		}
-
 		fn folder(&self, root: &str, identifier: &str) -> PathBuf {
 			self.0.join(root).join(identifier)
 		}
@@ -108,12 +98,6 @@ mod tests {
 			fs::create_dir_all(&folder).unwrap();
 			fs::write(folder.join("content"), identifier).unwrap();
 			folder
-		}
-	}
-
-	impl Drop for ScratchHome {
-		fn drop(&mut self) {
-			fs::remove_dir_all(&self.0).ok();
 		}
 	}
 
@@ -135,7 +119,7 @@ mod tests {
 
 	#[test]
 	fn every_per_app_folder_of_the_predecessor_moves() {
-		let home = ScratchHome::new();
+		let home = ScratchHome(ScratchDir::new());
 		for root in PER_APP_FOLDERS {
 			home.fill(root, "org.opengrind");
 		}
@@ -161,7 +145,7 @@ mod tests {
 
 	#[test]
 	fn a_folder_the_app_already_has_keeps_both_sides_untouched() {
-		let home = ScratchHome::new();
+		let home = ScratchHome(ScratchDir::new());
 		let theirs = home.fill("Library/WebKit", "org.opengrind");
 		let ours = home.fill("Library/WebKit", "org.opengrind.app");
 
@@ -183,7 +167,7 @@ mod tests {
 
 	#[test]
 	fn identifiers_sharing_the_prefix_stay_where_they_are() {
-		let home = ScratchHome::new();
+		let home = ScratchHome(ScratchDir::new());
 		home.fill("Library/Application Support", "org.opengrind.devtool");
 		home.fill("Library/Application Support", "org.opengrind.updaterdemo");
 

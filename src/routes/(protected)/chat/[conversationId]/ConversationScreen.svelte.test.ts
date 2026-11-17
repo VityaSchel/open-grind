@@ -45,6 +45,7 @@ vi.mock("./message-composer/MessageComposer.svelte", () => ({
 	default: () => {},
 }));
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import ConversationScreen from "./ConversationScreen.svelte";
 
 function openConversation({ leaving = false }: { leaving?: boolean } = {}) {
@@ -54,11 +55,15 @@ function openConversation({ leaving = false }: { leaving?: boolean } = {}) {
 }
 
 beforeEach(() => {
+	runningOn("windows");
 	document.title = "Previous Page";
 	conversation.profile = null;
 });
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	resetPlatform();
+});
 
 describe("ConversationScreen window title", () => {
 	it("names the peer", () => {

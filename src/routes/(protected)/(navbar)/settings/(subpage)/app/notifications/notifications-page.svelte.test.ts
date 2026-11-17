@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { failureLabels } from "#lib/push/push-test-helpers.ts";
-import type * as Os from "#lib/platform/os.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { PushToken } from "#lib/push/types.ts";
 import type * as Capability from "#lib/updates/capability.svelte.ts";
 import {
@@ -21,7 +21,6 @@ import {
 	addon,
 	addonInstalled,
 	checked,
-	currentPlatform,
 	disabled,
 	inMode,
 	installedFromFdroid,
@@ -68,15 +67,6 @@ vi.mock("#lib/platform/link-opener.ts", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("#lib/platform/os.ts", async (importOriginal) => {
-	const { currentPlatform } =
-		await import("./notifications-page-test-helpers.svelte");
-	return {
-		...(await importOriginal<typeof Os>()),
-		currentPlatform,
-		isAndroidPlatform: () => currentPlatform() === "android",
-	};
-});
 vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({
 	appLifecycle: { active: true },
 }));
@@ -99,27 +89,24 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it.each(["ios", "web"] as const)(
-		"says on %s that notifications aren’t supported on this platform yet",
-		(platform) => {
-			currentPlatform.mockReturnValue(platform);
+	it("says on iOS that notifications aren’t supported on this platform yet", () => {
+		runningOn("ios");
 
-			render(NotificationsPage);
+		render(NotificationsPage);
 
-			expect(
-				screen.getByText(
-					"Notifications aren’t supported on this platform yet.",
-				),
-			).toBeTruthy();
-			expect(screen.queryByRole("switch")).toBeNull();
-			expect(screen.queryByRole("radiogroup")).toBeNull();
-		},
-	);
+		expect(
+			screen.getByText(
+				"Notifications aren’t supported on this platform yet.",
+			),
+		).toBeTruthy();
+		expect(screen.queryByRole("switch")).toBeNull();
+		expect(screen.queryByRole("radiogroup")).toBeNull();
+	});
 
 	it.each(["macos", "windows", "linux"] as const)(
 		"offers the switch and both categories on %s, with no delivery modes",
 		async (platform) => {
-			currentPlatform.mockReturnValue(platform);
+			runningOn(platform);
 
 			render(NotificationsPage);
 
@@ -441,15 +428,12 @@ describe("the notifications copy", () => {
 			expect(button.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 
-	it.each(["ios", "web"] as const)(
-		"says on %s that notifications are unsupported in the active locale",
-		async (platform) => {
-			currentPlatform.mockReturnValue(platform);
-			render(NotificationsPage);
+	it("says on iOS that notifications are unsupported in the active locale", async () => {
+		runningOn("ios");
+		render(NotificationsPage);
 
-			await setLocale({ locale: "en-XA" });
+		await setLocale({ locale: "en-XA" });
 
-			expect(screen.getByText(PSEUDO_MESSAGE)).toBeTruthy();
-		},
-	);
+		expect(screen.getByText(PSEUDO_MESSAGE)).toBeTruthy();
+	});
 });

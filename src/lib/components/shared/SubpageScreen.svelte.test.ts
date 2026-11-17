@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { currentPage } = vi.hoisted(() => ({
 	currentPage: { route: { id: "/settings/account" } },
@@ -18,6 +18,7 @@ import {
 	PSEUDO_TITLE,
 } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import SubpageScreen from "./SubpageScreen.svelte";
 
 const routes = {
@@ -33,8 +34,11 @@ function renderAt(routeId: string) {
 	return screen.getByRole("navigation", { name: "Page" });
 }
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	document.title = "";
 	await setLocale({ locale: SOURCE_LOCALE });
 });

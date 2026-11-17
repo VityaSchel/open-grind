@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
-import { FIRST_ROUTE_COMPILE_MS } from "./support/app";
+import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import { APP_SETTINGS } from "./support/page-stack";
 import { showRestingToast } from "./support/toast";
 
@@ -22,6 +22,7 @@ const pseudoAccents = (page: Page) =>
 	});
 
 async function openLanguagePage(page: Page): Promise<void> {
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(LANGUAGE_PAGE);
 	await pseudoAccents(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await page.mouse.move(0, 0);

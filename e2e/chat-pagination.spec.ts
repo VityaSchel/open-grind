@@ -1,39 +1,23 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { installTauriShim } from "./support/app";
+import { MESSAGE, waitForPagingToSettle } from "./support/chat-stack";
 
 const LONG_CONVERSATION = "/chat/100333:123456000";
 const NEWEST_MESSAGE = "Backlog message 80";
 const OLDEST_MESSAGE = "Backlog message 1";
 const SCROLLER = '[data-slot="messages-scroller"]';
-const MESSAGE = '[data-slot="message"]';
 
 type AnchorProbe = { anchorDrifts: number[]; sampleAnchor: () => void };
 
 async function openLongConversation(page: Page): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(LONG_CONVERSATION);
 	await page
 		.getByText(NEWEST_MESSAGE, { exact: true })
 		.filter({ visible: true })
 		.waitFor({ timeout: 60_000 });
 	return page.locator(SCROLLER);
-}
-
-async function waitForPagingToSettle(page: Page): Promise<number> {
-	let previous = -1;
-	await expect
-		.poll(
-			async () => {
-				const count = await page.locator(MESSAGE).count();
-				const settled = count === previous;
-				previous = count;
-				return settled;
-			},
-			{ timeout: 30_000, intervals: [500] },
-		)
-		.toBe(true);
-	return previous;
 }
 
 test("scrolling to the top loads older pages until the thread starts", async ({
@@ -65,11 +49,11 @@ test("an older page lands without moving the messages in view", async ({
 	const scroller = await openLongConversation(page);
 	const loaded = await waitForPagingToSettle(page);
 
-	await scroller.evaluate((element) => {
+	await scroller.evaluate((element, messageSelector) => {
 		element.scrollTop = 300;
 		const viewTop = element.getBoundingClientRect().top;
 		const anchor = Array.from(
-			element.querySelectorAll<HTMLElement>('[data-slot="message"]'),
+			element.querySelectorAll<HTMLElement>(messageSelector),
 		).find((message) => message.getBoundingClientRect().bottom > viewTop);
 		if (!anchor) throw new Error("No message in view");
 		const anchorTop = anchor.getBoundingClientRect().top;
@@ -84,7 +68,7 @@ test("an older page lands without moving the messages in view", async ({
 		});
 		element.addEventListener("scroll", sample);
 		Object.assign(window, { anchorDrifts: drifts, sampleAnchor: sample });
-	});
+	}, MESSAGE);
 
 	await expect
 		.poll(() => page.locator(MESSAGE).count(), { timeout: 30_000 })
@@ -117,27 +101,30 @@ test("the start of the thread stays put when paging runs out", async ({
 }) => {
 	test.setTimeout(120_000);
 	const scroller = await openLongConversation(page);
-	await scroller.evaluate((element, oldest) => {
-		const exactly = new RegExp(`^${oldest}(?!\\d)`);
-		const offsets: number[] = [];
-		const sample = () => {
-			const message = Array.from(
-				element.querySelectorAll<HTMLElement>('[data-slot="message"]'),
-			).find((candidate) => exactly.test(candidate.innerText.trim()));
-			if (!message) return;
-			offsets.push(
-				message.getBoundingClientRect().top -
-					element.getBoundingClientRect().top +
-					element.scrollTop,
-			);
-		};
-		new MutationObserver(sample).observe(element, {
-			subtree: true,
-			childList: true,
-			attributes: true,
-		});
-		Object.assign(window, { oldestOffsets: offsets });
-	}, OLDEST_MESSAGE);
+	await scroller.evaluate(
+		(element, { oldest, messageSelector }) => {
+			const exactly = new RegExp(`^${oldest}(?!\\d)`);
+			const offsets: number[] = [];
+			const sample = () => {
+				const message = Array.from(
+					element.querySelectorAll<HTMLElement>(messageSelector),
+				).find((candidate) => exactly.test(candidate.innerText.trim()));
+				if (!message) return;
+				offsets.push(
+					message.getBoundingClientRect().top -
+						element.getBoundingClientRect().top +
+						element.scrollTop,
+				);
+			};
+			new MutationObserver(sample).observe(element, {
+				subtree: true,
+				childList: true,
+				attributes: true,
+			});
+			Object.assign(window, { oldestOffsets: offsets });
+		},
+		{ oldest: OLDEST_MESSAGE, messageSelector: MESSAGE },
+	);
 
 	await expect
 		.poll(

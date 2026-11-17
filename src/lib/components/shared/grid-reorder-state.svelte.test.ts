@@ -240,3 +240,44 @@ describe("GridReorderState while the page scrolls under a held cell", () => {
 		expect(moves).toEqual([{ from: 0, to: 4 }]);
 	});
 });
+
+describe("GridReorderState touch hold", () => {
+	async function freshGridOfThreeWithFirstLifted() {
+		vi.resetModules();
+		const { GridReorderState: FreshReorder } =
+			await import("./grid-reorder-state.svelte");
+		const { touchHeld } = await import("#lib/platform/held-touch.ts");
+		const reorder = new FreshReorder({ onReorder: () => {} });
+		const first = fakeCell(0);
+		const detach = [first, fakeCell(1), fakeCell(2)].map((cell, index) =>
+			reorder.cell(index)(cell),
+		);
+		reorder.press({
+			event: pointer({ pointerType: "touch", node: first }),
+			index: 0,
+		});
+		vi.advanceTimersByTime(300);
+		return { reorder, detach, touchHeld };
+	}
+
+	it("lets go of the touch once the lifted cell leaves the grid", async () => {
+		const { reorder, detach, touchHeld } =
+			await freshGridOfThreeWithFirstLifted();
+		expect(touchHeld()).toBe(true);
+
+		detach[0]?.();
+
+		expect(touchHeld()).toBe(false);
+		expect(reorder.dragging).toBe(false);
+	});
+
+	it("keeps holding the touch while another cell leaves the grid", async () => {
+		const { reorder, detach, touchHeld } =
+			await freshGridOfThreeWithFirstLifted();
+
+		detach[2]?.();
+
+		expect(touchHeld()).toBe(true);
+		expect(reorder.dragging).toBe(true);
+	});
+});

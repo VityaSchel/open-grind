@@ -144,7 +144,7 @@ function showResultToast(
 test("the update toasts render only pseudo-translated text", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/?locale=en-XA");
 	await page
 		.locator("nav a")

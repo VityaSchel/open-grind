@@ -1,13 +1,17 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { installTauriShim, openGrid, wheel } from "./support/app";
+import {
+	GRID_SCROLLER,
+	installTauriShim,
+	openGrid,
+	wheel,
+} from "./support/app";
 import { routeDemoThroughFaultHook } from "./support/demo-faults";
 import { refreshButton } from "./support/pull";
 
 test.use({ baseURL: DEV_SERVER_URL });
 
-const SCROLLER = ".pull-scroller";
 const GRID = '[data-slot="grid-cells"]';
 const PROFILE_LINK = `${GRID} a[href^="/profile/"]`;
 const TOAST = "[data-sonner-toast]";
@@ -104,7 +108,7 @@ async function openFailingGrid({
 	latencyMs: number;
 	status: number;
 }): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await injectCascadeFaults(page);
 	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
@@ -113,7 +117,7 @@ async function openFailingGrid({
 		"the demo transport asks the fault hook",
 	).not.toHaveLength(0);
 	await failNextPages({ page, latencyMs, status });
-	return page.locator(SCROLLER);
+	return page.locator(GRID_SCROLLER);
 }
 
 const scrollToBottom = (scroller: Locator) =>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { api } = vi.hoisted(() => ({
 	api: { getMyAlbums: vi.fn(), getAlbumStorageLimits: vi.fn() },
@@ -13,6 +13,7 @@ import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { demoMyAlbums } from "#lib/demo/mock/albums.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import MyAlbumsPage from "./+page.svelte";
 
 const ALBUM_TILE = '[data-slot="album-tile"]';
@@ -36,6 +37,10 @@ function tilesOf(container: HTMLElement): Promise<number> {
 function addAlbum(): HTMLElement | null {
 	return screen.queryByRole("link", { name: "Add album" });
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	cleanup();

@@ -1,9 +1,12 @@
 import { cleanup, render } from "@testing-library/svelte";
-import { tick } from "svelte";
+import { flushSync, tick } from "svelte";
+import { SvelteMap } from "svelte/reactivity";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import DataRefreshControl from "./DataRefreshControl.svelte";
 import { contentSlideRecorder } from "./refresh/content-slide-test-helpers";
+import { touchEvent } from "./refresh/pull-test-helpers";
+import RefreshAnnouncements from "./refresh/RefreshAnnouncements.svelte";
 
 export const FRAME_MS = 16;
 export const TWEEN_FRAMES = 20;
@@ -38,6 +41,26 @@ export const distinctBands = (frames: ContentFrame[]) => [
 export type HeldAnimation = { onfinish: (() => void) | null };
 
 let heldAnimations: HeldAnimation[] = [];
+
+class ListIntersectionObserver {
+	readonly #callback: IntersectionObserverCallback;
+
+	constructor(callback: IntersectionObserverCallback) {
+		this.#callback = callback;
+	}
+
+	observe(target: Element) {
+		queueMicrotask(() =>
+			this.#callback(
+				[{ target, intersectionRatio: 1 } as IntersectionObserverEntry],
+				this as unknown as IntersectionObserver,
+			),
+		);
+	}
+
+	disconnect() {}
+}
+
 export let slideRecorder = contentSlideRecorder();
 export let outroEvents: string[] = [];
 let outroListeners = new AbortController();
@@ -102,11 +125,21 @@ export async function mountAtRest(
 
 	const onrefresh = vi.fn();
 	const oninsetchange = vi.fn();
+	const refreshProps = new SvelteMap<"updating" | "failed", boolean>([
+		["updating", false],
+		["failed", false],
+	]);
+	render(RefreshAnnouncements);
 	const view = render(DataRefreshControl, {
 		props: {
 			container: scroller,
 			position: edge,
-			updating: false,
+			get updating() {
+				return refreshProps.get("updating") === true;
+			},
+			get failed() {
+				return refreshProps.get("failed") === true;
+			},
 			onrefresh,
 			oninsetchange,
 		},
@@ -149,14 +182,19 @@ export async function mountAtRest(
 		scrollWrites: () => scrollWrites,
 		unmount: view.unmount,
 		disc: () => discWindow().querySelector("[data-refresh-disc]"),
+		ticks: () => anchor().querySelector('[data-slot="refresh-ticks"]'),
 		button: () => band().querySelector("button"),
+		status: () => document.querySelector('[role="status"]'),
 		discClipBoxes: () =>
 			[discWindow(), anchor()].map((box) => ({
 				height: box.style.height,
 				opacity: box.style.opacity,
 			})),
-		async setUpdating(updating: boolean) {
-			await view.rerender({ updating });
+		async setUpdating(updating: boolean, { failed = false } = {}) {
+			flushSync(() => {
+				refreshProps.set("updating", updating);
+				refreshProps.set("failed", failed);
+			});
 			await settle();
 		},
 		async moveBandTo({
@@ -177,6 +215,14 @@ export async function mountAtRest(
 		},
 		async touchList() {
 			scroller.dispatchEvent(new Event("touchmove"));
+			await settle();
+		},
+		async fingerDown() {
+			content.dispatchEvent(touchEvent("touchstart"));
+			await settle();
+		},
+		async liftFinger() {
+			content.dispatchEvent(touchEvent("touchend"));
 			await settle();
 		},
 		async pressInsideList(key: string) {
@@ -255,6 +301,7 @@ export function useRefreshControlHarness({
 			],
 		});
 		heldAnimations = [];
+		vi.stubGlobal("IntersectionObserver", ListIntersectionObserver);
 		slideRecorder = contentSlideRecorder();
 		slideRecorder.installTimeline();
 		reducedMotion.current = false;

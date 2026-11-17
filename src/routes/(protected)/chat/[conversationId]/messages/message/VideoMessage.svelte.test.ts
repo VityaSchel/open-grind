@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const lightbox = vi.hoisted(() => ({
 	openLightbox: vi.fn(() => Promise.resolve()),
@@ -26,6 +26,8 @@ vi.mock("#lib/api/current-session.ts", () => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { openLightbox } from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
 
@@ -100,6 +102,10 @@ function closeLightbox() {
 	openedLightbox().onClosed();
 }
 
+beforeEach(() => {
+	runningOn("windows");
+});
+
 afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
@@ -165,10 +171,12 @@ describe("video message", () => {
 		});
 		const { items, videoAt } = openedLightbox();
 		expect(items).toEqual([
-			expect.objectContaining({ src: REFETCHED_URL }),
+			expect.objectContaining({
+				src: proxyMediaUrl(REFETCHED_URL, { as: "video" }),
+			}),
 		]);
 		expect(videoAt?.(0)).toEqual({
-			src: REFETCHED_URL,
+			src: proxyMediaUrl(REFETCHED_URL, { as: "video" }),
 			poster: null,
 			loop: true,
 		});

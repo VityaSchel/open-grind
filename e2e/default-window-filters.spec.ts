@@ -1,14 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import tauriConfig from "../src-tauri/tauri.conf.json" with { type: "json" };
-import { animationsFinished, CLASSIC_SCROLLBARS } from "./support/app";
+import {
+	animationsFinished,
+	CLASSIC_SCROLLBARS,
+	GRID_SCROLLER,
+} from "./support/app";
 import { openBrowse } from "./support/profile-pager";
 
 const [mainWindow] = tauriConfig.app.windows;
 if (!mainWindow) throw new Error("tauri.conf.json declares no window");
 const DEFAULT_WINDOW = { width: mainWindow.width, height: mainWindow.height };
 const CLASSIC_SCROLLBAR_PX = 17;
-const GRID_SCROLLER = ':has(> [data-slot="grid-content"])';
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -42,7 +45,7 @@ async function gridColumnsBesideScrollbar({
 test("the default window opens All Filters as three columns that stay under the sheet's height cap", async ({
 	page,
 }) => {
-	await openBrowse(page);
+	await openBrowse(page, { platform: "macos" });
 	await page.getByRole("button", { name: "All filters" }).click();
 	await page.getByRole("button", { name: "Apply" }).waitFor();
 	const sheet = page.locator('[data-slot="sheet-content"]');
@@ -68,7 +71,7 @@ test("the default window opens All Filters as three columns that stay under the 
 test("the default window shows as many grid columns beside a classic scrollbar as without one", async ({
 	page,
 }) => {
-	await openBrowse(page);
+	await openBrowse(page, { platform: "macos" });
 
 	const withoutScrollbar = await gridColumnsBesideScrollbar({
 		page,

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { openGrid } from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 import {
 	dividers,
 	filtersScroller,
@@ -18,8 +18,9 @@ async function openScrolledToBottom(page: Page): Promise<void> {
 		.toEqual({ header: true, footer: false });
 }
 
-test.beforeEach(() => {
+test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("a sheet with nothing to scroll shows no dividers", async ({ page }) => {

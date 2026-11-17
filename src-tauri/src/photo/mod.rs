@@ -183,8 +183,26 @@ mod tests {
 		));
 	}
 
+	#[cfg(target_os = "macos")]
 	#[tokio::test]
-	async fn heic_is_refused_as_unsupported_off_android() {
+	async fn heic_leaves_as_an_upright_jpeg_on_macos() {
+		let app = app();
+
+		let photo = normalize(
+			app.handle(),
+			include_bytes!("heif/fixtures/rotated.heic").to_vec(),
+			"image/heic".to_owned(),
+		)
+		.await
+		.expect("normalize");
+
+		assert_eq!(photo.content_type, JPEG);
+		assert_eq!(dimensions(&photo.bytes), (48, 96));
+	}
+
+	#[cfg(any(target_os = "linux", target_os = "windows"))]
+	#[tokio::test]
+	async fn heic_is_refused_as_unsupported_on_linux_and_windows() {
 		let app = app();
 		let mut heic = vec![0, 0, 0, 0x18];
 		heic.extend_from_slice(b"ftypheic");

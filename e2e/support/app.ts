@@ -6,6 +6,7 @@ import {
 	type test,
 } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { serveDemoImages } from "./media";
 
 export const DEMO_CONVERSATION_ID = "100001:123456000";
@@ -77,6 +78,7 @@ export function animationsFinished(
 
 declare global {
 	interface Window {
+		__backSwipeArms?: boolean[];
 		__capturedInvokes?: Record<string, unknown[]>;
 		__emitTauriEvent?: (event: string, payload: unknown) => void;
 		__rendered?: Record<string, boolean>;
@@ -273,6 +275,7 @@ export function flownIn(page: Page, button: string): Promise<unknown> {
 }
 
 export const GRID_READY_SELECTOR = '[aria-label="All filters"]';
+export const GRID_SCROLLER = '[data-slot="grid-scroller"]';
 
 export async function ensureGridLocation(page: Page): Promise<void> {
 	const allFilters = page.locator(GRID_READY_SELECTOR);
@@ -319,11 +322,12 @@ export async function runPaletteCommand(
 	await page.keyboard.press("Enter");
 }
 
-// The platform decides which wheel path the app takes: "macos" (the
-// default) runs the gesture-phase bridge.
 export async function installTauriShim(
 	page: Page,
-	{ platform = "macos", demoImages = true } = {},
+	{
+		platform,
+		demoImages = true,
+	}: { platform: SupportedPlatform; demoImages?: boolean },
 ): Promise<void> {
 	if (demoImages) await serveDemoImages(page.context());
 	await page.addInitScript((platformName: string) => {
@@ -339,6 +343,11 @@ export async function installTauriShim(
 			const { file = "", content = "" } = (args ?? {}) as AppDataArgs;
 
 			if (cmd.startsWith("plugin:event|")) return null;
+			if (cmd === "set_back_swipe_armed") {
+				const { armed } = args as { armed: boolean };
+				(window.__backSwipeArms ??= []).push(armed);
+				return null;
+			}
 			if (cmd === "plugin:menu|new") {
 				menuResources += 1;
 				return [menuResources, `menu-${menuResources}`];
@@ -363,9 +372,6 @@ export async function installTauriShim(
 		};
 
 		Object.assign(window, {
-			// the real runtime defines this; isTauri() reads it, and the
-			// wheel-input mode hangs off isTauri()
-			isTauri: true,
 			__TAURI_OS_PLUGIN_INTERNALS__: {
 				eol: "\n",
 				platform: platformName,

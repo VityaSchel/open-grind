@@ -37,10 +37,10 @@ for (const viewport of [
 			page,
 		}) => {
 			test.setTimeout(120_000);
-			await openAlbums(page);
+			await openAlbums(page, { platform: "macos" });
 			const mine = await albumGrid(page);
 
-			await openAttachments(page);
+			await openAttachments(page, { platform: "macos" });
 			await page.getByRole("tab", { name: "Albums" }).click();
 			const drawer = await albumGrid(page);
 

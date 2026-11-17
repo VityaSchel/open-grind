@@ -16,7 +16,7 @@ import {
 } from "./support/stickers";
 
 test("each tab keeps its own place in the expanded sheet", async ({ page }) => {
-	await openStickers(page);
+	await openStickers(page, { platform: "macos" });
 	const scroller = page.locator(DRAWER).locator(SHEET_SCROLLER);
 	const peek = await page
 		.locator(DRAWER)
@@ -40,7 +40,7 @@ test("each tab keeps its own place in the expanded sheet", async ({ page }) => {
 test("a tile focused from the keyboard scrolls clear of the tab bar", async ({
 	page,
 }) => {
-	await openGaymoji(page);
+	await openGaymoji(page, { platform: "macos" });
 	await expandToFull(page);
 
 	const clearance = await page.evaluate(

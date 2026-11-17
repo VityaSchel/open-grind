@@ -53,7 +53,7 @@ async function openSheet(
 	page: Page,
 	{ overflowAnchor }: { overflowAnchor: OverflowAnchor },
 ): Promise<void> {
-	await openStickers(page);
+	await openStickers(page, { platform: "macos" });
 	await page.locator(SHEET_SCROLLER).evaluate((scroller, value) => {
 		scroller.style.overflowAnchor = value;
 	}, overflowAnchor);

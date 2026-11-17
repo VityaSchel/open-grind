@@ -1,28 +1,20 @@
-//! Drops browser-shell entries from the WebView2 context menu. No-op off Windows.
+//! Drops browser-shell entries from the WebView2 context menu.
 
 /// WebView2 names an item after its English label in lower camel case:
 /// <https://learn.microsoft.com/microsoft-edge/webview2/reference/win32/icorewebview2contextmenuitem>
-#[cfg(target_os = "windows")]
 const REMOVED: [&str; 3] = ["print", "saveAs", "sendTabToSelf"];
 
 pub fn trim_native_menu<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
-	#[cfg(target_os = "windows")]
-	{
-		let dispatched = window.with_webview(|webview| {
-			if let Err(e) = windows::install(&webview) {
-				tracing::warn!("[context-menu] left untrimmed: {e}");
-			}
-		});
-		if let Err(e) = dispatched {
-			tracing::warn!("[context-menu] could not reach the webview: {e}");
+	let dispatched = window.with_webview(|webview| {
+		if let Err(e) = windows::install(&webview) {
+			tracing::warn!("[context-menu] left untrimmed: {e}");
 		}
+	});
+	if let Err(e) = dispatched {
+		tracing::warn!("[context-menu] could not reach the webview: {e}");
 	}
-
-	#[cfg(not(target_os = "windows"))]
-	let _ = window;
 }
 
-#[cfg(target_os = "windows")]
 mod windows {
 	use webview2_com::ContextMenuRequestedEventHandler;
 	use webview2_com::Microsoft::Web::WebView2::Win32::{

@@ -1,10 +1,12 @@
 #[cfg(target_os = "android")]
 mod android;
+#[cfg(any(target_os = "ios", target_os = "macos"))]
+mod apple;
 
 use tauri::{AppHandle, Runtime};
 
 use crate::error::AppError;
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 use crate::error::MediaError;
 
 use super::source::Source;
@@ -20,7 +22,12 @@ pub async fn decode<R: Runtime>(
 	{
 		android::decode(app, bytes).await
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", target_os = "macos"))]
+	{
+		let _ = app;
+		apple::decode(bytes).await
+	}
+	#[cfg(any(target_os = "linux", target_os = "windows"))]
 	{
 		let _ = (app, bytes);
 		Err(MediaError::HeicUnsupported.into())

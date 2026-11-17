@@ -31,7 +31,7 @@ async function openReportSheet({
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(240_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await goToRightNow(page);
 	await page
 		.locator(POST)

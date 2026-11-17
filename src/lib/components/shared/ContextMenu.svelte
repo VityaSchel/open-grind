@@ -50,6 +50,7 @@
 	let contextMenuItems: HTMLDivElement | null = $state(null);
 	let contextMenuListPosition = $state({ x: 0, y: 0 });
 	let liftedBox = $state(untrack(() => anchor.getBoundingClientRect()));
+	let pressStartedOnScrim = false;
 
 	dismissOnBackGesture({
 		active: () => true,
@@ -119,8 +120,14 @@
 <dialog
 	class="menu-scrim fixed top-0 left-0 z-9999 size-full max-h-none max-w-none bg-transparent select-none"
 	bind:this={contextMenuDialog}
+	onpointerdown={(event) => {
+		pressStartedOnScrim = event.target === contextMenuDialog;
+	}}
 	onmousedown={(event) => {
+		const startedOnScrim = pressStartedOnScrim;
+		pressStartedOnScrim = false;
 		if (
+			startedOnScrim &&
 			event.currentTarget === contextMenuDialog &&
 			event.currentTarget === event.target
 		) {

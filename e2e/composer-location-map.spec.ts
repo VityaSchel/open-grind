@@ -38,7 +38,7 @@ test("location sharing loads maps on demand and preserves the searched and panne
 			body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#ddd"/></svg>',
 		});
 	});
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await seedPreferences(page, { preferences: { geohash: DEMO_GEOHASH } });
 	await page.goto(DEMO_CONVERSATION);
 	await places.start();

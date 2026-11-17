@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "#lib/test/platform.ts";
 import { setVisibility } from "#lib/test/visibility.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -12,22 +13,22 @@ const mocks = vi.hoisted(() => ({
 	reconnect: vi.fn<() => Promise<void>>(),
 	onSignOut: vi.fn<(release: () => Promise<void>) => void>(),
 	getPreferences: vi.fn<() => Promise<{ geohash: string | null }>>(),
-	isMobilePlatform: vi.fn<() => boolean>(),
 	writeAppDataFileAtomic:
 		vi.fn<(args: { path: string; content: Uint8Array }) => Promise<void>>(),
 	existsAppDataFile: vi.fn<(path: string) => Promise<boolean>>(),
 	removeAppDataFile: vi.fn<(path: string) => Promise<void>>(),
+	finishBeforeSuspending: vi.fn<(work: Promise<unknown>) => void>(),
 }));
 
+vi.mock("#lib/api/app-lifecycle.svelte.ts", () => ({
+	appLifecycle: { finishBeforeSuspending: mocks.finishBeforeSuspending },
+}));
 vi.mock("#lib/api/browse/location.ts", () => ({
 	updateLocation: mocks.updateLocation,
 }));
 vi.mock("#lib/api/methods.ts", () => ({ callMethod: mocks.callMethod }));
 vi.mock("#lib/api/sign-out.ts", () => ({ onSignOut: mocks.onSignOut }));
 vi.mock("#lib/ws.svelte.ts", () => ({ ws: { reconnect: mocks.reconnect } }));
-vi.mock("#lib/platform/os.ts", () => ({
-	isMobilePlatform: mocks.isMobilePlatform,
-}));
 vi.mock("#lib/app-data/preferences.svelte.ts", () => ({
 	getPreferences: mocks.getPreferences,
 }));
@@ -98,7 +99,7 @@ beforeEach(async () => {
 		return Promise.resolve();
 	});
 	mocks.getPreferences.mockResolvedValue({ geohash: mocks.HOME });
-	mocks.isMobilePlatform.mockReturnValue(false);
+	runningOn("macos");
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	hold = await import("./honduras-hold");
 	accounts = await import("#lib/api/account-caches.ts");
@@ -348,7 +349,7 @@ describe("holdInHonduras", () => {
 	});
 
 	it("moves home as soon as the phone app goes to the background", async () => {
-		mocks.isMobilePlatform.mockReturnValue(true);
+		runningOn("android");
 		const taken = await takeHold();
 		const lease = taken.lease();
 
@@ -359,6 +360,30 @@ describe("holdInHonduras", () => {
 		expect(mocks.journal.slice(-2)).toEqual(["move:home", "unmark"]);
 		await lease.release();
 		expect(movesHome()).toBe(1);
+	});
+
+	it("keeps the app from suspending until it is back home", async () => {
+		runningOn("ios");
+		const taken = await takeHold();
+		const [work] = mocks.finishBeforeSuspending.mock.lastCall ?? [];
+		if (!work) throw new Error("the hold asked the app to finish nothing");
+		const homecoming = Promise.withResolvers<void>();
+		mocks.updateLocation.mockImplementationOnce(() => homecoming.promise);
+		let finished = false;
+		void work.then(() => {
+			finished = true;
+		});
+
+		setVisibility("hidden");
+		await taken.ended;
+		await settle();
+		expect(movesHome()).toBe(1);
+		expect(mocks.journal).not.toContain("unmark");
+		expect(finished).toBe(false);
+
+		homecoming.resolve();
+		await work;
+		expect(mocks.journal.at(-1)).toBe("unmark");
 	});
 
 	it("keeps the hold while a desktop window is hidden", async () => {

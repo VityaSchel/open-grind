@@ -32,7 +32,7 @@ test.describe("attachments drawer: touch drag to close", () => {
 		test(`a slow drag down from the ${origin} follows the finger and closes`, async ({
 			page,
 		}) => {
-			await openAttachments(page);
+			await openAttachments(page, { platform: "macos" });
 			const touch = await TrustedTouch.attach(page);
 			const start = await box(page);
 			const tile = (await page
@@ -66,7 +66,7 @@ test.describe("attachments drawer: touch drag to close", () => {
 	test("after scrolling back to the short size, a slow drag down still follows the finger", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const start = await box(page);
 		await touch.drag(
@@ -116,7 +116,7 @@ test.describe("attachments drawer: touch drag to close", () => {
 		page,
 	}) => {
 		const images = await holdImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const tile = (await page
 			.locator(SELECTABLE_MEDIA_TILE)
 			.first()

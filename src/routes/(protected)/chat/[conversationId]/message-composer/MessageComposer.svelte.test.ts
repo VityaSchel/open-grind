@@ -10,6 +10,11 @@ import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
 } from "#lib/platform/back-gesture-event.svelte.ts";
+import {
+	IOS_INSETS,
+	IOS_KEYBOARD_SHOWN,
+} from "#lib/platform/native-insets-test-helpers.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { ComposerSheetsState } from "./composer-sheets-state.svelte";
 
 const { conversations, composerSheets, conversationState } = vi.hoisted(() => ({
@@ -67,6 +72,7 @@ let sheets: ComposerSheetsState;
 beforeEach(() => {
 	sheets = new ComposerSheetsState();
 	composerSheets.current = sheets;
+	runningOn("windows");
 });
 
 function renderComposer({
@@ -484,4 +490,36 @@ describe("MessageComposer sheet triggers", () => {
 
 		expect(sheets.composer).toBeNull();
 	});
+});
+
+describe("MessageComposer send button on ios", () => {
+	beforeEach(() => {
+		drafts = new Drafts();
+		conversations.drafts = drafts;
+		runningOn("ios");
+	});
+
+	afterEach(() => {
+		cleanup();
+		delete window.__iosInsets;
+	});
+
+	for (const { ime, held } of [
+		{ ime: true, held: true },
+		{ ime: false, held: false },
+	]) {
+		it(`${held ? "holds" : "lets go of"} the composer focus on the tap's mouse press while the keyboard is ${ime ? "up" : "down"}`, async () => {
+			window.__iosInsets = ime ? IOS_KEYBOARD_SHOWN : IOS_INSETS;
+			const { textarea, getByRole } = renderComposer();
+			await type(textarea, "see you soon");
+			const press = new MouseEvent("mousedown", {
+				bubbles: true,
+				cancelable: true,
+			});
+
+			getByRole("button", { name: "Send message" }).dispatchEvent(press);
+
+			expect(press.defaultPrevented).toBe(held);
+		});
+	}
 });

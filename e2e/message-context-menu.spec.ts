@@ -21,7 +21,7 @@ const LONG_TEXT = Array.from(
 ).join(" ");
 
 test("right-clicking a message opens its context menu", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 
 	const bubble = page.getByText("Hey! Lorem ipsum dolor sit amet.").first();
@@ -62,7 +62,7 @@ async function openConversation(
 	viewport: { width: number; height: number },
 ): Promise<void> {
 	await page.setViewportSize(viewport);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(THREAD_BUBBLE).first().waitFor({ timeout: 60_000 });

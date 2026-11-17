@@ -2,26 +2,13 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, isTauriMock } = vi.hoisted(() => ({
-	invokeMock: vi.fn(),
-	isTauriMock: vi.fn(() => true),
-}));
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: invokeMock,
-	isTauri: isTauriMock,
-}));
-
-import {
-	backdropCompositingRenders,
-	hydrateBackdropCompositing,
-	webviewEngine,
-} from "./compositing.svelte";
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 beforeEach(() => {
 	vi.resetModules();
 	invokeMock.mockReset();
-	isTauriMock.mockReturnValue(true);
 });
 
 async function freshModule() {
@@ -59,16 +46,9 @@ describe("hydrateBackdropCompositing", () => {
 		}
 	});
 
-	it("asks the platform once, and never off Tauri", async () => {
-		isTauriMock.mockReturnValue(false);
-		await hydrateBackdropCompositing();
-		expect(backdropCompositingRenders()).toBe(true);
-		expect(webviewEngine()).toBe(navigator.userAgent);
-		expect(invokeMock).not.toHaveBeenCalled();
-
+	it("asks the platform once", async () => {
 		const module = await freshModule();
 		invokeMock.mockResolvedValue(true);
-		isTauriMock.mockReturnValue(true);
 		await module.hydrateBackdropCompositing();
 		await module.hydrateBackdropCompositing();
 		expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([

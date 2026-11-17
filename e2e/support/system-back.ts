@@ -54,3 +54,31 @@ export const commitSystemBack = (page: Page) =>
 
 export const cancelSystemBack = (page: Page) =>
 	page.evaluate(() => window.__AndroidOnBackGestureCancel?.());
+
+export const edgeSwipeArmed = (page: Page) =>
+	page.evaluate(() => window.__backSwipeArms?.at(-1) === true);
+
+export const edgeSwipeArmsSent = (page: Page) =>
+	page.evaluate(() => window.__backSwipeArms ?? []);
+
+export const startEdgeSwipeUnarmed = (page: Page) =>
+	page.evaluate(
+		() => window.__iosBack?.start({ x: 2, y: innerHeight / 2 }) ?? null,
+	);
+
+export async function startEdgeSwipe(page: Page) {
+	return page.evaluate(() => {
+		if (window.__backSwipeArms?.at(-1) !== true) return false;
+		return window.__iosBack?.start({ x: 2, y: innerHeight / 2 }) === true;
+	});
+}
+
+export async function progressEdgeSwipe(page: Page, progress: number) {
+	await page.evaluate((value) => window.__iosBack?.progress(value), progress);
+	await afterTwoFrames(page);
+}
+
+export const releaseEdgeSwipe = (
+	page: Page,
+	release: { commit: boolean; velocity: number },
+) => page.evaluate((value) => window.__iosBack?.finish(value), release);

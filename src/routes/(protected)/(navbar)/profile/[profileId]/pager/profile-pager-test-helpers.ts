@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 
+import { touchEvent } from "#lib/components/feedback/refresh/pull-test-helpers.ts";
 import { rendered } from "#lib/grid/grid-test-helpers.ts";
 import { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 import type { GridProfile, RenderedGridProfile } from "#lib/grid/grid.ts";
@@ -13,6 +14,13 @@ import {
 export const OUR_ID = 9999;
 
 export const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+export function heldPull(on: Element): boolean {
+	on.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+	const move = touchEvent("touchmove", { y: 140 });
+	on.dispatchEvent(move);
+	return move.defaultPrevented;
+}
 
 export const range = (from: number, to: number) =>
 	Array.from({ length: to - from + 1 }, (_, offset) => from + offset);

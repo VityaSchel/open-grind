@@ -2,6 +2,7 @@
 import { lstat, symlink } from "node:fs/promises";
 import path from "path";
 import { parseVersion, type Version } from "./lib/semver";
+import { type Occurrence, versionOccurrences } from "./lib/version-occurrences";
 
 const root = path.join(import.meta.dir, "..");
 const usage = "usage: bun scripts/bump-version.ts <version> [--code <n>]";
@@ -11,8 +12,6 @@ const PRE_MVP_VERSION = "0.1.0";
 const handAssignedPreMvpCodes: Record<string, (index: number) => number> = {
 	rc: (index) => 10_000 + 1000 * index,
 };
-
-type Occurrence = { file: string; literal: string };
 
 function fail(message: string): never {
 	console.error(message);
@@ -65,31 +64,6 @@ async function linkAbiChangelogs(code: number): Promise<string[]> {
 		}
 	}
 	return linked;
-}
-
-function versionOccurrences({
-	version,
-	code,
-}: {
-	version: string;
-	code: number;
-}): Occurrence[] {
-	return [
-		{ file: "package.json", literal: `"version": "${version}"` },
-		{ file: "src-tauri/Cargo.toml", literal: `\nversion = "${version}"\n` },
-		{
-			file: "src-tauri/tauri.conf.json",
-			literal: `"version": "${version}"`,
-		},
-		{
-			file: "src-tauri/tauri.conf.json",
-			literal: `"versionCode": ${code}`,
-		},
-		{
-			file: "src-tauri/Cargo.lock",
-			literal: `name = "open-grind"\nversion = "${version}"`,
-		},
-	];
 }
 
 function lastReleaseOccurrences({

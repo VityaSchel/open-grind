@@ -3,11 +3,7 @@
 	import type { Attachment } from "svelte/attachments";
 
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
-	import {
-		explainsMediaFailures,
-		mediaFailure,
-		remedyFor,
-	} from "#lib/platform/media-failure.ts";
+	import { mediaFailure, remedyFor } from "#lib/platform/media-failure.ts";
 	import { now } from "#lib/util/clock.ts";
 	import {
 		loadWhenVisible,
@@ -105,10 +101,6 @@
 	});
 
 	async function recover(failed: string): Promise<void> {
-		if (!explainsMediaFailures()) {
-			failedSrc = failed;
-			return;
-		}
 		const retried = recovering?.retrying === true;
 		recovery = { src: failed, retrying: false, attempt: 1 };
 		const remedy = remedyFor(await mediaFailure(failed));

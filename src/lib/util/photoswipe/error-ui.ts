@@ -3,7 +3,7 @@ import type { ComponentProps } from "svelte";
 
 import { richParts, t } from "#lib/i18n/index.ts";
 import { openExternalLink } from "#lib/platform/link-opener.ts";
-import { isLinuxPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { canDecodeH264 } from "#lib/platform/video-codecs.ts";
 import type VideoPlayer from "#lib/components/shared/VideoPlayer.svelte";
 import { followLocaleWhileOpen } from "./follow-locale";
@@ -17,6 +17,18 @@ export type Failure = Parameters<
 export const failures = new WeakMap<object, Failure>();
 
 const CODECS_GUIDE = "https://opengrind.org/guides/codecs";
+
+function h264DecoderMissing(): boolean {
+	switch (currentPlatform()) {
+		case "linux":
+			return !canDecodeH264();
+		case "android":
+		case "ios":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
 
 function codecsGuideLink(text: string): HTMLAnchorElement {
 	const guide = document.createElement("a");
@@ -33,7 +45,7 @@ function codecsGuideLink(text: string): HTMLAnchorElement {
 function undecodableNotice(): HTMLParagraphElement {
 	const notice = document.createElement("p");
 	notice.className = "mt-4 max-w-80 text-center text-sm text-neutral-400";
-	if (!isLinuxPlatform() || canDecodeH264()) {
+	if (!h264DecoderMissing()) {
 		notice.textContent = t("media.lightbox.errors.playFailed");
 		return notice;
 	}

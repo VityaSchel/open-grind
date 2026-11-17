@@ -1,4 +1,11 @@
 import { cubicOut } from "svelte/easing";
+import { prefersReducedMotion } from "svelte/motion";
+
+import { stopScrollMomentum } from "#lib/platform/scroll-momentum.ts";
+
+const TOP_GLIDE_MS = 400;
+
+const glidesToTop = new WeakMap<HTMLElement, () => void>();
 
 export const TOP_SLOP_PX = 16;
 
@@ -16,22 +23,88 @@ export function nearestScrollableAncestor(node: Element): Element | null {
 	return null;
 }
 
-export function glideScrollTop({
+function glideScrollTop({
 	element,
-	durationMs,
+	landing,
 	onLanded,
 }: {
 	element: HTMLElement;
-	durationMs: number;
+	landing: () => number;
 	onLanded: () => void;
 }): () => void {
-	const from = element.scrollTop;
+	const distance = element.scrollTop - landing();
 	const start = performance.now();
 	let frame = requestAnimationFrame(function step(now) {
-		const progress = Math.min(1, Math.max(0, now - start) / durationMs);
-		element.scrollTop = from * (1 - cubicOut(progress));
+		const progress = Math.min(1, Math.max(0, now - start) / TOP_GLIDE_MS);
+		element.scrollTop = landing() + distance * (1 - cubicOut(progress));
 		if (progress < 1) frame = requestAnimationFrame(step);
 		else onLanded();
 	});
 	return () => cancelAnimationFrame(frame);
+}
+
+export function followInsertionsAbove({
+	scroller,
+	anchor,
+}: {
+	scroller: HTMLElement;
+	anchor: HTMLElement;
+}): () => number {
+	const contentOffset = () =>
+		anchor.getBoundingClientRect().top -
+		scroller.getBoundingClientRect().top +
+		scroller.scrollTop;
+	const startOffset = contentOffset();
+	let inserted = 0;
+	return () => {
+		if (anchor.isConnected)
+			inserted = Math.max(0, contentOffset() - startOffset);
+		return inserted;
+	};
+}
+
+export function glidingToTop(element: HTMLElement): boolean {
+	return glidesToTop.has(element);
+}
+
+export function stopGlidingToTop(element: HTMLElement): void {
+	glidesToTop.get(element)?.();
+}
+
+export function jumpThenGlideToTop({
+	element,
+	landing = () => 0,
+}: {
+	element: HTMLElement;
+	landing?: () => number;
+}): void {
+	stopGlidingToTop(element);
+	const ending = new AbortController();
+	let stopFrames = () => {};
+	const end = () => {
+		ending.abort();
+		stopFrames();
+		if (glidesToTop.get(element) === end) glidesToTop.delete(element);
+	};
+	const begin = () => {
+		if (ending.signal.aborted) return;
+		if (prefersReducedMotion.current) {
+			element.scrollTop = landing();
+			end();
+			return;
+		}
+		element.scrollTop = Math.min(
+			element.scrollTop,
+			landing() + element.clientHeight,
+		);
+		stopFrames = glideScrollTop({ element, landing, onLanded: end });
+	};
+
+	glidesToTop.set(element, end);
+	const takeover = { passive: true, signal: ending.signal };
+	element.addEventListener("touchstart", end, takeover);
+	element.addEventListener("wheel", end, takeover);
+	const stopping = stopScrollMomentum(element);
+	if (stopping) void stopping.then(begin);
+	else begin();
 }

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const lightbox = vi.hoisted(() => ({
 	loadAlbumSlides: vi.fn(),
@@ -20,6 +20,8 @@ vi.mock("#lib/api/current-session.ts", () => ({
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import { singleClick } from "../../../routes/(protected)/chat/[conversationId]/messages/message/single-click";
 import AlbumPreview from "./AlbumPreview.svelte";
 
@@ -69,6 +71,10 @@ async function failedToastLabel(preview: HTMLButtonElement): Promise<unknown> {
 	expect(consoleError).toHaveBeenCalledOnce();
 	return sonner.toast.error.mock.calls[0]?.[0];
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	cleanup();
@@ -190,7 +196,7 @@ describe("album preview on Google Play", () => {
 			album.contains(getByRole("link", { name: "Show mature content" })),
 		).toBe(true);
 		expect(album.querySelector("img")?.getAttribute("src")).toBe(
-			"https://example.invalid/cover",
+			proxyMediaUrl("https://example.invalid/cover"),
 		);
 		expect(lightbox.loadAlbumSlides).not.toHaveBeenCalled();
 	});
@@ -232,7 +238,7 @@ describe("album preview cover renewal", () => {
 
 		await cover.renew(RENEWED);
 
-		expect(cover.image().getAttribute("src")).toBe(OLD);
+		expect(cover.image().getAttribute("src")).toBe(proxyMediaUrl(OLD));
 	});
 
 	it("loads the renewed url for a cover that failed", async () => {
@@ -241,7 +247,7 @@ describe("album preview cover renewal", () => {
 
 		await cover.renew(RENEWED);
 
-		expect(cover.image().getAttribute("src")).toBe(RENEWED);
+		expect(cover.image().getAttribute("src")).toBe(proxyMediaUrl(RENEWED));
 	});
 });
 

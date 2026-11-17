@@ -56,6 +56,7 @@
 		<DataRefreshControl
 			{container}
 			updating={feed.refreshing}
+			failed={feed.refreshFailed}
 			position="top"
 			onrefresh={() => void feed.refresh()}
 		/>

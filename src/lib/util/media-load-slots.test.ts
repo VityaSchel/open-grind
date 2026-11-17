@@ -4,20 +4,23 @@ import { LoadSlots, mediaLoadCapacity } from "./media-load-slots";
 
 describe("mediaLoadCapacity", () => {
 	it("leaves one of the Android WebView intercept workers free", () => {
-		expect(mediaLoadCapacity({ android: true, cores: 8 })).toBe(5);
-		expect(mediaLoadCapacity({ android: true, cores: 12 })).toBe(9);
+		expect(mediaLoadCapacity({ platform: "android", cores: 8 })).toBe(5);
+		expect(mediaLoadCapacity({ platform: "android", cores: 12 })).toBe(9);
 	});
 
 	it("keeps the three-worker floor on phones with few cores", () => {
-		expect(mediaLoadCapacity({ android: true, cores: 4 })).toBe(2);
-		expect(mediaLoadCapacity({ android: true, cores: 1 })).toBe(2);
+		expect(mediaLoadCapacity({ platform: "android", cores: 4 })).toBe(2);
+		expect(mediaLoadCapacity({ platform: "android", cores: 1 })).toBe(2);
 	});
 
-	it("does not limit loads off Android", () => {
-		expect(mediaLoadCapacity({ android: false, cores: 8 })).toBe(
-			Number.POSITIVE_INFINITY,
-		);
-	});
+	it.each(["ios", "linux", "macos", "windows"] as const)(
+		"does not limit loads on %s",
+		(platform) => {
+			expect(mediaLoadCapacity({ platform, cores: 8 })).toBe(
+				Number.POSITIVE_INFINITY,
+			);
+		},
+	);
 });
 
 describe("LoadSlots", () => {

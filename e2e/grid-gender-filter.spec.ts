@@ -1,10 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import {
-	ensureGridLocation,
-	installTauriShim,
-	runPaletteCommand,
-} from "./support/app";
+import { installTauriShim, openGrid, runPaletteCommand } from "./support/app";
 import {
 	installPersistentAppData,
 	storedPreferences,
@@ -52,11 +48,9 @@ async function storedGenderFilter(page: Page) {
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installPersistentAppData(page);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 });
 
 test("the gender filter offers Men, Women and their Cis and Trans genders first and never Ask Me", async ({

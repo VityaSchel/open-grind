@@ -1,6 +1,6 @@
 import { expect, type Locator, test } from "@playwright/test";
 
-import { openSharedAlbum } from "./support/albums";
+import { openAlbum, SHARED_ALBUM } from "./support/albums";
 import { openAttachments } from "./support/drawer";
 
 async function shownOnScreen(locator: Locator): Promise<boolean> {
@@ -13,7 +13,7 @@ test.describe("media sheet titles", () => {
 	test("the album's previous uploads sheet is titled Previous Uploads", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await page
 			.getByRole("button", { name: "Add photos or videos" })
 			.click();
@@ -31,7 +31,7 @@ test.describe("media sheet titles", () => {
 	test("the chat attachments sheet is named Attachments for screen readers only", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 
 		const sheet = page.getByRole("dialog", { name: "Attachments" });
 		await expect(sheet).toBeVisible();

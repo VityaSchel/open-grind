@@ -559,6 +559,21 @@ describe("fetch races", () => {
 		await gridState.refresh();
 		expect(showErrorToastMock).toHaveBeenCalledTimes(1);
 	});
+
+	it("remembers that its latest refresh failed, heartbeat or pull, until the next one lands", async () => {
+		expect(gridState.refreshFailed).toBe(false);
+
+		getGridMock.mockRejectedValueOnce(new Error("offline"));
+		await gridState.refresh({ background: true });
+		expect(gridState.refreshFailed).toBe(true);
+
+		getGridMock.mockRejectedValueOnce(new Error("offline"));
+		await gridState.refresh();
+		expect(gridState.refreshFailed).toBe(true);
+
+		await gridState.refresh();
+		expect(gridState.refreshFailed).toBe(false);
+	});
 });
 
 describe("loaded pages", () => {

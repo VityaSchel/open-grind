@@ -1,15 +1,14 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
-vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
-
-const { sendTapMock, showErrorToastMock } = vi.hoisted(() => ({
-	sendTapMock: vi.fn(),
+const { playHapticMock, sendTapMock, showErrorToastMock } = vi.hoisted(() => ({
+	playHapticMock: vi.fn(),
+	sendTapMock: vi.fn(() => Promise.resolve({ isMutual: false })),
 	showErrorToastMock: vi.fn(),
 }));
+vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 vi.mock("#lib/api/interest/taps.ts", () => ({ sendTap: sendTapMock }));
 vi.mock("#lib/api/error-toast.ts", () => ({
 	showErrorToast: showErrorToastMock,
@@ -17,6 +16,10 @@ vi.mock("#lib/api/error-toast.ts", () => ({
 
 import { TapType } from "#lib/model/interest/taps.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
+import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import TapProfileButton from "./TapProfileButton.svelte";
 
 function renderButton() {
@@ -26,12 +29,22 @@ function renderButton() {
 	return getByRole("button", { name: "Send a Fire tap" });
 }
 
+function pointerClick() {
+	return new MouseEvent("click", { bubbles: true, detail: 1 });
+}
+
 afterEach(() => {
 	cleanup();
 	playHapticMock.mockReset();
+	sendTapMock.mockClear();
+	resetPlatform();
 });
 
 describe("tap menu haptics", () => {
+	beforeEach(() => {
+		runningOn("android");
+	});
+
 	it("taps once when a touch long press opens the tap menu", () => {
 		const button = renderButton();
 
@@ -50,7 +63,106 @@ describe("tap menu haptics", () => {
 	});
 });
 
+describe("tap picker on Android", () => {
+	beforeEach(() => {
+		runningOn("android");
+	});
+
+	it("still sends one Fire tap for a click after a touch long press", () => {
+		const button = renderButton();
+
+		button.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
+		button.dispatchEvent(pointerClick());
+
+		expect(sendTapMock).toHaveBeenCalledExactlyOnceWith({
+			recipientId: 2,
+			tapType: TapType.Hot,
+		});
+	});
+});
+
+describe("tap picker on iOS", () => {
+	useHoldClock();
+
+	beforeEach(() => {
+		runningOn("ios");
+	});
+
+	it("opens the picker once a touch is held, with one haptic tap", async () => {
+		const button = renderButton();
+
+		button.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
+		vi.useRealTimers();
+
+		expect(
+			await screen.findByRole("menuitem", {
+				name: "Send a Cookie tap",
+				hidden: true,
+			}),
+		).toBeTruthy();
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("sends no tap for the click the hold leaves behind", () => {
+		const button = renderButton();
+
+		button.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
+		button.dispatchEvent(pointerEvent("pointerup"));
+		button.dispatchEvent(pointerClick());
+
+		expect(sendTapMock).not.toHaveBeenCalled();
+	});
+
+	it("sends no tap for the hold's click even when it arrives late", () => {
+		const button = renderButton();
+
+		button.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
+		button.dispatchEvent(pointerEvent("pointerup"));
+		vi.advanceTimersByTime(1000);
+		button.dispatchEvent(pointerClick());
+
+		expect(sendTapMock).not.toHaveBeenCalled();
+	});
+
+	it("still sends a Fire tap for a keyboard activation after a hold", () => {
+		const button = renderButton();
+
+		button.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
+		button.dispatchEvent(pointerEvent("pointerup"));
+		button.dispatchEvent(pointerClick());
+		vi.advanceTimersByTime(1000);
+		button.click();
+
+		expect(sendTapMock).toHaveBeenCalledExactlyOnceWith({
+			recipientId: 2,
+			tapType: TapType.Hot,
+		});
+	});
+
+	it("still sends a Fire tap for a quick tap", () => {
+		const button = renderButton();
+
+		button.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(100);
+		button.dispatchEvent(pointerEvent("pointerup"));
+		button.click();
+
+		expect(sendTapMock).toHaveBeenCalledExactlyOnceWith({
+			recipientId: 2,
+			tapType: TapType.Hot,
+		});
+	});
+});
+
 describe("tap labels", () => {
+	beforeEach(() => {
+		runningOn("android");
+	});
+
 	afterEach(() => {
 		vi.restoreAllMocks();
 		sendTapMock.mockReset();

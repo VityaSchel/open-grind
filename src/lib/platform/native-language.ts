@@ -19,17 +19,11 @@ async function send(tag: string): Promise<void> {
 function showsNativeText(): boolean {
 	switch (currentPlatform()) {
 		case "android":
+		case "linux":
 		case "macos":
 		case "windows":
-		case "linux":
-		case "freebsd":
-		case "dragonfly":
-		case "netbsd":
-		case "openbsd":
-		case "solaris":
 			return true;
 		case "ios":
-		case "web":
 			return false;
 	}
 }

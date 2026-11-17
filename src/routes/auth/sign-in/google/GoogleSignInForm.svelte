@@ -2,7 +2,10 @@
 	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 
-	import { googleHandoffState } from "#lib/api/google-handoff-state.svelte.ts";
+	import {
+		googleHandoffState,
+		googleSignInMode,
+	} from "#lib/api/google-handoff-state.svelte.ts";
 	import { callMethod } from "#lib/api/methods.ts";
 	import {
 		companionDisabled,
@@ -24,7 +27,6 @@
 	import { t } from "#lib/i18n/index.ts";
 	import Rich from "#lib/i18n/Rich.svelte";
 	import { openExternalLink } from "#lib/platform/link-opener.ts";
-	import { isAndroidPlatform } from "#lib/platform/os.ts";
 	import { isPlayBuild } from "#lib/platform/store.ts";
 	import {
 		addonActivity,
@@ -45,7 +47,7 @@
 	} from "./google-sign-in-view";
 
 	const companionHref = manualInstallHref(GOOGLE_OAUTH_COMPONENT);
-	const automated = isAndroidPlatform();
+	const automated = googleSignInMode() === "companion";
 
 	let token = $state("");
 	let submitting = $state(false);

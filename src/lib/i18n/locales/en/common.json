@@ -127,7 +127,9 @@
 			"photoDamaged": "Unreadable or damaged photo",
 			"heicUnsupported": "HEIC photos aren’t supported on this platform yet",
 			"photoUndecodable": "Undecodable photo",
-			"outsideReadableFolders": "That file is outside the folders this app may read"
+			"outsideReadableFolders": "That file is outside the folders this app may read",
+			"pickedItemsLoadFailed_one": "Couldn’t load {{count}} of the picked items",
+			"pickedItemsLoadFailed_other": "Couldn’t load {{count}} of the picked items"
 		},
 		"uploadPhotosOrVideos": "Upload photos or videos",
 		"drop": {

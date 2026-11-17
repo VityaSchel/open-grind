@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isWithin } from "#lib/util/pathname.ts";
+import { entryPathname, isWithin } from "#lib/util/pathname.ts";
 
 describe("isWithin", () => {
 	it("includes the root itself", () => {
@@ -34,5 +34,17 @@ describe("isWithin", () => {
 	it("treats the site root as containing every path", () => {
 		expect(isWithin({ pathname: "/", root: "/" })).toBe(true);
 		expect(isWithin({ pathname: "/chat", root: "/" })).toBe(true);
+	});
+});
+
+describe("entryPathname", () => {
+	it("reads an address with no path as the root", () => {
+		expect(entryPathname("tauri://localhost")).toBe("/");
+	});
+
+	it("keeps the path of an address that has one", () => {
+		expect(entryPathname("tauri://localhost/profile/7?tab=albums")).toBe(
+			"/profile/7",
+		);
 	});
 });

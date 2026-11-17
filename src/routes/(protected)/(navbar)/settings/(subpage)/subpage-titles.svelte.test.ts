@@ -2,7 +2,7 @@
 
 import { cleanup, render } from "@testing-library/svelte";
 import { createRawSnippet } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { currentPage } = vi.hoisted(() => ({
 	currentPage: { route: { id: "" } },
@@ -16,6 +16,7 @@ vi.mock("$app/navigation", () => ({
 
 import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import SubpageLayout from "./+layout.svelte";
 
 const GROUP = "/(protected)/(navbar)/settings/(subpage)";
@@ -55,8 +56,11 @@ function openSubpage(route: string) {
 	});
 }
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	document.title = "";
 	await setLocale({ locale: SOURCE_LOCALE });
 });

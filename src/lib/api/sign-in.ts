@@ -28,6 +28,7 @@ export const companionDisabled = "companion-disabled";
 const companionFailed = "companion-failed";
 export const signInInProgress = "sign-in-in-progress";
 export const signInFlowEnded = "sign-in-flow-ended";
+export const signInTimedOut = "sign-in-timed-out";
 
 export function untrustedCompanionMessage(): string {
 	return t("auth.signIn.companion.errors.untrusted");
@@ -40,6 +41,8 @@ export function refusedCompanionMessage(): string {
 export function disabledCompanionMessage(): string {
 	return t("auth.signIn.companion.errors.disabled");
 }
+
+const signInPageUnavailable = "sign-in-page-unavailable";
 
 export function finishSignIn(result: {
 	restriction?: Restriction | null;
@@ -67,6 +70,13 @@ export function reportSignInFailure({
 	if (blockedKind && markRequestBlocked({ kind: blockedKind })) return;
 	if (appError?.kind === "Auth" && typeof appError.message === "string") {
 		if (appError.message === "Sign-in canceled") return;
+		if (appError.message.startsWith(`${signInPageUnavailable}: `)) {
+			showErrorToast({
+				label: t("auth.signIn.errors.pageUnavailable"),
+				error,
+			});
+			return;
+		}
 		if (appError.message === "account not registered") {
 			toast.error(t("auth.signIn.errors.notRegistered"));
 			return;

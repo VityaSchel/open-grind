@@ -211,6 +211,24 @@ pub async fn set_app_active(
 	Ok(())
 }
 
+#[cfg(target_os = "ios")]
+#[tauri::command]
+pub async fn allow_suspension(
+	app: AppHandle,
+	state: tauri::State<'_, AppState>,
+) -> Result<(), AppError> {
+	if let Ok(client) = state.client() {
+		if !client.is_active() {
+			crate::api::ws::wait_until_disconnected(
+				&mut client.connection_state(),
+			)
+			.await;
+		}
+	}
+	crate::background_task::deactivated(&app);
+	Ok(())
+}
+
 #[tauri::command]
 pub async fn current_session(
 	state: tauri::State<'_, AppState>,

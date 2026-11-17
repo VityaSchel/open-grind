@@ -1,10 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { openAlbum, SHARED_ALBUM } from "./support/albums";
 import { backLink, FIRST_ROUTE_COMPILE_MS, meTab } from "./support/app";
 import { openSettings, SETTINGS, stackSettled } from "./support/page-stack";
 import {
 	cancelSystemBack,
 	commitSystemBack,
+	edgeSwipeArmed,
 	startSystemBack,
 } from "./support/system-back";
 
@@ -58,6 +60,21 @@ test("the profile editor asks before Back, the back gesture or the Me tab drops 
 
 	await openProfileEditor(page);
 	await expect(displayName(page)).toHaveValue(saved);
+});
+
+test("on iOS the edge swipe stays off while the album editor holds an edit", async ({
+	page,
+}) => {
+	await openAlbum(page, { tile: SHARED_ALBUM, platform: "ios" });
+	const albumName = page.getByRole("textbox", { name: "Album name" });
+	const saved = await albumName.inputValue();
+	await expect.poll(() => edgeSwipeArmed(page)).toBe(true);
+
+	await albumName.fill(RENAMED);
+	await expect.poll(() => edgeSwipeArmed(page)).toBe(false);
+
+	await albumName.fill(saved);
+	await expect.poll(() => edgeSwipeArmed(page)).toBe(true);
 });
 
 test("the profile editor lets go without asking once its edit is saved", async ({

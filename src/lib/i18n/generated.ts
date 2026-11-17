@@ -25,11 +25,12 @@ export interface Messages {
 	"auth.signIn.errors.inProgress": { provider: string };
 	"auth.signIn.errors.invalidCredentials": undefined;
 	"auth.signIn.errors.notRegistered": undefined;
+	"auth.signIn.errors.pageUnavailable": undefined;
 	"auth.signIn.errors.providerFailed": { provider: string };
 	"auth.signIn.errors.rateLimited": undefined;
+	"auth.signIn.errors.timedOut": undefined;
 	"auth.signIn.facebook.errors.dialogError": undefined;
 	"auth.signIn.facebook.errors.handoffRefused": undefined;
-	"auth.signIn.facebook.errors.timedOut": undefined;
 	"auth.signIn.facebook.errors.unverified": undefined;
 	"auth.signIn.facebook.title": undefined;
 	"auth.signIn.forgotPassword": undefined;
@@ -91,8 +92,10 @@ export interface Messages {
 	"browse.gridFilters.title": undefined;
 	"browse.location.errors.autoUpdateFailed": undefined;
 	"browse.location.errors.locateFailed": undefined;
+	"browse.location.locationServicesOff": undefined;
 	"browse.location.openSettings": undefined;
 	"browse.location.permissionDenied": undefined;
+	"browse.location.preciseLocationOff": undefined;
 	"browse.locationChange.a11y.autoUpdating": undefined;
 	"browse.locationChange.a11y.change": undefined;
 	"browse.locationChooser.a11y.description": undefined;
@@ -464,6 +467,7 @@ export interface Messages {
 	"common.media.errors.photoTooLarge": { megabytes: string };
 	"common.media.errors.photoUndecodable": undefined;
 	"common.media.errors.photoUnloadable": undefined;
+	"common.media.errors.pickedItemsLoadFailed": { count: number };
 	"common.media.errors.readFailed": undefined;
 	"common.media.errors.unsupportedFile": undefined;
 	"common.media.errors.videoUnreadable": undefined;
@@ -1089,6 +1093,8 @@ export interface Messages {
 	"settings.subpage.titles.privacy": undefined;
 	"settings.subpage.titles.profile": undefined;
 	"shell.backLink.a11y.label": undefined;
+	"shell.dataRefreshControl.a11y.refreshed": undefined;
+	"shell.dataRefreshControl.a11y.refreshing": undefined;
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;

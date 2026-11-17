@@ -33,6 +33,7 @@ resvg = { version = "0.49", default-features = false, features = ["raster-images
 serde_json = "1"
 
 [dev-dependencies]
+boring2 = "4.15.11"
 tauri = { version = "2", features = ["test"] }
 tokio = { version = "1", features = ["net", "io-util", "rt-multi-thread", "test-util"] }
 
@@ -46,9 +47,6 @@ image = { version = "0.25", default-features = false, features = ["jpeg", "png",
 moxcms = "0.8"
 tokio = { version = "1", features = ["sync", "time", "rt", "macros"] }
 wreq = { version = "0.15", default-features = false }
-ed25519-dalek = { version = "2", default-features = false, features = ["alloc"] }
-blake2 = { version = "0.10", default-features = false }
-semver = "1"
 tauri-plugin-fs = "2"
 tauri-plugin-geolocation = "2"
 tauri-plugin-os = "2"
@@ -59,7 +57,6 @@ base64 = "0.22"
 getrandom = "0.3"
 keyring-core = "1.0.0"
 tauri-plugin-devtools = { version = "2.2.2", optional = true }
-tauri-plugin-dialog = "2"
 tracing = { version = "0.1", features = ["release_max_level_off"] }
 uuid = { version = "1", features = ["v4"] }
 sha2 = "0.10"
@@ -67,20 +64,24 @@ sha2 = "0.10"
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }
 security-framework = { version = "3.7", optional = true }
-# Private WKWebView selector behind `-apple-visual-effect`, see src/appearance.rs
-objc2 = "0.6"
-# Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs
-block2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSEvent", "NSHapticFeedback", "NSImage", "NSResponder", "NSRunningApplication", "NSWorkspace", "block2", "objc2-core-foundation"] }
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "block2", "NSArray", "NSBundle", "NSCalendar", "NSData", "NSDateFormatter", "NSDictionary", "NSError", "NSFileManager", "NSFormatter", "NSLocale", "NSNotification", "NSObject", "NSOperation", "NSString", "NSUserDefaults"] }
 objc2-user-notifications = { version = "0.3", default-features = false, features = ["std", "bitflags", "block2", "UNNotification", "UNNotificationContent", "UNNotificationRequest", "UNNotificationResponse", "UNNotificationSettings", "UNNotificationSound", "UNNotificationTrigger", "UNUserNotificationCenter"] }
 rfd = "0.16"
 
-[target.'cfg(target_vendor = "apple")'.dependencies]
+[target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
 wry = { version = "0.55", default-features = false }
+objc2 = "0.6"
+block2 = "0.6"
+objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFCGTypes", "CFData", "CFDictionary", "CFNumber", "CFString"] }
+objc2-image-io = { version = "0.3", default-features = false, features = ["std", "CGImageDestination", "CGImageSource", "objc2-core-graphics"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"] }
+boring2 = "4.15.11"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "block2", "NSArray", "NSDate", "NSDictionary", "NSError", "NSItemProvider", "NSNotification", "NSObjCRuntime", "NSOperation", "NSProcessInfo", "NSProgress", "NSRunLoop", "NSString", "NSURL", "NSValue"] }
+objc2-photos-ui = { version = "0.3", default-features = false, features = ["std", "PHPicker"] }
+objc2-ui-kit = { version = "0.3", default-features = false, features = ["std", "block2", "objc2-core-foundation", "UIAction", "UIAccessibility", "UIApplication", "UIBarButtonItem", "UIBarItem", "UIColor", "UIEvent", "UIFeedbackGenerator", "UIGeometry", "UIGestureRecognizer", "UIImpactFeedbackGenerator", "UIInterface", "UIMenuElement", "UINavigationController", "UINavigationItem", "UIPanGestureRecognizer", "UIPresentationController", "UIResponder", "UIScreen", "UIScreenEdgePanGestureRecognizer", "UIScrollView", "UISwipeGestureRecognizer", "UITouch", "UIView", "UIViewController", "UIViewControllerTransitionCoordinator", "UIWindow"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-native-keyring-store = "1.1.0"
@@ -105,7 +106,13 @@ android-native-keyring-store = "1.0.0"
 jni = "0.21"
 tauri-plugin-android-fs = "=28.2.2"
 
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+[target.'cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))'.dependencies]
+ed25519-dalek = { version = "2", default-features = false, features = ["alloc"] }
+blake2 = { version = "0.10", default-features = false }
+semver = "1"
+
+[target.'cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))'.dependencies]
+tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
 
 [profile.release]
@@ -138,3 +145,4 @@ tauri = { path = ".patched/tauri" }
 tauri-utils = { path = ".patched/tauri-utils" }
 tauri-runtime = { path = ".patched/tauri-runtime" }
 tauri-runtime-wry = { path = ".patched/tauri-runtime-wry" }
+tao = { path = ".patched/tao" }

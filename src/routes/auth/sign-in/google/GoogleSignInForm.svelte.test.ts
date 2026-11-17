@@ -10,6 +10,7 @@ import {
 	vi,
 } from "vitest";
 
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	awaitingPermission,
 	installedBy,
@@ -37,7 +38,6 @@ const {
 	gotoMock,
 	pageMock,
 	toastMock,
-	platform,
 	openExternalLink,
 	getUpdateCapability,
 } = vi.hoisted(() => ({
@@ -46,7 +46,6 @@ const {
 	gotoMock: vi.fn(),
 	pageMock: { url: new URL("http://localhost/") },
 	toastMock: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
-	platform: { isAndroidPlatform: vi.fn(() => true) },
 	openExternalLink: vi.fn(),
 }));
 
@@ -64,7 +63,6 @@ vi.mock("#lib/updates/index.ts", async () => ({
 	getUpdateCapability,
 }));
 vi.mock("#lib/updates/toasts.ts", () => toasts);
-vi.mock("#lib/platform/os.ts", () => platform);
 vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink }));
 
 let testing: typeof import("@testing-library/svelte");
@@ -115,7 +113,7 @@ describe("GoogleSignInForm", () => {
 		vi.clearAllMocks();
 		fake.reset();
 		pageMock.url = new URL(SCREEN_URL);
-		platform.isAndroidPlatform.mockReturnValue(true);
+		runningOn("android");
 		api.checkForUpdate.mockResolvedValue(offer("install"));
 		getUpdateCapability.mockResolvedValue(releaseSigned);
 		vi.spyOn(console, "error").mockImplementation(() => {});
@@ -475,8 +473,7 @@ describe("GoogleSignInForm", () => {
 	it("falls back to the pasted token when the Google OAuth app is untrusted", async () => {
 		api.getInstalledVersion.mockResolvedValue("1.1.0");
 		const { screen, fireEvent } = await opened();
-		const { untrustedCompanionMessage } =
-			await import("#lib/api/sign-in.ts");
+		const signIn = await import("#lib/api/sign-in.ts");
 		callMethodMock.mockRejectedValue({
 			kind: "Auth",
 			message: "companion-untrusted",
@@ -486,7 +483,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			untrustedCompanionMessage(),
+			signIn.untrustedCompanionMessage(),
 		);
 		expect(screen.getByLabelText("Token")).toBeTruthy();
 	});
@@ -720,16 +717,19 @@ describe("GoogleSignInForm", () => {
 		expect(button("Install")).toBeTruthy();
 	});
 
-	it("only offers the pasted token off Android", async () => {
-		platform.isAndroidPlatform.mockReturnValue(false);
-		const { screen } = await opened();
+	it.each(["ios", "linux", "macos", "windows"] as const)(
+		"only offers the pasted token on %s",
+		async (platform) => {
+			runningOn(platform);
+			const { screen } = await opened();
 
-		expect(screen.getByLabelText("Token")).toBeTruthy();
-		expect(
-			screen.queryByRole("button", {
-				name: "use the Open Grind Google OAuth app",
-			}),
-		).toBeNull();
-		expect(api.getInstalledVersion).not.toHaveBeenCalled();
-	});
+			expect(screen.getByLabelText("Token")).toBeTruthy();
+			expect(
+				screen.queryByRole("button", {
+					name: "use the Open Grind Google OAuth app",
+				}),
+			).toBeNull();
+			expect(api.getInstalledVersion).not.toHaveBeenCalled();
+		},
+	);
 });

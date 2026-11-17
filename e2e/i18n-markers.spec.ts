@@ -163,6 +163,7 @@ async function capture(page: Page): Promise<Buffer> {
 test("markers name the keys of plain, rich and nested messages and add no visible text", async ({
 	page,
 }) => {
+	await installTauriShim(page, { platform: "macos" });
 	await page.route(AUTH_LAYOUT_LOAD, (route) =>
 		route.fulfill({
 			contentType: "text/javascript",

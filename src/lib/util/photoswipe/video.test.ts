@@ -1,15 +1,12 @@
 // @vitest-environment jsdom
 
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { applyPhotoSwipeErrorUi } from "./error-ui";
 import { applyPhotoSwipeVideo } from "./video";
 
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	isLinuxPlatform: () => true,
-}));
 vi.mock("#lib/platform/video-codecs.ts", () => ({
 	canDecodeH264: () => false,
 }));
@@ -17,8 +14,11 @@ vi.mock("#lib/platform/video-codecs.ts", () => ({
 const VIDEO = '[data-slot="video-player-media"]';
 const teardowns: (() => void)[] = [];
 
+beforeEach(() => runningOn("linux"));
+
 afterEach(() => {
 	for (const teardown of teardowns.splice(0)) teardown();
+	resetPlatform();
 });
 
 describe("applyPhotoSwipeVideo", () => {

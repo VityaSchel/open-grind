@@ -1,9 +1,11 @@
 import type { HTMLAttributes } from "svelte/elements";
 
 import { playHaptic } from "#lib/haptics.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { firedByTouch } from "#lib/platform/touch-origin.ts";
+import type { PagePoint } from "#lib/util/page-point.ts";
 
-const LONG_PRESS_DURATION_MS = 450;
+export const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
 // A layout shift can land the contextmenu or the click on another element.
 const NATIVE_CONTEXTMENU_DELAY_MS = 500;
@@ -67,7 +69,7 @@ function holdTouch(): void {
 	window.addEventListener("pointercancel", release, true);
 }
 
-type LongPressHandlers = Pick<
+export type LongPressHandlers = Pick<
 	HTMLAttributes<HTMLElement>,
 	| "onpointerdown"
 	| "onpointermove"
@@ -76,7 +78,23 @@ type LongPressHandlers = Pick<
 	| "oncontextmenu"
 >;
 
-export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
+type MenuLongPressSource = "holdTimer" | "contextMenu";
+
+export function menuLongPressSource(): MenuLongPressSource {
+	switch (currentPlatform()) {
+		case "ios":
+			return "holdTimer";
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return "contextMenu";
+	}
+}
+
+export function longPressHandlers(
+	onLongPress: (point: PagePoint) => void,
+): LongPressHandlers {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let originX = 0;
 	let originY = 0;
@@ -103,7 +121,10 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 				timer = null;
 				pressConsumed = true;
 				holdTouch();
-				fireOnce({ onLongPress, byTouch });
+				fireOnce({
+					onLongPress: () => onLongPress({ x: originX, y: originY }),
+					byTouch,
+				});
 			}, LONG_PRESS_DURATION_MS);
 		},
 		onpointermove(event) {
@@ -133,14 +154,40 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 			if (Date.now() < heldTouchUntil) return;
 			if (pressing && pressConsumed) return;
 			pressConsumed = true;
+			const point = { x: event.clientX, y: event.clientY };
 			const { pointerType } = event as Partial<PointerEvent>;
 			if (pointerType === "mouse" || pointerType === "") {
-				onLongPress();
+				onLongPress(point);
 				return;
 			}
 			const byTouch = firedByTouch(event);
 			if (byTouch) holdTouch();
-			fireOnce({ onLongPress, byTouch });
+			fireOnce({ onLongPress: () => onLongPress(point), byTouch });
 		},
 	};
+}
+
+export function menuPressHandlers({
+	openMenu,
+	onHold,
+}: {
+	openMenu: (press: { byTouch: boolean }) => boolean;
+	onHold?: () => void;
+}): LongPressHandlers {
+	switch (menuLongPressSource()) {
+		case "holdTimer":
+			return longPressHandlers(() => {
+				onHold?.();
+				openMenu({ byTouch: true });
+			});
+		case "contextMenu":
+			return {
+				oncontextmenu(event) {
+					event.preventDefault();
+					const byTouch = firedByTouch(event);
+					if (openMenu({ byTouch }) && byTouch)
+						playHaptic("longPress");
+				},
+			};
+	}
 }

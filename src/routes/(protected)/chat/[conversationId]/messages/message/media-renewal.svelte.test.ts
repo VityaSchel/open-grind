@@ -15,7 +15,6 @@ vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
 	...(await importOriginal<
 		typeof import("#lib/platform/media-failure.ts")
 	>()),
-	explainsMediaFailures: () => true,
 	mediaFailure: () =>
 		Promise.resolve({
 			kind: "status",
@@ -27,6 +26,7 @@ vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import Message from "./Message.svelte";
 
 const URL =
@@ -81,7 +81,10 @@ async function refusedTile(kind: { type: string; body: unknown }) {
 	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-beforeEach(() => renewMock.mockClear());
+beforeEach(() => {
+	runningOn("windows");
+	renewMock.mockClear();
+});
 afterEach(() => cleanup());
 
 describe("chat media renewal", () => {

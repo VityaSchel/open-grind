@@ -1,10 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-import {
-	ensureGridLocation,
-	GRID_READY_SELECTOR,
-	installTauriShim,
-} from "./app";
+import { GRID_READY_SELECTOR, installTauriShim, openGrid } from "./app";
 import { installPersistentAppData } from "./app-data";
 import { installGeolocationShim } from "./geolocation";
 
@@ -42,9 +38,7 @@ export async function enableTracking(page: Page): Promise<void> {
 
 export async function launchGrid(page: Page): Promise<void> {
 	await installGpsHarness(page);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 }
 
 export async function relaunch(page: Page): Promise<void> {

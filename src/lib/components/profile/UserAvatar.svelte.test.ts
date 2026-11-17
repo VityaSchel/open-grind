@@ -1,17 +1,23 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("#lib/api/current-session.ts", () => ({
 	signedInProfileIdSnapshot: () => 858049792,
 	signedInProfileId: () => Promise.resolve(858049792),
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
+import { profileMediaUrl } from "#lib/util/media.ts";
 import UserAvatar from "./UserAvatar.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
 const COVER = '[data-slot="mature-content-cover"]';
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("UserAvatar on Google Play", () => {
 	afterEach(() => {
@@ -27,7 +33,9 @@ describe("UserAvatar on Google Play", () => {
 
 		expect(container.querySelector(COVER)?.textContent?.trim()).toBe("18+");
 		expect(screen.queryByRole("link")).toBeNull();
-		expect(container.querySelector("img")?.src).toContain("deadbeef");
+		expect(container.querySelector("img")?.src).toBe(
+			profileMediaUrl({ mediaHash: "deadbeef", size: "thumb" }),
+		);
 	});
 
 	it("leaves our own photo uncovered", () => {
@@ -80,7 +88,9 @@ describe("UserAvatar", () => {
 		});
 
 		const img = container.querySelector("img");
-		expect(img?.src).toContain("deadbeef");
+		expect(img?.src).toBe(
+			profileMediaUrl({ mediaHash: "deadbeef", size: "thumb" }),
+		);
 
 		await fireEvent.error(img!);
 

@@ -6,7 +6,7 @@ import {
 	within,
 } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AlbumSlide } from "#lib/components/album/album-lightbox.ts";
 
@@ -39,6 +39,8 @@ import {
 	type AlbumContentReplyMessage,
 	apiResponseMessageSchema,
 } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
 function renderReply({
@@ -73,6 +75,10 @@ function renderReply({
 	});
 }
 
+beforeEach(() => {
+	runningOn("windows");
+});
+
 afterEach(() => {
 	cleanup();
 	albumShares.clear();
@@ -104,7 +110,7 @@ describe("AlbumContentReply", () => {
 			).toBeNull();
 			expect(
 				within(preview).getByRole("presentation").getAttribute("src"),
-			).toBe("https://example.invalid/preview.jpg");
+			).toBe(proxyMediaUrl("https://example.invalid/preview.jpg"));
 		},
 	);
 

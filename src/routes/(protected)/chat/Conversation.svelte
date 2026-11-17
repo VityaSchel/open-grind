@@ -24,7 +24,13 @@
 		previewLabel,
 	} from "#lib/model/messaging/message-preview.ts";
 	import { firedByTouch } from "#lib/platform/touch-origin.ts";
+	import {
+		type LongPressHandlers,
+		longPressHandlers,
+		menuLongPressSource,
+	} from "#lib/util/long-press.ts";
 	import type { Conversation } from "#lib/model/messaging/conversations.ts";
+	import type { PagePoint } from "#lib/util/page-point.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 
 	let {
@@ -53,6 +59,7 @@
 
 	let contextMenuUsed = $state(false);
 	let pressedByTouch = false;
+	let trigger: HTMLElement | null = $state(null);
 
 	function togglePinned() {
 		void conversations.setPinned({
@@ -71,6 +78,37 @@
 	function toggleSelected() {
 		selection?.toggle(conversationId);
 	}
+
+	function openMenuAt({ x, y }: PagePoint) {
+		trigger?.dispatchEvent(
+			new MouseEvent("contextmenu", {
+				bubbles: true,
+				cancelable: true,
+				clientX: x,
+				clientY: y,
+			}),
+		);
+	}
+
+	function triggerPressHandlers(): LongPressHandlers {
+		switch (menuLongPressSource()) {
+			case "holdTimer": {
+				const { oncontextmenu: _ownMenu, ...hold } =
+					longPressHandlers(openMenuAt);
+				void _ownMenu;
+				return hold;
+			}
+			case "contextMenu":
+				return {
+					onpointerdown: (event) =>
+						(pressedByTouch = firedByTouch(event)),
+					oncontextmenu: (event) =>
+						(pressedByTouch = firedByTouch(event)),
+				};
+		}
+	}
+
+	const triggerPress = triggerPressHandlers();
 </script>
 
 {#snippet titleBadges()}
@@ -183,8 +221,8 @@
 	>
 		<ContextMenu.Trigger
 			class="rounded-2xl"
-			onpointerdown={(event) => (pressedByTouch = firedByTouch(event))}
-			oncontextmenu={(event) => (pressedByTouch = firedByTouch(event))}
+			bind:ref={trigger}
+			{...triggerPress}
 		>
 			{@render row()}
 		</ContextMenu.Trigger>

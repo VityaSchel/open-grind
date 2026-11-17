@@ -20,7 +20,7 @@ test.describe("refreshing without a pull", () => {
 	test("a rubber band that no wheel comes with is still a pull and offers no Refresh button", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 
 		await driveInOneGesture(
 			page,
@@ -40,7 +40,7 @@ test.describe("refreshing without a pull", () => {
 	test("a rubber band that a scroll key drives offers the Refresh button without ever pulling, and the next band brings the hint back", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const phases = await page
 			.locator("[data-refresh-phase]")
 			.evaluateHandle((control: HTMLElement) => {
@@ -92,7 +92,7 @@ test.describe("refreshing without a pull", () => {
 	test("an arrow key pressed toward the top of a list that is already there offers the Refresh button in a row of its own", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		const firstRow = page.locator(CONVERSATION_ROW).first();
 		const restingTop = await topOf(firstRow);
 		await firstRow.focus();
@@ -108,7 +108,7 @@ test.describe("refreshing without a pull", () => {
 	test("the Refresh button a key press offers is the tab stop right before the list, and Enter refreshes from it", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "macos" });
 		await page
 			.locator(CONVERSATIONS_SCROLLER)
 			.getByRole("link")

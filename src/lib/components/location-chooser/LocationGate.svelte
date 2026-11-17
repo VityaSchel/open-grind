@@ -14,20 +14,33 @@
 	const geohash = $derived(preferencesSnapshot().geohash);
 </script>
 
+{#snippet fallback(failure: { error: unknown } | null)}
+	<main class="screen-nav-host">
+		<div class="size-full overflow-y-auto overscroll-none">
+			<div class="flex min-h-full w-full pb-nav-clear">
+				<div class="m-auto flex max-w-full">
+					{#if failure === null}
+						<LocationEmpty />
+					{:else}
+						<ApiErrorDisplay
+							error={failure.error}
+							onRetry={() =>
+								(preferencesHydrated = hydratePreferences())}
+							class="m-auto"
+						/>
+					{/if}
+				</div>
+			</div>
+		</div>
+	</main>
+{/snippet}
+
 {#await preferencesHydrated then}
 	{#if geohash === null}
-		<main class="m-auto flex max-w-full flex-1">
-			<LocationEmpty />
-		</main>
+		{@render fallback(null)}
 	{:else}
 		{@render children({ geohash })}
 	{/if}
 {:catch error}
-	<main class="m-auto flex max-w-full flex-1">
-		<ApiErrorDisplay
-			{error}
-			onRetry={() => (preferencesHydrated = hydratePreferences())}
-			class="m-auto"
-		/>
-	</main>
+	{@render fallback({ error })}
 {/await}

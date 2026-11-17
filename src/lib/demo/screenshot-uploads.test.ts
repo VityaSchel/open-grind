@@ -40,7 +40,7 @@ function upload({
 	return uploadAlbumContent({
 		albumId,
 		media: {
-			source: "web",
+			source: "demo",
 			key: "picked",
 			mimeType: "image/jpeg",
 			file: new File([], "picked.jpg"),

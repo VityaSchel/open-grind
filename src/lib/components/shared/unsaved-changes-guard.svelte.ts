@@ -58,7 +58,7 @@ export function provideUnsavedChangesGuard({
 	dismissOnBackGesture({
 		active: () => changes.pending,
 		dismiss: () => changes.ask(goBack),
-		layer: "screen",
+		layer: "guard",
 	});
 
 	return changes;

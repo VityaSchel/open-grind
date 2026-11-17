@@ -47,7 +47,7 @@
 				return t("settings.app.discreetAppIcon.stillShown.windows");
 			case "linux":
 				return t("settings.app.discreetAppIcon.stillShown.linux");
-			default:
+			case "ios":
 				return "";
 		}
 	}
@@ -64,10 +64,9 @@
 					: t("settings.app.discreetAppIcon.restart.macos", {
 							appName: choice.name,
 						});
+			case "ios":
 			case "linux":
 			case "windows":
-				return null;
-			default:
 				return null;
 		}
 	}

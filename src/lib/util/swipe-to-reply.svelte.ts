@@ -3,7 +3,7 @@ import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 
 import { playHaptic } from "#lib/haptics.ts";
-import { isMacosPlatform, isMobilePlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import {
 	scrollGesture,
 	type ScrollGestureState,
@@ -46,8 +46,16 @@ export type WheelInputMode = "rail" | "bridge" | "none";
 // stops the rail from latching vertical wheel gestures away from the
 // conversation's own overscroll.
 export function wheelInputMode(): WheelInputMode {
-	if (isMacosPlatform()) return "bridge";
-	return isMobilePlatform() ? "none" : "rail";
+	switch (currentPlatform()) {
+		case "macos":
+			return "bridge";
+		case "android":
+		case "ios":
+			return "none";
+		case "linux":
+		case "windows":
+			return "rail";
+	}
 }
 
 export class SwipeToReply {
@@ -135,8 +143,8 @@ export class SwipeToReply {
 		onpointerup: (event) => this.#onUp(event),
 		// A cancelled gesture is not a release: releasing fires the reply,
 		// cancelling must not.
-		onpointercancel: (event) => this.#reset(event),
-		onlostpointercapture: (event) => this.#reset(event),
+		onpointercancel: (event) => this.#resetPointer(event),
+		onlostpointercapture: (event) => this.#resetPointer(event),
 	};
 
 	// A trackpad drag rides the row's own scroller: a real scroll position
@@ -332,7 +340,7 @@ export class SwipeToReply {
 
 		if (this.#axis === "undecided") {
 			if (Math.abs(deltaY) > AXIS_LOCK_SLOP_PX) {
-				this.#reset(event);
+				this.#resetPointer(event);
 				return;
 			}
 			if (Math.abs(deltaX) <= AXIS_LOCK_SLOP_PX) return;
@@ -355,16 +363,16 @@ export class SwipeToReply {
 	#onUp(event: PointerEvent): void {
 		if (event.pointerId !== this.#pointerId) return;
 		const shouldReply = this.armed;
-		this.#release();
+		this.resetTouch();
 		if (shouldReply) this.#onReply();
 	}
 
-	#reset(event: PointerEvent): void {
+	#resetPointer(event: PointerEvent): void {
 		if (event.pointerId !== this.#pointerId) return;
-		this.#release();
+		this.resetTouch();
 	}
 
-	#release(): void {
+	resetTouch(): void {
 		this.#pointerId = null;
 		this.#axis = "undecided";
 		this.#disarm();

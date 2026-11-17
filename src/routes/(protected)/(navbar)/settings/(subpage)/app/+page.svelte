@@ -22,12 +22,6 @@
 			case "linux":
 				return "settings.app.sectionDescriptions.notifications.desktop";
 			case "ios":
-			case "freebsd":
-			case "dragonfly":
-			case "netbsd":
-			case "openbsd":
-			case "solaris":
-			case "web":
 				return null;
 		}
 	});
@@ -40,12 +34,6 @@
 			case "linux":
 				return "settings.app.sectionDescriptions.security.iconAndName";
 			case "ios":
-			case "freebsd":
-			case "dragonfly":
-			case "netbsd":
-			case "openbsd":
-			case "solaris":
-			case "web":
 				return "settings.app.sectionDescriptions.security.iconOnly";
 		}
 	});

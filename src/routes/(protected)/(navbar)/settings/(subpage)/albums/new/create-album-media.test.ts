@@ -6,15 +6,20 @@ const api = vi.hoisted(() => ({
 	getAlbumStorageLimits: vi.fn(),
 }));
 const media = vi.hoisted(() => ({
-	pickInspectedAlbumMedia: vi.fn(),
+	pickOrScreenAlbumMedia: vi.fn(),
 	enqueueAlbumMedia: vi.fn(),
 }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
+const mediaFile = vi.hoisted(() => ({ discardStagedMedia: vi.fn() }));
 
 vi.mock("$app/navigation", () => navigation);
 vi.mock("#lib/api/error-toast.ts", () => errorToast);
 vi.mock("#lib/api/messaging/albums.ts", () => api);
+vi.mock("#lib/platform/media-file.ts", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	...mediaFile,
+}));
 vi.mock("../album-uploads/add-album-media", () => media);
 vi.mock("svelte-sonner", () => sonner);
 
@@ -56,7 +61,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	api.getAlbumStorageLimits.mockResolvedValue(limits);
-	media.pickInspectedAlbumMedia.mockResolvedValue(inspected);
+	media.pickOrScreenAlbumMedia.mockResolvedValue(inspected);
 	api.createAlbum.mockResolvedValue({ albumId: 904, albumName: "Trip" });
 });
 
@@ -64,7 +69,7 @@ describe("creating an album from its first upload", () => {
 	it("creates the album, opens it, and uploads there", async () => {
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: "Trip" });
 
-		expect(media.pickInspectedAlbumMedia).toHaveBeenCalledWith({
+		expect(media.pickOrScreenAlbumMedia).toHaveBeenCalledWith({
 			room: { photos: true, videos: true },
 		});
 		expect(api.createAlbum).toHaveBeenCalledWith({ albumName: "Trip" });
@@ -100,13 +105,13 @@ describe("creating an album from its first upload", () => {
 
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
-		expect(media.pickInspectedAlbumMedia).toHaveBeenCalledWith({
+		expect(media.pickOrScreenAlbumMedia).toHaveBeenCalledWith({
 			room: { photos: true, videos: false },
 		});
 	});
 
 	it("creates nothing when nothing usable was picked", async () => {
-		media.pickInspectedAlbumMedia.mockResolvedValue([]);
+		media.pickOrScreenAlbumMedia.mockResolvedValue([]);
 
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
@@ -125,6 +130,25 @@ describe("creating an album from its first upload", () => {
 		);
 		expect(errorToast.showErrorToast).not.toHaveBeenCalled();
 		expect(navigation.goto).not.toHaveBeenCalled();
+	});
+
+	it("discards the picks it staged when the album can't be created", async () => {
+		const staged: PickedMedia = {
+			source: "staged",
+			key: "s",
+			mimeType: "image/jpeg",
+			id: "staged-1",
+		};
+		media.pickOrScreenAlbumMedia.mockResolvedValue([
+			{ media: staged, inspection: { kind: "photo", size: 1024 } },
+		]);
+		api.createAlbum.mockRejectedValue(httpError(500));
+
+		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
+
+		expect(mediaFile.discardStagedMedia).toHaveBeenCalledExactlyOnceWith([
+			staged,
+		]);
 	});
 
 	it("reports any other failure to create the album", async () => {

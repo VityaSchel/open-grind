@@ -7,21 +7,31 @@
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
+	import AnnouncedRefresh from "./refresh/AnnouncedRefresh.svelte";
 	import { attachPullInputs } from "./refresh/attach-inputs";
 	import { contentSlide, PacingTween } from "./refresh/content-slide";
 	import {
-		MAX_SLINGSHOT_TENSION,
-		slingshotTension,
+		DISC_REST,
+		DISC_START,
+		DISC_WINDOW,
+		discDragTop,
 	} from "./refresh/disc-math";
 	import { fixedHeaderOffset } from "./refresh/fixed-header-offset.svelte";
 	import { PullModel } from "./refresh/pull-model.svelte";
+	import {
+		gestureFace,
+		type IndicatorFace,
+		pullStyleHere,
+	} from "./refresh/pull-style";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
+	import RefreshTicks from "./refresh/RefreshTicks.svelte";
 	import { RestingButtonModel } from "./refresh/resting-button.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
 	import { scrollGeometry } from "./refresh/scroll-geometry";
 
 	let {
 		updating,
+		failed,
 		position,
 		container,
 		hintOffset = 0,
@@ -29,7 +39,8 @@
 		onrefresh,
 		oninsetchange,
 	}: {
-		updating?: boolean;
+		updating: boolean;
+		failed: boolean;
 		position: "top" | "bottom";
 		container?: HTMLElement | null;
 		hintOffset?: number;
@@ -41,7 +52,7 @@
 	const BUTTON_HEIGHT_PX = 32;
 	const REST_GAP_PX = 12;
 	const REST_HEIGHT_PX = BUTTON_HEIGHT_PX + REST_GAP_PX * 2;
-	const ARM_PX = 18;
+	const { source: PULL_SOURCE, armPx: ARM_PX } = pullStyleHere();
 	const BOUNDARY_SETTLE_MS = 50;
 	const MOUSE_PROBE_MS = BOUNDARY_SETTLE_MS + 70;
 	const REVEAL_MS = 250;
@@ -50,7 +61,6 @@
 		easing: expoOut,
 	};
 
-	const mounted = $derived(!!container);
 	let distance = $state(Infinity);
 	const headerOffset = fixedHeaderOffset({
 		container: () => container,
@@ -64,44 +74,26 @@
 	const model = new PullModel();
 	model.space = ARM_PX;
 
-	const busy = $derived((updating ?? false) || model.phase === "refreshing");
+	const busy = $derived(updating || model.phase === "refreshing");
 
-	$effect(() => {
-		model.setUpdating(updating ?? false);
-	});
+	$effect(() => model.setUpdating(updating));
 	model.onTrigger = () => onrefresh?.();
 	model.getBaseline = () => (restingButton.shown ? REST_HEIGHT_PX : 0);
 
-	type IndicatorType = "disc" | "hint" | "button";
-	const activeFace = $derived.by((): IndicatorType | null => {
-		if (busy) return "disc";
-		if (model.gestureActive)
-			return model.source === "touch" ? "disc" : "hint";
+	const activeFace = $derived.by((): IndicatorFace | null => {
+		if (busy) return gestureFace(PULL_SOURCE);
+		if (model.gestureActive) return gestureFace(model.source);
 		if (restingButton.shown) return "button";
 		return null;
 	});
-	let lingerFace: IndicatorType | null = $state(null);
+	let lingerFace: IndicatorFace | null = $state(null);
 	$effect(() => {
 		if (activeFace) lingerFace = activeFace;
 	});
 
-	const DISC_SIZE = 40;
-	const DISC_SHADOW = 8;
-	const DISC_START = -(DISC_SIZE + DISC_SHADOW);
-	const DISC_REST = 10;
-	const DISC_TRAVEL = DISC_REST - DISC_START;
-	const DISC_WINDOW = DISC_REST + DISC_TRAVEL + DISC_SIZE + DISC_SHADOW;
 	const discTop = new Tween(DISC_START, { duration: 250, easing: cubicOut });
 	const settleMotion = () =>
 		prefersReducedMotion.current ? { duration: 0 } : undefined;
-
-	function discDragTop(displayPx: number): number {
-		const drag = Math.min(1, displayPx / ARM_PX);
-		const tension = slingshotTension(displayPx / ARM_PX);
-		return (
-			DISC_START + DISC_TRAVEL * (drag + tension / MAX_SLINGSHOT_TENSION)
-		);
-	}
 
 	const discShown = $derived.by(() => {
 		if (activeFace) return activeFace === "disc";
@@ -127,26 +119,26 @@
 		hintShown ? reveal.current : buttonSpace.current,
 	);
 
-	const discSpinning = $derived(
+	const spinning = $derived(
 		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
+	);
+	const touchProgress = $derived(
+		model.gestureActive && model.source === "touch"
+			? model.displayPx / ARM_PX
+			: undefined,
 	);
 	let lastDragProgress = $state(0);
 	$effect(() => {
-		if (model.gestureActive && model.source === "touch")
-			lastDragProgress = model.displayPx / ARM_PX;
+		if (touchProgress !== undefined) lastDragProgress = touchProgress;
 	});
 	$effect(() => {
 		if (busy && model.settledFrom !== "touch") lastDragProgress = 0;
 	});
-	const discProgress = $derived(
-		model.gestureActive && model.source === "touch"
-			? model.displayPx / ARM_PX
-			: lastDragProgress,
-	);
+	const discProgress = $derived(touchProgress ?? lastDragProgress);
 
 	$effect(() => {
-		if (model.gestureActive && model.source === "touch") {
-			void discTop.set(discDragTop(model.displayPx), { duration: 0 });
+		if (touchProgress !== undefined) {
+			void discTop.set(discDragTop(touchProgress), { duration: 0 });
 		} else if (busy) {
 			void discTop.set(DISC_REST, settleMotion());
 		} else if (discShown) {
@@ -155,17 +147,15 @@
 	});
 
 	const bandOpacity = $derived.by(() => {
-		if (hintShown) {
+		if (hintShown)
 			return Math.min(
 				1,
 				Math.max(0, (reveal.current / ARM_PX) * 1.2 - 0.2),
 			);
-		} else {
-			return Math.min(
-				1,
-				Math.max(0, (buttonSpace.current / REST_HEIGHT_PX) * 1.6 - 0.2),
-			);
-		}
+		return Math.min(
+			1,
+			Math.max(0, (buttonSpace.current / REST_HEIGHT_PX) * 1.6 - 0.2),
+		);
 	});
 	const anchorEdge = $derived({
 		"top-0": position === "top",
@@ -270,6 +260,9 @@
 	$effect(() => {
 		if (shouldRevealRestingButton()) restingButton.shown = true;
 	});
+	$effect(() => {
+		if (!restingButton.offered) restingButton.shown = false;
+	});
 
 	$effect(() => () => restingButton.destroy());
 
@@ -301,7 +294,7 @@
 	});
 </script>
 
-{#if mounted}
+{#if container}
 	<div
 		data-refresh-phase={model.phase}
 		data-refresh-source={model.source}
@@ -343,7 +336,7 @@
 						{t("shell.dataRefreshControl.pullHint")}
 					{/if}
 				</span>
-			{:else if buttonShown}
+			{:else if buttonShown || restingButton.shown}
 				<div
 					class={[
 						"absolute left-1/2 -translate-x-1/2",
@@ -352,11 +345,29 @@
 							"top-3": position === "bottom",
 						},
 					]}
+					style:opacity={buttonShown ? null : 0}
 				>
 					{@render button()}
 				</div>
 			{/if}
 		</div>
+		{#if activeFace === "ticks"}
+			<div
+				class={[
+					"absolute inset-x-0 grid place-items-center",
+					anchorEdge,
+				]}
+				style:height="{ARM_PX}px"
+				out:scale={{ duration: 150, easing: cubicOut }}
+			>
+				<RefreshTicks
+					progress={model.source === "band"
+						? model.displayPx / ARM_PX
+						: 1}
+					{spinning}
+				/>
+			</div>
+		{/if}
 		<div
 			data-slot="refresh-disc-window"
 			class={["absolute inset-x-0 overflow-clip", anchorEdge]}
@@ -372,21 +383,23 @@
 					onoutroend={() =>
 						void discTop.set(DISC_START, { duration: 0 })}
 				>
-					<RefreshDisc
-						progress={discProgress}
-						spinning={discSpinning}
-					/>
+					<RefreshDisc progress={discProgress} {spinning} />
 				</div>
 			{/if}
 		</div>
+		<AnnouncedRefresh {busy} {updating} {failed} list={container} />
 	</div>
 {/if}
 
 {#snippet button()}
+	{@const pointerEvents = buttonShown ? "auto" : "none"}
 	<Button
 		size="sm"
-		class="pointer-events-auto h-(--height) w-25"
-		style="--height: {BUTTON_HEIGHT_PX}px;"
+		class="h-(--height) w-25"
+		style="--height: {BUTTON_HEIGHT_PX}px; pointer-events: {pointerEvents};"
+		tabindex={buttonShown ? undefined : -1}
+		aria-disabled={busy || undefined}
+		aria-busy={busy || undefined}
 		onclick={() => model.clickTrigger()}
 	>
 		{t("shell.dataRefreshControl.refreshButton")}

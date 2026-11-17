@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("#lib/components/album/album-lightbox.ts", () => ({
 	loadAlbumSlides: vi.fn(),
@@ -15,6 +15,7 @@ import {
 } from "#lib/i18n/fixtures/count-formatter.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import type { UploadLimits } from "../album-uploads/album-uploads-state.svelte";
@@ -74,6 +75,10 @@ function previewAreaOf(content: AlbumContent[]): string {
 	if (area === null) throw new Error("no preview area");
 	return area.outerHTML;
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	cleanup();

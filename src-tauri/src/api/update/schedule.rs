@@ -405,7 +405,11 @@ mod tests {
 		let _ = fs::remove_dir_all(path.parent().unwrap());
 	}
 
-	#[cfg(unix)]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "linux",
+		target_os = "macos"
+	))]
 	#[test]
 	fn a_transient_read_failure_keeps_the_saved_consent() {
 		use std::os::unix::fs::PermissionsExt;

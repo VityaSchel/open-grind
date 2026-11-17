@@ -179,7 +179,7 @@ export const signInRefusals: Scene = {
 			attempts: [
 				authFailing({
 					button: "facebook",
-					message: "facebook-timed-out",
+					message: "sign-in-timed-out",
 				}),
 				authFailing({
 					button: "google",

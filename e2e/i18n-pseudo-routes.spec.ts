@@ -17,7 +17,7 @@ import { readPseudoText } from "./support/pseudo";
 
 test.use({ baseURL: DEV_SERVER_URL });
 
-type Platform = "android" | "desktop" | "web";
+type Platform = "android" | "desktop";
 
 interface ModuleOverride {
 	module: RegExp;
@@ -34,8 +34,7 @@ interface RouteCase {
 	prepare?: (page: Page) => Promise<void>;
 }
 
-const SIGNED_IN: readonly Platform[] = ["android", "desktop"];
-const SIGNED_OUT: readonly Platform[] = ["web", "android", "desktop"];
+const PLATFORMS: readonly Platform[] = ["android", "desktop"];
 const PAGE_FILE = /^\+page(?:@[^.]*)?\.svelte$/;
 const DESKTOP_VIEWPORT = { width: 1280, height: 800 };
 const SETTINGS = "/settings";
@@ -203,14 +202,12 @@ const routes: readonly RouteCase[] = [
 		route: "/auth/password-reset",
 		path: "/auth/password-reset",
 		shows: ALERT,
-		platforms: SIGNED_OUT,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
 		route: "/auth/sign-in",
 		path: "/auth/sign-in",
 		shows: '[data-slot="input"][type="email"]',
-		platforms: SIGNED_OUT,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -218,7 +215,7 @@ const routes: readonly RouteCase[] = [
 		state: "with the token field",
 		path: "/auth/sign-in/google",
 		shows: '[data-slot="textarea"]',
-		platforms: ["web", "desktop"],
+		platforms: ["desktop"],
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -233,7 +230,6 @@ const routes: readonly RouteCase[] = [
 		route: "/auth/sign-up",
 		path: "/auth/sign-up",
 		shows: ALERT,
-		platforms: SIGNED_OUT,
 		layout: SIGNED_OUT_LAYOUT,
 	},
 	{
@@ -262,11 +258,9 @@ async function open(
 		layout,
 	}: { path: string; platform: Platform; layout?: ModuleOverride },
 ): Promise<void> {
-	if (platform !== "web") {
-		await installTauriShim(page, {
-			platform: platform === "android" ? "android" : "macos",
-		});
-	}
+	await installTauriShim(page, {
+		platform: platform === "android" ? "android" : "macos",
+	});
 	if (platform === "desktop") await page.setViewportSize(DESKTOP_VIEWPORT);
 	await serveImages(page, AVATAR_HOST);
 	await serveImages(page, CHAT_MEDIA_HOST);
@@ -291,7 +285,7 @@ for (const {
 	state,
 	path,
 	shows,
-	platforms = SIGNED_IN,
+	platforms = PLATFORMS,
 	layout,
 	prepare,
 } of routes) {

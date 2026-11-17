@@ -52,7 +52,7 @@
 <div
 	data-refresh-disc
 	data-spinning={spinning || undefined}
-	class="disc grid size-10 place-items-center rounded-full bg-card"
+	class="grid size-10 place-items-center rounded-full bg-card shadow-refresh-disc"
 >
 	<svg viewBox="0 0 40 40" class="size-10 text-accent">
 		{#if spinning}
@@ -108,13 +108,6 @@
 
 <style lang="postcss">
 	@reference "$layout";
-
-	.disc {
-		/* CircleImageView: key shadow y 1.75 r 3.5 @ 12% + ambient fill @ 24% */
-		box-shadow:
-			0 1.75px 3.5px rgb(0 0 0 / 0.12),
-			0 1px 4px rgb(0 0 0 / 0.24);
-	}
 
 	/* Dash values are Android's CircularProgressDrawable scaled to r 7.5. */
 	.spin-group {

@@ -62,8 +62,14 @@ import {
 	BlockedProfileError,
 	HiddenProfileError,
 } from "#lib/api/users/profiles.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
-import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
+import {
+	flush,
+	fullProfile,
+	heldPull,
+	OUR_ID,
+} from "./profile-pager-test-helpers";
 import {
 	gridRow,
 	PROFILE_ID,
@@ -72,6 +78,7 @@ import {
 } from "./profile-pane-test-helpers";
 
 const SECOND_HASH = "secondphoto";
+const PHOTO_ROW = '[data-slot="profile-photo-row"]';
 
 const LOADED = {
 	profileId: PROFILE_ID,
@@ -127,6 +134,7 @@ async function chooseFromProfileMenu(name: string) {
 beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(fullProfile(LOADED));
+	runningOn("windows");
 });
 
 afterEach(cleanup);
@@ -238,15 +246,63 @@ describe("ProfilePane loading", () => {
 		const { section } = renderPane({ active: true, row: null });
 		await tick();
 
-		const photoSlot = section.querySelector("main")!.firstElementChild!;
+		const photoRow = section.querySelector(PHOTO_ROW)!;
 		expect(headingElement(section)).toBeNull();
 		expect(section.querySelector(".carousel")).toBeNull();
-		expect(photoSlot.getAttribute("data-slot")).toBe("skeleton");
+		expect(photoRow.firstElementChild!.getAttribute("data-slot")).toBe(
+			"skeleton",
+		);
 		expect(
-			photoSlot.nextElementSibling!.querySelector(
+			photoRow.nextElementSibling!.querySelector(
 				'[data-slot="skeleton"]',
 			),
 		).not.toBeNull();
+	});
+});
+
+describe("ProfilePane photo row", () => {
+	it.each([
+		{ hero: "several photos", mediaHashes: [ROW_HASH, SECOND_HASH] },
+		{ hero: "one photo", mediaHashes: [ROW_HASH] },
+		{ hero: "no photos", mediaHashes: [] },
+	])(
+		"keeps a pull anywhere across the row of $hero from refreshing or moving the profile",
+		async ({ mediaHashes }) => {
+			runningOn("ios");
+			getProfileMock.mockResolvedValue(
+				fullProfile({ ...LOADED, mediaHashes }),
+			);
+			const { section } = renderPane({ active: true, row: gridRow() });
+			await flush();
+
+			const photoRow = section.querySelector(PHOTO_ROW)!;
+			expect(photoRow.querySelectorAll(".carousel img")).toHaveLength(
+				mediaHashes.length,
+			);
+			expect(photoRow.hasAttribute("data-refresh-no-pull")).toBe(true);
+			expect(heldPull(photoRow)).toBe(true);
+		},
+	);
+
+	it("keeps a pull anywhere across the row of the loading photo from refreshing or moving the profile", async () => {
+		runningOn("android");
+		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
+		const { section } = renderPane({ active: true, row: null });
+		await tick();
+
+		const photoRow = section.querySelector(PHOTO_ROW)!;
+		expect(photoRow.firstElementChild!.getAttribute("data-slot")).toBe(
+			"skeleton",
+		);
+		expect(photoRow.hasAttribute("data-refresh-no-pull")).toBe(true);
+		expect(heldPull(photoRow)).toBe(true);
+	});
+
+	it("lets a drag across the photo row move the profile as usual on desktop", async () => {
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		expect(heldPull(section.querySelector(PHOTO_ROW)!)).toBe(false);
 	});
 });
 
@@ -339,6 +395,20 @@ describe("ProfilePane profile actions", () => {
 		const note = screen.getByRole("button", { name: "Met at the gym" });
 		const menu = screen.getByRole("button", { name: "Profile menu" });
 		expect(controls.indexOf(note)).toBeLessThan(controls.indexOf(menu));
+	});
+
+	it("keeps a pull on a favorite's note from refreshing or moving the profile", async () => {
+		runningOn("android");
+		const favorite = { ...fullProfile(LOADED), isFavorite: true };
+		getProfileMock.mockResolvedValue(favorite);
+		const { profileState } = renderPane({ active: true, row: gridRow() });
+		await flush();
+		profileState.setNote({ notes: "Met at the gym", phoneNumber: "" });
+		await tick();
+
+		const note = screen.getByRole("button", { name: "Met at the gym" });
+		expect(note.hasAttribute("data-refresh-no-pull")).toBe(true);
+		expect(heldPull(within(note).getByText("Met at the gym"))).toBe(true);
 	});
 
 	it("holds someone else's profile actions back until the profile loads", async () => {

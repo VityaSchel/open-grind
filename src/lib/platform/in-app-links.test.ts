@@ -1,13 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const { isMacosPlatformMock } = vi.hoisted(() => ({
-	isMacosPlatformMock: vi.fn(() => false),
-}));
-vi.mock("#lib/platform/os.ts", () => ({
-	isMacosPlatform: isMacosPlatformMock,
-}));
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { keepLinksInApp, staysInApp } from "#lib/platform/in-app-links.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { isPlainClick } from "#lib/util/plain-click.ts";
 
 const MODIFIERS = ["shiftKey", "ctrlKey", "altKey", "metaKey"] as const;
@@ -56,6 +50,7 @@ function soleArrival(): MouseEvent | undefined {
 }
 
 beforeEach(() => {
+	runningOn("linux");
 	for (const type of CLICK_TYPES)
 		document.addEventListener(type, handleLikeTheApp);
 });
@@ -66,7 +61,6 @@ afterEach(() => {
 		document.removeEventListener(type, handleLikeTheApp);
 	reachedTheApp.length = 0;
 	document.body.replaceChildren();
-	isMacosPlatformMock.mockReturnValue(false);
 });
 
 describe("keepLinksInApp", () => {
@@ -178,7 +172,7 @@ describe("keepLinksInApp", () => {
 	it.each([IN_APP_HREF, EXTERNAL_HREF])(
 		"swallows the macOS secondary click on %s, leaving only the menu",
 		(href) => {
-			isMacosPlatformMock.mockReturnValue(true);
+			runningOn("macos");
 			releases.push(keepLinksInApp());
 
 			const pressed = press({
@@ -193,7 +187,7 @@ describe("keepLinksInApp", () => {
 	);
 
 	it("follows a link activated from the keyboard on macOS with Control held", () => {
-		isMacosPlatformMock.mockReturnValue(true);
+		runningOn("macos");
 		releases.push(keepLinksInApp());
 
 		const pressed = press({
@@ -208,7 +202,7 @@ describe("keepLinksInApp", () => {
 	});
 
 	it("still navigates on macOS for the modifiers that are not a secondary click", () => {
-		isMacosPlatformMock.mockReturnValue(true);
+		runningOn("macos");
 		releases.push(keepLinksInApp());
 
 		const pressed = press({

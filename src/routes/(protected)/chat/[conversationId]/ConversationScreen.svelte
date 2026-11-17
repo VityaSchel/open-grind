@@ -6,6 +6,7 @@
 	import * as Card from "#lib/components/ui/card/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { setScreenLeaving } from "#lib/platform/back-gesture-event.svelte.ts";
+	import { followSoftKeyboard } from "#lib/platform/keyboard-follow.ts";
 	import type { MessageDraft } from "#lib/model/messaging/messages.ts";
 	import ChatNavBar from "./conversation-nav-bar/ConversationNavBar.svelte";
 	import {
@@ -77,7 +78,10 @@
 	/>
 {/if}
 <ChatNavBar />
-<Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
+<Card.Content
+	class="relative flex min-h-0 flex-1 flex-col p-0"
+	{@attach followSoftKeyboard}
+>
 	<ConversationMessages {composerHeight} />
 	<MessageComposer
 		conversationId={conversationState.conversationId}

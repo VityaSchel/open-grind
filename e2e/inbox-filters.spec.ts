@@ -34,7 +34,7 @@ async function listedConversations(page: Page): Promise<string[]> {
 }
 
 async function openInbox(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 	await expect

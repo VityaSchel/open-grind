@@ -78,7 +78,12 @@ export function attachTouchPull(
 			const root = scrollRoot();
 			if (
 				!root ||
-				!chainAllowsPull({ start: startTarget, root, position }) ||
+				!chainAllowsPull({
+					start: startTarget,
+					root,
+					position,
+					honorNoPull: landedAtPullEdge,
+				}) ||
 				!model.beginPull("touch")
 			) {
 				browserTookTheGesture = true;

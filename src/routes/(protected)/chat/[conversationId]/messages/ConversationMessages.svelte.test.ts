@@ -2,8 +2,9 @@
 
 import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "#lib/test/platform.ts";
 import type { OptimisticMessage } from "../merge-messages";
 import ConversationMessages from "./ConversationMessages.svelte";
 
@@ -31,6 +32,10 @@ vi.mock("./ConversationPaginationSentinel.svelte", () => ({
 vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: () => ({ scrollToRest: () => {} }),
 }));
+
+beforeEach(() => {
+	runningOn("android");
+});
 
 const OUR_PROFILE_ID = 1;
 const PEER_PROFILE_ID = 7;

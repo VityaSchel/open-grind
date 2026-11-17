@@ -8,7 +8,7 @@ const TAPS_DOT = `${INTEREST_TAB} [data-slot="badge"]`;
 test("the interest tab dot clears once received taps are opened", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator(INTEREST_TAB).waitFor({ timeout: 180_000 });
 

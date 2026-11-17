@@ -29,6 +29,7 @@ import {
 } from "#lib/i18n/fixtures/count-formatter.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
 
 function picks(count: number) {
@@ -67,7 +68,10 @@ async function uploadFromSheet(
 	);
 }
 
-beforeEach(() => previousUploads());
+beforeEach(() => {
+	runningOn("windows");
+	previousUploads();
+});
 
 afterEach(async () => {
 	cleanup();

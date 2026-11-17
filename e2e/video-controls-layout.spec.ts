@@ -34,7 +34,7 @@ test.describe("video controls layout", () => {
 	test("a narrow window keeps every control inside the bar", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 		// resize after the opening animation: pswp only binds resize once it ends
 		await page.setViewportSize({ width: 420, height: 260 });
 		await page.waitForTimeout(600);
@@ -61,7 +61,7 @@ test.describe("video controls layout", () => {
 	test("a phone-width window insets the bar 1rem from the slide edges", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 		await page.locator(ACTIVE_SURFACE).hover();
 		await page.waitForTimeout(300);
 
@@ -81,7 +81,7 @@ test.describe("video controls layout", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 720 });
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 		await page.locator(ACTIVE_SURFACE).hover();
 		await page.waitForTimeout(300);
 

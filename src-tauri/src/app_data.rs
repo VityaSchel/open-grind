@@ -157,54 +157,31 @@ pub async fn remove_app_data(
 
 #[cfg(test)]
 mod tests {
-	use std::sync::atomic::{AtomicUsize, Ordering};
+	use std::path::Path;
 	use std::sync::Barrier;
 
 	use super::*;
+	use crate::scratch_dir::ScratchDir;
 
-	struct ScratchDir(PathBuf);
-
-	impl ScratchDir {
-		fn new() -> Self {
-			static NEXT: AtomicUsize = AtomicUsize::new(0);
-			Self(std::env::temp_dir().join(format!(
-				"open-grind-app-data-{}-{}",
-				std::process::id(),
-				NEXT.fetch_add(1, Ordering::Relaxed)
-			)))
-		}
-
-		fn app_data(&self) -> AppDataDir {
-			AppDataDir(self.0.join("org.opengrind"))
-		}
-
-		fn entries(&self) -> Vec<String> {
-			let mut names: Vec<String> =
-				fs::read_dir(self.0.join("org.opengrind"))
-					.unwrap()
-					.map(|entry| {
-						entry
-							.unwrap()
-							.file_name()
-							.to_string_lossy()
-							.into_owned()
-					})
-					.collect();
-			names.sort();
-			names
-		}
+	fn app_data(scratch: &Path) -> AppDataDir {
+		AppDataDir(scratch.join("Application Support").join("org.opengrind"))
 	}
 
-	impl Drop for ScratchDir {
-		fn drop(&mut self) {
-			fs::remove_dir_all(&self.0).ok();
-		}
+	fn entries(dir: &AppDataDir) -> Vec<String> {
+		let mut names: Vec<String> = fs::read_dir(&dir.0)
+			.unwrap()
+			.map(|entry| {
+				entry.unwrap().file_name().to_string_lossy().into_owned()
+			})
+			.collect();
+		names.sort();
+		names
 	}
 
 	#[test]
 	fn written_bytes_read_back_unchanged() {
 		let scratch = ScratchDir::new();
-		let dir = scratch.app_data();
+		let dir = app_data(&scratch);
 		let content: Vec<u8> = (0u8..=255).collect();
 
 		dir.write_atomic(AppDataFile::Preferences, &content)
@@ -216,14 +193,14 @@ mod tests {
 	#[test]
 	fn a_write_creates_the_missing_directory_and_leaves_no_temp_file() {
 		let scratch = ScratchDir::new();
-		let dir = scratch.app_data();
+		let dir = app_data(&scratch);
 
 		dir.write_atomic(AppDataFile::Preferences, b"first")
 			.unwrap();
 		dir.write_atomic(AppDataFile::Preferences, b"second")
 			.unwrap();
 
-		assert_eq!(scratch.entries(), ["preferences.data"]);
+		assert_eq!(entries(&dir), ["preferences.data"]);
 		assert_eq!(
 			dir.read(AppDataFile::Preferences).unwrap().as_deref(),
 			Some(&b"second"[..])
@@ -233,7 +210,7 @@ mod tests {
 	#[test]
 	fn a_failed_rename_reports_the_error_and_removes_the_temp_file() {
 		let scratch = ScratchDir::new();
-		let dir = scratch.app_data();
+		let dir = app_data(&scratch);
 		fs::create_dir_all(dir.path(AppDataFile::Preferences)).unwrap();
 		fs::write(dir.path(AppDataFile::Preferences).join("occupant"), b"")
 			.unwrap();
@@ -242,13 +219,13 @@ mod tests {
 			.write_atomic(AppDataFile::Preferences, b"content")
 			.is_err());
 
-		assert_eq!(scratch.entries(), ["preferences.data"]);
+		assert_eq!(entries(&dir), ["preferences.data"]);
 	}
 
 	#[test]
 	fn overlapping_writes_all_succeed_and_publish_one_whole_content() {
 		let scratch = ScratchDir::new();
-		let dir = &scratch.app_data();
+		let dir = &app_data(&scratch);
 		let start = &Barrier::new(8);
 		let payloads: Vec<Vec<u8>> = (1..=8u8)
 			.map(|byte| vec![byte; usize::from(byte) * 64 * 1024])
@@ -270,7 +247,7 @@ mod tests {
 			"published a torn file of {} bytes",
 			published.len()
 		);
-		assert_eq!(scratch.entries(), ["preferences.data"]);
+		assert_eq!(entries(dir), ["preferences.data"]);
 	}
 
 	#[test]
@@ -278,7 +255,7 @@ mod tests {
 		let scratch = ScratchDir::new();
 
 		assert_eq!(
-			scratch.app_data().read(AppDataFile::Preferences).unwrap(),
+			app_data(&scratch).read(AppDataFile::Preferences).unwrap(),
 			None
 		);
 	}
@@ -286,7 +263,7 @@ mod tests {
 	#[test]
 	fn removing_deletes_the_file_and_tolerates_a_missing_one() {
 		let scratch = ScratchDir::new();
-		let dir = scratch.app_data();
+		let dir = app_data(&scratch);
 		dir.write_atomic(AppDataFile::Preferences, b"content")
 			.unwrap();
 

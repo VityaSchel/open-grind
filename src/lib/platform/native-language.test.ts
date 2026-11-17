@@ -3,11 +3,10 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LanguageSettings } from "./language-sync";
 import { NATIVE_READ_TIMEOUT_MS } from "./regional-settings";
 
-const { invokeMock, tauri, os, preferences } = vi.hoisted(() => {
+const { invokeMock, os, preferences } = vi.hoisted(() => {
 	const stored: LanguageSettings = { language: null, languageSync: null };
 	return {
 		invokeMock: vi.fn(),
-		tauri: { enabled: true },
 		os: { platform: "android" },
 		preferences: { stored, writable: true },
 	};
@@ -16,7 +15,6 @@ const { invokeMock, tauri, os, preferences } = vi.hoisted(() => {
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
-	isTauri: () => tauri.enabled,
 }));
 
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => os.platform }));
@@ -97,7 +95,6 @@ beforeEach(() => {
 	vi.restoreAllMocks();
 	invokeMock.mockReset();
 	answer();
-	tauri.enabled = true;
 	os.platform = "android";
 	preferences.stored = { language: null, languageSync: null };
 	preferences.writable = true;
@@ -133,12 +130,8 @@ describe("publishNativeLanguage", () => {
 		},
 	);
 
-	it.each([
-		["the iOS app", true, "ios"],
-		["a browser", false, "android"],
-	])("sends nothing in %s", async (_, enabled, platform) => {
-		tauri.enabled = enabled;
-		os.platform = platform;
+	it("sends nothing on iOS", async () => {
+		os.platform = "ios";
 		const { setLocale, publishNativeLanguage } = await load();
 		await setLocale({ locale: "de" });
 

@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 import FavoriteNoteButton from "./FavoriteNoteButton.svelte";
@@ -18,8 +19,11 @@ function renderButton(note: FavoriteNote) {
 	return screen.getByRole("button");
 }
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 

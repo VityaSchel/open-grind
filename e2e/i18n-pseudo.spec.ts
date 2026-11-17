@@ -80,6 +80,7 @@ async function openErrorPage(
 	page: Page,
 	{ locale }: { locale: string },
 ): Promise<Locator> {
+	await installTauriShim(page, { platform: "macos" });
 	await page.route(FAILING_LOAD, (route) =>
 		route.fulfill({ contentType: "text/javascript", body: THROWING_LOAD }),
 	);
@@ -91,6 +92,7 @@ async function openNotFoundPage(
 	page: Page,
 	{ locale }: { locale: string },
 ): Promise<Locator> {
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(`${MISSING_ROUTE}?locale=${locale}`);
 	return waitForErrorContent(page);
 }
@@ -229,7 +231,7 @@ test("the command center trigger, palette and commands render only pseudo-transl
 		{ query: "@", shows: paletteOption("@copy") },
 		{ query: "grid", shows: COMMAND_EMPTY },
 	];
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/?locale=en-XA");
 	await page
 		.locator("nav a")
@@ -266,7 +268,7 @@ test("the command center trigger, palette and commands render only pseudo-transl
 test("the inbox and its quick-filter drawers render only pseudo-translated text", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat?locale=en-XA");
 	const inbox = page.getByRole("main");
 	await inbox
@@ -298,7 +300,7 @@ test("the inbox and its quick-filter drawers render only pseudo-translated text"
 test("a conversation, a message menu, the attachment tabs, a media tile's menu and the Location tab render only pseudo-translated text", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(`${PHOTO_CONVERSATION}?locale=en-XA`);
 	const conversation = page.getByRole("main");
 	await conversation
@@ -361,7 +363,7 @@ test("a conversation, a message menu, the attachment tabs, a media tile's menu a
 test("a GIF message, the GIPHY prompt and the GIFs and stickers sheet render only pseudo-translated text", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(`${DEMO_CONVERSATION}?locale=en-XA`);
 	const gif = page.locator(GIPHY_MESSAGE).first();
 	await gif.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
@@ -406,7 +408,7 @@ test("a GIF message, the GIPHY prompt and the GIFs and stickers sheet render onl
 test("the profile note editor, actions menu and report sheet render only pseudo-translated text", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(`${DEMO_PROFILE}?locale=en-XA`);
 	await expect(page.getByRole("navigation")).toHaveCount(
 		PROFILE_NAVIGATIONS,
@@ -458,7 +460,7 @@ test("the profile note editor, actions menu and report sheet render only pseudo-
 test("the account popups render only pseudo-translated text", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto("/?locale=en-XA");
 	await page
@@ -526,7 +528,7 @@ test("the account popups render only pseudo-translated text", async ({
 test("my albums, an album, its Shared With list, its previous uploads and its menu render only pseudo-translated text", async ({
 	page,
 }) => {
-	await openAlbums(page, { locale: "en-XA" });
+	await openAlbums(page, { platform: "macos", locale: "en-XA" });
 	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
 	const content = page.getByRole("main");
 	const landmarks = content.or(page.getByRole("navigation"));
@@ -598,7 +600,7 @@ async function showLastSlide(page: Page): Promise<void> {
 test("an album lightbox and its played-out video slide render only pseudo-translated text", async ({
 	page,
 }) => {
-	await serveAlbumMedia(page);
+	await serveAlbumMedia(page, { platform: "macos" });
 	const lightbox = await openAlbumLightbox(page, {
 		conversation: PLAYED_OUT_CONVERSATION,
 	});
@@ -617,7 +619,7 @@ test("an album lightbox and its played-out video slide render only pseudo-transl
 test("album video controls render only pseudo-translated text", async ({
 	page,
 }) => {
-	await serveAlbumMedia(page);
+	await serveAlbumMedia(page, { platform: "macos" });
 	await page.route(CLIP, () => {});
 	await openAlbumLightbox(page, { conversation: DEMO_CONVERSATION });
 	await showLastSlide(page);
@@ -631,7 +633,7 @@ test("album video controls render only pseudo-translated text", async ({
 });
 
 test("ar-XB lays the navigation bar out right to left", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/right-now?locale=ar-XB");
 	const navBar = page
 		.getByRole("navigation")

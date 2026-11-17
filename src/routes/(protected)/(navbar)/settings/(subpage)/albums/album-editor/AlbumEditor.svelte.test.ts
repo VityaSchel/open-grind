@@ -7,7 +7,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { api, errorToast, guardUnsavedChanges, sonner } = vi.hoisted(() => ({
 	api: {
@@ -38,6 +38,7 @@ vi.mock("#lib/components/shared/unsaved-changes-guard.svelte.ts", () => ({
 import { ApiError } from "#lib/api/api-error.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import AlbumEditor from "./AlbumEditor.svelte";
 
@@ -80,8 +81,11 @@ async function removeAndSave(name: string): Promise<void> {
 	await fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 }
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	vi.clearAllMocks();
 	await setLocale({ locale: SOURCE_LOCALE });
 });

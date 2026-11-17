@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { makeScrollable } from "./pull-test-helpers";
-import { chainAllowsPull } from "./scroll-chain";
+import { chainAllowsPull, chainRestsAt } from "./scroll-chain";
+
+const NO_PULL = "data-refresh-no-pull";
 
 describe("chainAllowsPull", () => {
 	it("allows when no intermediate scroller can consume the pull", () => {
@@ -87,5 +89,129 @@ describe("chainAllowsPull", () => {
 		).toBe(false);
 		document.body.style.overflow = "";
 		leaf.remove();
+	});
+});
+
+describe("chainAllowsPull from a no-pull area", () => {
+	function tree() {
+		const outside = document.createElement("section");
+		const root = document.createElement("div");
+		const area = document.createElement("div");
+		const photo = document.createElement("img");
+		const row = document.createElement("p");
+		area.append(photo);
+		root.append(area, row);
+		outside.append(root);
+		document.body.append(outside);
+		return { outside, root, area, photo, row };
+	}
+
+	it("refuses a pull that starts inside a marked area only when no-pull areas are honored", () => {
+		const { outside, root, area, photo } = tree();
+		area.setAttribute(NO_PULL, "");
+
+		expect(
+			chainAllowsPull({
+				start: photo,
+				root,
+				position: "top",
+				honorNoPull: true,
+			}),
+		).toBe(false);
+		expect(
+			chainAllowsPull({
+				start: area,
+				root,
+				position: "top",
+				honorNoPull: true,
+			}),
+		).toBe(false);
+		expect(chainAllowsPull({ start: photo, root, position: "top" })).toBe(
+			true,
+		);
+		outside.remove();
+	});
+
+	it("still pulls from outside the marked area", () => {
+		const { outside, root, area, row } = tree();
+		area.setAttribute(NO_PULL, "");
+
+		expect(
+			chainAllowsPull({
+				start: row,
+				root,
+				position: "top",
+				honorNoPull: true,
+			}),
+		).toBe(true);
+		outside.remove();
+	});
+
+	it("ignores a marker on the root or above it", () => {
+		const { outside, root, photo } = tree();
+		root.setAttribute(NO_PULL, "");
+		outside.setAttribute(NO_PULL, "");
+
+		expect(
+			chainAllowsPull({
+				start: photo,
+				root,
+				position: "top",
+				honorNoPull: true,
+			}),
+		).toBe(true);
+		expect(
+			chainAllowsPull({
+				start: root,
+				root,
+				position: "top",
+				honorNoPull: true,
+			}),
+		).toBe(true);
+		outside.remove();
+	});
+});
+
+describe("chainRestsAt", () => {
+	function nest() {
+		const page = document.createElement("div");
+		const carousel = document.createElement("div");
+		const photo = document.createElement("img");
+		carousel.append(photo);
+		page.append(carousel);
+		document.body.append(page);
+		makeScrollable(page);
+		makeScrollable(carousel);
+		return { page, carousel, photo };
+	}
+
+	it("rests at the top while every scroller around the start is at its top", () => {
+		const { page, photo } = nest();
+
+		expect(chainRestsAt({ start: photo, position: "top" })).toBe(true);
+		page.remove();
+	});
+
+	it.each(["page", "carousel"] as const)(
+		"does not rest at the top while the %s can still scroll up",
+		(scrolled) => {
+			const scrollers = nest();
+			scrollers[scrolled].scrollTop = 40;
+
+			expect(
+				chainRestsAt({ start: scrollers.photo, position: "top" }),
+			).toBe(false);
+			scrollers.page.remove();
+		},
+	);
+
+	it("rests at the bottom only once every scroller around the start reached its floor", () => {
+		const { page, carousel, photo } = nest();
+
+		expect(chainRestsAt({ start: photo, position: "bottom" })).toBe(false);
+		page.scrollTop = 400;
+		carousel.scrollTop = 400;
+		expect(chainRestsAt({ start: photo, position: "bottom" })).toBe(true);
+		page.remove();
 	});
 });

@@ -53,7 +53,7 @@ const SURFACES: Surface[] = [
 
 async function open(page: Page, surface: Surface) {
 	if (surface.prepare) test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(surface.path);
 	await page.locator("nav a").first().waitFor({ timeout: 60_000 });
 	await surface.prepare?.(page);
@@ -158,7 +158,7 @@ test.describe("side by side with a conversation", () => {
 	test("the inbox button centers on the conversation list, not the window", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		await page
 			.locator("a[href^='/chat/']")
@@ -180,7 +180,7 @@ test.describe("side by side with a conversation", () => {
 });
 
 test("a list that fits on screen never offers the button", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/account/hidden");
 	await expect(page.getByText("No Hidden Users")).toBeVisible({
 		timeout: 60_000,

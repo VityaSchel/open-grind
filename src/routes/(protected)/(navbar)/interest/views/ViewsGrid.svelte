@@ -31,6 +31,7 @@
 		<DataRefreshControl
 			{container}
 			updating={views.refreshing}
+			failed={views.refreshFailed}
 			position="top"
 			onrefresh={() => void views.refresh()}
 		/>

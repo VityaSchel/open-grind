@@ -1,7 +1,6 @@
 import type { PullModel } from "./pull-model.svelte";
-import { AT_BOUNDARY_PX } from "./scroll-chain";
+import { AT_BOUNDARY_PX, PAST_EDGE_PX } from "./scroll-chain";
 
-const ENGAGE_PX = 0.5;
 const BAND_DETECT_PX = 2;
 const MOMENTUM_VELOCITY_PX_PER_MS = 1.6;
 // Scroll events come in bursts, so one frame's speed on its own is unreliable.
@@ -85,7 +84,7 @@ export function attachOverscrollPull(
 
 		if (model.source === "touch") return;
 
-		if (over <= ENGAGE_PX) {
+		if (over <= PAST_EDGE_PX) {
 			const scrolledIntoContent = over < -AT_BOUNDARY_PX;
 			if (scrolledIntoContent) offBoundary = true;
 			if (active) {
@@ -101,7 +100,7 @@ export function attachOverscrollPull(
 			return;
 		}
 
-		const bandBegins = cameFrom <= ENGAGE_PX || pausedBefore;
+		const bandBegins = cameFrom <= PAST_EDGE_PX || pausedBefore;
 		if (!active && bandBegins) {
 			const keyAt = scrollKeyAt();
 			keyBand = keyAt !== null && at - keyAt <= KEY_BAND_WINDOW_MS;

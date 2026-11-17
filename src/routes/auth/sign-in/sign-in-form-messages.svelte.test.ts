@@ -9,9 +9,14 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { signInFlowEnded, signInInProgress } from "#lib/api/sign-in.ts";
+import {
+	signInFlowEnded,
+	signInInProgress,
+	signInTimedOut,
+} from "#lib/api/sign-in.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import SignInForm from "./SignInForm.svelte";
 
 const { callMethodMock, gotoMock, toastMock } = vi.hoisted(() => ({
@@ -98,12 +103,11 @@ const facebookFailures = [
 		marker: "facebook-unverified",
 		english: "Couldn’t verify the Facebook sign-in",
 	},
-	{
-		failure: "a Facebook sign-in that timed out",
-		marker: "facebook-timed-out",
-		english: "Sign-in timed out",
-	},
 ];
+
+beforeEach(() => runningOn("windows"));
+
+afterEach(resetPlatform);
 
 describe("SignInForm OAuth failures", () => {
 	beforeEach(() => {
@@ -170,6 +174,26 @@ describe("SignInForm OAuth failures", () => {
 
 			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
 				"Sign-in flow ended unexpectedly",
+			);
+		},
+	);
+
+	it.each(["Google", "Facebook"])(
+		"explains a %s sign-in that timed out",
+		async (vendor) => {
+			callMethodMock.mockRejectedValue({
+				kind: "Auth",
+				message: signInTimedOut,
+			});
+			render(SignInForm);
+
+			await fireEvent.click(
+				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+			);
+			await settle();
+
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				"Sign-in timed out",
 			);
 		},
 	);

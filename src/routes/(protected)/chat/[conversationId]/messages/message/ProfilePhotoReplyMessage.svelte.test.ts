@@ -6,7 +6,7 @@ import {
 	within,
 } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }));
 vi.mock("../../conversation-state.svelte", () => ({
@@ -18,6 +18,7 @@ vi.mock("#lib/api/current-session.ts", () => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { profileMediaUrl } from "#lib/util/media.ts";
 import * as photoswipe from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
@@ -67,6 +68,10 @@ async function pointerClick(
 	);
 	await fireEvent.click(target, { detail: 1 });
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();

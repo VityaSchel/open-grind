@@ -40,6 +40,7 @@ import {
 	PEER_ID,
 	settled,
 } from "#lib/chat/conversations-test-helpers.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CHAT = "1:2";
@@ -57,6 +58,7 @@ let conversations: ConversationsState;
 const chats: ConversationState[] = [];
 
 beforeEach(async () => {
+	runningOn("android");
 	vi.clearAllMocks();
 	localStorage.clear();
 	getConversationsMock.mockResolvedValue({

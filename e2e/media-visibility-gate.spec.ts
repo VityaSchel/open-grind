@@ -4,31 +4,23 @@ import {
 	PREFETCH_MARGIN_PX,
 	TRANSPARENT_PIXEL,
 } from "../src/lib/util/load-when-visible";
-import { ensureGridLocation, installTauriShim } from "./support/app";
+import { GRID_SCROLLER, installTauriShim, openGrid } from "./support/app";
+import { loadGridPages } from "./support/grid-window";
 import { AVATAR_HOST, serveImages } from "./support/media";
 
-const SCROLLER = ".pull-scroller";
 const PROFILE_LINK = 'a[href^="/profile/"]';
 
 const JUMP_PAST_MOUNTED_BAND = 3000;
 
 type Tile = { armed: boolean; gapBelow: number; onScreen: boolean };
 
-async function openGrid(page: Page) {
+async function openGridWithPagesLoaded(page: Page) {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await serveImages(page, AVATAR_HOST);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
-	for (let page_ = 0; page_ < 5; page_++) {
-		await page.evaluate((selector) => {
-			const scroller = document.querySelector(selector)!;
-			scroller.scrollTo({ top: scroller.scrollHeight });
-		}, SCROLLER);
-		await page.waitForTimeout(400);
-	}
+	await loadGridPages(page, { pages: 5 });
 }
 
 async function scrollTo(page: Page, top: number) {
@@ -36,7 +28,7 @@ async function scrollTo(page: Page, top: number) {
 		({ selector, offset }) => {
 			document.querySelector(selector)!.scrollTo({ top: offset });
 		},
-		{ selector: SCROLLER, offset: top },
+		{ selector: GRID_SCROLLER, offset: top },
 	);
 	await page.waitForTimeout(400);
 }
@@ -56,7 +48,7 @@ function tiles(page: Page, placeholder: string): Promise<Tile[]> {
 				};
 			});
 		},
-		{ selector: SCROLLER, link: PROFILE_LINK, blank: placeholder },
+		{ selector: GRID_SCROLLER, link: PROFILE_LINK, blank: placeholder },
 	);
 }
 
@@ -64,7 +56,7 @@ test.describe("media visibility gate", () => {
 	test("loads what is on screen and holds back what is far below", async ({
 		page,
 	}) => {
-		await openGrid(page);
+		await openGridWithPagesLoaded(page);
 
 		for (const offset of [
 			JUMP_PAST_MOUNTED_BAND,
@@ -89,7 +81,7 @@ test.describe("media visibility gate", () => {
 	test("arms a held-back tile once it is scrolled into view", async ({
 		page,
 	}) => {
-		await openGrid(page);
+		await openGridWithPagesLoaded(page);
 		await scrollTo(page, JUMP_PAST_MOUNTED_BAND);
 
 		const before = await tiles(page, TRANSPARENT_PIXEL);
@@ -108,7 +100,7 @@ test.describe("media visibility gate", () => {
 	});
 
 	test("shows photos again on the way back up", async ({ page }) => {
-		await openGrid(page);
+		await openGridWithPagesLoaded(page);
 		await scrollTo(page, JUMP_PAST_MOUNTED_BAND * 3);
 		await scrollTo(page, 0);
 

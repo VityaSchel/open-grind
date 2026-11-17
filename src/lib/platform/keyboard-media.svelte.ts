@@ -5,7 +5,7 @@ import z from "zod";
 
 import { t } from "#lib/i18n/index.ts";
 import { discardStagedMedia } from "#lib/platform/media-file.ts";
-import { isAndroidPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 
 const KEYBOARD_MEDIA_EVENT = "keyboard-media";
@@ -33,11 +33,19 @@ export function receiveKeyboardMedia(
 }
 
 export function listenForKeyboardMedia(): () => void {
-	if (!isAndroidPlatform()) return () => {};
-	const unlisten = listen(KEYBOARD_MEDIA_EVENT, ({ payload }) => {
-		deliver(stagedSchema.parse(payload));
-	});
-	return () => void unlisten.then((stop) => stop());
+	switch (currentPlatform()) {
+		case "android": {
+			const unlisten = listen(KEYBOARD_MEDIA_EVENT, ({ payload }) => {
+				deliver(stagedSchema.parse(payload));
+			});
+			return () => void unlisten.then((stop) => stop());
+		}
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return () => {};
+	}
 }
 
 function deliver({ id, mimeType }: z.infer<typeof stagedSchema>): void {

@@ -1,3 +1,4 @@
+import { currentPlatform } from "#lib/platform/os.ts";
 import type { PlainMessageKey } from "#lib/i18n/index.ts";
 
 export const INTEREST_TABS = [
@@ -10,4 +11,16 @@ export function interestTabIndex(pathname: string): number {
 		0,
 		INTEREST_TABS.findIndex(({ href }) => href === pathname),
 	);
+}
+
+export function tabChipDetachesAtRest(): boolean {
+	switch (currentPlatform()) {
+		case "android":
+			return true;
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
 }

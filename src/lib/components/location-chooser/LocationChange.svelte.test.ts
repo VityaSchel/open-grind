@@ -5,6 +5,7 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { encodeGeohash } from "#lib/model/geohash.ts";
+import { runningOn } from "#lib/test/platform.ts";
 
 const { preferencesSnapshotMock, setPreferencesMock } = vi.hoisted(() => ({
 	preferencesSnapshotMock: vi.fn(),
@@ -31,7 +32,6 @@ vi.mock("#lib/location/location-request.svelte.ts", () => ({
 		lastFix: null,
 	},
 }));
-vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => true }));
 vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	above: () => ({ current: true }),
 }));
@@ -45,6 +45,7 @@ const chooserState = () => screen.queryByRole("dialog")?.dataset.state;
 
 describe("LocationChange", () => {
 	beforeEach(() => {
+		runningOn("android");
 		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: false,
 			geohash: encodeGeohash({ lat: 48.8566, lon: 2.3522 }),

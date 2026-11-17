@@ -18,7 +18,7 @@ function forceScrollRoot(page: Page) {
 }
 
 async function openNoteEditor(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(FAVORITE_PROFILE);
 	const trigger = page.getByRole("button", { name: /note/i }).first();
 	await trigger.waitFor({ timeout: 60_000 });

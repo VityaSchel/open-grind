@@ -10,11 +10,7 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { platform, desktopEntry } = vi.hoisted(() => ({
-	platform: {
-		isAndroidPlatform: vi.fn(() => false),
-		isMacosPlatform: vi.fn(() => false),
-	},
+const { desktopEntry } = vi.hoisted(() => ({
 	desktopEntry: { available: false },
 }));
 
@@ -25,10 +21,6 @@ vi.mock("#lib/app-data/index.ts", () => ({
 	writeAppDataFileAtomic: () => Promise.resolve(),
 }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	...platform,
-}));
 vi.mock("#lib/platform/desktop-entry.svelte.ts", () => ({
 	desktopEntryAvailable: () => desktopEntry.available,
 	desktopEntryInstalled: () => false,
@@ -43,6 +35,7 @@ import {
 	hydratePreferences,
 	preferencesSnapshot,
 } from "#lib/app-data/preferences.svelte.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import DisplayPage from "./+page.svelte";
 
 const units = () => screen.getByRole("radio", { name: "Metric" });
@@ -66,42 +59,44 @@ function inDocumentOrder(elements: (HTMLElement | null)[]): boolean {
 }
 
 beforeEach(() => {
-	platform.isAndroidPlatform.mockReturnValue(false);
-	platform.isMacosPlatform.mockReturnValue(false);
+	runningOn("linux");
 	desktopEntry.available = false;
 });
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	resetPlatform();
+});
 
 describe("the Display settings", () => {
 	it.each([
-		{ os: "Android", android: true, macos: false, entry: false },
-		{ os: "macOS", android: false, macos: true, entry: false },
+		{ os: "Android", platform: "android", vibrates: true, entry: false },
+		{ os: "iOS", platform: "ios", vibrates: true, entry: false },
+		{ os: "macOS", platform: "macos", vibrates: true, entry: false },
 		{
 			os: "Linux with an apps menu",
-			android: false,
-			macos: false,
+			platform: "linux",
+			vibrates: false,
 			entry: true,
 		},
-		{ os: "Windows", android: false, macos: false, entry: false },
-	])(
+		{ os: "Windows", platform: "windows", vibrates: false, entry: false },
+	] as const)(
 		"offer units and blur on $os, with haptics only where it has them and the apps menu entry only where it has one",
-		({ android, macos, entry }) => {
-			platform.isAndroidPlatform.mockReturnValue(android);
-			platform.isMacosPlatform.mockReturnValue(macos);
+		({ platform, vibrates, entry }) => {
+			runningOn(platform);
 			desktopEntry.available = entry;
 
 			render(DisplayPage);
 
 			expect(inDocumentOrder([units(), blur()])).toBe(true);
-			expect(haptics() !== null).toBe(android || macos);
+			expect(haptics() !== null).toBe(vibrates);
 			expect(appsMenu() !== null).toBe(entry);
 			expect(screen.queryAllByRole("heading")).toEqual([]);
 		},
 	);
 
 	it("keep units, blur, haptic feedback and the apps menu entry in that order", () => {
-		platform.isAndroidPlatform.mockReturnValue(true);
+		runningOn("android");
 		desktopEntry.available = true;
 
 		render(DisplayPage);

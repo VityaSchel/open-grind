@@ -14,11 +14,13 @@
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import type { RenderedGridProfile } from "#lib/grid/grid.ts";
 	import BlockedProfile from "../BlockedProfile.svelte";
 	import ProfileBottomNavBar from "../bottom-nav/ProfileBottomNavBar.svelte";
 	import FavoriteNoteButton from "../favorite-note/FavoriteNoteButton.svelte";
 	import HiddenProfile from "../HiddenProfile.svelte";
+	import { holdsStillHere, holdsStillOnPull } from "../hold-still-on-pull";
 	import ImageCarousel from "../ImageCarousel.svelte";
 	import type { ProfileState } from "../profile-state.svelte";
 	import ProfileBody from "../ProfileBody.svelte";
@@ -40,6 +42,8 @@
 		row: RenderedGridProfile | null;
 		heroHash: string | null;
 	} = $props();
+
+	const holdsStill = holdsStillHere();
 
 	let scroller = $state<HTMLElement | null>(null);
 
@@ -114,6 +118,7 @@
 			<DataRefreshControl
 				container={scroller}
 				updating={profileState.refreshing}
+				failed={profileState.refreshFailed}
 				position="top"
 				onrefresh={() => profileState.refresh()}
 			/>
@@ -121,29 +126,47 @@
 		<div
 			bind:this={scroller}
 			{...scrollerHooks}
-			class="h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto"
+			class={[
+				"@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto",
+				{ "[scrollbar-gutter:stable]": holdsStill },
+			]}
+			{@attach active && scrollsToTopOnStatusBarTap}
 		>
 			<main
 				inert={!active}
 				data-refresh-content
 				class="relative mx-auto min-h-overscrollable w-full max-w-200"
 			>
-				{#if profile || medias.length > 0}
-					<ImageCarousel
-						{medias}
-						own={ourProfile}
-						onreply={profile && !ourProfile && active
-							? (reply) => {
-									if (active && !leaving)
-										void profileState.replyToPhoto(reply);
-								}
-							: undefined}
-					/>
-				{:else}
-					<Skeleton
-						class="aspect-3/4 h-auto max-h-photo w-full rounded-none"
-					/>
-				{/if}
+				<div
+					data-slot="profile-photo-row"
+					class={[
+						"relative",
+						{
+							"before:absolute before:inset-x-[calc(50%-50cqw)] before:inset-y-0":
+								holdsStill,
+						},
+					]}
+					{@attach holdsStillOnPull}
+				>
+					{#if profile || medias.length > 0}
+						<ImageCarousel
+							{medias}
+							own={ourProfile}
+							onreply={profile && !ourProfile && active
+								? (reply) => {
+										if (active && !leaving)
+											void profileState.replyToPhoto(
+												reply,
+											);
+									}
+								: undefined}
+						/>
+					{:else}
+						<Skeleton
+							class="aspect-3/4 h-auto max-h-photo w-full rounded-none"
+						/>
+					{/if}
+				</div>
 				{#if profile?.isFavorite && profileState.note && !ourProfile}
 					<FavoriteNoteButton
 						profileId={profile.profileId}

@@ -16,14 +16,14 @@ const mocks = vi.hoisted(() => ({
 	events: [] as string[],
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: mocks.invoke,
-	isTauri: () => true,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: mocks.invoke }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn() }));
 vi.mock("$app/navigation", () => ({ goto: mocks.goto }));
 vi.mock("svelte-sonner", () => ({ toast: { error: mocks.toastError } }));
-vi.mock("#lib/api/google-handoff-state.svelte.ts", () => ({
+vi.mock("#lib/api/google-handoff-state.svelte.ts", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("#lib/api/google-handoff-state.svelte.ts")
+	>()),
 	confirmAccountSwitch: mocks.confirmAccountSwitch,
 	googleHandoffState: mocks.handoff,
 }));
@@ -35,10 +35,6 @@ vi.mock("#lib/api/sign-in.ts", () => ({
 	reportSignInFailure: mocks.reportSignInFailure,
 }));
 vi.mock("#lib/api/sign-out.ts", () => ({ signOut: mocks.signOut }));
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	isAndroidPlatform: () => true,
-}));
 
 import { listen } from "@tauri-apps/api/event";
 
@@ -46,6 +42,7 @@ import {
 	consumeGoogleHandoff,
 	startGoogleHandoffWatch,
 } from "#lib/api/google-handoff.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 
 const SIGNED_IN_AS = 42;
 const NEW_ACCOUNT = { profileId: 7, restriction: null };
@@ -249,14 +246,16 @@ describe("Google handoff failures in the active locale", () => {
 describe("watching for a Google handoff", () => {
 	beforeEach(() => {
 		vi.mocked(listen).mockClear();
+		runningOn("android");
 		backend({ exchange: () => NEW_ACCOUNT, pending: () => false });
 	});
 
 	afterEach(() => {
 		vi.unstubAllGlobals();
+		resetPlatform();
 	});
 
-	it("listens for handoffs on Android", async () => {
+	it("listens for handoffs when the companion app signs in", async () => {
 		await startGoogleHandoffWatch();
 
 		expect(listen).toHaveBeenCalledWith(
@@ -266,6 +265,15 @@ describe("watching for a Google handoff", () => {
 		await vi.waitFor(() =>
 			expect(mocks.events).toContain("google_handoff_pending"),
 		);
+	});
+
+	it("never picks up a handoff when the sign-in is pasted", async () => {
+		runningOn("ios");
+
+		await startGoogleHandoffWatch();
+
+		expect(listen).not.toHaveBeenCalled();
+		expect(mocks.invoke).not.toHaveBeenCalled();
 	});
 
 	it("never picks up a handoff in the demo", async () => {

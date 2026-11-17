@@ -7,11 +7,10 @@ const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
+import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import MediaSheetTile from "./MediaSheetTile.svelte";
-
-const LONG_PRESS_MS = 450;
-
-let clock = Date.parse("2026-01-01T00:00:00Z");
 
 function renderTile({ busy }: { busy: boolean }) {
 	const onMenu = vi.fn();
@@ -30,30 +29,22 @@ function renderTile({ busy }: { busy: boolean }) {
 	return { tile: getByRole("button"), onMenu };
 }
 
-function touchDown(): MouseEvent {
-	return Object.assign(new MouseEvent("pointerdown", { bubbles: true }), {
-		pointerType: "touch",
-	});
-}
+useHoldClock();
 
 beforeEach(() => {
-	vi.useFakeTimers();
-	clock += 60_000;
-	vi.setSystemTime(clock);
 	playHapticMock.mockReset();
 });
 
 afterEach(() => {
 	cleanup();
-	vi.useRealTimers();
 });
 
 describe("media tile long press", () => {
 	it("taps once as a touch hold opens the tile's menu", () => {
 		const { tile, onMenu } = renderTile({ busy: false });
 
-		tile.dispatchEvent(touchDown());
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		tile.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 
 		expect(onMenu).toHaveBeenCalledOnce();
 		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
@@ -62,8 +53,8 @@ describe("media tile long press", () => {
 	it("stays quiet when a touch hold lands on a tile being deleted", () => {
 		const { tile, onMenu } = renderTile({ busy: true });
 
-		tile.dispatchEvent(touchDown());
-		vi.advanceTimersByTime(LONG_PRESS_MS);
+		tile.dispatchEvent(pointerEvent("pointerdown"));
+		vi.advanceTimersByTime(LONG_PRESS_DURATION_MS);
 		const menuEvent = contextMenuEvent({ pointerType: "touch" });
 		tile.dispatchEvent(menuEvent);
 

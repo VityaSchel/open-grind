@@ -51,6 +51,7 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 	},
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import { conversation, OUR_ID, settled } from "./conversations-test-helpers";
 
@@ -59,6 +60,7 @@ beforeEach(() => {
 	deleteConversationForMeMock.mockImplementation(() => Promise.resolve());
 	reconcileHandlers.length = 0;
 	conversationDeleteHandlers.length = 0;
+	runningOn("android");
 });
 
 describe("ConversationsState drafts", () => {

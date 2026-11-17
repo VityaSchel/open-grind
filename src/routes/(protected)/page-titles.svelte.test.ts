@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("$app/env", () => ({ version: "test" }));
 vi.mock("./(navbar)/settings/(me)/AccountSettingsLink.svelte", () => ({
@@ -35,6 +35,7 @@ vi.mock("#lib/util/scroll-restore.svelte.ts", () => ({
 
 import { PSEUDO_TITLE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import BrowsePage from "./(navbar)/(root)/+page.svelte";
 import RightNowPage from "./(navbar)/right-now/+page.svelte";
 import MePage from "./(navbar)/settings/(me)/+page.svelte";
@@ -55,8 +56,11 @@ const pages = [
 	},
 ];
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	document.title = "";
 	await setLocale({ locale: SOURCE_LOCALE });
 });

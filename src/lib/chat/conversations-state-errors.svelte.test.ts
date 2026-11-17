@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	getConversationsMock,
@@ -40,6 +40,7 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 	ws: { on: () => Promise.resolve(vi.fn()) },
 }));
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import { conversation, OUR_ID, settled } from "./conversations-test-helpers";
 
@@ -56,6 +57,7 @@ const refusedUnless =
 		conversationId === accepted ? Promise.resolve() : refused();
 
 beforeEach(() => {
+	runningOn("android");
 	vi.clearAllMocks();
 	localStorage.clear();
 	vi.spyOn(console, "error").mockImplementation(() => {});
@@ -89,6 +91,8 @@ function expectOneToast(label: string) {
 		error: expect.any(Error),
 	});
 }
+
+afterEach(resetPlatform);
 
 describe("ConversationsState failure toasts", () => {
 	it.each([

@@ -42,12 +42,14 @@
 				<DataRefreshControl
 					container={gridContainer}
 					updating={gridState.refreshing}
+					failed={gridState.refreshFailed}
 					position="top"
 					onrefresh={() =>
 						void gridState.refresh({ keepLoadedPages: false })}
 				/>
 			{/if}
 			<div
+				data-slot="grid-scroller"
 				class="pull-scroller"
 				bind:this={gridContainer}
 				onscroll={() =>

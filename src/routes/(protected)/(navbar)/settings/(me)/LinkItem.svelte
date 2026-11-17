@@ -5,6 +5,7 @@
 	import * as Dialog from "#lib/components/ui/dialog/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
 	import Link from "#lib/components/ui/link/Link.svelte";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import ButtonItemContent from "./ButtonItemContent.svelte";
 
 	let {
@@ -25,6 +26,11 @@
 	} = $props();
 
 	let warningOpen = $state(false);
+
+	dismissOnBackGesture({
+		active: () => warningOpen,
+		dismiss: () => (warningOpen = false),
+	});
 </script>
 
 {#snippet content()}

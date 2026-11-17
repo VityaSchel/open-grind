@@ -275,6 +275,8 @@
 	},
 	"location": {
 		"permissionDenied": "Location permission denied. Change this in your system settings to use GPS.",
+		"preciseLocationOff": "Precise Location is off. Turn it on in your system settings to use GPS.",
+		"locationServicesOff": "Location Services are off or restricted. Turn them on in your system settings to use GPS.",
 		"openSettings": "Settings",
 		"errors": {
 			"locateFailed": "Couldn’t get your current location",

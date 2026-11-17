@@ -49,6 +49,7 @@ vi.mock("./right-now-viewer.ts", () => ({
 }));
 
 import { rightNowPostSheetRequest } from "#lib/components/right-now/post-sheet-request-state.svelte.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { ReportTarget } from "#lib/components/report/report-request.ts";
 import type {
@@ -143,6 +144,7 @@ function focusOutsideCard() {
 }
 
 beforeEach(() => {
+	runningOn("windows");
 	vi.resetAllMocks();
 	getRightNowPostReportMock.mockResolvedValue(null);
 	page.url = new URL("http://localhost/profile/100006");
@@ -155,6 +157,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	cleanup();
+	resetPlatform();
 	document.body.replaceChildren();
 	rightNowPostSheetRequest.take();
 	vi.restoreAllMocks();

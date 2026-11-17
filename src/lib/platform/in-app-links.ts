@@ -1,4 +1,4 @@
-import { isMacosPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { isProxiedMediaUrl } from "#lib/util/media.ts";
 import { isPlainClick } from "#lib/util/plain-click.ts";
 
@@ -23,6 +23,18 @@ export function staysInApp({
 	);
 }
 
+function controlClickOpensMenu(): boolean {
+	switch (currentPlatform()) {
+		case "macos":
+			return true;
+		case "android":
+		case "ios":
+		case "linux":
+		case "windows":
+			return false;
+	}
+}
+
 export function keepLinksInApp(): () => void {
 	const listening = new AbortController();
 	const onClick = (event: MouseEvent) => {
@@ -39,7 +51,7 @@ export function keepLinksInApp(): () => void {
 			!fromKeyboard &&
 			event.button === 0 &&
 			event.ctrlKey &&
-			isMacosPlatform();
+			controlClickOpensMenu();
 		if (!secondaryClick && !staysInApp({ href: link.href, app: location }))
 			return;
 		event.preventDefault();

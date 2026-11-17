@@ -12,7 +12,11 @@ import {
 } from "./support/app";
 import {
 	backToInbox,
+	deleteFromList,
 	dim,
+	openInboxFromHome,
+	openRow,
+	openRows,
 	recordFrames,
 	row,
 	rows,
@@ -22,55 +26,13 @@ import {
 import { systemBack } from "./support/page-stack";
 import { PHONE } from "./support/stack-layers";
 
-async function openInboxFromHome(
-	page: Page,
-	{ platform }: { platform?: string } = {},
-) {
-	await page.setViewportSize(WIDE);
-	await installTauriShim(page, { platform });
-	await page.goto("/");
-	await page
-		.getByRole("link", { name: "Inbox", exact: true })
-		.click({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await expect(page).toHaveURL(/\/chat$/);
-	await rows(page).nth(3).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-}
-
-async function deleteFromList(page: Page, { href }: { href: string }) {
-	await row(page, { href }).click({ button: "right" });
-	await page.getByRole("menuitem", { name: "Delete" }).click();
-	await page.getByRole("button", { name: "Delete", exact: true }).click();
-	await expect(row(page, { href })).toHaveCount(0);
-}
-
 const noConversation = (page: Page) =>
 	page.getByText("Select a conversation to start chatting");
-
-async function openHref(page: Page, { href }: { href: string }) {
-	await row(page, { href }).click();
-	await expect(page).toHaveURL(new RegExp(`${href}$`));
-}
-
-async function openRow(page: Page, { nth }: { nth: number }) {
-	const href = (await rows(page).nth(nth).getAttribute("href"))!;
-	await openHref(page, { href });
-	return href;
-}
-
-async function openRows(page: Page, { count }: { count: number }) {
-	const hrefs = await rows(page).evaluateAll(
-		(links, count) =>
-			links.slice(1, count + 1).map((link) => link.getAttribute("href")!),
-		count,
-	);
-	for (const href of hrefs) await openHref(page, { href });
-	return hrefs;
-}
 
 test("deleting the open conversation from the list walks back to the inbox", async ({
 	page,
 }) => {
-	await openInboxFromHome(page);
+	await openInboxFromHome(page, { platform: "macos" });
 	const atInbox = await historyEntries(page);
 
 	await deleteFromList(page, { href: await openRow(page, { nth: 1 }) });
@@ -93,7 +55,7 @@ test("deleting the open conversation from the list walks back to the inbox", asy
 test("Forward does not reopen a conversation deleted while open", async ({
 	page,
 }) => {
-	await openInboxFromHome(page);
+	await openInboxFromHome(page, { platform: "macos" });
 	const atInbox = await historyEntries(page);
 	const href = await openRow(page, { nth: 1 });
 	await deleteFromList(page, { href });
@@ -119,7 +81,7 @@ test("Forward does not reopen a conversation deleted while open", async ({
 test("Forward still opens a conversation that was not deleted", async ({
 	page,
 }) => {
-	await openInboxFromHome(page);
+	await openInboxFromHome(page, { platform: "macos" });
 	const deleted = (await rows(page).nth(2).getAttribute("href"))!;
 	const kept = await openRow(page, { nth: 1 });
 	await page.goBack();
@@ -136,7 +98,7 @@ test("deleting a conversation opened directly takes its place in history", async
 	page,
 }) => {
 	await page.setViewportSize(WIDE);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 
 	const opened = row(page, { href: DEMO_CONVERSATION });
@@ -151,7 +113,7 @@ test("deleting a conversation opened directly takes its place in history", async
 
 test.describe("Back into a conversation deleted this session", () => {
 	test("skips it to the entry before it", async ({ page }) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [deleted, open] = await openRows(page, { count: 2 });
 		await deleteFromList(page, { href: deleted! });
@@ -179,7 +141,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	});
 
 	test("skips every deleted conversation in a row", async ({ page }) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [first, second, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: first! });
@@ -207,7 +169,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	});
 
 	test("skips it when a jump back lands on it", async ({ page }) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [deleted, kept, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: deleted! });
@@ -229,7 +191,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	test("still opens a conversation that was not deleted on the way", async ({
 		page,
 	}) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [deleted, kept, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: deleted! });
@@ -252,7 +214,7 @@ test.describe("Back into a conversation deleted this session", () => {
 	test("Back to Inbox skips it and still answers the next tap", async ({
 		page,
 	}) => {
-		await openInboxFromHome(page);
+		await openInboxFromHome(page, { platform: "macos" });
 		const atInbox = await historyEntries(page);
 		const [kept, deleted, open] = await openRows(page, { count: 3 });
 		await deleteFromList(page, { href: deleted! });
@@ -312,39 +274,5 @@ test.describe("Back into a conversation deleted this session", () => {
 			await messagesShown(),
 			"the deleted conversation never opened",
 		).toBe(false);
-	});
-
-	test("without the Navigation API Back steps past each one", async ({
-		page,
-	}) => {
-		await page.addInitScript(() =>
-			Object.defineProperty(window, "navigation", { value: undefined }),
-		);
-		await openInboxFromHome(page);
-		const [first, second] = await openRows(page, { count: 3 });
-		await deleteFromList(page, { href: first! });
-		await deleteFromList(page, { href: second! });
-		const messagesShown = await watchRendered(page, {
-			selector: MESSAGE_ROW,
-		});
-
-		await page.goBack();
-
-		await expect
-			.poll(() => pathname(page), { message: "Back lands on the inbox" })
-			.toBe("/chat");
-		await afterTwoFrames(page);
-		expect(await pathname(page)).toBe("/chat");
-		expect(
-			await messagesShown(),
-			"neither deleted conversation opened",
-		).toBe(false);
-		await page.goBack();
-		await expect
-			.poll(() => pathname(page), {
-				message:
-					"that was the inbox entry, with the home screen before it",
-			})
-			.toBe("/");
 	});
 });

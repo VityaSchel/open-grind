@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "#lib/test/platform.ts";
 import { setVisibility } from "#lib/test/visibility.ts";
 
 const {
@@ -7,7 +8,6 @@ const {
 	connectedHandlers,
 	droppedHandlers,
 	rejectedHandlers,
-	isMobilePlatformMock,
 	awaitHomeLocationMock,
 } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(() =>
@@ -16,16 +16,12 @@ const {
 	connectedHandlers: [] as (() => void)[],
 	droppedHandlers: [] as ((skipped: number) => void)[],
 	rejectedHandlers: [] as ((eventType: string) => void)[],
-	isMobilePlatformMock: vi.fn(() => false),
 	awaitHomeLocationMock: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
-}));
-vi.mock("#lib/platform/os.ts", () => ({
-	isMobilePlatform: isMobilePlatformMock,
 }));
 vi.mock("#lib/entitlements/honduras-hold.ts", () => ({
 	awaitHomeLocation: awaitHomeLocationMock,
@@ -80,6 +76,10 @@ async function hideFor(awayMs: number) {
 	setVisibility("visible");
 	await flushMockSubscriptions();
 }
+
+beforeEach(() => {
+	runningOn("macos");
+});
 
 describe("Reconciler resync after dropped websocket events", () => {
 	beforeEach(() => {
@@ -180,7 +180,6 @@ describe("Reconciler on returning to the app", () => {
 
 	afterEach(() => {
 		vi.useRealTimers();
-		isMobilePlatformMock.mockReturnValue(false);
 	});
 
 	it("leaves desktop data alone when the window was hidden for under five minutes", async () => {
@@ -218,7 +217,7 @@ describe("Reconciler on returning to the app", () => {
 	});
 
 	it("reconciles on mobile after any absence, however short", async () => {
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 		const reconciler = await freshReconciler();
 		const handler = vi.fn();
 		reconciler.subscribe(handler);
@@ -251,13 +250,12 @@ describe("Reconciler causes", () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 		vi.spyOn(console, "warn").mockImplementation(() => undefined);
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 	});
 
 	afterEach(() => {
 		vi.useRealTimers();
 		vi.restoreAllMocks();
-		isMobilePlatformMock.mockReturnValue(false);
 	});
 
 	async function subscribed() {

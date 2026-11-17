@@ -8,6 +8,7 @@ import { stubMapResizeObserver } from "#lib/components/location-chooser/map-test
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { decodeGeohash, encodeGeohash } from "#lib/model/geohash.ts";
+import { runningOn } from "#lib/test/platform.ts";
 
 vi.hoisted(() => {
 	vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
@@ -42,7 +43,6 @@ vi.mock("../../message-composer-context.svelte", () => ({
 		sendMessages: mocks.send,
 	}),
 }));
-vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => true }));
 vi.mock("svelte/motion", async (importOriginal) => ({
 	...(await importOriginal<typeof import("svelte/motion")>()),
 	prefersReducedMotion: mocks.reducedMotion,
@@ -55,6 +55,7 @@ await import("#lib/components/location-chooser/GeoMap.svelte");
 const geohash = encodeGeohash({ lat: 48.8566, lon: 2.3522 });
 
 beforeEach(() => {
+	runningOn("android");
 	vi.clearAllMocks();
 	mocks.disabled = false;
 	mocks.reducedMotion.current = false;

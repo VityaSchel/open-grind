@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { isWithin } from "../../src/lib/util/pathname";
 import { pushedFromChain } from "../../src/routes/(protected)/(navbar)/settings/page-stack/hierarchy";
 import {
@@ -35,7 +36,7 @@ export async function openSettings(
 	{
 		reducedMotion,
 		platform,
-	}: { reducedMotion?: "reduce"; platform?: string } = {},
+	}: { reducedMotion?: "reduce"; platform: SupportedPlatform },
 ) {
 	if (reducedMotion) await page.emulateMedia({ reducedMotion });
 	await installTauriShim(page, { platform });
@@ -48,8 +49,7 @@ export async function openSettings(
 
 export async function openDeepLink(
 	page: Page,
-	path: string,
-	{ platform }: { platform?: string } = {},
+	{ path, platform }: { path: string; platform: SupportedPlatform },
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);
@@ -60,6 +60,12 @@ export async function openDeepLink(
 export async function openAppSettings(page: Page) {
 	await page.getByRole("link", { name: "App Settings" }).click();
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
+	await stackSettled(page);
+}
+
+export async function openCredits(page: Page) {
+	await page.getByRole("link", { name: "Credits & Licenses" }).click();
+	await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
 	await stackSettled(page);
 }
 

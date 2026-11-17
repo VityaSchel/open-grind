@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, within } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { albumProcessingPlaceholderUrl } from "#lib/demo/mock/albums.ts";
 import { slot } from "#lib/i18n/fixtures/dom.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import {
 	getAlbumUploads,
@@ -60,6 +61,10 @@ function cells(container: HTMLElement): HTMLElement[] {
 		),
 	];
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	cleanup();

@@ -52,7 +52,7 @@ async function openProfileAtRest(
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 for (const profile of [THREE_PHOTOS, FOUR_PHOTOS, FIVE_PHOTOS]) {

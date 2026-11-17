@@ -27,6 +27,7 @@ import {
 	searchGifs,
 } from "#lib/api/messaging/gifs.ts";
 import { toBase64 } from "#lib/util/base64.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 
 const KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
 const media =
@@ -141,8 +142,8 @@ describe("getTrendingGifs", () => {
 			gifs: [
 				{
 					id: "xT0xeChUR33EsYNNRK",
-					tileUrl: `${media}/200w_d.webp`,
-					stillTileUrl: `${media}/200_s.gif`,
+					tileUrl: proxyMediaUrl(`${media}/200w_d.webp`),
+					stillTileUrl: proxyMediaUrl(`${media}/200_s.gif`),
 					alt: {
 						kind: "title",
 						title: "Season 2 No GIF by Portlandia",
@@ -169,7 +170,7 @@ describe("getTrendingGifs", () => {
 
 		const { gifs } = await getTrendingGifs({ offset: 0 });
 
-		expect(gifs[0]?.tileUrl).toBe(`${media}/200w_d.gif`);
+		expect(gifs[0]?.tileUrl).toBe(proxyMediaUrl(`${media}/200w_d.gif`));
 	});
 
 	it.each([
@@ -361,19 +362,19 @@ describe("GIPHY request failures", () => {
 describe("receivedGiphySrc", () => {
 	it("loads the renditions the official app sends", () => {
 		const url = `${media}/200.gif`;
-		expect(receivedGiphySrc(url)).toBe(url);
+		expect(receivedGiphySrc(url)).toBe(proxyMediaUrl(url));
 	});
 
 	it("loads bare media.giphy.com links from pasted GIPHY links", () => {
 		const url = "https://media.giphy.com/media/xT0xeChUR33EsYNNRK/200.gif";
-		expect(receivedGiphySrc(url)).toBe(url);
+		expect(receivedGiphySrc(url)).toBe(proxyMediaUrl(url));
 	});
 
 	it.each(["media0", "media1", "media2", "media3", "media4"])(
 		"loads GIPHY's %s host",
 		(host) => {
 			const url = `https://${host}.giphy.com/media/xT0xeChUR33EsYNNRK/200.gif`;
-			expect(receivedGiphySrc(url)).toBe(url);
+			expect(receivedGiphySrc(url)).toBe(proxyMediaUrl(url));
 		},
 	);
 

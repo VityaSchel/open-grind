@@ -61,7 +61,7 @@ async function nextFrame(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/profile");
 	await fieldLabel(page, "Display name").waitFor({ timeout: 60_000 });
 });

@@ -3,12 +3,9 @@ import { vi } from "vitest";
 import { ApiError } from "#lib/api/api-error.ts";
 import type { AlbumContentResponse } from "#lib/api/messaging/albums.ts";
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
+import type { ScreenedMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
-import type {
-	AlbumUploads,
-	InspectedPick,
-	UploadLimits,
-} from "./album-uploads-state.svelte";
+import type { AlbumUploads, UploadLimits } from "./album-uploads-state.svelte";
 
 export const ALBUM_ID = 4;
 
@@ -24,7 +21,7 @@ function media(key: string, mimeType: string): PickedMedia {
 	return { key, mimeType, source: "desktop", path: `/tmp/${key}` };
 }
 
-export function pick(key: string, mimeType: string): InspectedPick {
+export function pick(key: string, mimeType: string): ScreenedMedia {
 	const kind = mimeType.startsWith("video/") ? "video" : "photo";
 	return { media: media(key, mimeType), inspection: { kind, size: 1024 } };
 }
@@ -70,7 +67,7 @@ export function httpError(status: number): ApiError {
 	});
 }
 
-export function enqueue(uploads: AlbumUploads, ...inspected: InspectedPick[]) {
+export function enqueue(uploads: AlbumUploads, ...inspected: ScreenedMedia[]) {
 	uploads.enqueue({ albumId: ALBUM_ID, inspected, limits, content: [] });
 }
 

@@ -1,9 +1,6 @@
-use std::time::Duration;
-
 use tauri::Url;
-use tokio::sync::oneshot;
 
-use crate::api::oauth::{delivered, CANCELED};
+use crate::api::oauth::CANCELED;
 use crate::error::AppError;
 
 const DIALOG_URL: &str = "https://www.facebook.com/v16.0/dialog/oauth";
@@ -17,7 +14,6 @@ const REDIRECT_PATH: &str = "/";
 pub const DIALOG_ERROR: &str = "facebook-dialog-error";
 pub const HANDOFF_REFUSED: &str = "facebook-handoff-refused";
 pub const UNVERIFIED: &str = "facebook-unverified";
-pub const TIMED_OUT: &str = "facebook-timed-out";
 
 pub fn dialog_url(state: &str) -> Result<Url, AppError> {
 	Url::parse_with_params(
@@ -81,19 +77,9 @@ pub fn result_from_redirect(
 	Some(Ok(token))
 }
 
-pub async fn wait_for_result(
-	rx: oneshot::Receiver<Result<String, String>>,
-	limit: Duration,
-) -> Result<String, String> {
-	tokio::time::timeout(limit, delivered(rx))
-		.await
-		.unwrap_or_else(|_| Err(TIMED_OUT.to_owned()))
-}
-
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::api::oauth::FLOW_ENDED;
 
 	fn url(s: &str) -> Url {
 		Url::parse(s).unwrap()
@@ -180,41 +166,12 @@ mod tests {
 		let form = include_str!(
 			"../../../../src/routes/auth/sign-in/SignInForm.svelte"
 		);
-		for marker in [DIALOG_ERROR, HANDOFF_REFUSED, UNVERIFIED, TIMED_OUT] {
+		for marker in [DIALOG_ERROR, HANDOFF_REFUSED, UNVERIFIED] {
 			assert!(
 				form.contains(&format!("\"{marker}\": () =>")),
 				"SignInForm.svelte has no Facebook failure for {marker}"
 			);
 		}
-	}
-
-	#[tokio::test]
-	async fn a_result_delivered_in_time_is_the_verdict() {
-		let (tx, rx) = oneshot::channel();
-		tx.send(Ok("EAAtok".to_owned())).unwrap();
-		assert_eq!(
-			wait_for_result(rx, Duration::from_secs(1)).await,
-			Ok("EAAtok".into())
-		);
-	}
-
-	#[tokio::test(start_paused = true)]
-	async fn a_dialog_left_open_past_the_limit_times_out() {
-		let (_tx, rx) = oneshot::channel();
-		assert_eq!(
-			wait_for_result(rx, Duration::from_secs(600)).await,
-			Err(TIMED_OUT.into())
-		);
-	}
-
-	#[tokio::test]
-	async fn a_flow_whose_result_can_never_arrive_ends_unexpectedly() {
-		let (tx, rx) = oneshot::channel::<Result<String, String>>();
-		drop(tx);
-		assert_eq!(
-			wait_for_result(rx, Duration::from_secs(1)).await,
-			Err(FLOW_ENDED.into())
-		);
 	}
 
 	#[test]

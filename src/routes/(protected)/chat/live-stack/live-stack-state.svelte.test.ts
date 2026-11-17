@@ -2,7 +2,10 @@ import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationTarget } from "$app/navigation";
 
-import { stackMotion } from "#lib/components/navigation/stack/motion.ts";
+import {
+	releaseTiming,
+	stackMotion,
+} from "#lib/components/navigation/stack/motion.ts";
 import {
 	fakeSurface,
 	flushMicrotasks,
@@ -15,15 +18,17 @@ const LIST = "/chat";
 const FIRST = "/chat/1:2";
 const SECOND = "/chat/3:4";
 
-const motion = stackMotion({ platform: "android" });
+const androidMotion = stackMotion({ platform: "android" });
 
 function makeStack({
 	reducedMotion = false,
 	backLandsOnBase = true,
 	keyboardVisible = false,
 	startAt = LIST,
+	motion = androidMotion,
 } = {}) {
 	let top = $state<string | null>(keyOf(startAt));
+	let landsOnBase = $state(backLandsOnBase);
 	const { surface, applied, animations } = fakeSurface();
 	let hideKeyboard!: () => void;
 
@@ -34,7 +39,7 @@ function makeStack({
 		keyOf: (target: NavigationTarget) => keyOf(target.url.pathname),
 		scope: LIST,
 		reducedMotion: () => reducedMotion,
-		backLandsOnBase: () => backLandsOnBase,
+		backLandsOnBase: () => landsOnBase,
 		keyboardVisible: () => keyboardVisible,
 		keyboardHidden: () =>
 			new Promise<void>((resolve) => {
@@ -53,6 +58,9 @@ function makeStack({
 		animations,
 		arrive,
 		hideKeyboard: () => hideKeyboard(),
+		landOnBase: (lands: boolean) => {
+			landsOnBase = lands;
+		},
 	};
 }
 
@@ -62,13 +70,25 @@ function keyOf(pathname: string): string | null {
 		: null;
 }
 
+async function navigating({
+	stack,
+	from,
+	to,
+}: {
+	stack: LiveStackState;
+	from: string;
+	to: string;
+}): Promise<(() => void) | void> {
+	const afterUpdate = stack.navigate(navigationEvent({ from, to }));
+	await vi.advanceTimersByTimeAsync(0);
+	return afterUpdate;
+}
+
 async function navigate(
 	harness: ReturnType<typeof makeStack>,
 	{ from, to }: { from: string; to: string },
 ) {
-	const afterUpdate = await harness.stack.navigate(
-		navigationEvent({ from, to }),
-	);
+	const afterUpdate = await navigating({ stack: harness.stack, from, to });
 	harness.arrive(to);
 	afterUpdate?.();
 	vi.advanceTimersToNextFrame();
@@ -106,9 +126,7 @@ describe("LiveStackState opening a sheet", () => {
 		const harness = makeStack();
 		const { stack, animations } = harness;
 
-		const afterUpdate = await stack.navigate(
-			navigationEvent({ from: LIST, to: FIRST }),
-		);
+		const afterUpdate = await navigating({ stack, from: LIST, to: FIRST });
 		expect(stack.moving).toBe(true);
 		expect(harness.applied.at(-1)).toBe(1);
 
@@ -123,7 +141,7 @@ describe("LiveStackState opening a sheet", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 
 		await settleLast(animations);
@@ -180,7 +198,7 @@ describe("LiveStackState closing a sheet", () => {
 	it("lets a Back that lands before the push slid in rest without flashing the sheet over the list", async () => {
 		const harness = makeStack();
 		const { stack, animations, applied } = harness;
-		await stack.navigate(navigationEvent({ from: LIST, to: FIRST }));
+		await navigating({ stack, from: LIST, to: FIRST });
 		harness.arrive(FIRST);
 		const appliedBeforeBack = applied.length;
 
@@ -210,9 +228,7 @@ describe("LiveStackState closing a sheet", () => {
 		await navigate(harness, { from: FIRST, to: LIST });
 		animations.at(-1)!.reached = 0.6;
 
-		const afterUpdate = await stack.navigate(
-			navigationEvent({ from: LIST, to: SECOND }),
-		);
+		const afterUpdate = await navigating({ stack, from: LIST, to: SECOND });
 		expect(stack.leaving).toBeNull();
 		expect(stack.sheetKey).toBeNull();
 		expect(applied.at(-1)).toBe(1);
@@ -234,9 +250,7 @@ describe("LiveStackState closing a sheet", () => {
 		await navigate(harness, { from: FIRST, to: LIST });
 		animations.at(-1)!.reached = 0.6;
 
-		const afterUpdate = await stack.navigate(
-			navigationEvent({ from: LIST, to: FIRST }),
-		);
+		const afterUpdate = await navigating({ stack, from: LIST, to: FIRST });
 		expect(stack.sheetKey, "stays mounted until the route arrives").toBe(
 			"1:2",
 		);
@@ -259,9 +273,7 @@ describe("LiveStackState closing a sheet", () => {
 		const harness = await opened();
 		const { stack, animations } = harness;
 
-		const staleUpdate = await stack.navigate(
-			navigationEvent({ from: FIRST, to: LIST }),
-		);
+		const staleUpdate = await navigating({ stack, from: FIRST, to: LIST });
 		await navigate(harness, { from: FIRST, to: SECOND });
 		const count = animations.length;
 		staleUpdate?.();
@@ -324,7 +336,7 @@ describe("LiveStackState back gesture", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 0.3,
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
@@ -436,13 +448,34 @@ describe("LiveStackState back gesture", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
 
 		await navigate(harness, { from: FIRST, to: LIST });
 		expect(animations.at(-1)).toMatchObject({ from: 0, to: 1 });
+	});
+
+	it("finishes a released swipe at the finger's speed where the platform matches it", () => {
+		vi.stubGlobal("history", { back: vi.fn() });
+		const ios = stackMotion({ platform: "ios" });
+		const spring = ios.release!;
+		const committed = makeStack({ startAt: FIRST, motion: ios });
+		committed.stack.beginSwipeBack();
+		committed.stack.trackSwipeBack(0.6);
+		committed.stack.commitSwipeBack({ velocity: 1.5 });
+		const cancelled = makeStack({ startAt: FIRST, motion: ios });
+		cancelled.stack.beginSwipeBack();
+		cancelled.stack.trackSwipeBack(0.3);
+		cancelled.stack.cancelSwipeBack({ velocity: -1 });
+
+		expect(committed.animations.at(-1)).toMatchObject(
+			releaseTiming({ distance: 0.4, velocity: 1.5, spring }),
+		);
+		expect(cancelled.animations.at(-1)).toMatchObject(
+			releaseTiming({ distance: -0.3, velocity: -1, spring }),
+		);
 	});
 
 	it("settles a committed swipe instantly under reduced motion", () => {
@@ -455,6 +488,62 @@ describe("LiveStackState back gesture", () => {
 		stack.commitSwipeBack();
 
 		expect(animations.at(-1)).toMatchObject({ duration: 0 });
+	});
+});
+
+describe("LiveStackState offering a back swipe", () => {
+	it("offers one exactly where a swipe would start", async () => {
+		expect(makeStack().stack.offersSwipeBack).toBe(false);
+		expect(
+			makeStack({ startAt: FIRST, backLandsOnBase: false }).stack
+				.offersSwipeBack,
+		).toBe(false);
+		expect(makeStack({ startAt: FIRST }).stack.offersSwipeBack).toBe(true);
+
+		const harness = makeStack();
+		await navigate(harness, { from: LIST, to: FIRST });
+		expect(harness.stack.moving).toBe(true);
+		expect(harness.stack.offersSwipeBack, "while it slides in").toBe(true);
+	});
+
+	it("stops offering it while a committed swipe slides out", () => {
+		const { stack } = releasedSwipe({ progress: 0.6 });
+
+		expect(stack.moving).toBe(true);
+		expect(stack.offersSwipeBack).toBe(false);
+	});
+
+	it("reports the offer reactively", () => {
+		const { stack, landOnBase } = makeStack({
+			startAt: FIRST,
+			backLandsOnBase: false,
+		});
+		const offers: boolean[] = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				offers.push(stack.offersSwipeBack);
+			});
+		});
+		flushSync();
+
+		landOnBase(true);
+		flushSync();
+
+		expect(offers).toEqual([false, true]);
+		stop();
+	});
+
+	it("uncovers the base for a swipe about to start until the preparation is undone", () => {
+		const { stack } = makeStack({ startAt: FIRST });
+		expect(stack.basePrepared).toBe(false);
+
+		const undo = stack.prepareSwipeBack();
+		const undoAnother = stack.prepareSwipeBack();
+		expect(stack.basePrepared).toBe(true);
+		undo();
+		expect(stack.basePrepared).toBe(true);
+		undoAnother();
+		expect(stack.basePrepared).toBe(false);
 	});
 });
 
@@ -495,7 +584,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.85),
 			to: 1,
-			easing: motion.commitEasing,
+			easing: androidMotion.commitEasing,
 		});
 
 		const count = animations.length;
@@ -519,7 +608,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.85),
 			to: 0,
-			easing: motion.cancelEasing,
+			easing: androidMotion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
@@ -538,9 +627,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 
 	it("leaves the gesture to the system before the sheet starts sliding in", async () => {
 		const harness = makeStack();
-		await harness.stack.navigate(
-			navigationEvent({ from: LIST, to: FIRST }),
-		);
+		await navigating({ stack: harness.stack, from: LIST, to: FIRST });
 		harness.arrive(FIRST);
 
 		expect(harness.stack.beginSwipeBack()).toBe(false);

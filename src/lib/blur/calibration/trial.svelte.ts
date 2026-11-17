@@ -2,7 +2,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "#lib/app-data/preferences.svelte.ts";
-import { isLinuxPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { consumesScrollKeys, scrollKeys } from "#lib/util/scroll-keys.ts";
 import { webviewEngine } from "../compositing.svelte";
 import {
@@ -79,7 +79,15 @@ export function backdropBlurTrialArm(): AutoQuality | null {
 }
 
 export function calibratesFromLow(): boolean {
-	return isLinuxPlatform();
+	switch (currentPlatform()) {
+		case "linux":
+			return true;
+		case "android":
+		case "ios":
+		case "macos":
+		case "windows":
+			return false;
+	}
 }
 
 export function engineCalibration(): BackdropBlurCalibration | null {

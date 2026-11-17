@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { encodeGeohash } from "#lib/model/geohash.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { PIN_ZOOM } from "./constants";
 import { stubMapResizeObserver } from "./map-test-helpers";
 
@@ -70,7 +71,6 @@ function reportFix(fix: { lat: number; lon: number; accuracyMeters: number }) {
 	lastFix = fix;
 	return { status: "ok" as const, coords: fix };
 }
-vi.mock("#lib/platform/os.ts", () => ({ isMobilePlatform: () => true }));
 vi.mock("#lib/util/breakpoints.svelte.ts", () => ({
 	above: () => ({ current: true }),
 }));
@@ -96,6 +96,7 @@ const saveButton = () => screen.getByRole("button", { name: "Save" });
 
 describe("LocationChooser", () => {
 	beforeEach(() => {
+		runningOn("android");
 		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: false,
 			geohash: null,
@@ -405,6 +406,7 @@ describe("LocationChooser", () => {
 
 describe("LocationChooser GPS feedback", () => {
 	beforeEach(() => {
+		runningOn("android");
 		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: null,

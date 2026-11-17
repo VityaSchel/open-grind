@@ -54,7 +54,7 @@ async function setShown(page: Page, shown: boolean): Promise<void> {
 test.describe("our own Right Now post in the demo", () => {
 	test.beforeEach(async ({ page }) => {
 		test.setTimeout(240_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await goToRightNow(page);
 		await articles(page)
 			.first()
@@ -163,7 +163,7 @@ test.describe("an area with no free posts left", () => {
 
 	test("disables Join and says why", async ({ page }) => {
 		test.setTimeout(240_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.addInitScript((path) => {
 			Object.assign(window, {
 				__demoFault: (request: { path: string }) =>
