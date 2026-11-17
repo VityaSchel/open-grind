@@ -2,9 +2,10 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { rightClick } from "#lib/test/context-menu.ts";
+import { runningOn } from "#lib/test/platform.ts";
 
 const drawer = vi.hoisted(() => ({
 	getDrawerMedia: vi.fn(),
@@ -13,11 +14,16 @@ const drawer = vi.hoisted(() => ({
 const chatMedia = vi.hoisted(() => ({ addMediaToDrawer: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
+const mediaFile = vi.hoisted(() => ({ discardStagedMedia: vi.fn() }));
 
 vi.mock("#lib/api/messaging/drawer.ts", () => drawer);
 vi.mock("#lib/api/messaging/chat-media.ts", async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	...chatMedia,
+}));
+vi.mock("#lib/platform/media-file.ts", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	...mediaFile,
 }));
 vi.mock("#lib/platform/media-picker.ts", () => picker);
 vi.mock("svelte-sonner", () => sonner);
@@ -29,6 +35,7 @@ vi.mock("../../../conversation-state.svelte", () => ({
 }));
 
 import { UnsupportedChatMediaError } from "#lib/api/messaging/chat-media.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
 import ComposerMediaTab from "./ComposerMediaTab.svelte";
 
@@ -64,6 +71,10 @@ function renderTab() {
 		},
 	});
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();
@@ -178,6 +189,29 @@ describe("composer media tab", () => {
 		);
 	});
 
+	it("discards a picked copy it couldn't upload", async () => {
+		const staged = {
+			source: "staged",
+			key: "picked",
+			mimeType: "image/jpeg",
+			id: "staged-1",
+		};
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([staged]);
+		chatMedia.addMediaToDrawer.mockRejectedValue(new Error("offline"));
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(getByRole("button", { name: UPLOAD }));
+
+		await vi.waitFor(() =>
+			expect(
+				mediaFile.discardStagedMedia,
+			).toHaveBeenCalledExactlyOnceWith([staged]),
+		);
+	});
+
 	it("says a picked file isn’t a photo or video instead of the diagnostic", async () => {
 		drawer.getDrawerMedia.mockResolvedValue([]);
 		picker.pickMultipleMedia.mockResolvedValue([
@@ -223,7 +257,9 @@ describe("composer media tab", () => {
 		const tile = await findByRole("button", { name: "Video 2" });
 
 		const preview = tile.querySelector<HTMLVideoElement>(PREVIEW);
-		expect(preview?.src).toBe(`${video.url}#t=0.001`);
+		expect(preview?.src).toBe(
+			`${proxyMediaUrl(video.url, { as: "video" })}#t=0.001`,
+		);
 		expect(preview?.muted).toBe(true);
 		expect(preview?.autoplay).toBe(false);
 		expect(preview?.preload).toBe("metadata");

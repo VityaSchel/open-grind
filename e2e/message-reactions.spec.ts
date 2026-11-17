@@ -14,7 +14,7 @@ const HINT = "Double tap to";
 const CHIP = 'img[alt="Fire reaction"]';
 
 async function openConversation(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 }

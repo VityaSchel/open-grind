@@ -37,10 +37,10 @@ test("App Settings lists Language, the subscreens, the privacy policy and the cr
 		)
 		.toEqual([
 			"Language English",
-			"Display",
-			"Notifications",
-			"Privacy",
-			"Security",
+			"Display Units, blur level, haptics",
+			"Notifications Push notifications, categories",
+			"Privacy Message reads, profile views, GIPHY",
+			"Security App icon & name, PIN",
 			"Privacy policy",
 			"Credits & Licenses",
 		]);

@@ -20,16 +20,7 @@ vi.mock("#lib/app-data/index.ts", () => ({
 
 import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
 import { hapticsAvailable, playHaptic } from "#lib/haptics.ts";
-
-const tauri = globalThis as {
-	isTauri?: boolean;
-	__TAURI_OS_PLUGIN_INTERNALS__?: { platform: string };
-};
-
-function runningOn(platform: string) {
-	tauri.isTauri = true;
-	tauri.__TAURI_OS_PLUGIN_INTERNALS__ = { platform };
-}
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 
 beforeEach(async () => {
 	invokeMock.mockReset().mockResolvedValue(undefined);
@@ -38,14 +29,14 @@ beforeEach(async () => {
 	await setPreferences({ hapticFeedback: true });
 });
 
-afterEach(() => {
-	delete tauri.isTauri;
-	delete tauri.__TAURI_OS_PLUGIN_INTERNALS__;
-});
+afterEach(resetPlatform);
 
 describe("hapticsAvailable", () => {
 	it("is true on the platforms with a native actuator", () => {
 		runningOn("android");
+		expect(hapticsAvailable()).toBe(true);
+
+		runningOn("ios");
 		expect(hapticsAvailable()).toBe(true);
 
 		runningOn("macos");
@@ -53,8 +44,6 @@ describe("hapticsAvailable", () => {
 	});
 
 	it("is false where nothing can be played", () => {
-		expect(hapticsAvailable()).toBe(false);
-
 		runningOn("linux");
 		expect(hapticsAvailable()).toBe(false);
 
@@ -64,15 +53,18 @@ describe("hapticsAvailable", () => {
 });
 
 describe("playHaptic", () => {
-	it("asks the backend for the named kind on a platform that has one", () => {
-		runningOn("android");
+	it.each(["android", "ios", "macos"] as const)(
+		"asks the backend for the named kind on %s",
+		(platform) => {
+			runningOn(platform);
 
-		playHaptic("longPress");
+			playHaptic("longPress");
 
-		expect(invokeMock).toHaveBeenCalledExactlyOnceWith("play_haptic", {
-			kind: "longPress",
-		});
-	});
+			expect(invokeMock).toHaveBeenCalledExactlyOnceWith("play_haptic", {
+				kind: "longPress",
+			});
+		},
+	);
 
 	it("stays quiet where nothing can be played", () => {
 		runningOn("windows");

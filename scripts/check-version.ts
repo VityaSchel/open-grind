@@ -1,30 +1,12 @@
 import path from "path";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
-import packageJson from "../package.json";
-import { parseVersion } from "./lib/semver";
+import { requireVersion } from "./lib/semver";
+import { versionOccurrences } from "./lib/version-occurrences";
 
-const cargo = await Bun.file(
-	path.join(__dirname, "../src-tauri/Cargo.toml"),
-).text();
-const cargoVersion = /^version = "(.+)"$/m.exec(cargo)?.[1];
-if (!cargoVersion) throw new Error("no version found in src-tauri/Cargo.toml");
-
+const root = path.join(import.meta.dir, "..");
 const configVersion = tauriConfJson.version;
 
-const packageVersion = packageJson.version;
-if (!packageVersion) throw new Error("no version found in package.json");
-
-if (cargoVersion !== configVersion || packageVersion !== configVersion) {
-	throw new Error(
-		`version mismatch: tauri.conf.json is ${configVersion}, Cargo.toml is ${cargoVersion}, ` +
-			`package.json is ${packageVersion}. Tauri reads the version from tauri.conf.json, so ` +
-			`drift here silently changes the user agent and the update check.`,
-	);
-}
-
-const parsed = parseVersion(configVersion);
-if (!parsed) throw new Error(`${configVersion} is not a valid semver version`);
-const { prerelease } = parsed;
+const { prerelease } = requireVersion(configVersion);
 
 const versionCode = tauriConfJson.bundle?.android?.versionCode;
 if (!Number.isInteger(versionCode)) {
@@ -34,6 +16,19 @@ if (versionCode % 10 !== 0) {
 	throw new Error(
 		`bundle.android.versionCode ${versionCode} must end in 0; the last digit is the per-ABI offset from opengrind.android.abiVersionCodeOffsets`,
 	);
+}
+
+for (const { file, literal } of versionOccurrences({
+	version: configVersion,
+	code: versionCode,
+})) {
+	const text = await Bun.file(path.join(root, file)).text();
+	const copies = text.split(literal).length - 1;
+	if (copies !== 1) {
+		throw new Error(
+			`${file} holds ${copies} copies of ${JSON.stringify(literal)}, expected 1: every version copy must match tauri.conf.json (${configVersion}, versionCode ${versionCode})`,
+		);
+	}
 }
 
 const isDev =

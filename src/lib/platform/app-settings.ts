@@ -1,12 +1,20 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import { isAndroidPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export function canOpenAppSettings(): boolean {
-	return isAndroidPlatform();
+	switch (currentPlatform()) {
+		case "android":
+		case "ios":
+			return true;
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
 }
 
 export function openAppSettings(): void {
-	if (!isAndroidPlatform()) return;
+	if (!canOpenAppSettings()) return;
 	void invoke("open_app_settings").catch(console.error);
 }

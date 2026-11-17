@@ -4,8 +4,20 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const { invoke } = vi.hoisted(() => ({
+	invoke: vi.fn<(command: string, args?: unknown) => Promise<void>>(() =>
+		Promise.resolve(),
+	),
+}));
+
+vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
+	invoke,
+}));
+
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import ScrollToTopButton from "./ScrollToTopButton.svelte";
 
 const SCREEN_HEIGHT = 800;
@@ -48,6 +60,7 @@ async function mountWithScroller({
 	onjump,
 }: { scrollTop?: number; text?: string; onjump?: () => void } = {}) {
 	const scroller = document.createElement("div");
+	scroller.style.overflowY = "auto";
 	Object.defineProperty(scroller, "clientHeight", {
 		value: SCREEN_HEIGHT,
 		configurable: true,
@@ -56,8 +69,12 @@ async function mountWithScroller({
 		value: 20_000,
 		configurable: true,
 	});
+	vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue(
+		new DOMRect(0, 0, 402, SCREEN_HEIGHT),
+	);
 	scroller.scrollTop = scrollTop;
 	document.body.append(scroller);
+	document.elementFromPoint = () => scroller;
 
 	let labeled = false;
 	const view = render(ScrollToTopButton, {
@@ -114,12 +131,15 @@ describe("the scroll-to-top button", () => {
 				"performance",
 			],
 		});
+		runningOn("macos");
 	});
 
 	afterEach(async () => {
 		cleanup();
 		document.body.replaceChildren();
 		vi.useRealTimers();
+		resetPlatform();
+		invoke.mockClear();
 		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
@@ -152,45 +172,6 @@ describe("the scroll-to-top button", () => {
 		expect(view.button()).not.toBeNull();
 		expect(animate).toHaveBeenCalled();
 		animate.mockRestore();
-	});
-
-	it("jumps to within one screen of the top before gliding the rest", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(5000);
-
-		await view.click();
-		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
-		expect(view.button()).toBeNull();
-
-		await view.glideFor(GLIDE_MS);
-		expect(view.scroller.scrollTop).toBe(0);
-	});
-
-	it("glides without a jump when the top is less than a screen away", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(500);
-
-		await view.click();
-		expect(view.scroller.scrollTop).toBe(500);
-
-		await view.glideFor(GLIDE_MS);
-		expect(view.scroller.scrollTop).toBe(0);
-	});
-
-	it("starts the glide fast and slows into the top", async () => {
-		const view = await mountWithScroller();
-		await view.scrollTo(SCREEN_HEIGHT);
-
-		await view.click();
-		await view.glideFor(GLIDE_MS / 4);
-		const firstQuarter = SCREEN_HEIGHT - view.scroller.scrollTop;
-		await view.glideFor(GLIDE_MS / 2);
-		const lastQuarterStart = view.scroller.scrollTop;
-		await view.glideFor(GLIDE_MS / 4);
-
-		expect(firstQuarter).toBeGreaterThan(SCREEN_HEIGHT / 3);
-		expect(lastQuarterStart).toBeLessThan(SCREEN_HEIGHT / 30);
-		expect(view.scroller.scrollTop).toBe(0);
 	});
 
 	for (const takeover of ["wheel", "touchstart"]) {
@@ -231,6 +212,55 @@ describe("the scroll-to-top button", () => {
 		expect(view.button()).toBeNull();
 		await view.glideFor(GLIDE_MS / 2);
 		expect(view.scroller.scrollTop).toBe(0);
+	});
+
+	it("on iOS stops the coasting list under its center before the jump", async () => {
+		runningOn("ios");
+		let stopped = () => {};
+		invoke.mockImplementationOnce(
+			() =>
+				new Promise<void>((resolve) => {
+					stopped = resolve;
+				}),
+		);
+		const view = await mountWithScroller();
+		await view.scrollTo(5000);
+
+		await view.click();
+		expect(invoke).toHaveBeenCalledWith("stop_scroll_momentum", {
+			at: { x: 201, y: SCREEN_HEIGHT / 2 },
+		});
+		expect(view.button()).toBeNull();
+		expect(view.scroller.scrollTop).toBe(5000);
+
+		stopped();
+		await settle();
+		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
+		await view.glideFor(GLIDE_MS);
+		expect(view.scroller.scrollTop).toBe(0);
+	});
+
+	it("on iOS answers a status-bar tap with its own scroll to the top", async () => {
+		runningOn("ios");
+		const view = await mountWithScroller();
+		await view.scrollTo(5000);
+
+		window.__iosStatusBarTap?.();
+		await settle();
+
+		expect(view.button()).toBeNull();
+		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
+		await view.glideFor(GLIDE_MS);
+		expect(view.scroller.scrollTop).toBe(0);
+
+		cleanup();
+		await view.scrollTo(5000);
+		window.__iosStatusBarTap?.();
+		await settle();
+		expect(
+			view.scroller.scrollTop,
+			"an unmounted button stops answering",
+		).toBe(5000);
 	});
 
 	it("renames the button when the locale changes", async () => {

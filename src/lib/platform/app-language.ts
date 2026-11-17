@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
@@ -231,14 +231,14 @@ export async function startLanguage(): Promise<void> {
 		window.addEventListener("languagechange", followBrowserChange);
 		stopFollowing = () =>
 			window.removeEventListener("languagechange", followBrowserChange);
-		if (isTauri()) {
-			await startNative();
-		} else {
-			await enqueue(() => sync(browserLanguages()));
-		}
+		await startNative();
 	} catch (error) {
 		console.error("Failed to start the interface language", error);
 	}
+}
+
+export function getSystemLanguages(): readonly string[] {
+	return current.system;
 }
 
 export function chooseLanguage({ tag }: { tag: string }): Promise<void> {

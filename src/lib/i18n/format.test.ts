@@ -12,6 +12,7 @@ import {
 	formatNumber,
 	formatRange,
 	formatRelativeTime,
+	formatUnitName,
 	isolate,
 	type NumberPresetName,
 } from "./format";
@@ -357,6 +358,18 @@ describe("regional formats", () => {
 		await setLocale({ locale: "fr" });
 		setRegionalSettings({ locale: "en-US", numberingSystem: "arab" });
 		expect(timeAgo(5 * MINUTE)).toBe("il y a ٥ minutes");
+	});
+});
+
+describe("formatUnitName", () => {
+	it("names the unit as the language abbreviates it", async () => {
+		expect(formatUnitName("heightCentimeters")).toBe("cm");
+		expect(formatUnitName("weightKilograms")).toBe("kg");
+		expect(formatUnitName("weightPounds")).toBe("lb");
+
+		await setLocale({ locale: "ru" });
+		expect(formatUnitName("heightCentimeters")).toBe("см");
+		expect(formatUnitName("weightKilograms")).toBe("кг");
 	});
 });
 

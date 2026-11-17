@@ -1,9 +1,8 @@
-<script>
+<script lang="ts">
 	import PaperPlaneRightIcon from "phosphor-svelte/lib/PaperPlaneRightIcon";
 
 	import PrimaryComposerButton from "#lib/components/shared/PrimaryComposerButton.svelte";
 	import { t } from "#lib/i18n/index.ts";
-	import { softKeyboardVisibility } from "#lib/platform/android-native-bridge.ts";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
 
 	const { disabled } = $derived(getMessageComposerContext()());
@@ -14,9 +13,7 @@
 	aria-label={t("chat.composer.a11y.send")}
 	class="focus-ring-icon ps-(--icon-start) [--icon-start:--spacing(2)]"
 	{disabled}
-	onpointerdown={(event) => {
-		if (softKeyboardVisibility() !== false) event.preventDefault();
-	}}
+	keepsSoftKeyboardUp
 >
 	{#snippet icon({ ...props })}
 		<PaperPlaneRightIcon weight="fill" {...props} />

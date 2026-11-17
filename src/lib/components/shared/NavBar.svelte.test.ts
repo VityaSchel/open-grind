@@ -38,6 +38,8 @@ vi.mock("#lib/util/media.ts", async (importOriginal) => ({
 import { mergeProfileEditIntoCaches } from "#lib/api/users/profiles.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { noteSoftKeyboardOpen } from "#lib/platform/soft-keyboard.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import NavBar from "./NavBar.svelte";
 
 function medias(...mediaHashes: string[]): Profile["medias"] {
@@ -73,6 +75,7 @@ async function renderedAvatar(container: HTMLElement): Promise<string | null> {
 
 beforeEach(() => {
 	getProfileMock.mockReset();
+	runningOn("windows");
 });
 
 afterEach(async () => {
@@ -204,5 +207,30 @@ describe("navbar avatar", () => {
 		await tick();
 
 		expect(avatarSrc(container)).toBe("https://cdn.test/saved");
+	});
+});
+
+describe("navbar under the soft keyboard", () => {
+	beforeEach(() => {
+		getProfileMock.mockResolvedValue(profileWith(medias("first")));
+	});
+
+	afterEach(() => {
+		noteSoftKeyboardOpen(false);
+	});
+
+	it("steps aside while the keyboard shrinks the page and comes back once it closes", async () => {
+		runningOn("android");
+		render(NavBar, { props: { ourProfileId: OUR_ID } });
+		const nav = screen.getByRole("navigation", { name: "Main" });
+		expect(nav.hidden).toBe(false);
+
+		noteSoftKeyboardOpen(true);
+		await tick();
+		expect(nav.hidden).toBe(true);
+
+		noteSoftKeyboardOpen(false);
+		await tick();
+		expect(nav.hidden).toBe(false);
 	});
 });

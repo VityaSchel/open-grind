@@ -2,11 +2,12 @@
 
 import { cleanup, fireEvent, render, within } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { rightClick } from "#lib/test/context-menu.ts";
+import { runningOn } from "#lib/test/platform.ts";
 
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
@@ -59,6 +60,20 @@ function openMenuLabels(): (string | null)[] {
 	);
 }
 
+async function openTileMenu(tile: HTMLElement): Promise<HTMLDialogElement> {
+	await rightClick(tile);
+	const menu = document.querySelector("dialog[open]");
+	if (!(menu instanceof HTMLDialogElement))
+		throw new Error("the menu did not open");
+	return menu;
+}
+
+async function pressScrim(menu: HTMLDialogElement): Promise<void> {
+	menu.setPointerCapture = () => {};
+	await fireEvent.pointerDown(menu);
+	await fireEvent.mouseDown(menu);
+}
+
 function holdCloseEvent(dialog: HTMLDialogElement): () => void {
 	let fire = () => {};
 	dialog.close = () => {
@@ -67,6 +82,10 @@ function holdCloseEvent(dialog: HTMLDialogElement): () => void {
 	};
 	return () => fire();
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	cleanup();
@@ -173,17 +192,38 @@ describe("previous uploads sheet", () => {
 		const { findByRole } = renderSheet({ uploads: [photo(1), video(2)] });
 		const tile = await findByRole("button", { name: "Video 2" });
 
-		await rightClick(tile);
-		const closing = document.querySelector("dialog[open]");
-		if (!(closing instanceof HTMLDialogElement))
-			throw new Error("the menu did not open");
+		const closing = await openTileMenu(tile);
 		const fireCloseEvent = holdCloseEvent(closing);
-		await fireEvent.mouseDown(closing);
+		await pressScrim(closing);
 		await rightClick(tile);
 		fireCloseEvent();
 		await tick();
 
 		expect(openMenuLabels()).toEqual(["Video options"]);
+	});
+
+	it("keeps a tile's menu open through the mouse events a long press leaves on lifting", async () => {
+		const { findByRole } = renderSheet({ uploads: [photo(1)] });
+		const menu = await openTileMenu(
+			await findByRole("button", { name: "Photo 1" }),
+		);
+
+		await fireEvent.mouseDown(menu);
+		await fireEvent.mouseUp(menu);
+		await fireEvent.click(menu);
+
+		expect(openMenuLabels()).toEqual(["Photo options"]);
+	});
+
+	it("closes a tile's menu when a press starts on the scrim", async () => {
+		const { findByRole } = renderSheet({ uploads: [photo(1)] });
+		const menu = await openTileMenu(
+			await findByRole("button", { name: "Photo 1" }),
+		);
+
+		await pressScrim(menu);
+
+		expect(openMenuLabels()).toEqual([]);
 	});
 
 	it("keeps an upload the server refused to delete and says so", async () => {

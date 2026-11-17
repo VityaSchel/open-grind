@@ -21,7 +21,7 @@ const UPLOADED_HASH = "c".repeat(40);
 const initialScene = structuredClone(screenshotScene);
 
 const picked: PickedMedia = {
-	source: "web",
+	source: "demo",
 	key: "picked",
 	mimeType: "image/jpeg",
 	file: new File([], "picked.jpg"),

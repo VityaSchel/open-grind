@@ -8,7 +8,7 @@ use tokio::sync::OnceCell;
 use zbus::zvariant::{OwnedValue, Value};
 use zbus::Connection;
 
-use super::desktop::{HourCycle, RegionalSettings};
+use super::os_settings::{HourCycle, RegionalSettings};
 use super::pattern;
 
 const PORTAL_TIMEOUT: Duration = Duration::from_millis(250);

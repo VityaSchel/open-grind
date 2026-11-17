@@ -108,7 +108,7 @@ test.describe("scrolled to the bottom with unsaved changes", () => {
 		page,
 	}) => {
 		test.setTimeout(120_000);
-		await openAlbum(page, TWO_ROW_ALBUM);
+		await openAlbum(page, { tile: TWO_ROW_ALBUM, platform: "macos" });
 		await makeDirty({
 			page,
 			edit: () =>
@@ -128,7 +128,7 @@ test.describe("scrolled to the bottom with unsaved changes", () => {
 		page,
 	}) => {
 		test.setTimeout(120_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings/profile");
 		const displayName = page.getByRole("textbox", { name: "Display name" });
 		await displayName.waitFor({ timeout: 60_000 });
@@ -150,7 +150,7 @@ test("on a short album the save button sits where it sticks on a long one", asyn
 }) => {
 	test.setTimeout(120_000);
 	await page.setViewportSize({ width: 420, height: 1100 });
-	await openAlbum(page, SHARED_ALBUM);
+	await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 	await makeDirty({
 		page,
 		edit: () =>

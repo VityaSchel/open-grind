@@ -12,7 +12,7 @@ const ACTIVE_SLIDE = ".pswp__item[aria-hidden=false]";
 async function openLastSlide(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(CONVERSATION_WITH_PLAYED_OUT_VIDEO);
 	await page.locator(ALBUM_TRIGGER).first().click({ timeout: 60_000 });
 	await page.locator(LIGHTBOX).waitFor({ timeout: 30_000 });

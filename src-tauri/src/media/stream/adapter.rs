@@ -124,7 +124,7 @@ impl WebViewStream {
 	}
 }
 
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[cfg_attr(any(target_os = "ios", desktop), allow(dead_code))]
 impl ResponseStream for WebViewStream {
 	fn available(&mut self) -> io::Result<u64> {
 		self.open()?;

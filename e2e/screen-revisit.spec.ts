@@ -44,7 +44,7 @@ test("reopening Interest keeps the taps list and its scroll offset, with no skel
 	page,
 }) => {
 	test.setTimeout(300_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/interest/taps");
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
 
@@ -77,7 +77,7 @@ test("reopening a profile keeps a favorite it was just given", async ({
 	page,
 }) => {
 	test.setTimeout(300_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 180_000 });
 	await ensureGridLocation(page);
@@ -106,7 +106,7 @@ test("reopening a profile keeps a favorite it was just given", async ({
 
 test("returning to the grid keeps its scroll offset", async ({ page }) => {
 	test.setTimeout(300_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 180_000 });
 	await ensureGridLocation(page);

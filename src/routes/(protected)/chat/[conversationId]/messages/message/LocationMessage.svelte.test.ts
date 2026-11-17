@@ -1,24 +1,18 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { openExternalLink, currentPlatform } = vi.hoisted(() => ({
-	openExternalLink: vi.fn(),
-	currentPlatform: vi.fn<
-		typeof import("#lib/platform/os.ts").currentPlatform
-	>(() => "android"),
-}));
+const { openExternalLink } = vi.hoisted(() => ({ openExternalLink: vi.fn() }));
 vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink }));
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	currentPlatform,
-}));
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import Message from "./Message.svelte";
 
 const GEO_URL = "geo:51.507456,-0.127812?q=51.507456,-0.127812";
+const APPLE_MAPS_URL =
+	"https://maps.apple.com/?ll=51.507456,-0.127812&q=51.507456,-0.127812";
 const WEB_URL =
 	"https://www.openstreetmap.org/?mlat=51.507456&mlon=-0.127812#map=16/51.507456/-0.127812";
 const LOCATION_NAME = "Location 51.50746, -0.12781 Open map";
@@ -69,7 +63,7 @@ async function pointerClick(
 }
 
 beforeEach(() => {
-	currentPlatform.mockReturnValue("android");
+	runningOn("android");
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 });
 
@@ -103,21 +97,24 @@ describe("location messages", () => {
 		},
 	);
 
-	it.each([
-		"ios",
-		"macos",
-		"windows",
-		"linux",
-		"freebsd",
-		"dragonfly",
-		"netbsd",
-		"openbsd",
-		"solaris",
-		"web",
-	] as const)(
+	it("opens Apple Maps at the exact coordinates on ios", async () => {
+		runningOn("ios");
+		renderLocation();
+		const link = screen.getByRole("link", { name: LOCATION_NAME });
+		expect(link.getAttribute("href")).toBe(APPLE_MAPS_URL);
+
+		await pointerClick(link, "mouse");
+		await vi.advanceTimersByTimeAsync(300);
+
+		expect(openExternalLink).toHaveBeenCalledExactlyOnceWith(
+			APPLE_MAPS_URL,
+		);
+	});
+
+	it.each(["linux", "macos", "windows"] as const)(
 		"opens OpenStreetMap at the exact coordinates on %s",
 		async (platform) => {
-			currentPlatform.mockReturnValue(platform);
+			runningOn(platform);
 			renderLocation();
 			const link = screen.getByRole("link", { name: LOCATION_NAME });
 			expect(link.getAttribute("href")).toBe(WEB_URL);

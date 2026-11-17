@@ -39,7 +39,7 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
-import { applyBackGestureHandler } from "#lib/platform/android-native-bridge.ts";
+import { applyBackGestureHandler } from "#lib/platform/android-system-back.ts";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100010;

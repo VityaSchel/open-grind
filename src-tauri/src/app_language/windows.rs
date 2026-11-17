@@ -4,7 +4,7 @@ use windows::Win32::Globalization::{
 	GetUserPreferredUILanguages, MUI_LANGUAGE_NAME,
 };
 
-use super::desktop::AppLanguages;
+use super::os_settings::AppLanguages;
 use super::tags::multi_string;
 use super::NO_PER_APP_SETTING;
 

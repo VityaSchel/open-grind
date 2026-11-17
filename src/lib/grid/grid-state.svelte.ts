@@ -50,6 +50,7 @@ class GridState {
 	});
 	loading = $state(false);
 	refreshing = $state(false);
+	refreshFailed = $state(false);
 	error: Error | null = $state(null);
 	viewActive = false;
 
@@ -188,6 +189,7 @@ class GridState {
 		if (!geohash || this.refreshing) return;
 		this.#geohash = geohash;
 		this.refreshing = true;
+		this.refreshFailed = false;
 		try {
 			await this.#fetchProfiles(geohash, {
 				silent: true,
@@ -218,6 +220,7 @@ class GridState {
 		this.#stale = false;
 		this.loading = false;
 		this.refreshing = false;
+		this.refreshFailed = false;
 		this.scrollY = 0;
 		this.#geohash = null;
 		this.#retargeted = null;
@@ -356,6 +359,7 @@ class GridState {
 			if (this.#generation.isStale(generation)) return;
 			console.error(err);
 			this.loading = false;
+			if (this.refreshing) this.refreshFailed = true;
 			if (opts?.automatic) return;
 			if (opts?.silent) {
 				showErrorToast({

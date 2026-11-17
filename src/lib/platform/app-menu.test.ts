@@ -40,7 +40,6 @@ type Fake = {
 const { created, native, fakeClass } = vi.hoisted(() => {
 	const created: Fake[] = [];
 	const native = {
-		tauri: true,
 		platform: "macos",
 		failing: undefined as FakeKind | undefined,
 	};
@@ -61,11 +60,6 @@ const { created, native, fakeClass } = vi.hoisted(() => {
 	});
 	return { created, native, fakeClass };
 });
-
-vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
-	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
-	isTauri: () => native.tauri,
-}));
 
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => native.platform }));
 
@@ -211,11 +205,7 @@ async function switchLocale(locale: string): Promise<void> {
 
 beforeEach(() => {
 	created.length = 0;
-	Object.assign(native, {
-		tauri: true,
-		platform: "macos",
-		failing: undefined,
-	});
+	Object.assign(native, { platform: "macos", failing: undefined });
 });
 
 afterEach(async () => {
@@ -314,18 +304,17 @@ describe("startAppMenu", () => {
 		expect(relabeled()).toHaveLength(20);
 	});
 
-	it.each([
-		["outside the app", { tauri: false, platform: "macos" }],
-		["on Windows", { tauri: true, platform: "windows" }],
-		["on Linux", { tauri: true, platform: "linux" }],
-	])("keeps the default menu %s", async (_, platform) => {
-		Object.assign(native, platform);
+	it.each(["android", "ios", "linux", "windows"])(
+		"keeps the default menu on %s",
+		async (platform) => {
+			native.platform = platform;
 
-		await startAppMenu();
-		await switchLocale("en-XA");
+			await startAppMenu();
+			await switchLocale("en-XA");
 
-		expect(created).toEqual([]);
-	});
+			expect(created).toEqual([]);
+		},
+	);
 
 	it("keeps Tauri's default menu and logs when building fails", async () => {
 		const logged = vi.spyOn(console, "error").mockImplementation(() => {});

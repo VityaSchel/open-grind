@@ -1,8 +1,9 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
 import { screenshotScene } from "#lib/demo/screenshot-scene.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
 	type Capability,
@@ -22,18 +23,12 @@ import {
 
 export * from "./types";
 
-const notPackaged: Unsupported = {
-	reason: "noReleaseArtifacts",
-	detail: { target: "web" },
-};
-const unavailableCapability: Capability = {
-	state: "unsupported",
-	detail: notPackaged,
-};
-const unavailableReadiness: Readiness = {
-	state: "unsupported",
-	detail: notPackaged,
-};
+function notPackaged(): Unsupported {
+	return {
+		reason: "noReleaseArtifacts",
+		detail: { target: __DEMO__ ? "demo" : currentPlatform() },
+	};
+}
 
 async function parsed<T>(
 	command: string,
@@ -68,12 +63,20 @@ export { COMPONENT_PACKAGE, GOOGLE_OAUTH_COMPONENT } from "./components";
 export { APP_COMPONENT, type ComponentKey };
 
 export function updatesAvailableHere(): boolean {
-	if (__SCREENSHOTS__ && screenshotScene.updates) return isTauri();
-	return isTauri() && !__DEMO__;
+	switch (currentPlatform()) {
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return !__DEMO__ || (__SCREENSHOTS__ && screenshotScene.updates);
+		case "ios":
+			return false;
+	}
 }
 
 export async function getUpdateCapability(): Promise<Capability> {
-	if (!updatesAvailableHere()) return unavailableCapability;
+	if (!updatesAvailableHere())
+		return { state: "unsupported", detail: notPackaged() };
 	return parsed("updater_capability", capabilitySchema);
 }
 
@@ -117,7 +120,8 @@ export async function getUpdateProgress(): Promise<Progress | null> {
 export async function getUpdateReadiness(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<Readiness> {
-	if (!updatesAvailableHere()) return unavailableReadiness;
+	if (!updatesAvailableHere())
+		return { state: "unsupported", detail: notPackaged() };
 	return parsed("updater_readiness", readinessSchema, { component });
 }
 

@@ -1,10 +1,11 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { page } from "$app/state";
 import { flushSync } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "$app/navigation";
 import type { ResolvedPathname } from "$app/types";
 
+import { runningOn } from "#lib/test/platform.ts";
 import { fakePagerLayout, WIDTH } from "#lib/util/snap-pager-test-helpers.ts";
 import InterestPager from "./InterestPager.svelte";
 
@@ -151,6 +152,10 @@ function restOnViews({
 		: null;
 	pager.scroll(0);
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("InterestPager", () => {
 	afterEach(() => {

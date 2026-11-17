@@ -1,6 +1,6 @@
 import { playHaptic } from "#lib/haptics.ts";
 
-export type PullSource = "touch" | "overscroll" | "click";
+export type PullSource = "touch" | "overscroll" | "band" | "click";
 export type PullPhase = "idle" | "pulling" | "armed" | "refreshing";
 export type PullOutcome = "triggered" | "canceled";
 

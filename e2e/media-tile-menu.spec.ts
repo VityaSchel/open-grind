@@ -12,7 +12,7 @@ test.describe("media tile menu", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const corners = await page
 			.locator(MEDIA_TILE)
 			.evaluateAll((tiles) =>
@@ -39,7 +39,7 @@ test.describe("media tile menu", () => {
 
 	test("the menu is wide enough for its item's label", async ({ page }) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await page.locator(MEDIA_TILE).first().click({ button: "right" });
 
 		const menu = page.getByRole("menu", { name: "Photo options" });
@@ -61,7 +61,7 @@ test.describe("media tile menu", () => {
 		page,
 	}) => {
 		const images = await holdImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expect.poll(images.requested).toBeGreaterThan(0);
 		const tile = page.locator(MEDIA_TILE).first();
 

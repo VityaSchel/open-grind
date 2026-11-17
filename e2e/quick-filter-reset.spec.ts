@@ -76,7 +76,7 @@ for (const { name, open, quickFilters } of SCREENS) {
 		page,
 	}) => {
 		test.setTimeout(180_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await open(page);
 
 		for (const quickFilter of quickFilters) {

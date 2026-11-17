@@ -82,7 +82,7 @@ test("photo-grid rounds its outer cells at every column count and item count", a
 	page,
 }) => {
 	test.setTimeout(180_000);
-	await openAttachments(page);
+	await openAttachments(page, { platform: "macos" });
 	await expect(page.locator(".photo-grid").first()).toBeVisible({
 		timeout: 60_000,
 	});

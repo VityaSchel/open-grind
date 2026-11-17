@@ -8,10 +8,11 @@ import {
 	within,
 } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { isPhotoSwipeBusy } from "#lib/util/photoswipe/index.ts";
 import * as safeArea from "#lib/util/safe-area.ts";
 import ImageCarousel from "./ImageCarousel.svelte";
@@ -52,6 +53,10 @@ function galleryOf({
 		return fireEvent.scroll(gallery);
 	};
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("ImageCarousel", () => {
 	afterEach(async () => {

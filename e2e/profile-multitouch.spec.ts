@@ -43,7 +43,7 @@ async function restingScrollLeft(page: Page): Promise<number> {
 test("a finger still down outside the pager holds the landing until it lifts", async ({
 	page,
 }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { platform: "macos", nth: 1 });
 	const at = await fingerLane(page);
 	const fingers = await TrustedFingers.attach(page);
 	const meTabBox = (await meTab(page).boundingBox())!;

@@ -1,15 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, listenMock, tauri } = vi.hoisted(() => ({
+const { invokeMock, listenMock } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
 	listenMock: vi.fn(),
-	tauri: { enabled: false },
 }));
 
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
-	isTauri: () => tauri.enabled,
 }));
 
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
@@ -39,7 +37,6 @@ function emitChange(payload: unknown): void {
 beforeEach(() => {
 	invokeMock.mockReset();
 	listenMock.mockReset().mockResolvedValue(() => {});
-	tauri.enabled = false;
 });
 
 afterEach(() => {
@@ -49,7 +46,7 @@ afterEach(() => {
 	setRegionalSettings(webRegionalSettings());
 });
 
-describe("startRegionalSettings in a browser", () => {
+describe("startRegionalSettings with a dev override", () => {
 	it("pins a dev ?regional= tag and ignores the browser's language", async () => {
 		history.replaceState(null, "", "/chat?regional=de-DE-u-hc-h12");
 
@@ -77,24 +74,18 @@ describe("startRegionalSettings in a browser", () => {
 		});
 	});
 
-	it("follows the browser's language without an override", async () => {
+	it("reads the system's settings when it can't parse the override", async () => {
 		history.replaceState(null, "", "/?regional=%%%");
-		setRegionalSettings({ locale: "ja-JP" });
+		invokeMock.mockResolvedValue({ locale: "de-AT" });
 
 		await startRegionalSettings();
-		expect(getRegionalSettings()).toEqual({ locale: navigator.language });
 
-		changeLanguage("de-AT");
+		expect(invokeMock).toHaveBeenCalledWith("regional_settings");
 		expect(getRegionalSettings()).toEqual({ locale: "de-AT" });
-		expect(invokeMock).not.toHaveBeenCalled();
 	});
 });
 
-describe("startRegionalSettings in the app", () => {
-	beforeEach(() => {
-		tauri.enabled = true;
-	});
-
+describe("startRegionalSettings without an override", () => {
 	it("reads the system's settings, dropping fields it cannot read", async () => {
 		invokeMock.mockResolvedValue({
 			locale: "de-DE",

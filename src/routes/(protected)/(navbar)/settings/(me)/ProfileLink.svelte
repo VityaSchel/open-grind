@@ -26,7 +26,7 @@
 		<a
 			href="/profile/{id}"
 			{...props}
-			class={["rounded-full", props.class, "flex-nowrap!"]}
+			class={["rounded-full", props.class, "flex-nowrap! ps-3.5"]}
 		>
 			<Item.Media
 				class="translate-y-none size-14 rounded-full bg-neutral-700"

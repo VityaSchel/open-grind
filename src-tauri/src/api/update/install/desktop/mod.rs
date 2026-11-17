@@ -1,4 +1,4 @@
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "linux")]
 mod binary;
 #[cfg(target_os = "macos")]
 mod bundle;
@@ -6,7 +6,6 @@ mod bundle;
 mod installer;
 #[cfg(target_os = "macos")]
 mod location;
-mod taskbar;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -16,7 +15,9 @@ use tauri::{AppHandle, Manager};
 use super::super::baseline::Baseline;
 use super::super::component::Component;
 use super::super::error::UpdateError;
-use super::{Outcome, TransferProgress, TransferPurpose, Unsupported};
+use super::{Outcome, Unsupported};
+#[cfg(target_os = "macos")]
+pub use location::enforce_home;
 
 const INSTALLED_MARKER: &str = "update-installed";
 
@@ -26,6 +27,7 @@ pub fn probe_package(_app: &AppHandle, _package: &str) -> Baseline {
 	}
 }
 
+#[cfg(target_os = "linux")]
 pub fn reason() -> Unsupported {
 	if let Some(runtime) = sandbox() {
 		return Unsupported::Sandboxed {
@@ -38,17 +40,20 @@ pub fn reason() -> Unsupported {
 				path: path.display().to_string(),
 			}
 		}
-		_ => Unsupported::NoReleaseArtifacts {
-			target: super::target(),
-		},
+		_ => Unsupported::no_release_artifacts(),
 	}
+}
+
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+pub fn reason() -> Unsupported {
+	Unsupported::no_release_artifacts()
 }
 
 pub fn verdict(
 	_app: &AppHandle,
 	_component: &Component,
 ) -> Result<bool, Unsupported> {
-	if sandbox().is_some() || !installable() {
+	if !installable() {
 		return Err(reason());
 	}
 	Ok(true)
@@ -63,7 +68,7 @@ pub async fn install(
 	bundle::install(payload)?;
 	#[cfg(target_os = "windows")]
 	installer::install(payload)?;
-	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+	#[cfg(target_os = "linux")]
 	binary::install(payload)?;
 
 	if let Ok(marker) = marker(app) {
@@ -81,36 +86,13 @@ pub async fn install(
 	{
 		Ok(())
 	}
-	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+	#[cfg(target_os = "linux")]
 	if crate::appimage::path().is_some() {
 		binary::relaunch_after_exit();
 		app.exit(0);
 		Ok(())
 	} else {
 		app.restart()
-	}
-}
-
-pub(super) fn begin_transfer<R: tauri::Runtime>(
-	_app: &AppHandle<R>,
-	_purpose: TransferPurpose,
-) {
-}
-
-pub(super) fn report_transfer<R: tauri::Runtime>(
-	app: &AppHandle<R>,
-	_purpose: TransferPurpose,
-	progress: TransferProgress,
-) {
-	taskbar::show(app, progress);
-}
-
-pub(super) fn end_transfer<R: tauri::Runtime>(
-	app: &AppHandle<R>,
-	purpose: TransferPurpose,
-) {
-	if matches!(purpose, TransferPurpose::Update { .. }) {
-		taskbar::clear(app);
 	}
 }
 
@@ -129,16 +111,6 @@ pub fn open_install_permission_settings(
 	_app: &AppHandle,
 ) -> Result<(), UpdateError> {
 	Err(UpdateError::Unsupported(reason()))
-}
-
-pub fn sweep_replaced() {
-	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-	binary::sweep_replaced();
-}
-
-pub fn enforce_home() {
-	#[cfg(target_os = "macos")]
-	location::enforce();
 }
 
 pub fn take_outcome(app: &AppHandle) -> Option<Outcome> {
@@ -165,18 +137,25 @@ fn outcome_of(replaced: &str, current: &str) -> Outcome {
 	}
 }
 
+#[cfg(target_os = "linux")]
 fn installable() -> bool {
-	match std::env::consts::OS {
-		"windows" => true,
-		"macos" => std::env::current_exe()
-			.ok()
-			.and_then(|exe| enclosing_bundle(&exe))
-			.is_some(),
-		"linux" => crate::appimage::replaceable().is_some(),
-		_ => false,
-	}
+	sandbox().is_none() && crate::appimage::replaceable().is_some()
 }
 
+#[cfg(target_os = "macos")]
+fn installable() -> bool {
+	std::env::current_exe()
+		.ok()
+		.and_then(|exe| enclosing_bundle(&exe))
+		.is_some()
+}
+
+#[cfg(target_os = "windows")]
+fn installable() -> bool {
+	true
+}
+
+#[cfg(any(target_os = "macos", test))]
 pub fn enclosing_bundle(exe: &Path) -> Option<PathBuf> {
 	exe.ancestors()
 		.find(|dir| dir.extension().is_some_and(|kind| kind == "app"))
@@ -192,10 +171,8 @@ fn marker(app: &AppHandle) -> Result<PathBuf, UpdateError> {
 	Ok(dir.join(INSTALLED_MARKER))
 }
 
+#[cfg(target_os = "linux")]
 fn sandbox() -> Option<&'static str> {
-	if !cfg!(target_os = "linux") {
-		return None;
-	}
 	if std::env::var_os("FLATPAK_ID").is_some() {
 		return Some("Flatpak");
 	}

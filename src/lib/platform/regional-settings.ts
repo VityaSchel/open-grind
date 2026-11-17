@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 import { setRegionalSettings } from "#lib/i18n/index.ts";
@@ -6,7 +6,6 @@ import {
 	parseRegionalOverride,
 	type RegionalSettings,
 	regionalSettingsSchema,
-	webRegionalSettings,
 } from "#lib/i18n/regional.ts";
 
 export const NATIVE_READ_TIMEOUT_MS = 500;
@@ -40,13 +39,6 @@ function settledWithin({
 	]);
 }
 
-function followWebSettings(): void {
-	setRegionalSettings(webRegionalSettings());
-	window.addEventListener("languagechange", () =>
-		setRegionalSettings(webRegionalSettings()),
-	);
-}
-
 async function followNativeSettings(): Promise<void> {
 	let changed = false;
 	void listen<unknown>(CHANGED_EVENT, ({ payload }) => {
@@ -74,10 +66,8 @@ async function start(): Promise<void> {
 	const pinned = import.meta.env.DEV ? regionalOverride() : undefined;
 	if (pinned !== undefined) {
 		setRegionalSettings(pinned);
-	} else if (isTauri()) {
-		await followNativeSettings();
 	} else {
-		followWebSettings();
+		await followNativeSettings();
 	}
 }
 

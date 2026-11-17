@@ -36,6 +36,7 @@ vi.mock("#lib/platform/app-language.ts", () => ({
 	}),
 }));
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { ScreenshotHooks } from "./screenshot-scene";
 
 const HOOK_NAMES = [
@@ -70,9 +71,11 @@ beforeAll(async () => {
 beforeEach(() => {
 	vi.clearAllMocks();
 	hookedAtStartup.length = 0;
+	runningOn("android");
 });
 
 afterEach(() => {
+	resetPlatform();
 	vi.unstubAllGlobals();
 	delete window.__openGrindScreenshots;
 	delete window.__openGrindScreenshotScene;

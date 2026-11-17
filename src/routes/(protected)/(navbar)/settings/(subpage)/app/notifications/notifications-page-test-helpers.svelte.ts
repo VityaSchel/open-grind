@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/svelte";
 import { SvelteSet } from "svelte/reactivity";
 import { vi } from "vitest";
 
+import { runningOn } from "#lib/test/platform.ts";
 import type * as AccountApi from "#lib/api/settings/account.ts";
-import type * as Os from "#lib/platform/os.ts";
 import type * as PushApi from "#lib/push/index.ts";
 import type { PushCategory, PushToken } from "#lib/push/types.ts";
 import type NotificationsPage from "./+page.svelte";
@@ -11,6 +11,8 @@ import type NotificationsPage from "./+page.svelte";
 type InstallListener = () => Promise<void>;
 
 const settled = () => Promise.resolve();
+
+const actualPush = await vi.importActual<typeof PushApi>("#lib/push/index.ts");
 
 export const token: PushToken = {
 	token: "fid:APA91b",
@@ -27,8 +29,7 @@ export const push = {
 	notificationPermission: vi.fn<typeof PushApi.notificationPermission>(),
 	openNotificationSettings: vi.fn(settled),
 	openPushCategorySettings: vi.fn(settled),
-	pushAvailableHere: () =>
-		["android", "linux", "macos", "windows"].includes(currentPlatform()),
+	pushAvailableHere: actualPush.pushAvailableHere,
 	pushCategories: vi.fn<typeof PushApi.pushCategories>(),
 	pushErrorReason: () => null,
 	requestNotificationPermission:
@@ -76,7 +77,6 @@ export async function addonInstalled(): Promise<void> {
 }
 
 export const installedFromFdroid = vi.fn(() => false);
-export const currentPlatform = vi.fn<typeof Os.currentPlatform>();
 export const showErrorToast = vi.fn();
 export const openExternalLink = vi.fn();
 
@@ -101,7 +101,7 @@ export async function resetNotificationsPage(): Promise<void> {
 	stored.notificationsEnabled = true;
 	appLifecycle.active = true;
 	installListeners.clear();
-	currentPlatform.mockReturnValue("android");
+	runningOn("android");
 	installedFromFdroid.mockReturnValue(false);
 	addon.addonInstallerAvailable.mockReturnValue(true);
 	inMode("slow");

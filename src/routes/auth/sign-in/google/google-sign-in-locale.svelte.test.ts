@@ -12,6 +12,7 @@ import {
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	installedBy,
 	offer,
@@ -26,21 +27,14 @@ const ASCII_LETTER = /[A-Za-z]/;
 const fake = updateApiFake();
 const toasts = toastsFake();
 const { api } = fake;
-const {
-	callMethodMock,
-	pageMock,
-	toastMock,
-	platform,
-	store,
-	getUpdateCapability,
-} = vi.hoisted(() => ({
-	getUpdateCapability: vi.fn<() => Promise<Capability>>(),
-	callMethodMock: vi.fn(),
-	pageMock: { url: new URL("http://localhost/") },
-	toastMock: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
-	platform: { isAndroidPlatform: vi.fn(() => true) },
-	store: { isPlayBuild: vi.fn(() => false) },
-}));
+const { callMethodMock, pageMock, toastMock, store, getUpdateCapability } =
+	vi.hoisted(() => ({
+		getUpdateCapability: vi.fn<() => Promise<Capability>>(),
+		callMethodMock: vi.fn(),
+		pageMock: { url: new URL("http://localhost/") },
+		toastMock: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
+		store: { isPlayBuild: vi.fn(() => false) },
+	}));
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("$app/state", () => ({ page: pageMock }));
@@ -56,7 +50,6 @@ vi.mock("#lib/updates/index.ts", async () => ({
 	getUpdateCapability,
 }));
 vi.mock("#lib/updates/toasts.ts", () => toasts);
-vi.mock("#lib/platform/os.ts", () => platform);
 vi.mock("#lib/platform/store.ts", () => store);
 vi.mock("#lib/platform/link-opener.ts", () => ({ openExternalLink: vi.fn() }));
 
@@ -113,7 +106,7 @@ describe("GoogleSignInForm in the active locale", () => {
 		vi.clearAllMocks();
 		fake.reset();
 		pageMock.url.search = "";
-		platform.isAndroidPlatform.mockReturnValue(true);
+		runningOn("android");
 		store.isPlayBuild.mockReturnValue(false);
 		api.checkForUpdate.mockResolvedValue(offer("install"));
 		getUpdateCapability.mockResolvedValue(releaseSigned);
@@ -123,11 +116,12 @@ describe("GoogleSignInForm in the active locale", () => {
 	afterEach(async () => {
 		testing.cleanup();
 		vi.restoreAllMocks();
+		resetPlatform();
 		await switchLocale(SOURCE_LOCALE);
 	});
 
 	it("translates the token form off Android", async () => {
-		platform.isAndroidPlatform.mockReturnValue(false);
+		runningOn("linux");
 		const { container, screen } = await opened();
 		const token = screen.getByLabelText("Token");
 		const signIn = screen.getByRole("button", { name: "Sign in" });

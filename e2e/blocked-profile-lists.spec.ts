@@ -5,7 +5,7 @@ import { installTauriShim } from "./support/app";
 const VIEW_CARD = '.photo-grid a[href^="/profile/"]';
 
 async function blockFirstViewer(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/interest/views");
 
 	const cards = page.locator(VIEW_CARD);

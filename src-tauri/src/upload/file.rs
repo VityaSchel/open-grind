@@ -10,11 +10,11 @@ use sha2::{Digest, Sha256};
 use tauri::Runtime;
 
 use crate::api::rest::{self, encode_response, RawResponse};
-use crate::api::update::TransferHold;
 use crate::error::{AppError, MediaError};
 use crate::hex::hex;
 use crate::photo;
 use crate::state::AppState;
+use crate::transfer::{TransferHold, TransferPurpose};
 use crate::upload::form::{FormPart, Framing};
 use crate::upload::inspect::{inspect, MediaKind};
 use crate::upload::picked::PickedFile;
@@ -278,7 +278,7 @@ pub async fn upload_media_file(
 	rest::refuse_signed_path(&request.path)?;
 	let method = rest::parse_method(&request.method)?;
 	let _one_at_a_time = upload_lock.0.lock().await;
-	let _background = TransferHold::media_upload(&app);
+	let _background = TransferHold::begin(&app, TransferPurpose::MediaUpload);
 
 	let source = open_and_read(app.clone(), file.clone()).await?;
 	let outgoing = match source {

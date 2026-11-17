@@ -1,20 +1,14 @@
 import { expect, test } from "@playwright/test";
 
-import {
-	ensureGridLocation,
-	installTauriShim,
-	runPaletteCommand,
-} from "./support/app";
+import { installTauriShim, openGrid, runPaletteCommand } from "./support/app";
 
 const PROFILE_LINK = '.photo-grid a[href^="/profile/"]';
 const NO_DEMO_PROFILE_AGE = "age=90-99";
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await installTauriShim(page, { platform: "macos" });
+	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 });
 

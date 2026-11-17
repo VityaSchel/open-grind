@@ -8,6 +8,7 @@ import {
 	installTauriShim,
 } from "./support/app";
 import { DRAWER, scrollSheetTo, SHEET_PANEL } from "./support/drawer";
+import { TEST_INSETS } from "./support/keyboard";
 import { openStickers } from "./support/stickers";
 import {
 	bottomToaster,
@@ -31,7 +32,7 @@ async function settled(page: Page): Promise<void> {
 test("a toast rides 8px above an open sheet and pins under the status bar once the sheet fills the screen", async ({
 	page,
 }) => {
-	await openStickers(page, { stretchPanel: false });
+	await openStickers(page, { platform: "macos", stretchPanel: false });
 
 	const collapsed = await showRestingToast({
 		page,
@@ -94,7 +95,7 @@ test("a toast rides 8px above an open sheet and pins under the status bar once t
 test("the last toast leaving over an open sheet stays above the sheet", async ({
 	page,
 }) => {
-	await openStickers(page, { stretchPanel: false });
+	await openStickers(page, { platform: "macos", stretchPanel: false });
 	const toast = await showRestingToast({
 		page,
 		edge: "bottom",
@@ -120,7 +121,7 @@ test("the last toast leaving over an open sheet stays above the sheet", async ({
 test("a toast glides back above the composer when the sheet closes", async ({
 	page,
 }) => {
-	await openStickers(page, { stretchPanel: false });
+	await openStickers(page, { platform: "macos", stretchPanel: false });
 	const toast = await showRestingToast({
 		page,
 		edge: "bottom",
@@ -140,35 +141,36 @@ test("a toast glides back above the composer when the sheet closes", async ({
 test("an offset change glides the toasts to their new place instead of jumping", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await composer(page).waitFor({ timeout: 60_000 });
 	await showRestingToast({ page, edge: "bottom", label: "Offset probe" });
 
-	const transition = await bottomToaster(page).evaluate((toaster, bottom) => {
-		const insets = window.__AndroidInsets;
-		if (!insets) throw new Error("Test insets are off");
-		const before = toaster.getBoundingClientRect().top;
-		insets.bottom = () => bottom;
-		window.__reapplyInsets();
-		return new Promise<{ gliding: boolean; firstFrameMovedPx: number }>(
-			(measured) =>
-				requestAnimationFrame(() =>
-					measured({
-						gliding: toaster
-							.getAnimations()
-							.some(
-								(animation) =>
-									animation instanceof CSSTransition &&
-									animation.transitionProperty === "bottom",
+	const transition = await bottomToaster(page).evaluate(
+		(toaster, insets) => {
+			const before = toaster.getBoundingClientRect().top;
+			window.__reapplyInsets(insets);
+			return new Promise<{ gliding: boolean; firstFrameMovedPx: number }>(
+				(measured) =>
+					requestAnimationFrame(() =>
+						measured({
+							gliding: toaster
+								.getAnimations()
+								.some(
+									(animation) =>
+										animation instanceof CSSTransition &&
+										animation.transitionProperty ===
+											"bottom",
+								),
+							firstFrameMovedPx: Math.abs(
+								toaster.getBoundingClientRect().top - before,
 							),
-						firstFrameMovedPx: Math.abs(
-							toaster.getBoundingClientRect().top - before,
-						),
-					}),
-				),
-		);
-	}, RAISED_BOTTOM_INSET_PX);
+						}),
+					),
+			);
+		},
+		{ ...TEST_INSETS, bottom: RAISED_BOTTOM_INSET_PX },
+	);
 
 	expect(transition.gliding).toBe(true);
 	expect(transition.firstFrameMovedPx).toBeLessThan(

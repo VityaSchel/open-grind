@@ -1,12 +1,13 @@
 import { tick } from "svelte";
 import type { OnNavigate } from "$app/navigation";
 
-import { StackSettle } from "#lib/components/navigation/stack/settle.ts";
+import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
 import { Generation } from "#lib/util/generation.ts";
-import { canGoBack } from "#lib/util/history.ts";
+import { BackWatchdog, canGoBack } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
+import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
 import { ancestorsOf, stackRelation, type StackRelation } from "./hierarchy";
 import { type PaneSnapshot, snapshotPane } from "./snapshot";
 
@@ -20,17 +21,19 @@ export class PageStackState {
 	ghost = $state<PaneSnapshot | null>(null);
 	liveRole = $state<LiveRole>("front");
 	tracking = $state(false);
+	committing = $state(false);
 
 	readonly #settle: StackSettle;
 	readonly #livePane: () => HTMLElement | null;
 	readonly #reducedMotion: () => boolean;
 	readonly #scope: string;
 
-	#ancestors: PaneSnapshot[] = [];
+	#ancestors = $state.raw<PaneSnapshot[]>([]);
 	#pushedFrom: { path: string }[];
 	#generation = new Generation();
 	#backOwed = false;
-	#committedByGesture = false;
+	#committedByGesture = $state(false);
+	readonly #backWatchdog = new BackWatchdog();
 
 	constructor({
 		surface,
@@ -54,8 +57,16 @@ export class PageStackState {
 		this.#pushedFrom = pushedFrom;
 	}
 
-	get canSwipeBack(): boolean {
-		return this.#ancestors.length > 0;
+	get moving(): boolean {
+		return this.ghost !== null;
+	}
+
+	get offersSwipeBack(): boolean {
+		return (
+			this.#ancestors.length > 0 &&
+			this.#livePane() !== null &&
+			!this.#committedByGesture
+		);
 	}
 
 	async navigate(navigation: OnNavigate): Promise<(() => void) | void> {
@@ -64,7 +75,9 @@ export class PageStackState {
 		if (!from || !to) return;
 
 		this.tracking = false;
+		this.committing = false;
 		this.#backOwed = false;
+		this.#backWatchdog.cancel();
 		const generation = this.#generation.next();
 
 		if (this.#committedByGesture) {
@@ -102,7 +115,7 @@ export class PageStackState {
 
 		const snapshot = snapshotPane(pane, from);
 		if (relation === "push") {
-			this.#ancestors.push(snapshot);
+			this.#ancestors = [...this.#ancestors, snapshot];
 			this.#pushedFrom.push(snapshot);
 		}
 		this.#keepAncestorsOf(to);
@@ -116,6 +129,7 @@ export class PageStackState {
 		this.ghost = snapshot;
 		this.liveRole = relation === "push" ? "front" : "back";
 		if (!turnsAround) this.#settle.progress = 1 - target;
+		this.#settle.apply();
 
 		await tick();
 		snapshot.restore();
@@ -140,7 +154,7 @@ export class PageStackState {
 		}
 
 		const previous = this.#ancestors.at(-1);
-		if (!this.canSwipeBack || !previous || !this.#livePane()) return false;
+		if (!previous || !this.offersSwipeBack) return false;
 
 		this.ghost = previous;
 		this.liveRole = "front";
@@ -171,23 +185,31 @@ export class PageStackState {
 		this.#settle.track(progress);
 	}
 
-	commitSwipeBack(): void {
-		this.#finishSwipeBack(true);
+	commitSwipeBack(release?: SwipeRelease): void {
+		this.#finishSwipeBack({ commit: true, velocity: release?.velocity });
 	}
 
-	cancelSwipeBack(): void {
-		this.#finishSwipeBack(false);
+	cancelSwipeBack(release?: SwipeRelease): void {
+		this.#finishSwipeBack({ commit: false, velocity: release?.velocity });
 	}
 
-	#finishSwipeBack(commit: boolean): void {
+	#finishSwipeBack({
+		commit,
+		velocity,
+	}: {
+		commit: boolean;
+		velocity: number | undefined;
+	}): void {
 		if (!this.tracking) return;
 		this.tracking = false;
 		this.#backOwed = commit && canGoBack();
+		this.committing = this.#backOwed;
 
 		void this.#settle
 			.settleTo({
 				target: commit ? 1 : 0,
 				intent: commit ? "commit" : "cancel",
+				velocity,
 			})
 			.then((settled) => {
 				if (!settled) return;
@@ -204,7 +226,17 @@ export class PageStackState {
 	#payBack(): void {
 		this.#backOwed = false;
 		this.#committedByGesture = true;
-		history.back();
+		this.#backWatchdog.back({ stalled: () => this.#abandonBack() });
+	}
+
+	#abandonBack(): void {
+		this.#committedByGesture = false;
+		this.committing = false;
+		void this.#settle
+			.settleTo({ target: 0, intent: "cancel" })
+			.then((settled) => {
+				if (settled) this.ghost = null;
+			});
 	}
 
 	async #adoptGhost(): Promise<void> {

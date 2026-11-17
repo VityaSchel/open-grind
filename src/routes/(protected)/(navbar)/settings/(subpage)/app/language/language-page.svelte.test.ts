@@ -11,18 +11,25 @@ import {
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { readMock, writeMock, showErrorToastMock, catalogs, navigated } =
-	vi.hoisted(() => ({
-		readMock: vi.fn(),
-		writeMock: vi.fn(),
-		showErrorToastMock: vi.fn(),
-		catalogs: {
-			failing: new Set<string>(),
-			held: new Map<string, PromiseWithResolvers<void>>(),
-			requested: [] as string[],
-		},
-		navigated: [] as ((navigation: { type: string }) => void)[],
-	}));
+const {
+	readMock,
+	writeMock,
+	showErrorToastMock,
+	catalogs,
+	navigated,
+	systemLanguages,
+} = vi.hoisted(() => ({
+	readMock: vi.fn(),
+	writeMock: vi.fn(),
+	showErrorToastMock: vi.fn(),
+	catalogs: {
+		failing: new Set<string>(),
+		held: new Map<string, PromiseWithResolvers<void>>(),
+		requested: [] as string[],
+	},
+	navigated: [] as ((navigation: { type: string }) => void)[],
+	systemLanguages: { list: [] as string[] },
+}));
 
 vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
@@ -37,6 +44,10 @@ vi.mock("$app/navigation", () => ({
 	afterNavigate: (callback: (typeof navigated)[number]) => {
 		navigated.push(callback);
 	},
+}));
+vi.mock("#lib/platform/app-language.ts", async (importOriginal) => ({
+	...(await importOriginal<typeof import("#lib/platform/app-language.ts")>()),
+	getSystemLanguages: () => systemLanguages.list,
 }));
 vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => {
 	const actual =
@@ -110,6 +121,11 @@ function checkedNames(): string[] {
 		.map((choice) => lines(choice)[0]?.text ?? "");
 }
 
+const ENGAGE_PAGE = "https://i18n.opengrind.org/engage/open-grind/";
+
+const helpTranslateLink = () =>
+	screen.getByRole("link", { name: "Help translate Open Grind" });
+
 const scrollIntoView = vi.fn();
 
 beforeEach(async () => {
@@ -122,6 +138,7 @@ beforeEach(async () => {
 	catalogs.failing.clear();
 	catalogs.held.clear();
 	catalogs.requested.length = 0;
+	systemLanguages.list = [];
 	await setPreferences({ language: null, languageSync: null });
 	await setLocale({ locale: "en-US" });
 	writeMock.mockClear();
@@ -150,6 +167,37 @@ describe("the Language page", () => {
 		expect(
 			choices.filter((choice) => choice.querySelector("div, p")),
 		).toEqual([]);
+	});
+
+	it("links translators to Weblate below the languages", () => {
+		render(LanguagePage);
+
+		const link = helpTranslateLink();
+		expect(link.textContent.trim()).toBe("Help translate Open Grind");
+		expect(link.getAttribute("data-slot")).toBe("help-translate");
+		expect(link.querySelector("svg")).not.toBeNull();
+		expect(
+			screen.getByRole("radiogroup").compareDocumentPosition(link) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+	});
+
+	it("links to the page of the first system language the project translates", () => {
+		systemLanguages.list = ["uk-UA", "de-DE"];
+
+		render(LanguagePage);
+
+		expect(helpTranslateLink().getAttribute("href")).toBe(
+			`${ENGAGE_PAGE}-/uk/`,
+		);
+	});
+
+	it("links to the project page when the first system language has no translation", () => {
+		systemLanguages.list = ["sw-KE", "de-DE"];
+
+		render(LanguagePage);
+
+		expect(helpTranslateLink().getAttribute("href")).toBe(ENGAGE_PAGE);
 	});
 
 	it.each([

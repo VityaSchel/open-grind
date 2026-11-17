@@ -95,7 +95,7 @@
 
 <ProgressiveBlur
 	direction="topToBottom"
-	class="fixed top-0 left-0 z-20 h-[calc(var(--selection-bar-height)+var(--safe-area-top))] w-full"
+	class="fixed top-0 left-0 z-20 h-[calc(var(--selection-bar-height)+var(--safe-area-top))] w-full px-safe"
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="h-full"
 	tag="nav"

@@ -32,6 +32,7 @@ vi.mock("#lib/components/feedback/DataRefreshControl.svelte", () => ({
 import { HiddenProfileError } from "#lib/api/users/profiles.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import { gridRow, PROFILE_ID, renderPane } from "./profile-pane-test-helpers";
 
@@ -44,6 +45,7 @@ function inertElements(section: HTMLElement): HTMLElement[] {
 beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(fullProfile({ profileId: PROFILE_ID }));
+	runningOn("windows");
 });
 
 afterEach(async () => {

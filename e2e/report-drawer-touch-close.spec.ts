@@ -10,7 +10,7 @@ const DRAG_PX = 240;
 const FOLLOWED_PX = 150;
 
 async function openReportSheet(page: Page): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_PROFILE);
 	await page.getByLabel("Profile menu").click();
 	await page.getByRole("menuitem", { name: "Report user" }).click();

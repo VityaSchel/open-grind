@@ -3,6 +3,9 @@ import { hasScrollableOverflowY } from "#lib/util/scroll.ts";
 export type PullPosition = "top" | "bottom";
 
 export const AT_BOUNDARY_PX = 1;
+export const PAST_EDGE_PX = 0.5;
+
+export const NO_PULL_ATTRIBUTE = "data-refresh-no-pull";
 
 function isScrollableY(el: Element): boolean {
 	return hasScrollableOverflowY(el) && el.scrollHeight > el.clientHeight + 1;
@@ -34,14 +37,29 @@ const viewportScrollLocked = () =>
 	isScrollLocked(document.documentElement) ||
 	(!!document.body && isScrollLocked(document.body));
 
+export function chainRestsAt({
+	start,
+	position,
+}: {
+	start: Element;
+	position: PullPosition;
+}): boolean {
+	for (let el: Element | null = start; el; el = el.parentElement)
+		if (isScrollableY(el) && canScrollToward({ el, position }))
+			return false;
+	return true;
+}
+
 export function chainAllowsPull({
 	start,
 	root,
 	position,
+	honorNoPull = false,
 }: {
 	start: EventTarget | null;
 	root: Element;
 	position: PullPosition;
+	honorNoPull?: boolean;
 }): boolean {
 	const rootIsDocument = root === document.documentElement;
 	if (rootIsDocument ? viewportScrollLocked() : isScrollLocked(root))
@@ -50,6 +68,7 @@ export function chainAllowsPull({
 	let el = start instanceof Element ? start : null;
 	if (el === root) return true;
 	while (el && el !== root) {
+		if (honorNoPull && el.hasAttribute(NO_PULL_ATTRIBUTE)) return false;
 		if (isScrollableY(el) && canScrollToward({ el, position }))
 			return false;
 		el = el.parentElement;

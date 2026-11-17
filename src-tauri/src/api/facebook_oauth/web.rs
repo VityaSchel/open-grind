@@ -4,33 +4,24 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
 use crate::error::AppError;
-#[cfg(desktop)]
+#[cfg(any(desktop, target_os = "ios"))]
 use crate::native_strings::NativeText;
 
 use crate::api::oauth::{
-	is_allowed_target, new_nonce, without_secrets, CANCELED,
+	await_sign_in, is_allowed_target, new_nonce, without_secrets, SignInWait,
 };
 
 use super::dialog::{
-	dialog_url, is_redirect_url, result_from_redirect, wait_for_result,
-	HANDOFF_REFUSED,
+	dialog_url, is_redirect_url, result_from_redirect, HANDOFF_REFUSED,
 };
 use super::FacebookOauthBridge;
 
 const WINDOW_LABEL: &str = "facebook-oauth";
 
-const FLOW_TIMEOUT: std::time::Duration =
-	std::time::Duration::from_secs(10 * 60);
-
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (600.0, 700.0);
 #[cfg(mobile)]
 const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
-
-#[cfg(not(target_os = "android"))]
-const DESKTOP_USER_AGENT: &str =
-	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
-	 AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
 pub async fn fetch_access_token(
 	app: &AppHandle,
@@ -56,7 +47,6 @@ async fn run_flow(
 	let bridge_for_nav = bridge.clone();
 	let state_for_nav = state.clone();
 
-	#[allow(unused_mut)]
 	let mut builder = WebviewWindowBuilder::new(
 		app,
 		WINDOW_LABEL,
@@ -81,9 +71,15 @@ async fn run_flow(
 		false
 	});
 
-	#[cfg(not(target_os = "android"))]
+	#[cfg(target_os = "ios")]
 	{
-		builder = builder.user_agent(DESKTOP_USER_AGENT);
+		builder =
+			builder.user_agent(&crate::api::oauth::user_agent::iphone_safari());
+	}
+
+	#[cfg(desktop)]
+	{
+		builder = builder.user_agent(crate::api::oauth::user_agent::MAC_SAFARI);
 	}
 
 	#[cfg(desktop)]
@@ -109,22 +105,24 @@ async fn run_flow(
 			.data_directory(crate::api::oauth::oauth_data_dir(app, &state)?);
 	}
 
+	#[cfg(target_os = "ios")]
+	{
+		builder = crate::api::oauth::sheet::prepare(builder);
+	}
+
 	let window = builder.build().map_err(|e| {
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
-	let bridge_for_close = bridge.clone();
-	window.on_window_event(move |event| {
-		if matches!(
-			event,
-			tauri::WindowEvent::CloseRequested { .. }
-				| tauri::WindowEvent::Destroyed
-		) {
-			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
-		}
-	});
-
-	let result = wait_for_result(rx, FLOW_TIMEOUT).await;
+	let result = await_sign_in(SignInWait {
+		window: &window,
+		bridge,
+		answer: rx,
+		#[cfg(target_os = "ios")]
+		title: crate::app_language::native_strings(app)
+			.text(NativeText::FacebookSignInTitle),
+	})
+	.await;
 
 	dismiss_window(app).await;
 

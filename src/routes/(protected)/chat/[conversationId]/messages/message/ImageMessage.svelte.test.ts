@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("#lib/api/current-session.ts", () => ({
 	signedInProfileIdSnapshot: () => 858049792,
@@ -10,6 +10,8 @@ vi.mock("#lib/api/current-session.ts", () => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import Message from "./Message.svelte";
 
 const signed = ({ file, signature }: { file: string; signature: string }) =>
@@ -68,6 +70,10 @@ function loaded(img: HTMLImageElement) {
 	return fireEvent.load(img);
 }
 
+beforeEach(() => {
+	runningOn("windows");
+});
+
 afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
@@ -80,8 +86,8 @@ describe("photo message", () => {
 
 		await photo.renew(RENEWED);
 
-		expect(photo.image().getAttribute("src")).toBe(OLD);
-		expect(photo.link()?.getAttribute("href")).toBe(RENEWED);
+		expect(photo.image().getAttribute("src")).toBe(proxyMediaUrl(OLD));
+		expect(photo.link()?.getAttribute("href")).toBe(proxyMediaUrl(RENEWED));
 	});
 
 	it("loads the renewed url for a photo that failed", async () => {
@@ -90,7 +96,7 @@ describe("photo message", () => {
 
 		await photo.renew(RENEWED);
 
-		expect(photo.image().getAttribute("src")).toBe(RENEWED);
+		expect(photo.image().getAttribute("src")).toBe(proxyMediaUrl(RENEWED));
 	});
 
 	it("switches a loaded photo to a different file", async () => {
@@ -99,7 +105,9 @@ describe("photo message", () => {
 
 		await photo.renew(OTHER_FILE);
 
-		expect(photo.image().getAttribute("src")).toBe(OTHER_FILE);
+		expect(photo.image().getAttribute("src")).toBe(
+			proxyMediaUrl(OTHER_FILE),
+		);
 	});
 
 	it("starts a lightbox for a photo that stays on screen", async () => {
@@ -145,7 +153,9 @@ describe("photo message on Google Play", () => {
 		expect(
 			photo.contains(getByRole("link", { name: "Show mature content" })),
 		).toBe(true);
-		expect(photo.querySelector("img")?.getAttribute("src")).toBe(OLD);
+		expect(photo.querySelector("img")?.getAttribute("src")).toBe(
+			proxyMediaUrl(OLD),
+		);
 	});
 
 	it("shows a photo we sent", () => {
@@ -155,7 +165,7 @@ describe("photo message on Google Play", () => {
 			container
 				.querySelector('a[aria-label="Photo"]')
 				?.getAttribute("href"),
-		).toBe(OLD);
+		).toBe(proxyMediaUrl(OLD));
 		expect(
 			container.querySelector('[data-slot="mature-content-cover"]'),
 		).toBeNull();

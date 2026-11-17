@@ -132,16 +132,9 @@ export function formatNumber({
 	value: number;
 	preset: NumberPresetName;
 }): string {
-	const { options, round } = numberPresets[preset];
-	const { text: locale, decimal, group } = getFormatLocales();
-	const formatter = cachedFormatter({
-		cache: numberFormats,
-		locale,
-		preset,
-		create: (locales) => new Intl.NumberFormat(locales, options),
-	});
-	const text = formatter
-		.formatToParts(round(value))
+	const { decimal, group } = getFormatLocales();
+	const text = numberFormatter(preset)
+		.formatToParts(numberPresets[preset].round(value))
 		.map((part) =>
 			part.type === "decimal"
 				? decimal
@@ -151,6 +144,25 @@ export function formatNumber({
 		)
 		.join("");
 	return markFormatted({ locale: getLocale(), text });
+}
+
+export function formatUnitName(preset: NumberPresetName): string {
+	const text = numberFormatter(preset)
+		.formatToParts(0)
+		.filter(({ type }) => type === "unit")
+		.map(({ value }) => value)
+		.join("");
+	return markFormatted({ locale: getLocale(), text });
+}
+
+function numberFormatter(preset: NumberPresetName): Intl.NumberFormat {
+	return cachedFormatter({
+		cache: numberFormats,
+		locale: getFormatLocales().text,
+		preset,
+		create: (locales) =>
+			new Intl.NumberFormat(locales, numberPresets[preset].options),
+	});
 }
 
 export function formatInteger(value: number): string {

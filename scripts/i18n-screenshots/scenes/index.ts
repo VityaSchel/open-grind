@@ -49,6 +49,7 @@ import {
 	autoLocationFailure,
 	locationChange,
 	locationFailures,
+	locationSettingsOff,
 } from "./browse-location";
 import {
 	gridEmpty,
@@ -56,6 +57,7 @@ import {
 	gridLoadMoreFailure,
 	gridPreferencesUnreadable,
 	gridProfileFailure,
+	gridRefreshAnnouncements,
 	gridRefreshFailures,
 } from "./browse-states";
 import { attachments, conversation, inbox, inboxPinFailure } from "./chat";
@@ -208,6 +210,7 @@ import {
 	desktopAppSettings,
 	desktopDisplaySettings,
 	displaySettings,
+	iosAppSettings,
 	languageSettings,
 	meSettings,
 	profileSettings,
@@ -332,6 +335,7 @@ export const scenes: Scene[] = [
 	accountSettings,
 	appSettings,
 	desktopAppSettings,
+	iosAppSettings,
 	displaySettings,
 	desktopDisplaySettings,
 	appPrivacySettings,
@@ -515,6 +519,7 @@ export const scenes: Scene[] = [
 	gridLoadingMore,
 	gridLoadMoreFailure,
 	gridRefreshFailures,
+	gridRefreshAnnouncements,
 	gridProfileFailure,
 	gridPreferencesUnreadable,
 	bodyFilters,
@@ -523,6 +528,7 @@ export const scenes: Scene[] = [
 	tagsLoadFailure,
 	quickFilters,
 	locationFailures,
+	locationSettingsOff,
 	autoLocationFailure,
 	locationChange,
 	rightNow,

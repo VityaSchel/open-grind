@@ -1,0 +1,131 @@
+import { $ } from "bun";
+import { exists, mkdtemp, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { XCRUN } from "../../scripts/lib/xcrun";
+
+const root = import.meta.dir;
+const derivedData = join(root, "build");
+const simulatorName = Bun.env.OG_SIMULATOR ?? "og-ios-test";
+
+interface SimulatorListing {
+	devices: Record<string, { name: string; udid: string }[]>;
+}
+
+async function simulatorId(): Promise<string> {
+	const listing: SimulatorListing =
+		await $`${XCRUN} simctl list devices --json`.json();
+	for (const devices of Object.values(listing.devices)) {
+		const device = devices.find(
+			(candidate) => candidate.name === simulatorName,
+		);
+		if (device) return device.udid;
+	}
+	throw new Error(`no simulator named ${simulatorName}`);
+}
+
+interface TestRun {
+	path: string;
+	modified: number;
+}
+
+async function testRun(): Promise<TestRun | undefined> {
+	const products = join(derivedData, "Build", "Products");
+	if (!(await exists(products))) return undefined;
+	let newest: TestRun | undefined;
+	for await (const file of new Bun.Glob("*.xctestrun").scan({
+		cwd: products,
+	})) {
+		const path = join(products, file);
+		const { mtimeMs } = await stat(path);
+		if (!newest || mtimeMs > newest.modified)
+			newest = { path, modified: mtimeMs };
+	}
+	return newest;
+}
+
+async function sourcesModified(): Promise<number> {
+	const sources = [join(root, "project.yml")];
+	for await (const file of new Bun.Glob("Driver/**").scan({ cwd: root })) {
+		sources.push(join(root, file));
+	}
+	const stats = await Promise.all(sources.map((source) => stat(source)));
+	return Math.max(...stats.map(({ mtimeMs }) => mtimeMs));
+}
+
+async function build(destination: string): Promise<string> {
+	await $`xcodegen generate --spec ${join(root, "project.yml")} --quiet`;
+	await $`${XCRUN} xcodebuild build-for-testing -project ${join(root, "OpenGrindUITests.xcodeproj")} -scheme OpenGrindUITests -destination ${destination} -derivedDataPath ${derivedData} -quiet`;
+	const run = await testRun();
+	if (!run) throw new Error("build-for-testing produced no .xctestrun");
+	return run.path;
+}
+
+const usage = `usage: bun e2e/ios/drive.ts <steps.json | '[{"tap":"Get started"}]'>
+
+Runs on the simulator named OG_SIMULATOR (default og-ios-test), which must exist and boots if it is shut down. The runner rebuilds when Driver/ or project.yml is newer than its last build, and OG_REBUILD=1 forces a rebuild.
+An unknown step key fails the run before any step runs; a wrongly typed value or any failed step stops it.
+
+Steps (labels match label, identifier or placeholder; points are normalized 0..1):
+	{"app": "<bundle id>"} makes this and later steps act on that app, such as "com.apple.Preferences" (default org.opengrind.app)
+	{"launch": true} | {"activate": true} | {"home": true}
+	{"rotate": "portrait" | "landscapeLeft" | "landscapeRight"}
+	{"pasteboardImage": "<host png path>"} | {"pasteboardText": "<host text file path>"} (for secrets: the text never enters a log, unlike "type", expires after 60 s and is cleared when the run ends)
+	{"tap": label} | {"tapIfPresent": label} | {"doubleTap": label} | {"tapSecure": label} (a secure text field, not its <label>)
+	{"press": label, "seconds": 1}
+	{"springboard": label} taps a SpringBoard element, such as a system alert button ("Allow While Using App")
+	{"tapAt": [x, y]} | {"drag": [x1, y1, x2, y2]}
+	{"dragHold": {"path": [x1, y1, x2, y2], "hold": 2, "velocity": 1000, "screenshot": path, "tree": path}}
+	{"touchPath": [[x, y, seconds], ...]}
+	{"edgeSwipe": {"y": 0.5, "to": 0.6, "seconds": 0.3, "inset": 2, "press": 0, "hold": 0}}
+	{"type": text} | {"swipe": "up" | "down" | "left" | "right", "on": label}
+	{"wait": seconds} | {"expect": label} | {"expectGone": label} | {"keyboard": true | false}
+	{"screenshot": "<host path>"} | {"tree": "<host path>"}
+
+dragHold presses, drags at velocity points/s and holds without lifting; it captures once, about hold/2 into the hold, timed from the call because the gesture runs as one synthesized event. The gesture starts about 0.5 s after the call, so keep hold at 2 s or more. Its drag eases out before the hold, and UIKit keeps the last drag velocity through a hold, so it can't set a release velocity.
+touchPath lands one finger on the first point, moves to each next point by its time offset from touch-down and lifts at the last point. Each segment eases in and out, so a release at speed needs segments of about 1/30 s; shorter ones run slow. It drives XCTest's private event synthesizer and assumes portrait.
+edgeSwipe is a touchPath that lands inset points (default 2) from the left edge at height y, rests press seconds, slides to x = to in 1/30 s steps over seconds and lifts after resting hold seconds, so it lets go at (to × width − inset) / seconds points/s, or still after a hold.
+Screenshots keep the portrait pixel buffer, so landscape content comes out rotated; tree frames follow the app's orientation.
+Runs that need the software keyboard need: defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
+Runs that paste secrets need: defaults write com.apple.iphonesimulator PasteboardAutomaticSync -bool false (or a running Simulator app copies them to the Mac clipboard)`;
+
+const [stepsArgument] = Bun.argv.slice(2);
+if (!stepsArgument) {
+	console.error(usage);
+	process.exit(2);
+}
+
+const udid = await simulatorId();
+const destination = `platform=iOS Simulator,id=${udid}`;
+await $`${XCRUN} simctl bootstatus ${udid} -b`.quiet();
+
+const cached = await testRun();
+const run =
+	!Bun.env.OG_REBUILD &&
+	cached &&
+	cached.modified >= (await sourcesModified())
+		? cached.path
+		: await build(destination);
+
+let stepsPath = stepsArgument;
+if (stepsArgument.trimStart().startsWith("[")) {
+	stepsPath = join(await mkdtemp(join(tmpdir(), "og-steps-")), "steps.json");
+	await writeFile(stepsPath, stepsArgument);
+}
+
+const result =
+	await $`${XCRUN} xcodebuild test-without-building -xctestrun ${run} -destination ${destination} -only-testing:OpenGrindUITests/Driver/testSteps -collect-test-diagnostics never`
+		.env({ ...process.env, TEST_RUNNER_OG_STEPS: stepsPath })
+		.nothrow()
+		.quiet();
+const output = result.stdout.toString() + result.stderr.toString();
+const failures = output
+	.split("\n")
+	.filter((line) => /error:|failed|XCTAssert|no element labelled/.test(line));
+console.log(
+	result.exitCode === 0
+		? "steps passed"
+		: `steps failed:\n${failures.join("\n")}`,
+);
+process.exit(result.exitCode);

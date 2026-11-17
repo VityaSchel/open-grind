@@ -14,7 +14,7 @@ const FIRST_LOAD_TIMEOUT = 120_000;
 
 test.describe("broken images", () => {
 	test("loaded avatars never show the placeholder", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveImages(page, AVATAR_HOST);
 		await page.goto("/interest/taps");
 		const avatar = page.locator('a[href^="/profile/"] img').first();
@@ -34,7 +34,7 @@ test.describe("broken images", () => {
 	test("a failing avatar becomes a placeholder with the same footprint", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await abortImages(page, AVATAR_HOST);
 		await page.goto("/interest/taps");
 
@@ -50,7 +50,7 @@ test.describe("broken images", () => {
 	test("a cached failure still renders the placeholder on revisit", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.route(AVATAR_HOST, (route) =>
 			route.fulfill({
 				status: 404,
@@ -75,7 +75,7 @@ test.describe("broken images", () => {
 	test("a broken profile photo fills the carousel and cannot open the lightbox", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await abortImages(page, AVATAR_HOST);
 		await page.goto("/interest/taps");
 		const profileLink = page.locator('a[href^="/profile/"]').first();
@@ -95,7 +95,7 @@ test.describe("broken images", () => {
 	});
 
 	test("a failing album cover shows the placeholder", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await abortImages(page, CHAT_MEDIA_HOST);
 		await page.goto("/settings/albums");
 
@@ -106,7 +106,7 @@ test.describe("broken images", () => {
 	});
 
 	test("loaded photos still open their lightboxes", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveImages(page, AVATAR_HOST);
 		await serveImages(page, CHAT_MEDIA_HOST);
 		await page.goto("/interest/taps");
@@ -142,7 +142,7 @@ test.describe("broken images", () => {
 	test("a broken chat image keeps its bubble and the lightbox shows the error icon", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await abortImages(page, CHAT_MEDIA_HOST);
 		await page.goto(IMAGE_CONVERSATION);
 

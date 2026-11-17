@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { formatUnitName } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { cmToInches, inchesToCm } from "#lib/util/units.ts";
 	import { heightCmRange, heightInchOptions } from "../options";
@@ -35,7 +36,7 @@
 		bind:value
 		min={heightCmRange.min}
 		max={heightCmRange.max}
-		unit={t("settings.profile.units.centimeters")}
+		unit={formatUnitName("heightCentimeters")}
 		placeholder="—"
 	/>
 {/if}

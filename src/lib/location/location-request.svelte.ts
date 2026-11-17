@@ -12,12 +12,32 @@ import { Generation } from "#lib/util/generation.ts";
 export type Coordinates = { lat: number; lon: number };
 type Fix = Coordinates & { accuracyMeters: number };
 
+export type MissingLocationGrant = "permission" | "precision";
+export type LocationErrorReason = "disabled" | "failed";
+
 export type LocationOutcome =
 	| { status: "ok"; coords: Fix }
-	| { status: "denied" }
+	| { status: "denied"; missing: MissingLocationGrant }
 	| { status: "aborted" }
 	| { status: "unsupported" }
-	| { status: "error"; error: unknown };
+	| { status: "error"; error: unknown; reason: LocationErrorReason };
+
+const PLUGIN_ERROR_CODE = /^\[(\w+)\]/;
+
+function failureOutcome(error: unknown): LocationOutcome {
+	const code =
+		typeof error === "string"
+			? PLUGIN_ERROR_CODE.exec(error)?.[1]
+			: undefined;
+	switch (code) {
+		case "denied":
+			return { status: "denied", missing: "permission" };
+		case "disabled":
+			return { status: "error", error, reason: code };
+		default:
+			return { status: "error", error, reason: "failed" };
+	}
+}
 
 class LocationRequest {
 	pending = $state(false);
@@ -56,7 +76,14 @@ class LocationRequest {
 				permissions = await requestPermissions(["location"]);
 				if (superseded()) return { status: "aborted" };
 			}
-			if (permissions.location !== "granted") return { status: "denied" };
+			if (permissions.location !== "granted")
+				return {
+					status: "denied",
+					missing:
+						permissions.coarseLocation === "granted"
+							? "precision"
+							: "permission",
+				};
 			const {
 				coords: { latitude, longitude, accuracy },
 			} = await getCurrentPosition({
@@ -75,7 +102,7 @@ class LocationRequest {
 			return { status: "ok", coords: fix };
 		} catch (error) {
 			if (superseded()) return { status: "aborted" };
-			return { status: "error", error };
+			return failureOutcome(error);
 		} finally {
 			if (!superseded()) this.pending = false;
 		}

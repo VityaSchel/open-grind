@@ -8,7 +8,7 @@ import {
 } from "@tauri-apps/api/menu";
 
 import { followLocale, type MessageKey, t } from "#lib/i18n/index.ts";
-import { isMacosPlatform } from "./os";
+import { currentPlatform } from "./os";
 
 const WINDOW_SUBMENU_ID = "__tauri_window_menu__";
 const HELP_SUBMENU_ID = "__tauri_help_menu__";
@@ -138,10 +138,22 @@ function relabel(labels: readonly Label[]): void {
 	}
 }
 
+function drawsAppMenuBar(): boolean {
+	switch (currentPlatform()) {
+		case "macos":
+			return true;
+		case "android":
+		case "ios":
+		case "linux":
+		case "windows":
+			return false;
+	}
+}
+
 export async function startAppMenu(): Promise<void> {
 	stopFollowing();
 	stopFollowing = () => {};
-	if (!isMacosPlatform()) return;
+	if (!drawsAppMenuBar()) return;
 	try {
 		const [name, version] = await Promise.all([getName(), getVersion()]);
 		const submenus = await Promise.all(

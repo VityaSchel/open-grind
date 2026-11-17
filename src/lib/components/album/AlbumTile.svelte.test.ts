@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
 	albumProcessingPlaceholderUrl,
@@ -13,6 +13,7 @@ import {
 } from "#lib/i18n/fixtures/count-formatter.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 import AlbumTile from "./AlbumTile.svelte";
@@ -68,6 +69,10 @@ function coverOf(album: MyAlbum): Element | null {
 function textOf(element: Element | null): string | undefined {
 	return element?.textContent?.trim();
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	cleanup();

@@ -9,16 +9,19 @@
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { toggleVariants } from "#lib/components/ui/toggle/index.ts";
 	import { t } from "#lib/i18n/index.ts";
-	import { isAndroidPlatform } from "#lib/platform/os.ts";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import InterestPager from "./InterestPager.svelte";
-	import { INTEREST_TABS, interestTabIndex } from "./tabs";
+	import {
+		INTEREST_TABS,
+		interestTabIndex,
+		tabChipDetachesAtRest,
+	} from "./tabs";
 
 	let { data }: import("./$types").LayoutProps = $props();
 
-	const chipDetachesAtRest = isAndroidPlatform();
+	const chipDetachesAtRest = tabChipDetachesAtRest();
 	const uid = $props.id();
 	const tabs = INTEREST_TABS.map(({ href, label }, index) => ({
 		href,
@@ -69,7 +72,7 @@
 				tag="nav"
 				aria-label={t("common.sections.interest")}
 				data-fixed-header
-				class="fixed top-0 left-0 z-10 w-full px-4 pt-fixed-header pb-2"
+				class="fixed top-0 left-0 z-10 w-full pt-fixed-header px-safe-4 pb-2"
 				bgClass="bg-linear-to-b from-background to-transparent"
 				contentClass="w-full max-w-120 mx-auto"
 				{@attach topChrome}
@@ -131,6 +134,13 @@
 		.tab-chip-following {
 			animation: follow-pager linear both;
 			animation-timeline: --interest-pager;
+		}
+	}
+	@supports not (timeline-scope: none) {
+		@media (prefers-reduced-motion: no-preference) {
+			.tab-chip {
+				transition: translate 300ms ease-in-out;
+			}
 		}
 	}
 	@keyframes follow-pager {

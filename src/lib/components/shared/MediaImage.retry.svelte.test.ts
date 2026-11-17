@@ -3,10 +3,7 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const failures = vi.hoisted(() => ({
-	explainsMediaFailures: vi.fn(() => true),
-	mediaFailure: vi.fn(),
-}));
+const failures = vi.hoisted(() => ({ mediaFailure: vi.fn() }));
 
 const { probeMediaMock, slotRequests } = vi.hoisted(() => ({
 	probeMediaMock: vi.fn(),
@@ -32,6 +29,7 @@ vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
 	...failures,
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
 import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
 import { mediaRetry } from "#lib/util/media-retry.svelte.ts";
@@ -97,10 +95,10 @@ async function brokenByDroppedConnection() {
 }
 
 beforeEach(() => {
+	runningOn("windows");
 	advance(60 * 60 * 1000);
 	probeMediaMock.mockReset();
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-	failures.explainsMediaFailures.mockReturnValue(true);
 	failures.mediaFailure.mockReset();
 });
 
@@ -252,16 +250,6 @@ describe("MediaImage recovery", () => {
 
 		expect(tile.broken()).not.toBeNull();
 		expect(tile.onexpired).not.toHaveBeenCalled();
-	});
-
-	it("does not wait for an explanation where the proxy cannot give one", async () => {
-		failures.explainsMediaFailures.mockReturnValue(false);
-		const tile = renderImage();
-
-		await fireEvent.error(tile.image()!);
-
-		expect(tile.broken()).not.toBeNull();
-		expect(failures.mediaFailure).not.toHaveBeenCalled();
 	});
 
 	it("brings back a tile that broke on a dropped connection once the network returns", async () => {

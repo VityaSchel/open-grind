@@ -1,15 +1,25 @@
 use std::marker::PhantomData;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use base64::Engine;
-use tauri::Url;
+use tauri::{Url, WebviewWindow, WindowEvent};
 use tokio::sync::oneshot;
 
 use crate::app_origin::is_served_locally;
 use crate::error::AppError;
 
-/// Matched verbatim by the frontend, which stays silent for it.
+#[cfg(target_os = "ios")]
+pub mod sheet;
+#[cfg(any(target_os = "ios", desktop))]
+pub mod user_agent;
+
 pub const CANCELED: &str = "Sign-in canceled";
+
+#[cfg(any(target_os = "ios", test))]
+const SHEET_UNAVAILABLE: &str = "sign-in-page-unavailable";
+
+const FLOW_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
 pub const COMPANION_UNAVAILABLE: &str = "companion-unavailable";
 pub const COMPANION_UNTRUSTED: &str = "companion-untrusted";
@@ -20,6 +30,7 @@ const COMPANION_CANCELLED: &str = "cancelled";
 
 pub const IN_PROGRESS: &str = "sign-in-in-progress";
 pub const FLOW_ENDED: &str = "sign-in-flow-ended";
+pub const TIMED_OUT: &str = "sign-in-timed-out";
 
 pub trait OauthProvider: Send + Sync + 'static {}
 
@@ -66,10 +77,48 @@ impl<P: OauthProvider> OauthBridge<P> {
 	}
 }
 
-pub async fn delivered(
+pub struct SignInWait<'a, P: OauthProvider> {
+	pub window: &'a WebviewWindow,
+	pub bridge: &'a Arc<OauthBridge<P>>,
+	pub answer: oneshot::Receiver<Result<String, String>>,
+	#[cfg(target_os = "ios")]
+	pub title: &'static str,
+}
+
+pub async fn await_sign_in<P: OauthProvider>(
+	wait: SignInWait<'_, P>,
+) -> Result<String, String> {
+	let bridge_for_close = wait.bridge.clone();
+	wait.window.on_window_event(move |event| {
+		if matches!(
+			event,
+			WindowEvent::CloseRequested { .. } | WindowEvent::Destroyed
+		) {
+			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
+		}
+	});
+
+	#[cfg(target_os = "ios")]
+	if let Err(e) = sheet::present(wait.window, wait.title).await {
+		wait.bridge
+			.fulfill(Err(format!("{SHEET_UNAVAILABLE}: {e}")));
+	}
+
+	answer_in_time(wait.answer).await
+}
+
+async fn delivered(
 	rx: oneshot::Receiver<Result<String, String>>,
 ) -> Result<String, String> {
 	rx.await.unwrap_or_else(|_| Err(FLOW_ENDED.to_owned()))
+}
+
+async fn answer_in_time(
+	rx: oneshot::Receiver<Result<String, String>>,
+) -> Result<String, String> {
+	tokio::time::timeout(FLOW_TIMEOUT, delivered(rx))
+		.await
+		.unwrap_or_else(|_| Err(TIMED_OUT.to_owned()))
 }
 
 pub fn companion_failure(rejection: Option<&str>) -> AppError {
@@ -262,11 +311,27 @@ mod tests {
 	}
 
 	#[test]
+	fn the_cancel_and_sheet_failure_messages_match_the_frontend() {
+		let frontend = include_str!("../../../src/lib/api/sign-in.ts");
+		assert!(
+			frontend.contains(&format!("appError.message === \"{CANCELED}\"")),
+			"sign-in.ts no longer stays silent for {CANCELED}"
+		);
+		assert!(
+			frontend.contains(&format!(
+				"signInPageUnavailable = \"{SHEET_UNAVAILABLE}\""
+			)),
+			"sign-in.ts signInPageUnavailable is not {SHEET_UNAVAILABLE}"
+		);
+	}
+
+	#[test]
 	fn flow_markers_match_the_frontend() {
 		let frontend = include_str!("../../../src/lib/api/sign-in.ts");
 		for (typescript, marker) in [
 			("signInInProgress", IN_PROGRESS),
 			("signInFlowEnded", FLOW_ENDED),
+			("signInTimedOut", TIMED_OUT),
 		] {
 			assert!(
 				frontend.contains(&format!("{typescript} = \"{marker}\"")),
@@ -352,6 +417,26 @@ mod tests {
 		let rx = bridge.begin().expect("first flow starts");
 		bridge.abort();
 		assert_eq!(delivered(rx).await, Err(FLOW_ENDED.into()));
+	}
+
+	#[tokio::test]
+	async fn a_result_delivered_in_time_is_the_answer() {
+		let (tx, rx) = oneshot::channel();
+		tx.send(Ok("token".to_owned())).unwrap();
+		assert_eq!(answer_in_time(rx).await, Ok("token".into()));
+	}
+
+	#[tokio::test(start_paused = true)]
+	async fn a_sign_in_page_left_open_past_the_limit_times_out() {
+		let (_tx, rx) = oneshot::channel();
+		assert_eq!(answer_in_time(rx).await, Err(TIMED_OUT.into()));
+	}
+
+	#[tokio::test]
+	async fn a_flow_whose_answer_can_never_arrive_ends_unexpectedly() {
+		let (tx, rx) = oneshot::channel::<Result<String, String>>();
+		drop(tx);
+		assert_eq!(answer_in_time(rx).await, Err(FLOW_ENDED.into()));
 	}
 
 	#[test]

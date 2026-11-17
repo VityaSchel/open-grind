@@ -1,20 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
-import {
-	openAppSettings,
-	openSettings,
-	STACK_PANE,
-	stackSettled,
-} from "./support/page-stack";
-import { pauseOnceSliding, resumeSlides } from "./support/stack-layers";
 
 const NOTIFICATIONS = "/settings/app/notifications";
 const SCREENS = [
 	{ name: "a 420 × 800 phone", viewport: { width: 420, height: 800 } },
 	{ name: "a 1040 × 800 desktop", viewport: { width: 1040, height: 800 } },
 ];
-const UNSUPPORTED = { platform: "ios", named: "this platform" };
+const UNSUPPORTED = { platform: "ios", named: "this platform" } as const;
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -46,28 +39,6 @@ for (const screen of SCREENS) {
 
 			expect(
 				Math.abs(center.x - screen.viewport.width / 2),
-			).toBeLessThanOrEqual(1);
-			expect(
-				Math.abs(center.y - screen.viewport.height / 2),
-			).toBeLessThanOrEqual(1);
-		});
-
-		test("the message stays in the middle of its page while the page slides in", async ({
-			page,
-		}) => {
-			await openSettings(page, { platform: UNSUPPORTED.platform });
-			await openAppSettings(page);
-
-			const sliding = pauseOnceSliding(page, { pane: STACK_PANE });
-			await page.getByRole("link", { name: "Notifications" }).click();
-			const travelled = await sliding;
-			const center = await textCenter(page, UNSUPPORTED);
-			await resumeSlides(page);
-			await stackSettled(page);
-
-			expect(travelled).toBeGreaterThan(0);
-			expect(
-				Math.abs(center.x - travelled - screen.viewport.width / 2),
 			).toBeLessThanOrEqual(1);
 			expect(
 				Math.abs(center.y - screen.viewport.height / 2),

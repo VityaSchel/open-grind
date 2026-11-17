@@ -2,6 +2,7 @@ import {
 	accountEpoch,
 	isAccountEpochCurrent,
 } from "#lib/api/account-caches.ts";
+import { appLifecycle } from "#lib/api/app-lifecycle.svelte.ts";
 import { updateLocation } from "#lib/api/browse/location.ts";
 import { callMethod } from "#lib/api/methods.ts";
 import { onSignOut } from "#lib/api/sign-out.ts";
@@ -65,6 +66,7 @@ class Hold {
 		this.settled = new Promise((resolve) => {
 			this.#markSettled = resolve;
 		});
+		appLifecycle.finishBeforeSuspending(this.settled);
 		if (this.#watchesVisibility) {
 			document.addEventListener("visibilitychange", this.#endWhenHidden);
 		}

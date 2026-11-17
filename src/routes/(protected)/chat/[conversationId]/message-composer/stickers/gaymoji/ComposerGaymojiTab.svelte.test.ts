@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({ getGaymoji: vi.fn() }));
 
 vi.mock("#lib/api/messaging/gaymoji.ts", () => api);
 
+import { runningOn } from "#lib/test/platform.ts";
 import type {
 	GaymojiCategory,
 	GaymojiItem,
@@ -82,6 +83,7 @@ beforeEach(() => {
 	api.getGaymoji.mockReset();
 	api.getGaymoji.mockResolvedValue(shortManifest);
 	vi.spyOn(console, "error").mockImplementation(() => {});
+	runningOn("windows");
 });
 
 afterEach(() => {

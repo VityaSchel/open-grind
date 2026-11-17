@@ -1,13 +1,14 @@
 import { createContext } from "svelte";
 import { SvelteMap } from "svelte/reactivity";
 
-export type BackGestureLayer = "stack" | "screen" | "overlay";
+export type BackGestureLayer = "stack" | "guard" | "screen" | "overlay";
 
 type BackGestureHandler = () => boolean;
 
 const LAYERS_TOP_FIRST: readonly BackGestureLayer[] = [
 	"overlay",
 	"screen",
+	"guard",
 	"stack",
 ];
 
@@ -16,17 +17,29 @@ export const backGestureEventHandlers = new SvelteMap<
 	BackGestureLayer
 >();
 
-function backGestureHandlersTopFirst(): BackGestureHandler[] {
+type LayerSkip = { skipping?: readonly BackGestureLayer[] };
+
+function backGestureHandlersTopFirst({
+	skipping = [],
+}: LayerSkip = {}): BackGestureHandler[] {
 	const newestFirst = [...backGestureEventHandlers].reverse();
-	return LAYERS_TOP_FIRST.flatMap((layer) =>
+	return LAYERS_TOP_FIRST.filter(
+		(layer) => !skipping.includes(layer),
+	).flatMap((layer) =>
 		newestFirst
 			.filter(([, handlerLayer]) => handlerLayer === layer)
 			.map(([handler]) => handler),
 	);
 }
 
-export function topBackGestureHandler(): BackGestureHandler | undefined {
-	return backGestureHandlersTopFirst()[0];
+export function topBackGestureHandler(
+	skip: LayerSkip = {},
+): BackGestureHandler | undefined {
+	return backGestureHandlersTopFirst(skip)[0];
+}
+
+export function overlayOpen(): boolean {
+	return [...backGestureEventHandlers.values()].includes("overlay");
 }
 
 export function runBackGestureHandlers(): boolean {

@@ -3,8 +3,8 @@ import { expect, test } from "@playwright/test";
 import {
 	captureInvokes,
 	DEMO_GEOHASH,
-	ensureGridLocation,
 	installTauriShim,
+	openGrid,
 	runPaletteCommand,
 } from "./support/app";
 
@@ -15,10 +15,8 @@ test("the @ command copies the current location and still sets a new one", async
 	page,
 }) => {
 	test.setTimeout(240_000);
-	await installTauriShim(page);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await installTauriShim(page, { platform: "macos" });
+	await openGrid(page);
 
 	await page.keyboard.press("ControlOrMeta+k");
 	const palette = page.getByRole("combobox");
@@ -58,10 +56,8 @@ test("the @ command copies the current location and still sets a new one", async
 
 test("a palette command runs once per Enter", async ({ page }) => {
 	test.setTimeout(240_000);
-	await installTauriShim(page);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await ensureGridLocation(page);
+	await installTauriShim(page, { platform: "macos" });
+	await openGrid(page);
 	const writes = await captureInvokes(page, "write_app_data");
 	const copies = await captureInvokes(
 		page,

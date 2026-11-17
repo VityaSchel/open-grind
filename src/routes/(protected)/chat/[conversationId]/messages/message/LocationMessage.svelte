@@ -15,15 +15,10 @@
 			case "android":
 				return `geo:${message.lat},${message.lon}?q=${message.lat},${message.lon}`;
 			case "ios":
+				return `https://maps.apple.com/?ll=${message.lat},${message.lon}&q=${message.lat},${message.lon}`;
+			case "linux":
 			case "macos":
 			case "windows":
-			case "linux":
-			case "freebsd":
-			case "dragonfly":
-			case "netbsd":
-			case "openbsd":
-			case "solaris":
-			case "web":
 				return `https://www.openstreetmap.org/?mlat=${message.lat}&mlon=${message.lon}#map=16/${message.lat}/${message.lon}`;
 		}
 	});

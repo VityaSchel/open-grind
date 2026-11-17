@@ -25,7 +25,7 @@ test("the grid offers a retry when saved preferences cannot be read", async ({
 	page,
 }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installPersistentAppData(page);
 	await openGrid(page);
 	const readable = await storedPreferencesBytes(page);

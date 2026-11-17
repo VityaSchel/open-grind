@@ -298,6 +298,7 @@
 			<DataRefreshControl
 				container={covered ? null : container}
 				updating={conversations.refreshing}
+				failed={conversations.refreshFailed}
 				position="top"
 				onrefresh={() => void conversations.refresh()}
 			/>

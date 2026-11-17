@@ -1,3 +1,5 @@
+import { voiceOverRunning } from "#lib/platform/voice-over.svelte.ts";
+
 export class RestingButtonModel {
 	shown = $state(false);
 
@@ -5,13 +7,21 @@ export class RestingButtonModel {
 	#sawPull = false;
 	#probe: ReturnType<typeof setTimeout> | undefined;
 	#probeMs: number;
+	#alwaysOffered: () => boolean;
 
-	constructor({ probeMs }: { probeMs: number }) {
+	constructor({
+		probeMs,
+		alwaysOffered = voiceOverRunning,
+	}: {
+		probeMs: number;
+		alwaysOffered?: () => boolean;
+	}) {
 		this.#probeMs = probeMs;
+		this.#alwaysOffered = alwaysOffered;
 	}
 
 	get offered(): boolean {
-		return this.#offered;
+		return this.#offered || this.#alwaysOffered();
 	}
 
 	probePointer(): void {

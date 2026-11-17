@@ -19,7 +19,7 @@ test.describe("attachments drawer", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const { short } = await snapTops(page);
 		const b = await box(page);
 
@@ -32,7 +32,7 @@ test.describe("attachments drawer", () => {
 	test("the footer sits at the visible bottom edge, not below it", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const b = await box(page);
 		const bottomEdge = b.viewport - b.safeBottom;
 		expect(
@@ -48,7 +48,7 @@ test.describe("attachments drawer", () => {
 	test("a wheel drags the drawer continuously instead of snapping", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const start = await box(page);
 		const at = { x: 210, y: start.top + 160 };
 		const tops: number[] = [];
@@ -68,7 +68,7 @@ test.describe("attachments drawer", () => {
 	test("released part way, it settles onto the nearest snap", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const start = await box(page);
 		await wheel(page, { x: 210, y: start.top + 160 }, 60, { steps: 2 });
 		const { full, short } = await snapTops(page);
@@ -83,7 +83,7 @@ test.describe("attachments drawer", () => {
 	test("one unbroken wheel gesture resizes, then scrolls the content", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const start = await box(page);
 		const at = { x: 210, y: start.top + 160 };
 		await page.mouse.move(at.x, at.y);
@@ -103,7 +103,7 @@ test.describe("attachments drawer", () => {
 	test("one unbroken wheel gesture scrolls to the top, then collapses", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expandToFull(page);
 		const at = { x: 210, y: 300 };
 		await page.mouse.move(at.x, at.y);
@@ -131,7 +131,7 @@ test.describe("attachments drawer", () => {
 	test("touch: dragging the content down from full size collapses it", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expandToFull(page);
 		const touch = await TrustedTouch.attach(page);
 		const before = await box(page);
@@ -148,7 +148,7 @@ test.describe("attachments drawer", () => {
 	test("touch: while the content is scrolled, dragging does not collapse it", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expandToFull(page);
 		const touch = await TrustedTouch.attach(page);
 		await touch.drag(page, { x: 210, y: 520 }, { x: 210, y: 220 });
@@ -172,7 +172,7 @@ test.describe("attachments drawer", () => {
 	test("touch: one unbroken drag resizes, then scrolls the content", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const start = await box(page);
 		await touch.drag(
@@ -194,7 +194,7 @@ test.describe("attachments drawer", () => {
 	test("touch: one unbroken drag scrolls to the top, then collapses", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expandToFull(page);
 		const touch = await TrustedTouch.attach(page);
 		await touch.drag(page, { x: 210, y: 520 }, { x: 210, y: 240 });
@@ -218,7 +218,7 @@ test.describe("attachments drawer", () => {
 	});
 
 	test("the handle drags the drawer to any size", async ({ page }) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const start = await box(page);
 		await touch.drag(
@@ -234,7 +234,7 @@ test.describe("attachments drawer", () => {
 	test("the footer stays at the bottom edge while the sheet moves", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const at = { x: 210, y: (await box(page)).top + 160 };
 		await page.mouse.move(at.x, at.y);
 		const worst = await page.evaluate(async () => {
@@ -267,7 +267,7 @@ test.describe("attachments drawer", () => {
 	test("a drag does not select the item under the pointer; a tap does", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const tile = page.locator(SELECTABLE_MEDIA_TILE).first();
 		const rect = (await tile.boundingBox())!;
@@ -298,7 +298,7 @@ test.describe("attachments drawer", () => {
 	test("the expiring toggle sends the selection as an expiring photo", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 30_000 });
 		const bubbles = page
 			.locator("button")
@@ -326,7 +326,7 @@ test.describe("attachments drawer", () => {
 	test("the expiring toggle and the selection reset when the drawer reopens", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
 		const send = page
 			.locator(DRAWER)
@@ -350,7 +350,7 @@ test.describe("attachments drawer", () => {
 	});
 
 	test("closes by dragging well past the short size", async ({ page }) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const start = await box(page);
 		await touch.drag(
@@ -366,7 +366,7 @@ test.describe("attachments drawer", () => {
 	test("dragging a tile down to close does not also select it", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const tile = page.locator(SELECTABLE_MEDIA_TILE).first();
 		const rect = (await tile.boundingBox())!;
@@ -387,7 +387,7 @@ test.describe("attachments drawer", () => {
 	test("right-click deletes a tile for good after confirming, and the drawer stays open", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const tiles = page.locator(MEDIA_TILE);
 		const before = await tiles.count();
 		const firstId = await page.evaluate(
@@ -417,7 +417,7 @@ test.describe("attachments drawer", () => {
 	test("touch: a long press opens the delete menu without selecting the tile", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const touch = await TrustedTouch.attach(page);
 		const rect = (await page
 			.locator(SELECTABLE_MEDIA_TILE)
@@ -449,7 +449,7 @@ test.describe("attachments drawer", () => {
 	test("tiles sit in rows with nothing between them but the grid gap", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const rows = await page.evaluate((selector) => {
 			const tiles = [
 				...document.querySelectorAll<HTMLElement>(selector),
@@ -466,7 +466,7 @@ test.describe("attachments drawer", () => {
 		page,
 	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		const tile = page.locator(MEDIA_TILE).nth(1);
 		await expect
 			.poll(() => showsMedia(tile), {
@@ -511,7 +511,7 @@ test.describe("attachments drawer", () => {
 	test("tapping the scrim closes the menu only, selecting nothing under it", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
 		await expect(page.locator(SELECTED_MEDIA_TILE)).toHaveCount(1);
 		const neighbor = page.locator(SELECTABLE_MEDIA_TILE).nth(2);
@@ -545,7 +545,7 @@ test.describe("attachments drawer", () => {
 	test("Escape and a right-click on the scrim close the menu, not the sheet, and keep the scroll", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expandToFull(page);
 		const scroller = page.locator("[data-slot=sheet-scroller]");
 		await scroller.evaluate((el) => (el.scrollTop += 120));
@@ -591,7 +591,7 @@ test.describe("attachments drawer", () => {
 	test("the sheet scroller has scroll to give but paints no scrollbar", async ({
 		page,
 	}) => {
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 		await expandToFull(page);
 		const scroller = await page.evaluate(() => {
 			const el = document.querySelector<HTMLElement>(

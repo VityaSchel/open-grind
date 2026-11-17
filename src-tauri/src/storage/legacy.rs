@@ -1,7 +1,5 @@
 use super::entries::{DEVICE_INFO, SESSION, SIGNING_KEY};
-use super::STARTUP_PROBE;
-
-const ACCOUNTS: [&str; 4] = [SESSION, DEVICE_INFO, SIGNING_KEY, STARTUP_PROBE];
+use super::ACCOUNTS;
 
 enum Carried {
 	Moved,
@@ -136,6 +134,7 @@ mod tests {
 	use std::collections::BTreeMap;
 
 	use super::*;
+	use crate::storage::STARTUP_PROBE;
 
 	#[derive(Default)]
 	struct FakeKeychain {

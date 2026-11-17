@@ -128,3 +128,34 @@ Backport of [tauri#16220](https://github.com/tauri-apps/tauri/pull/16220). **Del
 Accuracy and time to first fix are worse where Play Services exists, since the platform API does no sensor fusion.
 
 **Delete when upstream drops `play-services-location`.** [plugins-workspace#3377](https://github.com/tauri-apps/plugins-workspace/pull/3377) does not: it keeps the dependency and the GMS-first path, and needs API 31.
+
+On iOS the plugin reported `location` as granted with Precise Location off, so the app took fixes that are off by kilometers. It also failed a request on the first `kCLErrorLocationUnknown`, which is transient, and answered every earlier request again on each new fix.
+
+| File                                  | Change                                                                                                                              |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ios/Sources/GeolocationPlugin.swift` | Report `location` as denied and `coarseLocation` as granted under reduced accuracy, as Android does without `ACCESS_FINE_LOCATION`. |
+| `ios/Sources/GeolocationPlugin.swift` | Retry `requestLocation` every second through `kCLErrorLocationUnknown`, and reject a position request after 15 s.                   |
+| `ios/Sources/GeolocationPlugin.swift` | Drop a position request once it is answered.                                                                                        |
+| `ios/Sources/GeolocationPlugin.swift` | Reject with the code `denied`, `disabled` (Location Services off or restricted), `timeout` or `failed`.                             |
+| `ios/Sources/GeolocationPlugin.swift` | Queue requests on the main thread, where the location delegate reads them.                                                          |
+
+Not a backport. **Keep it.**
+
+## tao
+
+UIKit asks the app delegate for a scene configuration, and tao answers with a pointer to an object it frees on return. Release iOS builds crash at launch once `Info.ios.plist` declares a scene manifest, which the iOS 27 SDK requires.
+
+| File                            | Change                                                                        |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| `src/platform_impl/ios/view.rs` | Return the configuration autoreleased, not a pointer to a dropped `Retained`. |
+
+Backport of [tao#1245](https://github.com/tauri-apps/tao/pull/1245), requested for 0.35 in [tao#1340](https://github.com/tauri-apps/tao/issues/1340). **Delete when tauri-runtime-wry accepts a tao that has it**: 0.37 does, tauri-runtime-wry 2.11 requires 0.35.
+
+On iOS tao never reports a dropped window as destroyed, so Tauri keeps its label and opening another window with that label fails until the app restarts.
+
+| File                              | Change                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `src/platform_impl/ios/window.rs` | Emit `WindowEvent::Destroyed` when a window is dropped, as tao does on desktop. |
+| `Cargo.toml`                      | Allow warnings, since a path dependency gets no `--cap-lints allow`.            |
+
+Not a backport: tao 0.37 still drops iOS windows silently. **Keep it.**

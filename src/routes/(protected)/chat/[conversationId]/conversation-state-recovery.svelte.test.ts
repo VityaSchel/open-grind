@@ -25,10 +25,7 @@ const {
 	signOutMock: vi.fn(),
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: invokeMock,
-	isTauri: () => false,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({
 	listen: (name: string, handler: (event: { payload: unknown }) => void) => {
 		const handlers = listeners.get(name) ?? new Set();
@@ -79,6 +76,7 @@ import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
 } from "#lib/model/messaging/messages.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import { setVisibility } from "#lib/test/visibility.ts";
 import { ws } from "#lib/ws.svelte.ts";
 import { ConversationState } from "./conversation-state.svelte";
@@ -181,13 +179,13 @@ async function consumeFirstConnectSkip() {
 beforeAll(consumeFirstConnectSkip);
 
 beforeEach(async () => {
+	runningOn("android");
 	vi.clearAllMocks();
 	localStorage.clear();
 	clock += PAST_RECONCILE_THROTTLE_MS;
 	vi.spyOn(Date, "now").mockImplementation(() => clock);
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
-	vi.spyOn(document, "hasFocus").mockReturnValue(true);
 	invokeMock.mockImplementation((name: string) => {
 		if (name === "current_session")
 			return Promise.resolve({

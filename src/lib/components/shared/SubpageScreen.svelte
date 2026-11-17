@@ -18,6 +18,7 @@
 	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { t } from "#lib/i18n/index.ts";
+	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import { goBack } from "#lib/util/history.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 	import DiscardChangesDialog from "./DiscardChangesDialog.svelte";
@@ -71,7 +72,7 @@
 
 <ProgressiveBlur
 	direction="topToBottom"
-	class="fixed top-0 left-0 z-20 h-[calc(4.75rem+var(--safe-area-top))] w-full shrink-0"
+	class="fixed top-0 left-0 z-20 h-[calc(4.75rem+var(--safe-area-top))] w-full shrink-0 px-safe"
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
@@ -92,6 +93,7 @@
 		bind:this={scroller}
 		class="h-full w-full scroll-pt-header-clear-19 scroll-pb-nav-clear overflow-y-auto overscroll-none"
 		data-slot="subpage-scroller"
+		{@attach scrollsToTopOnStatusBarTap}
 	>
 		<div
 			class="flex min-h-full w-full px-4 pt-header-clear-19 pb-nav-clear"

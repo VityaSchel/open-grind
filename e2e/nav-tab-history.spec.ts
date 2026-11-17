@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 import {
-	ensureGridLocation,
 	FIRST_ROUTE_COMPILE_MS,
 	historyDepth,
 	installTauriShim,
+	openGrid,
 } from "./support/app";
 
 const TAPS = "/interest/taps";
@@ -13,7 +13,7 @@ const PROFILE_LINK = 'a[href^="/profile/"]';
 test.describe.configure({ timeout: 300_000 });
 
 test("switching interest tabs never grows history", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(TAPS);
 	await page
 		.locator(PROFILE_LINK)
@@ -38,13 +38,8 @@ test("switching interest tabs never grows history", async ({ page }) => {
 test("the Browse tab returns to the grid instead of pushing a duplicate", async ({
 	page,
 }) => {
-	await installTauriShim(page);
-	await page.goto("/");
-	await page
-		.locator("nav a")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await ensureGridLocation(page);
+	await installTauriShim(page, { platform: "macos" });
+	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 
 	await page.locator(PROFILE_LINK).first().click();

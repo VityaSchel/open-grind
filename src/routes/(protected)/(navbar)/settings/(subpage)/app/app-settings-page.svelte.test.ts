@@ -11,10 +11,12 @@ import {
 } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	installedBy,
 	updateApiFake,
 } from "#lib/updates/updates-test-helpers.ts";
+import type { SupportedPlatform } from "#lib/platform/os.ts";
 import type { Capability } from "#lib/updates/types.ts";
 
 const PRIVACY_POLICY = "https://opengrind.org/privacy";
@@ -45,6 +47,9 @@ const SUBSCREENS = [
 	{ name: "Privacy", href: "/settings/app/privacy" },
 	{ name: "Security", href: "/settings/app/security" },
 ];
+const SUBSCREENS_WITHOUT_NOTIFICATIONS = SUBSCREENS.filter(
+	({ name }) => name !== "Notifications",
+);
 const UPDATES = { name: "Updates", href: "/settings/app/updates" };
 const ABOUT = [
 	{ name: "Privacy policy", href: PRIVACY_POLICY },
@@ -52,9 +57,8 @@ const ABOUT = [
 ];
 
 const fake = updateApiFake();
-const { capabilityApi, platform, linkOpener } = vi.hoisted(() => ({
+const { capabilityApi, linkOpener } = vi.hoisted(() => ({
 	capabilityApi: { getUpdateCapability: vi.fn<() => Promise<Capability>>() },
-	platform: { isAndroidPlatform: vi.fn(() => true) },
 	linkOpener: { openExternalLink: vi.fn() },
 }));
 
@@ -64,23 +68,19 @@ vi.mock("#lib/updates/index.ts", async () => ({
 	...fake.api,
 	...capabilityApi,
 }));
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	...platform,
-}));
 vi.mock("#lib/platform/link-opener.ts", () => linkOpener);
 
 let testing: typeof import("@testing-library/svelte");
 
 async function opened({
 	capability,
-	android = true,
+	platform = "android",
 }: {
 	capability: Capability;
-	android?: boolean;
+	platform?: SupportedPlatform;
 }) {
 	capabilityApi.getUpdateCapability.mockResolvedValue(capability);
-	platform.isAndroidPlatform.mockReturnValue(android);
+	runningOn(platform);
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
 		await import("#lib/updates/capability.svelte.ts");
@@ -90,11 +90,21 @@ async function opened({
 	return testing.screen;
 }
 
+function rowName(link: Element): string {
+	return [
+		...link.querySelectorAll(
+			'[data-slot="item-title"], [data-slot="language-setting-current"]',
+		),
+	]
+		.map((part) => part.textContent.trim())
+		.join(" ");
+}
+
 function rows(): { name: string; href: string | null }[] {
 	return testing.screen
 		.getAllByRole("link")
 		.map((link) => ({
-			name: link.textContent.replace(/\s+/g, " ").trim(),
+			name: rowName(link),
 			href: link.getAttribute("href"),
 		}));
 }
@@ -103,10 +113,22 @@ function groups(): string[][] {
 	const found: string[][] = [[]];
 	for (const element of document.querySelectorAll('a, [role="separator"]')) {
 		if (element.getAttribute("role") === "separator") found.push([]);
-		else
-			found.at(-1)!.push(element.textContent.replace(/\s+/g, " ").trim());
+		else found.at(-1)!.push(rowName(element));
 	}
 	return found;
+}
+
+function descriptions(): Record<string, string> {
+	return Object.fromEntries(
+		testing.screen.getAllByRole("link").flatMap((link) => {
+			const description = link.querySelector(
+				'[data-slot="item-description"]',
+			);
+			return description
+				? [[rowName(link), description.textContent.trim()]]
+				: [];
+		}),
+	);
 }
 
 beforeAll(async () => {
@@ -151,20 +173,25 @@ describe("the app settings menu", () => {
 	);
 
 	it.each([
-		{ build: "a self-updating build", capability: SELF_UPDATING },
+		{
+			build: "a self-updating build",
+			capability: SELF_UPDATING,
+			platform: "linux",
+		},
 		{
 			build: "a store build signed by Open Grind",
 			capability: FDROID_BUILD,
-			android: true,
+			platform: "android",
 		},
 		{
 			build: "a desktop build installed where it can’t update itself",
 			capability: READ_ONLY_INSTALL,
+			platform: "linux",
 		},
-	])(
+	] as const)(
 		"offers Updates on $build",
-		async ({ capability, android = false }) => {
-			await opened({ capability, android });
+		async ({ capability, platform }) => {
+			await opened({ capability, platform });
 
 			expect(rows()).toEqual([...SUBSCREENS, UPDATES, ...ABOUT]);
 		},
@@ -175,17 +202,17 @@ describe("the app settings menu", () => {
 		{
 			build: "a build someone else signed",
 			capability: FOREIGN_SIGNER,
-			android: true,
+			platform: "android",
 		},
 		{
 			build: "a distribution package",
 			capability: DISTRIBUTION_PACKAGE,
-			android: false,
+			platform: "linux",
 		},
-	])(
+	] as const)(
 		"leaves Updates out on $build",
-		async ({ capability, android }) => {
-			await opened({ capability, android });
+		async ({ capability, platform }) => {
+			await opened({ capability, platform });
 
 			expect(rows()).toEqual([...SUBSCREENS, ...ABOUT]);
 		},
@@ -213,6 +240,75 @@ describe("the app settings menu", () => {
 		);
 	}, 60_000);
 
+	it.each([
+		{
+			platform: "android",
+			display: "Units, blur level, haptics",
+			notifications: "Push notifications, categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			platform: "macos",
+			display: "Units, blur level, haptics",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			platform: "windows",
+			display: "Units, blur level",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			platform: "linux",
+			display: "Units, blur level",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+	] as const)(
+		"describes Display, Notifications, Privacy and Security on $platform",
+		async ({ platform, display, notifications, security }) => {
+			const screen = await opened({
+				capability: FOREIGN_SIGNER,
+				platform,
+			});
+			const expected = {
+				Display: display,
+				Notifications: notifications,
+				Privacy: "Message reads, profile views, GIPHY",
+				Security: security,
+			};
+
+			expect(descriptions()).toEqual(expected);
+			for (const [name, description] of Object.entries(expected)) {
+				expect(
+					screen.getByRole("link", { name, description }),
+				).toBeTruthy();
+			}
+		},
+		60_000,
+	);
+
+	it("leaves out the Notifications row on iOS, where notifications aren’t supported", async () => {
+		const screen = await opened({
+			capability: FOREIGN_SIGNER,
+			platform: "ios",
+		});
+
+		expect(rows()).toEqual([...SUBSCREENS_WITHOUT_NOTIFICATIONS, ...ABOUT]);
+		expect(descriptions()).toEqual({
+			Display: "Units, blur level, haptics",
+			Privacy: "Message reads, profile views, GIPHY",
+			Security: "App icon, PIN",
+		});
+		expect(
+			screen.getByRole("link", {
+				name: "Security",
+				description: "App icon, PIN",
+			}),
+		).toBeTruthy();
+	}, 60_000);
+
 	it("follows the active locale", async () => {
 		const screen = await opened({ capability: FDROID_BUILD });
 		const titles = screen
@@ -231,5 +327,31 @@ describe("the app settings menu", () => {
 		for (const title of titles) {
 			expect(title.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 		}
+		const described = document.querySelectorAll(
+			'[data-slot="item-description"]',
+		);
+		expect(described).toHaveLength(4);
+		for (const description of described) {
+			expect(description.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
+	}, 60_000);
+});
+
+describe("the app settings menu on iOS", () => {
+	it("leaves Updates out, because the app ships no updater", async () => {
+		runningOn("ios");
+		const actual = await vi.importActual<
+			typeof import("#lib/updates/index.ts")
+		>("#lib/updates/index.ts");
+		fake.api.updatesAvailableHere.mockImplementation(
+			actual.updatesAvailableHere,
+		);
+		const screen = await opened({
+			capability: await actual.getUpdateCapability(),
+			platform: "ios",
+		});
+
+		expect(rows()).toEqual([...SUBSCREENS_WITHOUT_NOTIFICATIONS, ...ABOUT]);
+		expect(screen.queryByRole("link", { name: "Updates" })).toBeNull();
 	}, 60_000);
 });

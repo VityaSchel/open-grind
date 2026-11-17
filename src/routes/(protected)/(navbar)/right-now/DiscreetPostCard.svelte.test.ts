@@ -7,9 +7,10 @@ import {
 	screen,
 	within,
 } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SexualPosition } from "#lib/model/users/profiles.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { DiscreetPostData } from "#lib/model/right-now/feed.ts";
 import DiscreetPostCard from "./DiscreetPostCard.svelte";
 import { discreetPostData, photo } from "./feed-post-test-helpers";
@@ -26,7 +27,12 @@ function renderCard(
 	});
 }
 
-afterEach(cleanup);
+beforeEach(() => runningOn("windows"));
+
+afterEach(() => {
+	cleanup();
+	resetPlatform();
+});
 
 describe("a discreet Right Now post card", () => {
 	it("offers no link or button to reach the anonymous author, only ones to open the photo and report the post", () => {

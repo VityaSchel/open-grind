@@ -13,7 +13,7 @@
 
 	const optionClass = cn(
 		toggleVariants({ variant: "outline" }),
-		"flex-1 shrink-0 justify-center rounded-none border-l-0 px-3 shadow-none first:rounded-l-3xl first:border-l last:rounded-r-3xl focus-visible:z-10 data-[state=checked]:bg-popover-foreground data-[state=checked]:text-popover",
+		"flex-1 shrink-0 justify-center rounded-none border-l-0 px-3 shadow-none first:rounded-l-[calc(var(--radius-2xl)_-_--spacing(4)_-_1px)] first:border-l last:rounded-r-[calc(var(--radius-2xl)_-_--spacing(4)_-_1px)] focus-visible:z-10 data-[state=checked]:bg-popover-foreground data-[state=checked]:text-popover",
 	);
 
 	let pending = $state<UnitSystem | null>(null);
@@ -31,7 +31,7 @@
 		orientation="horizontal"
 		loop
 		aria-label={t("settings.app.units.title")}
-		class="flex-row items-center rounded-3xl"
+		class="flex-row items-center rounded-[calc(var(--radius-2xl)_-_--spacing(4)_-_1px)]"
 		bind:value={
 			() => value,
 			(next: string) => {

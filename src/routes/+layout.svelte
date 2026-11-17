@@ -19,24 +19,26 @@
 	import { hydrateBackdropCompositing } from "#lib/blur/compositing.svelte.ts";
 	import { applyBackdropBlurQuality } from "#lib/blur/quality.svelte.ts";
 	import { t } from "#lib/i18n/index.ts";
-	import {
-		applyAndroidInsets,
-		applyBackGestureHandler,
-		registerAndroidBackButtonListener,
-	} from "#lib/platform/android-native-bridge.ts";
 	import { blockNativeMenu } from "#lib/platform/block-native-menu.ts";
 	import { blockZoom } from "#lib/platform/block-zoom.ts";
 	import { bindContextMenuKey } from "#lib/platform/context-menu-key.ts";
 	import { trackHoverPointer } from "#lib/platform/hover-pointer.ts";
 	import { keepLinksInApp } from "#lib/platform/in-app-links.ts";
-	import { isAndroidPlatform } from "#lib/platform/os.ts";
+	import {
+		installNativeInsets,
+		type NativeInsets,
+	} from "#lib/platform/native-insets.ts";
 	import { revealKeyboardFocus } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { installScrollGestureBridge } from "#lib/platform/scroll-gesture.ts";
+	import { applySoftKeyboardLayout } from "#lib/platform/soft-keyboard.svelte.ts";
+	import { installSystemBack } from "#lib/platform/system-back-gesture.svelte.ts";
+	import { installVoiceOverWatch } from "#lib/platform/voice-over.svelte.ts";
 	import { reconcileNotifications } from "#lib/push/notifications.svelte.ts";
 	import { startPushWatch } from "#lib/push/watch.ts";
 	import { startAddonUpdateWatch } from "#lib/updates/addon.svelte.ts";
 	import { updatesSelfManaged } from "#lib/updates/capability.svelte.ts";
 	import { startUpdateWatch } from "#lib/updates/updates-manager.ts";
+	import { recordHistory } from "#lib/util/history-log.svelte.ts";
 	import {
 		bottomBlurBarClearance,
 		bottomChromeClearance,
@@ -47,35 +49,17 @@
 
 	onMount(() => {
 		installScrollGestureBridge();
-		if (PUBLIC_TEST_INSETS) {
-			window.__AndroidInsets = {
-				top() {
-					return 64;
-				},
-				bottom() {
-					return 64;
-				},
-				left() {
-					return 0;
-				},
-				right() {
-					return 0;
-				},
-			};
-		}
-		applyAndroidInsets();
-		applyBackGestureHandler();
+		installNativeInsets({
+			fallback: PUBLIC_TEST_INSETS ? TEST_INSETS : undefined,
+		});
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
 		const releaseHoverPointer = trackHoverPointer();
 		const releaseContextMenuKey = bindContextMenuKey();
 		const releaseInAppLinks = keepLinksInApp();
 		const releaseKeyboardFocusReveal = revealKeyboardFocus();
-		if (isAndroidPlatform()) {
-			void registerAndroidBackButtonListener().catch((error) => {
-				console.error("Failed to register back button listener", error);
-			});
-		}
+		installSystemBack();
+		installVoiceOverWatch();
 		void hydratePreferences().catch((error: unknown) => {
 			console.error("Failed to hydrate preferences", error);
 		});
@@ -106,14 +90,28 @@
 
 	let { children }: { children?: import("svelte").Snippet } = $props();
 
+	const TEST_INSETS: NativeInsets = {
+		top: 64,
+		bottom: 64,
+		left: 0,
+		right: 0,
+		ime: false,
+	};
+
 	const onboarded = $derived(
 		preferencesLoaded() && preferencesSnapshot().onboardingComplete,
 	);
+
+	recordHistory();
 
 	beforeNavigate(() => abortBackdropBlurTrialGesture());
 
 	$effect(() => {
 		applyBackdropBlurQuality();
+	});
+
+	$effect(() => {
+		applySoftKeyboardLayout();
 	});
 
 	$effect(() => {
@@ -146,8 +144,8 @@
 		};
 	});
 
-	const toastOffset = $derived(
-		screenChromeCovered()
+	const toastOffset = $derived({
+		...(screenChromeCovered()
 			? {
 					top: "calc(var(--safe-area-top) + 0.5rem)",
 					bottom: "calc(var(--safe-area-bottom) + 0.5rem)",
@@ -155,8 +153,10 @@
 			: {
 					top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px, ${topBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
 					bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px, ${bottomBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
-				},
-	);
+				}),
+		left: "calc(var(--safe-area-left) + 1rem)",
+		right: "calc(var(--safe-area-right) + 1rem)",
+	});
 </script>
 
 <svelte:head>

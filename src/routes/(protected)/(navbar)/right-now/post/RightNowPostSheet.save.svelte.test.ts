@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, screen } from "@testing-library/svelte";
 import { flushSync } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { photoApi, pickMediaMock } = vi.hoisted(() => ({
 	photoApi: {
@@ -25,6 +25,7 @@ vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: pickMediaMock }));
 vi.mock("#lib/api/error-toast.ts", () => ({ showErrorToast: vi.fn() }));
 
 import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { RightNowMediaUploadResponse } from "#lib/model/right-now/post.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import { ownPost, postPhoto } from "../right-now-post-test-helpers";
@@ -52,7 +53,12 @@ async function type(value: string) {
 	await fireEvent.input(textField(), { target: { value } });
 }
 
-afterEach(cleanup);
+beforeEach(() => runningOn("windows"));
+
+afterEach(() => {
+	cleanup();
+	resetPlatform();
+});
 
 describe("saving the Right Now post", () => {
 	it("keeps Save off until something changes", async () => {

@@ -1,13 +1,19 @@
 #[cfg(any(
 	target_os = "macos",
+	target_os = "ios",
 	target_os = "windows",
 	target_os = "linux",
 	test
 ))]
-use super::desktop::DateOrder;
-use super::desktop::{HourCycle, MeasurementSystem};
+use super::os_settings::DateOrder;
+use super::os_settings::{HourCycle, MeasurementSystem};
 
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
+#[cfg(any(
+	target_os = "macos",
+	target_os = "ios",
+	target_os = "windows",
+	test
+))]
 fn unquoted(pattern: &str) -> Vec<char> {
 	let mut quoted = false;
 	pattern
@@ -22,7 +28,12 @@ fn unquoted(pattern: &str) -> Vec<char> {
 		.collect()
 }
 
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
+#[cfg(any(
+	target_os = "macos",
+	target_os = "ios",
+	target_os = "windows",
+	test
+))]
 pub fn hour_cycle(pattern: &str) -> Option<HourCycle> {
 	unquoted(pattern)
 		.into_iter()
@@ -35,7 +46,12 @@ pub fn hour_cycle(pattern: &str) -> Option<HourCycle> {
 		})
 }
 
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
+#[cfg(any(
+	target_os = "macos",
+	target_os = "ios",
+	target_os = "windows",
+	test
+))]
 pub fn two_digit_hour(pattern: &str) -> Option<bool> {
 	unquoted(pattern)
 		.chunk_by(|a, b| a == b)
@@ -45,6 +61,7 @@ pub fn two_digit_hour(pattern: &str) -> Option<bool> {
 
 #[cfg(any(
 	target_os = "macos",
+	target_os = "ios",
 	target_os = "windows",
 	target_os = "linux",
 	test
@@ -64,7 +81,12 @@ fn field_order(fields: impl Iterator<Item = char>) -> Option<DateOrder> {
 	}
 }
 
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
+#[cfg(any(
+	target_os = "macos",
+	target_os = "ios",
+	target_os = "windows",
+	test
+))]
 pub fn date_order(pattern: &str) -> Option<DateOrder> {
 	field_order(unquoted(pattern).chunk_by(|a, b| a == b).filter_map(|run| {
 		match run[0] {
@@ -76,20 +98,26 @@ pub fn date_order(pattern: &str) -> Option<DateOrder> {
 	}))
 }
 
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(any(
+	all(desktop, not(any(target_os = "macos", target_os = "windows"))),
+	test
+))]
 struct PosixLocale<'a> {
 	language: &'a str,
 	script: Option<&'static str>,
 	territory: Option<&'a str>,
 }
 
-#[cfg(any(not(target_os = "macos"), test))]
+#[cfg(any(all(desktop, not(target_os = "macos")), test))]
 fn is_territory(code: &str) -> bool {
 	(code.len() == 2 && code.chars().all(|c| c.is_ascii_alphabetic()))
 		|| (code.len() == 3 && code.chars().all(|c| c.is_ascii_digit()))
 }
 
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(any(
+	all(desktop, not(any(target_os = "macos", target_os = "windows"))),
+	test
+))]
 fn parse_posix(value: &str) -> Option<PosixLocale<'_>> {
 	let (name, modifier) = match value.split_once('@') {
 		Some((name, modifier)) => (name, Some(modifier)),
@@ -118,7 +146,10 @@ fn parse_posix(value: &str) -> Option<PosixLocale<'_>> {
 	})
 }
 
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(any(
+	all(desktop, not(any(target_os = "macos", target_os = "windows"))),
+	test
+))]
 pub fn posix_locale(value: &str) -> Option<String> {
 	let PosixLocale {
 		language,
@@ -139,7 +170,7 @@ pub fn posix_locale(value: &str) -> Option<String> {
 	Some(tag)
 }
 
-#[cfg(any(not(target_os = "macos"), test))]
+#[cfg(any(all(desktop, not(target_os = "macos")), test))]
 pub fn region_measurement_system(region: &str) -> MeasurementSystem {
 	match region.to_ascii_uppercase().as_str() {
 		"US" | "LR" | "MM" => MeasurementSystem::Us,
@@ -148,12 +179,15 @@ pub fn region_measurement_system(region: &str) -> MeasurementSystem {
 	}
 }
 
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(any(
+	all(desktop, not(any(target_os = "macos", target_os = "windows"))),
+	test
+))]
 pub fn posix_measurement_system(value: &str) -> Option<MeasurementSystem> {
 	parse_posix(value)?.territory.map(region_measurement_system)
 }
 
-#[cfg(any(target_os = "macos", test))]
+#[cfg(any(target_os = "macos", target_os = "ios", test))]
 pub fn apple_measurement_system(name: &str) -> Option<MeasurementSystem> {
 	match name {
 		"Metric" => Some(MeasurementSystem::Metric),
@@ -185,7 +219,7 @@ pub fn windows_locale_name(name: &str) -> &str {
 	name.split('_').next().unwrap_or_default()
 }
 
-#[cfg(any(target_os = "macos", test))]
+#[cfg(any(target_os = "macos", target_os = "ios", test))]
 pub fn sunday_first_weekday(day: usize) -> Option<u8> {
 	(1..=7)
 		.contains(&day)
@@ -274,7 +308,10 @@ pub fn gnome_two_digit_hour(
 	}
 }
 
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(any(
+	all(desktop, not(any(target_os = "macos", target_os = "windows"))),
+	test
+))]
 pub fn gnome_clock_format(value: &str) -> Option<HourCycle> {
 	match value {
 		"24h" => Some(HourCycle::H23),

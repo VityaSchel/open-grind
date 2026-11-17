@@ -13,6 +13,7 @@ import { conversation, settled } from "#lib/chat/conversations-test-helpers.ts";
 import { defaultFilters } from "#lib/model/browse/grid/filters.ts";
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { defaultRightNowFeedFilters } from "#lib/model/right-now/filters.ts";
+import { runningOn } from "#lib/test/platform.ts";
 
 const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 	native: vi.fn(),
@@ -35,14 +36,10 @@ const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: native,
-	isTauri: () => true,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: native }));
 vi.mock("@tauri-apps/api/event", () => ({
 	listen: () => Promise.resolve(() => {}),
 }));
-vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => "android" }));
 vi.mock("$app/navigation", () => ({ goto }));
 vi.mock("$app/state", () => ({ page }));
 vi.mock("#lib/push/index.ts", () => push);
@@ -76,6 +73,7 @@ beforeAll(async () => {
 }, 30_000);
 
 beforeEach(async () => {
+	runningOn("android");
 	vi.resetModules();
 	vi.clearAllMocks();
 	files.clear();

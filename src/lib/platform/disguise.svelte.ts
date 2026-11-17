@@ -1,6 +1,8 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 import z from "zod";
+
+import { currentPlatform } from "./os";
 
 export const ORIGINAL_DISGUISE = "original";
 
@@ -27,8 +29,20 @@ const unavailable: State = {
 let state = $state<State>(unavailable);
 let hydrated = false;
 
+function offersDisguises(): boolean {
+	switch (currentPlatform()) {
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return true;
+		case "ios":
+			return false;
+	}
+}
+
 async function read(): Promise<State> {
-	if (!isTauri()) return unavailable;
+	if (!offersDisguises()) return unavailable;
 	const value = await invoke("disguise_state").catch(() => null);
 	return disguiseStateSchema.safeParse(value).data ?? unavailable;
 }
@@ -68,7 +82,7 @@ export function disguiseFailure(error: unknown): DisguiseFailure {
 const previewsSchema = z.record(z.string(), z.string());
 
 export async function loadDisguisePreviews(): Promise<Record<string, string>> {
-	if (!isTauri()) return {};
+	if (!offersDisguises()) return {};
 	const value = await invoke("disguise_previews").catch(() => null);
 	return previewsSchema.safeParse(value).data ?? {};
 }
@@ -91,7 +105,7 @@ export async function reopenAfterDisguiseRestart({
 }: {
 	trail: (path: string) => string[];
 }): Promise<void> {
-	if (!isTauri()) return;
+	if (!offersDisguises()) return;
 	const answer = await invoke("disguise_take_resume").catch(() => null);
 	const path = resumeSchema.safeParse(answer).data;
 	if (!path) return;

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { attachGalleryLightboxMock, detachMock, preloadFullImageMock } =
 	vi.hoisted(() => {
@@ -29,6 +29,7 @@ vi.mock("#lib/api/current-session.ts", () => ({
 	signedInProfileId: () => Promise.resolve(858049792),
 }));
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { RightNowPostMediaItem } from "#lib/model/right-now/feed.ts";
 import { photo } from "./feed-post-test-helpers";
@@ -53,8 +54,11 @@ async function showThumbnail() {
 	await fireEvent.load(thumbnail);
 }
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(() => {
 	cleanup();
+	resetPlatform();
 	vi.clearAllMocks();
 	vi.unstubAllEnvs();
 });

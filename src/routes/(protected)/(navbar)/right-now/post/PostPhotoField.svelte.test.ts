@@ -8,7 +8,7 @@ import {
 	within,
 } from "@testing-library/svelte";
 import { flushSync } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { drawerApi, photoApi, pickMediaMock, toastMock, errorToast } =
 	vi.hoisted(() => ({
@@ -36,6 +36,7 @@ vi.mock("#lib/platform/media-picker.ts", () => ({ pickMedia: pickMediaMock }));
 vi.mock("#lib/api/error-toast.ts", () => errorToast);
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { DrawerMedia } from "#lib/api/messaging/drawer.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import type { PostPhoto } from "./post-form";
@@ -106,8 +107,11 @@ async function openUploads() {
 	return screen.findByRole("dialog", { name: "Previous Uploads" });
 }
 
+beforeEach(() => runningOn("windows"));
+
 afterEach(() => {
 	cleanup();
+	resetPlatform();
 	vi.clearAllMocks();
 });
 

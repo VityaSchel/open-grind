@@ -7,15 +7,15 @@ import {
 	NATIVE_READ_TIMEOUT_MS,
 } from "#lib/platform/regional-settings.ts";
 
-const { files, invokeMock, listenMock, storage, tauri, toastError } =
-	vi.hoisted(() => ({
+const { files, invokeMock, listenMock, storage, toastError } = vi.hoisted(
+	() => ({
 		files: new Map<string, Uint8Array>(),
 		invokeMock: vi.fn(),
 		listenMock: vi.fn(),
 		storage: { writable: true },
-		tauri: { enabled: true },
 		toastError: vi.fn(),
-	}));
+	}),
+);
 
 vi.mock("#lib/app-data/index.ts", () => ({
 	existsAppDataFile: (path: string) => Promise.resolve(files.has(path)),
@@ -41,7 +41,6 @@ vi.mock("#lib/app-data/index.ts", () => ({
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
-	isTauri: () => tauri.enabled,
 }));
 
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
@@ -83,7 +82,6 @@ beforeEach(() => {
 	invokeMock.mockReset();
 	listenMock.mockReset().mockResolvedValue(() => {});
 	toastError.mockReset();
-	tauri.enabled = true;
 	vi.useRealTimers();
 });
 

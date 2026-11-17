@@ -31,6 +31,7 @@ vi.mock("$app/navigation", () => ({
 
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { runBackGestureHandlers } from "#lib/platform/back-gesture-event.svelte.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { leaveDeletedPages } from "#lib/util/deleted-pages.ts";
 import GuardedSubpage from "./fixtures/GuardedSubpage.svelte";
 
@@ -74,12 +75,18 @@ let go: MockInstance<History["go"]>;
 let back: MockInstance<History["back"]>;
 
 beforeEach(() => {
+	runningOn("android");
 	go = vi.spyOn(history, "go").mockImplementation(() => {});
-	back = vi.spyOn(history, "back").mockImplementation(() => {});
+	back = vi
+		.spyOn(history, "back")
+		.mockImplementation(() =>
+			window.dispatchEvent(new PopStateEvent("popstate")),
+		);
 });
 
 afterEach(() => {
 	cleanup();
+	resetPlatform();
 	clearAccountCaches();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
@@ -128,7 +135,14 @@ describe("a subpage with unsaved changes", () => {
 	});
 
 	it("asks on the back gesture and goes back once the edits are discarded", async () => {
-		vi.stubGlobal("navigation", { canGoBack: true });
+		vi.stubGlobal("navigation", {
+			canGoBack: true,
+			currentEntry: { index: 1 },
+			entries: () => [
+				{ url: "https://app.test/" },
+				{ url: page.url.href },
+			],
+		});
 		render(GuardedSubpage, { props: { dirty: true } });
 
 		expect(runBackGestureHandlers()).toBe(true);

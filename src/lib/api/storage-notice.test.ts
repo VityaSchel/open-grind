@@ -3,25 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 
-const {
-	callMethodMock,
-	platformMock,
-	toastErrorMock,
-	toastWarningMock,
-	activeToastsMock,
-} = vi.hoisted(() => ({
-	callMethodMock: vi.fn(),
-	platformMock: vi.fn(),
-	toastErrorMock: vi.fn(),
-	toastWarningMock: vi.fn(),
-	activeToastsMock: vi.fn(),
-}));
+const { callMethodMock, toastErrorMock, toastWarningMock, activeToastsMock } =
+	vi.hoisted(() => ({
+		callMethodMock: vi.fn(),
+		toastErrorMock: vi.fn(),
+		toastWarningMock: vi.fn(),
+		activeToastsMock: vi.fn(),
+	}));
 
 vi.mock("#lib/api/methods.ts", async (importOriginal) => ({
 	...(await importOriginal<typeof import("#lib/api/methods.ts")>()),
 	callMethod: callMethodMock,
 }));
-vi.mock("@tauri-apps/plugin-os", () => ({ platform: platformMock }));
 vi.mock("svelte-sonner", () => ({
 	toast: {
 		error: toastErrorMock,
@@ -30,10 +23,12 @@ vi.mock("svelte-sonner", () => ({
 	},
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
+
 const { noticeStorageBackend } = await import("./storage-notice");
 
 beforeEach(() => {
-	platformMock.mockReturnValue("linux");
+	runningOn("linux");
 	activeToastsMock.mockReturnValue([]);
 });
 
@@ -81,7 +76,7 @@ describe("noticeStorageBackend", () => {
 	});
 
 	it("stays quiet about the file store off Linux, where it is the build's own choice", async () => {
-		platformMock.mockReturnValue("macos");
+		runningOn("macos");
 		await noticeWith("file");
 		expect(toastWarningMock).not.toHaveBeenCalled();
 	});

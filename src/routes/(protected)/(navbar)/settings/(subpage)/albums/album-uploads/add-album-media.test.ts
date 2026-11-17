@@ -19,7 +19,7 @@ import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
-import { addAlbumMedia, pickInspectedAlbumMedia } from "./add-album-media";
+import { addAlbumMedia, pickOrScreenAlbumMedia } from "./add-album-media";
 import type { AlbumUploads } from "./album-uploads-state.svelte";
 
 const limits = {
@@ -81,13 +81,9 @@ afterEach(async () => {
 
 describe("picking media for an album", () => {
 	it("offers only the kinds the album has room for", async () => {
-		await pickInspectedAlbumMedia({ room: { photos: true, videos: true } });
-		await pickInspectedAlbumMedia({
-			room: { photos: true, videos: false },
-		});
-		await pickInspectedAlbumMedia({
-			room: { photos: false, videos: true },
-		});
+		await pickOrScreenAlbumMedia({ room: { photos: true, videos: true } });
+		await pickOrScreenAlbumMedia({ room: { photos: true, videos: false } });
+		await pickOrScreenAlbumMedia({ room: { photos: false, videos: true } });
 
 		expect(picker.pickMultipleMedia.mock.calls).toEqual([
 			["media"],
@@ -98,7 +94,7 @@ describe("picking media for an album", () => {
 
 	it("opens no picker when the album has room for nothing", async () => {
 		expect(
-			await pickInspectedAlbumMedia({
+			await pickOrScreenAlbumMedia({
 				room: { photos: false, videos: false },
 			}),
 		).toEqual([]);
@@ -112,7 +108,7 @@ describe("picking media for an album", () => {
 		]);
 
 		expect(
-			await pickInspectedAlbumMedia({
+			await pickOrScreenAlbumMedia({
 				room: { photos: true, videos: true },
 			}),
 		).toEqual([
@@ -130,7 +126,7 @@ describe("picking media for an album", () => {
 		mediaFile.inspectMediaFile.mockRejectedValue(new Error("gone"));
 
 		expect(
-			await pickInspectedAlbumMedia({
+			await pickOrScreenAlbumMedia({
 				room: { photos: true, videos: true },
 			}),
 		).toEqual([]);

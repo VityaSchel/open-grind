@@ -206,7 +206,7 @@ describe("in the demo", () => {
 
 		const first = await uploadRightNowPickedPhoto({
 			media: {
-				source: "web",
+				source: "demo",
 				key: "pick-4",
 				mimeType: "image/jpeg",
 				file,
@@ -214,7 +214,7 @@ describe("in the demo", () => {
 		});
 		const second = await uploadRightNowPickedPhoto({
 			media: {
-				source: "web",
+				source: "demo",
 				key: "pick-3",
 				mimeType: "image/jpeg",
 				file,
@@ -241,6 +241,6 @@ describe("in the demo", () => {
 	it("refuses a pick it cannot read in the browser", async () => {
 		await expect(
 			uploadRightNowPickedPhoto({ media: desktopPick }),
-		).rejects.toThrow("The demo only reads files picked in the browser");
+		).rejects.toThrow("The demo only reads files it holds in the page");
 	});
 });

@@ -29,6 +29,7 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 }));
 
 import { Drafts } from "#lib/chat/drafts.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type {
 	Message,
 	MessageDraft,
@@ -39,6 +40,10 @@ import { ConversationState } from "./conversation-state.svelte";
 const CONVERSATION_ID = "1:2";
 const OUR_ID = 1;
 const PEER_ID = 2;
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 const profile = {
 	distance: null,

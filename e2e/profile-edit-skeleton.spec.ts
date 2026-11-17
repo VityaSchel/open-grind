@@ -109,7 +109,7 @@ for (const viewport of VIEWPORTS) {
 			page,
 		}) => {
 			await recordLoadingSkeleton(page);
-			await installTauriShim(page);
+			await installTauriShim(page, { platform: "macos" });
 			await page.goto("/settings/profile");
 			await page
 				.getByRole("textbox", { name: "Display name" })

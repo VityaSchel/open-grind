@@ -146,6 +146,19 @@ pub async fn ws_connect(
 
 const RECONNECT_STEP_TIMEOUT: Duration = Duration::from_secs(3);
 
+pub async fn wait_until_disconnected(
+	states: &mut tokio::sync::watch::Receiver<grindr::WsConnectionState>,
+) -> bool {
+	timeout(
+		RECONNECT_STEP_TIMEOUT,
+		states.wait_for(|state| {
+			*state == grindr::WsConnectionState::Disconnected
+		}),
+	)
+	.await
+	.is_ok()
+}
+
 #[tauri::command]
 pub async fn ws_reconnect(
 	state: tauri::State<'_, AppState>,
@@ -158,14 +171,7 @@ pub async fn ws_reconnect(
 	}
 
 	client.set_active(false);
-	let stopped = timeout(
-		RECONNECT_STEP_TIMEOUT,
-		states.wait_for(|state| {
-			*state == grindr::WsConnectionState::Disconnected
-		}),
-	)
-	.await
-	.is_ok();
+	let stopped = wait_until_disconnected(&mut states).await;
 
 	client.set_active(recovery.foreground.load(Ordering::SeqCst));
 	if !stopped {

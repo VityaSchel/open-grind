@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 
 	import CommandCenter from "#lib/components/command-center/CommandCenter.svelte";
+	import RefreshAnnouncements from "#lib/components/feedback/refresh/RefreshAnnouncements.svelte";
 	import MediaDropOverlay from "#lib/components/shared/MediaDropOverlay.svelte";
 	import { restoreStrandedLocation } from "#lib/entitlements/honduras-hold.ts";
 	import { reopenAfterDisguiseRestart } from "#lib/platform/disguise.svelte.ts";
@@ -39,3 +40,4 @@
 {@render children()}
 <CommandCenter />
 <MediaDropOverlay />
+<RefreshAnnouncements />

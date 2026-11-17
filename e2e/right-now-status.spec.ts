@@ -46,7 +46,7 @@ async function clickOver(
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(240_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("Browse's Right Now filter lists only tiles marked as on Right Now", async ({

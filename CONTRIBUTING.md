@@ -205,15 +205,15 @@ Before opening a pull request, run the same checks CI runs:
 
 - `bun run lint` — ESLint, which also flags interface text in `src` that skips the translation files. Formatting is separate: `bun run format` (Prettier).
 - `bun run check` — `svelte-check` type checking.
-- `bun run check:i18n` — translation files, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json`, `src/lib/i18n/desktop-strings.json` and the files `bun run gen:i18n` generates from them, the Android `strings.xml` files and the desktop `catalogs.json` included. `bun run check:i18n-release` also fails when a shipped language lacks a message or its Android `strings.xml` or desktop text is out of date, and `bun run build` runs it before every release build. After merging Weblate's pull requests, run `bun run gen:i18n` and commit the result before a release.
+- `bun run check:i18n` — translation files, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json`, `src/lib/i18n/desktop-strings.json`, `src/lib/i18n/ios-strings.json` and the files `bun run gen:i18n` generates from them, the Android `strings.xml` files, the desktop `catalogs.json` and the iOS `InfoPlist.strings` files included. `bun run check:i18n-release` also fails when a shipped language lacks a message or its Android `strings.xml`, desktop text or iOS `InfoPlist.strings` is out of date, and `bun run build` runs it before every release build. After merging Weblate's pull requests, run `bun run gen:i18n` and commit the result before a release.
 - `bun run check:release-bundle` — fails when text from the demo fixtures in `src/lib/demo/mock` ships in `build/`. `bun run build` runs it after every release build; builds made with `OPEN_GRIND_DEMO=1` skip it.
 - `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
 - `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
 
 End-to-end tests are a separate tier:
 
-- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
-- `bun run test:e2e:guard` — the layout guard. It builds the web demo for production, then checks every signed-in page and the 404 page at a phone and a desktop size: the bars can't scroll and stay see-through in every blur mode, nothing overflows, and the page structure passes axe. About 5 minutes, build included.
+- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the demo build in Chromium under a Tauri shim and runs the browser serially, which is why it stays out of `bun run test`.
+- `bun run test:e2e:guard` — the layout guard. It builds the demo for production, then checks every signed-in page and the 404 page at a phone and a desktop size: the bars can't scroll and stay see-through in every blur mode, nothing overflows, and the page structure passes axe. About 5 minutes, build included.
 - `bun run test:android` — JUnit tests for the Android sources. Needs the Android SDK and the Gradle files that `bun run tauri android build` generates, which is why it stays out of `bun run test`.
 
 Local updater testing:
@@ -235,8 +235,8 @@ The dev server also serves a Google OAuth app release when given `COMPANION_PAYL
 `bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml) on top of the shared one in `@opengrind/config`). Each command runs when a staged file matches it, all of them in parallel, and fixes made to staged files are staged again:
 
 - `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
-- `*.{json,md,yml,yaml,css,html}`, except the four i18n files below — Prettier
-- `src/lib/i18n/locales/en/*.json`, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json` and `src/lib/i18n/desktop-strings.json` — `bun run gen:i18n`, which stops the commit until the files it generates are staged, new Android `strings.xml` files included, then Prettier
+- `*.{json,md,yml,yaml,css,html}`, except the five i18n files below — Prettier
+- `src/lib/i18n/locales/en/*.json`, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json`, `src/lib/i18n/desktop-strings.json` and `src/lib/i18n/ios-strings.json` — `bun run gen:i18n`, which stops the commit until the files it generates are staged, new Android `strings.xml` and iOS `InfoPlist.strings` files included, then Prettier
 - `*.sh` — ShellCheck
 - `*.rs` — `rustfmt` on the staged files and, at the same time, `cargo clippy` over the whole crate
 - `.editorconfig` and `rustfmt.toml` — `opengrind-config check`, which stops the commit when they differ from `@opengrind/config`

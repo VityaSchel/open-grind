@@ -2,16 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { ApiResponseMessage } from "#lib/model/messaging/messages.ts";
 import type { Announcement } from "./types";
 
 const push = vi.hoisted(() => ({
 	notify: vi.fn<(announcement: Announcement) => Promise<void>>(),
 }));
-const os = vi.hoisted(() => ({ desktop: true }));
 
 vi.mock("./index", () => push);
-vi.mock("#lib/platform/os.ts", () => ({ isDesktopPlatform: () => os.desktop }));
 
 const { announceMessage, announceTap } = await import("./announce");
 
@@ -37,7 +36,7 @@ function announced(): Announcement | undefined {
 beforeEach(() => {
 	push.notify.mockReset();
 	push.notify.mockResolvedValue();
-	os.desktop = true;
+	runningOn("macos");
 });
 
 describe("announcing on desktop", () => {
@@ -145,7 +144,7 @@ describe("announcing in the app's language", () => {
 
 describe("announcing on Android", () => {
 	it("leaves notifications to the system side", () => {
-		os.desktop = false;
+		runningOn("android");
 
 		announceMessage({
 			message: message("Text", { text: "hi" }),

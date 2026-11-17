@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("sends replies from the selected profile photo and keeps the chat draft", async ({

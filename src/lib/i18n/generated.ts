@@ -25,11 +25,12 @@ export interface Messages {
 	"auth.signIn.errors.inProgress": { provider: string };
 	"auth.signIn.errors.invalidCredentials": undefined;
 	"auth.signIn.errors.notRegistered": undefined;
+	"auth.signIn.errors.pageUnavailable": undefined;
 	"auth.signIn.errors.providerFailed": { provider: string };
 	"auth.signIn.errors.rateLimited": undefined;
+	"auth.signIn.errors.timedOut": undefined;
 	"auth.signIn.facebook.errors.dialogError": undefined;
 	"auth.signIn.facebook.errors.handoffRefused": undefined;
-	"auth.signIn.facebook.errors.timedOut": undefined;
 	"auth.signIn.facebook.errors.unverified": undefined;
 	"auth.signIn.facebook.title": undefined;
 	"auth.signIn.forgotPassword": undefined;
@@ -92,8 +93,10 @@ export interface Messages {
 	"browse.gridFilters.title": undefined;
 	"browse.location.errors.autoUpdateFailed": undefined;
 	"browse.location.errors.locateFailed": undefined;
+	"browse.location.locationServicesOff": undefined;
 	"browse.location.openSettings": undefined;
 	"browse.location.permissionDenied": undefined;
+	"browse.location.preciseLocationOff": undefined;
 	"browse.locationChange.a11y.autoUpdating": undefined;
 	"browse.locationChange.a11y.change": undefined;
 	"browse.locationChooser.a11y.description": undefined;
@@ -419,8 +422,6 @@ export interface Messages {
 	"common.albumShare.errors.shareFailed": undefined;
 	"common.albumShare.errors.unshareFailed": undefined;
 	"common.carousel.a11y.carouselRole": undefined;
-	"common.carousel.a11y.next": undefined;
-	"common.carousel.a11y.previous": undefined;
 	"common.carousel.a11y.slideRole": undefined;
 	"common.chat.writeMessage": undefined;
 	"common.commandDialog.a11y.description": undefined;
@@ -458,6 +459,7 @@ export interface Messages {
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
+	"common.location.permissionReason": undefined;
 	"common.media.drop.onlyPhotos": undefined;
 	"common.media.drop.onlyPhotosAndVideos": undefined;
 	"common.media.errors.heicUnsupported": undefined;
@@ -471,6 +473,7 @@ export interface Messages {
 	"common.media.errors.photoTooLarge": { megabytes: string };
 	"common.media.errors.photoUndecodable": undefined;
 	"common.media.errors.photoUnloadable": undefined;
+	"common.media.errors.pickedItemsLoadFailed": { count: number };
 	"common.media.errors.readFailed": undefined;
 	"common.media.errors.unsupportedFile": undefined;
 	"common.media.errors.videoUnreadable": undefined;
@@ -946,6 +949,7 @@ export interface Messages {
 	"settings.app.giphy.title": undefined;
 	"settings.app.hapticFeedback.description": undefined;
 	"settings.app.hapticFeedback.title": undefined;
+	"settings.app.language.helpTranslate": undefined;
 	"settings.app.pin.title": undefined;
 	"settings.app.pin.unimplemented": { issueLink: string };
 	"settings.app.privacyPolicy": undefined;
@@ -953,6 +957,13 @@ export interface Messages {
 	"settings.app.revealMessageRead.title": undefined;
 	"settings.app.revealProfileViews.description": undefined;
 	"settings.app.revealProfileViews.title": undefined;
+	"settings.app.sectionDescriptions.display.withHaptics": undefined;
+	"settings.app.sectionDescriptions.display.withoutHaptics": undefined;
+	"settings.app.sectionDescriptions.notifications.android": undefined;
+	"settings.app.sectionDescriptions.notifications.desktop": undefined;
+	"settings.app.sectionDescriptions.privacy": undefined;
+	"settings.app.sectionDescriptions.security.iconAndName": undefined;
+	"settings.app.sectionDescriptions.security.iconOnly": undefined;
 	"settings.app.sections.display": undefined;
 	"settings.app.sections.privacy": undefined;
 	"settings.app.sections.security": undefined;
@@ -1083,9 +1094,6 @@ export interface Messages {
 	"settings.profile.sections.basics": undefined;
 	"settings.profile.sections.photos": undefined;
 	"settings.profile.socialPlaceholder": undefined;
-	"settings.profile.units.centimeters": undefined;
-	"settings.profile.units.kilograms": undefined;
-	"settings.profile.units.pounds": undefined;
 	"settings.setting.errors.saveFailed": undefined;
 	"settings.subpage.titles.account": undefined;
 	"settings.subpage.titles.albums": undefined;
@@ -1100,6 +1108,8 @@ export interface Messages {
 	"settings.subpage.titles.privacy": undefined;
 	"settings.subpage.titles.profile": undefined;
 	"shell.backLink.a11y.label": undefined;
+	"shell.dataRefreshControl.a11y.refreshed": undefined;
+	"shell.dataRefreshControl.a11y.refreshing": undefined;
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;

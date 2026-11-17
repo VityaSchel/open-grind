@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { goto } from "$app/navigation";
 import { createRawSnippet } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("$app/state", () => ({
 	page: { url: new URL("http://localhost/interest/taps") },
@@ -13,10 +13,14 @@ vi.mock("./InterestPager.svelte", () => ({ default: () => {} }));
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import InterestLayout from "./+layout.svelte";
+
+beforeEach(() => runningOn("android"));
 
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	vi.mocked(goto).mockClear();
 	await setLocale({ locale: SOURCE_LOCALE });
 });

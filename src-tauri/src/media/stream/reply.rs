@@ -5,9 +5,13 @@ use super::super::requested::Requested;
 use super::super::response::{refused, Freshness};
 use super::super::target::host_of;
 use super::super::upstream::GatewayFailure;
+use super::super::{Host, HOST};
 use super::adapter::WebViewStream;
 
-pub const TELLS_THE_LENGTH: bool = cfg!(target_vendor = "apple");
+pub const TELLS_THE_LENGTH: bool = match HOST {
+	Host::WkWebView => true,
+	Host::AndroidWebView | Host::WholeBodies => false,
+};
 
 pub struct Streamed {
 	pub id: u64,

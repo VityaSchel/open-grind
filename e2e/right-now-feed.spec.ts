@@ -78,7 +78,7 @@ async function sortByDistance(page: Page): Promise<void> {
 test.describe("the demo feed", () => {
 	test.beforeEach(async ({ page }) => {
 		test.setTimeout(240_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await goToRightNow(page);
 		await articles(page)
 			.first()
@@ -270,7 +270,7 @@ test.describe("a feed whose photos are cropped to square thumbnails", () => {
 		page,
 	}) => {
 		test.setTimeout(240_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveRightNowPortraitPhotos(page);
 		await goToRightNow(page);
 		const photo = page.getByRole("link", { name: OPEN_PHOTO }).first();
@@ -298,7 +298,7 @@ test.describe("a feed whose first load fails", () => {
 
 	test("shows the error, and Retry loads the posts", async ({ page }) => {
 		test.setTimeout(240_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await failDemoRequests(page, {
 			pathPrefix: "/v4/rightnow/feed",
 			times: 1,

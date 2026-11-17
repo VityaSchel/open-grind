@@ -11,7 +11,7 @@ test("opening a profile before chat keeps its reply composer interactive", async
 }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/profile/100001");
 	await page.getByRole("link", { name: /Profile photo 1 of/ }).click();
 	const reply = page.getByRole("textbox", { name: "Reply to profile photo" });

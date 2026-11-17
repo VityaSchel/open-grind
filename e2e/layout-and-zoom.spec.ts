@@ -6,7 +6,7 @@ const TEST_INSET_PX = 64;
 
 test.describe("screen insets", () => {
 	test("the message composer clears the bottom inset", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto(DEMO_CONVERSATION);
 		const composer = page.locator(
 			'[data-slot="composer-attachments-trigger"]',
@@ -38,7 +38,7 @@ test.describe("screen insets", () => {
 	});
 
 	test("the conversation list clears the bottom inset", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		await page
 			.locator('a[href^="/chat/1"]')
@@ -57,7 +57,7 @@ test.describe("screen insets", () => {
 
 test.describe("keyboard zoom is disabled", () => {
 	test("the viewport forbids user scaling", async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		const content = await page
 			.locator('meta[name="viewport"]')
@@ -69,7 +69,7 @@ test.describe("keyboard zoom is disabled", () => {
 	test("ctrl/cmd +, - and 0 are cancelled instead of zooming", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		await page
 			.locator('a[href^="/chat/1"]')

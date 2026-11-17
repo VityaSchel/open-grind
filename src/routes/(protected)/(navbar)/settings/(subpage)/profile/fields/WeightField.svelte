@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { preferencesSnapshot } from "#lib/app-data/preferences.svelte.ts";
+	import { formatUnitName } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { kgToPounds, poundsToKg } from "#lib/util/units.ts";
 	import { weightKgRange, weightPoundRange } from "../options";
@@ -35,7 +36,7 @@
 		bind:value={() => pounds, storePounds}
 		min={weightPoundRange.min}
 		max={weightPoundRange.max}
-		unit={t("settings.profile.units.pounds")}
+		unit={formatUnitName("weightPounds")}
 		placeholder="—"
 		onfocus={() => (kgBeforeEditing = value)}
 	/>
@@ -46,7 +47,7 @@
 		min={weightKgRange.min}
 		max={weightKgRange.max}
 		step={0.5}
-		unit={t("settings.profile.units.kilograms")}
+		unit={formatUnitName("weightKilograms")}
 		placeholder="—"
 	/>
 {/if}

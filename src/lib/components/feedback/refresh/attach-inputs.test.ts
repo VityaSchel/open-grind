@@ -3,9 +3,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScrollGestureState } from "#lib/platform/scroll-gesture.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { attachPullInputs } from "./attach-inputs";
 import { PullModel } from "./pull-model.svelte";
-import { makeScrollable } from "./pull-test-helpers";
+import { makeScrollable, touchEvent } from "./pull-test-helpers";
 import { RestingButtonModel } from "./resting-button.svelte";
 import type { PullPosition } from "./scroll-chain";
 
@@ -25,11 +26,12 @@ function harness({
 	target.append(row, field);
 	document.body.append(target);
 	const restingButton = new RestingButtonModel({ probeMs: PROBE_MS });
+	const model = new PullModel();
 	const towardBoundary = position === "top" ? -1 : 1;
 	let distance = 0;
 	let bandPx = 0;
 	const detachInputs = attachPullInputs(target, {
-		model: new PullModel(),
+		model,
 		restingButton,
 		position,
 		boundaryDistance: () => distance,
@@ -45,6 +47,7 @@ function harness({
 	const wheel = (deltaX: number, deltaY: number) =>
 		target.dispatchEvent(new WheelEvent("wheel", { deltaX, deltaY }));
 	return {
+		model,
 		restingButton,
 		row,
 		field,
@@ -90,15 +93,30 @@ function harness({
 			bandPx = BAND_PX;
 			target.dispatchEvent(new Event("scroll"));
 		},
+		endBand() {
+			target.dispatchEvent(new Event("scrollend"));
+		},
+		dragFinger(dy: number) {
+			row.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+			row.dispatchEvent(touchEvent("touchmove", { y: 100 + dy }));
+		},
+		touchRow() {
+			row.dispatchEvent(touchEvent("touchstart"));
+		},
+		liftFinger() {
+			row.dispatchEvent(touchEvent("touchend"));
+		},
 	};
 }
 
 beforeEach(() => {
 	vi.useFakeTimers();
+	runningOn("windows");
 });
 
 afterEach(() => {
 	vi.useRealTimers();
+	resetPlatform();
 });
 
 describe("the mouse probe at the boundary", () => {
@@ -461,6 +479,87 @@ describe("a rubber band at the boundary on macOS", () => {
 		h.band({ pulledByWheel: false });
 
 		expect(h.restingButton.offered).toBe(true);
+		h.detach();
+	});
+});
+
+describe("the pull inputs on iOS", () => {
+	beforeEach(() => {
+		runningOn("ios");
+	});
+
+	it("reads a pull from the rubber band under a finger and refreshes on lift", () => {
+		const h = harness({ position: "top" });
+		const refreshed = vi.fn();
+		h.model.space = BAND_PX;
+		h.model.onTrigger = refreshed;
+
+		h.touchRow();
+		h.band({ pulledByWheel: false });
+		expect(h.model.source).toBe("band");
+		expect(h.model.phase).toBe("armed");
+		h.liftFinger();
+
+		expect(refreshed).toHaveBeenCalledOnce();
+		h.detach();
+	});
+
+	it("leaves a band without a finger alone, even when it ends with scrollend", () => {
+		const h = harness({ position: "top" });
+
+		h.band({ pulledByWheel: false });
+		h.endBand();
+
+		expect(h.model.phase).toBe("idle");
+		expect(h.model.settledFrom).toBeNull();
+		h.detach();
+	});
+
+	it("never starts a pull from the finger's own travel at the boundary", () => {
+		const h = harness({ position: "top" });
+
+		h.dragFinger(120);
+
+		expect(h.model.phase).toBe("idle");
+		h.detach();
+	});
+});
+
+describe("the pull inputs on Android", () => {
+	it("start a touch pull from the finger's travel at the boundary", () => {
+		runningOn("android");
+		const h = harness({ position: "top" });
+
+		h.dragFinger(120);
+
+		expect(h.model.source).toBe("touch");
+		h.detach();
+	});
+});
+
+describe("a pull from a no-pull area", () => {
+	it("is refused under a finger on android", () => {
+		runningOn("android");
+		const h = harness({ position: "top" });
+		h.row.setAttribute("data-refresh-no-pull", "");
+
+		h.dragFinger(120);
+
+		expect(h.model.source).toBeNull();
+		h.detach();
+	});
+
+	it("is refused from the rubber band on ios", () => {
+		runningOn("ios");
+		const h = harness({ position: "top" });
+		h.model.space = BAND_PX;
+		h.row.setAttribute("data-refresh-no-pull", "");
+
+		h.touchRow();
+		h.band({ pulledByWheel: false });
+
+		expect(h.model.source).toBeNull();
+		h.liftFinger();
 		h.detach();
 	});
 });

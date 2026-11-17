@@ -21,7 +21,7 @@ const LIGHTBOX = ".pswp";
 test.describe.configure({ timeout: 180_000 });
 
 test("Escape closes a profile opened from Browse", async ({ page }) => {
-	await openGridProfile(page, { nth: 0 });
+	await openGridProfile(page, { platform: "macos", nth: 0 });
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(/\/$/);
@@ -32,7 +32,7 @@ test("Escape closes the profile menu, then the photo viewer, then the profile", 
 }) => {
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page
 		.locator(`a[href="/profile/${PROFILE_WITH_PHOTOS}"]:visible`)
@@ -73,7 +73,7 @@ test("Escape closes the profile menu, then the photo viewer, then the profile", 
 test("Escape is left to a focused composer and closes the chat otherwise", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator('a[href^="/chat/"]').first().click();
 	await expect(page).toHaveURL(/\/chat\/.+/);
@@ -92,7 +92,7 @@ test("Escape is left to a focused composer and closes the chat otherwise", async
 test("Escape cancels a pending reply before it closes the chat", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(`a[href="${DEMO_CONVERSATION}"]`).first().click();
 	await page
@@ -113,7 +113,7 @@ test("Escape cancels a pending reply before it closes the chat", async ({
 });
 
 test("Escape closes a settings page", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/app");
 	await page.getByRole("link", { name: "Credits & Licenses" }).click();
 	await expect(page).toHaveURL(/\/settings\/app\/credits$/);
@@ -125,7 +125,7 @@ test("Escape closes a settings page", async ({ page }) => {
 test("Escape walks up a deep-linked settings page in place", async ({
 	page,
 }) => {
-	await openDeepLink(page, CREDITS);
+	await openDeepLink(page, { path: CREDITS, platform: "macos" });
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

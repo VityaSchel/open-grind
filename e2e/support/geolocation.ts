@@ -8,6 +8,8 @@ type GeolocationState = {
 	delayMs: number;
 	hang: boolean;
 	fail: boolean;
+	failure: string;
+	precise: boolean;
 	promptVisibilityCycle: boolean;
 };
 
@@ -31,6 +33,8 @@ const DEFAULT_STATE: GeolocationState = {
 	delayMs: 0,
 	hang: false,
 	fail: false,
+	failure: "Location unavailable.",
+	precise: true,
 	promptVisibilityCycle: false,
 };
 
@@ -85,7 +89,9 @@ export async function installGeolocationShim(
 			internals.invoke = (cmd, args, opts) => {
 				if (cmd === "plugin:geolocation|check_permissions")
 					return Promise.resolve({
-						location: shim.state.permission,
+						location: shim.state.precise
+							? shim.state.permission
+							: "denied",
 						coarseLocation: shim.state.permission,
 					});
 				if (cmd === "plugin:geolocation|request_permissions") {
@@ -115,7 +121,7 @@ export async function installGeolocationShim(
 					if (shim.state.hang) return new Promise(() => undefined);
 					if (shim.state.fail)
 						// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- the Android plugin rejects with a bare string
-						return Promise.reject("Location unavailable.");
+						return Promise.reject(shim.state.failure);
 					return new Promise((resolve) =>
 						setTimeout(
 							() =>

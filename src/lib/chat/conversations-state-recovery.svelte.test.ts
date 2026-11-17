@@ -57,6 +57,7 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 	},
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -98,6 +99,7 @@ beforeEach(() => {
 	localStorage.clear();
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
+	runningOn("android");
 });
 
 describe.each(["refresh", "ensureLoaded"] as const)(
@@ -263,5 +265,57 @@ describe("ConversationsState recovery after a failed first load", () => {
 
 		expect(state.entries.length).toBeGreaterThan(0);
 		expect(state.error).toBeNull();
+	});
+});
+
+describe("ConversationsState refresh outcome", () => {
+	it("remembers that its latest refresh failed, reconcile or pull, until the next one lands", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		onTestFinished(() => {
+			vi.restoreAllMocks();
+		});
+		const state = await inboxWith();
+		expect(state.refreshFailed).toBe(false);
+
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		await reconcileHandlers[0]?.();
+		expect(state.refreshFailed).toBe(true);
+
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		await state.refresh();
+		expect(state.refreshFailed).toBe(true);
+
+		await state.refresh();
+		expect(state.refreshFailed).toBe(false);
+	});
+
+	it("counts a refresh that a page load overtook as one that did not land", async () => {
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("a:1", 1000)],
+			nextPage: 2,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+			onFetchedReads,
+		});
+		onTestFinished(() => state.destroy());
+		await settled(state);
+
+		const reconcile = deferred<ReturnType<typeof page>>();
+		getConversationsMock.mockReturnValueOnce(reconcile.promise);
+		const refreshing = state.refresh();
+		await vi.waitFor(() =>
+			expect(getConversationsMock).toHaveBeenCalledTimes(2),
+		);
+		getConversationsMock.mockResolvedValueOnce(
+			page([conversation("b:2", 500)]),
+		);
+		await state.paging.run();
+		reconcile.resolve(page([conversation("a:1", 1000)]));
+		await refreshing;
+
+		expect(state.refreshing).toBe(false);
+		expect(state.refreshFailed).toBe(true);
 	});
 });

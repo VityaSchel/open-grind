@@ -16,7 +16,7 @@ const weight = (page: Page) => page.getByRole("textbox", { name: "Weight" });
 test.describe.configure({ timeout: 240_000 });
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installPersistentAppData(page);
 	await chooseUnits(page, { units: "Imperial" });
 

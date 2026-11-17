@@ -19,11 +19,15 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager, Wry};
 
+pub use baseline::InstallKind;
 pub use download::Progress;
 pub use error::UpdateError;
-pub use install::{enforce_home, TransferHold};
+#[cfg(target_os = "macos")]
+pub use install::enforce_home;
+#[cfg(target_os = "android")]
+pub use install::AndroidUpdater;
 
-use baseline::{Baseline, InstallKind};
+use baseline::Baseline;
 use release::Candidate;
 
 #[derive(Default)]
@@ -80,7 +84,6 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<Wry> {
 
 			let app = app.clone();
 			tauri::async_runtime::spawn_blocking(move || {
-				install::sweep_replaced();
 				if let Ok(root) = storage::root(&app) {
 					storage::sweep_foreign(&root);
 				}

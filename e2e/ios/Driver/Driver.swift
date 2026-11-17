@@ -1,0 +1,289 @@
+import UIKit
+import XCTest
+
+final class Driver: XCTestCase {
+	private static let stepKeys: Set<String> = [
+		"app", "launch", "activate", "home", "rotate", "pasteboardImage", "pasteboardText", "tap", "tapSecure", "tapIfPresent",
+		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "touchPath", "edgeSwipe", "type", "swipe",
+		"on", "wait", "expect", "expectGone", "keyboard", "screenshot", "tree",
+	]
+	private static let optionKeys: KeyValuePairs<String, Set<String>> = [
+		"dragHold": ["path", "hold", "velocity", "screenshot", "tree"],
+		"edgeSwipe": ["inset", "y", "to", "seconds", "press", "hold"],
+	]
+	private static let edgeSwipeStepsPerSecond = 30.0
+	private static let dragPress: TimeInterval = 0.05
+	private let timeout: TimeInterval = 15
+	private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+
+	override class func setUp() {
+		super.setUp()
+		skipIdleWait()
+	}
+
+	private static func skipIdleWait() {
+		guard let process = NSClassFromString("XCUIApplicationProcess") else { return }
+		let oneFlag: @convention(block) (AnyObject, Bool) -> Void = { _, _ in }
+		let twoFlags: @convention(block) (AnyObject, Bool, Bool) -> Void = { _, _, _ in }
+		let replacements: [(String, Any)] = [
+			("waitForQuiescenceIncludingAnimationsIdle:", oneFlag),
+			("waitForQuiescenceIncludingAnimationsIdle:isPreEvent:", twoFlags),
+		]
+		for (name, block) in replacements {
+			if let method = class_getInstanceMethod(process, NSSelectorFromString(name)) {
+				method_setImplementation(method, imp_implementationWithBlock(block))
+			}
+		}
+	}
+
+	func testSteps() throws {
+		continueAfterFailure = false
+		let stepsPath = try XCTUnwrap(ProcessInfo.processInfo.environment["OG_STEPS"], "OG_STEPS is not set")
+		let data = try Data(contentsOf: URL(fileURLWithPath: stepsPath))
+		let steps = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+		for (index, step) in steps.enumerated() {
+			try rejectUnknownKeys(in: step, known: Self.stepKeys, of: "step \(index + 1)")
+			for (key, known) in Self.optionKeys {
+				if let options: [String: Any] = try value(key, in: step) {
+					try rejectUnknownKeys(in: options, known: known, of: "step \(index + 1) \(key)")
+				}
+			}
+		}
+		if steps.contains(where: { $0["pasteboardText"] != nil }) {
+			addTeardownBlock { UIPasteboard.general.items = [] }
+		}
+		var app = XCUIApplication(bundleIdentifier: "org.opengrind.app")
+
+		for (index, step) in steps.enumerated() {
+			if let bundle: String = try value("app", in: step) {
+				app = XCUIApplication(bundleIdentifier: bundle)
+			}
+			try XCTContext.runActivity(named: "step \(index + 1): \(step)") { _ in
+				try run(step, in: app)
+			}
+		}
+	}
+
+	private func run(_ step: [String: Any], in app: XCUIApplication) throws {
+		if step["launch"] != nil {
+			app.launch()
+		}
+		if step["activate"] != nil {
+			app.activate()
+		}
+		if step["home"] != nil {
+			XCUIDevice.shared.press(.home)
+		}
+		if let name: String = try value("rotate", in: step) {
+			XCUIDevice.shared.orientation = try orientation(name)
+		}
+		if let path: String = try value("pasteboardImage", in: step) {
+			UIPasteboard.general.image = try XCTUnwrap(UIImage(contentsOfFile: path), "no image at \(path)")
+			guard UIPasteboard.general.hasImages else { throw failure("pasteboard holds no image") }
+		}
+		if let path: String = try value("pasteboardText", in: step) {
+			let text = try String(contentsOfFile: path, encoding: .utf8)
+			UIPasteboard.general.setItems(
+				[["public.utf8-plain-text": text]],
+				options: [.expirationDate: Date(timeIntervalSinceNow: 60)]
+			)
+			guard UIPasteboard.general.hasStrings else { throw failure("pasteboard holds no text") }
+		}
+		if let label: String = try value("tap", in: step) {
+			try element(label, in: app).tap()
+		}
+		if let label: String = try value("tapSecure", in: step) {
+			try element(label, in: app, of: .secureTextField).tap()
+		}
+		if let label: String = try value("tapIfPresent", in: step) {
+			let match = labelled(label, in: app)
+			if match.waitForExistence(timeout: 3) {
+				match.tap()
+			}
+		}
+		if let label: String = try value("doubleTap", in: step) {
+			try element(label, in: app).doubleTap()
+		}
+		if let label: String = try value("press", in: step) {
+			let seconds: Double = try value("seconds", in: step) ?? 1
+			try element(label, in: app).press(forDuration: seconds)
+		}
+		if let label: String = try value("springboard", in: step) {
+			try element(label, in: springboard).tap()
+		}
+		if let point: [Double] = try value("tapAt", in: step) {
+			guard point.count == 2 else { throw failure("tapAt needs a point of [x, y]") }
+			coordinate(point[0], point[1], in: app).tap()
+		}
+		if let path: [Double] = try value("drag", in: step) {
+			guard path.count == 4 else { throw failure("drag needs a path of [x1, y1, x2, y2]") }
+			let start = coordinate(path[0], path[1], in: app)
+			let end = coordinate(path[2], path[3], in: app)
+			start.press(forDuration: Self.dragPress, thenDragTo: end)
+		}
+		if let options: [String: Any] = try value("dragHold", in: step) {
+			try dragHold(options, in: app)
+		}
+		if let points: [[Double]] = try value("touchPath", in: step) {
+			try touchPath(points, in: app)
+		}
+		if let options: [String: Any] = try value("edgeSwipe", in: step) {
+			try edgeSwipe(options, in: app)
+		}
+		if let text: String = try value("type", in: step) {
+			app.typeText(text)
+		}
+		if let direction: String = try value("swipe", in: step) {
+			let on: String? = try value("on", in: step)
+			let target: XCUIElement = try on.map { try element($0, in: app) } ?? app
+			switch direction {
+			case "up": target.swipeUp()
+			case "down": target.swipeDown()
+			case "left": target.swipeLeft()
+			case "right": target.swipeRight()
+			default: throw failure("unknown swipe direction \(direction)")
+			}
+		}
+		if let seconds: Double = try value("wait", in: step) {
+			Thread.sleep(forTimeInterval: seconds)
+		}
+		if let label: String = try value("expect", in: step) {
+			_ = try element(label, in: app)
+		}
+		if let label: String = try value("expectGone", in: step) {
+			let match = labelled(label, in: app)
+			guard disappears(match) else { throw failure("\(label) is still shown") }
+		}
+		if let visible: Bool = try value("keyboard", in: step) {
+			let keyboard = app.keyboards.firstMatch
+			guard visible ? keyboard.waitForExistence(timeout: timeout) : disappears(keyboard) else {
+				throw failure("keyboard visible should be \(visible)")
+			}
+		}
+		try capture(step, of: app)
+	}
+
+	private func dragHold(_ options: [String: Any], in app: XCUIApplication) throws {
+		guard let path: [Double] = try value("path", in: options), path.count == 4 else {
+			throw failure("dragHold needs a path of [x1, y1, x2, y2]")
+		}
+		let hold: Double = try value("hold", in: options) ?? 2
+		let velocity: Double = try value("velocity", in: options) ?? 1000
+		let start = coordinate(path[0], path[1], in: app)
+		let end = coordinate(path[2], path[3], in: app)
+		let travel = hypot(end.screenPoint.x - start.screenPoint.x, end.screenPoint.y - start.screenPoint.y) / velocity
+		let captured = captureLater(options, of: app, after: Self.dragPress + travel + hold / 2)
+		start.press(forDuration: Self.dragPress, thenDragTo: end, withVelocity: XCUIGestureVelocity(velocity), thenHoldForDuration: hold)
+		try captured()
+	}
+
+	private func touchPath(_ points: [[Double]], in app: XCUIApplication) throws {
+		guard points.count >= 2, points.allSatisfy({ $0.count == 3 }) else {
+			throw failure("touchPath needs at least two points of [x, y, seconds]")
+		}
+		let screen = points.map { NSValue(cgPoint: coordinate($0[0], $0[1], in: app).screenPoint) }
+		let offsets = points.map { NSNumber(value: $0[2]) }
+		let done = XCTestExpectation(description: "touchPath synthesized")
+		var outcome: Error?
+		let started = OGTouchPath.synthesizePoints(screen, offsets: offsets) { synthesized, error in
+			outcome = synthesized ? nil : error ?? self.failure("touchPath was not synthesized")
+			done.fulfill()
+		}
+		guard started else { throw failure("this XCTest has no event synthesizer") }
+		guard XCTWaiter().wait(for: [done], timeout: timeout + points[points.count - 1][2]) == .completed else {
+			throw failure("touchPath timed out")
+		}
+		if let outcome { throw outcome }
+	}
+
+	private func edgeSwipe(_ options: [String: Any], in app: XCUIApplication) throws {
+		guard let y: Double = try value("y", in: options), let to: Double = try value("to", in: options),
+			let seconds: Double = try value("seconds", in: options), seconds > 0
+		else {
+			throw failure("edgeSwipe needs y, to and seconds above 0")
+		}
+		let startX = (try value("inset", in: options) ?? 2.0) / Double(app.frame.width)
+		let press: Double = try value("press", in: options) ?? 0
+		let hold: Double = try value("hold", in: options) ?? 0
+		let steps = max(1, Int((seconds * Self.edgeSwipeStepsPerSecond).rounded(.up)))
+		var points: [[Double]] = [[startX, y, 0]]
+		if press > 0 { points.append([startX, y, press]) }
+		for step in 1...steps {
+			let share = Double(step) / Double(steps)
+			points.append([startX + (to - startX) * share, y, press + seconds * share])
+		}
+		if hold > 0 { points.append([to, y, press + seconds + hold]) }
+		try touchPath(points, in: app)
+	}
+
+	private func captureLater(_ options: [String: Any], of app: XCUIApplication, after delay: TimeInterval) -> () throws -> Void {
+		let done = XCTestExpectation(description: "capture during the hold")
+		var outcome: Result<Void, Error> = .success(())
+		DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+			outcome = Result { try self.capture(options, of: app) }
+			done.fulfill()
+		}
+		return {
+			guard XCTWaiter().wait(for: [done], timeout: self.timeout) == .completed else {
+				throw self.failure("capture during the hold timed out")
+			}
+			try outcome.get()
+		}
+	}
+
+	private func capture(_ options: [String: Any], of app: XCUIApplication) throws {
+		if let path: String = try value("screenshot", in: options) {
+			try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: path))
+		}
+		if let path: String = try value("tree", in: options) {
+			try app.debugDescription.write(toFile: path, atomically: true, encoding: .utf8)
+		}
+	}
+
+	private func orientation(_ name: String) throws -> UIDeviceOrientation {
+		switch name {
+		case "portrait": return .portrait
+		case "landscapeLeft": return .landscapeLeft
+		case "landscapeRight": return .landscapeRight
+		default: throw failure("unknown orientation \(name)")
+		}
+	}
+
+	private func coordinate(_ x: Double, _ y: Double, in app: XCUIApplication) -> XCUICoordinate {
+		app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y))
+	}
+
+	private func labelled(_ label: String, in app: XCUIApplication, of type: XCUIElement.ElementType = .any) -> XCUIElement {
+		app.descendants(matching: type)
+			.matching(NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", label, label, label))
+			.firstMatch
+	}
+
+	private func element(_ label: String, in app: XCUIApplication, of type: XCUIElement.ElementType = .any) throws -> XCUIElement {
+		let match = labelled(label, in: app, of: type)
+		guard match.waitForExistence(timeout: timeout) else {
+			throw failure("no element labelled \(label)")
+		}
+		return match
+	}
+
+	private func disappears(_ element: XCUIElement) -> Bool {
+		let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+		return XCTWaiter().wait(for: [gone], timeout: timeout) == .completed
+	}
+
+	private func value<T>(_ key: String, in options: [String: Any]) throws -> T? {
+		guard let raw = options[key] else { return nil }
+		guard let typed = raw as? T else { throw failure("\(key) needs a \(T.self), not \(raw)") }
+		return typed
+	}
+
+	private func rejectUnknownKeys(in options: [String: Any], known: Set<String>, of name: String) throws {
+		let unknown = Set(options.keys).subtracting(known)
+		guard unknown.isEmpty else { throw failure("\(name) has unknown keys \(unknown.sorted())") }
+	}
+
+	private func failure(_ message: String) -> NSError {
+		NSError(domain: "Driver", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+	}
+}

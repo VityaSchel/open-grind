@@ -49,7 +49,7 @@ function expectOnlyPseudoText(scans: readonly PseudoScan[]): void {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("the Me page, its sign-out dialog and its Telegram warning render only pseudo-translated text", async ({

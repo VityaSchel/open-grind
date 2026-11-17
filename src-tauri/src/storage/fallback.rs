@@ -1,7 +1,7 @@
 use keyring_core::{CredentialStore, Error};
 
 use super::entries::{DEVICE_INFO, SESSION, SIGNING_KEY};
-use super::keyring::SERVICE;
+use super::keyring::{delete_each, SERVICE};
 use super::{entry, HAS_FILE_STORE};
 use crate::error::AppError;
 
@@ -102,14 +102,7 @@ fn retire_file_store(file_store: &CredentialStore) -> Result<(), AppError> {
 	tracing::warn!(
 		"[storage] could not discard the file store, clearing its sign-in instead: {e}"
 	);
-	[FALLBACK_MARKER, SIGN_OUT_MARKER, SESSION]
-		.into_iter()
-		.try_for_each(|name| {
-			match file_store.build(SERVICE, name, None)?.delete_credential() {
-				Ok(()) | Err(Error::NoEntry) => Ok(()),
-				Err(e) => Err(e),
-			}
-		})
+	delete_each(file_store, &[FALLBACK_MARKER, SIGN_OUT_MARKER, SESSION])
 		.map_err(|e| AppError::Auth(e.to_string()))
 }
 

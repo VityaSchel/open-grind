@@ -40,6 +40,7 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 	},
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
 import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
@@ -61,6 +62,7 @@ beforeEach(() => {
 	currentPage.route.id = "/(protected)/chat";
 	singleColumn.current = false;
 	messageSentHandlers.length = 0;
+	runningOn("android");
 });
 
 describe("ConversationsState incoming-message handler (P6.3)", () => {

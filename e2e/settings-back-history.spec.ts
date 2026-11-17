@@ -14,6 +14,7 @@ import {
 	CREDITS,
 	openAppSettings,
 	openAppSubscreen,
+	openCredits,
 	openDeepLink,
 	openSettings,
 	SETTINGS,
@@ -25,17 +26,28 @@ const ROUNDS = 3;
 const PLATFORMS = [
 	{ platform: "android", viewport: { width: 420, height: 800 } },
 	{ platform: "macos", viewport: { width: 1280, height: 800 } },
-];
+] as const;
+
+type TestedPlatform = (typeof PLATFORMS)[number]["platform"];
 
 test.describe.configure({ timeout: 180_000 });
 
 const entryIndex = (page: Page) =>
 	page.evaluate(() => navigation.currentEntry!.index);
 
-async function platformBack(page: Page, platform: string) {
+async function platformBack(
+	page: Page,
+	{ platform }: { platform: TestedPlatform },
+) {
 	const from = page.url();
-	if (platform === "android") await systemBack(page);
-	else await page.evaluate(() => history.back());
+	switch (platform) {
+		case "android":
+			await systemBack(page);
+			break;
+		case "macos":
+			await page.evaluate(() => history.back());
+			break;
+	}
 	await expect(page, `the platform back left ${from}`).not.toHaveURL(from);
 	await stackSettled(page);
 }
@@ -91,10 +103,10 @@ for (const { platform, viewport } of PLATFORMS) {
 				await openAppSubscreen(page, subscreen);
 				await clickNavBarBack(page);
 				visited.push(await pathname(page));
-				await platformBack(page, platform);
+				await platformBack(page, { platform });
 				visited.push(await pathname(page));
 			}
-			await platformBack(page, platform);
+			await platformBack(page, { platform });
 			visited.push(await pathname(page));
 
 			expect(visited, visited.join(" -> ")).toEqual([
@@ -291,7 +303,7 @@ test("the Me tab collapses every entry between here and the Me screen", async ({
 test("the Me tab still navigates from a deep-linked subpage", async ({
 	page,
 }) => {
-	await openDeepLink(page, APP_SETTINGS, { platform: "android" });
+	await openDeepLink(page, { path: APP_SETTINGS, platform: "android" });
 
 	await clickMeTab(page);
 
@@ -301,9 +313,7 @@ test("the Me tab still navigates from a deep-linked subpage", async ({
 test("the navbar Back pops two levels opened in the app", async ({ page }) => {
 	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
-	await page.getByRole("link", { name: "Credits & Licenses" }).click();
-	await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
-	await stackSettled(page);
+	await openCredits(page);
 	const atCredits = await historyEntries(page);
 
 	await clickNavBarBack(page);
@@ -327,7 +337,7 @@ test("the navbar Back pops two levels opened in the app", async ({ page }) => {
 test("the navbar Back walks up from a deep-linked subpage instead of looping", async ({
 	page,
 }) => {
-	await openDeepLink(page, CREDITS, { platform: "android" });
+	await openDeepLink(page, { path: CREDITS, platform: "android" });
 
 	await clickNavBarBack(page);
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

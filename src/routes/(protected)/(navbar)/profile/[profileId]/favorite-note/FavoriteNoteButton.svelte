@@ -5,6 +5,7 @@
 	import { t } from "#lib/i18n/index.ts";
 	import type { FavoriteNote } from "#lib/model/users/favorites.ts";
 	import type { Profile } from "#lib/model/users/profiles.ts";
+	import { holdsStillOnPull } from "../hold-still-on-pull";
 	import FavoriteNoteEditor from "./FavoriteNoteEditor.svelte";
 
 	let {
@@ -30,6 +31,7 @@
 	variant={empty ? "secondary" : "default"}
 	class="absolute top-2 right-2 z-10 max-w-1/2"
 	onclick={() => (open = true)}
+	{@attach holdsStillOnPull}
 >
 	<NotePencilIcon
 		weight={empty ? "regular" : "fill"}

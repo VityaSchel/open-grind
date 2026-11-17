@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
+import { useHoldClock } from "#lib/test/long-press.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
 import type { TouchOriginHints } from "#lib/platform/touch-origin.ts";
-import { longPressHandlers } from "./long-press";
+import type { PagePoint } from "#lib/util/page-point.ts";
+import { type LongPressHandlers, longPressHandlers } from "./long-press";
 
 function contextMenu(origin?: TouchOriginHints) {
 	return contextMenuEvent(origin) as unknown as Parameters<
@@ -16,25 +19,27 @@ function contextMenu(origin?: TouchOriginHints) {
 }
 
 function pointer(type: string, pointerType: string) {
-	const event = new MouseEvent(type, { bubbles: true, clientX: 10 });
-	Object.defineProperty(event, "pointerType", { value: pointerType });
-	return event as unknown as Parameters<
-		NonNullable<ReturnType<typeof longPressHandlers>["onpointerdown"]>
+	return pointerEvent(type, { pointerType }) as unknown as Parameters<
+		NonNullable<LongPressHandlers["onpointerdown"]>
 	>[0];
 }
 
-let clock = 1_700_000_000_000;
+function touchDownAt(point: PagePoint) {
+	return pointerEvent("pointerdown", point) as unknown as Parameters<
+		NonNullable<LongPressHandlers["onpointerdown"]>
+	>[0];
+}
+
+function contextMenuAt(options: PagePoint & { pointerType: string }) {
+	return pointerEvent("contextmenu", options) as unknown as Parameters<
+		NonNullable<LongPressHandlers["oncontextmenu"]>
+	>[0];
+}
+
+useHoldClock();
 
 beforeEach(() => {
-	vi.useFakeTimers();
-	clock += 60_000;
-	vi.setSystemTime(clock);
 	playHapticMock.mockReset();
-});
-
-afterEach(() => {
-	window.dispatchEvent(new Event("pointerup"));
-	vi.useRealTimers();
 });
 
 describe("longPressHandlers", () => {
@@ -131,6 +136,33 @@ describe("longPressHandlers", () => {
 		expect(onClick).toHaveBeenCalledOnce();
 		button.remove();
 	});
+
+	it("hands where a held touch started to onLongPress", () => {
+		const onLongPress = vi.fn();
+		const handlers = longPressHandlers(onLongPress);
+
+		handlers.onpointerdown?.(touchDownAt({ x: 30, y: 40 }));
+		vi.advanceTimersByTime(450);
+
+		expect(onLongPress).toHaveBeenCalledExactlyOnceWith({ x: 30, y: 40 });
+	});
+
+	it.each(["mouse", "touch"])(
+		"hands where a %s contextmenu landed to onLongPress",
+		(pointerType) => {
+			const onLongPress = vi.fn();
+			const handlers = longPressHandlers(onLongPress);
+
+			handlers.oncontextmenu?.(
+				contextMenuAt({ pointerType, x: 30, y: 40 }),
+			);
+
+			expect(onLongPress).toHaveBeenCalledExactlyOnceWith({
+				x: 30,
+				y: 40,
+			});
+		},
+	);
 
 	it("still swallows the click a fired touch hold leaves behind", () => {
 		const handlers = longPressHandlers(() => {});

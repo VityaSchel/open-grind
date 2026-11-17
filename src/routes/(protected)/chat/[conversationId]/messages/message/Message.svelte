@@ -7,10 +7,9 @@
 	import type { Attachment } from "svelte/attachments";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
-	import { playHaptic } from "#lib/haptics.ts";
 	import { formatClockTime } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
-	import { firedByTouch } from "#lib/platform/touch-origin.ts";
+	import { menuPressHandlers } from "#lib/util/long-press.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
 	import { returnFocus } from "#lib/util/return-focus.ts";
@@ -236,6 +235,14 @@
 	// tell a double tap (react) from a double click (reply).
 	let lastPointerType = "";
 
+	const rowPress = menuPressHandlers({
+		openMenu: ({ byTouch }) => {
+			const opened = openContextMenu();
+			if (opened && byTouch) swipe?.resetTouch();
+			return opened;
+		},
+	});
+
 	const wheelMode = wheelInputMode();
 	const railWheel = wheelMode === "rail";
 	const touchOnly = wheelMode === "none";
@@ -369,7 +376,13 @@
 				]}
 				role="article"
 				{@attach rovingItem}
-				onpointerdown={(event) => (lastPointerType = event.pointerType)}
+				onpointerdown={(event) => {
+					lastPointerType = event.pointerType;
+					if (hasMenuActions) rowPress.onpointerdown?.(event);
+				}}
+				onpointermove={rowPress.onpointermove}
+				onpointerup={rowPress.onpointerup}
+				onpointercancel={rowPress.onpointercancel}
 				ondblclick={(event) => {
 					const selection = window.getSelection();
 					if (
@@ -392,12 +405,7 @@
 						selection?.removeAllRanges();
 					}
 				}}
-				oncontextmenu={(event) => {
-					event.preventDefault();
-					if (openContextMenu() && firedByTouch(event)) {
-						playHaptic("longPress");
-					}
-				}}
+				oncontextmenu={rowPress.oncontextmenu}
 				style:visibility={contextMenuOpen ? "hidden" : undefined}
 				style:transform={swipe?.deltaX
 					? `translateX(${swipe.deltaX}px)`

@@ -9,7 +9,7 @@ test("an inline album reply sends the selected item and preserves the chat draft
 }) => {
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat/100006:123456000");
 	await page.getByRole("textbox").fill("Existing chat draft");
 	await page
@@ -56,7 +56,7 @@ test("an inline album reply sends the selected item and preserves the chat draft
 test("album video controls stay above the inline reply field", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
 	await page.route("**/picsum.photos/seed/album-5001-2/600/800", () => {});

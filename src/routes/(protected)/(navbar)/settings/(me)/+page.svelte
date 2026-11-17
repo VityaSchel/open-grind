@@ -4,6 +4,7 @@
 
 	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import { t } from "#lib/i18n/index.ts";
+	import { scrollsToTopOnStatusBarTap } from "#lib/platform/status-bar-tap.ts";
 	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import AccountSettingsLink from "./AccountSettingsLink.svelte";
 	import AlbumsLink from "./AlbumsLink.svelte";
@@ -39,6 +40,7 @@
 	<div
 		data-slot="me-scroller"
 		class="h-full w-full scroll-pb-nav-clear overflow-y-auto overscroll-none"
+		{@attach scrollsToTopOnStatusBarTap}
 	>
 		<div class="flex w-full p-4 pb-nav-clear">
 			<div

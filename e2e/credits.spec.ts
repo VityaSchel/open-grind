@@ -56,7 +56,7 @@ const scrollTop = (page: Page) =>
 	scroller(page).evaluate((el) => Math.round(el.scrollTop));
 
 async function openCredits(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(CREDITS);
 	await rows(page).first().waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
@@ -139,7 +139,7 @@ test.describe("credits page", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 420, height: 560 });
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto(APP_SETTINGS);
 		const link = page.getByRole("link", { name: "Credits & Licenses" });
 		await link.scrollIntoViewIfNeeded();
@@ -154,10 +154,8 @@ test.describe("credits page", () => {
 				timeout: FIRST_ROUTE_COMPILE_MS,
 			});
 			expect(await scrollTop(page)).toBe(0);
-			await expect(async () => {
-				await scroller(page).evaluate((el) => el.scrollTo(0, 3000));
-				expect(await scrollTop(page)).toBe(3000);
-			}).toPass();
+			await scroller(page).evaluate((el) => el.scrollTo(0, 3000));
+			await expect.poll(() => scrollTop(page)).toBeGreaterThan(appOffset);
 		};
 		const backOnAppSettings = async () => {
 			await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

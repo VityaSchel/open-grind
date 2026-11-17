@@ -48,6 +48,7 @@ vi.mock("../ImageCarousel.svelte", () => ({ default: mocks.carousel }));
 import { clearAccountCaches } from "#lib/api/account-caches.ts";
 import { conversationIdFor } from "#lib/chat/conversation-id.ts";
 import { Drafts } from "#lib/chat/drafts.svelte.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { ProfileState } from "../profile-state.svelte";
 import { fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import { gridRow, PROFILE_ID, renderPane } from "./profile-pane-test-helpers";
@@ -84,6 +85,7 @@ beforeEach(() => {
 	});
 	mocks.goto.mockResolvedValue(undefined);
 	mocks.traverseBackTo.mockReturnValue(false);
+	runningOn("windows");
 });
 
 afterEach(cleanup);

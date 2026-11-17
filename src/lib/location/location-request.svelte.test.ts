@@ -2,25 +2,19 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-	checkPermissionsMock,
-	getCurrentPositionMock,
-	isMobilePlatformMock,
-	requestPermissionsMock,
-} = vi.hoisted(() => ({
-	checkPermissionsMock: vi.fn(),
-	getCurrentPositionMock: vi.fn(),
-	isMobilePlatformMock: vi.fn(),
-	requestPermissionsMock: vi.fn(),
-}));
+import { runningOn } from "#lib/test/platform.ts";
+
+const { checkPermissionsMock, getCurrentPositionMock, requestPermissionsMock } =
+	vi.hoisted(() => ({
+		checkPermissionsMock: vi.fn(),
+		getCurrentPositionMock: vi.fn(),
+		requestPermissionsMock: vi.fn(),
+	}));
 
 vi.mock("@tauri-apps/plugin-geolocation", () => ({
 	checkPermissions: checkPermissionsMock,
 	getCurrentPosition: getCurrentPositionMock,
 	requestPermissions: requestPermissionsMock,
-}));
-vi.mock("#lib/platform/os.ts", () => ({
-	isMobilePlatform: isMobilePlatformMock,
 }));
 
 const { locationRequest } = await import("./location-request.svelte");
@@ -40,7 +34,7 @@ function deferred<T>() {
 
 describe("locationRequest", () => {
 	beforeEach(() => {
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 		checkPermissionsMock.mockResolvedValue({ location: "granted" });
 		getCurrentPositionMock.mockResolvedValue(BERLIN);
 		requestPermissionsMock.mockResolvedValue({ location: "granted" });
@@ -76,6 +70,7 @@ describe("locationRequest", () => {
 		requestPermissionsMock.mockResolvedValue({ location: "denied" });
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "denied",
+			missing: "permission",
 		});
 	});
 
@@ -83,21 +78,73 @@ describe("locationRequest", () => {
 		checkPermissionsMock.mockResolvedValue({ location: "denied" });
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "denied",
+			missing: "permission",
 		});
 		expect(requestPermissionsMock).not.toHaveBeenCalled();
 		expect(getCurrentPositionMock).not.toHaveBeenCalled();
 	});
 
+	it.each(["android", "ios"] as const)(
+		"on %s reports Precise Location as missing when only Approximate is granted",
+		async (platform) => {
+			runningOn(platform);
+			checkPermissionsMock.mockResolvedValue({
+				location: "denied",
+				coarseLocation: "granted",
+			});
+			await expect(locationRequest.run()).resolves.toEqual({
+				status: "denied",
+				missing: "precision",
+			});
+			expect(getCurrentPositionMock).not.toHaveBeenCalled();
+		},
+	);
+
+	it.each(["android", "ios"] as const)(
+		"on %s reports Precise Location as missing right after the prompt grants Approximate",
+		async (platform) => {
+			runningOn(platform);
+			checkPermissionsMock.mockResolvedValue({
+				location: "prompt",
+				coarseLocation: "prompt",
+			});
+			requestPermissionsMock.mockResolvedValue({
+				location: "denied",
+				coarseLocation: "granted",
+			});
+			await expect(locationRequest.run()).resolves.toEqual({
+				status: "denied",
+				missing: "precision",
+			});
+		},
+	);
+
+	it.each(["android", "ios"] as const)(
+		"on %s reports the permission as missing when location is refused outright",
+		async (platform) => {
+			runningOn(platform);
+			checkPermissionsMock.mockResolvedValue({
+				location: "denied",
+				coarseLocation: "denied",
+			});
+			await expect(locationRequest.run()).resolves.toEqual({
+				status: "denied",
+				missing: "permission",
+			});
+		},
+	);
+
 	it("never prompts when asked not to", async () => {
 		checkPermissionsMock.mockResolvedValue({ location: "prompt" });
 		await expect(locationRequest.run({ prompt: false })).resolves.toEqual({
 			status: "denied",
+			missing: "permission",
 		});
 		expect(requestPermissionsMock).not.toHaveBeenCalled();
 	});
 
 	it("is unsupported off mobile", async () => {
-		isMobilePlatformMock.mockReturnValue(false);
+		runningOn("macos");
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "unsupported",
 		});
@@ -109,6 +156,43 @@ describe("locationRequest", () => {
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "error",
 			error: "Location unavailable.",
+			reason: "failed",
+		});
+	});
+
+	it("reads a denied rejection from the plugin as a denial", async () => {
+		runningOn("ios");
+		getCurrentPositionMock.mockRejectedValue(
+			"[denied] - The operation couldn’t be completed.",
+		);
+		await expect(locationRequest.run()).resolves.toEqual({
+			status: "denied",
+			missing: "permission",
+		});
+	});
+
+	it("tells Location Services being off apart from other failures", async () => {
+		runningOn("ios");
+		checkPermissionsMock.mockRejectedValue(
+			"[disabled] - Location services are not enabled.",
+		);
+		await expect(locationRequest.run()).resolves.toEqual({
+			status: "error",
+			error: "[disabled] - Location services are not enabled.",
+			reason: "disabled",
+		});
+		expect(getCurrentPositionMock).not.toHaveBeenCalled();
+	});
+
+	it("treats a fix that never came like any other failure", async () => {
+		runningOn("ios");
+		getCurrentPositionMock.mockRejectedValue(
+			"[timeout] - Timed out waiting for a location fix.",
+		);
+		await expect(locationRequest.run()).resolves.toEqual({
+			status: "error",
+			error: "[timeout] - Timed out waiting for a location fix.",
+			reason: "failed",
 		});
 	});
 
@@ -175,7 +259,7 @@ describe("locationRequest", () => {
 
 describe("abortStale", () => {
 	beforeEach(() => {
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 		checkPermissionsMock.mockResolvedValue({ location: "granted" });
 		getCurrentPositionMock.mockResolvedValue(BERLIN);
 	});

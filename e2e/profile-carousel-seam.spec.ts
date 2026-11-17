@@ -26,6 +26,7 @@ test("every profile photo rests without a device row of its neighbors on a phone
 	page,
 }) => {
 	await expectPhotosToRestWithoutNeighbors(page, {
+		platform: "macos",
 		devicePixelRatio: DEVICE_PIXEL_RATIO,
 	});
 });

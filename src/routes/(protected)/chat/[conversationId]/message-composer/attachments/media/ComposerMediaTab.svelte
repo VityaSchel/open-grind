@@ -12,7 +12,10 @@
 	} from "#lib/api/messaging/drawer.ts";
 	import MediaSheetGrid from "#lib/components/media-sheet/MediaSheetGrid.svelte";
 	import { t } from "#lib/i18n/index.ts";
-	import { mediaFileKindOf } from "#lib/platform/media-file.ts";
+	import {
+		discardStagedMedia,
+		mediaFileKindOf,
+	} from "#lib/platform/media-file.ts";
 	import { pickMultipleMedia } from "#lib/platform/media-picker.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 	import { SelectionSet } from "#lib/util/selection.svelte.ts";
@@ -82,6 +85,7 @@
 			} catch (err) {
 				console.error(err);
 				toast.error(chatMediaFailureMessage(err));
+				void discardStagedMedia([item]);
 			} finally {
 				uploadingCount--;
 			}

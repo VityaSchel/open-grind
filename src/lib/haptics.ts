@@ -4,12 +4,20 @@ import {
 	preferencesLoaded,
 	preferencesSnapshot,
 } from "#lib/app-data/preferences.svelte.ts";
-import { isAndroidPlatform, isMacosPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 
 export type HapticKind = "longPress" | "threshold" | "dragStart";
 
 export function hapticsAvailable(): boolean {
-	return isAndroidPlatform() || isMacosPlatform();
+	switch (currentPlatform()) {
+		case "android":
+		case "ios":
+		case "macos":
+			return true;
+		case "linux":
+		case "windows":
+			return false;
+	}
 }
 
 export function playHaptic(kind: HapticKind): void {

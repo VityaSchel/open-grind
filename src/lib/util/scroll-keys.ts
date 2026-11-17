@@ -1,4 +1,5 @@
 import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
+import { typesText } from "#lib/util/text-entry.ts";
 
 type ScrollEdge = "up" | "down" | "left" | "right";
 
@@ -28,12 +29,7 @@ export function keyScrollsToward({
 }
 
 export function consumesScrollKeys(target: EventTarget | null): boolean {
-	return (
-		target instanceof HTMLInputElement ||
-		target instanceof HTMLTextAreaElement ||
-		target instanceof HTMLSelectElement ||
-		(target instanceof HTMLElement && target.isContentEditable)
-	);
+	return typesText(target) || target instanceof HTMLSelectElement;
 }
 
 function keyStep({ key, span }: { key: string; span: number }): number {

@@ -1,5 +1,6 @@
 import { type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { backLink, installTauriShim } from "./app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./media";
 import { stackSettled } from "./page-stack";
@@ -18,17 +19,20 @@ export function albumTileNamed(name: string): string {
 	return `a[data-slot="album-tile"]:has-text("${name}")`;
 }
 
-export async function serveAlbumMedia(page: Page): Promise<void> {
-	await installTauriShim(page);
+export async function serveAlbumMedia(
+	page: Page,
+	{ platform }: { platform: SupportedPlatform },
+): Promise<void> {
+	await installTauriShim(page, { platform });
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
 }
 
 export async function openAlbums(
 	page: Page,
-	{ locale }: { locale?: string } = {},
+	{ platform, locale }: { platform: SupportedPlatform; locale?: string },
 ): Promise<void> {
-	await serveAlbumMedia(page);
+	await serveAlbumMedia(page, { platform });
 	await page.goto(
 		locale === undefined ? MY_ALBUMS : `${MY_ALBUMS}?locale=${locale}`,
 	);
@@ -42,13 +46,12 @@ export async function enterAlbum(page: Page, tile: string): Promise<void> {
 	await page.waitForTimeout(500);
 }
 
-export async function openAlbum(page: Page, tile: string): Promise<void> {
-	await openAlbums(page);
+export async function openAlbum(
+	page: Page,
+	{ tile, platform }: { tile: string; platform: SupportedPlatform },
+): Promise<void> {
+	await openAlbums(page, { platform });
 	await enterAlbum(page, tile);
-}
-
-export function openSharedAlbum(page: Page): Promise<void> {
-	return openAlbum(page, SHARED_ALBUM);
 }
 
 export function back(page: Page): Promise<void> {

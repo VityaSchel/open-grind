@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	getConversationsMock,
@@ -57,6 +57,7 @@ vi.mock("#lib/ws.svelte.ts", async (importOriginal) => ({
 	},
 }));
 
+import { runningOn } from "#lib/test/platform.ts";
 import type { Conversation } from "#lib/model/messaging/conversations.ts";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
@@ -83,6 +84,7 @@ beforeEach(() => {
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
 	conversationDeleteHandlers.length = 0;
+	runningOn("android");
 });
 
 describe("ConversationsState initial load", () => {
@@ -337,8 +339,6 @@ describe("ConversationsState unread accounting", () => {
 	});
 
 	it("leaves no badge on a conversation opened while its sync was in flight", async () => {
-		const focus = vi.spyOn(document, "hasFocus").mockReturnValue(true);
-		onTestFinished(() => focus.mockRestore());
 		const state = await inboxWith([conversation("a:1", 1000)]);
 		currentPage.route.id = "/(protected)/(navbar)";
 		narrow.current = true;

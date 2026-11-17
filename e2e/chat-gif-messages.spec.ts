@@ -9,7 +9,7 @@ import { seedPreferences, storedPreferences } from "./support/app-data";
 import { GIPHY_MESSAGE } from "./support/stickers";
 
 async function openChatWithGiphy(page: Page, { on }: { on: boolean }) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await seedPreferences(page, { preferences: { giphyConsent: on } });
 	await page.goto(DEMO_CONVERSATION);
 }

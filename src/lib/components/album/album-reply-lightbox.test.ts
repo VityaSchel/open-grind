@@ -1,11 +1,16 @@
 import { fireEvent, screen } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "#lib/test/platform.ts";
 import { announceSafeAreaChange } from "#lib/util/safe-area.ts";
 import { type AlbumSlide, openAlbumLightbox } from "./album-lightbox";
 
 const controllers: AbortController[] = [];
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(async () => {
 	for (const controller of controllers.splice(0)) controller.abort();

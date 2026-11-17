@@ -9,8 +9,17 @@
 	import Label from "#lib/components/ui/label/label.svelte";
 	import Switch from "#lib/components/ui/switch/switch.svelte";
 	import { t } from "#lib/i18n/index.ts";
+	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 
 	let redact = $state(true);
+
+	function dismiss() {
+		settleCopyErrorConfirm({ abort: true });
+		redact = true;
+	}
+
+	dismissOnBackGesture({ active: () => copyErrorConfirmState.open, dismiss });
+
 	const preview = $derived(
 		getErrorText(copyErrorConfirmState.error, { redact }),
 	);
@@ -19,14 +28,11 @@
 <AlertDialog.Root
 	bind:open={copyErrorConfirmState.open}
 	onOpenChange={(open) => {
-		if (!open) {
-			settleCopyErrorConfirm({ abort: true });
-			redact = true;
-		}
+		if (!open) dismiss();
 	}}
 >
 	<AlertDialog.Content
-		class="shrink-0 max-sm:max-w-[calc(100%-2rem)]!"
+		class="shrink-0 max-sm:max-w-[calc(100%-2rem-var(--safe-area-left)-var(--safe-area-right))]!"
 		interactOutsideBehavior="close"
 	>
 		<div class="grid grid-rows-[auto_minmax(0,1fr)_auto] gap-4">

@@ -16,6 +16,7 @@ import { visit } from "./visit";
 const INTERACTIVE_FIX_EXPIRED_MS = 11_000;
 const SELECTED_LOCATION = '[title*="Selected location"]';
 const CHANGE_LOCATION = '[aria-label*="Change location"]';
+const LOCATION_SERVICES_OFF = "[disabled] - Location services are not enabled.";
 
 function useCurrentLocation(page: Page) {
 	return page.getByRole("button", { name: "Use current location" });
@@ -63,6 +64,44 @@ export const locationFailures: Scene = {
 				await overrideNative({
 					page,
 					overrides: { write_app_data: { reject: STORAGE_FULL } },
+				});
+				await locateFailing(page);
+			},
+		},
+	],
+};
+
+export const locationSettingsOff: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "browse/location/precise-location-off",
+			screen: "browse/location",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await visit({
+					page,
+					path: "/",
+					ready: page.locator(LOCATION_TITLE),
+				});
+				await setGeolocation(page, { precise: false });
+				await locateFailing(page);
+			},
+		},
+		{
+			id: "browse/location/location-services-off",
+			screen: "browse/location",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await visit({
+					page,
+					path: "/",
+					ready: page.locator(LOCATION_TITLE),
+				});
+				await setGeolocation(page, {
+					precise: true,
+					fail: true,
+					failure: LOCATION_SERVICES_OFF,
 				});
 				await locateFailing(page);
 			},

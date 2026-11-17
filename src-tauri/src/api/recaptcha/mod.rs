@@ -49,7 +49,7 @@ pub async fn mint_token(
 ) -> Result<String, AppError> {
 	#[cfg(target_os = "android")]
 	let minted = android::mint_token(app, action).await;
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	let minted = {
 		let _ = (app, action);
 		Err(RecaptchaError::UnsupportedPlatform)

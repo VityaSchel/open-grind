@@ -15,6 +15,7 @@
 	import { tabsListVariants } from "#lib/components/ui/tabs/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { getTapsState } from "#lib/interest/taps-state.svelte.ts";
+	import { softKeyboardShrinksPage } from "#lib/platform/soft-keyboard.svelte.ts";
 	import { returnTo } from "#lib/util/history.ts";
 	import { isWithin } from "#lib/util/pathname.ts";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
@@ -115,8 +116,9 @@
 	direction="bottomToTop"
 	tag="nav"
 	aria-label={t("shell.navBar.a11y.navigation")}
-	class="fixed bottom-0 z-50 w-full pt-2 pb-fixed-nav"
+	class="fixed bottom-0 z-50 w-full pt-2 px-safe pb-fixed-nav"
 	bgClass="bg-linear-to-t from-background to-transparent"
+	hidden={softKeyboardShrinksPage()}
 	{@attach bottomChrome}
 >
 	<div

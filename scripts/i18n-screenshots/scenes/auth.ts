@@ -179,11 +179,21 @@ export const signInRefusals: Scene = {
 			attempts: [
 				authFailing({
 					button: "facebook",
-					message: "facebook-timed-out",
+					message: "sign-in-timed-out",
 				}),
 				authFailing({
 					button: "google",
 					message: "companion-disabled",
+				}),
+			],
+		}),
+		failingView({
+			id: "auth/sign-in/page-unavailable",
+			attempts: [
+				authFailing({
+					button: "facebook",
+					message:
+						"sign-in-page-unavailable: the main window is gone",
 				}),
 			],
 		}),

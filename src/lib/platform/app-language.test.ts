@@ -2,24 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LanguageSettings } from "./language-sync";
 
-const { invokeMock, listenMock, tauri, preferences, catalogs } = vi.hoisted(
-	() => {
-		const stored: LanguageSettings = { language: null, languageSync: null };
-		const saves: Partial<LanguageSettings>[] = [];
-		return {
-			invokeMock: vi.fn(),
-			listenMock: vi.fn(),
-			tauri: { enabled: false },
-			preferences: { stored, readable: true, writable: true, saves },
-			catalogs: { failing: new Set<string>(), loads: [] as string[] },
-		};
-	},
-);
+const { invokeMock, listenMock, preferences, catalogs } = vi.hoisted(() => {
+	const stored: LanguageSettings = { language: null, languageSync: null };
+	const saves: Partial<LanguageSettings>[] = [];
+	return {
+		invokeMock: vi.fn(),
+		listenMock: vi.fn(),
+		preferences: { stored, readable: true, writable: true, saves },
+		catalogs: { failing: new Set<string>(), loads: [] as string[] },
+	};
+});
 
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
-	isTauri: () => tauri.enabled,
 }));
 
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
@@ -62,7 +58,11 @@ vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => {
 });
 
 import { getCatalogLocale, getLocale, setLocale } from "#lib/i18n/index.ts";
-import { chooseLanguage, startLanguage } from "./app-language";
+import {
+	chooseLanguage,
+	getSystemLanguages,
+	startLanguage,
+} from "./app-language";
 import { NATIVE_READ_TIMEOUT_MS } from "./regional-settings";
 
 type ChangeHandler = (event: { payload: unknown }) => void;
@@ -119,9 +119,8 @@ function shown(): { locale: string; catalog: string; lang: string } {
 }
 
 beforeEach(() => {
-	invokeMock.mockReset();
+	invokeMock.mockReset().mockResolvedValue(null);
 	listenMock.mockReset().mockResolvedValue(() => {});
-	tauri.enabled = false;
 	preferences.stored = { language: null, languageSync: null };
 	preferences.readable = true;
 	preferences.writable = true;
@@ -138,7 +137,7 @@ afterEach(async () => {
 	await setLocale({ locale: "en-US" });
 });
 
-describe("startLanguage in a browser", () => {
+describe("startLanguage without a native answer", () => {
 	it("shows the first browser language the app offers", async () => {
 		browserLanguages(["sw-KE", "fr-CA", "de-DE"]);
 
@@ -150,6 +149,7 @@ describe("startLanguage in a browser", () => {
 			lang: "fr-CA",
 		});
 		expect(preferences.saves).toEqual([]);
+		expect(getSystemLanguages()).toEqual(["sw-KE", "fr-CA", "de-DE"]);
 	});
 
 	it("falls back to American English when no language matches", async () => {
@@ -271,11 +271,7 @@ describe("the dev ?locale= pin", () => {
 	});
 });
 
-describe("startLanguage in the app", () => {
-	beforeEach(() => {
-		tauri.enabled = true;
-	});
-
+describe("startLanguage with a native answer", () => {
 	it("reads secondary system languages from the native side", async () => {
 		answerNative({
 			languages: { tier: "none", app: null, system: ["sw-KE", "pt-AO"] },
@@ -290,6 +286,7 @@ describe("startLanguage in the app", () => {
 			catalog: "pt-PT",
 			lang: "pt-AO",
 		});
+		expect(getSystemLanguages()).toEqual(["sw-KE", "pt-AO"]);
 	});
 
 	it("adopts a per-app language set in the system settings", async () => {
@@ -494,7 +491,6 @@ describe("chooseLanguage", () => {
 	});
 
 	it("writes the choice to a two-way platform", async () => {
-		tauri.enabled = true;
 		answerNative({
 			languages: { tier: "two-way", app: null, system: ["en-US"] },
 		});
@@ -511,7 +507,6 @@ describe("chooseLanguage", () => {
 
 	it("remembers a failed write so the next report retries it", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
-		tauri.enabled = true;
 		let denied = true;
 		answerNative({
 			languages: { tier: "two-way", app: "de", system: ["en-US"] },
@@ -542,7 +537,6 @@ describe("chooseLanguage", () => {
 	});
 
 	it("keeps the language and stores nothing when it can’t load", async () => {
-		tauri.enabled = true;
 		answerNative({
 			languages: { tier: "two-way", app: null, system: ["de-DE"] },
 		});

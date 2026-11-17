@@ -1,6 +1,6 @@
-import { isLinuxPlatform, isMacosPlatform } from "#lib/platform/os.ts";
+import { currentPlatform } from "#lib/platform/os.ts";
 import {
-	scrollGesture,
+	scrollGestureHere,
 	type ScrollGestureState,
 } from "#lib/platform/scroll-gesture.ts";
 import {
@@ -8,8 +8,10 @@ import {
 	keyScrollsToward,
 	scrollKeysToward,
 } from "#lib/util/scroll-keys.ts";
+import { attachNativeBandPull } from "./native-band-adapter";
 import { attachOverscrollPull } from "./overscroll-adapter";
 import type { PullModel } from "./pull-model.svelte";
+import { pullStyleHere } from "./pull-style";
 import type { RestingButtonModel } from "./resting-button.svelte";
 import {
 	AT_BOUNDARY_PX,
@@ -35,8 +37,19 @@ export type PullInputsOptions = {
 	shouldReveal: () => boolean;
 	shouldConceal: () => boolean;
 	fingerPhase?: ScrollGestureState | null;
-	nativeBand?: boolean;
 };
+
+function nativeOverscrollBandHere(): boolean {
+	switch (currentPlatform()) {
+		case "linux":
+			return false;
+		case "android":
+		case "ios":
+		case "macos":
+		case "windows":
+			return true;
+	}
+}
 
 export function attachPullInputs(
 	target: HTMLElement,
@@ -52,10 +65,7 @@ export function attachPullInputs(
 		setDistance,
 		shouldReveal,
 		shouldConceal,
-		fingerPhase = isMacosPlatform() || isLinuxPlatform()
-			? scrollGesture
-			: null,
-		nativeBand = !isLinuxPlatform(),
+		fingerPhase = scrollGestureHere(),
 	}: PullInputsOptions,
 ): () => void {
 	let trackpadEndedAt = -Infinity;
@@ -133,22 +143,33 @@ export function attachPullInputs(
 		else restingButton.cancelProbe();
 	});
 
-	const detach = [
-		attachTouchPull(model, {
-			listenTarget: target,
-			scrollRoot: () => target,
-			boundaryDistance,
-			position,
-		}),
-		attachOverscrollPull(model, {
-			listenTarget: target,
-			overscrollPx,
-			scrollKeyAt: () => (trackpadScrolling() ? null : scrollKeyAt),
-			onPullBand: () => restingButton.leaveBoundary(),
-			onKeyBand: () => restingButton.offerWithoutPull(),
-		}),
-	];
-	if (fingerPhase && !nativeBand)
+	const pullsFromNativeBand = pullStyleHere().source === "band";
+	const detach = pullsFromNativeBand
+		? [
+				attachNativeBandPull(model, {
+					scroller: target,
+					position,
+					overscrollPx,
+					onPullBand: () => restingButton.leaveBoundary(),
+				}),
+			]
+		: [
+				attachTouchPull(model, {
+					listenTarget: target,
+					scrollRoot: () => target,
+					boundaryDistance,
+					position,
+				}),
+				attachOverscrollPull(model, {
+					listenTarget: target,
+					overscrollPx,
+					scrollKeyAt: () =>
+						trackpadScrolling() ? null : scrollKeyAt,
+					onPullBand: () => restingButton.leaveBoundary(),
+					onKeyBand: () => restingButton.offerWithoutPull(),
+				}),
+			];
+	if (fingerPhase && !nativeOverscrollBandHere())
 		detach.push(
 			attachTouchpadPull(model, {
 				listenTarget: target,

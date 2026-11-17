@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
@@ -7,21 +7,18 @@ import { signedInProfileId } from "#lib/api/current-session.ts";
 import {
 	confirmAccountSwitch,
 	googleHandoffState,
+	googleSignInMode,
 } from "#lib/api/google-handoff-state.svelte.ts";
 import { signInResultSchema } from "#lib/api/methods.ts";
 import { finishSignIn, reportSignInFailure } from "#lib/api/sign-in.ts";
 import { signOut } from "#lib/api/sign-out.ts";
 import { t } from "#lib/i18n/index.ts";
-import { isAndroidPlatform } from "#lib/platform/os.ts";
 import { delay } from "#lib/util/delay.ts";
 
 const HANDOFF_EVENT = "google-oauth:handoff";
 const GOOGLE_SIGN_IN = "/auth/sign-in/google";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
-
-const available = () =>
-	(!__DEMO__ || __SCREENSHOTS__) && isTauri() && isAndroidPlatform();
 
 function reportExpired(): void {
 	toast.error(t("auth.googleHandoff.errors.expired"));
@@ -115,7 +112,9 @@ export function consumeGoogleHandoff(): Promise<void> {
 }
 
 export async function startGoogleHandoffWatch(): Promise<() => void> {
-	if (!available()) return () => {};
+	if ((__DEMO__ && !__SCREENSHOTS__) || googleSignInMode() !== "companion") {
+		return () => {};
+	}
 
 	const unlisten = await listen(HANDOFF_EVENT, () => {
 		void consumeGoogleHandoff();

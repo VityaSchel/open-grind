@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from "#lib/i18n/index.ts";
 	import type { Profile } from "#lib/model/users/profiles.ts";
+	import { holdsStillOnPull } from "../hold-still-on-pull";
 	import type { PendingViewabilityChange } from "../profile-state.svelte";
 	import EditProfileButton from "./EditProfileButton.svelte";
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";
@@ -27,6 +28,7 @@
 	<nav
 		aria-label={t("profile.topNav.a11y.navigation")}
 		class="absolute right-2 flex -translate-y-1/2 items-center gap-1.5"
+		{@attach holdsStillOnPull}
 	>
 		{#if ourProfile}
 			<EditProfileButton />

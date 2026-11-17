@@ -1,7 +1,15 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
-import { FIRST_ROUTE_COMPILE_MS, MESSAGE_ROW } from "./support/app";
+import {
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+	MESSAGE_ROW,
+} from "./support/app";
+
+test.beforeEach(async ({ page }) => {
+	await installTauriShim(page, { platform: "ios" });
+});
 
 const HENRY = "/chat/100009:123456000";
 const SCROLLER = '[data-slot="messages-scroller"]';
@@ -68,10 +76,10 @@ test.describe(() => {
 	});
 });
 
-test.describe("on a browser set to German", () => {
+test.describe("on an iPhone set to German", () => {
 	test.use({ baseURL: DEV_SERVER_URL, locale: "de-DE" });
 
-	test("formats like the browser in its language", async ({ page }) => {
+	test("formats like the system in its language", async ({ page }) => {
 		await openHenry(page);
 
 		await expect(statusLines(page, TWENTY_FOUR_HOUR).first()).toBeVisible();

@@ -10,13 +10,12 @@ import {
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type * as Os from "#lib/platform/os.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import {
 	account,
 	appLifecycle,
 	categories,
 	checked,
-	currentPlatform,
 	disabled,
 	inMode,
 	opened,
@@ -53,15 +52,6 @@ vi.mock("#lib/platform/link-opener.ts", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("#lib/platform/os.ts", async (importOriginal) => {
-	const { currentPlatform } =
-		await import("./notifications-page-test-helpers.svelte");
-	return {
-		...(await importOriginal<typeof Os>()),
-		currentPlatform,
-		isAndroidPlatform: () => currentPlatform() === "android",
-	};
-});
 vi.mock("#lib/api/app-lifecycle.svelte.ts", async () => ({
 	appLifecycle: (await import("./notifications-page-test-helpers.svelte"))
 		.appLifecycle,
@@ -125,7 +115,7 @@ describe("the notification categories", () => {
 	it.each(["macos", "windows", "linux"] as const)(
 		"leaves Received taps usable on %s, which has no delivery modes",
 		async (platform) => {
-			currentPlatform.mockReturnValue(platform);
+			runningOn(platform);
 			render(NotificationsPage);
 			const taps = await screen.findByRole("switch", {
 				name: "Received taps",

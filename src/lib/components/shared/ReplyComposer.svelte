@@ -3,7 +3,6 @@
 
 	import fireEmoji from "#lib/assets/emojis/fire/32px.png";
 	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
-	import { softKeyboardVisibility } from "#lib/platform/android-native-bridge.ts";
 	import MessageTextInput from "./MessageTextInput.svelte";
 	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
 
@@ -81,9 +80,7 @@
 				? t("media.lightbox.reply.a11y.react")
 				: t("media.lightbox.reply.a11y.send")}
 			disabled={!available || (react ? reacted : text.trim() === "")}
-			onpointerdown={(event) => {
-				if (softKeyboardVisibility() !== false) event.preventDefault();
-			}}
+			keepsSoftKeyboardUp
 		>
 			{#snippet icon(props)}
 				{#if react}

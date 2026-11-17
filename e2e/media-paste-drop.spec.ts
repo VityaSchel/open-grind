@@ -6,7 +6,7 @@ import {
 	test,
 } from "@playwright/test";
 
-import { MEDIA_SLOT, openSharedAlbum } from "./support/albums";
+import { MEDIA_SLOT, openAlbum, SHARED_ALBUM } from "./support/albums";
 import {
 	DEMO_CONVERSATION,
 	installTauriShim,
@@ -63,7 +63,7 @@ function bottomOf(locator: Locator): Promise<number> {
 }
 
 async function openChat(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	const composer = page.getByPlaceholder("Write a message…");
 	await composer.waitFor({ timeout: 30_000 });
@@ -435,7 +435,7 @@ test.describe("pasting and dropping media", () => {
 	});
 
 	test("a photo dropped on an album lands in it", async ({ page }) => {
-		await openSharedAlbum(page);
+		await openAlbum(page, { tile: SHARED_ALBUM, platform: "macos" });
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 		const dataTransfer = await transferOf(page, PNG);
 

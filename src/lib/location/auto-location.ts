@@ -1,4 +1,3 @@
-import { showErrorToast } from "#lib/api/error-toast.ts";
 import {
 	preferencesSnapshot,
 	setPreferences,
@@ -8,10 +7,7 @@ import { decodeGeohash, encodeGeohash } from "#lib/model/geohash.ts";
 import { isMobilePlatform } from "#lib/platform/os.ts";
 import { now } from "#lib/util/clock.ts";
 import { distanceMeters } from "./distance";
-import {
-	reportLocationFailure,
-	showLocationPermissionToast,
-} from "./location-feedback";
+import { reportLocationFailure } from "./location-feedback";
 import {
 	type LocationOutcome,
 	locationRequest,
@@ -63,18 +59,17 @@ class AutoLocation {
 			return moved ? encodeGeohash(outcome.coords) : current;
 		}
 		if (outcome.status === "denied") {
-			showLocationPermissionToast();
+			reportLocationFailure(outcome);
 			setPreferences({ autoUpdateLocation: false }).catch(
 				(error: unknown) => console.error(error),
 			);
 			return current;
 		}
 		if (outcome.status === "error") {
-			console.error(outcome.error);
+			if (this.#failureReported) console.error(outcome.error);
 			this.#reportOnce(() => {
-				showErrorToast({
+				reportLocationFailure(outcome, {
 					label: t("browse.location.errors.autoUpdateFailed"),
-					error: outcome.error,
 				});
 			});
 		}

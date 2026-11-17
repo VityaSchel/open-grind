@@ -31,7 +31,7 @@ test.use({
 });
 
 async function openCreditsFromAppSettings(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/app");
 	const link = page.getByRole("link", { name: "Credits & Licenses" });
 	await link.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

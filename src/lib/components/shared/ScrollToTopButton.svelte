@@ -1,9 +1,14 @@
 <script lang="ts">
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
-	import { prefersReducedMotion } from "svelte/motion";
 
 	import { t } from "#lib/i18n/index.ts";
-	import { glideScrollTop, TOP_SLOP_PX } from "#lib/util/scroll.ts";
+	import { answerStatusBarTaps } from "#lib/platform/status-bar-tap.ts";
+	import {
+		glidingToTop,
+		jumpThenGlideToTop,
+		stopGlidingToTop,
+		TOP_SLOP_PX,
+	} from "#lib/util/scroll.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
 
@@ -21,18 +26,9 @@
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
-	const GLIDE_MS = 400;
-
 	let atTop = $state(true);
-	let cancelGlide: (() => void) | null = null;
-
-	function releaseGlide() {
-		cancelGlide?.();
-		cancelGlide = null;
-	}
 
 	function settle() {
-		releaseGlide();
 		atTop = (container?.scrollTop ?? 0) <= TOP_SLOP_PX;
 	}
 
@@ -41,20 +37,21 @@
 		if (!el) return;
 
 		const onScroll = () => {
-			if (cancelGlide === null) settle();
+			if (!glidingToTop(el)) settle();
 		};
 
 		settle();
 		el.addEventListener("scroll", onScroll, { passive: true });
 		el.addEventListener("scrollend", onScroll, { passive: true });
-		el.addEventListener("wheel", releaseGlide, { passive: true });
-		el.addEventListener("touchstart", releaseGlide, { passive: true });
+		const stopAnswering = answerStatusBarTaps({
+			scroller: el,
+			scrollToTop,
+		});
 		return () => {
 			el.removeEventListener("scroll", onScroll);
 			el.removeEventListener("scrollend", onScroll);
-			el.removeEventListener("wheel", releaseGlide);
-			el.removeEventListener("touchstart", releaseGlide);
-			releaseGlide();
+			stopAnswering?.();
+			stopGlidingToTop(el);
 		};
 	});
 
@@ -67,19 +64,9 @@
 		if (!el) return;
 		const keyboardFocused =
 			document.activeElement?.matches(":focus-visible") ?? false;
-		releaseGlide();
 		atTop = true;
 		onjump?.({ keyboardFocused });
-		if (prefersReducedMotion.current) {
-			el.scrollTop = 0;
-			return;
-		}
-		el.scrollTop = Math.min(el.scrollTop, el.clientHeight);
-		cancelGlide = glideScrollTop({
-			element: el,
-			durationMs: GLIDE_MS,
-			onLanded: settle,
-		});
+		jumpThenGlideToTop({ element: el });
 	}
 </script>
 

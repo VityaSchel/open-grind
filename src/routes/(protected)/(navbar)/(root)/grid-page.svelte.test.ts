@@ -1,9 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { flushSync, tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { rendered } from "#lib/grid/grid-test-helpers.ts";
 import { t } from "#lib/i18n/index.ts";
+import { runningOn } from "#lib/test/platform.ts";
 import type { GridProfile } from "#lib/grid/grid.ts";
 import GridPage from "./+page.svelte";
 import { revealedGridScrollTop } from "./grid-reveal";
@@ -115,6 +116,10 @@ async function loaded() {
 	flushSync();
 	await tick();
 }
+
+beforeEach(() => {
+	runningOn("android");
+});
 
 describe("the grid page", () => {
 	afterEach(() => {

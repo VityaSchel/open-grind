@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { conversationIdFor } from "#lib/chat/conversation-id.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { PostData } from "#lib/model/right-now/feed.ts";
 import { photo, postData } from "./feed-post-test-helpers";
 import RightNowPostCard from "./RightNowPostCard.svelte";
@@ -39,7 +41,12 @@ function renderCard({
 	});
 }
 
-afterEach(cleanup);
+beforeEach(() => runningOn("windows"));
+
+afterEach(() => {
+	cleanup();
+	resetPlatform();
+});
 
 describe("a Right Now post card", () => {
 	it("heads the post with its text and names the article after it", () => {
@@ -97,7 +104,7 @@ describe("a Right Now post card", () => {
 		expect(images).toHaveLength(1);
 		await vi.waitFor(() =>
 			expect(images[0]?.getAttribute("src")).toBe(
-				first.data.thumbnailUrl,
+				proxyMediaUrl(first.data.thumbnailUrl),
 			),
 		);
 	});

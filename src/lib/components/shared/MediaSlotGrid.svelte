@@ -69,7 +69,7 @@
 	const reorderable = $derived(!disabled && slots.length > 1);
 
 	$effect(() => {
-		if (disabled) reorder.cancel();
+		if (!reorderable) reorder.cancel();
 	});
 
 	function positionOf(index: number): { position: string; total: string } {
@@ -165,6 +165,8 @@
 	function onSlotFocusOut(): void {
 		if (reorder.heldByKeyboard && document.hasFocus()) cancelHeldSlot();
 	}
+
+	$effect(() => () => reorder.cancel());
 </script>
 
 <div

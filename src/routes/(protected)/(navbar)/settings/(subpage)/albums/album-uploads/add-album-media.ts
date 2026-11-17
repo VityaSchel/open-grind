@@ -4,12 +4,11 @@ import { showErrorToast } from "#lib/api/error-toast.ts";
 import { getAlbumStorageLimits } from "#lib/api/messaging/albums.ts";
 import { type AlbumRoom, albumRoom } from "#lib/components/album/album.ts";
 import { t } from "#lib/i18n/index.ts";
+import { discardStagedMedia } from "#lib/platform/media-file.ts";
 import {
-	discardStagedMedia,
-	inspectMediaFile,
-	type MediaFileInspection,
-} from "#lib/platform/media-file.ts";
-import { screenMedia } from "#lib/platform/media-intake.svelte.ts";
+	type ScreenedMedia,
+	screenMedia,
+} from "#lib/platform/media-intake.svelte.ts";
 import {
 	type MediaKind,
 	type PickedMedia,
@@ -18,29 +17,9 @@ import {
 import type { AlbumContent } from "#lib/model/messaging/albums.ts";
 import {
 	type AlbumUploads,
-	type InspectedPick,
 	isPlanLimitReached,
 	type UploadLimits,
 } from "./album-uploads-state.svelte";
-
-function isUploadable(
-	inspection: MediaFileInspection,
-): inspection is InspectedPick["inspection"] {
-	return inspection.kind !== "unsupported";
-}
-
-async function inspectPicks(picked: PickedMedia[]): Promise<InspectedPick[]> {
-	const inspected: InspectedPick[] = [];
-	for (const media of picked) {
-		const inspection = await inspectMediaFile(media).catch(() => null);
-		if (inspection === null || !isUploadable(inspection)) {
-			toast.error(t("common.media.errors.unsupportedFile"));
-			continue;
-		}
-		inspected.push({ media, inspection });
-	}
-	return inspected;
-}
 
 function pickerKind(room: AlbumRoom): MediaKind | null {
 	if (room.photos && room.videos) return "media";
@@ -49,14 +28,20 @@ function pickerKind(room: AlbumRoom): MediaKind | null {
 	return null;
 }
 
-export async function pickInspectedAlbumMedia({
+export async function pickOrScreenAlbumMedia({
 	room,
+	media,
 }: {
 	room: AlbumRoom;
-}): Promise<InspectedPick[]> {
+	media?: PickedMedia[];
+}): Promise<ScreenedMedia[]> {
+	if (media !== undefined) return await screenMedia({ media, videos: true });
 	const kind = pickerKind(room);
 	if (kind === null) return [];
-	return await inspectPicks(await pickMultipleMedia(kind));
+	return await screenMedia({
+		media: await pickMultipleMedia(kind),
+		videos: true,
+	});
 }
 
 export function enqueueAlbumMedia({
@@ -68,7 +53,7 @@ export function enqueueAlbumMedia({
 }: {
 	uploads: AlbumUploads;
 	albumId: number;
-	inspected: InspectedPick[];
+	inspected: ScreenedMedia[];
 	limits: UploadLimits;
 	content: AlbumContent[];
 }): void {
@@ -113,10 +98,7 @@ export async function addAlbumMedia({
 			await discardStagedMedia(media ?? []);
 			return;
 		}
-		const inspected =
-			media === undefined
-				? await pickInspectedAlbumMedia({ room })
-				: await screenMedia({ media, videos: true });
+		const inspected = await pickOrScreenAlbumMedia({ room, media });
 		if (inspected.length === 0) return;
 		enqueueAlbumMedia({
 			uploads,

@@ -11,7 +11,7 @@ use objc2_foundation::{
 };
 use tauri::AppHandle;
 
-use super::desktop::{refresh, MeasurementSystem, RegionalSettings};
+use super::os_settings::{refresh, MeasurementSystem, RegionalSettings};
 use super::pattern;
 
 fn component(

@@ -7,7 +7,7 @@ test("hidden album controls do not send a reaction when tapped", async ({
 	page,
 }) => {
 	await serveImages(page, CHAT_MEDIA_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat/100006:123456000");
 	const reactions = page.getByRole("img", {
 		name: "Fire reaction",
@@ -44,7 +44,7 @@ test("an album composer sends reactions and replies to the selected item", async
 }) => {
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat/100006:123456000");
 	await page.getByRole("textbox").fill("Keep this draft");
 	await page

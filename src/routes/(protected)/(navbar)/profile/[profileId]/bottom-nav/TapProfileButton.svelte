@@ -6,10 +6,12 @@
 	import TapIcon from "#lib/components/profile/TapIcon.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
-	import { playHaptic } from "#lib/haptics.ts";
 	import { type MessageKey, t } from "#lib/i18n/index.ts";
 	import { TapType } from "#lib/model/interest/taps.ts";
-	import { firedByTouch } from "#lib/platform/touch-origin.ts";
+	import {
+		type LongPressHandlers,
+		menuPressHandlers,
+	} from "#lib/util/long-press.ts";
 
 	let {
 		profileId,
@@ -26,6 +28,7 @@
 	let customAnchor: HTMLButtonElement | null = $state(null);
 	let open = $state(false);
 	let sending = $state(false);
+	let heldOpen = false;
 	let keyboardOpener: HTMLElement | null = null;
 
 	function openPicker(opener: HTMLElement | null) {
@@ -75,6 +78,32 @@
 
 	const sent = $derived(tapType !== null);
 	const unavailable = $derived(sent || sending);
+
+	const press = menuPressHandlers({
+		openMenu: () => {
+			const opened = !open;
+			open = true;
+			return opened;
+		},
+		onHold: () => (heldOpen = true),
+	});
+	const pickerPress: LongPressHandlers = {
+		...press,
+		onpointerdown(event) {
+			heldOpen = false;
+			keyboardOpener = null;
+			press.onpointerdown?.(event);
+		},
+		oncontextmenu(event) {
+			if (unavailable) {
+				event.preventDefault();
+				return;
+			}
+			const focused = event.currentTarget.matches(":focus-visible");
+			keyboardOpener = focused ? event.currentTarget : null;
+			press.oncontextmenu?.(event);
+		},
+	};
 </script>
 
 <div class="relative flex shrink-0">
@@ -87,14 +116,13 @@
 		aria-describedby={sent ? undefined : hintId}
 		aria-disabled={unavailable}
 		bind:ref={customAnchor}
-		oncontextmenu={(e) => {
-			e.preventDefault();
-			if (unavailable) return;
-			if (!open && firedByTouch(e)) playHaptic("longPress");
-			const focused = e.currentTarget.matches(":focus-visible");
-			openPicker(focused ? e.currentTarget : null);
+		{...pickerPress}
+		onclick={(event) => {
+			const holdsClick = heldOpen && event.detail !== 0;
+			heldOpen = false;
+			if (holdsClick) return;
+			void send(defaultTapType);
 		}}
-		onclick={() => send(defaultTapType)}
 		class={[
 			"aria-disabled:pointer-events-none",
 			{

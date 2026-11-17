@@ -3,9 +3,9 @@ import { expect, test } from "@playwright/test";
 import { expectEveryControlNamed } from "./support/a11y";
 import {
 	DEMO_CONVERSATION,
-	ensureGridLocation,
 	installTauriShim,
 	MESSAGE_ROW,
+	openGrid,
 } from "./support/app";
 import { ALBUM_TILE } from "./support/drawer";
 import {
@@ -17,7 +17,7 @@ import {
 const DEMO_PROFILE = "/profile/100001";
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test.describe("every control has an accessible name", () => {
@@ -61,9 +61,7 @@ test.describe("every control has an accessible name", () => {
 
 	test("grid and its filter sheets", async ({ page }) => {
 		test.setTimeout(240_000);
-		await page.goto("/");
-		await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-		await ensureGridLocation(page);
+		await openGrid(page);
 		await expectEveryControlNamed(page, "grid");
 
 		const allFilters = page.locator('[aria-label="All filters"]');

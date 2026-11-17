@@ -2,19 +2,13 @@
 mod android;
 #[cfg(target_os = "android")]
 pub use android::AndroidUpdater;
-#[cfg(not(target_os = "android"))]
+#[cfg(desktop)]
 mod desktop;
-mod hold;
 
 use serde::{Deserialize, Serialize};
 
 use super::baseline::Baseline;
 use super::component::Component;
-use hold::TransferPurpose;
-pub use hold::{TransferHold, TransferProgress};
-
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
-const MEDIA_UPLOAD: &str = "mediaUpload";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(
@@ -34,7 +28,7 @@ pub enum Unsupported {
 }
 
 impl Unsupported {
-	#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+	#[cfg_attr(desktop, allow(dead_code))]
 	fn from_gate_marker(
 		marker: &str,
 		installer: Option<String>,
@@ -46,6 +40,16 @@ impl Unsupported {
 			"foreign-signer" => Some(Self::ForeignSigner),
 			"foreign-target" => Some(Self::ForeignTarget),
 			_ => None,
+		}
+	}
+
+	fn no_release_artifacts() -> Self {
+		Self::NoReleaseArtifacts {
+			target: format!(
+				"{}-{}",
+				std::env::consts::OS,
+				std::env::consts::ARCH
+			),
 		}
 	}
 }
@@ -97,6 +101,7 @@ fn suffix_for(os: &str, arch: &str) -> Option<String> {
 			Some(abi) => format!("-android-{abi}.apk"),
 			None => "-android.apk".to_owned(),
 		}),
+		"ios" => None,
 		"macos" => Some("-macos.zip".to_owned()),
 		"windows" => Some(format!("-windows-{desktop_arch}.exe")),
 		"linux" => Some(format!("-linux-{desktop_arch}.AppImage")),
@@ -105,15 +110,9 @@ fn suffix_for(os: &str, arch: &str) -> Option<String> {
 }
 
 pub fn release_asset_suffix() -> Option<String> {
-	let os = std::env::consts::OS;
-	if os == "linux" && crate::appimage::path().is_none() {
-		return None;
-	}
-	suffix_for(os, std::env::consts::ARCH)
-}
-
-fn target() -> String {
-	format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH)
+	#[cfg(target_os = "linux")]
+	crate::appimage::path()?;
+	suffix_for(std::env::consts::OS, std::env::consts::ARCH)
 }
 
 pub fn capability_for(
@@ -129,9 +128,7 @@ pub fn capability_for(
 			payload_suffix,
 			can_install_now,
 		},
-		None => Capability::Unsupported(Unsupported::NoReleaseArtifacts {
-			target: target(),
-		}),
+		None => Capability::Unsupported(Unsupported::no_release_artifacts()),
 	}
 }
 
@@ -144,12 +141,14 @@ pub fn probe(app: &tauri::AppHandle, component: &Component) -> Baseline {
 
 #[cfg(target_os = "android")]
 use android as platform;
-#[cfg(not(target_os = "android"))]
+#[cfg(desktop)]
 use desktop as platform;
 
+#[cfg(target_os = "macos")]
+pub use platform::enforce_home;
 pub use platform::{
-	enforce_home, install, install_pending, open_install_permission_settings,
-	sweep_replaced, take_outcome, watch_install,
+	install, install_pending, open_install_permission_settings, take_outcome,
+	watch_install,
 };
 
 #[cfg(test)]
@@ -209,13 +208,7 @@ mod pins {
 		"../../../../gen/android/app/src/main/java/org/opengrind/TokenHandoffActivity.kt"
 	);
 
-	const TRANSFER_TITLE: &str = include_str!(
-		"../../../../android-logic/src/main/kotlin/org/opengrind/update/TransferTitle.kt"
-	);
-
-	const TRANSFER_SERVICE: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/update/TransferService.kt"
-	);
+	const TRANSFER_BRIDGE: &str = include_str!("../../../transfer/android.rs");
 
 	const RECAPTCHA_PLUGIN: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/recaptcha/RecaptchaPlugin.kt"
@@ -537,6 +530,13 @@ mod pins {
 		plugin: PLUGIN,
 	};
 
+	const TRANSFER_PAIR: PluginPair = PluginPair {
+		bridge_file: "transfer/android.rs",
+		bridge: TRANSFER_BRIDGE,
+		plugin_file: "UpdatePlugin.kt",
+		plugin: PLUGIN,
+	};
+
 	const RECAPTCHA_PAIR: PluginPair = PluginPair {
 		bridge_file: "recaptcha/android.rs",
 		bridge: RECAPTCHA_BRIDGE,
@@ -701,7 +701,7 @@ mod pins {
 
 	#[test]
 	fn every_transfer_command_exists_in_kotlin_with_its_fields() {
-		let bridge = squashed(ANDROID_BRIDGE);
+		let bridge = squashed(TRANSFER_BRIDGE);
 		let sent: Vec<&str> = bridge
 			.split("send_transfer(app,\"")
 			.skip(1)
@@ -710,8 +710,8 @@ mod pins {
 		assert_eq!(sent, ["beginTransfer", "transferProgress", "endTransfer"]);
 		assert_plugin_declares(&sent);
 		assert_eq!(
-			UPDATE_PAIR.rust_wire_fields("TransferRequest"),
-			UPDATE_PAIR.kotlin_arg_fields("TransferArgs"),
+			TRANSFER_PAIR.rust_wire_fields("TransferRequest"),
+			TRANSFER_PAIR.kotlin_arg_fields("TransferArgs"),
 			"TransferRequest and TransferArgs disagree on field names"
 		);
 	}
@@ -1234,35 +1234,5 @@ mod pins {
 				"the Play overlay keeps the updater's <{tag}> {name}"
 			);
 		}
-	}
-
-	#[test]
-	fn a_media_upload_holds_the_transfer_service_under_its_own_title() {
-		assert_eq!(
-			kotlin_constant(TRANSFER_TITLE, "TransferTitle.kt", "MEDIA_UPLOAD"),
-			super::MEDIA_UPLOAD,
-			"the upload purpose the bridge sends is not the one TransferTitle reads"
-		);
-		let service = squashed(TRANSFER_SERVICE);
-		assert!(
-			service.contains(
-				"funstart(context:Context,transfer:Transfer,){holds.begin(transfer)context.startForegroundService("
-			),
-			"TransferService no longer restarts on every hold"
-		);
-		assert!(
-			service.contains(
-				"funstop(context:Context,transfer:Transfer,){holds.end(transfer)ContextCompat.getMainExecutor(context).execute{running?.get()?.settle()}}"
-			) && !service.contains("stopService("),
-			"TransferService is stopped from outside instead of stopping itself on the main thread"
-		);
-		assert!(
-			service.contains(
-				"}catch(e:Exception){stopIfLatest(startId)returnSTART_NOT_STICKY}foregroundStartId=startIdsettle()"
-			) && service.contains(
-				"privatefunsettle(){valstartId=foregroundStartId?:returnvalshowing=holds.newest()if(showing==null){stopIfLatest(startId)return}"
-			),
-			"TransferService can stop before it entered the foreground or while a transfer still runs"
-		);
 	}
 }

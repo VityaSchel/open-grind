@@ -36,7 +36,7 @@ async function expectFocusKept(page: Page, target: Locator): Promise<void> {
 }
 
 test("a tab tap keeps focus on the pressed tab", async ({ page }) => {
-	await openTaps(page);
+	await openTaps(page, { platform: "macos" });
 	const views = page.getByRole("tab", { name: "Views" });
 	await views.focus();
 	await watchBlur(views);
@@ -51,7 +51,7 @@ test("a tab tap keeps focus on the pressed tab", async ({ page }) => {
 });
 
 test("an interest pager swipe keeps focus where it was", async ({ page }) => {
-	await openTaps(page);
+	await openTaps(page, { platform: "macos" });
 	const taps = page.getByRole("tab", { name: "Taps" });
 	await taps.focus();
 	await watchBlur(taps);
@@ -64,7 +64,7 @@ test("an interest pager swipe keeps focus where it was", async ({ page }) => {
 });
 
 test("a profile pager swipe keeps focus on the pager", async ({ page }) => {
-	const tiles = await openGridProfile(page, { nth: 1 });
+	const tiles = await openGridProfile(page, { nth: 1, platform: "macos" });
 	const pager = profilePager(page);
 	await pager.focus();
 	await watchBlur(pager);

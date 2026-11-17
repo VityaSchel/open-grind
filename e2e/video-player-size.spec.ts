@@ -33,7 +33,7 @@ test.describe("video player size", () => {
 	test("a clip fills the space above the reply composer between the insets", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 		await expect(
 			page.getByRole("textbox", { name: "Reply to album item" }),
 		).toBeVisible();
@@ -48,7 +48,7 @@ test.describe("video player size", () => {
 	test("a clip follows the insets when they move without a resize", async ({
 		page,
 	}) => {
-		await openClip(page);
+		await openClip(page, { platform: "macos" });
 
 		for (const insets of [CUTOUT_LEFT, CUTOUT_RIGHT]) {
 			await sendInsets(page, insets);
@@ -62,7 +62,7 @@ test.describe("video player size", () => {
 	test("an own album clip fills the safe area without a composer", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveImages(page, CHAT_MEDIA_HOST);
 		await serveImages(page, AVATAR_HOST);
 		await page.route("**/picsum.photos/seed/album-901-0/600/800", () => {});

@@ -1,0 +1,235 @@
+use std::cell::RefCell;
+use std::ptr::NonNull;
+
+use block2::RcBlock;
+use objc2::rc::Retained;
+use objc2::runtime::{NSObject, NSObjectProtocol, ProtocolObject};
+use objc2::{
+	define_class, msg_send, sel, DefinedClass, MainThreadMarker, MainThreadOnly,
+};
+use objc2_foundation::NSString;
+use objc2_ui_kit::{
+	UIAction, UIAdaptivePresentationControllerDelegate, UIBarButtonItem,
+	UIBarButtonSystemItem, UIColor, UIModalPresentationStyle,
+	UINavigationController, UIPresentationController, UIRectEdge,
+	UIUserInterfaceStyle, UIView, UIViewAutoresizing, UIViewController,
+};
+use tauri::window::Color;
+use tauri::{
+	AppHandle, Manager, WebviewWindow, WebviewWindowBuilder, WindowEvent, Wry,
+};
+use tokio::sync::oneshot;
+
+use crate::presenting::{present_on_top, Presentation};
+use crate::uikit::page_scroller;
+use crate::MAIN_WINDOW_LABEL;
+
+const BACKGROUND: (u8, u8, u8) = (10, 10, 10);
+
+thread_local! {
+	static PRESENTED: RefCell<Option<Presented>> = const { RefCell::new(None) };
+}
+
+struct Presented {
+	navigation: Retained<UINavigationController>,
+	_delegate: Retained<SheetDelegate>,
+}
+
+define_class!(
+	#[unsafe(super(NSObject))]
+	#[thread_kind = MainThreadOnly]
+	#[ivars = WebviewWindow]
+	struct SheetDelegate;
+
+	unsafe impl NSObjectProtocol for SheetDelegate {}
+
+	unsafe impl UIAdaptivePresentationControllerDelegate for SheetDelegate {
+		#[unsafe(method(presentationControllerDidDismiss:))]
+		fn presentation_controller_did_dismiss(
+			&self,
+			_controller: &UIPresentationController,
+		) {
+			let _ = self.ivars().close();
+		}
+	}
+);
+
+impl SheetDelegate {
+	fn new(mtm: MainThreadMarker, sign_in: WebviewWindow) -> Retained<Self> {
+		let this = Self::alloc(mtm).set_ivars(sign_in);
+		unsafe { msg_send![super(this), init] }
+	}
+}
+
+pub fn prepare(
+	builder: WebviewWindowBuilder<'_, Wry, AppHandle>,
+) -> WebviewWindowBuilder<'_, Wry, AppHandle> {
+	let (red, green, blue) = BACKGROUND;
+	builder
+		.visible(false)
+		.background_color(Color(red, green, blue, 255))
+}
+
+pub async fn present(
+	window: &WebviewWindow,
+	title: &'static str,
+) -> Result<(), String> {
+	let main = window
+		.get_webview_window(MAIN_WINDOW_LABEL)
+		.ok_or("the main window is gone")?;
+	let (shown_tx, shown) = oneshot::channel();
+	let page_window = window.clone();
+	let sign_in = window.clone();
+	main.with_webview(move |main_webview| {
+		let host = main_webview.view_controller() as usize;
+		let _ = page_window.with_webview(move |page_webview| {
+			let page = page_webview.inner() as usize;
+			let report = move |outcome| {
+				let _ = shown_tx.send(outcome);
+			};
+			match MainThreadMarker::new() {
+				Some(mtm) => unsafe {
+					show(
+						mtm,
+						host as *mut UIViewController,
+						page as *mut UIView,
+						title,
+						sign_in,
+						report,
+					);
+				},
+				None => report(Err("not on the main thread")),
+			}
+		});
+	})
+	.map_err(|e| e.to_string())?;
+
+	let app = window.app_handle().clone();
+	window.on_window_event(move |event| {
+		if matches!(event, WindowEvent::Destroyed) {
+			let _ = app.run_on_main_thread(dismiss);
+		}
+	});
+
+	shown
+		.await
+		.unwrap_or(Err("the sign-in page never reached the main thread"))
+		.map_err(str::to_owned)
+}
+
+unsafe fn show(
+	mtm: MainThreadMarker,
+	host: *mut UIViewController,
+	page: *mut UIView,
+	title: &str,
+	sign_in: WebviewWindow,
+	report: impl FnOnce(Result<(), &'static str>) + 'static,
+) {
+	let (Some(host), Some(page)) =
+		(unsafe { Retained::retain(host) }, unsafe {
+			Retained::retain(page)
+		})
+	else {
+		report(Err("the sign-in views are gone"));
+		return;
+	};
+
+	if let Some(window) = page.window() {
+		window.setHidden(true);
+	}
+	let (red, green, blue) = BACKGROUND;
+	let background = UIColor::colorWithRed_green_blue_alpha(
+		f64::from(red) / 255.0,
+		f64::from(green) / 255.0,
+		f64::from(blue) / 255.0,
+		1.0,
+	);
+	let content = UIViewController::new(mtm);
+	content.setEdgesForExtendedLayout(UIRectEdge::None);
+	if let Some(view) = content.view() {
+		view.setBackgroundColor(Some(&background));
+		page.removeFromSuperview();
+		page.setFrame(view.bounds());
+		page.setAutoresizingMask(
+			UIViewAutoresizing::FlexibleWidth
+				| UIViewAutoresizing::FlexibleHeight,
+		);
+		view.addSubview(&page);
+		hide_top_edge_effect(&page);
+	}
+
+	let delegate = SheetDelegate::new(mtm, sign_in);
+	let canceling = delegate.clone();
+	let handler = RcBlock::new(move |_action: NonNull<UIAction>| {
+		let _ = canceling.ivars().close();
+	});
+	let action =
+		unsafe { UIAction::actionWithHandler(RcBlock::as_ptr(&handler), mtm) };
+	let cancel = UIBarButtonItem::initWithBarButtonSystemItem_primaryAction(
+		UIBarButtonItem::alloc(mtm),
+		UIBarButtonSystemItem::Cancel,
+		Some(&*action),
+	);
+	let item = content.navigationItem();
+	item.setTitle(Some(&NSString::from_str(title)));
+	item.setLeftBarButtonItem(Some(&cancel));
+
+	let navigation = UINavigationController::initWithRootViewController(
+		UINavigationController::alloc(mtm),
+		&content,
+	);
+	navigation.setModalPresentationStyle(UIModalPresentationStyle::PageSheet);
+	navigation.setOverrideUserInterfaceStyle(UIUserInterfaceStyle::Dark);
+	if let Some(view) = navigation.view() {
+		view.setBackgroundColor(Some(&background));
+	}
+	if let Some(controller) = navigation.presentationController() {
+		unsafe {
+			controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)))
+		};
+	}
+	PRESENTED.with(|presented| {
+		*presented.borrow_mut() = Some(Presented {
+			navigation: navigation.clone(),
+			_delegate: delegate,
+		});
+	});
+	let sheet = navigation.clone();
+	present_on_top(Presentation {
+		host,
+		controller: Retained::into_super(navigation),
+		shown: move |outcome| {
+			if outcome.is_err() {
+				PRESENTED.with(|presented| {
+					let mut presented = presented.borrow_mut();
+					if presented.as_ref().is_some_and(|current| {
+						Retained::as_ptr(&current.navigation)
+							== Retained::as_ptr(&sheet)
+					}) {
+						presented.take();
+					}
+				});
+			}
+			report(outcome);
+		},
+	});
+}
+
+fn hide_top_edge_effect(page: &UIView) {
+	let scroller = page_scroller(page)
+		.filter(|scroller| scroller.respondsToSelector(sel!(topEdgeEffect)));
+	if let Some(scroller) = scroller {
+		scroller.topEdgeEffect().setHidden(true);
+	}
+}
+
+fn dismiss() {
+	let Some(presented) =
+		PRESENTED.with(|presented| presented.borrow_mut().take())
+	else {
+		return;
+	};
+	presented
+		.navigation
+		.dismissViewControllerAnimated_completion(true, None);
+}

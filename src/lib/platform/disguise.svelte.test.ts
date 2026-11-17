@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const tauri = vi.hoisted(() => ({ invoke: vi.fn(), isTauri: vi.fn() }));
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+
+const tauri = vi.hoisted(() => ({ invoke: vi.fn() }));
 const goto = vi.hoisted(() => vi.fn());
 
 vi.mock("@tauri-apps/api/core", () => tauri);
@@ -28,8 +30,10 @@ describe("the disguise state", () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
-		tauri.isTauri.mockReturnValue(true);
+		runningOn("macos");
 	});
+
+	afterEach(resetPlatform);
 
 	it("offers nothing until it has been hydrated", async () => {
 		backendReports("original");
@@ -106,8 +110,8 @@ describe("the disguise state", () => {
 		expect(tauri.invoke).toHaveBeenCalledTimes(1);
 	});
 
-	it("does not reach for the backend outside Tauri", async () => {
-		tauri.isTauri.mockReturnValue(false);
+	it("does not reach for the backend on iOS, which offers no disguises", async () => {
+		runningOn("ios");
 		const { hydrateDisguiseState, disguiseAvailable } =
 			await import("./disguise.svelte");
 
@@ -179,8 +183,10 @@ describe("reopening after a disguise restart", () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
-		tauri.isTauri.mockReturnValue(true);
+		runningOn("macos");
 	});
+
+	afterEach(resetPlatform);
 
 	function backendResumes(path: unknown) {
 		tauri.invoke.mockImplementation((command: string) =>
@@ -234,8 +240,8 @@ describe("reopening after a disguise restart", () => {
 		}
 	});
 
-	it("does not reach for the backend outside Tauri", async () => {
-		tauri.isTauri.mockReturnValue(false);
+	it("does not reach for the backend on iOS, which offers no disguises", async () => {
+		runningOn("ios");
 		const { reopenAfterDisguiseRestart } =
 			await import("./disguise.svelte");
 

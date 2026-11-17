@@ -18,6 +18,7 @@ const testFiles = [
 	"src/**/*-test-helpers.ts",
 	"src/**/*-test-helpers.svelte.ts",
 	"src/lib/i18n/fixtures/**",
+	"src/lib/test/**",
 ];
 
 const untranslatedData = [
@@ -163,6 +164,7 @@ export default defineConfig(
 			"scripts/",
 			"ci/",
 			"e2e/updater/",
+			"e2e/ios/",
 			"src/lib/i18n/generated.ts",
 		],
 	}),

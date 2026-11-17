@@ -22,7 +22,7 @@
 </script>
 
 <PageTitle page={title} />
-<main class="flex min-h-dvh w-full p-8">
+<main class="flex h-dvh w-full flex-col overflow-y-auto p-safe-8">
 	{#if page.status === 404}
 		<NotFound />
 	{:else}

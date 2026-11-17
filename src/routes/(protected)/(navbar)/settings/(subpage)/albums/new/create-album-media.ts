@@ -9,12 +9,12 @@ import {
 import { albumRoom } from "#lib/components/album/album.ts";
 import { t } from "#lib/i18n/index.ts";
 import { discardStagedMedia } from "#lib/platform/media-file.ts";
-import { screenMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { MyAlbumsState } from "#lib/albums/my-albums-state.svelte.ts";
+import type { ScreenedMedia } from "#lib/platform/media-intake.svelte.ts";
 import type { PickedMedia } from "#lib/platform/media-picker.ts";
 import {
 	enqueueAlbumMedia,
-	pickInspectedAlbumMedia,
+	pickOrScreenAlbumMedia,
 } from "../album-uploads/add-album-media";
 import {
 	type AlbumUploads,
@@ -32,14 +32,13 @@ export async function createAlbumFromMedia({
 	albumName: string | null;
 	media?: PickedMedia[];
 }): Promise<void> {
+	let inspected: ScreenedMedia[] = [];
 	try {
 		const limits = await getAlbumStorageLimits();
-		const inspected =
-			media === undefined
-				? await pickInspectedAlbumMedia({
-						room: albumRoom({ content: [], pending: [], limits }),
-					})
-				: await screenMedia({ media, videos: true });
+		inspected = await pickOrScreenAlbumMedia({
+			room: albumRoom({ content: [], pending: [], limits }),
+			media,
+		});
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });
 		void myAlbums.reload();
@@ -47,7 +46,7 @@ export async function createAlbumFromMedia({
 		enqueueAlbumMedia({ uploads, albumId, inspected, limits, content: [] });
 	} catch (error) {
 		console.error(error);
-		void discardStagedMedia(media ?? []);
+		void discardStagedMedia(media ?? inspected.map((pick) => pick.media));
 		if (isPlanLimitReached(error)) {
 			toast.error(t("media.albums.new.errors.albumLimit"));
 			return;
