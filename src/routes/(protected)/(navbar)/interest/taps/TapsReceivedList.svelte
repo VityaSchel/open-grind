@@ -7,6 +7,7 @@
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
 	import { getTapsState } from "#lib/interest/taps-state.svelte.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
@@ -15,6 +16,18 @@
 		$props();
 
 	const taps = untrack(() => getTapsState(ourProfileId));
+
+	const rows = new RovingFocusState({
+		keys: () => taps.taps.map(({ profileId }) => profileId),
+		orientation: "vertical",
+		cells: (item) => [
+			...item.querySelectorAll<HTMLElement>(
+				'[data-slot="profile-item-link"]',
+			),
+		],
+		consumeAtEdge: ["left", "right"],
+		openerScope: "/interest/taps",
+	});
 
 	$effect(() => {
 		if (active) return taps.attachView();
@@ -61,11 +74,17 @@
 					/>
 				</div>
 			{:else}
-				{#each taps.taps as tap (tap.profileId)}
-					<TapReceivedProfile {tap} />
+				{#if taps.taps.length > 0}
+					<div class="flex flex-col gap-1" {@attach rows.container}>
+						{#each taps.taps as tap (tap.profileId)}
+							<div {@attach rows.item(tap.profileId)}>
+								<TapReceivedProfile {tap} />
+							</div>
+						{/each}
+					</div>
 				{:else}
 					<EmptyTapsList />
-				{/each}
+				{/if}
 				{#if taps.hasMore}
 					<div
 						class="h-0"

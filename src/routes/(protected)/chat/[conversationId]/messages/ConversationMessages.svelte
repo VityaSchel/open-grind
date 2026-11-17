@@ -281,7 +281,9 @@
 					{/if}
 				</div>
 				<ConversationPaginationSentinel {container} />
-				<MessagesList {seenMessageIds} />
+				{#key conversationState.conversationId}
+					<MessagesList {seenMessageIds} />
+				{/key}
 			</div>
 		{/if}
 	</div>

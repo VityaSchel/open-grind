@@ -166,15 +166,11 @@ test.describe("keyboard access to context menus", () => {
 
 		await expect(page.locator(MENU)).toHaveCount(1);
 		await expect(
-			page.getByRole("button", { name: "Delete for me" }),
+			page.getByRole("menuitem", { name: "Delete for me" }),
 		).toBeVisible();
 	});
 
 	test("Shift+F10 opens a focused message's menu", async ({ page }) => {
-		test.skip(
-			process.platform === "darwin",
-			"Shift+F10 is the Windows and Linux shortcut; macOS has none",
-		);
 		await openConversation(page);
 		await messageActions(page, GREETING).focus();
 
@@ -214,7 +210,7 @@ test.describe("keyboard access to context menus", () => {
 		).toHaveCount(0);
 	});
 
-	test("Tab from the top of the conversation reaches a message's menu button, which shows itself", async ({
+	test("Tab from the top of the conversation reaches the newest message's menu button, which shows itself", async ({
 		page,
 	}) => {
 		await openConversation(page);
@@ -226,9 +222,9 @@ test.describe("keyboard access to context menus", () => {
 
 		await page.keyboard.press("Tab");
 
-		const button = page.getByRole("button", MESSAGE_ACTIONS).first();
+		const button = page.getByRole("button", MESSAGE_ACTIONS).last();
 		await expect(button).toBeFocused();
-		await expect(button).toHaveAttribute("aria-haspopup", "dialog");
+		await expect(button).toHaveAttribute("aria-haspopup", "menu");
 		await expect(button).toBeInViewport();
 		expect(await widthOf(button)).toBeGreaterThan(16);
 	});
@@ -244,7 +240,7 @@ test.describe("keyboard access to context menus", () => {
 
 		await expect(page.locator(MENU)).toHaveCount(1);
 		await expect(
-			page.getByRole("button", { name: "Delete for me" }),
+			page.getByRole("menuitem", { name: "Delete for me" }),
 		).toBeVisible();
 
 		await page.keyboard.press("Escape");
@@ -344,7 +340,7 @@ test.describe("keyboard access to context menus", () => {
 			.toEqual({ gap: 4, offCenter: 0 });
 	});
 
-	test("Shift+Tab up the conversation never tucks a message's menu button under the bars", async ({
+	test("arrowing up the conversation never tucks a message's menu button under the bars", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 400, height: 520 });
@@ -354,15 +350,16 @@ test.describe("keyboard access to context menus", () => {
 		const actions = page.getByRole("button", MESSAGE_ACTIONS);
 		const count = await actions.count();
 		await page.getByRole("textbox", { name: "Write a message…" }).focus();
+		for (let press = 0; press < 3; press += 1) {
+			if (await actions.last().evaluate((node) => node.matches(":focus")))
+				break;
+			await page.keyboard.press("Shift+Tab");
+		}
 
 		const tucked: number[] = [];
 		for (let index = count - 1; index >= 0; index -= 1) {
 			const button = actions.nth(index);
-			for (let press = 0; press < 3; press += 1) {
-				if (await button.evaluate((node) => node.matches(":focus")))
-					break;
-				await page.keyboard.press("Shift+Tab");
-			}
+			if (index < count - 1) await page.keyboard.press("ArrowUp");
 			await expect(button).toBeFocused();
 			const shown = await boxOf(button);
 			if (
@@ -446,7 +443,7 @@ test.describe("keyboard access to context menus", () => {
 
 		await expect(page.locator(MENU)).toHaveCount(1);
 		await expect(
-			page.getByRole("button", { name: "Delete for me" }),
+			page.getByRole("menuitem", { name: "Delete for me" }),
 		).toBeVisible();
 
 		await page.keyboard.press("Escape");

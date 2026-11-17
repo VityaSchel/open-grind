@@ -52,7 +52,10 @@ import type { ReportTarget } from "./report-request";
 import ReportSheet from "./ReportSheet.svelte";
 
 type SheetProps = Partial<
-	Pick<ComponentProps<typeof ReportSheet>, "target" | "onBlock">
+	Pick<
+		ComponentProps<typeof ReportSheet>,
+		"target" | "onBlock" | "onCloseAutoFocus"
+	>
 >;
 
 const PROFILE_ID = 7;
@@ -338,6 +341,16 @@ describe("ReportSheet", () => {
 		expect(onBlock).toHaveBeenCalledOnce();
 		expect(blockUserMock).not.toHaveBeenCalled();
 		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+	});
+
+	it("lets its owner place focus when it closes", async () => {
+		const onCloseAutoFocus = vi.fn();
+		renderSheet({ onCloseAutoFocus });
+
+		await submitAndWait("SPAM");
+		await fireEvent.click(screen.getByRole("button", { name: "Done" }));
+
+		await vi.waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalledOnce());
 	});
 
 	it("toasts Couldn’t send report when sending fails", async () => {

@@ -134,17 +134,19 @@ describe("profile pictures upload", () => {
 
 	it("keeps the add tile off while the picker is open", async () => {
 		picker.pickMultipleMedia.mockReturnValue(new Promise(() => {}));
-		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
-			props: { ourProfileId: 1, medias: [] },
-		});
+		const { findByRole, getByRole, queryByRole } = render(
+			ProfilePicturesUpload,
+			{ props: { ourProfileId: 1, medias: [] } },
+		);
 
 		await uploadFromSheet(findByRole);
+		await vi.waitFor(() => expect(queryByRole("dialog")).toBeNull());
+		const add = getByRole("button", { name: "Add photos" });
+		await fireEvent.click(add);
 
 		expect(picker.pickMultipleMedia).toHaveBeenCalledOnce();
-		expect(getByRole("button", { name: "Add photos" })).toHaveProperty(
-			"disabled",
-			true,
-		);
+		expect(add.getAttribute("aria-disabled")).toBe("true");
+		expect(queryByRole("dialog"), "the sheet stays closed").toBeNull();
 	});
 
 	it("marks a photo for removal with one tap and keeps it with the next", async () => {

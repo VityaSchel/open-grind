@@ -154,8 +154,10 @@ test.describe("credits page", () => {
 				timeout: FIRST_ROUTE_COMPILE_MS,
 			});
 			expect(await scrollTop(page)).toBe(0);
-			await scroller(page).evaluate((el) => el.scrollTo(0, 3000));
-			await expect.poll(() => scrollTop(page)).toBe(3000);
+			await expect(async () => {
+				await scroller(page).evaluate((el) => el.scrollTo(0, 3000));
+				expect(await scrollTop(page)).toBe(3000);
+			}).toPass();
 		};
 		const backOnAppSettings = async () => {
 			await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

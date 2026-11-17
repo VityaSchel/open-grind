@@ -12,6 +12,7 @@
 		destination,
 		icon,
 		warning,
+		...attributes
 	}: {
 		label: string;
 		destination: string;
@@ -22,7 +23,7 @@
 			primary: { label: string; destination: string };
 			secondary: { label: string; destination: string };
 		};
-	} = $props();
+	} & import("svelte/elements").HTMLAttributes<HTMLElement> = $props();
 
 	let warningOpen = $state(false);
 </script>
@@ -39,7 +40,7 @@
 		<ArrowSquareOutIcon class="size-4" />
 	</Item.Actions>
 {/snippet}
-<Item.Root variant="default" size="sm">
+<Item.Root variant="default" size="sm" {...attributes}>
 	{#snippet child({ props })}
 		{#if warning}
 			<ButtonItemContent

@@ -4,6 +4,7 @@
 	import { untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";
+	import type { Attachment } from "svelte/attachments";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { playHaptic } from "#lib/haptics.ts";
@@ -39,6 +40,7 @@
 
 	let {
 		message,
+		rovingItem,
 		isOut,
 		isRead,
 		indexInStack,
@@ -54,6 +56,7 @@
 		onReport,
 	}: {
 		message: ApiResponseMessage;
+		rovingItem?: Attachment<HTMLElement>;
 		isOut: boolean;
 		isRead: boolean | null;
 		indexInStack: number;
@@ -61,7 +64,7 @@
 		dayStart?: number;
 		status?: "sent" | "pending" | "error";
 		onReact?: (reactionId: number) => void;
-		onDelete?: () => void;
+		onDelete?: (handoff: { fromKeyboard: boolean }) => void;
 		onVisible?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
@@ -365,6 +368,7 @@
 					},
 				]}
 				role="article"
+				{@attach rovingItem}
 				onpointerdown={(event) => (lastPointerType = event.pointerType)}
 				ondblclick={(event) => {
 					const selection = window.getSelection();
@@ -406,7 +410,7 @@
 						variant="secondary"
 						size="icon-sm"
 						aria-label={t("chat.message.a11y.actions")}
-						aria-haspopup="dialog"
+						aria-haspopup="menu"
 						aria-expanded={contextMenuOpen}
 						class="absolute size-8 -translate-y-1/2 scroll-my-20 transition-none not-focus-visible:sr-only"
 						style={actionsStyle}
@@ -462,7 +466,8 @@
 		reactionAvailable={message.reactions.length === 0 &&
 			!isOut &&
 			!message.unsent}
-		{onDelete}
+		onDelete={onDelete &&
+			(() => onDelete({ fromKeyboard: menuOpener !== null }))}
 		{onUnsend}
 		{onCopyError}
 		{onReply}

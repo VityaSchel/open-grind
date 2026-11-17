@@ -4,9 +4,12 @@
 
 	import * as Item from "#lib/components/ui/item/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+
+	let attributes: import("svelte/elements").HTMLAttributes<HTMLElement> =
+		$props();
 </script>
 
-<Item.Root variant="outline">
+<Item.Root variant="outline" {...attributes}>
 	{#snippet child({ props })}
 		<a href="/settings/app" {...props}>
 			<Item.Media>

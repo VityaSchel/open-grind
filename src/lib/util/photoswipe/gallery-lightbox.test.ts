@@ -176,4 +176,15 @@ describe("a gallery lightbox over whole thumbnails", () => {
 
 		expect(link.style.visibility).toBe("");
 	});
+
+	it("shows the thumbnails again before the closing viewer returns focus to one", async () => {
+		const { lightbox, link } = await attach({});
+		link.classList.add("item");
+
+		lightbox.dispatch("closingAnimationStart");
+		expect(link.style.visibility).toBe("hidden");
+		lightbox.dispatch("closingAnimationEnd");
+
+		expect(link.style.visibility).toBe("");
+	});
 });

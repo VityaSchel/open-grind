@@ -24,6 +24,7 @@ import { Generation } from "#lib/util/generation.ts";
 import { reconciler } from "#lib/util/reconcile.ts";
 import { SentinelPaging } from "#lib/util/sentinel-paging.svelte.ts";
 import type { cascadeV4QuerySchema } from "#lib/model/browse/grid/cascade/query/v4.ts";
+import type { RovingKey } from "#lib/util/roving-focus-state.svelte.ts";
 import {
 	getCachedProfile,
 	getGrid,
@@ -58,6 +59,7 @@ class GridState {
 	currentQuery: z.infer<typeof cascadeV4QuerySchema> | null = null;
 	scrollY = 0;
 	revealProfileId: number | null = null;
+	keyboardStop: RovingKey | null = null;
 
 	#geohash: string | null = null;
 	#retargeted: string | null = null;

@@ -8,6 +8,7 @@
 	import { gaymojiSections } from "#lib/chat/gaymoji-sections.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { StickerPick } from "../sticker-pick";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";
@@ -45,6 +46,15 @@
 	];
 
 	const windows = new SectionWindows();
+	const tiles = new RovingFocusState({
+		keys: () => tileKeys,
+		orientation: "grid",
+		columns: () => windows.columns,
+		sectionStarts: () => sectionStarts,
+		wrap: "rows",
+		pageRows: () => windows.rowsPerPage(strip),
+		reveal: (index) => revealTile(index),
+	});
 
 	let manifest = $state.raw<Manifest>({ status: "idle" });
 	let content = $state<HTMLElement | null>(null);
@@ -52,6 +62,17 @@
 
 	const sections = $derived(
 		manifest.status === "ready" ? gaymojiSections(manifest.categories) : [],
+	);
+	const sectionStarts = $derived.by(() => {
+		let start = 0;
+		return sections.map(({ items }) => {
+			const sectionStart = start;
+			start += items.length;
+			return sectionStart;
+		});
+	});
+	const tileKeys = $derived(
+		sections.flatMap(({ items }) => items).map((_, index) => index),
 	);
 	const scroll = new SectionScroll({
 		keys: () => sections.map(({ key }) => key),
@@ -73,6 +94,24 @@
 		}
 	}
 
+	function revealTile(index: number) {
+		const section = sectionStarts.findLastIndex((start) => start <= index);
+		if (section < 0) return;
+		windows.revealItem({
+			key: sections[section]!.key,
+			index: index - sectionStarts[section]!,
+			stickyTop: strip,
+		});
+	}
+
+	function jumpToSection(key: string) {
+		scroll.jumpTo(key);
+		const section = sections.findIndex(
+			(candidate) => candidate.key === key,
+		);
+		tiles.activeKey = sectionStarts[section] ?? tiles.activeKey;
+	}
+
 	function loadOnFirstVisit() {
 		if (manifest.status === "idle") void load();
 	}
@@ -92,24 +131,28 @@
 			bind:ref={strip}
 			{sections}
 			current={scroll.current}
-			onPick={(key) => scroll.jumpTo(key)}
+			onPick={jumpToSection}
 		/>
-		{#each sections as section (section.key)}
-			<GaymojiSection
-				{section}
-				headers={scroll.headers}
-				{windows}
-				{pickedId}
-				onToggle={(gaymoji) =>
-					onPick({
-						id: gaymoji.id,
-						message: {
-							type: "Gaymoji",
-							body: { imageHash: gaymoji.imageHash },
-						},
-					})}
-			/>
-		{/each}
+		<div {@attach tiles.container} data-slot="gaymoji-sections">
+			{#each sections as section, sectionIndex (section.key)}
+				<GaymojiSection
+					{section}
+					firstIndex={sectionStarts[sectionIndex]!}
+					headers={scroll.headers}
+					{windows}
+					{tiles}
+					{pickedId}
+					onToggle={(gaymoji) =>
+						onPick({
+							id: gaymoji.id,
+							message: {
+								type: "Gaymoji",
+								body: { imageHash: gaymoji.imageHash },
+							},
+						})}
+				/>
+			{/each}
+		</div>
 	{:else if manifest.status === "loading"}
 		<div
 			data-slot="sticker-grid-skeleton"

@@ -238,7 +238,7 @@ describe("message menu", () => {
 		const row = renderTextMessage();
 		const dialog = await openMenu(row);
 
-		within(dialog).getByRole("button", { name: "Copy message" }).click();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).click();
 
 		await vi.waitFor(() => {
 			expect(toastMock.success).toHaveBeenCalledExactlyOnceWith(
@@ -256,7 +256,7 @@ describe("message menu", () => {
 		const row = renderTextMessage();
 		const dialog = await openMenu(row);
 
-		within(dialog).getByRole("button", { name: "Copy message" }).click();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).click();
 
 		await vi.waitFor(() => {
 			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
@@ -276,7 +276,7 @@ describe("message actions button", () => {
 		expect(row.hasAttribute("tabindex")).toBe(false);
 		expect(row.hasAttribute("aria-keyshortcuts")).toBe(false);
 		expect(button.dataset.slot).toBe("message-actions");
-		expect(button.getAttribute("aria-haspopup")).toBe("dialog");
+		expect(button.getAttribute("aria-haspopup")).toBe("menu");
 		expect(button.getAttribute("aria-expanded")).toBe("false");
 	});
 
@@ -317,7 +317,7 @@ describe("message actions button", () => {
 		const button = actionsButton(row);
 		button.focus();
 		const dialog = await openMenu(row);
-		within(dialog).getByRole("button", { name: "Copy message" }).focus();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).focus();
 
 		dialog.close();
 
@@ -334,7 +334,7 @@ describe("message actions button", () => {
 		await tick();
 		const dialog = document.querySelector("dialog");
 		if (dialog === null) throw new Error("Missing message menu");
-		within(dialog).getByRole("button", { name: "Copy message" }).focus();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).focus();
 
 		dialog.close();
 

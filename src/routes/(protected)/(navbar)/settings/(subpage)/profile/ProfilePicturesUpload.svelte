@@ -8,7 +8,6 @@
 		uploadProfilePhoto,
 	} from "#lib/api/users/profiles.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
-	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
 	import { formatInteger } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
@@ -213,19 +212,16 @@
 	removed={removedKeys}
 	minSlots={canAdd ? maxProfilePhotos - 1 : maxProfilePhotos}
 	disabled={disabled || uploading.length > 0}
-	leading={canAdd ? addTile : undefined}
+	add={canAdd
+		? {
+				label: t("settings.profile.photos.add"),
+				disabled: disabled || adding,
+				onclick: () => (sheetOpen = true),
+			}
+		: undefined}
 	onReorder={({ from, to }) =>
 		(medias = moveItem({ items: medias, from, to }))}
 />
-
-{#snippet addTile()}
-	<AddTile
-		label={t("settings.profile.photos.add")}
-		class="aspect-square w-full rounded-xl"
-		disabled={disabled || adding}
-		onclick={() => (sheetOpen = true)}
-	/>
-{/snippet}
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}

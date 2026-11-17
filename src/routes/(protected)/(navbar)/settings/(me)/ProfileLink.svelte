@@ -9,7 +9,11 @@
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 
-	let { id }: { id: number } = $props();
+	let {
+		id,
+		...attributes
+	}: { id: number } & import("svelte/elements").HTMLAttributes<HTMLElement> =
+		$props();
 
 	const myProfile = $derived(getProfile(id));
 	const myProfilePhotos = $derived(
@@ -17,7 +21,7 @@
 	);
 </script>
 
-<Item.Root variant="outline">
+<Item.Root variant="outline" {...attributes}>
 	{#snippet child({ props })}
 		<a
 			href="/profile/{id}"

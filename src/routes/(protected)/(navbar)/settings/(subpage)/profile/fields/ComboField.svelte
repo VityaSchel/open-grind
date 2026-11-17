@@ -6,6 +6,7 @@
 	import * as Combobox from "#lib/components/ui/combobox/index.ts";
 	import { formatInteger } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { Option } from "#lib/util/options.ts";
 
 	let {
@@ -28,9 +29,17 @@
 		searchPlaceholder: string;
 	} = $props();
 
+	const chips = new RovingFocusState({
+		keys: () => values,
+		orientation: "horizontal",
+		wrap: "loop",
+		stopTabindex: "explicit",
+	});
+
 	let searchValue = $state("");
 	let open = $state(false);
 	let inputEl = $state<HTMLInputElement | null>(null);
+	let removalAnnouncement = $state("");
 
 	const filtered = $derived(
 		searchValue.trim() === ""
@@ -92,8 +101,24 @@
 			: t("settings.profile.combo.selected", params);
 	});
 
-	function remove(id: T) {
+	function remove({ id, byKeyboard }: { id: T; byKeyboard: boolean }) {
+		const index = values.indexOf(id);
+		removalAnnouncement = t("settings.profile.combo.a11y.removed", {
+			label: labelFor(id),
+		});
 		values = values.filter((value) => value !== id);
+		if (!byKeyboard) return;
+		const neighbor = values[index] ?? values[index - 1];
+		if (neighbor === undefined) inputEl?.focus();
+		else void chips.focus({ key: neighbor });
+	}
+
+	function focusLastChipFromEmptyInput(event: KeyboardEvent) {
+		const last = values.at(-1);
+		if (event.key !== "Backspace" || inputEl?.value || last === undefined)
+			return;
+		event.preventDefault();
+		void chips.focus({ key: last });
 	}
 
 	async function clearTypedQuery() {
@@ -114,7 +139,12 @@
 <Field {label} hint={effectiveHint}>
 	{#snippet picker({ labelId })}
 		{#if selectedChips.length}
-			<div class="flex flex-wrap gap-1.5">
+			<div
+				role="toolbar"
+				aria-labelledby={labelId}
+				class="flex flex-wrap gap-1.5"
+				{@attach chips.container}
+			>
 				{#each selectedChips as chip (chip.id)}
 					<span
 						class="inline-flex items-center gap-1 rounded-full bg-secondary py-1 pr-1.5 pl-3 text-sm text-secondary-foreground"
@@ -122,12 +152,26 @@
 						<span translate="no">{chip.label}</span>
 						<button
 							type="button"
-							onclick={() => remove(chip.id)}
+							onclick={(event) =>
+								remove({
+									id: chip.id,
+									byKeyboard: event.detail === 0,
+								})}
+							onkeydown={(event) => {
+								if (
+									event.key !== "Delete" &&
+									event.key !== "Backspace"
+								)
+									return;
+								event.preventDefault();
+								remove({ id: chip.id, byKeyboard: true });
+							}}
 							aria-label={t(
 								"settings.profile.combo.a11y.remove",
 								{ label: chip.label },
 							)}
 							class="-my-1 grid size-5 place-items-center rounded-full transition-colors hover:bg-foreground/10"
+							{@attach chips.item(chip.id)}
 						>
 							<XIcon class="size-3.5" />
 						</button>
@@ -158,12 +202,14 @@
 					oninput={(event) =>
 						(searchValue = event.currentTarget.value)}
 					onclick={() => (open = true)}
+					onkeydown={focusLastChipFromEmptyInput}
 					placeholder={searchPlaceholder}
 					aria-labelledby={labelId}
 				/>
 				<Combobox.Trigger
 					aria-label={t("settings.profile.combo.a11y.toggleList")}
 				/>
+				<span role="status" class="sr-only">{removalAnnouncement}</span>
 			</div>
 
 			<Combobox.Content aria-labelledby={labelId}>

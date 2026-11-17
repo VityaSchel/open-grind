@@ -1,11 +1,16 @@
 <script lang="ts">
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
+	import type { Attachment } from "svelte/attachments";
 
 	import { formatList } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import type { LoadedEntry } from "#lib/credits/index.ts";
 
-	let { entry }: { entry: LoadedEntry } = $props();
+	let {
+		entry,
+		summaryAttachment,
+	}: { entry: LoadedEntry; summaryAttachment?: Attachment<HTMLElement> } =
+		$props();
 
 	let open = $state(false);
 
@@ -23,6 +28,7 @@
 {#if entry.texts.length}
 	<details class="group/license min-w-0" bind:open>
 		<summary
+			{@attach summaryAttachment}
 			class="flex w-fit cursor-pointer list-none items-center gap-1 rounded-md py-0.5 pe-1 text-2xs text-muted-foreground hover:text-foreground"
 		>
 			<CaretRightIcon

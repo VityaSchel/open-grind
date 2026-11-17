@@ -2,7 +2,6 @@
 	import { albumRoom, isVideoContent } from "#lib/components/album/album.ts";
 	import { drawerPhotoUploads } from "#lib/components/media-sheet/drawer-photos.ts";
 	import PreviousUploadsSheet from "#lib/components/media-sheet/PreviousUploadsSheet.svelte";
-	import AddTile from "#lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "#lib/components/shared/MediaSlotGrid.svelte";
 	import { formatInteger } from "#lib/i18n/format.ts";
 	import {
@@ -161,19 +160,14 @@
 		{slots}
 		removed={removedKeys}
 		disabled={saving || pending.length > 0}
-		{leading}
+		add={{
+			label: t("media.albums.editor.content.addMedia"),
+			disabled: saving || adding || full,
+			onclick: () => (sheetOpen = true),
+		}}
 		{onReorder}
 	/>
 {/if}
-
-{#snippet leading()}
-	<AddTile
-		label={t("media.albums.editor.content.addMedia")}
-		class="aspect-square w-full rounded-xl"
-		disabled={saving || adding || full}
-		onclick={() => (sheetOpen = true)}
-	/>
-{/snippet}
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}

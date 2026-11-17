@@ -85,7 +85,8 @@
 	{#if showsErrorScreen}
 		<main
 			inert={!active}
-			class="flex size-full overflow-y-auto pb-(--nav-height)"
+			tabindex="-1"
+			class="flex size-full overflow-y-auto pb-(--nav-height) outline-none"
 		>
 			{#if error instanceof BlockedProfileError}
 				<BlockedProfile
@@ -125,8 +126,9 @@
 		>
 			<main
 				inert={!active}
+				tabindex="-1"
 				data-refresh-content
-				class="relative mx-auto min-h-overscrollable w-full max-w-200"
+				class="relative mx-auto min-h-overscrollable w-full max-w-200 outline-none"
 			>
 				{#if profile || medias.length > 0}
 					<ImageCarousel

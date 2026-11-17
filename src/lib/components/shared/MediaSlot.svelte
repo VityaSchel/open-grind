@@ -15,6 +15,7 @@
 		video = false,
 		pending = false,
 		held = false,
+		deleteFocusable = true,
 		onDelete,
 	}: {
 		src: string | null;
@@ -25,6 +26,7 @@
 		video?: boolean;
 		pending?: boolean;
 		held?: boolean;
+		deleteFocusable?: boolean;
 		onDelete?: () => void;
 	} = $props();
 </script>
@@ -64,6 +66,7 @@
 			variant={removed ? "secondary" : "destructive"}
 			size="icon-sm"
 			class="absolute top-1.5 right-1.5 rounded-full bg-background/80 scrim backdrop-filter-(--bd-veil) hover:bg-background dark:bg-background/80 dark:hover:bg-background"
+			tabindex={deleteFocusable ? undefined : -1}
 			onclick={onDelete}
 			aria-label={removed ? (undoLabel ?? deleteLabel) : deleteLabel}
 		>

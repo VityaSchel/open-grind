@@ -80,7 +80,7 @@ const routes: readonly RouteCase[] = [
 	{
 		route: "/(protected)/(navbar)/interest/views",
 		path: "/interest/views",
-		shows: '.photo-grid:has(> a[href^="/profile/"]):has(> div:not([data-slot="skeleton"]))',
+		shows: '.photo-grid:has(> div a[href^="/profile/"])',
 	},
 	{
 		route: "/(protected)/(navbar)/profile/[profileId]",

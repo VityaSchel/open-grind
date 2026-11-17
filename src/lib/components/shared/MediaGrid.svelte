@@ -4,6 +4,7 @@
 	import ApiErrorDisplay from "#lib/components/feedback/ApiErrorDisplay.svelte";
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
+	import type { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
 
 	let {
@@ -14,6 +15,7 @@
 		onRetry,
 		skeletons,
 		selected,
+		roving,
 		gridClass,
 		emptyState,
 		leading,
@@ -26,6 +28,7 @@
 		onRetry: () => void;
 		skeletons: number;
 		selected?: SelectionSet<unknown>;
+		roving?: RovingFocusState;
 		gridClass?: import("svelte/elements").ClassValue;
 		emptyState?: Snippet;
 		leading?: Snippet;
@@ -51,7 +54,11 @@
 	{:else if empty}
 		{@render emptyState?.()}
 	{:else}
-		<div class={["photo-grid", gridClass]}>
+		<div
+			{@attach roving?.container}
+			data-slot="media-grid"
+			class={["photo-grid", gridClass]}
+		>
 			{@render leading?.()}
 			{#each items as item, index (key(item))}
 				{@render tile(item, index)}

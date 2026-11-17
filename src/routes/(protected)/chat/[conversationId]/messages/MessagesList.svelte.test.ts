@@ -392,7 +392,9 @@ describe("MessagesList media renewal", () => {
 describe("MessagesList actions", () => {
 	it("deletes a sent message on the server", async () => {
 		const { onDelete } = renderOwnMessage();
-		await (onDelete as () => Promise<void>)();
+		await (
+			onDelete as (handoff: { fromKeyboard: boolean }) => Promise<void>
+		)({ fromKeyboard: false });
 
 		expect(remove).toHaveBeenCalledWith(MESSAGE_ID);
 		expect(deleteMessageForMeMock).toHaveBeenCalledWith({
@@ -403,7 +405,9 @@ describe("MessagesList actions", () => {
 
 	it("deletes a message that failed to send without asking the server", async () => {
 		const { onDelete } = renderOwnMessage({ status: "error" });
-		await (onDelete as () => Promise<void>)();
+		await (
+			onDelete as (handoff: { fromKeyboard: boolean }) => Promise<void>
+		)({ fromKeyboard: false });
 
 		expect(remove).toHaveBeenCalledWith(MESSAGE_ID);
 		expect(deleteMessageForMeMock).not.toHaveBeenCalled();
@@ -414,7 +418,9 @@ describe("MessagesList actions", () => {
 		deleteMessageForMeMock.mockRejectedValueOnce(new Error("offline"));
 
 		const { onDelete } = renderOwnMessage();
-		await (onDelete as () => Promise<void>)();
+		await (
+			onDelete as (handoff: { fromKeyboard: boolean }) => Promise<void>
+		)({ fromKeyboard: false });
 
 		expect(showErrorToastMock).toHaveBeenCalledWith(
 			expect.objectContaining({ label: "Couldn’t delete message" }),

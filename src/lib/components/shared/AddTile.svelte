@@ -1,5 +1,10 @@
+<script lang="ts" module>
+	export const ADD_TILE_KEY = "add-tile";
+</script>
+
 <script lang="ts">
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
+	import type { Attachment } from "svelte/attachments";
 
 	import { cn } from "#lib/util/utils.ts";
 
@@ -8,18 +13,20 @@
 		href,
 		disabled = false,
 		class: className,
+		attach,
 		onclick,
 	}: {
 		label: string;
 		href?: string;
 		disabled?: boolean;
 		class?: import("svelte/elements").ClassValue;
+		attach?: Attachment<HTMLElement>;
 		onclick?: () => void;
 	} = $props();
 
 	const tileClass = $derived(
 		cn(
-			"flex cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 px-2 text-center text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-50",
+			"flex cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 px-2 text-center text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
 			className,
 		),
 	);
@@ -32,16 +39,19 @@
 
 {#if href === undefined}
 	<button
+		{@attach attach}
 		type="button"
 		data-slot="add-tile"
 		class={tileClass}
-		{disabled}
-		{onclick}
+		aria-disabled={disabled}
+		onclick={() => {
+			if (!disabled) onclick?.();
+		}}
 	>
 		{@render content()}
 	</button>
 {:else}
-	<a {href} data-slot="add-tile" class={tileClass}>
+	<a {@attach attach} {href} data-slot="add-tile" class={tileClass}>
 		{@render content()}
 	</a>
 {/if}

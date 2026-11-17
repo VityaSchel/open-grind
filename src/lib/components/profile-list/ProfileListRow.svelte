@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { HTMLAttributes } from "svelte/elements";
+
 	import DistanceFormatted from "#lib/components/profile/DistanceFormatted.svelte";
 	import ProfileItem from "#lib/components/profile/ProfileItem.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
@@ -16,13 +18,15 @@
 		control: controlKind = "button",
 		label,
 		onToggle,
+		...rest
 	}: {
 		profileId: number;
 		profile: ProfileListProfile | null;
 		on: boolean;
 		submitting: boolean;
 		onToggle: () => void;
-	} & Pick<ProfileListToggle, "icon" | "control" | "label"> = $props();
+	} & Pick<ProfileListToggle, "icon" | "control" | "label"> &
+		HTMLAttributes<HTMLDivElement> = $props();
 
 	const id = $derived(String(profileId));
 	const identifies = $derived(
@@ -33,48 +37,56 @@
 	);
 </script>
 
-<ProfileItem
-	avatar={{ mediaHash: profile?.profileImageMediaHash ?? null }}
-	title={{
-		value: profile?.displayName ?? null,
-		fallback:
-			profile === null ? t("common.profileList.unavailable") : undefined,
-	}}
-	onlineUntil={profile?.onlineUntil ?? null}
-	link="/profile/{profileId}"
->
-	{#snippet description()}
-		{#if profile === null}
-			<Item.Description class="text-muted-foreground">
-				{t("common.profileList.profileId", { id })}
-			</Item.Description>
-		{:else if profile.distance !== null}
-			<Item.Description class="text-muted-foreground">
-				<DistanceFormatted distance={profile.distance} />
-			</Item.Description>
-		{/if}
-	{/snippet}
-	{#snippet control()}
-		{#if controlKind === "checkbox"}
-			<Checkbox
-				class="size-5 border-muted-foreground/50 after:-inset-y-3 data-checked:border-primary"
-				checked={on}
-				aria-label={toggleLabel}
-				disabled={submitting}
-				onCheckedChange={onToggle}
-			/>
-		{:else}
-			<Button
-				size="icon-lg"
-				variant="ghost"
-				role="switch"
-				aria-checked={on}
-				aria-label={toggleLabel}
-				disabled={submitting}
-				onclick={onToggle}
-			>
-				{@render icon(on)}
-			</Button>
-		{/if}
-	{/snippet}
-</ProfileItem>
+<div data-slot="profile-list-row" class="grid" {...rest}>
+	<ProfileItem
+		avatar={{ mediaHash: profile?.profileImageMediaHash ?? null }}
+		title={{
+			value: profile?.displayName ?? null,
+			fallback:
+				profile === null
+					? t("common.profileList.unavailable")
+					: undefined,
+		}}
+		onlineUntil={profile?.onlineUntil ?? null}
+		link="/profile/{profileId}"
+	>
+		{#snippet description()}
+			{#if profile === null}
+				<Item.Description class="text-muted-foreground">
+					{t("common.profileList.profileId", { id })}
+				</Item.Description>
+			{:else if profile.distance !== null}
+				<Item.Description class="text-muted-foreground">
+					<DistanceFormatted distance={profile.distance} />
+				</Item.Description>
+			{/if}
+		{/snippet}
+		{#snippet control()}
+			{#if controlKind === "checkbox"}
+				<Checkbox
+					class="size-5 border-muted-foreground/50 after:-inset-y-3 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-checked:border-primary"
+					checked={on}
+					aria-label={toggleLabel}
+					aria-disabled={submitting}
+					readonly={submitting}
+					onCheckedChange={onToggle}
+				/>
+			{:else}
+				<Button
+					size="icon-lg"
+					variant="ghost"
+					role="switch"
+					aria-checked={on}
+					aria-label={toggleLabel}
+					aria-disabled={submitting}
+					class="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+					onclick={() => {
+						if (!submitting) onToggle();
+					}}
+				>
+					{@render icon(on)}
+				</Button>
+			{/if}
+		{/snippet}
+	</ProfileItem>
+</div>

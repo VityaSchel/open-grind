@@ -21,6 +21,7 @@ vi.mock("#lib/api/browse/location.ts", () => ({
 import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import PlaceSearch from "./PlaceSearch.svelte";
 
+HTMLElement.prototype.scrollIntoView = vi.fn();
 afterEach(cleanup);
 
 describe("PlaceSearch", () => {
@@ -29,10 +30,10 @@ describe("PlaceSearch", () => {
 			props: { onpick: () => {} },
 		});
 
-		await fireEvent.input(screen.getByRole("searchbox"), {
+		await fireEvent.input(screen.getByRole("combobox"), {
 			target: { value: "cafe" },
 		});
-		await screen.findByRole("button", { name: /Café Central/ });
+		await screen.findByRole("option", { name: /Café Central/ });
 
 		expect(untranslatableTexts(container)).toEqual([
 			"Café Central",

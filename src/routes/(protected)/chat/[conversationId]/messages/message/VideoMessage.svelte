@@ -49,7 +49,9 @@
 
 	type RefetchedVideo = { video: LightboxVideo; viewsLeft: number };
 
-	function play() {
+	function play(event: MouseEvent & { currentTarget: HTMLElement }) {
+		if (player.status !== "idle") return;
+		if (event.detail > 0) event.currentTarget.blur();
 		player = { status: "loading" };
 	}
 
@@ -156,7 +158,7 @@
 			},
 		]}
 		aria-label={t("chat.message.video.a11y.play")}
-		disabled={player.status !== "idle"}
+		aria-disabled={player.status !== "idle"}
 		onclick={play}
 		{@attach media.attach}
 	>

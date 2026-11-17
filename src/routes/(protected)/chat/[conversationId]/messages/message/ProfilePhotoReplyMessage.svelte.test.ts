@@ -78,7 +78,7 @@ describe("profile photo reply messages", () => {
 	it("keeps reply text and blocks loading an invalid peer photo hash", async () => {
 		const open = vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();
 		renderPhoto({ imageHash: "../invalid?hash" });
-		expect(photoButton().hasAttribute("disabled")).toBe(true);
+		expect(photoButton().getAttribute("aria-disabled")).toBe("true");
 		expect(within(photoButton()).queryByRole("presentation")).toBeNull();
 		expect(screen.getByText("Nice photo!")).toBeTruthy();
 		await fireEvent.click(photoButton());
@@ -181,6 +181,32 @@ describe("profile photo reply messages", () => {
 			);
 		},
 	);
+
+	it("keeps focus on a photo opened from the keyboard while its viewer opens and ignores a second press", async () => {
+		const open = vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();
+		renderPhoto();
+		const button = photoButton();
+		button.focus();
+
+		await fireEvent.click(button);
+		await fireEvent.click(button);
+
+		expect(open).toHaveBeenCalledOnce();
+		expect(button.getAttribute("aria-disabled")).toBe("true");
+		expect(button.hasAttribute("disabled")).toBe(false);
+		expect(document.activeElement).toBe(button);
+	});
+
+	it("lets go of focus when the photo is opened with a pointer, so the closing viewer leaves no ring on it", async () => {
+		vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();
+		renderPhoto();
+		const button = photoButton();
+		button.focus();
+
+		await pointerClick(button, "mouse");
+
+		expect(document.activeElement).not.toBe(button);
+	});
 
 	it("aborts an opening viewer when unmounted", async () => {
 		const open = vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();

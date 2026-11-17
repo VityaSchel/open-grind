@@ -2,6 +2,7 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import { t } from "#lib/i18n/index.ts";
 	import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { GaymojiSection } from "#lib/chat/gaymoji-sections.ts";
 	import { ElementRegistry } from "./element-registry";
 
@@ -17,8 +18,15 @@
 		onPick: (key: string) => void;
 	} = $props();
 
-	let row = $state<HTMLDivElement | null>(null);
 	const buttons = new ElementRegistry<HTMLButtonElement>();
+	const toolbar = new RovingFocusState({
+		keys: () => sections.map(({ key }) => key),
+		orientation: "horizontal",
+		wrap: "loop",
+		restingKey: () => current,
+	});
+
+	let row = $state<HTMLDivElement | null>(null);
 
 	function revealInRow(button: HTMLButtonElement) {
 		if (!row) return;
@@ -45,12 +53,15 @@
 >
 	<div
 		bind:this={row}
+		{@attach toolbar.container}
+		role="toolbar"
 		data-scroll-intent="x"
 		class="relative -mx-4 no-scrollbar flex gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain border-b-hairline border-border px-4 py-2 group-data-at-top/sheet:touch-pan-x group-data-at-top/sheet:touch-pan-down"
 	>
 		{#each sections as section (section.key)}
 			<button
 				{@attach buttons.register(section.key)}
+				{@attach toolbar.item(section.key)}
 				type="button"
 				data-slot="gaymoji-section-button"
 				aria-label={section.title}

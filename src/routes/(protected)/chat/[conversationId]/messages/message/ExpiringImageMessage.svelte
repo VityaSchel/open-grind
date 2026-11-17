@@ -81,7 +81,9 @@
 		}
 	});
 
-	function openImage() {
+	function openImage(event: MouseEvent & { currentTarget: HTMLElement }) {
+		if (imageState.status !== "idle") return;
+		if (event.detail > 0) event.currentTarget.blur();
 		imageState =
 			cachedImage === null
 				? { status: "loading" }
@@ -177,7 +179,7 @@
 			},
 		]}
 		onclick={openImage}
-		disabled={imageState.status !== "idle"}
+		aria-disabled={imageState.status !== "idle"}
 		{@attach media.attach}
 	>
 		{@render bubbleContent()}

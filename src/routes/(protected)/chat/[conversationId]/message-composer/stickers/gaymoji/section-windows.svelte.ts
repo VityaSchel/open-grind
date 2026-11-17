@@ -2,6 +2,7 @@ import { flushSync } from "svelte";
 import { SvelteMap } from "svelte/reactivity";
 import type { Attachment } from "svelte/attachments";
 
+import { type Band, visibleBand } from "#lib/platform/reveal-keyboard-focus.ts";
 import {
 	type GridMetrics,
 	gridWindow,
@@ -27,6 +28,7 @@ const LAYOUT_UNITS_PER_PX = 64;
 
 type TrackedGrid = { element: HTMLElement; count: number };
 type ReadingPosition = { key: string; index: number; fraction: number };
+type ItemReveal = { key: string; index: number; stickyTop: Element | null };
 
 let lastMetrics: GridMetrics = NO_METRICS;
 
@@ -93,6 +95,31 @@ export class SectionWindows {
 				this.#offsets.delete(key);
 			};
 		};
+	}
+
+	get columns(): number {
+		return Math.max(1, this.#columns);
+	}
+
+	rowsPerPage(stickyTop: Element | null): number {
+		const stridePx = this.#cellPx + this.#gapPx;
+		if (stridePx <= 0) return 1;
+		const { top, bottom } = this.#bandBelow(stickyTop);
+		return Math.max(1, Math.floor((bottom - top) / stridePx));
+	}
+
+	revealItem({ key, index, stickyTop }: ItemReveal): void {
+		const scroller = this.#scroller;
+		const grid = this.#grids.get(key)?.element;
+		if (!scroller || !grid || this.#cellPx <= 0) return;
+		const row = Math.floor(index / this.columns);
+		const top =
+			grid.getBoundingClientRect().top +
+			row * (this.#cellPx + this.#gapPx);
+		const band = this.#bandBelow(stickyTop);
+		if (top < band.top) scroller.scrollTop -= band.top - top;
+		else if (top + this.#cellPx > band.bottom)
+			scroller.scrollTop += top + this.#cellPx - band.bottom;
 	}
 
 	windowOf({ key, count }: { key: string; count: number }): GridWindow {
@@ -176,6 +203,12 @@ export class SectionWindows {
 			grid.getBoundingClientRect().top +
 			anchorPx -
 			scroller.getBoundingClientRect().top;
+	}
+
+	#bandBelow(stickyTop: Element | null): Band {
+		const band = visibleBand(this.#scroller);
+		const covered = stickyTop?.getBoundingClientRect().bottom ?? band.top;
+		return { top: Math.max(band.top, covered), bottom: band.bottom };
 	}
 
 	#sample() {

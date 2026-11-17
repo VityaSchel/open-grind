@@ -6,6 +6,7 @@
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import UntrackedViewsGrid from "./UntrackedViewsGrid.svelte";
@@ -19,6 +20,17 @@
 		const state = getViewsState(ourProfileId);
 		state.load();
 		return state;
+	});
+
+	const grid = new RovingFocusState({
+		keys: () => views.views.map(({ key }) => key),
+		orientation: "grid",
+		wrap: "rows",
+		cells: (item) => [
+			item.querySelector<HTMLElement>(":scope > a") ?? item,
+		],
+		consumeAtEdge: ["left", "right"],
+		openerScope: "/interest/views",
 	});
 
 	let container: HTMLDivElement | null = $state(null);
@@ -67,12 +79,18 @@
 			{:else if views.views.length === 0}
 				<EmptyViewsGrid />
 			{:else}
-				<div class="photo-grid">
+				<div class="photo-grid" {@attach grid.container}>
 					{#each views.views as entry (entry.key)}
 						{#if entry.type === "profile"}
-							<ViewedProfile view={entry.profile} />
+							<ViewedProfile
+								view={entry.profile}
+								{@attach grid.item(entry.key)}
+							/>
 						{:else}
-							<ViewedPreview preview={entry.preview} />
+							<ViewedPreview
+								preview={entry.preview}
+								{@attach grid.item(entry.key)}
+							/>
 						{/if}
 					{/each}
 				</div>

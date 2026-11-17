@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("#lib/haptics.ts", () => ({ playHaptic: playHapticMock }));
 
-import { GridReorderState } from "./grid-reorder-state.svelte";
+import {
+	GridReorderState,
+	keyboardDropSlot,
+} from "./grid-reorder-state.svelte";
 
 const CELL_PX = 100;
 
@@ -238,5 +241,120 @@ describe("GridReorderState while the page scrolls under a held cell", () => {
 		reorder.release();
 
 		expect(moves).toEqual([{ from: 0, to: 4 }]);
+	});
+});
+
+describe("keyboardDropSlot behind a leading add tile in three columns", () => {
+	const grid = { count: 5, columns: 3, leadingTiles: 1 };
+
+	it("moves one slot along with Right and crosses the row end", () => {
+		expect(keyboardDropSlot({ ...grid, move: "next", from: 0 })).toBe(1);
+		expect(keyboardDropSlot({ ...grid, move: "next", from: 1 })).toBe(2);
+	});
+
+	it("moves a row down and back up in the column the slot is drawn in", () => {
+		expect(keyboardDropSlot({ ...grid, move: "rowBelow", from: 0 })).toBe(
+			3,
+		);
+		expect(keyboardDropSlot({ ...grid, move: "rowAbove", from: 3 })).toBe(
+			0,
+		);
+	});
+
+	it("never moves a slot onto the add tile", () => {
+		expect(keyboardDropSlot({ ...grid, move: "previous", from: 0 })).toBe(
+			0,
+		);
+		expect(keyboardDropSlot({ ...grid, move: "rowStart", from: 1 })).toBe(
+			0,
+		);
+		expect(keyboardDropSlot({ ...grid, move: "rowAbove", from: 1 })).toBe(
+			1,
+		);
+	});
+
+	it("leaves a slot in its column when the row above starts with the add tile", () => {
+		expect(keyboardDropSlot({ ...grid, move: "rowAbove", from: 2 })).toBe(
+			2,
+		);
+		expect(keyboardDropSlot({ ...grid, move: "pageUp", from: 2 })).toBe(2);
+	});
+
+	it("stops at the last slot", () => {
+		expect(keyboardDropSlot({ ...grid, move: "next", from: 4 })).toBe(4);
+		expect(keyboardDropSlot({ ...grid, move: "last", from: 0 })).toBe(4);
+	});
+
+	it("counts rows from the first slot when no add tile leads", () => {
+		expect(
+			keyboardDropSlot({
+				...grid,
+				leadingTiles: 0,
+				move: "rowBelow",
+				from: 0,
+			}),
+		).toBe(3);
+	});
+});
+
+describe("GridReorderState held by keyboard", () => {
+	function rowOfThree() {
+		const moves: { from: number; to: number }[] = [];
+		const reorder = new GridReorderState({
+			onReorder: (move) => moves.push(move),
+		});
+		const cells = [0, 1, 2].map(fakeCell);
+		cells.forEach((cell, index) => reorder.cell(index)(cell));
+		return { reorder, moves, cells };
+	}
+
+	it("draws the held cell over the slot it aims at and drops it there", () => {
+		const { reorder, moves } = rowOfThree();
+
+		reorder.lift(0);
+		reorder.aim(2);
+
+		expect(reorder.heldByKeyboard).toBe(true);
+		expect(reorder.transformFor(0)).toBe("translate(200px, 0px)");
+		expect(reorder.transformFor(1)).toBe("translate(-100px, 0px)");
+		reorder.release();
+		expect(moves).toEqual([{ from: 0, to: 2 }]);
+		expect(reorder.heldByKeyboard).toBe(false);
+	});
+
+	it("puts the cell back on cancel", () => {
+		const { reorder, moves } = rowOfThree();
+
+		reorder.lift(1);
+		reorder.aim(0);
+		reorder.cancel();
+
+		expect(reorder.dragging).toBe(false);
+		expect(reorder.transformFor(1)).toBeUndefined();
+		expect(moves).toEqual([]);
+	});
+
+	it("lets a pointer press during the hold put the cell back", () => {
+		const { reorder, moves, cells } = rowOfThree();
+
+		reorder.lift(0);
+		reorder.aim(2);
+		reorder.press({
+			event: pointer({ pointerType: "mouse", node: cells[1]! }),
+			index: 1,
+		});
+
+		expect(reorder.dragging).toBe(false);
+		reorder.release();
+		expect(moves).toEqual([]);
+	});
+
+	it("ignores aims while no cell is held by keyboard", () => {
+		const { reorder } = rowOfThree();
+
+		reorder.aim(2);
+
+		expect(reorder.dragging).toBe(false);
+		expect(reorder.to).toBe(-1);
 	});
 });

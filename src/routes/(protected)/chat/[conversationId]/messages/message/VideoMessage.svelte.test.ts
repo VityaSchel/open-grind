@@ -206,6 +206,33 @@ describe("video message", () => {
 		expect(queryByRole("button", PLAY)).toBeNull();
 	});
 
+	it("keeps focus on a play button pressed from the keyboard while the video loads and ignores repeated presses", async () => {
+		messagesApi.getSingleMessage.mockReturnValue(new Promise(() => {}));
+		const { getByRole } = renderVideo({ body: {} });
+		const play = getByRole("button", PLAY);
+		play.focus();
+
+		await fireEvent.click(play);
+		await fireEvent.click(play);
+
+		expect(play.getAttribute("aria-disabled")).toBe("true");
+		expect(play.hasAttribute("disabled")).toBe(false);
+		expect(document.activeElement).toBe(play);
+		expect(messagesApi.getSingleMessage).toHaveBeenCalledOnce();
+	});
+
+	it("lets go of focus when the play button is clicked with a pointer", async () => {
+		messagesApi.getSingleMessage.mockReturnValue(new Promise(() => {}));
+		const { getByRole } = renderVideo({ body: {} });
+		const play = getByRole("button", PLAY);
+		play.focus();
+
+		await fireEvent.click(play, { detail: 1 });
+
+		expect(play.getAttribute("aria-disabled")).toBe("true");
+		expect(document.activeElement).not.toBe(play);
+	});
+
 	it("spends another view on each play while views are left", async () => {
 		refetchReturns({ viewsRemaining: 1 });
 		const { getByRole } = renderVideo({ body: {} });
@@ -218,8 +245,8 @@ describe("video message", () => {
 
 		await vi.waitFor(() =>
 			expect(
-				(getByRole("button", PLAY) as HTMLButtonElement).disabled,
-			).toBe(false),
+				getByRole("button", PLAY).getAttribute("aria-disabled"),
+			).toBe("false"),
 		);
 		await fireEvent.click(getByRole("button", PLAY));
 		await vi.waitFor(() =>
@@ -240,8 +267,8 @@ describe("video message", () => {
 		expect(lightbox.openLightbox).not.toHaveBeenCalled();
 		await vi.waitFor(() =>
 			expect(
-				(getByRole("button", PLAY) as HTMLButtonElement).disabled,
-			).toBe(false),
+				getByRole("button", PLAY).getAttribute("aria-disabled"),
+			).toBe("false"),
 		);
 	});
 

@@ -4,6 +4,7 @@
 	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
 	import { expoOut } from "svelte/easing";
 	import { fade } from "svelte/transition";
+	import type { Attachment } from "svelte/attachments";
 
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import SelectionOverlay from "#lib/components/shared/SelectionOverlay.svelte";
@@ -28,6 +29,7 @@
 		dimmed = false,
 		disabled = false,
 		clickable = true,
+		attach,
 		onclick,
 	}: {
 		album: MyAlbum;
@@ -38,6 +40,7 @@
 		dimmed?: boolean;
 		disabled?: boolean;
 		clickable?: boolean;
+		attach?: Attachment<HTMLElement>;
 		onclick?: () => void;
 	} = $props();
 
@@ -118,17 +121,20 @@
 
 {#if href === undefined}
 	<button
+		{@attach attach}
 		type="button"
 		data-slot="album-tile"
 		class={tileClass}
 		aria-pressed={selected}
-		{disabled}
-		{onclick}
+		aria-disabled={disabled}
+		onclick={() => {
+			if (!disabled) onclick?.();
+		}}
 	>
 		{@render body()}
 	</button>
 {:else}
-	<a {href} data-slot="album-tile" class={tileClass}>
+	<a {@attach attach} {href} data-slot="album-tile" class={tileClass}>
 		{@render body()}
 	</a>
 {/if}

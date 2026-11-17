@@ -10,7 +10,7 @@
 		SharedCreditSection,
 	} from "#lib/credits/index.ts";
 	import CreditCard from "./CreditCard.svelte";
-	import CreditRow from "./CreditRow.svelte";
+	import CreditRows from "./CreditRows.svelte";
 	import { FrameCounter } from "./frame-counter.svelte";
 
 	let { cards, groups }: Credits = $props();
@@ -48,6 +48,7 @@
 			.reduce((sum, section) => sum + section.batches.length, 0);
 	const batchCount = $derived(batchesBefore(sections.length));
 	const revealed = new FrameCounter({ total: () => batchCount });
+	const fullyRevealed = $derived(revealed.count === batchCount);
 </script>
 
 <h2>{t("settings.credits.specialThanks")}</h2>
@@ -60,16 +61,15 @@
 	{#if shownBatches > 0}
 		<section class="flex min-w-0 flex-col" data-slot="credit-section">
 			<h2 class="mb-1">{sectionTitle(section)}</h2>
-			{#each section.batches.slice(0, shownBatches) as batch, batchIndex (batchIndex)}
-				{#each batch as entry (entry.ecosystem + entry.id + entry.spdx)}
-					<CreditRow {entry} />
-				{/each}
-			{/each}
+			<CreditRows
+				batches={section.batches.slice(0, shownBatches)}
+				revealed={fullyRevealed}
+			/>
 		</section>
 	{/if}
 {/each}
 
-{#if revealed.count === batchCount}
+{#if fullyRevealed}
 	<Link
 		href="https://git.opengrind.org/open-grind/open-grind/issues/new"
 		class="mt-4 inline-flex items-center gap-1 self-start rounded-sm px-1 text-sm text-primary hover:underline"
