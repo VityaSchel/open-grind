@@ -19,14 +19,6 @@
 		"reason": "Only when applying the filters or closing the command center throws, or navigating to Grid rejects. Applying them sets them in memory, starts Grid over and saves them in the background, and a failed save shows browse.grid.searchFilters.errors.updateFailed instead. Closing only changes state, and SvelteKit's goto resolves even when another navigation aborts it and rejects only when a navigation callback throws, which none of the app's callbacks do.",
 		"explanation": "Error toast for when the “Filter Grid…” command in the Command Center couldn’t apply the filters; only saving them can fail, and that shows a different message, so this toast never appears."
 	},
-	"common.carousel.a11y.next": {
-		"reason": "Only the Carousel.Next button carries this label, and no screen in the app renders that component.",
-		"explanation": "Screen reader label of the next-slide button of a carousel component that no screen in the app uses; the photo viewer’s arrow buttons have their own labels, so this label is never read out."
-	},
-	"common.carousel.a11y.previous": {
-		"reason": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
-		"explanation": "Screen reader label of the previous-slide button of a carousel component that no screen in the app uses; the photo viewer’s arrow buttons have their own labels, so this label is never read out."
-	},
 	"common.location.permissionReason": {
 		"reason": "Only in the location permission prompt that iOS draws over the app, so no page screenshot shows it.",
 		"explanation": "Reason that iOS shows in its prompt when Open Grind first asks for your location; iOS draws the prompt over the app, so no screenshot shows it."

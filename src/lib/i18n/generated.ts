@@ -416,8 +416,6 @@ export interface Messages {
 	"common.albumShare.errors.shareFailed": undefined;
 	"common.albumShare.errors.unshareFailed": undefined;
 	"common.carousel.a11y.carouselRole": undefined;
-	"common.carousel.a11y.next": undefined;
-	"common.carousel.a11y.previous": undefined;
 	"common.carousel.a11y.slideRole": undefined;
 	"common.chat.writeMessage": undefined;
 	"common.commandDialog.a11y.description": undefined;

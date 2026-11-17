@@ -31,8 +31,6 @@
 	"someone": "Someone",
 	"carousel": {
 		"a11y": {
-			"previous": "Previous slide",
-			"next": "Next slide",
 			"carouselRole": "carousel",
 			"slideRole": "slide"
 		}
