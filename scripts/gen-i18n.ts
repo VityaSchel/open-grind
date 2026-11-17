@@ -22,6 +22,16 @@ import {
 	renderDesktopTexts,
 	renderMatcherCases,
 } from "./i18n/desktop-strings";
+import {
+	checkIosManifest,
+	IOS_INFO_PLIST,
+	IOS_LOCALIZATIONS,
+	IOS_MANIFEST,
+	iosDrift,
+	plistStringsFileOf,
+	renderPlistStrings,
+	withPlistStrings,
+} from "./i18n/ios-strings";
 import { LOCALES, readLocaleFiles, SHIPPED } from "./i18n/locale-files";
 import {
 	GRADLE_PROPERTIES,
@@ -113,7 +123,28 @@ const desktop = checkDesktopManifest({
 	messages,
 });
 
+const ios = checkIosManifest({ text: await readText(IOS_MANIFEST), messages });
+
 const english = catalogTexts(source);
+
+const iosPlistStrings = withPlistStrings({
+	plist: await readText(IOS_INFO_PLIST),
+	manifest: ios.manifest,
+	english,
+});
+
+const iosInfoPlist = withBundleLocalizations({
+	plist: iosPlistStrings.plist,
+	shipped: shipped.languages,
+});
+
+const iosStrings = shipped.languages.map((locale) => ({
+	file: plistStringsFileOf(locale),
+	text: renderPlistStrings({
+		manifest: ios.manifest,
+		texts: catalogTexts(catalogs.get(locale) ?? []),
+	}),
+}));
 
 const renderStrings = ({
 	locale,
@@ -165,6 +196,8 @@ const problems = [
 	...shipped.errors,
 	...android.errors,
 	...desktop.errors,
+	...ios.errors,
+	...iosPlistStrings.errors,
 	...[englishStrings, ...translatedStrings, ...desktopTexts].flatMap(
 		(rendered) =>
 			rendered.errors.map((error) => `${rendered.locale}/${error}`),
@@ -177,7 +210,17 @@ if (infoPlist === undefined) {
 	);
 }
 
-if (problems.length > 0 || infoPlist === undefined) {
+if (iosInfoPlist === undefined) {
+	problems.push(
+		`${IOS_INFO_PLIST}: has no top-level <dict> to hold CFBundleLocalizations`,
+	);
+}
+
+if (
+	problems.length > 0 ||
+	infoPlist === undefined ||
+	iosInfoPlist === undefined
+) {
 	console.error(problems.map((problem) => `error: ${problem}`).join("\n"));
 	process.exit(1);
 }
@@ -190,6 +233,7 @@ const outputs = [
 	},
 	{ file: LOCALES_CONFIG, text: renderLocalesConfig(shipped.languages) },
 	{ file: INFO_PLIST, text: infoPlist },
+	{ file: IOS_INFO_PLIST, text: iosInfoPlist },
 	{
 		file: GRADLE_PROPERTIES,
 		text: withLocaleFilters({
@@ -220,6 +264,23 @@ const drift = androidDrift({
 
 const existingDesktop = await readText(DESKTOP_STRINGS);
 
+const iosFiles = iosDrift({
+	translated: iosStrings,
+	existing: new Map(
+		await Promise.all(
+			globSync("*.lproj/InfoPlist.strings", {
+				cwd: path.join(ROOT, IOS_LOCALIZATIONS),
+			})
+				.sort()
+				.map(async (relative) => {
+					const file = `${IOS_LOCALIZATIONS}/${relative}`;
+					return [file, await readText(file)] as const;
+				}),
+		),
+	),
+	release,
+});
+
 const desktopStrings = desktopDrift({
 	rendered: {
 		matching: matchingData([SOURCE_LOCALE, ...shipped.languages]),
@@ -235,16 +296,23 @@ if (
 	changed.length === 0 &&
 	drift.writes.length === 0 &&
 	drift.deletes.length === 0 &&
+	iosFiles.writes.length === 0 &&
+	iosFiles.deletes.length === 0 &&
 	desktopStrings.write === undefined
 ) {
 	console.log(`i18n files up to date (${messages.length} messages)`);
 } else if (check) {
-	for (const warning of [...drift.warnings, ...desktopStrings.warnings]) {
+	for (const warning of [
+		...drift.warnings,
+		...iosFiles.warnings,
+		...desktopStrings.warnings,
+	]) {
 		console.warn(`warning: ${warning}`);
 	}
 	const stale = [
 		...changed.map(({ file }) => `${file} is out of date.`),
 		...drift.errors,
+		...iosFiles.errors,
 		...desktopStrings.errors,
 	];
 	if (stale.length > 0) {
@@ -260,12 +328,13 @@ if (
 	for (const { file, text } of [
 		...changed,
 		...drift.writes,
+		...iosFiles.writes,
 		...desktopWrites,
 	]) {
 		await Bun.write(path.join(ROOT, file), text);
 		console.log(`wrote ${file}`);
 	}
-	for (const file of drift.deletes) {
+	for (const file of [...drift.deletes, ...iosFiles.deletes]) {
 		const folder = path.dirname(path.join(ROOT, file));
 		rmSync(path.join(ROOT, file));
 		if (readdirSync(folder).length === 0) rmdirSync(folder);

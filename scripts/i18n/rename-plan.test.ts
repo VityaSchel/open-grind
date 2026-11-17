@@ -8,6 +8,7 @@ import { type FileText, planRename } from "./rename-plan";
 const UNCAPTURABLE = "scripts/i18n-screenshots/uncapturable.json";
 const ANDROID_STRINGS = "src/lib/i18n/android-strings.json";
 const DESKTOP_STRINGS = "src/lib/i18n/desktop-strings.json";
+const IOS_STRINGS = "src/lib/i18n/ios-strings.json";
 
 const json = (tree: object) => `${JSON.stringify(tree, null, "\t")}\n`;
 
@@ -40,6 +41,9 @@ function repo(uncapturable: object = {}): string {
 			push_retry: "common.actions.retry",
 		}),
 		[DESKTOP_STRINGS]: json({ location_quit: "common.actions.close" }),
+		[IOS_STRINGS]: json({
+			NSLocationWhenInUseUsageDescription: "common.actions.close",
+		}),
 		[UNCAPTURABLE]: json(uncapturable),
 		"src/routes/Page.svelte": `{t("common.actions.close")} {t("chat.unread", { count })}\n`,
 		"e2e/close.spec.ts": `await marker(page, "common.actions.close").click();\n`,
@@ -81,6 +85,9 @@ describe("planRename", () => {
 			}),
 			[DESKTOP_STRINGS]: json({
 				location_quit: "common.actions.dismiss",
+			}),
+			[IOS_STRINGS]: json({
+				NSLocationWhenInUseUsageDescription: "common.actions.dismiss",
 			}),
 			"e2e/close.spec.ts": `await marker(page, "common.actions.dismiss").click();\n`,
 			"scripts/i18n-screenshots/scenes/close.ts": `export const keys = ["common.actions.dismiss"];\n`,

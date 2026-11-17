@@ -454,6 +454,7 @@ export interface Messages {
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
+	"common.location.permissionReason": undefined;
 	"common.media.drop.onlyPhotos": undefined;
 	"common.media.drop.onlyPhotosAndVideos": undefined;
 	"common.media.errors.heicUnsupported": undefined;

@@ -1,7 +1,7 @@
 {
 	"auth.signIn.facebook.title": {
-		"reason": "Only the title of the native window that the desktop apps open for signing in with Facebook, which the system draws outside the page, so no page screenshot shows it.",
-		"explanation": "Title of the window that the desktop apps open for signing in with Facebook; the system draws the window’s title bar, so no screenshot shows it."
+		"reason": "Only the title of the native window that the desktop apps open, and of the sheet that the iOS app shows, for signing in with Facebook, which the system draws outside the page, so no page screenshot shows it.",
+		"explanation": "Title of the window that the desktop apps open, and of the sheet that the iOS app shows, for signing in with Facebook; the system draws the title bar, so no screenshot shows it."
 	},
 	"chat.composer.errors.sendFailed": {
 		"reason": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
@@ -26,6 +26,10 @@
 	"common.carousel.a11y.previous": {
 		"reason": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
 		"explanation": "Screen reader label of the previous-slide button of a carousel component that no screen in the app uses; the photo viewer’s arrow buttons have their own labels, so this label is never read out."
+	},
+	"common.location.permissionReason": {
+		"reason": "Only in the location permission prompt that iOS draws over the app, so no page screenshot shows it.",
+		"explanation": "Reason that iOS shows in its prompt when Open Grind first asks for your location; iOS draws the prompt over the app, so no screenshot shows it."
 	},
 	"feedback.appError.contentTooLarge": {
 		"reason": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",

@@ -74,3 +74,11 @@ targets:
         outputFiles:
           - $(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a
           - $(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a
+    postBuildScripts:
+      - script: |
+          for strings in "${SRCROOT:?}"/Localizations/*.lproj; do
+            [ -d "${strings}" ] || continue
+            cp -R "${strings}" "${TARGET_BUILD_DIR:?}/${UNLOCALIZED_RESOURCES_FOLDER_PATH:?}/"
+          done
+        name: Copy Localized Info.plist Strings
+        basedOnDependencyAnalysis: false

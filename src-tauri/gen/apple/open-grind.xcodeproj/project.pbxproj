@@ -159,6 +159,7 @@
 				D44023B4E9969DE8ED427D31 /* Sources */,
 				B924AD225345CEB50013F104 /* Resources */,
 				E297E9626E5AFA5C56B9B281 /* Frameworks */,
+				6DF8FFC78B070A29FEDF9E77 /* Copy Localized Info.plist Strings */,
 			);
 			buildRules = (
 			);
@@ -239,6 +240,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "bun tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
+		};
+		6DF8FFC78B070A29FEDF9E77 /* Copy Localized Info.plist Strings */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Localized Info.plist Strings";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "for strings in \"${SRCROOT:?}\"/Localizations/*.lproj; do\n  [ -d \"${strings}\" ] || continue\n  cp -R \"${strings}\" \"${TARGET_BUILD_DIR:?}/${UNLOCALIZED_RESOURCES_FOLDER_PATH:?}/\"\ndone\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
