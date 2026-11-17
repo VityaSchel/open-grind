@@ -1,10 +1,11 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 export type FocusStop = {
 	element: string;
 	indicator: "outline" | "overlay" | "highlight" | "dialog" | null;
 	contrast: number | null;
 	clippedBy: string[];
+	cornerClippedBy: string[];
 	paintedOverBy: string | null;
 	coveredBy: string | null;
 };
@@ -67,12 +68,8 @@ export async function measureFocusedElement(): Promise<{
 		context.clearRect(0, 0, 1, 1);
 		context.fillStyle = color;
 		context.fillRect(0, 0, 1, 1);
-		const [r = 0, g = 0, b = 0, a = 0] = context.getImageData(
-			0,
-			0,
-			1,
-			1,
-		).data;
+		const pixel = context.getImageData(0, 0, 1, 1).data;
+		const [r = 0, g = 0, b = 0, a = 0] = pixel;
 		return { rgb: [r, g, b], alpha: a / 255 };
 	};
 	const blend = (
@@ -116,25 +113,36 @@ export async function measureFocusedElement(): Promise<{
 				}
 			: null;
 	};
+	const solidShadowsOf = (s: CSSStyleDeclaration) =>
+		s.boxShadow === "none"
+			? []
+			: s.boxShadow.split(/,(?![^(]*\))/).flatMap((shadow) => {
+					const color = /^\s*([a-z]+\([^)]*\)|#\w+)/.exec(
+						shadow,
+					)?.[1];
+					if (!color || rgba(color).alpha === 0) return [];
+					const [, , blur = 0, spread = 0] =
+						shadow
+							.replace(/[a-z]+\([^)]*\)/g, "")
+							.match(/-?[\d.]+px/g)
+							?.map(parseFloat) ?? [];
+					if (blur > 0 || spread <= 0) return [];
+					return [{ color, spread, inset: shadow.includes("inset") }];
+				});
 	const spreadRingOf = (s: CSSStyleDeclaration) => {
-		if (s.boxShadow === "none") return null;
-		for (const shadow of s.boxShadow.split(/,(?![^(]*\))/)) {
-			const color = /^\s*([a-z]+\([^)]*\)|#\w+)/.exec(shadow)?.[1];
-			if (!color || rgba(color).alpha === 0) continue;
-			const [, , blur = 0, spread = 0] =
-				shadow
-					.replace(/[a-z]+\([^)]*\)/g, "")
-					.match(/-?[\d.]+px/g)
-					?.map(parseFloat) ?? [];
-			if (blur > 0 || spread <= 0) continue;
-			const inset = shadow.includes("inset");
-			return { width: spread, offset: inset ? -spread : 0, color };
-		}
-		return null;
+		const [shadow] = solidShadowsOf(s);
+		return shadow
+			? {
+					width: shadow.spread,
+					offset: shadow.inset ? -shadow.spread : 0,
+					color: shadow.color,
+				}
+			: null;
 	};
 
 	const dialog = element.matches('[role="dialog"], [role="alertdialog"]');
-	const overlay = outlineOf(getComputedStyle(element, "::after"));
+	const overlayStyle = getComputedStyle(element, "::after");
+	const overlay = outlineOf(overlayStyle);
 	let ringOwner: Element = element;
 	let ring =
 		overlay ?? outlineOf(style) ?? (dialog ? null : spreadRingOf(style));
@@ -160,7 +168,13 @@ export async function measureFocusedElement(): Promise<{
 			: null;
 
 	const box = ringOwner.getBoundingClientRect();
-	const ringInside = ring !== null && ring.offset + ring.width <= 0;
+	const ringReach = ring ? ring.offset + ring.width : 0;
+	const ringInside = ring !== null && ringReach <= 0;
+	const overlayBand = overlay
+		? solidShadowsOf(overlayStyle).find(
+				({ inset, spread }) => inset && spread >= -overlay.offset,
+			)
+		: undefined;
 	const backdropAt = (x: number, y: number): number[] | null => {
 		const layers: { rgb: number[]; alpha: number }[] = [];
 		for (const node of document.elementsFromPoint(x, y)) {
@@ -176,6 +190,8 @@ export async function measureFocusedElement(): Promise<{
 		);
 	};
 	const backdropsUnderRing = (): number[][] => {
+		if (overlayBand && ringInside)
+			return [blend(rgba(overlayBand.color), backdropOf(ringOwner))];
 		if (!ring || ringInside) return [backdropOf(ringOwner)];
 		const middle = ring.offset + ring.width / 2;
 		const centerX = (box.left + box.right) / 2;
@@ -210,13 +226,14 @@ export async function measureFocusedElement(): Promise<{
 				? null
 				: highlight;
 
-	const reach = ring ? Math.max(ring.offset + ring.width, 0) : 0;
-	const outer = {
-		left: box.left - reach,
-		top: box.top - reach,
-		right: box.right + reach,
-		bottom: box.bottom + reach,
-	};
+	type Edges = { left: number; top: number; right: number; bottom: number };
+	const boxGrownBy = (by: number): Edges => ({
+		left: box.left - by,
+		top: box.top - by,
+		right: box.right + by,
+		bottom: box.bottom + by,
+	});
+	const outer = boxGrownBy(Math.max(ringReach, 0));
 
 	const establishesContainingBlock = (
 		s: CSSStyleDeclaration,
@@ -235,10 +252,7 @@ export async function measureFocusedElement(): Promise<{
 		/transform|filter/.test(s.willChange);
 
 	const clippedBy: string[] = [];
-	const overhang = (
-		clip: { left: number; top: number; right: number; bottom: number },
-		axes: { x: boolean; y: boolean },
-	) =>
+	const overhang = (clip: Edges, axes: { x: boolean; y: boolean }) =>
 		[
 			axes.x && clip.left - outer.left > 0.5 && "left",
 			axes.y && clip.top - outer.top > 0.5 && "top",
@@ -246,6 +260,109 @@ export async function measureFocusedElement(): Promise<{
 			axes.y && outer.bottom - clip.bottom > 0.5 && "bottom",
 		].filter(Boolean);
 
+	const corners = [
+		{ name: "top-left", x: "left", y: "top" },
+		{ name: "top-right", x: "right", y: "top" },
+		{ name: "bottom-right", x: "right", y: "bottom" },
+		{ name: "bottom-left", x: "left", y: "bottom" },
+	] as const;
+	const arcsOf = ({
+		style: s,
+		borderBox: { width, height },
+		edges,
+		grow,
+	}: {
+		style: CSSStyleDeclaration;
+		borderBox: DOMRect;
+		edges: Edges;
+		grow: (corner: (typeof corners)[number]) => number;
+	}) => {
+		const radii = corners.map(({ name }) => {
+			const value = s.getPropertyValue(`border-${name}-radius`);
+			const horizontal = value.split(" ")[0]!;
+			return horizontal.endsWith("%")
+				? (parseFloat(horizontal) / 100) * Math.min(width, height)
+				: parseFloat(horizontal) || 0;
+		});
+		const [topLeft = 0, topRight = 0, bottomRight = 0, bottomLeft = 0] =
+			radii;
+		const scale = Math.min(
+			1,
+			...[
+				[width, topLeft + topRight],
+				[width, bottomLeft + bottomRight],
+				[height, topLeft + bottomLeft],
+				[height, topRight + bottomRight],
+			].map(([side = 0, sum = 0]) => (sum > 0 ? side / sum : Infinity)),
+		);
+		return corners.map((corner, index) => {
+			const towardX = corner.x === "left" ? -1 : 1;
+			const towardY = corner.y === "top" ? -1 : 1;
+			const scaled = radii[index]! * scale;
+			const radius = Math.min(
+				scaled > 0 ? Math.max(0, scaled + grow(corner)) : 0,
+				(edges.right - edges.left) / 2,
+				(edges.bottom - edges.top) / 2,
+			);
+			return {
+				name: corner.name,
+				towardX,
+				towardY,
+				radius,
+				x: edges[corner.x] - towardX * radius,
+				y: edges[corner.y] - towardY * radius,
+			};
+		});
+	};
+	const ringCorners = arcsOf({
+		style: getComputedStyle(ringOwner),
+		borderBox: box,
+		edges: boxGrownBy(ringReach),
+		grow: () => ringReach,
+	}).map(({ name, towardX, towardY, radius, x, y }) => {
+		const fromCenter = radius * Math.SQRT1_2 - 0.6;
+		return {
+			name,
+			x: x + towardX * fromCenter,
+			y: y + towardY * fromCenter,
+		};
+	});
+	const clippedCorners = (ancestor: Element) => {
+		const s = getComputedStyle(ancestor);
+		const rect = ancestor.getBoundingClientRect();
+		const border = (side: keyof Edges) =>
+			parseFloat(s.getPropertyValue(`border-${side}-width`)) || 0;
+		const padding = {
+			left: rect.left + border("left"),
+			top: rect.top + border("top"),
+			right: rect.right - border("right"),
+			bottom: rect.bottom - border("bottom"),
+		};
+		const arcs = arcsOf({
+			style: s,
+			borderBox: rect,
+			edges: padding,
+			grow: ({ x, y }) => -Math.max(border(x), border(y)),
+		});
+		return ringCorners
+			.filter(
+				({ x, y }) =>
+					x >= padding.left &&
+					x <= padding.right &&
+					y >= padding.top &&
+					y <= padding.bottom &&
+					arcs.some(
+						(arc) =>
+							(x - arc.x) * arc.towardX > 0 &&
+							(y - arc.y) * arc.towardY > 0 &&
+							(x - arc.x) ** 2 + (y - arc.y) ** 2 >
+								arc.radius ** 2,
+					),
+			)
+			.map(({ name }) => name);
+	};
+
+	const cornerClippedBy: string[] = [];
 	if (ring) {
 		const ownerPosition = getComputedStyle(ringOwner).position;
 		let escaping: "absolute" | "fixed" | null =
@@ -284,6 +401,11 @@ export async function measureFocusedElement(): Promise<{
 					clippedBy.push(
 						`${describe(ancestor)} (${sides.join(", ")})`,
 					);
+				const clippedCornerNames = clippedCorners(ancestor);
+				if (clippedCornerNames.length)
+					cornerClippedBy.push(
+						`${describe(ancestor)} (${clippedCornerNames.join(", ")})`,
+					);
 			}
 			if (s.position === "absolute" || s.position === "fixed")
 				escaping = s.position;
@@ -315,11 +437,9 @@ export async function measureFocusedElement(): Promise<{
 	};
 	let paintedOverBy: string | null = null;
 	if (ring && !overlay) {
-		const middle = ring.offset + ring.width / 2;
-		const left = box.left - middle;
-		const top = box.top - middle;
-		const right = box.right + middle;
-		const bottom = box.bottom + middle;
+		const { left, top, right, bottom } = boxGrownBy(
+			ring.offset + ring.width / 2,
+		);
 		const samples = [0.25, 0.5, 0.75].flatMap((f) => [
 			[left + (right - left) * f, top],
 			[left + (right - left) * f, bottom],
@@ -372,10 +492,55 @@ export async function measureFocusedElement(): Promise<{
 							: null,
 			contrast,
 			clippedBy,
+			cornerClippedBy,
 			paintedOverBy,
 			coveredBy,
 		},
 	};
+}
+
+type FocusWalk = {
+	key: string;
+	stops: number;
+	from: "documentStart" | "currentFocus";
+	whenLost: "skip" | "end" | "report";
+	onStop?: () => Promise<void>;
+};
+
+const FOCUS_ON_BODY: FocusStop = {
+	element: "body",
+	indicator: null,
+	contrast: null,
+	clippedBy: [],
+	cornerClippedBy: [],
+	paintedOverBy: null,
+	coveredBy: null,
+};
+
+async function walkFocus(
+	page: Page,
+	{ key, stops, from, whenLost, onStop }: FocusWalk,
+): Promise<FocusStop[]> {
+	if (from === "documentStart")
+		await page.evaluate(() =>
+			(document.activeElement as HTMLElement | null)?.blur(),
+		);
+	const visited: FocusStop[] = [];
+	const seen = new Set<number>();
+	for (let i = 0; i < stops; i++) {
+		if (from === "documentStart" || i > 0) await page.keyboard.press(key);
+		const measured = await page.evaluate(measureFocusedElement);
+		if (!measured && whenLost === "skip") continue;
+		if (!measured)
+			return whenLost === "report"
+				? [...visited, FOCUS_ON_BODY]
+				: visited;
+		if (seen.has(measured.key)) break;
+		seen.add(measured.key);
+		visited.push(measured.stop);
+		await onStop?.();
+	}
+	return visited;
 }
 
 export async function tabThrough(
@@ -386,21 +551,41 @@ export async function tabThrough(
 		fromCurrentFocus = false,
 	}: { stops: number; key?: string; fromCurrentFocus?: boolean },
 ): Promise<FocusStop[]> {
-	if (!fromCurrentFocus)
-		await page.evaluate(() =>
-			(document.activeElement as HTMLElement | null)?.blur(),
-		);
-	const visited: FocusStop[] = [];
-	const seen = new Set<number>();
-	for (let i = 0; i < stops; i++) {
-		if (!fromCurrentFocus || i > 0) await page.keyboard.press(key);
-		const measured = await page.evaluate(measureFocusedElement);
-		if (!measured) continue;
-		if (seen.has(measured.key)) break;
-		seen.add(measured.key);
-		visited.push(measured.stop);
-	}
-	return visited;
+	return walkFocus(page, {
+		key,
+		stops,
+		from: fromCurrentFocus ? "currentFocus" : "documentStart",
+		whenLost: "skip",
+	});
+}
+
+export async function arrowThrough(
+	page: Page,
+	{ start, key, stops }: { start?: Locator; key: string; stops: number },
+): Promise<FocusStop[]> {
+	await start?.focus();
+	return walkFocus(page, {
+		key,
+		stops,
+		from: "currentFocus",
+		whenLost: "report",
+	});
+}
+
+export async function tabCycle(
+	page: Page,
+	{
+		limit = 200,
+		onStop,
+	}: { limit?: number; onStop?: () => Promise<void> } = {},
+): Promise<FocusStop[]> {
+	return walkFocus(page, {
+		key: "Tab",
+		stops: limit,
+		from: "documentStart",
+		whenLost: "end",
+		onStop,
+	});
 }
 
 export function focusProblems(visited: FocusStop[]): string[] {
@@ -410,6 +595,7 @@ export function focusProblems(visited: FocusStop[]): string[] {
 			indicator,
 			contrast,
 			clippedBy,
+			cornerClippedBy,
 			paintedOverBy,
 			coveredBy,
 		}) => [
@@ -420,6 +606,10 @@ export function focusProblems(visited: FocusStop[]): string[] {
 			...clippedBy.map(
 				(clipper) =>
 					`${element}: focus indicator clipped by ${clipper}`,
+			),
+			...cornerClippedBy.map(
+				(clipper) =>
+					`${element}: focus indicator corner clipped by ${clipper}`,
 			),
 			...(paintedOverBy
 				? [
