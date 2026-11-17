@@ -6,6 +6,7 @@
 	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import type { WithoutChildrenOrChild } from "#lib/util/utils.ts";
+	import DrawerHandle from "./drawer-handle.svelte";
 	import DrawerOverlay from "./drawer-overlay.svelte";
 	import DrawerPortal from "./drawer-portal.svelte";
 
@@ -30,13 +31,6 @@
 	});
 </script>
 
-{#snippet handleDefault()}
-	<div
-		data-slot="drawer-handle"
-		class="mx-auto mt-4 hidden h-1.5 w-25 shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
-	></div>
-{/snippet}
-
 <DrawerPortal {...portalProps}>
 	<DrawerOverlay />
 	<DrawerPrimitive.Content
@@ -51,7 +45,7 @@
 		{...restProps}
 	>
 		{#if handle === undefined}
-			{@render handleDefault()}
+			<DrawerHandle />
 		{:else}
 			{@render handle?.()}
 		{/if}

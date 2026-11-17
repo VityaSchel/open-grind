@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
+	import { anchorToastsAbove } from "#lib/components/feedback/toast-anchor.ts";
 	import * as Drawer from "#lib/components/ui/drawer/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
-	import { anchorToastsAbove } from "./toast-anchor";
 
 	let {
 		open = $bindable(),
@@ -17,12 +17,22 @@
 		children: Snippet;
 	} = $props();
 
+	const SHEET_PANEL = '[data-slot="sheet-panel"]';
+	const TOAST_GAP_PX = 8;
+
 	let pressedOutside = false;
 	let content = $state<HTMLElement | null>(null);
 
 	$effect(() => {
-		if (open && content) return anchorToastsAbove(content);
+		const sheet = content;
+		if (open && sheet) return anchorToastsAbove(() => panelEdge(sheet));
 	});
+
+	function panelEdge(sheet: HTMLElement): number | null {
+		const panel = sheet.querySelector<HTMLElement>(SHEET_PANEL);
+		if (panel === null) return null;
+		return panel.getBoundingClientRect().top - TOAST_GAP_PX;
+	}
 
 	function isScroller(target: EventTarget | null): boolean {
 		return (

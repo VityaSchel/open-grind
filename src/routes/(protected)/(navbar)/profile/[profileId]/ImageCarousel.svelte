@@ -5,6 +5,7 @@
 
 	import { matureContentCovered } from "#lib/components/mature-content/mature-content.ts";
 	import UserSilhouette from "#lib/components/profile/UserSilhouette.svelte";
+	import PageIndicator from "#lib/components/shared/PageIndicator.svelte";
 	import { formatDate, formatInteger } from "#lib/i18n/format.ts";
 	import { followLocale, t } from "#lib/i18n/index.ts";
 	import { profileMediaUrl } from "#lib/util/media.ts";
@@ -169,14 +170,7 @@
 		});
 	});
 
-	const GAP_PX = 4;
-	const PADDING_VERTICAL_PX = 8;
-	const PADDING_HORIZONTAL_PX = PADDING_VERTICAL_PX;
-	const BULLET_SIZE_PX = 8;
-	const BULLET_PITCH_PX = BULLET_SIZE_PX + GAP_PX;
-
-	let indicatorY = $state(PADDING_VERTICAL_PX);
-	let indicatorHeight = $state(BULLET_SIZE_PX);
+	let scrollPosition = $state(0);
 </script>
 
 <div
@@ -190,22 +184,7 @@
 			onscroll={() => {
 				if (!gallery) return;
 				const photoHeight = gallery.getBoundingClientRect().height;
-				const item = gallery.scrollTop / photoHeight;
-				const frac = item % 1;
-				const stretch = Math.min(frac, 1 - frac);
-				const index = Math.floor(item);
-				const tipYp =
-					Math.min(item > 0 ? index : item, medias.length - 1) +
-					(item < medias.length - 1
-						? Math.max(0, (frac - 0.5) * 2)
-						: frac);
-				indicatorY = PADDING_VERTICAL_PX + tipYp * BULLET_PITCH_PX;
-				const indicatorStretch = stretch * 2 * BULLET_PITCH_PX;
-				indicatorHeight =
-					BULLET_SIZE_PX +
-					(item > 0 && item < medias.length - 1
-						? indicatorStretch
-						: 0);
+				scrollPosition = gallery.scrollTop / photoHeight;
 				const lastVisible = Math.ceil(
 					(gallery.scrollTop - SUBPIXEL_SNAP_PX) / photoHeight,
 				);
@@ -227,21 +206,11 @@
 				/>
 			{/each}
 		</div>
-		<div
-			class="absolute top-1/2 right-2 flex -translate-y-1/2 flex-col rounded-full bg-background/30 scrim p-2 backdrop-filter-(--bd-veil)"
-			style:gap="{GAP_PX}px"
-			style:padding="{PADDING_VERTICAL_PX}px {PADDING_HORIZONTAL_PX}px"
-		>
-			{#each medias, i (i)}
-				<span class="block size-2 rounded-full bg-neutral-200/40"
-				></span>
-			{/each}
-			<span
-				class="absolute left-2 block w-2 rounded-full bg-neutral-300"
-				style:top="{indicatorY}px"
-				style:height="{indicatorHeight}px"
-			></span>
-		</div>
+		<PageIndicator
+			count={medias.length}
+			position={scrollPosition}
+			class="absolute top-1/2 right-2 -translate-y-1/2"
+		/>
 	{:else}
 		<div class="absolute size-full bg-neutral-700">
 			<UserSilhouette

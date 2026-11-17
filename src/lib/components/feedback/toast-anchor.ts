@@ -1,8 +1,6 @@
-const ANCHOR_GAP_PX = 8;
 const TOAST_HOST = '[data-slot="toast-host"]';
 const BOTTOM_TOASTER = '[data-sonner-toaster][data-y-position="bottom"]';
 const TOAST = "[data-sonner-toast]";
-const SHEET_PANEL = '[data-slot="sheet-panel"]';
 
 function release(toaster: HTMLElement | null) {
 	toaster?.removeAttribute("data-sheet-anchored");
@@ -21,7 +19,7 @@ function stackHeight(toaster: HTMLElement): number {
 	return height;
 }
 
-export function anchorToastsAbove(sheet: HTMLElement): () => void {
+export function anchorToastsAbove(edge: () => number | null): () => void {
 	const host = document.querySelector<HTMLElement>(TOAST_HOST);
 	if (host === null) return () => {};
 	let toaster: HTMLElement | null = null;
@@ -37,9 +35,12 @@ export function anchorToastsAbove(sheet: HTMLElement): () => void {
 			written = { anchor: "", stack: "" };
 		}
 		if (toaster === null) return;
-		const panel = sheet.querySelector<HTMLElement>(SHEET_PANEL);
-		if (panel !== null) {
-			const anchor = `${Math.round(innerHeight - panel.getBoundingClientRect().top + ANCHOR_GAP_PX)}px`;
+		const top = edge();
+		if (top === null) {
+			release(toaster);
+			written = { anchor: "", stack: "" };
+		} else {
+			const anchor = `${Math.round(innerHeight - top)}px`;
 			const stack = `${Math.ceil(stackHeight(toaster))}px`;
 			if (anchor !== written.anchor)
 				toaster.style.setProperty("--sheet-anchor", anchor);

@@ -10,11 +10,13 @@
 	let {
 		open = $bindable(false),
 		dismissible = true,
+		repositionInputs = true,
 		onDismissBlocked,
 		children,
 	}: {
 		open?: boolean;
 		dismissible?: boolean;
+		repositionInputs?: boolean;
 		onDismissBlocked?: () => void;
 		children?: Snippet<[{ desktop: boolean }]>;
 	} = $props();
@@ -45,7 +47,7 @@
 		{@render children?.({ desktop: true })}
 	</Dialog.Root>
 {:else}
-	<Drawer.Root bind:open {dismissible}>
+	<Drawer.Root bind:open {dismissible} {repositionInputs}>
 		{@render children?.({ desktop: false })}
 	</Drawer.Root>
 {/if}

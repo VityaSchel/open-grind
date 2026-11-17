@@ -3,6 +3,7 @@ import Close from "./drawer-close.svelte";
 import Content from "./drawer-content.svelte";
 import Description from "./drawer-description.svelte";
 import Footer from "./drawer-footer.svelte";
+import Handle from "./drawer-handle.svelte";
 import Header from "./drawer-header.svelte";
 import NestedRoot from "./drawer-nested.svelte";
 import Overlay from "./drawer-overlay.svelte";
@@ -19,6 +20,7 @@ export {
 	Description,
 	Overlay,
 	Footer,
+	Handle,
 	Header,
 	Title,
 	Trigger,
@@ -33,6 +35,7 @@ export {
 	Description as DrawerDescription,
 	Overlay as DrawerOverlay,
 	Footer as DrawerFooter,
+	Handle as DrawerHandle,
 	Header as DrawerHeader,
 	Title as DrawerTitle,
 	Trigger as DrawerTrigger,
