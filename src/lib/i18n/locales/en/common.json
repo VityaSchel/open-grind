@@ -155,7 +155,7 @@
 		}
 	},
 	"location": {
-		"permissionReason": "Open Grind uses your location to set your grid location and, when you choose, to share it in a chat.",
+		"permissionReason": "Open Grind uses your location to show nearby profiles on the Grid and, when you choose, to share it in a chat.",
 		"errors": {
 			"saveFailed": "Couldn’t save location"
 		}

@@ -81,15 +81,27 @@ describe("renderPlistStrings", () => {
 		["NSCameraUsageDescription", "camera"],
 	]);
 
-	it("sorts by key, escapes quotes, backslashes and line breaks, and leaves untranslated keys to Info.plist", () => {
+	it("sorts by key and escapes quotes, backslashes, line breaks and tabs", () => {
 		expect(
 			renderPlistStrings({
 				manifest,
 				texts: new Map([
-					["reason", 'Nutzt „deinen“ "Ort"\\\nund mehr'],
+					["reason", 'Nutzt „deinen“ "Ort"\\\nund\tmehr'],
+					["camera", "Kamera"],
 				]),
 			}),
-		).toBe(`"${LOCATION}" = "Nutzt „deinen“ \\"Ort\\"\\\\\\nund mehr";\n`);
+		).toBe(
+			`"NSCameraUsageDescription" = "Kamera";\n"${LOCATION}" = "Nutzt „deinen“ \\"Ort\\"\\\\\\nund\\tmehr";\n`,
+		);
+	});
+
+	it("leaves an untranslated key to Info.plist", () => {
+		expect(
+			renderPlistStrings({
+				manifest,
+				texts: new Map([["reason", "Nutzt deinen Ort"]]),
+			}),
+		).toBe(`"${LOCATION}" = "Nutzt deinen Ort";\n`);
 	});
 
 	it("writes nothing when no key is translated", () => {
