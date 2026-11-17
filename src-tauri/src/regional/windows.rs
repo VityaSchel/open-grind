@@ -5,7 +5,7 @@ use windows::Win32::Globalization::{
 	LOCALE_SSHORTTIME, LOCALE_STHOUSAND,
 };
 
-use super::desktop::RegionalSettings;
+use super::os_settings::RegionalSettings;
 use super::pattern;
 
 const LOCALE_NAME_CAPACITY: usize = 85;

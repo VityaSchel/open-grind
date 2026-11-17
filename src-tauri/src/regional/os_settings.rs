@@ -3,9 +3,9 @@ use std::sync::Mutex;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 use super::apple as platform;
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(all(desktop, not(any(target_os = "macos", target_os = "windows"))))]
 use super::linux as platform;
 #[cfg(target_os = "windows")]
 use super::windows as platform;
@@ -14,7 +14,7 @@ use super::CHANGED_EVENT;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(
-	not(any(target_os = "macos", target_os = "windows")),
+	not(any(target_os = "macos", target_os = "ios", target_os = "windows")),
 	allow(dead_code)
 )]
 pub enum HourCycle {
@@ -27,7 +27,12 @@ pub enum HourCycle {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(
-	not(any(target_os = "macos", target_os = "windows", target_os = "linux")),
+	not(any(
+		target_os = "macos",
+		target_os = "ios",
+		target_os = "windows",
+		target_os = "linux"
+	)),
 	allow(dead_code)
 )]
 pub enum DateOrder {
@@ -92,6 +97,7 @@ pub fn refresh(app: &AppHandle) {
 	});
 }
 
+#[cfg(desktop)]
 pub fn refresh_on_focus(window: &tauri::WebviewWindow) {
 	if window.label() != crate::MAIN_WINDOW_LABEL {
 		return;
