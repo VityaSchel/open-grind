@@ -58,7 +58,11 @@ vi.mock("#lib/i18n/catalog-files.ts", async (importOriginal) => {
 });
 
 import { getCatalogLocale, getLocale, setLocale } from "#lib/i18n/index.ts";
-import { chooseLanguage, startLanguage } from "./app-language";
+import {
+	chooseLanguage,
+	getSystemLanguages,
+	startLanguage,
+} from "./app-language";
 import { NATIVE_READ_TIMEOUT_MS } from "./regional-settings";
 
 type ChangeHandler = (event: { payload: unknown }) => void;
@@ -145,6 +149,7 @@ describe("startLanguage without a native answer", () => {
 			lang: "fr-CA",
 		});
 		expect(preferences.saves).toEqual([]);
+		expect(getSystemLanguages()).toEqual(["sw-KE", "fr-CA", "de-DE"]);
 	});
 
 	it("falls back to American English when no language matches", async () => {
@@ -281,6 +286,7 @@ describe("startLanguage with a native answer", () => {
 			catalog: "pt-PT",
 			lang: "pt-AO",
 		});
+		expect(getSystemLanguages()).toEqual(["sw-KE", "pt-AO"]);
 	});
 
 	it("adopts a per-app language set in the system settings", async () => {

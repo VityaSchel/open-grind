@@ -127,20 +127,23 @@
 		onclick={() => choose(choice)}
 		class="flex w-26 flex-col items-center gap-1.5 rounded-lg p-2 transition-colors disabled:opacity-60 can-hover:hover:bg-muted"
 	>
-		<img
-			src={data.previews[choice.id]}
-			alt=""
-			width="64"
-			height="64"
+		<span
 			class={[
-				"size-16 rounded-md",
-				{
-					"ring-1 ring-border": !selected,
-					"ring-2 ring-primary ring-offset-2 ring-offset-background":
-						selected,
-				},
+				"-m-1 rounded-[calc(var(--radius-md)_+_--spacing(1))] border-2 p-0.5",
+				{ "border-transparent": !selected, "border-primary": selected },
 			]}
-		/>
+		>
+			<img
+				src={data.previews[choice.id]}
+				alt=""
+				width="64"
+				height="64"
+				class={[
+					"block size-16 rounded-md",
+					{ "ring-1 ring-border": !selected },
+				]}
+			/>
+		</span>
 		<span
 			translate="no"
 			class={[

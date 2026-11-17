@@ -932,6 +932,7 @@ export interface Messages {
 	"settings.app.giphy.title": undefined;
 	"settings.app.hapticFeedback.description": undefined;
 	"settings.app.hapticFeedback.title": undefined;
+	"settings.app.language.helpTranslate": undefined;
 	"settings.app.pin.title": undefined;
 	"settings.app.pin.unimplemented": { issueLink: string };
 	"settings.app.privacyPolicy": undefined;
@@ -939,6 +940,13 @@ export interface Messages {
 	"settings.app.revealMessageRead.title": undefined;
 	"settings.app.revealProfileViews.description": undefined;
 	"settings.app.revealProfileViews.title": undefined;
+	"settings.app.sectionDescriptions.display.withHaptics": undefined;
+	"settings.app.sectionDescriptions.display.withoutHaptics": undefined;
+	"settings.app.sectionDescriptions.notifications.android": undefined;
+	"settings.app.sectionDescriptions.notifications.desktop": undefined;
+	"settings.app.sectionDescriptions.privacy": undefined;
+	"settings.app.sectionDescriptions.security.iconAndName": undefined;
+	"settings.app.sectionDescriptions.security.iconOnly": undefined;
 	"settings.app.sections.display": undefined;
 	"settings.app.sections.privacy": undefined;
 	"settings.app.sections.security": undefined;

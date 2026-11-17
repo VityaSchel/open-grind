@@ -32,7 +32,7 @@
 		<a
 			href="/settings/albums"
 			{...props}
-			class={["rounded-full", props.class, "flex-nowrap!"]}
+			class={["rounded-full", props.class, "flex-nowrap! ps-3.5"]}
 		>
 			<Item.Media class="size-10 overflow-hidden rounded-full">
 				{#if loading}

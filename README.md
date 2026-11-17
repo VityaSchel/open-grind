@@ -27,6 +27,10 @@ Interested in contributing to the project? Head to [CONTRIBUTING.md](./CONTRIBUT
 
 To build Open Grind yourself, follow [BUILDING.md](./BUILDING.md).
 
+## Translate
+
+Help translate Open Grind into your language on [Weblate](https://i18n.opengrind.org/engage/open-grind/). Sign in with a git.opengrind.org account.
+
 ## Problems, bugs, feature requests?
 
 Check out [issues](https://git.opengrind.org/open-grind/open-grind/issues) and the Matrix chatroom [#opengrind:opengrind.org](https://matrix.to/#/#opengrind:opengrind.org).

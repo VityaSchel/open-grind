@@ -237,6 +237,10 @@ export async function startLanguage(): Promise<void> {
 	}
 }
 
+export function getSystemLanguages(): readonly string[] {
+	return current.system;
+}
+
 export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 	return enqueue(async () => {
 		if (!offersLanguage(tag)) {

@@ -53,6 +53,12 @@ export const desktopAppSettings: Scene = {
 	views: [{ id: "settings/app/macos", drive: openAppSettings }],
 };
 
+export const iosAppSettings: Scene = {
+	platform: "phone",
+	shim: "ios",
+	views: [{ id: "settings/app/ios", drive: openAppSettings }],
+};
+
 export const displaySettings: Scene = {
 	platform: "phone",
 	views: [

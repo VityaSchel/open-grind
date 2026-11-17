@@ -47,6 +47,9 @@ const SUBSCREENS = [
 	{ name: "Privacy", href: "/settings/app/privacy" },
 	{ name: "Security", href: "/settings/app/security" },
 ];
+const SUBSCREENS_WITHOUT_NOTIFICATIONS = SUBSCREENS.filter(
+	({ name }) => name !== "Notifications",
+);
 const UPDATES = { name: "Updates", href: "/settings/app/updates" };
 const ABOUT = [
 	{ name: "Privacy policy", href: PRIVACY_POLICY },
@@ -87,11 +90,21 @@ async function opened({
 	return testing.screen;
 }
 
+function rowName(link: Element): string {
+	return [
+		...link.querySelectorAll(
+			'[data-slot="item-title"], [data-slot="language-setting-current"]',
+		),
+	]
+		.map((part) => part.textContent.trim())
+		.join(" ");
+}
+
 function rows(): { name: string; href: string | null }[] {
 	return testing.screen
 		.getAllByRole("link")
 		.map((link) => ({
-			name: link.textContent.replace(/\s+/g, " ").trim(),
+			name: rowName(link),
 			href: link.getAttribute("href"),
 		}));
 }
@@ -100,10 +113,22 @@ function groups(): string[][] {
 	const found: string[][] = [[]];
 	for (const element of document.querySelectorAll('a, [role="separator"]')) {
 		if (element.getAttribute("role") === "separator") found.push([]);
-		else
-			found.at(-1)!.push(element.textContent.replace(/\s+/g, " ").trim());
+		else found.at(-1)!.push(rowName(element));
 	}
 	return found;
+}
+
+function descriptions(): Record<string, string> {
+	return Object.fromEntries(
+		testing.screen.getAllByRole("link").flatMap((link) => {
+			const description = link.querySelector(
+				'[data-slot="item-description"]',
+			);
+			return description
+				? [[rowName(link), description.textContent.trim()]]
+				: [];
+		}),
+	);
 }
 
 beforeAll(async () => {
@@ -215,6 +240,75 @@ describe("the app settings menu", () => {
 		);
 	}, 60_000);
 
+	it.each([
+		{
+			platform: "android",
+			display: "Units, blur level, haptics",
+			notifications: "Push notifications, categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			platform: "macos",
+			display: "Units, blur level, haptics",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			platform: "windows",
+			display: "Units, blur level",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+		{
+			platform: "linux",
+			display: "Units, blur level",
+			notifications: "Notification categories",
+			security: "App icon & name, PIN",
+		},
+	] as const)(
+		"describes Display, Notifications, Privacy and Security on $platform",
+		async ({ platform, display, notifications, security }) => {
+			const screen = await opened({
+				capability: FOREIGN_SIGNER,
+				platform,
+			});
+			const expected = {
+				Display: display,
+				Notifications: notifications,
+				Privacy: "Message reads, profile views, GIPHY",
+				Security: security,
+			};
+
+			expect(descriptions()).toEqual(expected);
+			for (const [name, description] of Object.entries(expected)) {
+				expect(
+					screen.getByRole("link", { name, description }),
+				).toBeTruthy();
+			}
+		},
+		60_000,
+	);
+
+	it("leaves out the Notifications row on iOS, where notifications aren’t supported", async () => {
+		const screen = await opened({
+			capability: FOREIGN_SIGNER,
+			platform: "ios",
+		});
+
+		expect(rows()).toEqual([...SUBSCREENS_WITHOUT_NOTIFICATIONS, ...ABOUT]);
+		expect(descriptions()).toEqual({
+			Display: "Units, blur level, haptics",
+			Privacy: "Message reads, profile views, GIPHY",
+			Security: "App icon, PIN",
+		});
+		expect(
+			screen.getByRole("link", {
+				name: "Security",
+				description: "App icon, PIN",
+			}),
+		).toBeTruthy();
+	}, 60_000);
+
 	it("follows the active locale", async () => {
 		const screen = await opened({ capability: FDROID_BUILD });
 		const titles = screen
@@ -233,6 +327,13 @@ describe("the app settings menu", () => {
 		for (const title of titles) {
 			expect(title.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 		}
+		const described = document.querySelectorAll(
+			'[data-slot="item-description"]',
+		);
+		expect(described).toHaveLength(4);
+		for (const description of described) {
+			expect(description.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
 	}, 60_000);
 });
 
@@ -250,7 +351,7 @@ describe("the app settings menu on iOS", () => {
 			platform: "ios",
 		});
 
-		expect(rows()).toEqual([...SUBSCREENS, ...ABOUT]);
+		expect(rows()).toEqual([...SUBSCREENS_WITHOUT_NOTIFICATIONS, ...ABOUT]);
 		expect(screen.queryByRole("link", { name: "Updates" })).toBeNull();
 	}, 60_000);
 });
