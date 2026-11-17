@@ -15,7 +15,7 @@
 	} from "#lib/push/delivery.svelte.ts";
 	import { notificationSettings } from "#lib/push/notification-state.svelte.ts";
 	import type { FastSource, NotificationMode } from "#lib/push/types.ts";
-	import FastModeConfigDialog from "./FastModeConfigDialog.svelte";
+	import FastModeConfigSheet from "./FastModeConfigSheet.svelte";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
 
 	const modeKeys = {
@@ -44,7 +44,7 @@
 
 	let group = $state<HTMLElement | null>(null);
 	let configureField = $state<HTMLElement | null>(null);
-	let configDialog = $state<ReturnType<typeof FastModeConfigDialog> | null>(
+	let configSheet = $state<ReturnType<typeof FastModeConfigSheet> | null>(
 		null,
 	);
 
@@ -71,7 +71,7 @@
 			return;
 		}
 		event.preventDefault();
-		configDialog?.focusAddonOption();
+		configSheet?.focusAddonOption();
 	}
 
 	function focusConfigureField(event: Event): void {
@@ -137,8 +137,8 @@
 		{/if}
 	{/each}
 </RadioList>
-<FastModeConfigDialog
-	bind:this={configDialog}
+<FastModeConfigSheet
+	bind:this={configSheet}
 	onCloseAutoFocus={focusConfigureField}
 />
 <PushAddonAlert onCloseAutoFocus={focusAfterAddonDialog} />

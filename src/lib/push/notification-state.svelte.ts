@@ -5,7 +5,7 @@ type Phase = "idle" | "enablingFast" | "working";
 
 type AddonDialog = "install" | "manual";
 
-type RelayStep = "config" | "waiting" | "verify";
+type RelayStep = "config" | "waiting" | "verify" | "connected";
 
 type AddonAttempt = { id: number; fromConfigDialog: boolean };
 

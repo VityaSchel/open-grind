@@ -111,7 +111,7 @@ describe("entering the verification code", () => {
 		await submitting;
 	});
 
-	it("registers with Grindr, switches Fast Mode on and closes both dialogs on the right code", async () => {
+	it("registers with Grindr, switches Fast Mode on and says fcm-relay is connected on the right code", async () => {
 		const module = await atRelayStep("verify");
 		recordOrder();
 
@@ -120,13 +120,14 @@ describe("entering the verification code", () => {
 		expect(order).toEqual(["registerRelay", "enable"]);
 		expect(module.notificationSettings.fastSource).toBe("relay");
 		expect(module.notificationSettings.mode).toBe("fast");
-		expect(module.notificationSettings.configDialogOpen).toBe(false);
-		expect(module.notificationSettings.relayStep).toBeNull();
+		expect(module.notificationSettings.relayStep).toBe("connected");
+		expect(module.notificationSettings.configDialogOpen).toBe(true);
 		expect(module.notificationSettings.pendingSource).toBeNull();
 		expect(module.notificationSettings.committing).toBe(false);
+		expect(module.notificationSettings.busy).toBe(false);
 	});
 
-	it("closes the verification screen at once and keeps the options busy while Grindr registers the token", async () => {
+	it("keeps the verification screen busy while Grindr registers the token", async () => {
 		const registration = Promise.withResolvers<void>();
 		push.registerRelay.mockReturnValue(registration.promise);
 		const module = await atRelayStep("verify");
@@ -136,7 +137,7 @@ describe("entering the verification code", () => {
 			expect(push.registerRelay).toHaveBeenCalledOnce();
 		});
 
-		expect(module.notificationSettings.relayStep).toBeNull();
+		expect(module.notificationSettings.relayStep).toBe("verify");
 		expect(module.notificationSettings.fastSource).toBe("relay");
 		expect(module.notificationSettings.pendingSource).toBe("relay");
 		expect(module.notificationSettings.committing).toBe(true);
@@ -148,9 +149,41 @@ describe("entering the verification code", () => {
 		await submitting;
 
 		expect(module.notificationSettings.mode).toBe("fast");
-		expect(module.notificationSettings.configDialogOpen).toBe(false);
+		expect(module.notificationSettings.relayStep).toBe("connected");
 		expect(module.notificationSettings.pendingSource).toBeNull();
 		expect(module.notificationSettings.committing).toBe(false);
+	});
+
+	it("closes on Done after fcm-relay is connected and opens on the sources next time", async () => {
+		const module = await atRelayStep("verify");
+		await module.submitRelayCode("658591");
+
+		module.finishRelaySetup();
+
+		expect(module.notificationSettings.configDialogOpen).toBe(false);
+		expect(module.notificationSettings.relayStep).toBe("connected");
+		module.openFastModeConfig();
+		expect(module.notificationSettings.relayStep).toBeNull();
+		expect(module.notificationSettings.configDialogOpen).toBe(true);
+	});
+
+	it("leaves the connected screen when the dialog closes another way", async () => {
+		const module = await atRelayStep("verify");
+		await module.submitRelayCode("658591");
+
+		await module.closeFastModeConfig();
+
+		expect(module.notificationSettings.configDialogOpen).toBe(false);
+		expect(module.notificationSettings.relayStep).toBeNull();
+	});
+
+	it("ignores Done anywhere but the connected screen", async () => {
+		const module = await atRelayStep("verify");
+
+		module.finishRelaySetup();
+
+		expect(module.notificationSettings.configDialogOpen).toBe(true);
+		expect(module.notificationSettings.relayStep).toBe("verify");
 	});
 
 	it("lets the registration finish when the Configure dialog closes during it", async () => {
@@ -169,6 +202,8 @@ describe("entering the verification code", () => {
 		expect(push.cancelRelaySetup).not.toHaveBeenCalled();
 		expect(module.notificationSettings.mode).toBe("fast");
 		expect(module.notificationSettings.fastSource).toBe("relay");
+		expect(module.notificationSettings.relayStep).toBeNull();
+		expect(module.notificationSettings.configDialogOpen).toBe(false);
 	});
 
 	it("retires the add-on token last when the add-on was delivering in Fast Mode", async () => {

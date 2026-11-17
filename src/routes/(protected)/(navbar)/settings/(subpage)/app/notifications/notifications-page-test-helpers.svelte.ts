@@ -15,6 +15,8 @@ import type NotificationsPage from "./+page.svelte";
 
 type InstallListener = () => Promise<void>;
 
+const SETUP_NAME = /^(Set up|Modify)$/;
+
 const settled = () => Promise.resolve();
 
 export class PushFailure extends Error {
@@ -210,23 +212,57 @@ export function configureField(): HTMLElement {
 	return within(field).getByRole("button");
 }
 
-export function configDialog(): Promise<HTMLElement> {
-	return screen.findByRole("alertdialog", { name: "Configure Fast Mode" });
+export function configSheet(): Promise<HTMLElement> {
+	return screen.findByRole("dialog", { name: "Configure Fast Mode" });
 }
 
-export function relayAlert(): Promise<HTMLElement> {
-	return screen.findByRole("alertdialog", { name: "fcm-relay config" });
+export function relaySheet(): Promise<HTMLElement> {
+	return screen.findByRole("dialog", { name: "Save the fcm-relay config" });
+}
+
+export function setupStep(sheet: HTMLElement): string | null {
+	return (
+		sheet
+			.querySelector('[data-slot="page-indicator"][role="img"]')
+			?.getAttribute("aria-label") ?? null
+	);
 }
 
 export function sourceOptions(dialog: HTMLElement) {
 	return {
-		addon: within(dialog).getByRole("radio", {
-			name: /^FCM service add-on/,
-		}),
-		relay: within(dialog).getByRole("radio", {
-			name: /^fcm-relay \+ UnifiedPush/,
-		}),
+		addon: sourceOption(dialog, "FCM service add-on"),
+		relay: sourceOption(dialog, "fcm-relay + UnifiedPush"),
 	};
+}
+
+function sourceOption(dialog: HTMLElement, title: string): HTMLElement {
+	const option = within(dialog)
+		.getByRole("heading", { name: title })
+		.closest<HTMLElement>('[data-slot="fast-mode-option"]');
+	if (option === null) throw new Error(`The ${title} option isn’t shown`);
+	return option;
+}
+
+export function setupButton(option: HTMLElement): HTMLElement {
+	return within(option).getByRole("button", { name: SETUP_NAME });
+}
+
+export function querySetupButton(option: HTMLElement): HTMLElement | null {
+	return within(option).queryByRole("button", { name: SETUP_NAME });
+}
+
+export function optionStatus(option: HTMLElement): HTMLElement | null {
+	return option.querySelector<HTMLElement>(
+		'[data-slot="fast-mode-option-status"]',
+	);
+}
+
+export function optionAction(option: HTMLElement): string | null {
+	return (
+		(
+			querySetupButton(option) ?? optionStatus(option)
+		)?.textContent.trim() ?? null
+	);
 }
 
 export function checked(control: HTMLElement): string | null {

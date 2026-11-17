@@ -12,7 +12,7 @@
 <RadioGroup.Item
 	class={cn(
 		Item.itemVariants(),
-		"rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset",
+		"rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset disabled:cursor-not-allowed",
 		className,
 	)}
 	{...restProps}

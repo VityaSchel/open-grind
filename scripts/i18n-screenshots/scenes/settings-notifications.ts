@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { animationsFinished } from "../../../e2e/support/app";
+
 import {
 	type NativeOverride,
 	type NativeOverrides,
@@ -18,6 +20,7 @@ const CATEGORIES = [
 	{ category: "taps", enabled: true, systemBlocked: false },
 ];
 const WRONG_CODE = "123456";
+const RIGHT_CODE = "658591";
 const ONBOARDED = { onboardingComplete: true };
 
 function pushRejection(reason: string): NativeOverride {
@@ -50,6 +53,15 @@ const RELAY_CONNECTED: NativeOverrides = {
 	push_relay_await: { answer: null },
 };
 
+const ADDON_IN_USE: NativeOverrides = {
+	...ANDROID_PUSH,
+	push_mode: { answer: "fast" },
+	push_fast_source: { answer: "addon" },
+	push_token: {
+		answer: { token: "fid:APA91b", vendorProvidedIdentifier: "fid" },
+	},
+};
+
 const RELAY_PAIRED: NativeOverrides = {
 	...ANDROID_PUSH,
 	push_mode: { answer: "fast" },
@@ -61,22 +73,41 @@ function notificationsSwitch(page: Page) {
 	return page.getByRole("switch", { name: "Enable notifications" });
 }
 
+function fastModeSelected(page: Page) {
+	return page.getByRole("radio", {
+		name: /^Fast Mode/,
+		checked: true,
+		disabled: false,
+	});
+}
+
 function configureField(page: Page) {
 	return page.locator('[data-slot="fast-mode-config-field"] button');
 }
 
 function fastModeConfig(page: Page) {
-	return page.getByRole("alertdialog", { name: "Configure Fast Mode" });
+	return page.getByRole("dialog", { name: "Configure Fast Mode" });
 }
 
 function relayConfig(page: Page) {
-	return page.getByRole("alertdialog", { name: "fcm-relay config" });
+	return page
+		.getByRole("dialog")
+		.filter({ has: page.getByRole("img", { name: /Step \d of 3/ }) });
 }
 
-function relayOption(page: Page) {
-	return fastModeConfig(page).getByRole("radio", {
-		name: "fcm-relay + UnifiedPush",
-	});
+function setupButton({ page, title }: { page: Page; title: string }) {
+	return fastModeConfig(page)
+		.getByRole("listitem")
+		.filter({ has: page.getByRole("heading", { name: title }) })
+		.getByRole("button");
+}
+
+function addonSetup(page: Page) {
+	return setupButton({ page, title: "FCM service add-on" });
+}
+
+function relaySetup(page: Page) {
+	return setupButton({ page, title: "fcm-relay + UnifiedPush" });
 }
 
 function codeInput(page: Page) {
@@ -120,12 +151,12 @@ const enableDesktopNotifications = (page: Page) =>
 async function openFastModeConfig(page: Page): Promise<void> {
 	await press(configureField(page));
 	await fastModeConfig(page).waitFor();
+	await animationsFinished(fastModeConfig(page));
 }
 
 async function chooseRelay(page: Page): Promise<void> {
-	await press(relayOption(page));
+	await press(relaySetup(page));
 	await relayConfig(page).waitFor();
-	showsLoading(page);
 }
 
 async function startRelaySetup(page: Page): Promise<void> {
@@ -155,11 +186,7 @@ export const androidNotifications: Scene = {
 			id: "settings/notifications/addon",
 			screen: "settings/notifications",
 			drive: async (page) => {
-				await press(
-					fastModeConfig(page).getByRole("radio", {
-						name: "FCM service add-on",
-					}),
-				);
+				await press(addonSetup(page));
 				await page
 					.getByRole("alertdialog", {
 						name: "Install push notifications add-on",
@@ -189,12 +216,13 @@ export const androidNotifications: Scene = {
 			screen: "settings/notifications",
 			drive: async (page) => {
 				await press(
-					relayConfig(page).getByRole("button", { name: "Done" }),
+					relayConfig(page).getByRole("button", { name: "Continue" }),
 				);
 				await relayConfig(page)
 					.getByRole("status")
 					.filter({ hasText: "Waiting for fcm-relay connection…" })
 					.waitFor();
+				showsLoading(page);
 			},
 		},
 		{
@@ -229,6 +257,23 @@ export const androidNotifications: Scene = {
 					.waitFor();
 			},
 		},
+		{
+			id: "settings/notifications/relay-connected",
+			screen: "settings/notifications",
+			drive: async (page) => {
+				await overrideNative({
+					page,
+					overrides: {
+						push_relay_commit: { answer: { matched: true } },
+					},
+				});
+				await codeInput(page).fill(RIGHT_CODE);
+				await page
+					.getByRole("dialog", { name: "fcm-relay connected" })
+					.getByRole("button", { name: "Continue" })
+					.waitFor();
+			},
+		},
 	],
 };
 
@@ -243,7 +288,7 @@ export const fastModeWithoutPlayServices: Scene = {
 			drive: async (page) => {
 				await enableAndroidNotifications(page);
 				await openFastModeConfig(page);
-				await fastModeConfig(page).getByText("Not Available").waitFor();
+				await fastModeConfig(page).getByText("Not available").waitFor();
 			},
 		},
 	],
@@ -251,7 +296,7 @@ export const fastModeWithoutPlayServices: Scene = {
 
 export const fcmServiceSource: Scene = {
 	platform: "phone",
-	native: { ...ANDROID_PUSH, push_fast_source: { answer: "addon" } },
+	native: ADDON_IN_USE,
 	preferences: ONBOARDED,
 	views: [
 		{
@@ -259,6 +304,15 @@ export const fcmServiceSource: Scene = {
 			drive: async (page) => {
 				await enableAndroidNotifications(page);
 				await configureField(page).getByText("FCM service").waitFor();
+				await fastModeSelected(page).waitFor();
+			},
+		},
+		{
+			id: "settings/notifications/fast-mode-config-fcm-service",
+			screen: "settings/notifications",
+			drive: async (page) => {
+				await openFastModeConfig(page);
+				await fastModeConfig(page).getByText("Selected").waitFor();
 			},
 		},
 	],
@@ -276,8 +330,47 @@ export const fcmRelaySource: Scene = {
 				await configureField(page).getByText("fcm-relay").waitFor();
 			},
 		},
+		{
+			id: "settings/notifications/fast-mode-config-fcm-relay",
+			screen: "settings/notifications",
+			drive: async (page) => {
+				await openFastModeConfig(page);
+				await relaySetup(page).getByText("Modify").waitFor();
+			},
+		},
 	],
 };
+
+export const addonSetupFailure: Scene = {
+	platform: "phone",
+	native: {
+		...ANDROID_PUSH,
+		updater_installed_version: { answer: "1.0.0" },
+		push_addon_ready: pushRejection("addonUnavailable"),
+	},
+	preferences: ONBOARDED,
+	demo: { updates: true },
+	views: [
+		{
+			id: "settings/notifications/addon-failed",
+			screen: "settings/notifications",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await enableAndroidNotifications(page);
+				await openFastModeConfig(page);
+				await addingToast({
+					page,
+					action: () => press(addonSetup(page)),
+				});
+			},
+		},
+	],
+};
+
+async function failRelaySetup(page: Page): Promise<void> {
+	await waitForNewToast({ page, action: () => press(relaySetup(page)) });
+	await holdToast(page);
+}
 
 export const relaySetupFailures: Scene = {
 	platform: "phone",
@@ -294,23 +387,43 @@ export const relaySetupFailures: Scene = {
 	preferences: ONBOARDED,
 	views: [
 		{
-			id: "settings/notifications/relay-setup-failed",
+			id: "settings/notifications/relay-no-distributor",
 			screen: "settings/notifications",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await enableAndroidNotifications(page);
 				await openFastModeConfig(page);
-				for (let attempt = 0; attempt < 3; attempt += 1) {
-					await waitForNewToast({
-						page,
-						action: () => press(relayOption(page)),
-					});
-				}
-				await holdToast(page);
+				await failRelaySetup(page);
 			},
+		},
+		{
+			id: "settings/notifications/relay-action-required",
+			screen: "settings/notifications",
+			survivesLocaleSwitch: false,
+			drive: failRelaySetup,
+		},
+		{
+			id: "settings/notifications/relay-setup-failed",
+			screen: "settings/notifications",
+			survivesLocaleSwitch: false,
+			drive: failRelaySetup,
 		},
 	],
 };
+
+async function failConfigExport({
+	page,
+	name,
+}: {
+	page: Page;
+	name: string;
+}): Promise<void> {
+	await waitForNewToast({
+		page,
+		action: () => press(relayConfig(page).getByRole("button", { name })),
+	});
+	await holdToast(page);
+}
 
 export const relayConfigFailures: Scene = {
 	platform: "phone",
@@ -327,17 +440,14 @@ export const relayConfigFailures: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await startRelaySetup(page);
-				for (const name of ["Save", "Share"]) {
-					await waitForNewToast({
-						page,
-						action: () =>
-							press(
-								relayConfig(page).getByRole("button", { name }),
-							),
-					});
-				}
-				await holdToast(page);
+				await failConfigExport({ page, name: "Save" });
 			},
+		},
+		{
+			id: "settings/notifications/relay-share-failed",
+			screen: "settings/notifications",
+			survivesLocaleSwitch: false,
+			drive: (page) => failConfigExport({ page, name: "Share" }),
 		},
 	],
 };

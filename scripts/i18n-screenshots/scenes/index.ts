@@ -247,6 +247,7 @@ import {
 	windowsDiscreetIcon,
 } from "./settings-discreet";
 import {
+	addonSetupFailure,
 	androidNotifications,
 	fastModeWithoutPlayServices,
 	fcmRelaySource,
@@ -493,6 +494,7 @@ export const scenes: Scene[] = [
 	fastModeWithoutPlayServices,
 	fcmServiceSource,
 	fcmRelaySource,
+	addonSetupFailure,
 	relaySetupFailures,
 	relayConfigFailures,
 	relayCodeCheckFailure,

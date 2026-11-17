@@ -201,6 +201,9 @@
 		},
 		"fastConfig": {
 			"title": "Configure Fast Mode",
+			"setUp": "Set up",
+			"modify": "Modify",
+			"selected": "Selected",
 			"field": {
 				"unconfigured": "Configure",
 				"addon": "FCM service",
@@ -209,19 +212,25 @@
 			"addon": {
 				"title": "FCM service add-on",
 				"description": "Includes Google’s proprietary Firebase library and needs Google Play services or microG.",
-				"unavailable": "Not Available"
+				"unavailable": "Not available"
 			},
 			"relay": {
 				"title": "fcm-relay + UnifiedPush",
 				"description": "For advanced users. Requires a <distributorsLink>UnifiedPush distributor app</distributorsLink>, such as <ntfyLink>ntfy</ntfyLink>, and a <relayLink>self-hosted fcm-relay</relayLink>."
 			},
 			"relaySetup": {
-				"title": "fcm-relay config",
+				"saveConfigTitle": "Save the fcm-relay config",
 				"saveConfig": "Save this file as the fcm-relay config on the machine you use to host fcm-relay and restart the fcm-relay, then tap “{{button}}”.",
 				"waiting": "Waiting for fcm-relay connection…",
 				"waitingHint": "If you’re stuck on this stage for a while, ensure fcm-relay is running with no errors in the logs.",
 				"enterCode": "Enter verification code",
-				"incorrectCode": "Incorrect verification code"
+				"findCode": "Find it in the fcm-relay log.",
+				"incorrectCode": "Incorrect verification code",
+				"connected": "fcm-relay connected",
+				"connectedHint": "New messages and taps now arrive instantly through your fcm-relay.",
+				"a11y": {
+					"step": "Step {{current}} of {{total}}"
+				}
 			}
 		}
 	},

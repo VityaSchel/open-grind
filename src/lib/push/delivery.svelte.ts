@@ -97,13 +97,20 @@ export async function readFastSource(): Promise<FastSource | null> {
 }
 
 export function openFastModeConfig(): void {
+	if (notificationState.relayStep === "connected") endRelaySetup();
 	notificationState.configDialogOpen = true;
 }
 
 export async function closeFastModeConfig(): Promise<void> {
 	notificationState.configDialogOpen = false;
+	if (notificationState.relayStep === "connected") endRelaySetup();
 	if (notificationState.addonAttempt?.fromConfigDialog) abandonAddonAttempt();
 	await cancelRelaySetupFlow();
+}
+
+export function finishRelaySetup(): void {
+	if (notificationState.relayStep === "connected")
+		notificationState.configDialogOpen = false;
 }
 
 export async function chooseFastSource(source: FastSource): Promise<void> {
@@ -451,7 +458,6 @@ async function finishRelayPairing(): Promise<void> {
 	const previous = notificationState.fastSource;
 	const wasFast = notificationState.mode === "fast";
 	const retiresAddon = previous === "addon" && wasFast;
-	notificationState.relayStep = null;
 	notificationState.fastSource = "relay";
 	if (!notificationSettings.enabled) {
 		finishFastModeConfig();
@@ -483,7 +489,16 @@ async function finishRelayPairing(): Promise<void> {
 		return;
 	}
 	if (retiresAddon) await retireAddonToken();
-	finishFastModeConfig();
+	showRelayConnected();
+}
+
+function showRelayConnected(): void {
+	if (!notificationState.configDialogOpen) {
+		finishFastModeConfig();
+		return;
+	}
+	endRelaySetup();
+	notificationState.relayStep = "connected";
 }
 
 async function settleOnSlow({

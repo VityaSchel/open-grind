@@ -28,6 +28,10 @@
 		if (!notificationSettings.committing) input?.focus();
 	});
 
+	export function focus(): void {
+		input?.focus();
+	}
+
 	function codeChanged(next: string): void {
 		clearRelayCodeMismatch();
 		if (next.length === CODE_LENGTH) void submitRelayCode(next);
@@ -55,22 +59,34 @@
 		{#snippet children({ cells })}
 			<InputOTP.Group>
 				{#each cells.slice(0, GROUP_LENGTH) as cell, index (index)}
-					<InputOTP.Slot {cell} aria-invalid={mismatch} />
+					<InputOTP.Slot
+						{cell}
+						aria-invalid={mismatch}
+						class="size-11 text-lg"
+					/>
 				{/each}
 			</InputOTP.Group>
 			<InputOTP.Separator aria-hidden="true" />
 			<InputOTP.Group>
 				{#each cells.slice(GROUP_LENGTH) as cell, index (index)}
-					<InputOTP.Slot {cell} aria-invalid={mismatch} />
+					<InputOTP.Slot
+						{cell}
+						aria-invalid={mismatch}
+						class="size-11 text-lg"
+					/>
 				{/each}
 			</InputOTP.Group>
 		{/snippet}
 	</InputOTP.Root>
-	<div aria-live="polite" class="self-stretch">
+	<div
+		data-slot="relay-code-error"
+		aria-live="polite"
+		class="min-h-8 self-stretch"
+	>
 		{#if mismatch}
 			<p
 				id={errorId}
-				class="pt-2 text-center text-sm text-destructive"
+				class="pt-3 text-center text-sm text-destructive"
 				transition:slide={{ duration: TRANSITION_MS }}
 			>
 				<span transition:fade={{ duration: TRANSITION_MS }}>
