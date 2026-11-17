@@ -68,6 +68,7 @@ Runs on the simulator named OG_SIMULATOR (default og-ios-test), which must exist
 An unknown step key fails the run before any step runs; a wrongly typed value or any failed step stops it.
 
 Steps (labels match label, identifier or placeholder; points are normalized 0..1):
+	{"app": "<bundle id>"} makes this and later steps act on that app, such as "com.apple.Preferences" (default org.opengrind.app)
 	{"launch": true} | {"activate": true} | {"home": true}
 	{"rotate": "portrait" | "landscapeLeft" | "landscapeRight"}
 	{"pasteboardImage": "<host png path>"} | {"pasteboardText": "<host text file path>"} (for secrets: the text never enters a log, unlike "type", expires after 60 s and is cleared when the run ends)

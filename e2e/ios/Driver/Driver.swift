@@ -3,7 +3,7 @@ import XCTest
 
 final class Driver: XCTestCase {
 	private static let stepKeys: Set<String> = [
-		"launch", "activate", "home", "rotate", "pasteboardImage", "pasteboardText", "tap", "tapSecure", "tapIfPresent",
+		"app", "launch", "activate", "home", "rotate", "pasteboardImage", "pasteboardText", "tap", "tapSecure", "tapIfPresent",
 		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "touchPath", "edgeSwipe", "type", "swipe",
 		"on", "wait", "expect", "expectGone", "keyboard", "screenshot", "tree",
 	]
@@ -52,9 +52,12 @@ final class Driver: XCTestCase {
 		if steps.contains(where: { $0["pasteboardText"] != nil }) {
 			addTeardownBlock { UIPasteboard.general.items = [] }
 		}
-		let app = XCUIApplication(bundleIdentifier: "org.opengrind.app")
+		var app = XCUIApplication(bundleIdentifier: "org.opengrind.app")
 
 		for (index, step) in steps.enumerated() {
+			if let bundle: String = try value("app", in: step) {
+				app = XCUIApplication(bundleIdentifier: bundle)
+			}
 			try XCTContext.runActivity(named: "step \(index + 1): \(step)") { _ in
 				try run(step, in: app)
 			}
