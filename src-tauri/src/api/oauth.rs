@@ -81,6 +81,7 @@ pub struct SignInWait<'a, P: OauthProvider> {
 	pub window: &'a WebviewWindow,
 	pub bridge: &'a Arc<OauthBridge<P>>,
 	pub answer: oneshot::Receiver<Result<String, String>>,
+	#[cfg(target_os = "ios")]
 	pub title: &'static str,
 }
 

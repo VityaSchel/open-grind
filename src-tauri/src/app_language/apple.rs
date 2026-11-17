@@ -5,7 +5,7 @@ use objc2_foundation::{
 	NSUserDefaults,
 };
 
-use super::desktop::{AppLanguages, SyncTier};
+use super::os_settings::{AppLanguages, SyncTier};
 use super::tags::is_language_tag;
 use super::NO_PER_APP_SETTING;
 

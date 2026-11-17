@@ -117,7 +117,7 @@ describe("publishNativeLanguage", () => {
 		expect(sent()).toEqual([{ tag }]);
 	});
 
-	it.each(["macos", "windows", "linux"])(
+	it.each(["ios", "macos", "windows", "linux"])(
 		"sends the tag on %s, where native windows show text too",
 		async (platform) => {
 			os.platform = platform;
@@ -129,16 +129,6 @@ describe("publishNativeLanguage", () => {
 			expect(sent()).toEqual([{ tag: "es-419" }]);
 		},
 	);
-
-	it("sends nothing on iOS", async () => {
-		os.platform = "ios";
-		const { setLocale, publishNativeLanguage } = await load();
-		await setLocale({ locale: "de" });
-
-		await publishNativeLanguage();
-
-		expect(invokeMock).not.toHaveBeenCalled();
-	});
 
 	it("sends the same tag again, so Android stores the languages it now stands for", async () => {
 		const { setLocale, publishNativeLanguage } = await load();

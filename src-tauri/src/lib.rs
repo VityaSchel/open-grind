@@ -28,7 +28,7 @@ pub mod media;
 mod media_drag;
 #[cfg(mobile)]
 mod media_picker;
-#[cfg(desktop)]
+#[cfg(any(desktop, target_os = "ios"))]
 mod native_strings;
 #[cfg(any(target_os = "ios", test))]
 mod page_point;

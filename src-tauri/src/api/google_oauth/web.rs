@@ -8,7 +8,6 @@ use crate::api::oauth::{
 	await_sign_in, is_allowed_target, new_nonce, without_secrets, SignInWait,
 };
 use crate::error::AppError;
-#[cfg(desktop)]
 use crate::native_strings::NativeText;
 
 use super::GoogleOauthBridge;
@@ -16,7 +15,6 @@ use super::GoogleOauthBridge;
 const HELPER_URL: &str = "https://web.grindr.com/";
 const HELPER_HOST: &str = "web.grindr.com";
 const WINDOW_LABEL: &str = "google-oauth";
-const WINDOW_TITLE: &str = "Sign In with Google";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
@@ -143,7 +141,9 @@ async fn run_flow(
 		window: &window,
 		bridge,
 		answer: rx,
-		title: WINDOW_TITLE,
+		#[cfg(target_os = "ios")]
+		title: crate::app_language::native_strings(app)
+			.text(NativeText::GoogleSignInTitle),
 	})
 	.await;
 

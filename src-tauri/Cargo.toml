@@ -79,7 +79,7 @@ objc2-image-io = { version = "0.3", default-features = false, features = ["std",
 [target.'cfg(target_os = "ios")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"] }
 boring2 = "4.15.11"
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "block2", "NSArray", "NSDate", "NSDictionary", "NSError", "NSItemProvider", "NSNotification", "NSObjCRuntime", "NSOperation", "NSProcessInfo", "NSProgress", "NSRunLoop", "NSString", "NSURL", "NSValue"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "block2", "NSArray", "NSBundle", "NSDate", "NSDictionary", "NSError", "NSItemProvider", "NSLocale", "NSNotification", "NSObjCRuntime", "NSOperation", "NSProcessInfo", "NSProgress", "NSRunLoop", "NSString", "NSURL", "NSUserDefaults", "NSValue"] }
 objc2-photos-ui = { version = "0.3", default-features = false, features = ["std", "PHPicker"] }
 objc2-ui-kit = { version = "0.3", default-features = false, features = ["std", "block2", "objc2-core-foundation", "UIAction", "UIAccessibility", "UIApplication", "UIBarButtonItem", "UIBarItem", "UIColor", "UIEvent", "UIFeedbackGenerator", "UIGeometry", "UIGestureRecognizer", "UIImpactFeedbackGenerator", "UIInterface", "UIMenuElement", "UINavigationController", "UINavigationItem", "UIPanGestureRecognizer", "UIPresentationController", "UIResponder", "UIScreen", "UIScreenEdgePanGestureRecognizer", "UIScrollView", "UISwipeGestureRecognizer", "UITouch", "UIView", "UIViewController", "UIViewControllerTransitionCoordinator", "UIWindow"] }
 

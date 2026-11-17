@@ -104,7 +104,7 @@ impl AppDataDir {
 	}
 }
 
-#[cfg(desktop)]
+#[cfg(any(desktop, target_os = "ios"))]
 pub(crate) fn read_preferences(app: &AppHandle) -> Option<Vec<u8>> {
 	AppDataDir::of(app)
 		.ok()?

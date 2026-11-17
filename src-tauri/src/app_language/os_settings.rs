@@ -1,21 +1,27 @@
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+#[cfg(desktop)]
+use tauri::Emitter;
+use tauri::{AppHandle, Manager};
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 use super::apple as platform;
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(all(desktop, not(any(target_os = "macos", target_os = "windows"))))]
 use super::linux as platform;
 #[cfg(target_os = "windows")]
 use super::windows as platform;
+#[cfg(desktop)]
 use super::CHANGED_EVENT;
 use crate::native_strings::NativeStrings;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SyncTier {
-	#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+	#[cfg_attr(
+		not(any(target_os = "macos", target_os = "ios", test)),
+		allow(dead_code)
+	)]
 	TwoWay,
 	None,
 }
@@ -108,6 +114,7 @@ pub fn set(app: &AppHandle, tag: Option<&str>) -> Result<(), String> {
 	Ok(())
 }
 
+#[cfg(desktop)]
 fn refresh(app: &AppHandle) {
 	let app = app.clone();
 	tauri::async_runtime::spawn(async move {
@@ -118,6 +125,7 @@ fn refresh(app: &AppHandle) {
 	});
 }
 
+#[cfg(desktop)]
 pub fn refresh_on_focus(window: &tauri::WebviewWindow) {
 	if window.label() != crate::MAIN_WINDOW_LABEL {
 		return;

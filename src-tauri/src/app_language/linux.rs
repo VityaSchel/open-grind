@@ -1,4 +1,4 @@
-use super::desktop::AppLanguages;
+use super::os_settings::AppLanguages;
 use super::tags::posix_languages;
 use super::NO_PER_APP_SETTING;
 

@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
 use crate::error::AppError;
-#[cfg(desktop)]
+#[cfg(any(desktop, target_os = "ios"))]
 use crate::native_strings::NativeText;
 
 use crate::api::oauth::{
@@ -17,7 +17,6 @@ use super::dialog::{
 use super::FacebookOauthBridge;
 
 const WINDOW_LABEL: &str = "facebook-oauth";
-const WINDOW_TITLE: &str = "Sign In with Facebook";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (600.0, 700.0);
@@ -119,7 +118,9 @@ async fn run_flow(
 		window: &window,
 		bridge,
 		answer: rx,
-		title: WINDOW_TITLE,
+		#[cfg(target_os = "ios")]
+		title: crate::app_language::native_strings(app)
+			.text(NativeText::FacebookSignInTitle),
 	})
 	.await;
 

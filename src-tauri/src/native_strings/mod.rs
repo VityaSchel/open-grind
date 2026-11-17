@@ -108,6 +108,7 @@ fn catalogs() -> &'static Catalogs {
 	})
 }
 
+#[cfg_attr(target_os = "ios", allow(dead_code))]
 fn fill(template: &str, values: &[(&str, &str)]) -> String {
 	let mut filled = String::with_capacity(template.len());
 	let mut rest = template;
@@ -143,6 +144,7 @@ impl NativeStrings {
 		catalogs().text(self.catalog, text)
 	}
 
+	#[cfg_attr(target_os = "ios", allow(dead_code))]
 	pub fn fill(&self, text: NativeText, values: &[(&str, &str)]) -> String {
 		fill(self.text(text), values)
 	}

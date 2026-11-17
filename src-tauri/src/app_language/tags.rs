@@ -1,7 +1,10 @@
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(all(
+	desktop,
+	any(not(any(target_os = "macos", target_os = "windows")), test)
+))]
 use crate::regional::posix_locale;
 
-#[cfg(any(target_os = "macos", test))]
+#[cfg(any(target_os = "macos", target_os = "ios", test))]
 pub fn is_language_tag(tag: &str) -> bool {
 	let mut subtags = tag.split('-');
 	let language = subtags.next().unwrap_or_default();
@@ -13,7 +16,10 @@ pub fn is_language_tag(tag: &str) -> bool {
 		})
 }
 
-#[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
+#[cfg(all(
+	desktop,
+	any(not(any(target_os = "macos", target_os = "windows")), test)
+))]
 pub fn posix_languages(
 	variable: impl Fn(&str) -> Option<String>,
 ) -> Vec<String> {
@@ -40,7 +46,7 @@ pub fn posix_languages(
 	languages
 }
 
-#[cfg(any(target_os = "windows", test))]
+#[cfg(any(target_os = "windows", all(test, desktop)))]
 pub fn multi_string(buffer: &[u16]) -> Vec<String> {
 	buffer
 		.split(|&unit| unit == 0)
@@ -49,7 +55,7 @@ pub fn multi_string(buffer: &[u16]) -> Vec<String> {
 		.collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, desktop))]
 mod tests {
 	use std::collections::HashMap;
 
