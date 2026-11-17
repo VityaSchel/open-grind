@@ -18,7 +18,7 @@
 	let sizeHolds = 0;
 	let atTop = $state(true);
 	let expanded = $state(false);
-	let observedPeekHeight = 0;
+	let observedPeekHeight = $state(0);
 	let expandedContentScrollTop: number | null = null;
 
 	function expandedScrollTop(): number {
@@ -162,6 +162,7 @@
 	bind:this={sheet}
 	data-slot="sheet-scroller"
 	data-at-top={fullsize && atTop ? "" : undefined}
+	style:--sheet-peek-height={fullsize ? `${observedPeekHeight}px` : undefined}
 	onscroll={onScroll}
 	{@attach holdSizeWhileTouched}
 	class={[

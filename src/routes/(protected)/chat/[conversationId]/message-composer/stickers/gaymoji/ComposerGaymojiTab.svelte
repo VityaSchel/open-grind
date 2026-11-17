@@ -125,9 +125,13 @@
 			{/each}
 		</div>
 	{:else if manifest.status === "failed"}
-		<StickerLoadFailure
-			message={t("chat.composer.stickers.gaymoji.errors.loadFailed")}
-			onRetry={() => void load()}
-		/>
+		<div
+			class="flex flex-1 flex-col justify-center pb-(--sheet-peek-height)"
+		>
+			<StickerLoadFailure
+				message={t("chat.composer.stickers.gaymoji.errors.loadFailed")}
+				onRetry={() => void load()}
+			/>
+		</div>
 	{/if}
 </div>

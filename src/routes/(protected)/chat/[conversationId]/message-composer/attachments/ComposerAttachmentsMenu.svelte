@@ -73,7 +73,10 @@
 		class={["min-h-0 gap-0", { "h-full": isFullsizeTab }]}
 	>
 		<MediaSheetBody fullsize={isFullsizeTab}>
-			<Tabs.Content value="media">
+			<Tabs.Content
+				value="media"
+				class="flex-1 flex-col data-[state=active]:flex"
+			>
 				<ComposerMediaTab
 					bind:this={tabs.media}
 					{expiring}
@@ -82,7 +85,10 @@
 					onClose={() => (open = false)}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value="albums">
+			<Tabs.Content
+				value="albums"
+				class="flex-1 flex-col data-[state=active]:flex"
+			>
 				<ComposerAlbumsTab
 					bind:this={tabs.albums}
 					onSelectionChange={(albumSelection) =>
