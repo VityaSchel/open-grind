@@ -17,8 +17,10 @@
 		description,
 		actions,
 		control,
+		menuButton,
 		onToggleSelected,
 		onLongPress,
+		managedTabStops = false,
 	}: {
 		avatar: {
 			mediaHash: string | null;
@@ -37,14 +39,18 @@
 		description?: import("svelte").Snippet;
 		actions?: import("svelte").Snippet;
 		control?: import("svelte").Snippet;
+		menuButton?: import("svelte").Snippet;
 		onToggleSelected?: () => void;
 		onLongPress?: () => void;
+		managedTabStops?: boolean;
 	} = $props();
 
 	const longPress = $derived(
 		onLongPress ? longPressHandlers(onLongPress) : {},
 	);
-	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
+	const linkTabindex = $derived(
+		onToggleSelected || managedTabStops ? -1 : undefined,
+	);
 	const accessibleName = $derived(
 		title.value ?? title.fallback ?? t("common.someone"),
 	);
@@ -97,6 +103,7 @@
 	{#if avatar.link}
 		<a
 			href={avatar.link}
+			data-slot="profile-item-avatar-link"
 			aria-label={t("profile.item.a11y.profileLink", {
 				name: accessibleName,
 			})}
@@ -107,6 +114,7 @@
 		</a>
 		<a
 			href={link}
+			data-slot="profile-item-link"
 			class="content gap-0.5 rounded-r-2xl p-4 ps-2 @max-row:hidden!"
 			tabindex={linkTabindex}
 		>
@@ -114,6 +122,7 @@
 		</a>
 		<a
 			href={link}
+			data-slot="profile-item-link"
 			aria-label={accessibleName}
 			class="min-w-24 rounded-2xl @row:hidden"
 			tabindex={linkTabindex}
@@ -123,6 +132,7 @@
 	{:else}
 		<a
 			href={link}
+			data-slot="profile-item-link"
 			class="content gap-2.5 overflow-clip rounded-2xl pe-4"
 			tabindex={linkTabindex}
 		>
@@ -135,6 +145,7 @@
 			{@render control()}
 		</div>
 	{/if}
+	{@render menuButton?.()}
 	{#if selected}
 		<div
 			class="pointer-events-none absolute -inset-px z-1 rounded-[inherit] bg-primary/20"
@@ -143,6 +154,7 @@
 	{#if onToggleSelected}
 		<button
 			type="button"
+			data-slot="profile-item-selection-toggle"
 			class="absolute inset-0 z-2 rounded-[inherit]"
 			aria-pressed={selected ?? false}
 			aria-label={accessibleName}

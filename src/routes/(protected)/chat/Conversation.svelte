@@ -2,6 +2,7 @@
 	import { page } from "$app/state";
 	import BellIcon from "phosphor-svelte/lib/BellIcon";
 	import BellSimpleSlashIcon from "phosphor-svelte/lib/BellSimpleSlashIcon";
+	import DotsThreeIcon from "phosphor-svelte/lib/DotsThreeIcon";
 	import PushPinIcon from "phosphor-svelte/lib/PushPinIcon";
 	import PushPinSlashIcon from "phosphor-svelte/lib/PushPinSlashIcon";
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
@@ -13,6 +14,7 @@
 	import RelativeTimeDynamic from "#lib/components/shared/RelativeTimeDynamic.svelte";
 	import SelectionCheck from "#lib/components/shared/SelectionCheck.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.ts";
+	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as ContextMenu from "#lib/components/ui/context-menu/index.ts";
 	import * as Item from "#lib/components/ui/item/index.ts";
 	import { playHaptic } from "#lib/haptics.ts";
@@ -23,6 +25,7 @@
 		previewIsUserText,
 		previewLabel,
 	} from "#lib/model/messaging/message-preview.ts";
+	import { dispatchContextMenu } from "#lib/platform/context-menu-key.ts";
 	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 	import type { Conversation } from "#lib/model/messaging/conversations.ts";
 	import type { SelectionSet } from "#lib/util/selection.svelte.ts";
@@ -52,7 +55,9 @@
 	const isSelected = $derived(selection?.has(conversationId) ?? false);
 
 	let contextMenuUsed = $state(false);
+	let contextMenuOpen = $state(false);
 	let pressedByTouch = false;
+	let deleteChosen = false;
 
 	function togglePinned() {
 		void conversations.setPinned({
@@ -70,6 +75,12 @@
 
 	function toggleSelected() {
 		selection?.toggle(conversationId);
+	}
+
+	function requestDeleteOnceMenuCloses() {
+		if (!deleteChosen) return;
+		deleteChosen = false;
+		onRequestDelete?.();
 	}
 </script>
 
@@ -95,6 +106,21 @@
 	</div>
 {/snippet}
 
+{#snippet menuButton()}
+	<Button
+		data-slot="conversation-actions"
+		variant="secondary"
+		size="icon-sm"
+		aria-label={t("chat.conversations.row.a11y.actions")}
+		aria-haspopup={onEnterSelection ? undefined : "menu"}
+		aria-expanded={onEnterSelection ? undefined : contextMenuOpen}
+		class="absolute end-3 top-1/2 size-8 -translate-y-1/2 transition-none not-focus-visible:sr-only @max-row:end-1.5 @max-row:top-auto @max-row:bottom-1.5 @max-row:size-7 @max-row:translate-y-0"
+		onclick={(event) => dispatchContextMenu(event.currentTarget)}
+	>
+		<DotsThreeIcon weight="bold" />
+	</Button>
+{/snippet}
+
 {#snippet row()}
 	<ProfileItem
 		{active}
@@ -109,6 +135,8 @@
 		selected={isSelected}
 		onToggleSelected={selection ? toggleSelected : undefined}
 		onLongPress={onEnterSelection}
+		managedTabStops
+		menuButton={selection ? undefined : menuButton}
 	>
 		{#snippet description()}
 			<Item.Description
@@ -175,6 +203,7 @@
 	{@render row()}
 {:else}
 	<ContextMenu.Root
+		bind:open={contextMenuOpen}
 		onOpenChange={(open) => {
 			if (!open) return;
 			contextMenuUsed = true;
@@ -189,7 +218,10 @@
 			{@render row()}
 		</ContextMenu.Trigger>
 		{#if contextMenuUsed}
-			<ContextMenu.Content class="w-48">
+			<ContextMenu.Content
+				class="w-48"
+				onCloseAutoFocus={requestDeleteOnceMenuCloses}
+			>
 				<ContextMenu.Item onSelect={togglePinned}>
 					{#if conversation.data.pinned}
 						<PushPinSlashIcon weight="fill" class="size-5" />
@@ -211,7 +243,7 @@
 				<ContextMenu.Separator />
 				<ContextMenu.Item
 					variant="destructive"
-					onSelect={onRequestDelete}
+					onSelect={() => (deleteChosen = true)}
 				>
 					<TrashIcon class="size-5" />
 					{t("common.actions.delete")}

@@ -26,6 +26,7 @@
 	} from "#lib/platform/android-native-bridge.ts";
 	import { blockNativeMenu } from "#lib/platform/block-native-menu.ts";
 	import { blockZoom } from "#lib/platform/block-zoom.ts";
+	import { bindContextMenuKey } from "#lib/platform/context-menu-key.ts";
 	import { trackHoverPointer } from "#lib/platform/hover-pointer.ts";
 	import { keepLinksInApp } from "#lib/platform/in-app-links.ts";
 	import { isAndroidPlatform } from "#lib/platform/os.ts";
@@ -67,6 +68,7 @@
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
 		const releaseHoverPointer = trackHoverPointer();
+		const releaseContextMenuKey = bindContextMenuKey();
 		const releaseInAppLinks = keepLinksInApp();
 		const releaseKeyboardFocusReveal = revealKeyboardFocus();
 		if (isAndroidPlatform()) {
@@ -84,6 +86,7 @@
 			releaseZoomBlock();
 			releaseNativeMenuBlock();
 			releaseHoverPointer();
+			releaseContextMenuKey();
 			releaseInAppLinks();
 			releaseKeyboardFocusReveal();
 		};
