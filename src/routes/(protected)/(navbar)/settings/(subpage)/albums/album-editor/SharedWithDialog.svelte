@@ -26,6 +26,7 @@
 		dialogClass="max-h-[calc(var(--screen-safe)-4rem)] sm:max-w-md"
 		drawerClass="max-h-screen-safe"
 		dialogProps={{ showCloseButton: true }}
+		data-autofocus
 	>
 		<ResponsiveDialog.Header class="pb-2">
 			<ResponsiveDialog.Title>

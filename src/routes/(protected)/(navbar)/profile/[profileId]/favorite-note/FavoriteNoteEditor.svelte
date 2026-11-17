@@ -45,6 +45,7 @@
 		});
 	});
 
+	const adding = $derived(!note.notes && !note.phoneNumber);
 	const over = $derived(notes.length > favoriteNoteLimits.notes);
 	const dirty = $derived(
 		notes !== note.notes || phoneNumber !== note.phoneNumber,
@@ -93,6 +94,7 @@
 		class="flex flex-col gap-4"
 		drawerClass="**:[fieldset>div]:px-4"
 		dialogProps={{ showCloseButton: true }}
+		data-autofocus
 	>
 		<ResponsiveDialog.Header drawerClass="p-0">
 			<ResponsiveDialog.Title>
@@ -106,6 +108,7 @@
 			<ResponsiveDialog.Body
 				class="flex flex-col gap-4 pt-1"
 				dialogClass="-mx-1 px-1"
+				data-autofocus={adding ? "keyboard" : undefined}
 			>
 				<MultilineField
 					bind:value={notes}

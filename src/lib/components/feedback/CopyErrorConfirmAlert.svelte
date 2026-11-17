@@ -66,6 +66,7 @@
 						onclick={() => settleCopyErrorConfirm({ redact })}
 						class="rounded-t-none rounded-b-[inherit] border-0"
 						size="lg"
+						data-autofocus
 					>
 						{t("feedback.copyErrorConfirm.copy")}
 					</Button>

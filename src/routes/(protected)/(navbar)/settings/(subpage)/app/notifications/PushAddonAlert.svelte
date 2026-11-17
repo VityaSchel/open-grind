@@ -45,6 +45,7 @@
 			<AlertDialog.Action
 				size="lg"
 				onclick={() => void continueToAddon()}
+				data-autofocus
 			>
 				{t("common.actions.continue")}
 			</AlertDialog.Action>

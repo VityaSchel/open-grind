@@ -46,7 +46,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={busy} class="contents">
-				<AlertDialog.Cancel size="lg">
+				<AlertDialog.Cancel size="lg" data-autofocus>
 					{t("common.actions.cancel")}
 				</AlertDialog.Cancel>
 				<AlertDialog.Action

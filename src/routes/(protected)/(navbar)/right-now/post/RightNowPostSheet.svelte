@@ -118,6 +118,7 @@
 				"sm:max-w-lg": !twoColumns,
 			}}
 			dialogProps={{ showCloseButton: true }}
+			data-autofocus
 		>
 			<ResponsiveDialog.Header
 				class="flex-row items-center justify-between gap-3 text-start"

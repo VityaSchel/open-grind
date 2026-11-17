@@ -81,7 +81,7 @@
 			{/each}
 		</div>
 		<AlertDialog.Footer class="shrink-0">
-			<AlertDialog.Cancel size="lg">
+			<AlertDialog.Cancel size="lg" data-autofocus>
 				{t("common.actions.cancel")}
 			</AlertDialog.Cancel>
 			<AlertDialog.Action

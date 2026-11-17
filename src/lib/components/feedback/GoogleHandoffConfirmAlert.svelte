@@ -39,7 +39,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={switching} class="contents">
-				<AlertDialog.Cancel
+				<AlertDialog.Cancel data-autofocus="keyboard"
 					>{t("common.actions.cancel")}</AlertDialog.Cancel
 				>
 				<Button

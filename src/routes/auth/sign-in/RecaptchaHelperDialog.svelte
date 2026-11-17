@@ -37,7 +37,7 @@
 			<AlertDialog.Cancel size="lg">
 				{t("common.actions.cancel")}
 			</AlertDialog.Cancel>
-			<AlertDialog.Action size="lg" onclick={onContinue}>
+			<AlertDialog.Action size="lg" onclick={onContinue} data-autofocus>
 				{t("common.actions.continue")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>

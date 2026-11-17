@@ -242,7 +242,11 @@
 					{/if}
 					{t("common.actions.signOut")}
 				</Button>
-				<Button onclick={tryAgain} aria-busy={running === "tryAgain"}>
+				<Button
+					onclick={tryAgain}
+					aria-busy={running === "tryAgain"}
+					data-autofocus="keyboard"
+				>
 					{#if running === "tryAgain"}
 						<Spinner aria-hidden="true" />
 					{/if}
