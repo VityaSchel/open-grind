@@ -1075,9 +1075,6 @@ export interface Messages {
 	"settings.profile.sections.basics": undefined;
 	"settings.profile.sections.photos": undefined;
 	"settings.profile.socialPlaceholder": undefined;
-	"settings.profile.units.centimeters": undefined;
-	"settings.profile.units.kilograms": undefined;
-	"settings.profile.units.pounds": undefined;
 	"settings.setting.errors.saveFailed": undefined;
 	"settings.subpage.titles.account": undefined;
 	"settings.subpage.titles.albums": undefined;

@@ -317,11 +317,6 @@
 				"value_other": "{{count}} years"
 			}
 		},
-		"units": {
-			"centimeters": "cm",
-			"kilograms": "kg",
-			"pounds": "lb"
-		},
 		"notSet": "Not Set",
 		"socialPlaceholder": "username",
 		"combo": {
