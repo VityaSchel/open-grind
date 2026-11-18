@@ -1,10 +1,11 @@
+import { untrack } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
 
 import { androidSystemBack } from "#lib/platform/android-system-back.ts";
 import {
 	backGestureEventHandlers,
 	type BackGestureLayer,
-	topBackGestureHandler,
+	topBackGestureLayer,
 } from "#lib/platform/back-gesture-event.svelte.ts";
 import { iosSystemBack } from "#lib/platform/ios-system-back.ts";
 import { currentPlatform } from "#lib/platform/os.ts";
@@ -66,77 +67,114 @@ function platformSystemBack(): SystemBackAdapter {
 	}
 }
 
+function stacksNewestFirst(): SwipeBackStack[] {
+	return [...attachedStacks].reverse();
+}
+
+function trackingStack(): SwipeBackStack | undefined {
+	return stacksNewestFirst().find((stack) => stack.tracking);
+}
+
+function stackInCharge(): SwipeBackStack | undefined {
+	const stacks = stacksNewestFirst();
+	return (
+		stacks.find((stack) => stack.tracking || stack.offersSwipeBack) ??
+		stacks.find((stack) => stack.moving) ??
+		stacks[0]
+	);
+}
+
+function owningStack(): SwipeBackStack | undefined {
+	const topLayer = topBackGestureLayer({
+		skipping: platformSystemBack().passesOver,
+	});
+	return topLayer === "stack" ? stackInCharge() : undefined;
+}
+
+function swipeArmed(): boolean {
+	const owner = owningStack();
+	return owner !== undefined && (owner.tracking || owner.offersSwipeBack);
+}
+
+let frame: number | undefined;
+
+function stopReading(): void {
+	if (frame !== undefined) cancelAnimationFrame(frame);
+	frame = undefined;
+}
+
+function followProgress(): void {
+	const stack = trackingStack();
+	if (!stack) {
+		stopReading();
+		return;
+	}
+	const progress = platformSystemBack().readProgress();
+	if (progress !== undefined) stack.trackSwipeBack(progress);
+	frame = requestAnimationFrame(followProgress);
+}
+
+function commitInFlight(): boolean {
+	const stack = trackingStack();
+	if (!stack) return true;
+	stopReading();
+	stack.commitSwipeBack();
+	return false;
+}
+
+const systemBackGesture: SystemBackGesture = {
+	start: () => {
+		if (!owningStack()?.beginSwipeBack()) return false;
+		frame = requestAnimationFrame(followProgress);
+		return true;
+	},
+	cancel: () => {
+		stopReading();
+		trackingStack()?.cancelSwipeBack();
+	},
+	finish: ({ commit, velocity }) => {
+		const stack = trackingStack();
+		if (!stack) return;
+		stopReading();
+		if (commit) stack.commitSwipeBack({ velocity });
+		else stack.cancelSwipeBack({ velocity });
+	},
+	prepare: () => stackInCharge()?.prepareSwipeBack?.(),
+};
+
+function pushArm(): void {
+	platformSystemBack().arm({
+		gesture: systemBackGesture,
+		armed: swipeArmed(),
+	});
+}
+
+let stopArming: (() => void) | undefined;
+
 export function installSystemBack(): void {
-	platformSystemBack().install();
+	const systemBack = platformSystemBack();
+	systemBack.install();
+	systemBack.expose(systemBackGesture);
+	untrack(pushArm);
 }
 
 export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
-	const systemBack = platformSystemBack();
-	let frame: number | undefined;
-
-	const stopReading = () => {
-		if (frame !== undefined) cancelAnimationFrame(frame);
-		frame = undefined;
-	};
-
-	const followProgress = () => {
-		if (!stack.tracking) {
-			stopReading();
-			return;
-		}
-		const progress = systemBack.readProgress();
-		if (progress !== undefined) stack.trackSwipeBack(progress);
-		frame = requestAnimationFrame(followProgress);
-	};
-
-	const commitInFlight = () => {
-		if (!stack.tracking) return true;
-		stopReading();
-		stack.commitSwipeBack();
-		return false;
-	};
-
-	const ownsTheGesture = () =>
-		topBackGestureHandler({ skipping: systemBack.passesOver }) ===
-		commitInFlight;
-
-	const gesture: SystemBackGesture = {
-		start: () => {
-			if (!ownsTheGesture() || !stack.beginSwipeBack()) return false;
-			frame = requestAnimationFrame(followProgress);
-			return true;
-		},
-		cancel: () => {
-			stopReading();
-			stack.cancelSwipeBack();
-		},
-		finish: ({ commit, velocity }) => {
-			if (!stack.tracking) return;
-			stopReading();
-			if (commit) stack.commitSwipeBack({ velocity });
-			else stack.cancelSwipeBack({ velocity });
-		},
-		prepare: () => stack.prepareSwipeBack?.(),
-	};
-	const unexpose = systemBack.expose(gesture);
 	attachedStacks.add(stack);
 	backGestureEventHandlers.set(commitInFlight, "stack");
-	const stopArming = $effect.root(() => {
-		$effect(() => {
-			systemBack.arm({
-				gesture,
-				armed:
-					ownsTheGesture() &&
-					(stack.tracking || stack.offersSwipeBack),
-			});
-		});
+	stopArming ??= $effect.root(() => {
+		$effect(pushArm);
 	});
 
 	return () => {
-		stopReading();
-		stopArming();
 		attachedStacks.delete(stack);
-		backGestureEventHandlers.delete(commitInFlight);
-		unexpose();
+		untrack(() => {
+			if (!trackingStack()) stopReading();
+			if (attachedStacks.size === 0) {
+				stopArming?.();
+				stopArming = undefined;
+				backGestureEventHandlers.delete(commitInFlight);
+			}
+			pushArm();
+		});
 	};
 }

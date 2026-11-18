@@ -7,6 +7,7 @@ import {
 	overlayOpen,
 	runBackGestureHandlers,
 	topBackGestureHandler,
+	topBackGestureLayer,
 } from "./back-gesture-event.svelte";
 
 function register({
@@ -115,6 +116,25 @@ describe("back gesture layers", () => {
 
 		const overlay = register({ layer: "overlay" });
 		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(overlay);
+	});
+
+	it("reports the layer of the top handler past the layers a caller passes over", () => {
+		expect(topBackGestureLayer()).toBeUndefined();
+		register({ layer: "stack" });
+		register({ layer: "stack" });
+		expect(topBackGestureLayer()).toBe("stack");
+
+		const screen = register({ layer: "screen" });
+		expect(topBackGestureLayer()).toBe("screen");
+		expect(topBackGestureLayer({ skipping: ["screen"] })).toBe("stack");
+
+		register({ layer: "guard" });
+		expect(topBackGestureLayer()).toBe("screen");
+		expect(topBackGestureLayer({ skipping: ["screen"] })).toBe("guard");
+
+		backGestureEventHandlers.delete(screen);
+		register({ layer: "overlay" });
+		expect(topBackGestureLayer({ skipping: ["screen"] })).toBe("overlay");
 	});
 
 	it("tracks the top handler reactively", () => {

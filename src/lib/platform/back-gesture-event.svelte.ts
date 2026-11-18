@@ -38,6 +38,15 @@ export function topBackGestureHandler(
 	return backGestureHandlersTopFirst(skip)[0];
 }
 
+export function topBackGestureLayer({ skipping = [] }: LayerSkip = {}):
+	| BackGestureLayer
+	| undefined {
+	const registered = [...backGestureEventHandlers.values()];
+	return LAYERS_TOP_FIRST.find(
+		(layer) => !skipping.includes(layer) && registered.includes(layer),
+	);
+}
+
 export function overlayOpen(): boolean {
 	return [...backGestureEventHandlers.values()].includes("overlay");
 }
