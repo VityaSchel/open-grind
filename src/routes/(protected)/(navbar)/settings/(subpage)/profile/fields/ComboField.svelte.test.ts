@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
 	bracketCounts,
@@ -10,6 +10,7 @@ import {
 } from "#lib/i18n/fixtures/count-formatter.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { Option } from "#lib/util/options.ts";
 import ComboField from "./ComboField.svelte";
 
@@ -64,8 +65,13 @@ async function search(input: HTMLInputElement, query: string) {
 	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	restoreCountFormatter();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
