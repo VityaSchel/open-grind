@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { Attachment } from "svelte/attachments";
 
 import {
 	capturedScreenRoot,
@@ -17,7 +18,13 @@ import { snapshotScreen } from "./snapshot";
 
 const detached: (() => void)[] = [];
 
-function attach(root: HTMLElement, attachment = screenRoot) {
+function attach({
+	root,
+	attachment = screenRoot,
+}: {
+	root: HTMLElement;
+	attachment?: Attachment<HTMLElement>;
+}) {
 	const detach = attachment(root);
 	if (detach) detached.push(detach);
 	return detach;
@@ -34,8 +41,8 @@ describe("screenRoot", () => {
 		const conversation = document.createElement("div");
 		expect(currentScreenRoot()).toBeNull();
 
-		attach(column);
-		const detachConversation = attach(conversation);
+		attach({ root: column });
+		const detachConversation = attach({ root: conversation });
 		expect(currentScreenRoot()).toBe(conversation);
 
 		detachConversation?.();
@@ -45,10 +52,13 @@ describe("screenRoot", () => {
 	it("takes a captured root as the screen to picture but never as the one to move", () => {
 		const column = document.createElement("div");
 		const chat = document.createElement("div");
-		attach(column);
+		attach({ root: column });
 		expect(currentScreenFront()).toBe(column);
 
-		const detachChat = attach(chat, capturedScreenRoot);
+		const detachChat = attach({
+			root: chat,
+			attachment: capturedScreenRoot,
+		});
 		expect(currentScreenRoot()).toBe(chat);
 		expect(currentScreenFront()).toBeNull();
 
@@ -60,7 +70,7 @@ describe("screenRoot", () => {
 		const root = document.createElement("div");
 		root.innerHTML = "<div><div></div></div>";
 		document.body.append(root);
-		attach(root, capturedScreenRoot);
+		attach({ root, attachment: capturedScreenRoot });
 		const scroller = root.firstElementChild as HTMLElement;
 		scroller.scrollTop = 80;
 		scroller.dispatchEvent(new Event("scroll"));
@@ -75,7 +85,7 @@ describe("screenRoot", () => {
 		const root = document.createElement("div");
 		root.innerHTML = "<div><div></div></div>";
 		document.body.append(root);
-		attach(root);
+		attach({ root });
 		const scroller = root.firstElementChild as HTMLElement;
 		scroller.scrollTop = 120;
 		scroller.dispatchEvent(new Event("scroll"));
@@ -92,7 +102,7 @@ describe("navBarRider", () => {
 		const navBar = document.createElement("nav");
 		expect(currentNavBarRider()).toBeNull();
 
-		const detach = attach(navBar, navBarRider);
+		const detach = attach({ root: navBar, attachment: navBarRider });
 		expect(currentNavBarRider()).toBe(navBar);
 
 		detach?.();
