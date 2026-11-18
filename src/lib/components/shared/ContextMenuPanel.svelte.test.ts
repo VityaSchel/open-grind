@@ -2,8 +2,9 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { createRawSnippet, tick } from "svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import ContextMenuPanel from "./ContextMenuPanel.svelte";
 
 let itemSlot: Element | null = null;
@@ -40,9 +41,14 @@ async function settle(): Promise<void> {
 	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(() => {
 	cleanup();
 	itemSlot = null;
+	resetPlatform();
 });
 
 describe("ContextMenuPanel", () => {

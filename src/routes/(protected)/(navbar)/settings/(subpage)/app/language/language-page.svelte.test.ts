@@ -77,6 +77,7 @@ import {
 } from "#lib/app-data/preferences.svelte.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import LanguagePage from "./+page.svelte";
 
 const OFFERED = [
@@ -129,6 +130,7 @@ const helpTranslateLink = () =>
 const scrollIntoView = vi.fn();
 
 beforeEach(async () => {
+	runningOn("linux");
 	navigated.length = 0;
 	scrollIntoView.mockReset();
 	Element.prototype.scrollIntoView = scrollIntoView;
@@ -146,6 +148,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -177,7 +180,7 @@ describe("the Language page", () => {
 		expect(link.getAttribute("data-slot")).toBe("help-translate");
 		expect(link.querySelector("svg")).not.toBeNull();
 		expect(
-			screen.getByRole("radiogroup").compareDocumentPosition(link) &
+			screen.getByRole("listbox").compareDocumentPosition(link) &
 				Node.DOCUMENT_POSITION_FOLLOWING,
 		).toBeTruthy();
 	});

@@ -5,7 +5,7 @@ import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { currentPlatformMock } = vi.hoisted(() => ({
-	currentPlatformMock: vi.fn(() => "web"),
+	currentPlatformMock: vi.fn(() => "linux"),
 }));
 
 vi.mock("#lib/platform/os.ts", async (importOriginal) => ({

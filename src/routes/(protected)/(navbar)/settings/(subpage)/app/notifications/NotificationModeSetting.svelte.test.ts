@@ -5,6 +5,7 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { notificationState } from "#lib/push/notification-state.svelte.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type * as Preferences from "#lib/app-data/preferences.svelte.ts";
 import type { NotificationMode } from "#lib/push/types.ts";
 import NotificationModeSetting from "./NotificationModeSetting.svelte";
@@ -31,6 +32,7 @@ const fast = () => mode(/^Fast Mode/);
 const slow = () => mode(/^Slow Mode/);
 
 beforeEach(() => {
+	runningOn("linux");
 	Object.assign(notificationState, {
 		mode: "slow",
 		phase: "idle",
@@ -40,7 +42,10 @@ beforeEach(() => {
 	selectNotificationMode.mockReset();
 });
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	resetPlatform();
+});
 
 describe("the delivery mode list from the keyboard", () => {
 	it("is one Tab stop that rests on the selected mode", () => {

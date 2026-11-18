@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { RovingKey } from "./roving-focus-state.svelte";
 import {
 	button,
@@ -18,12 +19,17 @@ vi.mock("$app/navigation", () => ({
 	beforeNavigate: vi.fn(),
 }));
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(() => {
 	destroyRovingLists();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	document.body.replaceChildren();
+	resetPlatform();
 });
 
 type Build = (key: RovingKey) => HTMLElement;

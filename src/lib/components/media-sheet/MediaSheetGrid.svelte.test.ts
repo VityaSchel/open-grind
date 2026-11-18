@@ -2,8 +2,9 @@
 
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { SelectionSet } from "#lib/util/selection.svelte.ts";
 import MediaSheetGrid from "./MediaSheetGrid.svelte";
 
@@ -61,9 +62,14 @@ async function pressOn({ target, key }: { target: HTMLElement; key: string }) {
 	await tick();
 }
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(() => {
 	cleanup();
 	document.body.replaceChildren();
+	resetPlatform();
 });
 
 describe("media sheet grid arrows with uploads in flight", () => {

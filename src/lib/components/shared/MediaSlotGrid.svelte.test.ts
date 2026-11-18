@@ -2,8 +2,9 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import MediaSlotGrid from "./MediaSlotGrid.svelte";
 
 type GridProps = {
@@ -46,9 +47,14 @@ function tabStops(grid: HTMLElement): Element[] {
 	return [...grid.querySelectorAll('[tabindex="0"]')];
 }
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(() => {
 	cleanup();
 	onDelete.mockReset();
+	resetPlatform();
 });
 
 describe("media slot grid tab stop", () => {
