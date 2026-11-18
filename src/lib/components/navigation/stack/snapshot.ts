@@ -37,6 +37,7 @@ const TRANSIENT_LAYERS = [
 ];
 const STACK_PANES = ["page-stack-pane", "live-stack-base", "live-stack-sheet"];
 const NAV_BAR = '[data-slot="navbar"]';
+const NAV_BAR_COPY = "screen-ghost-navbar";
 const OUT_OF_SIGHT = "[inert], [data-covered]";
 const STILL_VIDEO_ATTRIBUTES = ["src", "autoplay"];
 const BLOCK_EDGES = [
@@ -280,15 +281,24 @@ function showsNavBar(root: HTMLElement): boolean {
 	);
 }
 
+function navBarCopy(navBar: HTMLElement): HTMLElement {
+	const copy = navBar.cloneNode(true) as HTMLElement;
+	stripAttributes({ clone: copy, stripped: SCREEN_MODE.stripped });
+	inheritVisibility(copy);
+	copy.dataset.slot = NAV_BAR_COPY;
+	return copy;
+}
+
 export function snapshotScreen({
 	root,
 	path,
+	navBar = null,
 }: {
 	root: HTMLElement;
 	path: string;
+	navBar?: HTMLElement | null;
 }): Snapshot {
-	return {
-		...snapshot({ root, path, mode: SCREEN_MODE }),
-		showsNavBar: showsNavBar(root),
-	};
+	const picture = snapshot({ root, path, mode: SCREEN_MODE });
+	if (navBar) picture.node.append(navBarCopy(navBar));
+	return { ...picture, showsNavBar: showsNavBar(root) };
 }

@@ -15,7 +15,7 @@ import {
 	type ScreenLanding,
 } from "./screen-root";
 import type { ScreenSnapshots } from "./screen-snapshots.svelte";
-import { capturesScreen } from "./screen-swipe-routes";
+import { capturesScreen, hidesNavBar } from "./screen-swipe-routes";
 import { type Snapshot, snapshotScreen } from "./snapshot";
 import type { StackSurface } from "./surface";
 import { SwipeBackCore } from "./swipe-back-core.svelte";
@@ -123,6 +123,7 @@ export class ScreenStackState {
 	readonly #snapshots: ScreenSnapshots;
 	readonly #root: () => HTMLElement | null;
 	readonly #front: () => HTMLElement | null;
+	readonly #navBar: () => HTMLElement | null;
 
 	#prepared = $state(false);
 	#preparing: AbortController | null = null;
@@ -135,6 +136,7 @@ export class ScreenStackState {
 		snapshots,
 		root,
 		front,
+		navBar = () => null,
 		navigationPending,
 	}: {
 		surface: StackSurface;
@@ -143,6 +145,7 @@ export class ScreenStackState {
 		snapshots: ScreenSnapshots;
 		root: () => HTMLElement | null;
 		front: () => HTMLElement | null;
+		navBar?: () => HTMLElement | null;
 		navigationPending: () => boolean;
 	}) {
 		this.#core = new SwipeBackCore({
@@ -159,6 +162,7 @@ export class ScreenStackState {
 		this.#snapshots = snapshots;
 		this.#root = root;
 		this.#front = front;
+		this.#navBar = navBar;
 	}
 
 	get front(): HTMLElement | null {
@@ -261,7 +265,8 @@ export class ScreenStackState {
 		}
 
 		performance.mark(CAPTURE_START);
-		const snapshot = withFixup(snapshotScreen({ root, path }));
+		const navBar = hidesNavBar(to.route.id) ? this.#navBar() : null;
+		const snapshot = withFixup(snapshotScreen({ root, path, navBar }));
 		this.#snapshots.remember({ snapshot, kind: "screen" });
 		performance.measure(CAPTURE_MEASURE, {
 			start: CAPTURE_START,

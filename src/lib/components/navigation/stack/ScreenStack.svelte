@@ -45,6 +45,7 @@
 		snapshots: screenSnapshots,
 		root: currentScreenRoot,
 		front: currentScreenRoot,
+		navBar: currentNavBarRider,
 		navigationPending: () => navigationPending({ owns: () => false }),
 	});
 
@@ -100,6 +101,8 @@
 			{
 				invisible: !stack.revealed,
 				"**:data-[slot=navbar]:invisible": !stack.covering,
+				"**:data-[slot=screen-ghost-navbar]:invisible":
+					currentNavBarRider() !== null,
 			},
 		]}
 		style:z-index={stack.covering ? STACK_Z.cover : STACK_Z.back}

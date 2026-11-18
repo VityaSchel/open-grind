@@ -40,6 +40,8 @@ import { snapshotScreen } from "./snapshot";
 import { flushMicrotasks, navigationEvent } from "./stack-test-helpers";
 
 const NAV_BAR_COPY_HIDDEN = "**:data-[slot=navbar]:invisible";
+const LIVE_NAV_BAR_OVER_COPY = "**:data-[slot=screen-ghost-navbar]:invisible";
+const NAV_BAR_COPY = '[data-slot="screen-ghost-navbar"]';
 const CONVERSATION_LAYERS =
 	'<div data-slot="column" class="contents"><div data-slot="live-stack-base" data-covered inert>inbox</div><div data-slot="live-stack-sheet"><main>chat</main></div></div>';
 const INBOX =
@@ -59,10 +61,12 @@ function screenOver({
 	path,
 	html,
 	front,
+	navBar = null,
 }: {
 	path: string;
 	html: string;
 	front: string;
+	navBar?: HTMLElement | null;
 }) {
 	vi.stubGlobal("navigation", {
 		currentEntry: { index: 1 },
@@ -77,7 +81,7 @@ function screenOver({
 	screenSnapshots.navigated({ type: "link" });
 	enter({ path: front, index: 1 });
 	screenSnapshots.remember({
-		snapshot: snapshotScreen({ root: behind, path }),
+		snapshot: snapshotScreen({ root: behind, path, navBar }),
 		kind: "screen",
 	});
 	screenSnapshots.navigated({ type: "link" });
@@ -88,10 +92,14 @@ function profileOver({ path, html }: { path: string; html: string }) {
 }
 
 function conversationOverProfile() {
+	const navBar = document.createElement("nav");
+	navBar.dataset.slot = "navbar";
+	navBar.textContent = "tabs";
 	screenOver({
 		path: "/profile/7",
 		html: "<main>profile</main>",
 		front: "/chat/1:2",
+		navBar,
 	});
 }
 
@@ -107,12 +115,16 @@ async function swipedBack(stack: SwipeBackStack) {
 	flushSync();
 }
 
-function landedBackOn(path: string) {
+function landedBackOn({
+	path,
+	from = "/profile/7",
+}: {
+	path: string;
+	from?: string;
+}) {
 	enter({ path, index: 0 });
 	const navigated = vi.mocked(onNavigate).mock.calls.at(-1)![0];
-	void navigated(
-		navigationEvent({ from: "/profile/7", to: path, delta: -1 }),
-	);
+	void navigated(navigationEvent({ from, to: path, delta: -1 }));
 	flushSync();
 }
 
@@ -285,7 +297,7 @@ describe("ScreenStack", () => {
 		expect(back).toHaveBeenCalledOnce();
 		expect(host()?.classList).toContain(NAV_BAR_COPY_HIDDEN);
 
-		landedBackOn("/chat");
+		landedBackOn({ path: "/chat" });
 
 		expect(host()?.style.zIndex).toBe("49");
 		expect(host()?.classList).not.toContain(NAV_BAR_COPY_HIDDEN);
@@ -324,5 +336,43 @@ describe("ScreenStack", () => {
 		flushSync();
 		expect(layers.hasAttribute("data-raised")).toBe(false);
 		expect(layers.style.zIndex).toBe("");
+	});
+
+	it("shows the NavBar copy in the picture behind a conversation, which shows no NavBar, and hides it under a live NavBar", () => {
+		conversationOverProfile();
+		const { host } = renderScreenStack({ screen: CONVERSATION_LAYERS });
+		expect(host()?.querySelector(NAV_BAR_COPY)?.textContent).toBe("tabs");
+		expect(host()?.classList).not.toContain(LIVE_NAV_BAR_OVER_COPY);
+
+		const { detach } = riderNavBar();
+		flushSync();
+		expect(host()?.classList).toContain(LIVE_NAV_BAR_OVER_COPY);
+		detach?.();
+	});
+
+	it("hands the NavBar over from the copy to the live one as the swipe from a conversation lands on the profile", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		const back = vi.spyOn(history, "back").mockImplementation(() => {});
+		conversationOverProfile();
+		const {
+			column: layers,
+			host,
+			stack,
+		} = renderScreenStack({ screen: CONVERSATION_LAYERS });
+
+		await swipedBack(stack);
+		expect(back).toHaveBeenCalledOnce();
+		expect(layers.inert).toBe(true);
+		expect(host()?.classList).not.toContain(LIVE_NAV_BAR_OVER_COPY);
+
+		landedBackOn({ path: "/profile/7", from: "/chat/1:2" });
+		expect(host()?.style.zIndex).toBe("49");
+		expect(layers.style.transform).toBe("");
+		expect(host()?.classList).not.toContain(LIVE_NAV_BAR_OVER_COPY);
+
+		const { detach } = riderNavBar();
+		flushSync();
+		expect(host()?.classList).toContain(LIVE_NAV_BAR_OVER_COPY);
+		detach?.();
 	});
 });

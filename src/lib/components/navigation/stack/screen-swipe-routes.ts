@@ -42,3 +42,7 @@ export function capturesScreen({
 			return false;
 	}
 }
+
+export function hidesNavBar(toRoute: string | null): boolean {
+	return toRoute === CONVERSATION_ROUTE;
+}

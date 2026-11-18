@@ -367,6 +367,29 @@ describe("snapshotScreen", () => {
 		expect(behindSheet.showsNavBar).toBe(false);
 		expect(keyboardUp.showsNavBar).toBe(false);
 	});
+
+	it("adds a copy of the live NavBar it is given, marked as a copy, without touching the live one", () => {
+		const navBar = mountPane(
+			'<a id="inbox-tab" href="/chat" style="visibility: visible">Inbox</a>',
+		);
+		navBar.dataset.slot = "navbar";
+
+		const snapshot = snapshotScreen({
+			root: mountPane("<main>Profile</main>"),
+			path: "/profile/7",
+			navBar,
+		});
+
+		const copy = snapshot.node.lastElementChild as HTMLElement;
+		expect(snapshot.node.textContent).toBe("ProfileInbox");
+		expect(copy.dataset.slot).toBe("screen-ghost-navbar");
+		expect(copy.querySelector("[id]")).toBeNull();
+		expect(copy.querySelector("a")!.style.visibility).toBe("");
+		expect(snapshot.showsNavBar).toBe(true);
+		expect(navBar.dataset.slot).toBe("navbar");
+		expect(navBar.querySelector("#inbox-tab")).not.toBeNull();
+		expect(snapshot.node.querySelector('[data-slot="navbar"]')).toBeNull();
+	});
 });
 
 describe("snapshotPane strip mode", () => {

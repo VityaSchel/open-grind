@@ -24,12 +24,16 @@ const EDIT_PROFILE = "/(protected)/(navbar)/settings/(subpage)/profile";
 const APP_SETTINGS = "/(protected)/(navbar)/settings/(subpage)/app";
 const RIGHT_NOW = "/(protected)/(navbar)/right-now";
 const CONVERSATION = "/(protected)/chat/[conversationId]";
+const NAV_BAR_COPY = '[data-slot="screen-ghost-navbar"]';
 
 const iosMotion = stackMotion({ platform: "ios" });
 
 type Harness = ReturnType<typeof makeScreenStack>;
 
-function makeScreenStack({ at = "/" }: { at?: string } = {}) {
+function makeScreenStack({
+	at = "/",
+	navBar = null,
+}: { at?: string; navBar?: HTMLElement | null } = {}) {
 	const history = fakeHistory({ paths: [at] });
 	const snapshots = new ScreenSnapshots({ historyIndex: history.index });
 	snapshots.navigated({ type: "link" });
@@ -51,6 +55,7 @@ function makeScreenStack({ at = "/" }: { at?: string } = {}) {
 		snapshots,
 		root: () => page.root,
 		front: () => page.front,
+		navBar: () => navBar,
 		navigationPending: () => page.pending,
 	});
 
@@ -232,13 +237,38 @@ describe("ScreenStackState capturing the screen behind", () => {
 		["a profile", "/profile/7"],
 		["Right Now", "/right-now"],
 		["Browse", "/"],
-	])("pictures %s for a conversation opened from it", (_, at) => {
-		const harness = makeScreenStack({ at });
+	])(
+		"pictures %s for a conversation opened from it, with a copy of the NavBar the conversation hides",
+		(_, at) => {
+			const navBar = document.createElement("nav");
+			navBar.dataset.slot = "navbar";
+			navBar.textContent = "tabs";
+			const harness = makeScreenStack({ at, navBar });
 
-		go({ harness, to: "/chat/1:2", toRoute: CONVERSATION });
+			go({ harness, to: "/chat/1:2", toRoute: CONVERSATION });
 
-		expect(harness.stack.staged?.path).toBe(at);
-		expect(harness.stack.offersSwipeBack).toBe(true);
+			const { stack } = harness;
+			expect(stack.staged?.path).toBe(at);
+			expect(
+				stack.staged?.node.querySelector(NAV_BAR_COPY)?.textContent,
+			).toBe("tabs");
+			expect(stack.offersSwipeBack).toBe(true);
+		},
+	);
+
+	it("pictures a screen without a NavBar copy when the screen opened over it keeps the live NavBar", () => {
+		const navBar = document.createElement("nav");
+		const harness = makeScreenStack({ at: "/", navBar });
+
+		go({ harness, to: "/profile/7", toRoute: PROFILE });
+		expect(
+			harness.stack.staged?.node.querySelector(NAV_BAR_COPY),
+		).toBeNull();
+
+		go({ harness, to: "/settings/profile", toRoute: EDIT_PROFILE });
+		expect(
+			harness.stack.staged?.node.querySelector(NAV_BAR_COPY),
+		).toBeNull();
 	});
 
 	it("leaves a conversation opened from the inbox to the inbox's own swipe", () => {

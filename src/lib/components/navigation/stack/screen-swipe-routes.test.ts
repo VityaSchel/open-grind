@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SupportedPlatform } from "#lib/platform/os.ts";
-import { capturesScreen } from "./screen-swipe-routes";
+import { capturesScreen, hidesNavBar } from "./screen-swipe-routes";
 
 const PROFILE = "/(protected)/(navbar)/profile/[profileId]";
 const EDIT_PROFILE = "/(protected)/(navbar)/settings/(subpage)/profile";
@@ -129,5 +129,13 @@ describe("capturesScreen", () => {
 				platform,
 			}),
 		).toBe(false);
+	});
+});
+
+describe("hidesNavBar", () => {
+	it("hides the NavBar only in a conversation", () => {
+		expect(hidesNavBar(CONVERSATION)).toBe(true);
+		for (const toRoute of [PROFILE, EDIT_PROFILE, GRID, RIGHT_NOW, null])
+			expect(hidesNavBar(toRoute), String(toRoute)).toBe(false);
 	});
 });
