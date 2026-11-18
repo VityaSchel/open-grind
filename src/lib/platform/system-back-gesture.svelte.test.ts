@@ -62,13 +62,26 @@ describe("attachSystemBackGesture", () => {
 	});
 
 	it("tells native nothing of the edge zone, since Android's own Back gesture owns the edge", () => {
+		vi.useFakeTimers({
+			toFake: [
+				"setTimeout",
+				"clearTimeout",
+				"requestAnimationFrame",
+				"cancelAnimationFrame",
+			],
+		});
 		const { stack, calls } = makeStack({ edgeZone: "goes-back" });
 		const detach = attachSystemBackGesture(stack);
 		flushSync();
 
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
 		expect(calls.begin).toBe(1);
-		expect(invoke).not.toHaveBeenCalled();
+		vi.runOnlyPendingTimers();
+		expect(
+			invoke.mock.calls.filter(
+				([command]) => command === "set_back_swipe_armed",
+			),
+		).toEqual([]);
 
 		detach();
 	});
