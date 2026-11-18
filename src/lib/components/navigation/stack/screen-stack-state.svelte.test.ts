@@ -271,6 +271,16 @@ describe("ScreenStackState capturing the screen behind", () => {
 		).toBeNull();
 	});
 
+	it("pictures the conversation another one is opened from, as from the message popup", () => {
+		const harness = makeScreenStack({ at: "/chat/1:2" });
+
+		go({ harness, to: "/chat/1:3", toRoute: CONVERSATION });
+
+		expect(harness.stack.staged?.path).toBe("/chat/1:2");
+		expect(harness.stack.staged?.node.textContent).toBe("/chat/1:2");
+		expect(harness.stack.offersSwipeBack).toBe(true);
+	});
+
 	it("leaves a conversation opened from the inbox to the inbox's own swipe", () => {
 		const harness = makeScreenStack({ at: "/chat" });
 
