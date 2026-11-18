@@ -7,10 +7,9 @@ import {
 } from "#lib/components/navigation/stack/motion.ts";
 import {
 	flushMicrotasks,
-	navigationEvent,
 	settleLast,
 } from "#lib/components/navigation/stack/stack-test-helpers.ts";
-import { androidMotion, makeStack, push } from "./page-stack-test-helpers";
+import { androidMotion, go, makeStack, push } from "./page-stack-test-helpers";
 
 afterEach(() => {
 	document.body.innerHTML = "";
@@ -21,12 +20,9 @@ afterEach(() => {
 
 describe("PageStackState swipe back under reduced motion", () => {
 	it("follows the finger, then commits without a settle animation", async () => {
-		const { stack, applied, animations } = makeStack({
-			reducedMotion: true,
-		});
-		await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const harness = makeStack({ reducedMotion: true });
+		const { stack, applied, animations } = harness;
+		await go(harness, { from: "/settings", to: "/settings/app" });
 
 		expect(stack.beginSwipeBack()).toBe(true);
 		expect(stack.ghost?.path).toBe("/settings");
@@ -42,10 +38,9 @@ describe("PageStackState swipe back under reduced motion", () => {
 	});
 
 	it("returns the pane without a settle animation when the gesture is canceled", async () => {
-		const { stack, animations } = makeStack({ reducedMotion: true });
-		await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const harness = makeStack({ reducedMotion: true });
+		const { stack, animations } = harness;
+		await go(harness, { from: "/settings", to: "/settings/app" });
 		stack.beginSwipeBack();
 		stack.trackSwipeBack(0.6);
 
@@ -137,13 +132,11 @@ describe("PageStackState swipe back", () => {
 		expect(applied.at(-1)).toBe(1);
 		expect(stack.tracking).toBe(false);
 
-		const adopt = await stack.navigate(
-			navigationEvent({
-				from: "/settings/account/privacy",
-				to: "/settings/account",
-				delta: -1,
-			}),
-		);
+		const adopt = await go(harness, {
+			from: "/settings/account/privacy",
+			to: "/settings/account",
+			delta: -1,
+		});
 		adopt?.();
 		await flushMicrotasks();
 		await settleLast(animations);
@@ -164,13 +157,11 @@ describe("PageStackState swipe back", () => {
 		stack.commitSwipeBack();
 		const commit = animations.at(-1);
 
-		await stack.navigate(
-			navigationEvent({
-				from: "/settings/app",
-				to: "/settings",
-				delta: -1,
-			}),
-		);
+		await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		commit?.settle(true);
 		await flushMicrotasks();
 		await push(harness, { from: "/settings", to: "/settings/app" });
@@ -213,9 +204,11 @@ describe("PageStackState swipe back", () => {
 
 		const pending = animations.length;
 		applied.length = 0;
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		const start = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		start?.();
 		await tick();
 
@@ -236,9 +229,11 @@ describe("PageStackState swipe back", () => {
 		stack.commitSwipeBack();
 		await settleLast(animations);
 
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		const start = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		start?.();
 		await settleLast(animations);
 
@@ -246,7 +241,7 @@ describe("PageStackState swipe back", () => {
 		expect(stack.beginSwipeBack()).toBe(false);
 	});
 
-	it("forgets cached pages that are no longer ancestors", async () => {
+	it("offers nothing once a navigation leaves the stack", async () => {
 		const harness = makeStack();
 		const { stack } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
@@ -256,9 +251,7 @@ describe("PageStackState swipe back", () => {
 		});
 		expect(stack.offersSwipeBack).toBe(true);
 
-		await stack.navigate(
-			navigationEvent({ from: "/settings/app/credits", to: "/chat" }),
-		);
+		await go(harness, { from: "/settings/app/credits", to: "/chat" });
 		expect(stack.offersSwipeBack).toBe(false);
 	});
 
@@ -271,19 +264,20 @@ describe("PageStackState swipe back", () => {
 			to: "/settings/app/credits",
 		});
 
-		const start = await stack.navigate(
-			navigationEvent({
-				from: "/settings/app/credits",
-				to: "/settings/app",
-			}),
-		);
+		const start = await go(harness, {
+			from: "/settings/app/credits",
+			to: "/settings/app",
+			delta: -1,
+		});
 		start?.();
 		await settleLast(animations);
 		expect(stack.offersSwipeBack).toBe(true);
 
-		const toRoot = await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		const toRoot = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		toRoot?.();
 		await settleLast(animations);
 		expect(stack.offersSwipeBack).toBe(false);
@@ -293,9 +287,10 @@ describe("PageStackState swipe back", () => {
 describe("PageStackState back gesture during the slide-in", () => {
 	async function slidingIn() {
 		const harness = makeStack();
-		const start = await harness.stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const start = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+		});
 		start?.();
 		const slideIn = harness.animations.at(-1)!;
 		slideIn.reached = 0.6;
@@ -355,24 +350,6 @@ describe("PageStackState back gesture during the slide-in", () => {
 	});
 });
 
-describe("PageStackState commit with nothing to go back to", () => {
-	it("restores the pane instead of navigating into an empty history", async () => {
-		const harness = makeStack({ canGoBack: false });
-		const { stack, applied, animations } = harness;
-		const back = vi.spyOn(history, "back").mockImplementation(() => {});
-		await push(harness, { from: "/settings", to: "/settings/app" });
-
-		stack.beginSwipeBack();
-		stack.trackSwipeBack(0.9);
-		stack.commitSwipeBack();
-		await settleLast(animations);
-
-		expect(back).not.toHaveBeenCalled();
-		expect(stack.ghost).toBeNull();
-		expect(applied.at(-1)).toBe(0);
-	});
-});
-
 describe("PageStackState releasing a swipe", () => {
 	it("finishes a released swipe at the finger's speed where the platform matches it", async () => {
 		const ios = stackMotion({ platform: "ios" });
@@ -400,9 +377,10 @@ describe("PageStackState in motion", () => {
 		const { stack, animations } = harness;
 		expect(stack.moving).toBe(false);
 
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const start = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+		});
 		start?.();
 		expect(stack.moving).toBe(true);
 		await settleLast(animations);
@@ -431,13 +409,11 @@ describe("PageStackState committing a swipe", () => {
 		expect(stack.committing).toBe(true);
 		await settleLast(animations);
 
-		const adopt = await stack.navigate(
-			navigationEvent({
-				from: "/settings/app",
-				to: "/settings",
-				delta: -1,
-			}),
-		);
+		const adopt = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		adopt?.();
 		expect(stack.committing).toBe(false);
 	});
@@ -479,13 +455,11 @@ describe("PageStackState committing a swipe", () => {
 		await settleLast(animations);
 		expect(stack.ghost).toBeNull();
 
-		const pop = await stack.navigate(
-			navigationEvent({
-				from: "/settings/app",
-				to: "/settings",
-				delta: -1,
-			}),
-		);
+		const pop = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		pop?.();
 		expect(stack.ghost?.path).toBe("/settings/app");
 	});
@@ -499,13 +473,11 @@ describe("PageStackState committing a swipe", () => {
 		stack.beginSwipeBack();
 		stack.commitSwipeBack();
 		await settleLast(animations);
-		const adopt = await stack.navigate(
-			navigationEvent({
-				from: "/settings/app",
-				to: "/settings",
-				delta: -1,
-			}),
-		);
+		const adopt = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		adopt?.();
 		const settled = animations.length;
 
@@ -520,8 +492,9 @@ describe("PageStackState offering a back swipe", () => {
 		const harness = makeStack();
 		const offers: boolean[] = [];
 		const stop = $effect.root(() => {
+			const offered = $derived(harness.stack.offersSwipeBack);
 			$effect(() => {
-				offers.push(harness.stack.offersSwipeBack);
+				offers.push(offered);
 			});
 		});
 		flushSync();
@@ -558,8 +531,9 @@ describe("PageStackState offering a back swipe", () => {
 		});
 		const offers: boolean[] = [];
 		const stop = $effect.root(() => {
+			const offered = $derived(stack.offersSwipeBack);
 			$effect(() => {
-				offers.push(stack.offersSwipeBack);
+				offers.push(offered);
 			});
 		});
 		flushSync();
@@ -572,13 +546,11 @@ describe("PageStackState offering a back swipe", () => {
 		expect(stack.beginSwipeBack()).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
 
-		const adopt = await stack.navigate(
-			navigationEvent({
-				from: "/settings/account/privacy",
-				to: "/settings/account",
-				delta: -1,
-			}),
-		);
+		const adopt = await go(harness, {
+			from: "/settings/account/privacy",
+			to: "/settings/account",
+			delta: -1,
+		});
 		adopt?.();
 		flushSync();
 

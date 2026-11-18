@@ -1,24 +1,26 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-	navigationEvent,
-	settleLast,
-} from "#lib/components/navigation/stack/stack-test-helpers.ts";
-import { androidMotion, makeStack, push } from "./page-stack-test-helpers";
+import { settleLast } from "#lib/components/navigation/stack/stack-test-helpers.ts";
+import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { pushedFromChain } from "./hierarchy";
+import { androidMotion, go, makeStack, push } from "./page-stack-test-helpers";
 
-afterEach(() => {
+afterEach(async () => {
 	document.body.innerHTML = "";
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("PageStackState navigation", () => {
 	it("enters a pushed page from the right over a snapshot of the old one", async () => {
-		const { stack, applied, animations } = makeStack();
+		const harness = makeStack();
+		const { stack, applied, animations } = harness;
 
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const start = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+		});
 		expect(stack.liveRole).toBe("front");
 		expect(stack.ghost?.path).toBe("/settings");
 		expect(applied).toEqual([1, 1]);
@@ -40,9 +42,10 @@ describe("PageStackState navigation", () => {
 		await push(harness, { from: "/settings", to: "/settings/app" });
 		applied.length = 0;
 
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		const start = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+		});
 		expect(stack.liveRole).toBe("back");
 		expect(stack.ghost?.path).toBe("/settings/app");
 		expect(applied).toEqual([0, 0]);
@@ -53,13 +56,15 @@ describe("PageStackState navigation", () => {
 
 	it("puts the panes at the start of a slide before the ghost mounts", async () => {
 		const harness = makeStack();
-		const { stack, applied } = harness;
+		const { applied } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
 		applied.length = 0;
 
-		const navigating = stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		const navigating = go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 
 		expect(applied, "positioned in the same task as the ghost").toEqual([
 			0,
@@ -77,13 +82,11 @@ describe("PageStackState navigation", () => {
 			to: "/settings/account/privacy",
 		});
 
-		const start = await stack.navigate(
-			navigationEvent({
-				from: "/settings/account/privacy",
-				to: "/settings",
-				delta: -2,
-			}),
-		);
+		const start = await go(harness, {
+			from: "/settings/account/privacy",
+			to: "/settings",
+			delta: -2,
+		});
 		expect(stack.liveRole).toBe("back");
 
 		start?.();
@@ -91,7 +94,7 @@ describe("PageStackState navigation", () => {
 	});
 
 	it("cuts a pop onto a page it was never pushed from, even when another one waits beneath", async () => {
-		const harness = makeStack();
+		const harness = makeStack({ at: "/settings/account" });
 		const { stack, applied, animations } = harness;
 		await push(harness, {
 			from: "/settings/account",
@@ -99,12 +102,10 @@ describe("PageStackState navigation", () => {
 		});
 		const slides = animations.length;
 
-		const start = await stack.navigate(
-			navigationEvent({
-				from: "/settings/account/privacy",
-				to: "/settings",
-			}),
-		);
+		const start = await go(harness, {
+			from: "/settings/account/privacy",
+			to: "/settings",
+		});
 
 		expect(stack.ghost).toBeNull();
 		expect(start).toBeUndefined();
@@ -112,18 +113,24 @@ describe("PageStackState navigation", () => {
 		expect(applied.at(-1)).toBe(0);
 	});
 
-	it("slides down every level history says was pushed before the stack was mounted again, leaving the gesture to the system", async () => {
-		const { stack, animations } = makeStack({
+	it("slides down every level history says was pushed before the stack was mounted again", async () => {
+		const harness = makeStack({
+			before: ["/settings", "/settings/account"],
+			at: "/settings/account/blocked",
 			pushedFrom: [{ path: "/settings" }, { path: "/settings/account" }],
 		});
-		expect(stack.offersSwipeBack).toBe(false);
+		const { stack, animations } = harness;
+		expect(
+			stack.offersSwipeBack,
+			"no copy of the page beneath was cached",
+		).toBe(false);
 
 		for (const [from, to] of [
 			["/settings/account/blocked", "/settings/account"],
 			["/settings/account", "/settings"],
 		] as const) {
 			const slides = animations.length;
-			const start = await stack.navigate(navigationEvent({ from, to }));
+			const start = await go(harness, { from, to, delta: -1 });
 			expect(stack.ghost?.path).toBe(from);
 			start?.();
 			expect(animations).toHaveLength(slides + 1);
@@ -132,16 +139,43 @@ describe("PageStackState navigation", () => {
 		}
 	});
 
-	it("cuts a backward history move that lands deeper instead of pushing it in", async () => {
-		const { stack, animations } = makeStack();
+	it("offers the swipe again on a page mounted anew over a page it cached before leaving the stack", async () => {
+		const first = makeStack();
+		await push(first, { from: "/settings", to: "/settings/account" });
+		await push(first, {
+			from: "/settings/account",
+			to: "/settings/account/blocked",
+		});
+		await go(first, {
+			from: "/settings/account/blocked",
+			to: "/profile/1",
+		});
+		first.history.go(-1);
+		first.snapshots.navigating();
+		first.snapshots.navigated({ type: "popstate" });
 
-		const start = await stack.navigate(
-			navigationEvent({
-				from: "/settings",
-				to: "/settings/app",
-				delta: -1,
+		const { stack } = makeStack({
+			remounting: first,
+			pushedFrom: pushedFromChain({
+				pathname: "/settings/account/blocked",
+				earlier: ["/settings/account", "/settings"],
 			}),
-		);
+		});
+
+		expect(stack.offersSwipeBack).toBe(true);
+		expect(stack.beginSwipeBack()).toBe(true);
+		expect(stack.ghost?.path).toBe("/settings/account");
+	});
+
+	it("cuts a backward history move that lands deeper instead of pushing it in", async () => {
+		const harness = makeStack({ before: ["/settings/app"] });
+		const { stack, animations } = harness;
+
+		const start = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+			delta: -1,
+		});
 
 		expect(stack.ghost).toBeNull();
 		expect(start).toBeUndefined();
@@ -150,15 +184,14 @@ describe("PageStackState navigation", () => {
 	});
 
 	it("treats a forward history move as a push", async () => {
-		const { stack, animations } = makeStack();
+		const harness = makeStack({ later: ["/settings/app"] });
+		const { stack, animations } = harness;
 
-		const start = await stack.navigate(
-			navigationEvent({
-				from: "/settings",
-				to: "/settings/app",
-				delta: 1,
-			}),
-		);
+		const start = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+			delta: 1,
+		});
 		expect(stack.liveRole).toBe("front");
 
 		start?.();
@@ -166,29 +199,70 @@ describe("PageStackState navigation", () => {
 	});
 
 	it("does not animate between siblings", async () => {
-		const { stack, animations } = makeStack();
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings/profile" }),
-		);
+		const harness = makeStack({ at: "/settings/app" });
+		const { stack, animations } = harness;
+		const start = await go(harness, {
+			from: "/settings/app",
+			to: "/settings/profile",
+		});
 		expect(stack.ghost).toBeNull();
 		expect(start).toBeUndefined();
 		expect(animations).toHaveLength(0);
 	});
 
+	it("takes no copy of a page a replace navigation writes over, keeping the swipe onto the page beneath", async () => {
+		const harness = makeStack({ at: "/settings/albums" });
+		const { stack, pane } = harness;
+		await push(harness, {
+			from: "/settings/albums",
+			to: "/settings/albums/new",
+		});
+		const cloned = vi.spyOn(pane, "cloneNode");
+
+		await go(harness, {
+			from: "/settings/albums/new",
+			to: "/settings/albums/1",
+			replace: true,
+		});
+
+		expect(cloned).not.toHaveBeenCalled();
+		expect(stack.beginSwipeBack()).toBe(true);
+		expect(stack.ghost?.path).toBe("/settings/albums");
+	});
+
+	it("reveals the page history goes back to after a cut to a page that is not its child", async () => {
+		const harness = makeStack({ at: "/settings/account" });
+		const { stack } = harness;
+		await push(harness, {
+			from: "/settings/account",
+			to: "/settings/account/security",
+		});
+
+		await go(harness, {
+			from: "/settings/account/security",
+			to: "/settings/app/discreet-icon",
+		});
+
+		expect(stack.ghost).toBeNull();
+		expect(stack.beginSwipeBack()).toBe(true);
+		expect(stack.ghost?.path).toBe("/settings/account/security");
+	});
+
 	it("does not animate leaving the stack", async () => {
-		const { stack, animations } = makeStack();
-		await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/chat" }),
-		);
+		const harness = makeStack();
+		const { stack, animations } = harness;
+		await go(harness, { from: "/settings", to: "/chat" });
 		expect(stack.ghost).toBeNull();
 		expect(animations).toHaveLength(0);
 	});
 
 	it("swaps pages at once under reduced motion, keeping the page beneath for the back gesture", async () => {
-		const { stack, animations } = makeStack({ reducedMotion: true });
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const harness = makeStack({ reducedMotion: true });
+		const { stack, animations } = harness;
+		const start = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+		});
 		expect(stack.ghost).toBeNull();
 		expect(start).toBeUndefined();
 		expect(animations).toHaveLength(0);
@@ -205,9 +279,7 @@ describe("PageStackState state under interruption", () => {
 		expect(stack.beginSwipeBack()).toBe(true);
 		expect(stack.tracking).toBe(true);
 
-		await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings/profile" }),
-		);
+		await go(harness, { from: "/settings/app", to: "/settings/profile" });
 
 		expect(
 			stack.tracking,
@@ -216,16 +288,20 @@ describe("PageStackState state under interruption", () => {
 	});
 
 	it("turns a push around from where it had reached, not from a full page", async () => {
-		const { stack, applied, animations } = makeStack();
-		const entering = await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
+		const harness = makeStack();
+		const { stack, applied, animations } = harness;
+		const entering = await go(harness, {
+			from: "/settings",
+			to: "/settings/app",
+		});
 		entering?.();
 		animations.at(-1)!.reached = 0.7;
 
-		const leaving = await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		const leaving = await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		expect(stack.ghost?.path).toBe("/settings/app");
 		expect(applied.at(-1)).toBe(0.7);
 		leaving?.();
@@ -234,18 +310,17 @@ describe("PageStackState state under interruption", () => {
 
 	it("ignores the settle starter of a superseded navigation", async () => {
 		const harness = makeStack();
-		const { stack, animations } = harness;
+		const { animations } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
 
-		const stale = await stack.navigate(
-			navigationEvent({
-				from: "/settings/app",
-				to: "/settings/app/credits",
-			}),
-		);
-		await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings/profile" }),
-		);
+		const stale = await go(harness, {
+			from: "/settings/app",
+			to: "/settings/app/credits",
+		});
+		await go(harness, {
+			from: "/settings/app/credits",
+			to: "/settings/profile",
+		});
 		const before = animations.length;
 
 		stale?.();
@@ -263,61 +338,41 @@ describe("PageStackState after a language change", () => {
 		const { stack } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
 
-		stack.forgetSnapshots();
+		await setLocale({ locale: "en-XA" });
 
 		expect(stack.offersSwipeBack).toBe(false);
 		expect(stack.beginSwipeBack()).toBe(false);
 
-		await stack.navigate(
-			navigationEvent({ from: "/settings/app", to: "/settings" }),
-		);
+		await go(harness, {
+			from: "/settings/app",
+			to: "/settings",
+			delta: -1,
+		});
 		expect(stack.liveRole).toBe("back");
 		expect(stack.ghost?.path).toBe("/settings/app");
 	});
 
-	it("drops the copy of the previous page from a push still sliding in", async () => {
-		const { stack, applied, animations } = makeStack();
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
-		start?.();
-		expect(stack.ghost?.path).toBe("/settings");
-
-		stack.forgetSnapshots();
-
-		expect(stack.ghost).toBeNull();
-		expect(stack.liveRole).toBe("front");
-		expect(applied.at(-1)).toBe(0);
-		await settleLast(animations);
-		expect(stack.ghost).toBeNull();
-	});
-
-	it("ignores the settle starter of a push it interrupted", async () => {
-		const { stack, animations } = makeStack();
-		const start = await stack.navigate(
-			navigationEvent({ from: "/settings", to: "/settings/app" }),
-		);
-
-		stack.forgetSnapshots();
-		start?.();
-
-		expect(animations).toHaveLength(0);
-		expect(stack.ghost).toBeNull();
-	});
-
-	it("goes back at once when a committed swipe is still sliding out", async () => {
+	it("offers the swipe again from the next push, over the copy it takes in the new language", async () => {
 		const harness = makeStack();
-		const { stack, applied } = harness;
-		const back = vi.spyOn(history, "back").mockImplementation(() => {});
+		const { stack, animations } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
-		stack.beginSwipeBack();
-		stack.trackSwipeBack(0.6);
-		stack.commitSwipeBack();
+		await setLocale({ locale: "en-XA" });
 
-		stack.forgetSnapshots();
+		await push(harness, {
+			from: "/settings/app",
+			to: "/settings/app/credits",
+		});
+		expect(stack.beginSwipeBack()).toBe(true);
+		expect(stack.ghost?.path).toBe("/settings/app");
+		stack.cancelSwipeBack();
+		await settleLast(animations);
 
-		expect(back).toHaveBeenCalledTimes(1);
-		expect(applied.at(-1)).toBe(1);
+		await go(harness, {
+			from: "/settings/app/credits",
+			to: "/settings/app",
+			delta: -1,
+		});
+		expect(stack.offersSwipeBack).toBe(false);
 	});
 
 	it("lets a swipe in progress finish over the page it revealed", async () => {
@@ -327,7 +382,7 @@ describe("PageStackState after a language change", () => {
 		stack.beginSwipeBack();
 		stack.trackSwipeBack(0.3);
 
-		stack.forgetSnapshots();
+		await setLocale({ locale: "en-XA" });
 
 		expect(stack.tracking).toBe(true);
 		expect(stack.ghost?.path).toBe("/settings");

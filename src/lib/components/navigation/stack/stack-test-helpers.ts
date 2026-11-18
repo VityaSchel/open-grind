@@ -1,4 +1,5 @@
 import { flushSync } from "svelte";
+import { vi } from "vitest";
 import type { OnNavigate } from "$app/navigation";
 
 import type { StackSurface } from "./surface";
@@ -82,4 +83,41 @@ export async function settleLast(animations: PendingAnimation[]) {
 	animations.at(-1)?.settle(true);
 	await flushMicrotasks();
 	flushSync();
+}
+
+export type FakeHistory = ReturnType<typeof fakeHistory>;
+
+export function fakeHistory({
+	paths,
+	index = paths.length - 1,
+}: {
+	paths: string[];
+	index?: number;
+}) {
+	const entries = { paths: [...paths], index };
+	vi.stubGlobal("navigation", {
+		get currentEntry() {
+			return { index: entries.index };
+		},
+		entries: () =>
+			entries.paths.map((path) => ({ url: `http://app${path}` })),
+	});
+
+	return {
+		index: () => entries.index,
+		path: () => entries.paths[entries.index],
+		push: (path: string) => {
+			entries.paths = [
+				...entries.paths.slice(0, entries.index + 1),
+				path,
+			];
+			entries.index += 1;
+		},
+		replace: (path: string) => {
+			entries.paths[entries.index] = path;
+		},
+		go: (delta: number) => {
+			entries.index += delta;
+		},
+	};
 }
