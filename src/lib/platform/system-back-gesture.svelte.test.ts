@@ -331,6 +331,49 @@ describe("attachSystemBackGesture", () => {
 		detachOlder();
 	});
 
+	it("gives the gesture to an older stack still sliding when no stack offers a swipe back", () => {
+		const older = makeStack({ offers: false });
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
+		older.slide(true);
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(older.calls.begin).toBe(1);
+		expect(newer.calls.begin).toBe(0);
+
+		detachNewer();
+		detachOlder();
+	});
+
+	it("keeps feeding the tracking stack when an idle stack detaches, and stops once the tracking one detaches", () => {
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+		});
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
+		let progress = 0;
+		window.__AndroidBack = {
+			moveTaskToBack: () => {},
+			gestureProgress: () => progress,
+		};
+
+		window.__AndroidOnBackGestureStart?.();
+		progress = 0.25;
+		vi.advanceTimersToNextFrame();
+		detachNewer();
+		progress = 0.5;
+		vi.advanceTimersToNextFrame();
+
+		expect(older.tracked).toEqual([0.25, 0.5]);
+		expect(newer.tracked).toEqual([]);
+
+		detachOlder();
+		expect(vi.getTimerCount(), "no frame may stay queued").toBe(0);
+	});
+
 	it("keeps the hook defined and refusing once no stack is attached", () => {
 		const { stack } = makeStack();
 		attachSystemBackGesture(stack)();
@@ -628,15 +671,19 @@ describe("on iOS", () => {
 		expect(armedPushes()).toEqual([true, false, true, false]);
 	});
 
-	it("lets the stack prepare for a swipe and undo it", () => {
-		const { stack, calls } = makeStack();
-		const detach = attachSystemBackGesture(stack);
+	it("lets the stack that offers a swipe back prepare for it and undo it, under a newer one that offers none", () => {
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
 
 		window.__iosBack?.prepare();
 		window.dispatchEvent(new Event("touchend"));
 
-		expect(calls).toMatchObject({ prepare: 1, undo: 1 });
-		detach();
+		expect(older.calls).toMatchObject({ prepare: 1, undo: 1 });
+		expect(newer.calls).toMatchObject({ prepare: 0, undo: 0 });
+		detachNewer();
+		detachOlder();
 	});
 });
 
