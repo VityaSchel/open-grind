@@ -225,7 +225,8 @@ body {
 	--nav-height: 0px;
 }
 
-:root[data-keyboard-shrinks-page] .scroll-pb-nav-clear {
+:root[data-keyboard-shrinks-page]
+	:is(.scroll-pb-nav-clear, .scroll-pb-nav-clear-above-safe-area) {
 	scroll-padding-bottom: 0;
 }
 
@@ -426,6 +427,11 @@ textarea,
 @utility scroll-pb-nav-clear {
 	scroll-padding-bottom: calc(
 		0.5rem + var(--content-pb) + var(--bar-content-gap)
+	);
+}
+@utility scroll-pb-nav-clear-above-safe-area {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--nav-height) + var(--bar-content-gap)
 	);
 }
 @utility pt-header-clear-* {
