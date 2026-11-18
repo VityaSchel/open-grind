@@ -17,7 +17,8 @@ describe("PageStackState navigation", () => {
 		const harness = makeStack();
 		const { stack, applied, animations } = harness;
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 		});
@@ -42,7 +43,8 @@ describe("PageStackState navigation", () => {
 		await push(harness, { from: "/settings", to: "/settings/app" });
 		applied.length = 0;
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 		});
@@ -60,7 +62,8 @@ describe("PageStackState navigation", () => {
 		await push(harness, { from: "/settings", to: "/settings/app" });
 		applied.length = 0;
 
-		const navigating = go(harness, {
+		const navigating = go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -82,7 +85,8 @@ describe("PageStackState navigation", () => {
 			to: "/settings/account/privacy",
 		});
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/account/privacy",
 			to: "/settings",
 			delta: -2,
@@ -102,7 +106,8 @@ describe("PageStackState navigation", () => {
 		});
 		const slides = animations.length;
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/account/privacy",
 			to: "/settings",
 		});
@@ -130,7 +135,7 @@ describe("PageStackState navigation", () => {
 			["/settings/account", "/settings"],
 		] as const) {
 			const slides = animations.length;
-			const start = await go(harness, { from, to, delta: -1 });
+			const start = await go({ harness, from, to, delta: -1 });
 			expect(stack.ghost?.path).toBe(from);
 			start?.();
 			expect(animations).toHaveLength(slides + 1);
@@ -146,7 +151,8 @@ describe("PageStackState navigation", () => {
 			from: "/settings/account",
 			to: "/settings/account/blocked",
 		});
-		await go(first, {
+		await go({
+			harness: first,
 			from: "/settings/account/blocked",
 			to: "/profile/1",
 		});
@@ -171,7 +177,8 @@ describe("PageStackState navigation", () => {
 		const harness = makeStack({ before: ["/settings/app"] });
 		const { stack, animations } = harness;
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 			delta: -1,
@@ -187,7 +194,8 @@ describe("PageStackState navigation", () => {
 		const harness = makeStack({ later: ["/settings/app"] });
 		const { stack, animations } = harness;
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 			delta: 1,
@@ -201,7 +209,8 @@ describe("PageStackState navigation", () => {
 	it("does not animate between siblings", async () => {
 		const harness = makeStack({ at: "/settings/app" });
 		const { stack, animations } = harness;
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings/profile",
 		});
@@ -219,7 +228,8 @@ describe("PageStackState navigation", () => {
 		});
 		const cloned = vi.spyOn(pane, "cloneNode");
 
-		await go(harness, {
+		await go({
+			harness,
 			from: "/settings/albums/new",
 			to: "/settings/albums/1",
 			replace: true,
@@ -238,7 +248,8 @@ describe("PageStackState navigation", () => {
 			to: "/settings/account/security",
 		});
 
-		await go(harness, {
+		await go({
+			harness,
 			from: "/settings/account/security",
 			to: "/settings/app/discreet-icon",
 		});
@@ -251,7 +262,7 @@ describe("PageStackState navigation", () => {
 	it("does not animate leaving the stack", async () => {
 		const harness = makeStack();
 		const { stack, animations } = harness;
-		await go(harness, { from: "/settings", to: "/chat" });
+		await go({ harness, from: "/settings", to: "/chat" });
 		expect(stack.ghost).toBeNull();
 		expect(animations).toHaveLength(0);
 	});
@@ -259,7 +270,8 @@ describe("PageStackState navigation", () => {
 	it("swaps pages at once under reduced motion, keeping the page beneath for the back gesture", async () => {
 		const harness = makeStack({ reducedMotion: true });
 		const { stack, animations } = harness;
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 		});
@@ -279,7 +291,7 @@ describe("PageStackState state under interruption", () => {
 		expect(stack.beginSwipeBack()).toBe(true);
 		expect(stack.tracking).toBe(true);
 
-		await go(harness, { from: "/settings/app", to: "/settings/profile" });
+		await go({ harness, from: "/settings/app", to: "/settings/profile" });
 
 		expect(
 			stack.tracking,
@@ -290,14 +302,16 @@ describe("PageStackState state under interruption", () => {
 	it("turns a push around from where it had reached, not from a full page", async () => {
 		const harness = makeStack();
 		const { stack, applied, animations } = harness;
-		const entering = await go(harness, {
+		const entering = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 		});
 		entering?.();
 		animations.at(-1)!.reached = 0.7;
 
-		const leaving = await go(harness, {
+		const leaving = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -313,11 +327,13 @@ describe("PageStackState state under interruption", () => {
 		const { animations } = harness;
 		await push(harness, { from: "/settings", to: "/settings/app" });
 
-		const stale = await go(harness, {
+		const stale = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings/app/credits",
 		});
-		await go(harness, {
+		await go({
+			harness,
 			from: "/settings/app/credits",
 			to: "/settings/profile",
 		});
@@ -343,7 +359,8 @@ describe("PageStackState after a language change", () => {
 		expect(stack.offersSwipeBack).toBe(false);
 		expect(stack.beginSwipeBack()).toBe(false);
 
-		await go(harness, {
+		await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -367,7 +384,8 @@ describe("PageStackState after a language change", () => {
 		stack.cancelSwipeBack();
 		await settleLast(animations);
 
-		await go(harness, {
+		await go({
+			harness,
 			from: "/settings/app/credits",
 			to: "/settings/app",
 			delta: -1,

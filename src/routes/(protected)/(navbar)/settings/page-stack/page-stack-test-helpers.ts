@@ -65,19 +65,19 @@ export function makeStack({
 	return { stack, pane, applied, animations, history, snapshots };
 }
 
-export async function go(
-	{
-		stack,
-		history,
-		snapshots,
-	}: Pick<StackHarness, "stack" | "history" | "snapshots">,
-	{
-		from,
-		to,
-		delta,
-		replace = false,
-	}: { from: string; to: string; delta?: number; replace?: boolean },
-) {
+export async function go({
+	harness: { stack, history, snapshots },
+	from,
+	to,
+	delta,
+	replace = false,
+}: {
+	harness: Pick<StackHarness, "stack" | "history" | "snapshots">;
+	from: string;
+	to: string;
+	delta?: number;
+	replace?: boolean;
+}) {
 	expect(history.path(), "history shows the page navigated from").toBe(from);
 	if (delta !== undefined) history.go(delta);
 	else if (replace) history.replace(to);
@@ -94,7 +94,7 @@ export async function push(
 	harness: StackHarness,
 	{ from, to }: { from: string; to: string },
 ) {
-	const start = await go(harness, { from, to });
+	const start = await go({ harness, from, to });
 	start?.();
 	await settleLast(harness.animations);
 }

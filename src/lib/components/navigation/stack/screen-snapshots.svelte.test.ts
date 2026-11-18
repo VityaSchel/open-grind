@@ -38,7 +38,7 @@ function trackedHistory({ at = "/" }: { at?: string } = {}) {
 	snapshots.navigated({ type: "enter" });
 
 	const taken = new Map<string, Snapshot>();
-	const capture = (kind: SnapshotKind, path: string) => {
+	const capture = ({ kind, path }: { kind: SnapshotKind; path: string }) => {
 		const snapshot = picture(path);
 		taken.set(path, snapshot);
 		return snapshots.remember({ snapshot, kind });
@@ -59,15 +59,15 @@ function trackedHistory({ at = "/" }: { at?: string } = {}) {
 		}) => {
 			const from = history.path()!;
 			history.push(to);
-			if (kind && capturedFirst) capture(kind, from);
+			if (kind && capturedFirst) capture({ kind, path: from });
 			snapshots.navigating();
-			if (kind && !capturedFirst) capture(kind, from);
+			if (kind && !capturedFirst) capture({ kind, path: from });
 			snapshots.navigated({ type: "link" });
 		},
 		replace: ({ to, kind }: { to: string; kind?: SnapshotKind }) => {
 			const from = history.path()!;
 			history.replace(to);
-			const stored = kind ? capture(kind, from) : false;
+			const stored = kind ? capture({ kind, path: from }) : false;
 			snapshots.navigating();
 			snapshots.navigated({ type: "goto" });
 			return stored;

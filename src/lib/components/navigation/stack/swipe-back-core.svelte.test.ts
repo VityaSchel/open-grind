@@ -39,7 +39,13 @@ function makeCore({
 	return { core, page, adopt, applied, animations };
 }
 
-function committed(harness: ReturnType<typeof makeCore>, progress = 0.6) {
+function committed({
+	harness,
+	progress = 0.6,
+}: {
+	harness: ReturnType<typeof makeCore>;
+	progress?: number;
+}) {
 	harness.core.begin();
 	harness.core.track(progress);
 	harness.core.commit();
@@ -152,7 +158,7 @@ describe("SwipeBackCore committing a swipe", () => {
 		const back = vi.spyOn(history, "back").mockImplementation(() => {});
 		const harness = makeCore();
 		const { core, applied } = harness;
-		committed(harness);
+		committed({ harness });
 
 		expect(core.offersSwipeBack).toBe(true);
 		expect(core.begin()).toBe(false);
@@ -166,7 +172,7 @@ describe("SwipeBackCore committing a swipe", () => {
 		const back = vi.spyOn(history, "back").mockImplementation(() => {});
 		const harness = makeCore({ earlier: [] });
 		const { core, applied, animations } = harness;
-		committed(harness, 0.9);
+		committed({ harness, progress: 0.9 });
 
 		expect(core.committing).toBe(false);
 		await settleLast(animations);
@@ -180,7 +186,7 @@ describe("SwipeBackCore committing a swipe", () => {
 		const back = vi.spyOn(history, "back").mockImplementation(() => {});
 		const harness = makeCore({ pending: true });
 		const { core, animations } = harness;
-		committed(harness);
+		committed({ harness });
 
 		await settleLast(animations);
 
@@ -201,7 +207,7 @@ describe("SwipeBackCore committing a swipe", () => {
 		vi.spyOn(history, "back").mockImplementation(() => {});
 		const harness = makeCore();
 		const { core, animations } = harness;
-		committed(harness);
+		committed({ harness });
 		await settleLast(animations);
 
 		vi.advanceTimersByTime(999);
@@ -223,7 +229,7 @@ describe("SwipeBackCore across navigations", () => {
 		vi.spyOn(history, "back").mockImplementation(() => {});
 		const harness = makeCore();
 		const { core, adopt, animations } = harness;
-		committed(harness);
+		committed({ harness });
 		await settleLast(animations);
 
 		const landing = core.startNavigation();
@@ -244,7 +250,7 @@ describe("SwipeBackCore across navigations", () => {
 		const back = vi.spyOn(history, "back").mockImplementation(() => {});
 		const harness = makeCore();
 		const { core, animations } = harness;
-		committed(harness);
+		committed({ harness });
 
 		const navigation = core.startNavigation();
 		await settleLast(animations);

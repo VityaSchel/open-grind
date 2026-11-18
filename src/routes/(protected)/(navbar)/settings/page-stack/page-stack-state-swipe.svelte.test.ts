@@ -22,7 +22,7 @@ describe("PageStackState swipe back under reduced motion", () => {
 	it("follows the finger, then commits without a settle animation", async () => {
 		const harness = makeStack({ reducedMotion: true });
 		const { stack, applied, animations } = harness;
-		await go(harness, { from: "/settings", to: "/settings/app" });
+		await go({ harness, from: "/settings", to: "/settings/app" });
 
 		expect(stack.beginSwipeBack()).toBe(true);
 		expect(stack.ghost?.path).toBe("/settings");
@@ -40,7 +40,7 @@ describe("PageStackState swipe back under reduced motion", () => {
 	it("returns the pane without a settle animation when the gesture is canceled", async () => {
 		const harness = makeStack({ reducedMotion: true });
 		const { stack, animations } = harness;
-		await go(harness, { from: "/settings", to: "/settings/app" });
+		await go({ harness, from: "/settings", to: "/settings/app" });
 		stack.beginSwipeBack();
 		stack.trackSwipeBack(0.6);
 
@@ -132,7 +132,8 @@ describe("PageStackState swipe back", () => {
 		expect(applied.at(-1)).toBe(1);
 		expect(stack.tracking).toBe(false);
 
-		const adopt = await go(harness, {
+		const adopt = await go({
+			harness,
 			from: "/settings/account/privacy",
 			to: "/settings/account",
 			delta: -1,
@@ -157,7 +158,8 @@ describe("PageStackState swipe back", () => {
 		stack.commitSwipeBack();
 		const commit = animations.at(-1);
 
-		await go(harness, {
+		await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -204,7 +206,8 @@ describe("PageStackState swipe back", () => {
 
 		const pending = animations.length;
 		applied.length = 0;
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -229,7 +232,8 @@ describe("PageStackState swipe back", () => {
 		stack.commitSwipeBack();
 		await settleLast(animations);
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -251,7 +255,7 @@ describe("PageStackState swipe back", () => {
 		});
 		expect(stack.offersSwipeBack).toBe(true);
 
-		await go(harness, { from: "/settings/app/credits", to: "/chat" });
+		await go({ harness, from: "/settings/app/credits", to: "/chat" });
 		expect(stack.offersSwipeBack).toBe(false);
 	});
 
@@ -264,7 +268,8 @@ describe("PageStackState swipe back", () => {
 			to: "/settings/app/credits",
 		});
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings/app/credits",
 			to: "/settings/app",
 			delta: -1,
@@ -273,7 +278,8 @@ describe("PageStackState swipe back", () => {
 		await settleLast(animations);
 		expect(stack.offersSwipeBack).toBe(true);
 
-		const toRoot = await go(harness, {
+		const toRoot = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -287,7 +293,8 @@ describe("PageStackState swipe back", () => {
 describe("PageStackState back gesture during the slide-in", () => {
 	async function slidingIn() {
 		const harness = makeStack();
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 		});
@@ -377,7 +384,8 @@ describe("PageStackState in motion", () => {
 		const { stack, animations } = harness;
 		expect(stack.moving).toBe(false);
 
-		const start = await go(harness, {
+		const start = await go({
+			harness,
 			from: "/settings",
 			to: "/settings/app",
 		});
@@ -409,7 +417,8 @@ describe("PageStackState committing a swipe", () => {
 		expect(stack.committing).toBe(true);
 		await settleLast(animations);
 
-		const adopt = await go(harness, {
+		const adopt = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -455,7 +464,8 @@ describe("PageStackState committing a swipe", () => {
 		await settleLast(animations);
 		expect(stack.ghost).toBeNull();
 
-		const pop = await go(harness, {
+		const pop = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -473,7 +483,8 @@ describe("PageStackState committing a swipe", () => {
 		stack.beginSwipeBack();
 		stack.commitSwipeBack();
 		await settleLast(animations);
-		const adopt = await go(harness, {
+		const adopt = await go({
+			harness,
 			from: "/settings/app",
 			to: "/settings",
 			delta: -1,
@@ -546,7 +557,8 @@ describe("PageStackState offering a back swipe", () => {
 		expect(stack.beginSwipeBack()).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
 
-		const adopt = await go(harness, {
+		const adopt = await go({
+			harness,
 			from: "/settings/account/privacy",
 			to: "/settings/account",
 			delta: -1,
