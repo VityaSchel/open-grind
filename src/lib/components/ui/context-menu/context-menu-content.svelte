@@ -2,6 +2,7 @@
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
+	import { inertWhileClosing } from "#lib/util/inert-while-closing.ts";
 	import { safeArea } from "#lib/util/safe-area.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import type { WithoutChildrenOrChild } from "#lib/util/utils.ts";
@@ -18,6 +19,10 @@
 			ComponentProps<typeof ContextMenuPortal>
 		>;
 	} = $props();
+
+	$effect(() => {
+		if (ref) return inertWhileClosing(ref);
+	});
 </script>
 
 <ContextMenuPortal {...portalProps}>

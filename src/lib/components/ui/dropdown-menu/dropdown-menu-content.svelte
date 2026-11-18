@@ -2,6 +2,7 @@
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
+	import { inertWhileClosing } from "#lib/util/inert-while-closing.ts";
 	import { safeArea } from "#lib/util/safe-area.ts";
 	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import DropdownMenuPortal from "./dropdown-menu-portal.svelte";
@@ -19,6 +20,10 @@
 			ComponentProps<typeof DropdownMenuPortal>
 		>;
 	} = $props();
+
+	$effect(() => {
+		if (ref) return inertWhileClosing(ref);
+	});
 </script>
 
 <DropdownMenuPortal {...portalProps}>
