@@ -4,6 +4,10 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+	closeScreenLanding,
+	openScreenLanding,
+} from "#lib/components/navigation/stack/screen-root.ts";
 import { runningOn } from "#lib/test/platform.ts";
 import type { OptimisticMessage } from "../merge-messages";
 import ConversationMessages from "./ConversationMessages.svelte";
@@ -296,5 +300,52 @@ describe("holding the floor through a composer resize", () => {
 		await conversation.resizeComposer(20);
 
 		expect(conversation.scroller.scrollTop).toBe(614);
+	});
+});
+
+describe("landing back on a conversation", () => {
+	afterEach(cleanup);
+
+	it("holds the landing picture until the messages have loaded and come to rest", async () => {
+		const state: FakeConversationState = $state({
+			conversationId: "a:1",
+			ourProfileId: OUR_PROFILE_ID,
+			messages: [message({ timestamp: 1000 })],
+			loading: true,
+			refreshing: false,
+			error: null,
+		});
+		box.current = state;
+		const landing = openScreenLanding();
+		render(ConversationMessages, { props: { composerHeight: 0 } });
+		closeScreenLanding(landing);
+		const released = vi.fn();
+		void landing.released().then(released);
+
+		await tick();
+		await tick();
+		expect(released).not.toHaveBeenCalled();
+
+		state.loading = false;
+		await vi.waitFor(() => expect(released).toHaveBeenCalledOnce());
+	});
+
+	it("lets the landing go when the conversation closes before it loads", async () => {
+		const state: FakeConversationState = $state({
+			conversationId: "a:1",
+			ourProfileId: OUR_PROFILE_ID,
+			messages: [],
+			loading: true,
+			refreshing: false,
+			error: null,
+		});
+		box.current = state;
+		const landing = openScreenLanding();
+		render(ConversationMessages, { props: { composerHeight: 0 } });
+		closeScreenLanding(landing);
+
+		cleanup();
+
+		await expect(landing.released()).resolves.toBeUndefined();
 	});
 });
