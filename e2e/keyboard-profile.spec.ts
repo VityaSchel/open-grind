@@ -111,7 +111,10 @@ test.describe("paging profiles from the keyboard", () => {
 	test("moves focus from a photo to the next profile's photos", async ({
 		page,
 	}) => {
-		const tiles = await openGridProfile(page, { nth: 1 });
+		const tiles = await openGridProfile(page, {
+			nth: 1,
+			platform: "macos",
+		});
 		await focusFromKeyboard(activeProfilePane(page).locator(PHOTO).first());
 		await page.keyboard.press("End");
 		await page.keyboard.press("ArrowRight");
@@ -127,7 +130,10 @@ test.describe("paging profiles from the keyboard", () => {
 	test("keeps focus on the favorite toggle between a favorite and a non-favorite", async ({
 		page,
 	}) => {
-		const tiles = await openGridProfile(page, { nth: 1 });
+		const tiles = await openGridProfile(page, {
+			nth: 1,
+			platform: "macos",
+		});
 		const favorite = activeProfilePane(page);
 		await favorite
 			.getByRole("switch", { name: "Add to favorites" })
@@ -167,7 +173,10 @@ test.describe("paging profiles from the keyboard", () => {
 	test("moves focus from the menu button to the next profile's", async ({
 		page,
 	}) => {
-		const tiles = await openGridProfile(page, { nth: 1 });
+		const tiles = await openGridProfile(page, {
+			nth: 1,
+			platform: "macos",
+		});
 		await focusFromKeyboard(menu(activeProfilePane(page)));
 		await page.keyboard.press("ArrowRight");
 		await restsOn(page, { position: 2 });

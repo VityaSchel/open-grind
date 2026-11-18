@@ -25,7 +25,7 @@ function historyLength(page: Page): Promise<number> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await openTaps(page);
+	await openTaps(page, { platform: "macos" });
 });
 
 test("the Interest tabs are one Tab stop resting on the shown tab", async ({

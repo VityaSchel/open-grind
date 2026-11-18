@@ -95,7 +95,7 @@ async function expectOneTabStop({
 
 test.describe("keyboard reorder of album media", () => {
 	test.beforeEach(async ({ page }) => {
-		await openAlbum(page, TWO_ROW_ALBUM);
+		await openAlbum(page, { tile: TWO_ROW_ALBUM, platform: "macos" });
 	});
 
 	test("the media grid is one Tab stop and the arrows walk the add tile and every item with a visible ring", async ({

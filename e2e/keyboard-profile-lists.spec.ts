@@ -73,7 +73,7 @@ function focusedInsideBand(page: Page): Promise<boolean> {
 }
 
 async function openSharedWithFromKeyboard(page: Page): Promise<Locator> {
-	await openAlbums(page);
+	await openAlbums(page, { platform: "macos" });
 	await page.locator(SHARED_ALBUM).click();
 	const sharedWith = page.getByRole("button", { name: /^Shared with/ });
 	await expect(sharedWith).toBeEnabled({ timeout: 30_000 });

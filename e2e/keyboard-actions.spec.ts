@@ -118,7 +118,7 @@ async function openProfile(page: Page): Promise<Locator> {
 
 async function openMediaGrid(page: Page): Promise<Locator> {
 	await serveImages(page, CHAT_MEDIA_HOST);
-	await openAttachments(page);
+	await openAttachments(page, { platform: "macos" });
 	const panel = page.getByRole("tabpanel", { name: "Media" });
 	await panel.locator(MEDIA_TILE).nth(2).waitFor();
 	return panel;

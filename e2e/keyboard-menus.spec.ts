@@ -173,7 +173,7 @@ test.describe("message menu on a touch screen", () => {
 test("a media tile's menu is a named menu that Tab closes", async ({
 	page,
 }) => {
-	await openAttachments(page);
+	await openAttachments(page, { platform: "macos" });
 	const tile = page.locator(MEDIA_TILE).nth(1);
 	await tile.focus();
 

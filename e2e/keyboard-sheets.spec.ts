@@ -81,7 +81,7 @@ test.describe("My Albums", () => {
 	test("the album grid is one Tab stop and the arrows walk every tile with a visible ring", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		const grid = page.locator(MEDIA_GRID);
 		const cells = grid.locator(`${ADD_TILE}, ${ALBUM_TILE}`);
 		await expectOneTabStop({ page, composite: grid, start: cells.first() });
@@ -103,7 +103,7 @@ test.describe("My Albums", () => {
 	test("ArrowDown keeps the column and Enter then Back returns to the opened album", async ({
 		page,
 	}) => {
-		await openAlbums(page);
+		await openAlbums(page, { platform: "macos" });
 		const cells = page.locator(
 			`${MEDIA_GRID} :is(${ADD_TILE}, ${ALBUM_TILE})`,
 		);
@@ -125,7 +125,7 @@ test.describe("My Albums", () => {
 test.describe("the attachments sheet", () => {
 	test.beforeEach(async ({ page }) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await openAttachments(page);
+		await openAttachments(page, { platform: "macos" });
 	});
 
 	test("the media grid is one Tab stop led by the add tile, and the arrows walk it by rows", async ({
@@ -221,7 +221,7 @@ test.describe("the attachments sheet", () => {
 
 test.describe("the GIF grid", () => {
 	test.beforeEach(async ({ page }) => {
-		await openStickers(page, { stretchPanel: false });
+		await openStickers(page, { stretchPanel: false, platform: "macos" });
 	});
 
 	test("ArrowDown and Enter in the search move to the results, ArrowUp from the top row goes back", async ({
@@ -284,7 +284,7 @@ test.describe("the GIF search on a touch screen", () => {
 	test.use({ hasTouch: true });
 
 	test.beforeEach(async ({ page }) => {
-		await openStickers(page, { stretchPanel: false });
+		await openStickers(page, { stretchPanel: false, platform: "macos" });
 	});
 
 	test("Enter after tapping the search dismisses it without moving focus to the results", async ({
@@ -315,7 +315,7 @@ test.describe("the GIF search on a touch screen", () => {
 
 test.describe("the gaymoji tab", () => {
 	test.beforeEach(async ({ page }) => {
-		await openGaymoji(page, { stretchPanel: false });
+		await openGaymoji(page, { stretchPanel: false, platform: "macos" });
 	});
 
 	test("the section strip is one Tab stop whose arrows wrap around", async ({
