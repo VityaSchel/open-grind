@@ -62,7 +62,7 @@ export class SectionScroll {
 				this.#strip()?.contains(event.target);
 			if (!pressedStrip) this.#endJump(scroller);
 		};
-		const landOnFocus = ({ target }: FocusEvent) => {
+		const landOnFocus = ({ target }: Event) => {
 			const jump = this.#jump;
 			const inStrip =
 				target instanceof Node && this.#strip()?.contains(target);
