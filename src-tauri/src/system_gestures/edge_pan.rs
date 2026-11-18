@@ -1,10 +1,11 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::page_point::PagePoint;
 
 const COMMIT_PAST: f64 = 0.5;
 const RELEASE_PROJECTION_SECONDS: f64 = 0.25;
-const PREPARE_ZONE_POINTS: f64 = 40.0;
+const EDGE_ZONE_POINTS: f64 = 40.0;
+const SIDEWAYS_SLACK_POINTS: f64 = 1.0;
 pub const PREPARE_SCRIPT: &str = "window.__iosBack?.prepare()";
 
 const YIELDING_RECOGNIZERS: [&str; 4] = [
@@ -13,6 +14,35 @@ const YIELDING_RECOGNIZERS: [&str; 4] = [
 	"WKImageAnalysisGestureRecognizer",
 	"UIVariableDelayLoupeGesture",
 ];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EdgeZone {
+	Shared,
+	GoesBack,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ScrollerExtent {
+	pub content_width: f64,
+	pub inset_left: f64,
+	pub inset_right: f64,
+	pub visible_width: f64,
+}
+
+impl ScrollerExtent {
+	pub fn scrolls_sideways(self) -> bool {
+		self.content_width + self.inset_left + self.inset_right
+			> self.visible_width + SIDEWAYS_SLACK_POINTS
+	}
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ScrollerTouch {
+	pub zone: EdgeZone,
+	pub landed_in_edge_zone: bool,
+	pub scrolls_sideways: bool,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub struct Release {
@@ -38,8 +68,17 @@ pub fn progress(translation: f64, width: f64) -> f64 {
 	translation.max(0.0) / width.max(1.0)
 }
 
-pub fn prepares_for(x: f64) -> bool {
-	x < PREPARE_ZONE_POINTS
+pub fn lands_in_edge_zone(x: f64) -> bool {
+	x < EDGE_ZONE_POINTS
+}
+
+pub fn scroller_waits_for_back_swipe(touch: ScrollerTouch) -> bool {
+	match touch.zone {
+		EdgeZone::Shared => false,
+		EdgeZone::GoesBack => {
+			touch.landed_in_edge_zone && touch.scrolls_sideways
+		}
+	}
 }
 
 fn commits(progress: f64, velocity: f64) -> bool {
@@ -75,6 +114,8 @@ mod tests {
 	const APP_TYPES: &str = include_str!("../../../src/app.d.ts");
 	const IOS_SYSTEM_BACK: &str =
 		include_str!("../../../src/lib/platform/ios-system-back.ts");
+	const SYSTEM_BACK_GESTURE: &str =
+		include_str!("../../../src/lib/platform/system-back-gesture.svelte.ts");
 
 	fn declared_back_hooks() -> &'static str {
 		APP_TYPES
@@ -108,11 +149,79 @@ mod tests {
 	}
 
 	#[test]
-	fn a_touch_landing_near_the_left_edge_prepares_the_stack() {
-		assert!(prepares_for(2.0));
-		assert!(prepares_for(39.5));
-		assert!(!prepares_for(40.0));
-		assert!(!prepares_for(120.0));
+	fn a_touch_landing_near_the_left_edge_lands_in_the_edge_zone() {
+		assert!(lands_in_edge_zone(2.0));
+		assert!(lands_in_edge_zone(39.5));
+		assert!(!lands_in_edge_zone(40.0));
+		assert!(!lands_in_edge_zone(120.0));
+	}
+
+	const PAGER_AT_THE_EDGE: ScrollerTouch = ScrollerTouch {
+		zone: EdgeZone::GoesBack,
+		landed_in_edge_zone: true,
+		scrolls_sideways: true,
+	};
+
+	#[test]
+	fn a_pager_waits_for_the_back_swipe_only_at_an_edge_that_goes_back() {
+		assert!(scroller_waits_for_back_swipe(PAGER_AT_THE_EDGE));
+		for touch in [
+			ScrollerTouch {
+				landed_in_edge_zone: false,
+				..PAGER_AT_THE_EDGE
+			},
+			ScrollerTouch {
+				zone: EdgeZone::Shared,
+				..PAGER_AT_THE_EDGE
+			},
+			ScrollerTouch {
+				scrolls_sideways: false,
+				..PAGER_AT_THE_EDGE
+			},
+		] {
+			assert!(!scroller_waits_for_back_swipe(touch), "{touch:?}");
+		}
+	}
+
+	#[test]
+	fn a_scroller_scrolls_sideways_only_past_a_point_of_overflow() {
+		let pager = ScrollerExtent {
+			content_width: 1206.0,
+			inset_left: 0.0,
+			inset_right: 0.0,
+			visible_width: 402.0,
+		};
+		assert!(pager.scrolls_sideways());
+		assert!(!ScrollerExtent {
+			content_width: 402.5,
+			..pager
+		}
+		.scrolls_sideways());
+		assert!(ScrollerExtent {
+			content_width: 402.0,
+			inset_left: 16.0,
+			..pager
+		}
+		.scrolls_sideways());
+	}
+
+	#[test]
+	fn the_edge_zone_reads_the_names_the_page_sends() {
+		for (sent, zone) in [
+			("shared", EdgeZone::Shared),
+			("goes-back", EdgeZone::GoesBack),
+		] {
+			assert_eq!(
+				serde_json::from_value::<EdgeZone>(serde_json::json!(sent))
+					.unwrap(),
+				zone
+			);
+		}
+		assert!(SYSTEM_BACK_GESTURE
+			.contains(r#"export type EdgeZone = "shared" | "goes-back";"#));
+		assert!(IOS_SYSTEM_BACK.contains(
+			r#"invoke("set_back_swipe_armed", { armed, edgeZone, order })"#
+		));
 	}
 
 	#[test]

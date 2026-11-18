@@ -1,11 +1,15 @@
 import { flushSync } from "svelte";
 
 import type {
+	EdgeZone,
 	SwipeBackStack,
 	SwipeRelease,
 } from "./system-back-gesture.svelte";
 
-export function makeStack({ offers = true }: { offers?: boolean } = {}) {
+export function makeStack({
+	offers = true,
+	edgeZone = "shared",
+}: { offers?: boolean; edgeZone?: EdgeZone } = {}) {
 	let tracking = $state(false);
 	let moving = $state(false);
 	let offersSwipeBack = $state(offers);
@@ -27,6 +31,7 @@ export function makeStack({ offers = true }: { offers?: boolean } = {}) {
 		get covering() {
 			return covering;
 		},
+		edgeZone,
 		beginSwipeBack: () => {
 			calls.begin += 1;
 			tracking = true;

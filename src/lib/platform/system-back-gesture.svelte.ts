@@ -12,11 +12,16 @@ import { currentPlatform } from "#lib/platform/os.ts";
 
 export type SwipeRelease = { velocity: number };
 
+export type EdgeZone = "shared" | "goes-back";
+
+export type SwipeArm = { armed: boolean; edgeZone: EdgeZone };
+
 export type SwipeBackStack = {
 	readonly tracking: boolean;
 	readonly moving: boolean;
 	readonly offersSwipeBack: boolean;
 	readonly covering?: boolean;
+	readonly edgeZone: EdgeZone;
 	beginSwipeBack(): boolean;
 	trackSwipeBack(progress: number): void;
 	commitSwipeBack(release?: SwipeRelease): void;
@@ -38,7 +43,7 @@ export type SystemBackAdapter = {
 	install: () => void;
 	readProgress: () => number | undefined;
 	expose: (gesture: SystemBackGesture) => void;
-	arm: (arming: { gesture: SystemBackGesture; armed: boolean }) => void;
+	arm: (arming: SwipeArm & { gesture: SystemBackGesture }) => void;
 };
 
 const attachedStacks = new SvelteSet<SwipeBackStack>();
@@ -94,9 +99,12 @@ function owningStack(): SwipeBackStack | undefined {
 	return stack?.covering ? undefined : stack;
 }
 
-function swipeArmed(): boolean {
+const DISARMED: SwipeArm = { armed: false, edgeZone: "shared" };
+
+function swipeArm(): SwipeArm {
 	const owner = owningStack();
-	return owner !== undefined && (owner.tracking || owner.offersSwipeBack);
+	if (!owner || !(owner.tracking || owner.offersSwipeBack)) return DISARMED;
+	return { armed: true, edgeZone: owner.edgeZone };
 }
 
 let frame: number | undefined;
@@ -146,10 +154,7 @@ const systemBackGesture: SystemBackGesture = {
 };
 
 function pushArm(): void {
-	platformSystemBack().arm({
-		gesture: systemBackGesture,
-		armed: swipeArmed(),
-	});
+	platformSystemBack().arm({ gesture: systemBackGesture, ...swipeArm() });
 }
 
 export function installSystemBack(): void {

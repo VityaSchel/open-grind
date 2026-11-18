@@ -61,6 +61,18 @@ describe("attachSystemBackGesture", () => {
 		detach();
 	});
 
+	it("tells native nothing of the edge zone, since Android's own Back gesture owns the edge", () => {
+		const { stack, calls } = makeStack({ edgeZone: "goes-back" });
+		const detach = attachSystemBackGesture(stack);
+		flushSync();
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(calls.begin).toBe(1);
+		expect(invoke).not.toHaveBeenCalled();
+
+		detach();
+	});
+
 	it("refuses to start while an overlay owns the back gesture", () => {
 		const { stack, calls } = makeStack();
 		const detach = attachSystemBackGesture(stack);

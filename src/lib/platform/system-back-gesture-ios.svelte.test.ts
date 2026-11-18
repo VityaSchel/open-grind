@@ -22,14 +22,20 @@ import { makeStack } from "./system-back-gesture-test-helpers.svelte";
 import {
 	attachSystemBackGesture,
 	installSystemBack,
+	type SwipeArm,
 } from "./system-back-gesture.svelte";
 
-function armedPushes() {
+function sentArms() {
 	vi.runOnlyPendingTimers();
 	return invoke.mock.calls
 		.filter(([command]) => command === "set_back_swipe_armed")
-		.map(([, args]) => (args as { armed: boolean }).armed);
+		.map(([, args]) => {
+			const { armed, edgeZone } = args as SwipeArm;
+			return { armed, edgeZone };
+		});
 }
+
+const armedPushes = () => sentArms().map(({ armed }) => armed);
 
 afterEach(() => {
 	resetPlatform();
@@ -285,10 +291,37 @@ describe("on iOS", () => {
 		expect(armedPushes()).toEqual([true, false, true, false]);
 	});
 
+	it("arms with the edge zone of the stack that owns the swipe, and sends a disarm with a shared one", () => {
+		const screen = makeStack({ edgeZone: "goes-back" });
+		const detachScreen = attachSystemBackGesture(screen.stack);
+		const page = makeStack({ offers: false });
+		const detachPage = attachSystemBackGesture(page.stack);
+		flushSync();
+		const lastArm = () => sentArms().at(-1);
+		const overlay = () => false;
+		expect(lastArm()).toEqual({ armed: true, edgeZone: "goes-back" });
+
+		page.offerSwipeBack(true);
+		expect(lastArm()).toEqual({ armed: true, edgeZone: "shared" });
+		page.offerSwipeBack(false);
+		expect(lastArm()).toEqual({ armed: true, edgeZone: "goes-back" });
+		backGestureEventHandlers.set(overlay, "overlay");
+		flushSync();
+		expect(lastArm()).toEqual({ armed: false, edgeZone: "shared" });
+		backGestureEventHandlers.delete(overlay);
+		flushSync();
+		expect(lastArm()).toEqual({ armed: true, edgeZone: "goes-back" });
+		detachPage();
+		detachScreen();
+
+		expect(sentArms()).toHaveLength(6);
+		expect(lastArm()).toEqual({ armed: false, edgeZone: "shared" });
+	});
+
 	it("keeps arming for the stacks left once the first stack to attach unmounts in an update that also moves the arm", () => {
 		let firstMounted = $state(true);
 		const first = makeStack();
-		const screen = makeStack({ offers: false });
+		const screen = makeStack({ offers: false, edgeZone: "goes-back" });
 		const unmountFirst = $effect.root(() => {
 			$effect.pre(() => {
 				if (!firstMounted) return;
@@ -305,7 +338,10 @@ describe("on iOS", () => {
 		expect(armedPushes()).toEqual([true, false]);
 		screen.offerSwipeBack(true);
 
-		expect(armedPushes().at(-1)).toBe(true);
+		expect(sentArms().at(-1)).toEqual({
+			armed: true,
+			edgeZone: "goes-back",
+		});
 		expect(start()).toBe(true);
 		expect(screen.calls.begin).toBe(1);
 		window.__iosBack?.finish({ commit: false, velocity: 0 });

@@ -10,12 +10,12 @@ use objc2::{
 use objc2_foundation::{NSError, NSNumber, NSString};
 use objc2_ui_kit::{
 	UIGestureRecognizer, UIGestureRecognizerDelegate, UIGestureRecognizerState,
-	UIRectEdge, UIScreenEdgePanGestureRecognizer, UISwipeGestureRecognizer,
-	UITouch, UIView,
+	UIRectEdge, UIScreenEdgePanGestureRecognizer, UIScrollView,
+	UISwipeGestureRecognizer, UITouch, UIView,
 };
 use tauri::{Manager, WebviewWindow};
 
-use super::edge_pan::{self, Release};
+use super::edge_pan::{self, EdgeZone, Release, ScrollerExtent, ScrollerTouch};
 use crate::child_scroller::child_scroller_at;
 use crate::page_point::PagePoint;
 use crate::presenting::presenting;
@@ -32,6 +32,14 @@ struct Swipe {
 	sent: Cell<Option<f64>>,
 	gesture: Cell<u64>,
 	arm_order: Cell<u64>,
+	edge_zone: Cell<EdgeZone>,
+	landed_in_edge_zone: Cell<bool>,
+}
+
+struct Arming {
+	armed: bool,
+	edge_zone: EdgeZone,
+	order: u64,
 }
 
 define_class!(
@@ -92,6 +100,8 @@ impl BackSwipe {
 			sent: Cell::new(None),
 			gesture: Cell::new(0),
 			arm_order: Cell::new(0),
+			edge_zone: Cell::new(EdgeZone::Shared),
+			landed_in_edge_zone: Cell::new(false),
 		});
 		unsafe { msg_send![super(this), init] }
 	}
@@ -114,12 +124,13 @@ impl BackSwipe {
 	}
 
 	fn touch_landed(&self, touch: &UITouch) {
-		let (Some(webview), Some(host)) =
-			(self.ivars().webview.load(), self.ivars().recognizer.view())
-		else {
+		let Some(host) = self.ivars().recognizer.view() else {
 			return;
 		};
-		if edge_pan::prepares_for(touch.locationInView(Some(&host)).x) {
+		let landed =
+			edge_pan::lands_in_edge_zone(touch.locationInView(Some(&host)).x);
+		self.ivars().landed_in_edge_zone.set(landed);
+		if let (true, Some(webview)) = (landed, self.ivars().webview.load()) {
 			evaluate(&webview, edge_pan::PREPARE_SCRIPT);
 		}
 	}
@@ -129,13 +140,43 @@ impl BackSwipe {
 		if edge_pan::yields_to_back_swipe(&name) {
 			return true;
 		}
-		let Some(webview) = self.ivars().webview.load() else {
+		let (Some(webview), Some(view)) =
+			(self.ivars().webview.load(), other.view())
+		else {
 			return false;
 		};
-		other.isKindOfClass(UISwipeGestureRecognizer::class())
-			&& other
-				.view()
-				.is_some_and(|view| view.isDescendantOfView(&webview))
+		if !view.isDescendantOfView(&webview) {
+			return false;
+		}
+		if other.isKindOfClass(UISwipeGestureRecognizer::class()) {
+			return true;
+		}
+		view.downcast::<UIScrollView>()
+			.is_ok_and(|scroller| self.scroller_waits(&scroller, other))
+	}
+
+	fn scroller_waits(
+		&self,
+		scroller: &UIScrollView,
+		other: &UIGestureRecognizer,
+	) -> bool {
+		let pan = scroller.panGestureRecognizer();
+		let pan: &UIGestureRecognizer = &pan;
+		if !std::ptr::eq(pan, other) || !scroller.isScrollEnabled() {
+			return false;
+		}
+		let inset = scroller.adjustedContentInset();
+		edge_pan::scroller_waits_for_back_swipe(ScrollerTouch {
+			zone: self.ivars().edge_zone.get(),
+			landed_in_edge_zone: self.ivars().landed_in_edge_zone.get(),
+			scrolls_sideways: ScrollerExtent {
+				content_width: scroller.contentSize().width,
+				inset_left: inset.left,
+				inset_right: inset.right,
+				visible_width: scroller.bounds().size.width,
+			}
+			.scrolls_sideways(),
+		})
 	}
 
 	fn follow(&self, recognizer: &UIScreenEdgePanGestureRecognizer) {
@@ -220,16 +261,18 @@ impl BackSwipe {
 		}
 	}
 
-	fn arm(&self, armed: bool, order: u64) {
-		if order <= self.ivars().arm_order.get() {
+	fn arm(&self, arming: Arming) {
+		if arming.order <= self.ivars().arm_order.get() {
 			return;
 		}
-		self.ivars().arm_order.set(order);
-		self.ivars().recognizer.setEnabled(armed);
+		self.ivars().arm_order.set(arming.order);
+		self.ivars().edge_zone.set(arming.edge_zone);
+		self.ivars().recognizer.setEnabled(arming.armed);
 	}
 
 	fn disarm(&self) {
 		self.ivars().arm_order.set(0);
+		self.ivars().edge_zone.set(EdgeZone::Shared);
 		self.ivars().recognizer.setEnabled(false);
 	}
 }
@@ -268,8 +311,19 @@ fn with_swipe(
 }
 
 #[tauri::command]
-pub fn set_back_swipe_armed(window: WebviewWindow, armed: bool, order: u64) {
-	with_swipe(&window, move |swipe| swipe.arm(armed, order));
+pub fn set_back_swipe_armed(
+	window: WebviewWindow,
+	armed: bool,
+	edge_zone: EdgeZone,
+	order: u64,
+) {
+	with_swipe(&window, move |swipe| {
+		swipe.arm(Arming {
+			armed,
+			edge_zone,
+			order,
+		});
+	});
 }
 
 pub fn disarm(window: &WebviewWindow) {

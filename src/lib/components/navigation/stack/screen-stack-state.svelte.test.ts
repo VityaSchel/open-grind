@@ -353,6 +353,10 @@ describe("ScreenStackState preparing for a swipe", () => {
 });
 
 describe("ScreenStackState during a swipe", () => {
+	it("takes a drag from the left edge over a sideways scroller, so the edge of a profile with one to its left goes back", () => {
+		expect(makeScreenStack({ at: "/" }).stack.edgeZone).toBe("goes-back");
+	});
+
 	it("keeps a running swipe through a replace, as when the profile pages", () => {
 		const harness = makeScreenStack({ at: "/" });
 		go({ harness, to: "/profile/7", toRoute: PROFILE });

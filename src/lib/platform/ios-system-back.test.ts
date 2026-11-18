@@ -14,7 +14,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 import { holdTouch } from "#lib/platform/held-touch.ts";
 import { IosSystemBack } from "#lib/platform/ios-system-back.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
-import type { SystemBackGesture } from "./system-back-gesture.svelte";
+import type { EdgeZone, SystemBackGesture } from "./system-back-gesture.svelte";
 
 class FakePointerEvent extends MouseEvent {
 	readonly pointerId: number;
@@ -43,7 +43,8 @@ function makeGesture({ starts = true }: { starts?: boolean } = {}) {
 function sentArms() {
 	vi.runOnlyPendingTimers();
 	return invoke.mock.calls.map(
-		([, args]) => args as { armed: boolean; order: number },
+		([, args]) =>
+			args as { armed: boolean; edgeZone: EdgeZone; order: number },
 	);
 }
 
@@ -81,16 +82,17 @@ describe("IosSystemBack arming", () => {
 		const { gesture } = makeGesture();
 		systemBack.expose(gesture);
 
-		systemBack.arm({ gesture, armed: false });
+		systemBack.arm({ gesture, armed: false, edgeZone: "shared" });
 		expect(sentArmed()).toEqual([]);
-		systemBack.arm({ gesture, armed: true });
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
 		expect(sentArmed()).toEqual([true]);
-		systemBack.arm({ gesture, armed: true });
-		systemBack.arm({ gesture, armed: false });
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
+		systemBack.arm({ gesture, armed: false, edgeZone: "shared" });
 
 		const pushes = sentArms();
 		expect(invoke).toHaveBeenCalledWith("set_back_swipe_armed", {
 			armed: true,
+			edgeZone: "shared",
 			order: expect.any(Number),
 		});
 		expect(pushes.map(({ armed }) => armed)).toEqual([true, false]);
@@ -100,25 +102,50 @@ describe("IosSystemBack arming", () => {
 	it("sends nothing for an arm that flips back within the same task", () => {
 		const { gesture } = makeGesture();
 		systemBack.expose(gesture);
-		systemBack.arm({ gesture, armed: true });
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
 		expect(sentArmed()).toEqual([true]);
 
-		systemBack.arm({ gesture, armed: false });
-		systemBack.arm({ gesture, armed: true });
+		systemBack.arm({ gesture, armed: false, edgeZone: "shared" });
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
 
 		expect(sentArmed()).toEqual([true]);
 	});
 
+	it("tells native when the edge zone changes under a swipe that stays armed", () => {
+		const { gesture } = makeGesture();
+		systemBack.expose(gesture);
+
+		systemBack.arm({ gesture, armed: true, edgeZone: "goes-back" });
+		systemBack.arm({ gesture, armed: true, edgeZone: "goes-back" });
+		expect(sentArms().map(({ edgeZone }) => edgeZone)).toEqual([
+			"goes-back",
+		]);
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
+
+		const pushes = sentArms();
+		expect(
+			pushes.map(({ armed, edgeZone }) => ({ armed, edgeZone })),
+		).toEqual([
+			{ armed: true, edgeZone: "goes-back" },
+			{ armed: true, edgeZone: "shared" },
+		]);
+		expect(pushes[1]!.order).toBeGreaterThan(pushes[0]!.order);
+	});
+
 	it("sends no arm for a gesture other than the one exposed", () => {
 		const { gesture } = makeGesture();
-		systemBack.arm({ gesture, armed: true });
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
 		expect(sentArmed(), "nothing is exposed yet").toEqual([]);
 
 		systemBack.expose(gesture);
-		systemBack.arm({ gesture: makeGesture().gesture, armed: true });
+		systemBack.arm({
+			gesture: makeGesture().gesture,
+			armed: true,
+			edgeZone: "shared",
+		});
 		expect(sentArmed()).toEqual([]);
 
-		systemBack.arm({ gesture, armed: true });
+		systemBack.arm({ gesture, armed: true, edgeZone: "shared" });
 		expect(sentArmed()).toEqual([true]);
 	});
 
@@ -127,13 +154,13 @@ describe("IosSystemBack arming", () => {
 		const previous = new IosSystemBack();
 		previous.expose(gesture);
 		for (const armed of [true, false, true]) {
-			previous.arm({ gesture, armed });
+			previous.arm({ gesture, armed, edgeZone: "shared" });
 			vi.runOnlyPendingTimers();
 		}
 		vi.advanceTimersByTime(1);
 		const reloaded = new IosSystemBack();
 		reloaded.expose(gesture);
-		reloaded.arm({ gesture, armed: true });
+		reloaded.arm({ gesture, armed: true, edgeZone: "shared" });
 
 		const orders = sentArms().map(({ order }) => order);
 		expect(orders).toHaveLength(4);

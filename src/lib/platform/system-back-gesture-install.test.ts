@@ -50,6 +50,7 @@ describe("installSystemBack on iOS", () => {
 			tracking: false,
 			moving: false,
 			offersSwipeBack: true,
+			edgeZone: "shared",
 			beginSwipeBack: () => {
 				begun += 1;
 				return true;

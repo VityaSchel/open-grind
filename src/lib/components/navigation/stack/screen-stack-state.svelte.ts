@@ -3,7 +3,10 @@ import type { NavigationTarget, OnNavigate } from "$app/navigation";
 
 import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
 import { entryPathname } from "#lib/util/pathname.ts";
-import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
+import type {
+	EdgeZone,
+	SwipeRelease,
+} from "#lib/platform/system-back-gesture.svelte.ts";
 import type { StackMotion } from "./motion";
 import {
 	closeScreenLanding,
@@ -108,6 +111,7 @@ function withFixup(snapshot: Snapshot): Snapshot {
 }
 
 export class ScreenStackState {
+	readonly edgeZone: EdgeZone = "goes-back";
 	covering = $state(false);
 	staged: Snapshot | null = $derived.by(() => {
 		if (this.#core.ghost) return this.#core.ghost;

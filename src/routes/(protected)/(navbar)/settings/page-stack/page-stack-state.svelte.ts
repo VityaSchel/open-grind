@@ -11,7 +11,10 @@ import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { ScreenSnapshots } from "#lib/components/navigation/stack/screen-snapshots.svelte.ts";
 import type { Snapshot } from "#lib/components/navigation/stack/snapshot.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
-import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
+import type {
+	EdgeZone,
+	SwipeRelease,
+} from "#lib/platform/system-back-gesture.svelte.ts";
 import { ancestorsOf, stackRelation, type StackRelation } from "./hierarchy";
 
 function historyDirection(delta: number): StackRelation {
@@ -19,6 +22,7 @@ function historyDirection(delta: number): StackRelation {
 }
 
 export class PageStackState {
+	readonly edgeZone: EdgeZone = "shared";
 	readonly #swipe: SwipeBackCore;
 	readonly #snapshots: ScreenSnapshots;
 	readonly #livePane: () => HTMLElement | null;
