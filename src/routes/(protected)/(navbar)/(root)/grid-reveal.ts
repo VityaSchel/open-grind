@@ -34,3 +34,26 @@ export function revealedGridScrollTop({
 		maxScrollTop: scroller.scrollHeight - scroller.clientHeight,
 	});
 }
+
+export function revealInGhostGrid({
+	ghost,
+	profileId,
+	index,
+}: {
+	ghost: HTMLElement;
+	profileId: number;
+	index: number;
+}): void {
+	const scroller = ghost.querySelector<HTMLElement>(
+		'[data-slot="grid-scroller"]',
+	);
+	const cell = scroller?.querySelector(
+		`[data-slot="grid-cells"] a[href="/profile/${profileId}"]`,
+	);
+	if (!scroller || !cell) return;
+	scroller.scrollTop = revealedGridScrollTop({
+		scroller,
+		savedTop: scroller.scrollTop,
+		index,
+	});
+}

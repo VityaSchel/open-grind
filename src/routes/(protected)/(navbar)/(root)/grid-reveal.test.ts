@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { revealedGridScrollTop } from "./grid-reveal";
+import { revealedGridScrollTop, revealInGhostGrid } from "./grid-reveal";
 
 const { revealRowScrollTop } = vi.hoisted(() => ({
 	revealRowScrollTop:
@@ -29,10 +29,21 @@ revealRowScrollTop.mockReturnValue(REVEALED_TOP);
 function mountGrid({
 	scrollTop = 0,
 	measured = true,
-}: { scrollTop?: number; measured?: boolean } = {}): HTMLElement {
+	cells = [],
+}: {
+	scrollTop?: number;
+	measured?: boolean;
+	cells?: number[];
+} = {}): HTMLElement {
 	const scroller = document.createElement("div");
 	const content = document.createElement("div");
 	const grid = document.createElement("div");
+	scroller.dataset.slot = "grid-scroller";
+	for (const profileId of cells) {
+		const cell = document.createElement("a");
+		cell.setAttribute("href", `/profile/${profileId}`);
+		grid.append(cell);
+	}
 	content.dataset.slot = "grid-content";
 	content.style.paddingTop = `${HEADER_CLEAR}px`;
 	content.style.paddingBottom = `${NAV_CLEAR}px`;
@@ -50,7 +61,7 @@ function mountGrid({
 	Object.defineProperties(scroller, {
 		clientHeight: { value: VIEWPORT },
 		scrollHeight: { value: SCROLL_HEIGHT },
-		scrollTop: { value: scrollTop },
+		scrollTop: { value: scrollTop, writable: true },
 	});
 	vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({
 		top: SCROLLER_TOP,
@@ -106,5 +117,48 @@ describe("revealedGridScrollTop", () => {
 			insetBottomPx: NAV_CLEAR,
 			maxScrollTop: SCROLL_HEIGHT - VIEWPORT,
 		});
+	});
+});
+
+describe("revealInGhostGrid", () => {
+	function pictured(scroller: HTMLElement): HTMLElement {
+		const ghost = document.createElement("div");
+		ghost.append(scroller);
+		document.body.append(ghost);
+		return ghost;
+	}
+
+	it("scrolls a pictured grid to the row of the profile paged to when the picture rendered that row", () => {
+		const scroller = mountGrid({
+			scrollTop: SAVED_TOP,
+			cells: [60, 61, 62],
+		});
+
+		revealInGhostGrid({
+			ghost: pictured(scroller),
+			profileId: 61,
+			index: 61,
+		});
+
+		expect(scroller.scrollTop).toBe(REVEALED_TOP);
+		expect(revealRowScrollTop).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({ savedTop: SAVED_TOP }),
+		);
+	});
+
+	it("leaves a pictured grid where it was left when the profile paged to lies beyond the rows it rendered", () => {
+		const scroller = mountGrid({
+			scrollTop: SAVED_TOP,
+			cells: [60, 61, 62],
+		});
+
+		revealInGhostGrid({
+			ghost: pictured(scroller),
+			profileId: 400,
+			index: 400,
+		});
+
+		expect(scroller.scrollTop).toBe(SAVED_TOP);
+		expect(revealRowScrollTop).not.toHaveBeenCalled();
 	});
 });
