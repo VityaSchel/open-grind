@@ -288,7 +288,7 @@ test.describe("the iOS edge swipe in chats", () => {
 		await expect(page).toHaveURL(new RegExp(`${href}$`));
 	});
 
-	test("stays off in a conversation that was not opened from the inbox", async ({
+	test("stays off in a conversation opened by a link, with no screen behind it", async ({
 		page,
 	}) => {
 		await installTauriShim(page, { platform: "ios" });
@@ -299,16 +299,26 @@ test.describe("the iOS edge swipe in chats", () => {
 	});
 });
 
-test("the iOS edge swipe is on for a profile opened from Browse and stays off in the chat opened from it", async ({
+test("the iOS edge swipe is on in a chat opened from a profile on Browse and lets go onto that profile", async ({
 	page,
 }) => {
 	await openGridProfile(page, { nth: 0, platform: "ios" });
 	await expectEdgeSwipeArmed(page, { armed: true });
+	const profile = page.url();
 
 	await activeProfilePane(page)
 		.getByRole("link", { name: "Write a message…" })
 		.click();
 	await expect(page).toHaveURL(/\/chat\//);
 	await backToInbox(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await expectEdgeSwipeStaysOff(page);
+	await expectEdgeSwipeArmed(page, { armed: true });
+	expect(await edgeSwipeZone(page)).toBe("goes-back");
+
+	expect(await startEdgeSwipe(page)).toBe(true);
+	await progressEdgeSwipe(page, 0.5);
+	await releaseEdgeSwipe(page, { commit: true, velocity: 1 });
+
+	await expect(page).toHaveURL(profile);
+	await expect(activeProfilePane(page)).toBeVisible();
+	await expectEdgeSwipeArmed(page, { armed: true });
 });
