@@ -1,7 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	afterTwoFrames,
+	backLink,
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
@@ -17,6 +19,7 @@ import {
 import {
 	APP_SETTINGS,
 	CREDITS,
+	ghost,
 	openAppSettings,
 	openSettings,
 	pane,
@@ -27,18 +30,38 @@ import {
 import { activeProfilePane, openGridProfile } from "./support/profile-pager";
 import { PHONE } from "./support/stack-layers";
 import {
+	commitSystemBack,
 	edgeSwipeArmed,
 	edgeSwipeArmsSent,
 	progressEdgeSwipe,
+	progressSystemBack,
 	releaseEdgeSwipe,
 	startEdgeSwipe,
 	startEdgeSwipeUnarmed,
+	startSystemBack,
 } from "./support/system-back";
 
 test.describe.configure({ timeout: 180_000 });
 test.use({ viewport: PHONE });
 
 const REPLIABLE = "consectetur adipiscing elit";
+const ACCOUNT_SETTINGS = `${SETTINGS}/account`;
+const BLOCKED = `${ACCOUNT_SETTINGS}/blocked`;
+const LANGUAGE = `${APP_SETTINGS}/language`;
+const SECURITY = `${APP_SETTINGS}/security`;
+const DISCREET_ICON = `${APP_SETTINGS}/discreet-icon`;
+
+const endsWith = (path: string) => new RegExp(`${path}$`);
+
+const linkTo = (path: string) => `a[href="${path}"]`;
+
+async function openSubpage(page: Page, { path }: { path: string }) {
+	await pane(page).locator(linkTo(path)).click();
+	await expect(page).toHaveURL(endsWith(path), {
+		timeout: FIRST_ROUTE_COMPILE_MS,
+	});
+	await stackSettled(page);
+}
 
 const leftEdge = (locator: Locator) =>
 	locator.evaluate((element) => element.getBoundingClientRect().x);
@@ -130,6 +153,112 @@ test.describe("the iOS edge swipe in settings", () => {
 		await stackSettled(page);
 		await expectStaysOff(page);
 	});
+
+	test("goes back over Account Settings from the blocked list after a visit to a blocked profile", async ({
+		page,
+	}) => {
+		await openSettings(page, { platform: "ios" });
+		await openSubpage(page, { path: ACCOUNT_SETTINGS });
+		await openSubpage(page, { path: BLOCKED });
+		await page.locator('a[href^="/profile/"]').first().click();
+		await expect(page).toHaveURL(/\/profile\/\d+$/);
+		await backLink(page).click();
+		await expect(page).toHaveURL(endsWith(BLOCKED));
+		await stackSettled(page);
+		await expectArmed(page, true);
+
+		expect(await startEdgeSwipe(page)).toBe(true);
+		await progressEdgeSwipe(page, 0.5);
+		await expect(ghost(page).locator(linkTo(BLOCKED))).toHaveCount(1);
+		await releaseEdgeSwipe(page, { commit: true, velocity: 1 });
+
+		await expect(page).toHaveURL(endsWith(ACCOUNT_SETTINGS));
+		await stackSettled(page);
+	});
+});
+
+test.describe("the iOS edge swipe in settings after a language change", () => {
+	test.use({ baseURL: DEV_SERVER_URL });
+
+	test("stays off over pages kept in the old language until the next push keeps one in the new language", async ({
+		page,
+	}) => {
+		await openSettings(page, { platform: "ios" });
+		await openAppSettings(page);
+		await openSubpage(page, { path: LANGUAGE });
+		await expectArmed(page, true);
+
+		await page
+			.getByRole("radio", { name: "German Deutsch", exact: true })
+			.click();
+		await expect(page.locator("html")).toHaveAttribute("lang", "de");
+		await expectArmed(page, false);
+		await expectStaysOff(page);
+
+		await page.locator("nav").locator(linkTo(APP_SETTINGS)).click();
+		await expect(page).toHaveURL(endsWith(APP_SETTINGS));
+		await stackSettled(page);
+		await expectStaysOff(page);
+
+		await openSubpage(page, { path: CREDITS });
+		await expectArmed(page, true);
+
+		expect(await startEdgeSwipe(page)).toBe(true);
+		await progressEdgeSwipe(page, 0.5);
+		await expect(ghost(page)).toContainText("Deutsch");
+		await releaseEdgeSwipe(page, { commit: true, velocity: 1 });
+
+		await expect(page).toHaveURL(endsWith(APP_SETTINGS));
+		await stackSettled(page);
+		await expectArmed(page, false);
+	});
+});
+
+async function openWithDisguises(page: Page, { path }: { path: string }) {
+	await installTauriShim(page, { platform: "android" });
+	await page.addInitScript(() => {
+		const internals = (
+			window as unknown as {
+				__TAURI_INTERNALS__: {
+					invoke: (
+						cmd: string,
+						args?: unknown,
+						opts?: unknown,
+					) => unknown;
+				};
+			}
+		).__TAURI_INTERNALS__;
+		const passThrough = internals.invoke;
+		internals.invoke = (cmd, args, opts) =>
+			cmd === "disguise_state"
+				? Promise.resolve({
+						available: true,
+						current: "original",
+						presets: [],
+						renameNeedsAdmin: false,
+					})
+				: passThrough(cmd, args, opts);
+	});
+	await page.goto(path);
+	await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await stackSettled(page);
+}
+
+test("Android's predictive back from the Discreet App Icon reached from Security reveals Security", async ({
+	page,
+}) => {
+	await openWithDisguises(page, { path: APP_SETTINGS });
+	await openSubpage(page, { path: SECURITY });
+	await openSubpage(page, { path: DISCREET_ICON });
+
+	expect(await startSystemBack(page)).toBe(true);
+	await progressSystemBack(page, 0.5);
+	await expect(ghost(page).locator(linkTo(DISCREET_ICON))).toHaveCount(1);
+	await expect(ghost(page).locator(linkTo(CREDITS))).toHaveCount(0);
+
+	expect(await commitSystemBack(page)).toBe(false);
+	await expect(page).toHaveURL(endsWith(SECURITY));
+	await stackSettled(page);
 });
 
 test.describe("the iOS edge swipe in chats", () => {
