@@ -144,7 +144,7 @@ test.describe("the iOS edge swipe in chats", () => {
 		await expectArmed(page, true);
 		await messageRow(page).click({ button: "right" });
 		await expectArmed(page, false);
-		await page.getByRole("button", { name: "Reply" }).click();
+		await page.getByRole("menuitem", { name: "Reply" }).click();
 		await expect(page.getByLabel("Cancel reply")).toBeVisible();
 		await expectArmed(page, true);
 

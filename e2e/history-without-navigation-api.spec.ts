@@ -101,7 +101,7 @@ test("SvelteKit numbers each history entry where the history log reads it", asyn
 		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	const steps = [await entry()];
 
-	await page.getByRole("link", { name: "Views" }).click();
+	await page.getByRole("tab", { name: "Views" }).click();
 	await expect(page).toHaveURL(/\/interest\/views$/);
 	steps.push(await entry());
 	await meTab(page).click();
