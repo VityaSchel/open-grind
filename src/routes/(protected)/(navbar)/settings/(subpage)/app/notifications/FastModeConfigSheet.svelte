@@ -69,6 +69,9 @@
 		notificationSettings.relayStep ?? "sources",
 	);
 	const expanded = $derived(screen !== "sources");
+	const step = $derived(
+		screen === "sources" ? undefined : STEP_INDEX[screen],
+	);
 	const locked = $derived(
 		exporting !== null || notificationSettings.committing,
 	);
@@ -236,17 +239,17 @@
 				<Drawer.Handle />
 			{/if}
 			<ResponsiveDialog.Header drawerClass="pb-2">
-				{#if expanded}
+				{#if step !== undefined}
 					<PageIndicator
 						count={SETUP_STEPS}
-						position={STEP_INDEX[screen]}
+						position={step}
 						orientation="horizontal"
 						tone="accent"
 						shape="pill"
 						label={t(
 							"settings.notifications.fastConfig.relaySetup.a11y.step",
 							{
-								current: formatInteger(STEP_INDEX[screen] + 1),
+								current: formatInteger(step + 1),
 								total: formatInteger(SETUP_STEPS),
 							},
 						)}
