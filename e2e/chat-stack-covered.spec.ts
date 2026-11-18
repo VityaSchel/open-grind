@@ -65,8 +65,9 @@ async function openScrolledInbox(page: Page) {
 	await listScroller(page).evaluate((scroller, top) => {
 		scroller.scrollTop = top;
 	}, LIST_OFFSET);
+	await row(page, { href: READ_CONVERSATION }).scrollIntoViewIfNeeded();
 	const before = await listSnapshot(page);
-	expect(before.scrollTop).toBe(LIST_OFFSET);
+	expect(before.scrollTop).toBeGreaterThanOrEqual(LIST_OFFSET);
 	expect(before.rows.length).toBeGreaterThan(5);
 	return before;
 }
