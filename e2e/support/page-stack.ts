@@ -151,6 +151,11 @@ async function watchLeaving(page: Page) {
 					.toBe(true);
 			await stackSettled(page);
 			await screenSettled(page);
+			if (!tracked && from.pictureBehind)
+				expect(
+					await slidOverPicture(),
+					`${from.pathname} cuts to ${onto}`,
+				).toBe(false);
 		},
 	};
 }
