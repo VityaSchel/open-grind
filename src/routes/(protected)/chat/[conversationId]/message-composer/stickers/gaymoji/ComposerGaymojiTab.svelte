@@ -74,6 +74,12 @@
 	const tileKeys = $derived(
 		sections.flatMap(({ items }) => items).map((_, index) => index),
 	);
+	const focusedSection = $derived.by(() => {
+		const active = tiles.activeKey;
+		if (!tiles.focusWithin || typeof active !== "number") return null;
+		const section = sectionStarts.findLastIndex((start) => start <= active);
+		return sections[section]?.key ?? null;
+	});
 	const scroll = new SectionScroll({
 		keys: () => sections.map(({ key }) => key),
 		strip: () => strip,
@@ -131,6 +137,7 @@
 			bind:ref={strip}
 			{sections}
 			current={scroll.current}
+			restingKey={focusedSection ?? scroll.current}
 			onPick={jumpToSection}
 		/>
 		<div {@attach tiles.container} data-slot="gaymoji-sections">

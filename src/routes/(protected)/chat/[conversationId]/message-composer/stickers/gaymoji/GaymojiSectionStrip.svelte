@@ -10,11 +10,13 @@
 		ref = $bindable(null),
 		sections,
 		current,
+		restingKey,
 		onPick,
 	}: {
 		ref?: HTMLElement | null;
 		sections: GaymojiSection[];
 		current: string | null;
+		restingKey: string | null;
 		onPick: (key: string) => void;
 	} = $props();
 
@@ -23,7 +25,7 @@
 		keys: () => sections.map(({ key }) => key),
 		orientation: "horizontal",
 		wrap: "loop",
-		restingKey: () => current,
+		restingKey: () => restingKey,
 	});
 
 	let row = $state<HTMLDivElement | null>(null);

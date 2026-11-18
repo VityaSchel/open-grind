@@ -181,6 +181,24 @@ describe("composer Gaymoji tab", () => {
 		).toHaveLength(6);
 	});
 
+	it("rests the strip's Tab stop on the focused Gaymoji's section", async () => {
+		mount({ active: true });
+		await settle();
+		const strip = screen.getByRole("navigation", {
+			name: "Gaymoji Categories",
+		});
+		const stop = () =>
+			strip.querySelector('[tabindex="0"]')?.getAttribute("aria-label");
+
+		tile("Sticker 7").focus();
+		await settle();
+		expect(stop()).toBe("Mood");
+
+		tile("Sticker 1").focus();
+		await settle();
+		expect(stop()).toBe("Body");
+	});
+
 	it("keeps a title made from an unknown category out of page translation", async () => {
 		api.getGaymoji.mockResolvedValue([
 			{ name: "body", items: shortItems.slice(0, 6) },
