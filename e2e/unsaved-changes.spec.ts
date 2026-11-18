@@ -7,6 +7,8 @@ import {
 	cancelSystemBack,
 	commitSystemBack,
 	edgeSwipeArmed,
+	expectEdgeSwipeArmed,
+	startEdgeSwipeUnarmed,
 	startSystemBack,
 } from "./support/system-back";
 
@@ -75,6 +77,23 @@ test("on iOS the edge swipe stays off while the album editor holds an edit", asy
 
 	await albumName.fill(saved);
 	await expect.poll(() => edgeSwipeArmed(page)).toBe(true);
+});
+
+test("on iOS the edge swipe back onto your profile stays off while the profile editor holds an edit", async ({
+	page,
+}) => {
+	await openSettings(page, { platform: "ios" });
+	const saved = await openProfileEditor(page);
+	await expectEdgeSwipeArmed(page, { armed: true });
+
+	await displayName(page).fill(RENAMED);
+	await expectEdgeSwipeArmed(page, { armed: false });
+	expect(await startEdgeSwipeUnarmed(page), "the edit holds the page").toBe(
+		false,
+	);
+
+	await displayName(page).fill(saved);
+	await expectEdgeSwipeArmed(page, { armed: true });
 });
 
 test("the profile editor lets go without asking once its edit is saved", async ({
