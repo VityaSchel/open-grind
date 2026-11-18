@@ -2,6 +2,7 @@
 
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
+import { createAttachmentKey } from "svelte/attachments";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Profile } from "#lib/model/users/profiles.ts";
@@ -108,6 +109,17 @@ describe("NavBar", () => {
 			navigation: "Main",
 			links: ["Browse", "Right Now", "Interest", "Inbox", "Me"],
 		});
+	});
+
+	it("hands the attachments it is given to the navigation it renders", () => {
+		const attached = vi.fn();
+		render(NavBar, {
+			props: { ourProfileId: OUR_ID, [createAttachmentKey()]: attached },
+		});
+
+		const navigation = screen.getByRole("navigation");
+		expect(attached).toHaveBeenCalledExactlyOnceWith(navigation);
+		expect(navigation.dataset.slot).toBe("navbar");
 	});
 
 	it("renames the navigation and its tabs when the locale changes", async () => {

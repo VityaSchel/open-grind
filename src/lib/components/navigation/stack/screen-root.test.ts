@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+	capturedScreenRoot,
 	closeScreenLanding,
+	currentNavBarRider,
+	currentScreenFront,
 	currentScreenRoot,
 	ghostFixupFor,
 	holdScreenLanding,
+	navBarRider,
 	openScreenLanding,
 	registerGhostFixup,
 	screenRoot,
@@ -13,8 +17,8 @@ import { snapshotScreen } from "./snapshot";
 
 const detached: (() => void)[] = [];
 
-function attach(root: HTMLElement) {
-	const detach = screenRoot(root);
+function attach(root: HTMLElement, attachment = screenRoot) {
+	const detach = attachment(root);
 	if (detach) detached.push(detach);
 	return detach;
 }
@@ -38,6 +42,35 @@ describe("screenRoot", () => {
 		expect(currentScreenRoot()).toBe(column);
 	});
 
+	it("takes a captured root as the screen to picture but never as the one to move", () => {
+		const column = document.createElement("div");
+		const chat = document.createElement("div");
+		attach(column);
+		expect(currentScreenFront()).toBe(column);
+
+		const detachChat = attach(chat, capturedScreenRoot);
+		expect(currentScreenRoot()).toBe(chat);
+		expect(currentScreenFront()).toBeNull();
+
+		detachChat?.();
+		expect(currentScreenFront()).toBe(column);
+	});
+
+	it("tracks the scrolled elements of a captured root too", () => {
+		const root = document.createElement("div");
+		root.innerHTML = "<div><div></div></div>";
+		document.body.append(root);
+		attach(root, capturedScreenRoot);
+		const scroller = root.firstElementChild as HTMLElement;
+		scroller.scrollTop = 80;
+		scroller.dispatchEvent(new Event("scroll"));
+
+		const snapshot = snapshotScreen({ root, path: "/chat" });
+		snapshot.restore();
+
+		expect(snapshot.node.firstElementChild?.scrollTop).toBe(80);
+	});
+
 	it("tracks the scrolled elements of a root so its picture keeps their scroll", () => {
 		const root = document.createElement("div");
 		root.innerHTML = "<div><div></div></div>";
@@ -51,6 +84,19 @@ describe("screenRoot", () => {
 		snapshot.restore();
 
 		expect(snapshot.node.firstElementChild?.scrollTop).toBe(120);
+	});
+});
+
+describe("navBarRider", () => {
+	it("offers the attached NavBar to ride with the screen, until it goes", () => {
+		const navBar = document.createElement("nav");
+		expect(currentNavBarRider()).toBeNull();
+
+		const detach = attach(navBar, navBarRider);
+		expect(currentNavBarRider()).toBe(navBar);
+
+		detach?.();
+		expect(currentNavBarRider()).toBeNull();
 	});
 });
 

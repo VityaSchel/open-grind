@@ -213,6 +213,59 @@ describe("paneSurface", () => {
 	});
 });
 
+describe("paneSurface rider", () => {
+	function riding() {
+		const front = paneAt(0);
+		const back = paneAt(0);
+		const rider = paneAt(0);
+		const surface = paneSurface({
+			panes: () => ({
+				front: front.pane,
+				back: back.pane,
+				dim: null,
+				rider: rider.pane,
+			}),
+			parallax: () => true,
+			motion: slide,
+		});
+		return { front, back, rider, surface };
+	}
+
+	it("moves the rider along with the front pane", () => {
+		const { front, back, rider, surface } = riding();
+
+		surface.apply(0.4);
+
+		expect(rider.pane.style.transform).toBe(front.pane.style.transform);
+		expect(rider.pane.style.transform).toBe("translate3d(40.000%,0,0)");
+		expect(back.pane.style.transform).not.toBe(rider.pane.style.transform);
+	});
+
+	it("settles the rider over the front pane's path and lands it with the front", async () => {
+		const { front, back, rider, surface } = riding();
+
+		const running = surface.animate({
+			from: 0.4,
+			to: 1,
+			duration: 540,
+			easing: "linear",
+		});
+
+		expect(rider.animate).toHaveBeenCalledExactlyOnceWith(
+			[
+				{ transform: "translate3d(40.000%,0,0)" },
+				{ transform: "translate3d(100.000%,0,0)" },
+			],
+			expect.objectContaining({ duration: 540 }),
+		);
+		front.finish();
+		back.finish();
+		rider.finish();
+		expect(await running.completed).toBe(true);
+		expect(rider.pane.style.transform).toBe("translate3d(100.000%,0,0)");
+	});
+});
+
 describe("frontClearedAtRest", () => {
 	function clearing() {
 		const front = paneAt(0);
@@ -279,5 +332,30 @@ describe("frontClearedAtRest", () => {
 		expect(canceled.front.pane.style.transform).toBe(
 			"translate3d(50.000%,0,0)",
 		);
+	});
+	it("puts the rider back in place with the front pane", () => {
+		const front = paneAt(0);
+		const rider = paneAt(0);
+		const surface = frontClearedAtRest({
+			surface: paneSurface({
+				panes: () => ({
+					front: front.pane,
+					back: null,
+					dim: null,
+					rider: rider.pane,
+				}),
+				parallax: () => true,
+				motion: slide,
+			}),
+			front: () => front.pane,
+			rider: () => rider.pane,
+		});
+
+		surface.apply(0.5);
+		expect(rider.pane.style.transform).toBe("translate3d(50.000%,0,0)");
+
+		surface.apply(0);
+		expect(rider.pane.style.transform).toBe("");
+		expect(front.pane.style.transform).toBe("");
 	});
 });

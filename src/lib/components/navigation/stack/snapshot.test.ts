@@ -321,6 +321,52 @@ describe("snapshotScreen", () => {
 			root.querySelector<HTMLElement>(".shown")!.style.visibility,
 		).toBe("visible");
 	});
+
+	it("pictures a screen without a NavBar of its own as one the live NavBar stays over", () => {
+		const snapshot = snapshotScreen({
+			root: mountPane("<main>Browse</main>"),
+			path: "/",
+		});
+
+		expect(snapshot.showsNavBar).toBe(true);
+	});
+
+	it("keeps the inbox's NavBar copy, for the picture to show once the live NavBar is gone", () => {
+		const root = mountPane(
+			'<div data-slot="live-stack-base"><main>Inbox</main><nav data-slot="navbar">Tabs</nav></div>',
+		);
+
+		const snapshot = snapshotScreen({ root, path: "/chat" });
+
+		expect(snapshot.showsNavBar).toBe(true);
+		expect(snapshot.node.textContent).toBe("InboxTabs");
+		expect(
+			snapshot.node.querySelector('[data-slot="navbar"]'),
+		).not.toBeNull();
+	});
+
+	it("pictures a conversation as showing no NavBar while the sheet covers the inbox's", () => {
+		const covered = snapshotScreen({
+			root: mountPane(
+				'<div data-covered inert><nav data-slot="navbar"></nav></div><div><main>Chat</main></div>',
+			),
+			path: "/chat/1:2",
+		});
+		const behindSheet = snapshotScreen({
+			root: mountPane(
+				'<div inert><nav data-slot="navbar"></nav></div><div><main>Chat</main></div>',
+			),
+			path: "/chat/1:2",
+		});
+		const keyboardUp = snapshotScreen({
+			root: mountPane('<nav data-slot="navbar" hidden></nav>'),
+			path: "/chat",
+		});
+
+		expect(covered.showsNavBar).toBe(false);
+		expect(behindSheet.showsNavBar).toBe(false);
+		expect(keyboardUp.showsNavBar).toBe(false);
+	});
 });
 
 describe("snapshotPane strip mode", () => {

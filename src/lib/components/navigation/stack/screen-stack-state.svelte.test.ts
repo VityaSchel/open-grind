@@ -45,6 +45,7 @@ function makeScreenStack({ at = "/" }: { at?: string } = {}) {
 		reducedMotion: () => false,
 		snapshots,
 		root: () => page.root,
+		front: () => page.root,
 		navigationPending: () => page.pending,
 	});
 

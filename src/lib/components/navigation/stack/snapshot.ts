@@ -1,6 +1,11 @@
 import type { Attachment } from "svelte/attachments";
 
-export type Snapshot = { node: HTMLElement; path: string; restore: () => void };
+export type Snapshot = {
+	node: HTMLElement;
+	path: string;
+	restore: () => void;
+	showsNavBar?: boolean;
+};
 
 type SnapshotMode = {
 	slot: string;
@@ -31,6 +36,8 @@ const TRANSIENT_LAYERS = [
 	"live-stack-dim",
 ];
 const STACK_PANES = ["page-stack-pane", "live-stack-base", "live-stack-sheet"];
+const NAV_BAR = '[data-slot="navbar"]';
+const OUT_OF_SIGHT = "[inert], [data-covered]";
 const STILL_VIDEO_ATTRIBUTES = ["src", "autoplay"];
 const BLOCK_EDGES = [
 	"paddingTop",
@@ -263,6 +270,16 @@ export function snapshotPane({
 	return snapshot({ root: pane, path, mode: PANE_MODE });
 }
 
+function showsNavBar(root: HTMLElement): boolean {
+	const navBars = [...root.querySelectorAll<HTMLElement>(NAV_BAR)];
+	return (
+		navBars.length === 0 ||
+		navBars.some(
+			(navBar) => !navBar.hidden && navBar.closest(OUT_OF_SIGHT) === null,
+		)
+	);
+}
+
 export function snapshotScreen({
 	root,
 	path,
@@ -270,5 +287,8 @@ export function snapshotScreen({
 	root: HTMLElement;
 	path: string;
 }): Snapshot {
-	return snapshot({ root, path, mode: SCREEN_MODE });
+	return {
+		...snapshot({ root, path, mode: SCREEN_MODE }),
+		showsNavBar: showsNavBar(root),
+	};
 }

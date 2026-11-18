@@ -111,13 +111,14 @@ export class ScreenStackState {
 	covering = $state(false);
 	staged: Snapshot | null = $derived.by(() => {
 		if (this.#core.ghost) return this.#core.ghost;
-		if (this.#root() === null) return null;
+		if (this.#front() === null) return null;
 		return this.#snapshots.behind("screen") ?? null;
 	});
 
 	readonly #core: SwipeBackCore;
 	readonly #snapshots: ScreenSnapshots;
 	readonly #root: () => HTMLElement | null;
+	readonly #front: () => HTMLElement | null;
 
 	#prepared = $state(false);
 	#preparing: AbortController | null = null;
@@ -129,6 +130,7 @@ export class ScreenStackState {
 		reducedMotion,
 		snapshots,
 		root,
+		front,
 		navigationPending,
 	}: {
 		surface: StackSurface;
@@ -136,6 +138,7 @@ export class ScreenStackState {
 		reducedMotion: () => boolean;
 		snapshots: ScreenSnapshots;
 		root: () => HTMLElement | null;
+		front: () => HTMLElement | null;
 		navigationPending: () => boolean;
 	}) {
 		this.#core = new SwipeBackCore({
@@ -143,7 +146,7 @@ export class ScreenStackState {
 			motion,
 			reducedMotion,
 			host: {
-				front: root,
+				front,
 				ghostBehind: () => snapshots.behind("screen"),
 				adopt: () => this.#land(),
 				navigationPending,
@@ -151,10 +154,11 @@ export class ScreenStackState {
 		});
 		this.#snapshots = snapshots;
 		this.#root = root;
+		this.#front = front;
 	}
 
 	get front(): HTMLElement | null {
-		return this.#root();
+		return this.#front();
 	}
 
 	get revealed(): boolean {
@@ -264,7 +268,7 @@ export class ScreenStackState {
 	#cover(): void {
 		this.#landing = openScreenLanding();
 		this.covering = true;
-		this.#root()?.style.removeProperty("transform");
+		this.#front()?.style.removeProperty("transform");
 	}
 
 	async #land(): Promise<void> {

@@ -8,7 +8,11 @@
 	import { navigationPending } from "#lib/util/history.ts";
 	import { cn } from "#lib/util/utils.ts";
 	import { STACK_Z, stackMotion } from "./motion";
-	import { currentScreenRoot } from "./screen-root";
+	import {
+		currentNavBarRider,
+		currentScreenFront,
+		currentScreenRoot,
+	} from "./screen-root";
 	import { screenSnapshots } from "./screen-snapshots.svelte";
 	import { ScreenStackState } from "./screen-stack-state.svelte";
 	import { frontClearedAtRest, paneSurface } from "./surface";
@@ -23,21 +27,32 @@
 	let host: HTMLElement | null = $state(null);
 	let dim: HTMLElement | null = $state(null);
 
-	const front = () => (stack.covering ? null : currentScreenRoot());
+	const front = () => (stack.covering ? null : currentScreenFront());
+	const rider = () =>
+		stack.covering || stack.staged?.showsNavBar !== false
+			? null
+			: currentNavBarRider();
 
 	const stack: ScreenStackState = new ScreenStackState({
 		surface: frontClearedAtRest({
 			surface: paneSurface({
-				panes: () => ({ front: front(), back: host, dim }),
+				panes: () => ({
+					front: front(),
+					back: host,
+					dim,
+					rider: rider(),
+				}),
 				parallax: () => !prefersReducedMotion.current,
 				motion,
 			}),
 			front,
+			rider,
 		}),
 		motion,
 		reducedMotion: () => prefersReducedMotion.current,
 		snapshots: screenSnapshots,
 		root: currentScreenRoot,
+		front: currentScreenFront,
 		navigationPending: () => navigationPending({ owns: () => false }),
 	});
 
@@ -64,11 +79,20 @@
 	});
 
 	$effect(() => {
-		const leaving = stack.committing ? stack.front : null;
-		if (!leaving) return;
-		leaving.inert = true;
+		const riding =
+			stack.staged?.showsNavBar === false ? currentNavBarRider() : null;
+		if (!riding) return;
+		return () => riding.style.removeProperty("transform");
+	});
+
+	$effect(() => {
+		if (!stack.committing) return;
+		const leaving = [stack.front, rider()].filter(
+			(element) => element !== null,
+		);
+		for (const element of leaving) element.inert = true;
 		return () => {
-			leaving.inert = false;
+			for (const element of leaving) element.inert = false;
 		};
 	});
 </script>
@@ -81,7 +105,10 @@
 		data-slot="screen-stack-host"
 		class={[
 			"pointer-events-none fixed inset-0 overflow-hidden",
-			{ invisible: !stack.revealed },
+			{
+				invisible: !stack.revealed,
+				"**:data-[slot=navbar]:invisible": !stack.covering,
+			},
 		]}
 		style:z-index={stack.covering ? STACK_Z.cover : STACK_Z.back}
 	></div>

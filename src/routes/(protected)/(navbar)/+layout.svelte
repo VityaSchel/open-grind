@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { screenRoot } from "#lib/components/navigation/stack/screen-root.ts";
+	import {
+		navBarRider,
+		screenRoot,
+	} from "#lib/components/navigation/stack/screen-root.ts";
 	import NavBar from "#lib/components/shared/NavBar.svelte";
 
 	let { data, children }: import("./$types").LayoutProps = $props();
@@ -11,4 +14,4 @@
 >
 	{@render children?.()}
 </div>
-<NavBar ourProfileId={data.ourProfileId} />
+<NavBar ourProfileId={data.ourProfileId} {@attach navBarRider} />
