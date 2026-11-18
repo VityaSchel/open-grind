@@ -7,6 +7,7 @@ import { on } from "svelte/events";
 import { SvelteMap } from "svelte/reactivity";
 
 import { onSignOut } from "#lib/api/sign-out.ts";
+import { onProfileEdit } from "#lib/api/users/profiles.ts";
 import { type FormatLocales, getFormatLocales } from "#lib/i18n/index.ts";
 import { liveHistoryIndex } from "#lib/util/history-index.ts";
 import { earlierPathnames } from "#lib/util/history.ts";
@@ -93,6 +94,11 @@ export class ScreenSnapshots {
 		this.#cached.clear();
 	}
 
+	forget({ path }: { path: string }): void {
+		for (const [entry, { snapshot }] of [...this.#cached])
+			if (snapshot.path === path) this.#cached.delete(entry);
+	}
+
 	#pushedFromEntry(): number | undefined {
 		const shown = this.#shown;
 		const destination = this.#historyIndex();
@@ -122,6 +128,11 @@ export function trackScreenSnapshots(): void {
 	onSignOut(clearOnSignOut);
 	onNavigate(() => screenSnapshots.navigating());
 	afterNavigate(({ type }) => screenSnapshots.navigated({ type }));
+	$effect(() =>
+		onProfileEdit(({ profileId }) =>
+			screenSnapshots.forget({ path: `/profile/${profileId}` }),
+		),
+	);
 	$effect(() => {
 		let width = innerWidth;
 		return on(window, "resize", () => {

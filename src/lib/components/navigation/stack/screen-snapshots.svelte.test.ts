@@ -6,6 +6,7 @@ const hooks = vi.hoisted(() => ({
 	onNavigate: [] as (() => void)[],
 	afterNavigate: [] as ((navigation: { type: NavigationType }) => void)[],
 	onSignOut: [] as (() => Promise<void>)[],
+	onProfileEdit: new Set<(edit: { profileId: number }) => void>(),
 }));
 
 vi.mock("$app/navigation", () => ({
@@ -15,6 +16,12 @@ vi.mock("$app/navigation", () => ({
 }));
 vi.mock("#lib/api/sign-out.ts", () => ({
 	onSignOut: (release: () => Promise<void>) => hooks.onSignOut.push(release),
+}));
+vi.mock("#lib/api/users/profiles.ts", () => ({
+	onProfileEdit: (listener: (edit: { profileId: number }) => void) => {
+		hooks.onProfileEdit.add(listener);
+		return () => hooks.onProfileEdit.delete(listener);
+	},
 }));
 
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
@@ -279,6 +286,23 @@ describe("ScreenSnapshots", () => {
 		stop();
 	});
 
+	it("forgets every picture of a path, whichever entry holds it", () => {
+		const tracked = trackedHistory({ at: "/profile/9" });
+		tracked.push({ to: "/settings/profile", kind: "screen" });
+		tracked.push({ to: "/profile/9", kind: "screen" });
+		tracked.push({ to: "/chat/9", kind: "screen" });
+
+		tracked.snapshots.forget({ path: "/profile/9" });
+		expect(tracked.snapshots.behind("screen")).toBeUndefined();
+
+		tracked.go(-1);
+		expect(tracked.snapshots.behind("screen")?.path).toBe(
+			"/settings/profile",
+		);
+		tracked.go(-1);
+		expect(tracked.snapshots.behind("screen")).toBeUndefined();
+	});
+
 	it("starts empty on a page load", () => {
 		const tracked = trackedHistory({ at: "/" });
 		tracked.push({ to: "/profile/1", kind: "screen" });
@@ -343,6 +367,37 @@ describe("trackScreenSnapshots", () => {
 
 		expect(screenSnapshots.behind("screen")).toBeUndefined();
 		stop();
+	});
+
+	it("lets go of a profile's picture once that profile is edited, keeping the others", () => {
+		const stop = tracking();
+
+		for (const listener of hooks.onProfileEdit) listener({ profileId: 8 });
+		expect(screenSnapshots.behind("screen")?.path).toBe("/");
+
+		vi.stubGlobal("navigation", {
+			get currentEntry() {
+				return { index: 2 };
+			},
+			entries: () =>
+				["/", "/profile/1", "/settings/profile"].map((path) => ({
+					url: `${location.origin}${path}`,
+				})),
+		});
+		enter({ path: "/settings/profile", index: 2 });
+		for (const callback of hooks.onNavigate) callback();
+		screenSnapshots.remember({
+			snapshot: picture("/profile/1"),
+			kind: "screen",
+		});
+		for (const callback of hooks.afterNavigate) callback({ type: "link" });
+		expect(screenSnapshots.behind("screen")?.path).toBe("/profile/1");
+
+		for (const listener of hooks.onProfileEdit) listener({ profileId: 1 });
+		expect(screenSnapshots.behind("screen")).toBeUndefined();
+
+		stop();
+		expect(hooks.onProfileEdit.size).toBe(0);
 	});
 
 	it("lets go of every snapshot when the viewport changes width, not height", () => {
