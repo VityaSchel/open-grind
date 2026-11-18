@@ -36,7 +36,11 @@ function makeScreenStack({ at = "/" }: { at?: string } = {}) {
 	const root = document.createElement("div");
 	root.innerHTML = `<p>${at}</p>`;
 	document.body.append(root);
-	const page = { root: root as HTMLElement | null, pending: false };
+	const page = $state<{
+		root: HTMLElement | null;
+		front: HTMLElement | null;
+		pending: boolean;
+	}>({ root, front: root, pending: false });
 
 	const { surface, applied, animations } = fakeSurface();
 	const stack = new ScreenStackState({
@@ -45,7 +49,7 @@ function makeScreenStack({ at = "/" }: { at?: string } = {}) {
 		reducedMotion: () => false,
 		snapshots,
 		root: () => page.root,
-		front: () => page.root,
+		front: () => page.front,
 		navigationPending: () => page.pending,
 	});
 
@@ -235,6 +239,64 @@ describe("ScreenStackState capturing the screen behind", () => {
 
 		expect(fixup).toHaveBeenCalledOnce();
 		expect(fixup).toHaveBeenCalledWith(harness.stack.staged?.node);
+	});
+});
+
+describe("ScreenStackState over a screen it pictures but does not move", () => {
+	function profileOverChat() {
+		const harness = makeScreenStack({ at: "/chat/1:2" });
+		const { page, root: chat } = harness;
+		page.front = null;
+		const column = document.createElement("div");
+		document.body.append(column);
+
+		go({ harness, to: "/profile/7", toRoute: PROFILE });
+		return { harness, chat, column };
+	}
+
+	it("pictures the chat it leaves for a profile, and offers the swipe once the profile's column is in front", () => {
+		const { harness, column } = profileOverChat();
+		const { stack, page } = harness;
+		expect(stack.staged, "nothing in front to move yet").toBeNull();
+		expect(stack.offersSwipeBack).toBe(false);
+
+		page.root = column;
+		page.front = column;
+
+		expect(stack.staged?.path).toBe("/chat/1:2");
+		expect(stack.staged?.node.textContent).toBe("/chat/1:2");
+		expect(stack.offersSwipeBack).toBe(true);
+	});
+
+	it("waits for the images in view in the chat it lands on, which has nothing in front", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		vi.spyOn(history, "back").mockImplementation(() => {});
+		const { harness, chat, column } = profileOverChat();
+		const { stack, page } = harness;
+		page.root = column;
+		page.front = column;
+		await committed({ harness });
+
+		const adopt = go({ harness, to: "/chat/1:2", delta: -1 });
+		page.root = chat;
+		page.front = null;
+		const image = document.createElement("img");
+		image.getBoundingClientRect = () => rect({ top: 0 });
+		let decoded!: () => void;
+		image.decode = () =>
+			new Promise<void>((resolve) => {
+				decoded = resolve;
+			});
+		chat.append(image);
+
+		adopt?.();
+		await flushLanding();
+		expect(stack.covering).toBe(true);
+
+		decoded();
+		await flushLanding();
+		expect(stack.covering).toBe(false);
+		expect(stack.staged).toBeNull();
 	});
 });
 
