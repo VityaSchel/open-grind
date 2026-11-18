@@ -1,14 +1,34 @@
 import type { Attachment } from "svelte/attachments";
 
-export type PaneSnapshot = {
-	node: HTMLElement;
-	path: string;
-	restore: () => void;
+export type Snapshot = { node: HTMLElement; path: string; restore: () => void };
+
+type SnapshotMode = {
+	slot: string;
+	stripped: readonly string[];
+	stillMedia: boolean;
+};
+
+const PANE_MODE: SnapshotMode = {
+	slot: "page-stack-ghost",
+	stripped: ["id", "data-slot"],
+	stillMedia: false,
+};
+
+const SCREEN_MODE: SnapshotMode = {
+	slot: "screen-ghost",
+	stripped: ["id", "data-fixed-header"],
+	stillMedia: true,
 };
 
 const FORM_FIELDS = "input, textarea, select";
 const OFFSCREEN_SKIPPED = "[data-offscreen-skip]";
-const IDENTITY_ATTRIBUTES = ["id", "data-slot"];
+const TRANSIENT_LAYERS = [
+	"page-stack-ghost",
+	"page-stack-dim",
+	"live-stack-dim",
+];
+const STACK_PANES = ["page-stack-pane", "live-stack-base", "live-stack-sheet"];
+const STILL_VIDEO_ATTRIBUTES = ["src", "autoplay"];
 const BLOCK_EDGES = [
 	"paddingTop",
 	"paddingBottom",
@@ -138,25 +158,102 @@ function formCarriers({
 	});
 }
 
-export function snapshotPane(pane: HTMLElement, path: string): PaneSnapshot {
-	const clone = pane.cloneNode(true) as HTMLElement;
-	clone.inert = true;
-	clone.setAttribute("aria-hidden", "true");
-	for (const attribute of IDENTITY_ATTRIBUTES) {
+function slotSelector(slots: string[]): string {
+	return slots.map((slot) => `[data-slot="${slot}"]`).join(", ");
+}
+
+function selfAndDescendants({
+	root,
+	selector,
+}: {
+	root: HTMLElement;
+	selector: string;
+}): HTMLElement[] {
+	const descendants = [...root.querySelectorAll<HTMLElement>(selector)];
+	return root.matches(selector) ? [root, ...descendants] : descendants;
+}
+
+function sanitize(clone: HTMLElement): void {
+	for (const layer of clone.querySelectorAll(slotSelector(TRANSIENT_LAYERS)))
+		layer.remove();
+	for (const pane of selfAndDescendants({
+		root: clone,
+		selector: slotSelector(STACK_PANES),
+	})) {
+		pane.style.removeProperty("transform");
+		pane.style.removeProperty("opacity");
+		pane.removeAttribute("data-slot");
+	}
+}
+
+function stripAttributes({
+	clone,
+	stripped,
+}: {
+	clone: HTMLElement;
+	stripped: readonly string[];
+}): void {
+	for (const attribute of stripped) {
 		clone.removeAttribute(attribute);
 		for (const element of clone.querySelectorAll(`[${attribute}]`))
 			element.removeAttribute(attribute);
 	}
-	clone.dataset.slot = "page-stack-ghost";
+}
 
+function stillVideos(clone: HTMLElement): void {
+	for (const video of clone.querySelectorAll("video")) {
+		video.autoplay = false;
+		for (const attribute of STILL_VIDEO_ATTRIBUTES)
+			video.removeAttribute(attribute);
+	}
+}
+
+function snapshot({
+	root,
+	path,
+	mode,
+}: {
+	root: HTMLElement;
+	path: string;
+	mode: SnapshotMode;
+}): Snapshot {
+	const clone = root.cloneNode(true) as HTMLElement;
 	const carried = [
-		...sizePins({ pane, clone }),
-		...scrollCarriers({ pane, clone }),
-		...formCarriers({ pane, clone }),
+		...sizePins({ pane: root, clone }),
+		...scrollCarriers({ pane: root, clone }),
+		...formCarriers({ pane: root, clone }),
 	];
+
+	sanitize(clone);
+	stripAttributes({ clone, stripped: mode.stripped });
+	if (mode.stillMedia) stillVideos(clone);
+	clone.inert = true;
+	clone.setAttribute("aria-hidden", "true");
+	clone.dataset.slot = mode.slot;
+
 	return {
 		node: clone,
 		path,
 		restore: () => carried.forEach((apply) => apply()),
 	};
+}
+
+export function snapshotPane({
+	pane,
+	path,
+}: {
+	pane: HTMLElement;
+	path: string;
+}): Snapshot {
+	return snapshot({ root: pane, path, mode: PANE_MODE });
+}
+
+export function snapshotScreen({
+	root,
+	path,
+}: {
+	root: HTMLElement;
+	path: string;
+}): Snapshot {
+	return snapshot({ root, path, mode: SCREEN_MODE });
 }

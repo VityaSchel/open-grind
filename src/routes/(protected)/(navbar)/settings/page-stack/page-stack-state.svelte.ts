@@ -2,6 +2,10 @@ import { tick } from "svelte";
 import type { OnNavigate } from "$app/navigation";
 
 import { StackSettle } from "#lib/components/navigation/stack/settle.svelte.ts";
+import {
+	type Snapshot,
+	snapshotPane,
+} from "#lib/components/navigation/stack/snapshot.ts";
 import { Generation } from "#lib/util/generation.ts";
 import { BackWatchdog, canGoBack } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
@@ -9,7 +13,6 @@ import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
 import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
 import { ancestorsOf, stackRelation, type StackRelation } from "./hierarchy";
-import { type PaneSnapshot, snapshotPane } from "./snapshot";
 
 type LiveRole = "front" | "back";
 
@@ -18,7 +21,7 @@ function historyDirection(delta: number): StackRelation {
 }
 
 export class PageStackState {
-	ghost = $state<PaneSnapshot | null>(null);
+	ghost = $state<Snapshot | null>(null);
 	liveRole = $state<LiveRole>("front");
 	tracking = $state(false);
 	committing = $state(false);
@@ -28,7 +31,7 @@ export class PageStackState {
 	readonly #reducedMotion: () => boolean;
 	readonly #scope: string;
 
-	#ancestors = $state.raw<PaneSnapshot[]>([]);
+	#ancestors = $state.raw<Snapshot[]>([]);
 	#pushedFrom: { path: string }[];
 	#generation = new Generation();
 	#backOwed = false;
@@ -113,7 +116,7 @@ export class PageStackState {
 			return;
 		}
 
-		const snapshot = snapshotPane(pane, from);
+		const snapshot = snapshotPane({ pane, path: from });
 		if (relation === "push") {
 			this.#ancestors = [...this.#ancestors, snapshot];
 			this.#pushedFrom.push(snapshot);
