@@ -1,44 +1,25 @@
-import { SvelteMap, SvelteSet } from "svelte/reactivity";
+import { SvelteSet } from "svelte/reactivity";
 import type { Attachment } from "svelte/attachments";
 
 import { trackScrolled } from "./snapshot";
 
 export type GhostFixup = (ghost: HTMLElement) => void;
 
-type ScreenRootRole = "front" | "captured";
-
-const roots = new SvelteMap<HTMLElement, ScreenRootRole>();
+const roots = new SvelteSet<HTMLElement>();
 const navBarRiders = new SvelteSet<HTMLElement>();
 const ghostFixups = new Map<string, GhostFixup>();
 
-function registerScreenRoot({
-	root,
-	role,
-}: {
-	root: HTMLElement;
-	role: ScreenRootRole;
-}): () => void {
+export const screenRoot: Attachment<HTMLElement> = (root) => {
 	const stopTracking = trackScrolled(root);
-	roots.set(root, role);
+	roots.add(root);
 	return () => {
 		roots.delete(root);
 		stopTracking?.();
 	};
-}
-
-export const screenRoot: Attachment<HTMLElement> = (root) =>
-	registerScreenRoot({ root, role: "front" });
-
-export const capturedScreenRoot: Attachment<HTMLElement> = (root) =>
-	registerScreenRoot({ root, role: "captured" });
+};
 
 export function currentScreenRoot(): HTMLElement | null {
-	return [...roots.keys()].at(-1) ?? null;
-}
-
-export function currentScreenFront(): HTMLElement | null {
-	const root = currentScreenRoot();
-	return root !== null && roots.get(root) === "front" ? root : null;
+	return [...roots].at(-1) ?? null;
 }
 
 export const navBarRider: Attachment<HTMLElement> = (navBar) => {

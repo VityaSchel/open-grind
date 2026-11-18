@@ -23,6 +23,7 @@ const PROFILE = "/(protected)/(navbar)/profile/[profileId]";
 const EDIT_PROFILE = "/(protected)/(navbar)/settings/(subpage)/profile";
 const APP_SETTINGS = "/(protected)/(navbar)/settings/(subpage)/app";
 const RIGHT_NOW = "/(protected)/(navbar)/right-now";
+const CONVERSATION = "/(protected)/chat/[conversationId]";
 
 const iosMotion = stackMotion({ platform: "ios" });
 
@@ -225,6 +226,28 @@ describe("ScreenStackState capturing the screen behind", () => {
 			"screen-stack-capture",
 			expect.objectContaining({ detail: { elements: 1 } }),
 		);
+	});
+
+	it.each([
+		["a profile", "/profile/7"],
+		["Right Now", "/right-now"],
+		["Browse", "/"],
+	])("pictures %s for a conversation opened from it", (_, at) => {
+		const harness = makeScreenStack({ at });
+
+		go({ harness, to: "/chat/1:2", toRoute: CONVERSATION });
+
+		expect(harness.stack.staged?.path).toBe(at);
+		expect(harness.stack.offersSwipeBack).toBe(true);
+	});
+
+	it("leaves a conversation opened from the inbox to the inbox's own swipe", () => {
+		const harness = makeScreenStack({ at: "/chat" });
+
+		go({ harness, to: "/chat/1:2", toRoute: CONVERSATION });
+
+		expect(harness.stack.staged).toBeNull();
+		expect(harness.stack.offersSwipeBack).toBe(false);
 	});
 
 	it("runs the fixup the screen registered each time its picture is revealed", async () => {

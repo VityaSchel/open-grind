@@ -10,7 +10,7 @@
 
 <div
 	{@attach screenRoot}
-	class="flex min-h-dvh flex-col pt-(--safe-area-top) px-safe pb-(--content-pb)"
+	class="flex min-h-dvh flex-col pt-(--safe-area-top) px-safe pb-(--content-pb) data-raised:relative data-raised:bg-background data-raised:shadow-(--stack-edge)"
 >
 	{@render children?.()}
 </div>

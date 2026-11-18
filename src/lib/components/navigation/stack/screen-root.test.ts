@@ -2,10 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Attachment } from "svelte/attachments";
 
 import {
-	capturedScreenRoot,
 	closeScreenLanding,
 	currentNavBarRider,
-	currentScreenFront,
 	currentScreenRoot,
 	ghostFixupFor,
 	holdScreenLanding,
@@ -47,38 +45,6 @@ describe("screenRoot", () => {
 
 		detachConversation?.();
 		expect(currentScreenRoot()).toBe(column);
-	});
-
-	it("takes a captured root as the screen to picture but never as the one to move", () => {
-		const column = document.createElement("div");
-		const chat = document.createElement("div");
-		attach({ root: column });
-		expect(currentScreenFront()).toBe(column);
-
-		const detachChat = attach({
-			root: chat,
-			attachment: capturedScreenRoot,
-		});
-		expect(currentScreenRoot()).toBe(chat);
-		expect(currentScreenFront()).toBeNull();
-
-		detachChat?.();
-		expect(currentScreenFront()).toBe(column);
-	});
-
-	it("tracks the scrolled elements of a captured root too", () => {
-		const root = document.createElement("div");
-		root.innerHTML = "<div><div></div></div>";
-		document.body.append(root);
-		attach({ root, attachment: capturedScreenRoot });
-		const scroller = root.firstElementChild as HTMLElement;
-		scroller.scrollTop = 80;
-		scroller.dispatchEvent(new Event("scroll"));
-
-		const snapshot = snapshotScreen({ root, path: "/chat" });
-		snapshot.restore();
-
-		expect(snapshot.node.firstElementChild?.scrollTop).toBe(80);
 	});
 
 	it("tracks the scrolled elements of a root so its picture keeps their scroll", () => {

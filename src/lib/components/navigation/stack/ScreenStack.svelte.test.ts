@@ -40,6 +40,8 @@ import { snapshotScreen } from "./snapshot";
 import { flushMicrotasks, navigationEvent } from "./stack-test-helpers";
 
 const NAV_BAR_COPY_HIDDEN = "**:data-[slot=navbar]:invisible";
+const CONVERSATION_LAYERS =
+	'<div data-slot="column" class="contents"><div data-slot="live-stack-base" data-covered inert>inbox</div><div data-slot="live-stack-sheet"><main>chat</main></div></div>';
 const INBOX =
 	'<div data-slot="live-stack-base"><main>inbox</main><nav data-slot="navbar">tabs</nav></div>';
 const CONVERSATION =
@@ -53,11 +55,19 @@ function enter({ path, index }: { path: string; index: number }) {
 	);
 }
 
-function profileOver({ path, html }: { path: string; html: string }) {
+function screenOver({
+	path,
+	html,
+	front,
+}: {
+	path: string;
+	html: string;
+	front: string;
+}) {
 	vi.stubGlobal("navigation", {
 		currentEntry: { index: 1 },
 		entries: () =>
-			[path, "/profile/7"].map((entry) => ({
+			[path, front].map((entry) => ({
 				url: `${location.origin}${entry}`,
 			})),
 	});
@@ -65,12 +75,24 @@ function profileOver({ path, html }: { path: string; html: string }) {
 	behind.innerHTML = html;
 	enter({ path, index: 0 });
 	screenSnapshots.navigated({ type: "link" });
-	enter({ path: "/profile/7", index: 1 });
+	enter({ path: front, index: 1 });
 	screenSnapshots.remember({
 		snapshot: snapshotScreen({ root: behind, path }),
 		kind: "screen",
 	});
 	screenSnapshots.navigated({ type: "link" });
+}
+
+function profileOver({ path, html }: { path: string; html: string }) {
+	screenOver({ path, html, front: "/profile/7" });
+}
+
+function conversationOverProfile() {
+	screenOver({
+		path: "/profile/7",
+		html: "<main>profile</main>",
+		front: "/chat/1:2",
+	});
 }
 
 function profileOverGrid() {
@@ -101,13 +123,11 @@ function riderNavBar() {
 	return { navBar, detach };
 }
 
-function renderScreenStack() {
+function renderScreenStack({
+	screen = '<div data-slot="column"><p>profile</p></div>',
+}: { screen?: string } = {}) {
 	const { container } = render(ScreenStack, {
-		props: {
-			children: createRawSnippet(() => ({
-				render: () => `<div data-slot="column"><p>profile</p></div>`,
-			})),
-		},
+		props: { children: createRawSnippet(() => ({ render: () => screen })) },
 	});
 	const column = container.querySelector<HTMLElement>(
 		'[data-slot="column"]',
@@ -144,9 +164,7 @@ describe("ScreenStack", () => {
 			column.compareDocumentPosition(staged!) &
 				Node.DOCUMENT_POSITION_FOLLOWING,
 		).toBeTruthy();
-		expect([...column.classList]).toEqual(
-			expect.arrayContaining(["relative", "bg-background"]),
-		);
+		expect(column.hasAttribute("data-raised")).toBe(true);
 		expect(column.style.zIndex).toBe("12");
 
 		detach?.();
@@ -154,7 +172,7 @@ describe("ScreenStack", () => {
 		expect(
 			container.querySelector('[data-slot="screen-ghost"]'),
 		).toBeNull();
-		expect(column.classList).not.toContain("relative");
+		expect(column.hasAttribute("data-raised")).toBe(false);
 		expect(column.style.zIndex).toBe("");
 	});
 
@@ -162,7 +180,7 @@ describe("ScreenStack", () => {
 		const { column, host } = renderScreenStack();
 
 		expect(host()).toBeNull();
-		expect(column.classList).not.toContain("relative");
+		expect(column.hasAttribute("data-raised")).toBe(false);
 		expect(column.style.zIndex).toBe("");
 	});
 
@@ -273,5 +291,38 @@ describe("ScreenStack", () => {
 		expect(host()?.classList).not.toContain(NAV_BAR_COPY_HIDDEN);
 		expect(host()?.classList).not.toContain("invisible");
 		expect(host()?.querySelector('[data-slot="navbar"]')).not.toBeNull();
+	});
+
+	it("raises a conversation's layers over the picture of the profile it was opened from, slides them with the swipe and rests them in place", () => {
+		conversationOverProfile();
+		const {
+			column: layers,
+			host,
+			detach,
+			stack,
+		} = renderScreenStack({ screen: CONVERSATION_LAYERS });
+		expect(host()?.querySelector("main")?.textContent).toBe("profile");
+		expect(layers.hasAttribute("data-raised")).toBe(true);
+		expect(layers.style.zIndex).toBe("12");
+		expect(stack.offersSwipeBack).toBe(true);
+
+		stack.beginSwipeBack();
+		stack.trackSwipeBack(0.5);
+		flushSync();
+		expect(layers.style.transform).toBe("translate3d(50.000%,0,0)");
+		const sheet = layers.querySelector<HTMLElement>(
+			'[data-slot="live-stack-sheet"]',
+		)!;
+		expect(sheet.style.transform, "the sheet rides inside the layers").toBe(
+			"",
+		);
+
+		stack.trackSwipeBack(0);
+		expect(layers.style.transform).toBe("");
+
+		detach?.();
+		flushSync();
+		expect(layers.hasAttribute("data-raised")).toBe(false);
+		expect(layers.style.zIndex).toBe("");
 	});
 });

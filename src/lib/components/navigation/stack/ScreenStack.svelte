@@ -6,13 +6,8 @@
 
 	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.svelte.ts";
 	import { navigationPending } from "#lib/util/history.ts";
-	import { cn } from "#lib/util/utils.ts";
 	import { STACK_Z, stackMotion } from "./motion";
-	import {
-		currentNavBarRider,
-		currentScreenFront,
-		currentScreenRoot,
-	} from "./screen-root";
+	import { currentNavBarRider, currentScreenRoot } from "./screen-root";
 	import { screenSnapshots } from "./screen-snapshots.svelte";
 	import { ScreenStackState } from "./screen-stack-state.svelte";
 	import { frontClearedAtRest, paneSurface } from "./surface";
@@ -20,14 +15,11 @@
 	let { children }: { children: Snippet } = $props();
 
 	const motion = stackMotion();
-	const raisedFront = cn("relative bg-background", {
-		"shadow-(--stack-edge)": motion.edge,
-	}).split(" ");
 
 	let host: HTMLElement | null = $state(null);
 	let dim: HTMLElement | null = $state(null);
 
-	const front = () => (stack.covering ? null : currentScreenFront());
+	const front = () => (stack.covering ? null : currentScreenRoot());
 	const rider = () =>
 		stack.covering || stack.staged?.showsNavBar !== false
 			? null
@@ -52,7 +44,7 @@
 		reducedMotion: () => prefersReducedMotion.current,
 		snapshots: screenSnapshots,
 		root: currentScreenRoot,
-		front: currentScreenFront,
+		front: currentScreenRoot,
 		navigationPending: () => navigationPending({ owns: () => false }),
 	});
 
@@ -70,10 +62,10 @@
 	$effect(() => {
 		const raised = stack.staged === null ? null : stack.front;
 		if (!raised) return;
-		raised.classList.add(...raisedFront);
+		raised.toggleAttribute("data-raised", true);
 		raised.style.zIndex = STACK_Z.front;
 		return () => {
-			raised.classList.remove(...raisedFront);
+			raised.removeAttribute("data-raised");
 			raised.style.removeProperty("z-index");
 		};
 	});

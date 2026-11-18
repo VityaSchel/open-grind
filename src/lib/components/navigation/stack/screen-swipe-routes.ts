@@ -2,9 +2,11 @@ import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 
 const PROFILE_ROUTE = "/(protected)/(navbar)/profile/[profileId]";
+const CONVERSATION_ROUTE = "/(protected)/chat/[conversationId]";
 
 const SETTINGS_SUBPAGE_ROUTES = "/(protected)/(navbar)/settings/(subpage)/";
 const SETTINGS = "/settings";
+const INBOX = "/chat";
 
 function entersSwipeableScreen({
 	fromPath,
@@ -14,6 +16,7 @@ function entersSwipeableScreen({
 	toRoute: string | null;
 }): boolean {
 	if (toRoute === PROFILE_ROUTE) return true;
+	if (toRoute === CONVERSATION_ROUTE) return fromPath !== INBOX;
 	return (
 		toRoute?.startsWith(SETTINGS_SUBPAGE_ROUTES) === true &&
 		!isWithin({ pathname: fromPath, root: SETTINGS })
