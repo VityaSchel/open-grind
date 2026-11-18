@@ -7,13 +7,17 @@ import {
 	cancelSystemBack,
 	commitSystemBack,
 	edgeSwipeArmed,
+	edgeSwipeArmsSent,
 	expectEdgeSwipeArmed,
+	expectEdgeSwipeStaysOff,
 	startEdgeSwipeUnarmed,
 	startSystemBack,
 } from "./support/system-back";
 
 const RENAMED = "Renamed in a test";
 
+const saveChanges = (page: Page) =>
+	page.getByRole("button", { name: "Save changes" });
 const discardPrompt = (page: Page) =>
 	page.getByRole("alertdialog", { name: "Discard changes?" });
 const displayName = (page: Page) =>
@@ -96,16 +100,34 @@ test("on iOS the edge swipe back onto your profile stays off while the profile e
 	await expectEdgeSwipeArmed(page, { armed: true });
 });
 
+test("on iOS the edge swipe back onto your profile stays off once the profile editor saves an edit, so it never reveals the old profile", async ({
+	page,
+}) => {
+	await openSettings(page, { platform: "ios" });
+	await openProfileEditor(page);
+	await expectEdgeSwipeArmed(page, { armed: true });
+
+	await displayName(page).fill(RENAMED);
+	await expectEdgeSwipeArmed(page, { armed: false });
+	const sentBeforeSave = (await edgeSwipeArmsSent(page)).length;
+	await saveChanges(page).click();
+	await expect(saveChanges(page)).toHaveCount(0);
+
+	await expectEdgeSwipeStaysOff(page);
+	expect(
+		(await edgeSwipeArmsSent(page)).slice(sentBeforeSave),
+		"the saved edit lets go of Back without arming the swipe",
+	).not.toContain(true);
+});
+
 test("the profile editor lets go without asking once its edit is saved", async ({
 	page,
 }) => {
 	await openSettings(page, { platform: "android" });
 	await openProfileEditor(page);
 	await displayName(page).fill(RENAMED);
-	await page.getByRole("button", { name: "Save changes" }).click();
-	await expect(
-		page.getByRole("button", { name: "Save changes" }),
-	).toHaveCount(0);
+	await saveChanges(page).click();
+	await expect(saveChanges(page)).toHaveCount(0);
 
 	await backLink(page).click();
 
