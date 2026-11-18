@@ -62,14 +62,24 @@ export class SectionScroll {
 				this.#strip()?.contains(event.target);
 			if (!pressedStrip) this.#endJump(scroller);
 		};
+		const landOnFocus = ({ target }: FocusEvent) => {
+			const jump = this.#jump;
+			const inStrip =
+				target instanceof Node && this.#strip()?.contains(target);
+			if (jump === null || inStrip) return;
+			scroller.scrollTo({ top: jump.top, behavior: "instant" });
+			if (arrived({ scroller, top: jump.top })) this.#endJump(scroller);
+		};
 		onScroll();
 		scroller.addEventListener("scroll", onScroll, { passive: true });
 		scroller.addEventListener("scrollend", endJump);
+		scroller.addEventListener("focusin", landOnFocus);
 		for (const type of TAKEOVER_EVENTS)
 			scroller.addEventListener(type, takeOver, { passive: true });
 		return () => {
 			scroller.removeEventListener("scroll", onScroll);
 			scroller.removeEventListener("scrollend", endJump);
+			scroller.removeEventListener("focusin", landOnFocus);
 			for (const type of TAKEOVER_EVENTS)
 				scroller.removeEventListener(type, takeOver);
 			this.#scroller = null;

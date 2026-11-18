@@ -237,6 +237,29 @@ describe("SectionScroll", () => {
 		stop();
 	});
 
+	it("lands a glide at once when focus moves into the sections, not along the strip", () => {
+		const { scroll, scroller, strip, scrollTo, release, reach, stop } =
+			mountSection({ contentTop: 314, stripHeight: 60, headerTop: 543 });
+		const tile = document.createElement("button");
+		scroller.firstElementChild!.append(tile);
+
+		scroll.jumpTo("section");
+		reach(200);
+		strip.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+		expect(scrollTo).toHaveBeenCalledOnce();
+
+		tile.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+
+		expect(scrollTo).toHaveBeenLastCalledWith({
+			top: 483,
+			behavior: "instant",
+		});
+		reach(483);
+		expect(release).toHaveBeenCalledOnce();
+		expect(scroll.current).toBe("section");
+		stop();
+	});
+
 	it("keeps one hold across a second tap mid-glide", () => {
 		const { scroll, holdSheetSize, release, reach, stop } = mountSection({
 			contentTop: 314,
