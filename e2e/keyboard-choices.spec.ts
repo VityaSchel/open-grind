@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import {
 	installPersistentAppData,
@@ -66,6 +67,8 @@ async function offerDisguises(page: Page): Promise<void> {
 }
 
 test.describe("Language", () => {
+	test.use({ baseURL: DEV_SERVER_URL });
+
 	const languages = (page: Page) =>
 		page.getByRole("listbox", { name: "Language" });
 

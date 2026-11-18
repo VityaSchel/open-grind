@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	DEMO_CONVERSATION,
 	DEMO_CONVERSATION_ID,
@@ -201,23 +202,30 @@ test.describe("keyboard navigation in the inbox", () => {
 		await expect(links.first()).toBeFocused();
 	});
 
-	test("End reaches conversations added after the list mounted and lands on the last one's link", async ({
-		page,
-	}) => {
-		await openInbox(page);
-		const lastId = await addLaterConversations(page);
-		await conversationLinks(page).first().focus();
+	test.describe("with conversations added after mount", () => {
+		test.use({ baseURL: DEV_SERVER_URL });
+		test.describe.configure({ timeout: 180_000 });
 
-		await page.keyboard.press("End");
+		test("End reaches conversations added after the list mounted and lands on the last one's link", async ({
+			page,
+		}) => {
+			await openInbox(page);
+			const lastId = await addLaterConversations(page);
+			await conversationLinks(page).first().focus();
 
-		await expect(
-			rowOf(page, { conversationId: lastId }).locator(
-				`${CONVERSATION_LINK}:visible`,
-			),
-		).toBeFocused();
-		expect(
-			focusProblems(await arrowThrough(page, { key: "End", stops: 1 })),
-		).toEqual([]);
+			await page.keyboard.press("End");
+
+			await expect(
+				rowOf(page, { conversationId: lastId }).locator(
+					`${CONVERSATION_LINK}:visible`,
+				),
+			).toBeFocused();
+			expect(
+				focusProblems(
+					await arrowThrough(page, { key: "End", stops: 1 }),
+				),
+			).toEqual([]);
+		});
 	});
 
 	test("only one conversation row holds a Tab stop", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	commandCenterShortcut,
 	FIRST_ROUTE_COMPILE_MS,
@@ -107,6 +108,8 @@ test.describe("the age wheel", () => {
 });
 
 test.describe("the location picker", () => {
+	test.use({ baseURL: DEV_SERVER_URL });
+
 	const search = (page: Page) =>
 		page.getByRole("combobox", { name: "Search places…" });
 	const results = (page: Page) =>
