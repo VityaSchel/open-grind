@@ -225,6 +225,14 @@ body {
 	--nav-height: 0px;
 }
 
+:root[data-keyboard-shrinks-page] .scroll-pb-nav-clear {
+	scroll-padding-bottom: 0;
+}
+
+:root[data-keyboard-shrinks-page] :is(input, textarea):focus-visible {
+	scroll-margin-bottom: 0;
+}
+
 a {
 	-webkit-user-drag: none;
 }
