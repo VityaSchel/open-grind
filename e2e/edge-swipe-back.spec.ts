@@ -2,7 +2,6 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { DEV_SERVER_URL } from "../playwright.config";
 import {
-	afterTwoFrames,
 	backLink,
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
@@ -31,13 +30,13 @@ import { activeProfilePane, openGridProfile } from "./support/profile-pager";
 import { PHONE } from "./support/stack-layers";
 import {
 	commitSystemBack,
-	edgeSwipeArmed,
-	edgeSwipeArmsSent,
+	edgeSwipeZone,
+	expectEdgeSwipeArmed,
+	expectEdgeSwipeStaysOff,
 	progressEdgeSwipe,
 	progressSystemBack,
 	releaseEdgeSwipe,
 	startEdgeSwipe,
-	startEdgeSwipeUnarmed,
 	startSystemBack,
 } from "./support/system-back";
 
@@ -65,21 +64,6 @@ async function openSubpage(page: Page, { path }: { path: string }) {
 
 const leftEdge = (locator: Locator) =>
 	locator.evaluate((element) => element.getBoundingClientRect().x);
-
-const expectArmed = (page: Page, armed: boolean) =>
-	expect.poll(() => edgeSwipeArmed(page)).toBe(armed);
-
-async function expectStaysOff(page: Page) {
-	const sentBefore = (await edgeSwipeArmsSent(page)).length;
-	await afterTwoFrames(page);
-	await page.evaluate(() => new Promise((folded) => setTimeout(folded)));
-
-	expect((await edgeSwipeArmsSent(page)).slice(sentBefore)).not.toContain(
-		true,
-	);
-	expect(await edgeSwipeArmed(page)).toBe(false);
-	expect(await startEdgeSwipeUnarmed(page)).toBe(false);
-}
 
 function releaseReadingEasing(
 	page: Page,
@@ -109,7 +93,8 @@ test.describe("the iOS edge swipe in settings", () => {
 	}) => {
 		await openSettings(page, { platform: "ios" });
 		await openAppSettings(page);
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
+		expect(await edgeSwipeZone(page)).toBe("shared");
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.5);
@@ -124,7 +109,7 @@ test.describe("the iOS edge swipe in settings", () => {
 		);
 		await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
 		await stackSettled(page);
-		await expectArmed(page, false);
+		await expectEdgeSwipeArmed(page, { armed: false });
 	});
 
 	test("slides App Settings back in when the swipe is let go short", async ({
@@ -132,7 +117,7 @@ test.describe("the iOS edge swipe in settings", () => {
 	}) => {
 		await openSettings(page, { platform: "ios" });
 		await openAppSettings(page);
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.3);
@@ -141,17 +126,17 @@ test.describe("the iOS edge swipe in settings", () => {
 		await stackSettled(page);
 		expect(await leftEdge(pane(page))).toBe(0);
 		await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 	});
 
 	test("stays off where no settings page lies behind", async ({ page }) => {
 		await openSettings(page, { platform: "ios" });
-		await expectStaysOff(page);
+		await expectEdgeSwipeStaysOff(page);
 
 		await page.goto(CREDITS);
 		await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 		await stackSettled(page);
-		await expectStaysOff(page);
+		await expectEdgeSwipeStaysOff(page);
 	});
 
 	test("goes back over Account Settings from the blocked list after a visit to a blocked profile", async ({
@@ -165,7 +150,7 @@ test.describe("the iOS edge swipe in settings", () => {
 		await backLink(page).click();
 		await expect(page).toHaveURL(endsWith(BLOCKED));
 		await stackSettled(page);
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.5);
@@ -186,22 +171,22 @@ test.describe("the iOS edge swipe in settings after a language change", () => {
 		await openSettings(page, { platform: "ios" });
 		await openAppSettings(page);
 		await openSubpage(page, { path: LANGUAGE });
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 
 		await page
 			.getByRole("radio", { name: "German Deutsch", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveAttribute("lang", "de");
-		await expectArmed(page, false);
-		await expectStaysOff(page);
+		await expectEdgeSwipeArmed(page, { armed: false });
+		await expectEdgeSwipeStaysOff(page);
 
 		await page.locator("nav").locator(linkTo(APP_SETTINGS)).click();
 		await expect(page).toHaveURL(endsWith(APP_SETTINGS));
 		await stackSettled(page);
-		await expectStaysOff(page);
+		await expectEdgeSwipeStaysOff(page);
 
 		await openSubpage(page, { path: CREDITS });
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.5);
@@ -210,7 +195,7 @@ test.describe("the iOS edge swipe in settings after a language change", () => {
 
 		await expect(page).toHaveURL(endsWith(APP_SETTINGS));
 		await stackSettled(page);
-		await expectArmed(page, false);
+		await expectEdgeSwipeArmed(page, { armed: false });
 	});
 });
 
@@ -270,12 +255,12 @@ test.describe("the iOS edge swipe in chats", () => {
 	}) => {
 		await openInbox(page, { platform: "ios" });
 		await openConversation(page, { href: DEMO_CONVERSATION });
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 		await messageRow(page).click({ button: "right" });
-		await expectArmed(page, false);
+		await expectEdgeSwipeArmed(page, { armed: false });
 		await page.getByRole("button", { name: "Reply" }).click();
 		await expect(page.getByLabel("Cancel reply")).toBeVisible();
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.6);
@@ -292,7 +277,7 @@ test.describe("the iOS edge swipe in chats", () => {
 	}) => {
 		await openInbox(page, { platform: "ios" });
 		const href = await openConversation(page);
-		await expectArmed(page, true);
+		await expectEdgeSwipeArmed(page, { armed: true });
 
 		expect(await startEdgeSwipe(page)).toBe(true);
 		await progressEdgeSwipe(page, 0.2);
@@ -310,20 +295,20 @@ test.describe("the iOS edge swipe in chats", () => {
 		await page.goto(DEMO_CONVERSATION);
 		await backToInbox(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
-		await expectStaysOff(page);
+		await expectEdgeSwipeStaysOff(page);
 	});
 });
 
-test("the iOS edge swipe stays off on a profile and in the chat opened from it", async ({
+test("the iOS edge swipe is on for a profile opened from Browse and stays off in the chat opened from it", async ({
 	page,
 }) => {
 	await openGridProfile(page, { nth: 0, platform: "ios" });
-	await expectStaysOff(page);
+	await expectEdgeSwipeArmed(page, { armed: true });
 
 	await activeProfilePane(page)
 		.getByRole("link", { name: "Write a message…" })
 		.click();
 	await expect(page).toHaveURL(/\/chat\//);
 	await backToInbox(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await expectStaysOff(page);
+	await expectEdgeSwipeStaysOff(page);
 });

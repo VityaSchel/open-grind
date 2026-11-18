@@ -39,16 +39,19 @@ async function openProfileMenu(page: Page) {
 
 test.describe.configure({ timeout: 240_000 });
 
-test("Back leaves a profile with no menu open", async ({ page }) => {
+test("the back gesture slides a profile with no menu open off onto Browse", async ({
+	page,
+}) => {
 	await openProfileFromGrid(page);
 
-	const { handled } = await systemBack(page);
+	const { tracked, handled } = await systemBack(page);
 
-	expect(handled, "nothing on the profile claims Back").toBe(false);
+	expect(tracked, "the profile follows the gesture").toBe(true);
+	expect(handled, "the profile takes Back once it has slid off").toBe(true);
 	await expect(page).toHaveURL(BROWSE_URL);
 });
 
-test("Back closes the profile menu and stays, the next Back leaves", async ({
+test("Back closes the profile menu and stays, the next back gesture slides the profile off", async ({
 	page,
 }) => {
 	const profileUrl = await openProfileFromGrid(page);
@@ -65,9 +68,12 @@ test("Back closes the profile menu and stays, the next Back leaves", async ({
 	await expect(menu(page)).toHaveCount(0);
 	await expect(page).toHaveURL(profileUrl);
 
-	const { handled } = await systemBack(page);
+	const { tracked, handled } = await systemBack(page);
 
-	expect(handled, "the closed menu no longer claims Back").toBe(false);
+	expect(tracked, "the closed menu lets the profile follow the gesture").toBe(
+		true,
+	);
+	expect(handled, "the profile takes Back once it has slid off").toBe(true);
 	await expect(page).toHaveURL(BROWSE_URL);
 });
 
