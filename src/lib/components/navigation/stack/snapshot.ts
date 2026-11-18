@@ -6,18 +6,21 @@ type SnapshotMode = {
 	slot: string;
 	stripped: readonly string[];
 	stillMedia: boolean;
+	inheritsVisibility: boolean;
 };
 
 const PANE_MODE: SnapshotMode = {
 	slot: "page-stack-ghost",
 	stripped: ["id", "data-slot"],
 	stillMedia: false,
+	inheritsVisibility: false,
 };
 
 const SCREEN_MODE: SnapshotMode = {
 	slot: "screen-ghost",
 	stripped: ["id", "data-fixed-header"],
 	stillMedia: true,
+	inheritsVisibility: true,
 };
 
 const FORM_FIELDS = "input, textarea, select";
@@ -42,7 +45,10 @@ export const trackScrolled: Attachment<HTMLElement> = (pane) => {
 	const scrolled = new Set<Element>();
 	scrolledIn.set(pane, scrolled);
 	const remember = ({ target }: Event) => {
-		if (target instanceof Element) scrolled.add(target);
+		if (!(target instanceof Element) || scrolled.has(target)) return;
+		for (const element of scrolled)
+			if (!pane.contains(element)) scrolled.delete(element);
+		scrolled.add(target);
 	};
 	pane.addEventListener("scroll", remember, { capture: true, passive: true });
 	return () => {
@@ -208,6 +214,14 @@ function stillVideos(clone: HTMLElement): void {
 	}
 }
 
+function inheritVisibility(clone: HTMLElement): void {
+	for (const element of clone.querySelectorAll<HTMLElement>(
+		'[style*="visibility"]',
+	))
+		if (element.style.visibility === "visible")
+			element.style.removeProperty("visibility");
+}
+
 function snapshot({
 	root,
 	path,
@@ -227,6 +241,7 @@ function snapshot({
 	sanitize(clone);
 	stripAttributes({ clone, stripped: mode.stripped });
 	if (mode.stillMedia) stillVideos(clone);
+	if (mode.inheritsVisibility) inheritVisibility(clone);
 	clone.inert = true;
 	clone.setAttribute("aria-hidden", "true");
 	clone.dataset.slot = mode.slot;

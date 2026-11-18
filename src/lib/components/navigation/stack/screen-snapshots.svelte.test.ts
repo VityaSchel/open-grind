@@ -176,6 +176,29 @@ describe("ScreenSnapshots", () => {
 		});
 	});
 
+	it("tells a replace of the entry showing from a push or a traversal", () => {
+		const { history, snapshots } = trackedHistory({ at: "/" });
+
+		history.push("/profile/1");
+		const onPush = snapshots.replaces();
+		snapshots.navigating();
+		snapshots.navigated({ type: "link" });
+
+		history.replace("/profile/2");
+		const onReplace = snapshots.replaces();
+		snapshots.navigating();
+		snapshots.navigated({ type: "goto" });
+
+		history.go(-1);
+		const onTraversal = snapshots.replaces();
+
+		expect({ onPush, onReplace, onTraversal }).toEqual({
+			onPush: false,
+			onReplace: true,
+			onTraversal: false,
+		});
+	});
+
 	it("drops the snapshots of the entry a traversal lands on and every entry above it", () => {
 		const tracked = trackedHistory({ at: "/" });
 		tracked.push({ to: "/profile/1", kind: "screen" });

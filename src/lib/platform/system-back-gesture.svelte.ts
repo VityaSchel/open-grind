@@ -16,6 +16,7 @@ export type SwipeBackStack = {
 	readonly tracking: boolean;
 	readonly moving: boolean;
 	readonly offersSwipeBack: boolean;
+	readonly covering?: boolean;
 	beginSwipeBack(): boolean;
 	trackSwipeBack(progress: number): void;
 	commitSwipeBack(release?: SwipeRelease): void;
@@ -78,6 +79,7 @@ function trackingStack(): SwipeBackStack | undefined {
 function stackInCharge(): SwipeBackStack | undefined {
 	const stacks = stacksNewestFirst();
 	return (
+		stacks.find((stack) => stack.covering) ??
 		stacks.find((stack) => stack.tracking || stack.offersSwipeBack) ??
 		stacks.find((stack) => stack.moving) ??
 		stacks[0]
@@ -88,7 +90,8 @@ function owningStack(): SwipeBackStack | undefined {
 	const topLayer = topBackGestureLayer({
 		skipping: platformSystemBack().passesOver,
 	});
-	return topLayer === "stack" ? stackInCharge() : undefined;
+	const stack = topLayer === "stack" ? stackInCharge() : undefined;
+	return stack?.covering ? undefined : stack;
 }
 
 function swipeArmed(): boolean {
@@ -149,8 +152,6 @@ function pushArm(): void {
 	});
 }
 
-let stopArming: (() => void) | undefined;
-
 export function installSystemBack(): void {
 	const systemBack = platformSystemBack();
 	systemBack.install();
@@ -161,19 +162,17 @@ export function installSystemBack(): void {
 export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 	attachedStacks.add(stack);
 	backGestureEventHandlers.set(commitInFlight, "stack");
-	stopArming ??= $effect.root(() => {
+	const stopArming = $effect.root(() => {
 		$effect(pushArm);
 	});
 
 	return () => {
+		stopArming();
 		attachedStacks.delete(stack);
 		untrack(() => {
 			if (!trackingStack()) stopReading();
-			if (attachedStacks.size === 0) {
-				stopArming?.();
-				stopArming = undefined;
+			if (attachedStacks.size === 0)
 				backGestureEventHandlers.delete(commitInFlight);
-			}
 			pushArm();
 		});
 	};

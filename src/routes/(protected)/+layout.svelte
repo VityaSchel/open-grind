@@ -4,6 +4,7 @@
 	import CommandCenter from "#lib/components/command-center/CommandCenter.svelte";
 	import RefreshAnnouncements from "#lib/components/feedback/refresh/RefreshAnnouncements.svelte";
 	import { trackScreenSnapshots } from "#lib/components/navigation/stack/screen-snapshots.svelte.ts";
+	import ScreenStack from "#lib/components/navigation/stack/ScreenStack.svelte";
 	import MediaDropOverlay from "#lib/components/shared/MediaDropOverlay.svelte";
 	import { restoreStrandedLocation } from "#lib/entitlements/honduras-hold.ts";
 	import { reopenAfterDisguiseRestart } from "#lib/platform/disguise.svelte.ts";
@@ -39,7 +40,9 @@
 	});
 </script>
 
-{@render children()}
+<ScreenStack>
+	{@render children()}
+</ScreenStack>
 <CommandCenter />
 <MediaDropOverlay />
 <RefreshAnnouncements />

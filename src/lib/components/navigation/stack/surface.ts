@@ -116,3 +116,30 @@ export function paneSurface({
 		},
 	};
 }
+
+export function frontClearedAtRest({
+	surface,
+	front,
+}: {
+	surface: StackSurface;
+	front: () => HTMLElement | null;
+}): StackSurface {
+	const clear = () => front()?.style.removeProperty("transform");
+	return {
+		apply: (progress) => {
+			surface.apply(progress);
+			if (progress === 0) clear();
+		},
+		animate: (options) => {
+			const animation = surface.animate(options);
+			if (options.to !== 0) return animation;
+			return {
+				...animation,
+				completed: animation.completed.then((completed) => {
+					if (completed) clear();
+					return completed;
+				}),
+			};
+		},
+	};
+}

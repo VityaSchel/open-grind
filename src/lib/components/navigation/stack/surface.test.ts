@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { type StackMotion, stackMotion } from "./motion";
-import { paneSurface } from "./surface";
+import { frontClearedAtRest, paneSurface } from "./surface";
 
 const slide = stackMotion({ platform: "android" });
 const windows = stackMotion({ platform: "windows" });
@@ -209,6 +209,75 @@ describe("paneSurface", () => {
 		expect(dim.animate).toHaveBeenCalledWith(
 			[{ opacity: 0 }, { opacity: 0 }],
 			expect.anything(),
+		);
+	});
+});
+
+describe("frontClearedAtRest", () => {
+	function clearing() {
+		const front = paneAt(0);
+		const back = paneAt(0);
+		const surface = frontClearedAtRest({
+			surface: surfaceOver({ front: front.pane, back: back.pane }),
+			front: () => front.pane,
+		});
+		return { front, back, surface };
+	}
+
+	it("leaves no transform on the front pane once it rests in place", () => {
+		const { front, back, surface } = clearing();
+
+		surface.apply(0.5);
+		expect(front.pane.style.transform).toBe("translate3d(50.000%,0,0)");
+
+		surface.apply(0);
+		expect(front.pane.style.transform).toBe("");
+		expect(back.pane.style.transform).toBe("translate3d(-33.000%,0,0)");
+	});
+
+	it("clears the front pane's transform when a settle back into place finishes", async () => {
+		const { front, back, surface } = clearing();
+		const running = surface.animate({
+			from: 0.5,
+			to: 0,
+			duration: 540,
+			easing: "linear",
+		});
+
+		front.finish();
+		back.finish();
+
+		expect(await running.completed).toBe(true);
+		expect(front.pane.style.transform).toBe("");
+	});
+
+	it("keeps the front pane's transform when a settle ends away from its place, or is stopped", async () => {
+		const { front, back, surface } = clearing();
+		const committing = surface.animate({
+			from: 0.5,
+			to: 1,
+			duration: 540,
+			easing: "linear",
+		});
+		front.finish();
+		back.finish();
+		expect(await committing.completed).toBe(true);
+		expect(front.pane.style.transform).toBe("translate3d(100.000%,0,0)");
+
+		const canceled = clearing();
+		canceled.surface.apply(0.5);
+		const stopped = canceled.surface.animate({
+			from: 0.5,
+			to: 0,
+			duration: 540,
+			easing: "linear",
+		});
+		stopped.cancel();
+		canceled.front.finish();
+		canceled.back.finish();
+		expect(await stopped.completed).toBe(false);
+		expect(canceled.front.pane.style.transform).toBe(
+			"translate3d(50.000%,0,0)",
 		);
 	});
 });

@@ -50,11 +50,17 @@ export function fakeSurface() {
 	return { surface, applied, animations };
 }
 
-function navigationTarget(pathname: string) {
+function navigationTarget({
+	pathname,
+	route = null,
+}: {
+	pathname: string;
+	route?: string | null;
+}) {
 	return {
 		url: new URL(`http://app${pathname}`),
 		params: {},
-		route: { id: null },
+		route: { id: route },
 	};
 }
 
@@ -62,16 +68,18 @@ export function navigationEvent({
 	from,
 	to,
 	delta,
+	toRoute,
 }: {
 	from: string;
 	to: string;
 	delta?: number;
+	toRoute?: string;
 }): OnNavigate {
 	return {
 		type: delta === undefined ? "link" : "popstate",
 		delta,
-		from: navigationTarget(from),
-		to: navigationTarget(to),
+		from: navigationTarget({ pathname: from }),
+		to: navigationTarget({ pathname: to, route: toRoute }),
 	} as OnNavigate;
 }
 

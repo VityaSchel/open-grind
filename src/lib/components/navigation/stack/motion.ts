@@ -1,6 +1,11 @@
 import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
 
-export const STACK_Z = { back: "10", dim: "11", front: "12" } as const;
+export const STACK_Z = {
+	back: "10",
+	dim: "11",
+	front: "12",
+	cover: "49",
+} as const;
 
 export type ReleaseSpring = { responseMs: number; settledWithin: number };
 

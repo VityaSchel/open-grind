@@ -37,6 +37,11 @@ export class ScreenSnapshots {
 		return this.#pushedFromEntry() !== undefined;
 	}
 
+	replaces(): boolean {
+		const shown = this.#shown;
+		return shown !== undefined && this.#historyIndex() === shown;
+	}
+
 	remember({
 		snapshot,
 		kind,

@@ -93,6 +93,30 @@ describe("snapshotPane", () => {
 		stopTracking?.();
 	});
 
+	it("lets go of scrolled elements that left the pane once another element scrolls, before any capture", () => {
+		const pane = mountPane(
+			'<div class="gone"></div><div class="next"></div>',
+		);
+		const stopTracking = trackScrolled(pane);
+		const gone = pane.querySelector<HTMLElement>(".gone")!;
+		gone.scrollTop = 120;
+		gone.dispatchEvent(new Event("scroll"));
+		gone.remove();
+		const next = pane.querySelector<HTMLElement>(".next")!;
+		next.scrollTop = 40;
+		next.dispatchEvent(new Event("scroll"));
+		pane.prepend(gone);
+
+		const snapshot = snapshotPane({ pane, path: "/profile/7" });
+		document.body.append(snapshot.node);
+		snapshot.restore();
+
+		const [goneCopy, nextCopy] = snapshot.node.children;
+		expect(goneCopy!.scrollTop, "no longer remembered").toBe(0);
+		expect(nextCopy!.scrollTop).toBe(40);
+		stopTracking?.();
+	});
+
 	it("carries values the clone would otherwise lose", () => {
 		const pane = mountPane(
 			"<input /><textarea></textarea><select><option>a</option><option>b</option></select>",
@@ -278,6 +302,24 @@ describe("snapshotScreen", () => {
 		expect(root.querySelector("video")!.getAttribute("src")).toBe(
 			"ogmedia://clip.mp4",
 		);
+	});
+
+	it("lets every copied element take its visibility from the hidden ghost host, keeping the ones hidden on purpose", () => {
+		const root = mountPane(
+			'<div class="shown" style="visibility: visible; aspect-ratio: 1"></div><div class="hidden" style="visibility: hidden"></div>',
+		);
+
+		const node = snapshotScreen({ root, path: "/profile/1" }).node;
+
+		const shown = node.querySelector<HTMLElement>(".shown")!;
+		expect(shown.style.visibility).toBe("");
+		expect(shown.style.aspectRatio).toBe("1");
+		expect(
+			node.querySelector<HTMLElement>(".hidden")!.style.visibility,
+		).toBe("hidden");
+		expect(
+			root.querySelector<HTMLElement>(".shown")!.style.visibility,
+		).toBe("visible");
 	});
 });
 
