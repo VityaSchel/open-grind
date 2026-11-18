@@ -239,8 +239,22 @@ test.describe("the Right Now feed from the keyboard", () => {
 		await page.keyboard.press("End");
 		const lastCell = await focusedCell(page);
 		expect(lastCell).toMatchObject({ post: lastPost, cell: 0 });
+		const scroller = page.locator(FEED_SCROLLER);
+		const scrollTop = () =>
+			scroller.evaluate((element) => element.scrollTop);
+		const before = await scroller.evaluate((element) => ({
+			top: element.scrollTop,
+			room:
+				element.scrollHeight - element.clientHeight - element.scrollTop,
+		}));
 
-		expect(await pressIsPrevented({ page, key: "ArrowDown" })).toBe(false);
+		await page.keyboard.press("ArrowDown");
+
+		await expect
+			.poll(scrollTop)
+			.toBeGreaterThanOrEqual(
+				before.top + Math.min(1, Math.floor(before.room)),
+			);
 		expect(await focusedCell(page)).toEqual(lastCell);
 	});
 
