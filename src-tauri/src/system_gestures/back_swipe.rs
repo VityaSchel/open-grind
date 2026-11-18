@@ -15,7 +15,9 @@ use objc2_ui_kit::{
 };
 use tauri::{Manager, WebviewWindow};
 
-use super::edge_pan::{self, EdgeZone, Release, ScrollerExtent, ScrollerTouch};
+use super::edge_pan::{
+	self, ArmState, Arming, EdgeZone, Release, ScrollerExtent, ScrollerTouch,
+};
 use crate::child_scroller::child_scroller_at;
 use crate::page_point::PagePoint;
 use crate::presenting::presenting;
@@ -31,15 +33,8 @@ struct Swipe {
 	recognizer: Retained<UIScreenEdgePanGestureRecognizer>,
 	sent: Cell<Option<f64>>,
 	gesture: Cell<u64>,
-	arm_order: Cell<u64>,
-	edge_zone: Cell<EdgeZone>,
+	arm_state: RefCell<ArmState>,
 	landed_in_edge_zone: Cell<bool>,
-}
-
-struct Arming {
-	armed: bool,
-	edge_zone: EdgeZone,
-	order: u64,
 }
 
 define_class!(
@@ -99,8 +94,7 @@ impl BackSwipe {
 			recognizer,
 			sent: Cell::new(None),
 			gesture: Cell::new(0),
-			arm_order: Cell::new(0),
-			edge_zone: Cell::new(EdgeZone::Shared),
+			arm_state: RefCell::default(),
 			landed_in_edge_zone: Cell::new(false),
 		});
 		unsafe { msg_send![super(this), init] }
@@ -167,7 +161,7 @@ impl BackSwipe {
 		}
 		let inset = scroller.adjustedContentInset();
 		edge_pan::scroller_waits_for_back_swipe(ScrollerTouch {
-			zone: self.ivars().edge_zone.get(),
+			zone: self.ivars().arm_state.borrow().edge_zone(),
 			landed_in_edge_zone: self.ivars().landed_in_edge_zone.get(),
 			scrolls_sideways: ScrollerExtent {
 				content_width: scroller.contentSize().width,
@@ -262,17 +256,14 @@ impl BackSwipe {
 	}
 
 	fn arm(&self, arming: Arming) {
-		if arming.order <= self.ivars().arm_order.get() {
-			return;
+		let armed = self.ivars().arm_state.borrow_mut().apply(arming);
+		if let Some(armed) = armed {
+			self.ivars().recognizer.setEnabled(armed);
 		}
-		self.ivars().arm_order.set(arming.order);
-		self.ivars().edge_zone.set(arming.edge_zone);
-		self.ivars().recognizer.setEnabled(arming.armed);
 	}
 
 	fn disarm(&self) {
-		self.ivars().arm_order.set(0);
-		self.ivars().edge_zone.set(EdgeZone::Shared);
+		self.ivars().arm_state.borrow_mut().reset();
 		self.ivars().recognizer.setEnabled(false);
 	}
 }

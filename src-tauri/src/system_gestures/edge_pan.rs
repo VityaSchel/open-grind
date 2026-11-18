@@ -15,11 +15,46 @@ const YIELDING_RECOGNIZERS: [&str; 4] = [
 	"UIVariableDelayLoupeGesture",
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EdgeZone {
+	#[default]
 	Shared,
 	GoesBack,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Arming {
+	pub armed: bool,
+	pub edge_zone: EdgeZone,
+	pub order: u64,
+}
+
+#[derive(Debug, Default)]
+pub struct ArmState {
+	order: u64,
+	edge_zone: EdgeZone,
+}
+
+impl ArmState {
+	pub fn edge_zone(&self) -> EdgeZone {
+		self.edge_zone
+	}
+
+	pub fn apply(&mut self, arming: Arming) -> Option<bool> {
+		if arming.order <= self.order {
+			return None;
+		}
+		*self = Self {
+			order: arming.order,
+			edge_zone: arming.edge_zone,
+		};
+		Some(arming.armed)
+	}
+
+	pub fn reset(&mut self) {
+		*self = Self::default();
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -181,6 +216,62 @@ mod tests {
 		] {
 			assert!(!scroller_waits_for_back_swipe(touch), "{touch:?}");
 		}
+	}
+
+	const GOES_BACK_ARMED: Arming = Arming {
+		armed: true,
+		edge_zone: EdgeZone::GoesBack,
+		order: 2,
+	};
+
+	#[test]
+	fn a_stale_arming_leaves_the_edge_zone_alone() {
+		let mut state = ArmState::default();
+		assert_eq!(state.apply(GOES_BACK_ARMED), Some(true));
+		for order in [1, 2] {
+			assert_eq!(
+				state.apply(Arming {
+					armed: false,
+					edge_zone: EdgeZone::Shared,
+					order,
+				}),
+				None,
+				"{order}"
+			);
+		}
+		assert_eq!(state.edge_zone(), EdgeZone::GoesBack);
+	}
+
+	#[test]
+	fn a_newer_arming_replaces_the_edge_zone() {
+		let mut state = ArmState::default();
+		state.apply(GOES_BACK_ARMED);
+		assert_eq!(
+			state.apply(Arming {
+				armed: false,
+				edge_zone: EdgeZone::Shared,
+				order: 3,
+			}),
+			Some(false)
+		);
+		assert_eq!(state.edge_zone(), EdgeZone::Shared);
+	}
+
+	#[test]
+	fn a_reset_shares_the_edge_and_takes_the_first_order_again() {
+		let mut state = ArmState::default();
+		assert_eq!(state.edge_zone(), EdgeZone::Shared);
+		state.apply(GOES_BACK_ARMED);
+		state.reset();
+		assert_eq!(state.edge_zone(), EdgeZone::Shared);
+		assert_eq!(
+			state.apply(Arming {
+				order: 1,
+				..GOES_BACK_ARMED
+			}),
+			Some(true)
+		);
+		assert_eq!(state.edge_zone(), EdgeZone::GoesBack);
 	}
 
 	#[test]
