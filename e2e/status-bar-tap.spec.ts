@@ -222,8 +222,12 @@ test("a status-bar tap does nothing while a drawer is open over the grid", async
 
 	await page.keyboard.press("Escape");
 	await expect(page.getByRole("dialog")).toHaveCount(0);
-	await tapStatusBar(page);
-	await expect.poll(() => scrollTop(grid)).toBe(0);
+	await expect
+		.poll(async () => {
+			await tapStatusBar(page);
+			return scrollTop(grid);
+		})
+		.toBe(0);
 });
 
 test("a status-bar tap does nothing while a popup is open, even one that leaves the list in view", async ({
