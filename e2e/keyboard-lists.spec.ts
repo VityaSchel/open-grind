@@ -87,7 +87,7 @@ test.use({ viewport: { width: 1280, height: 800 }, hasTouch: false });
 test.describe.configure({ timeout: 240_000 });
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 for (const { name, path, opens } of SETTINGS_LISTS) {

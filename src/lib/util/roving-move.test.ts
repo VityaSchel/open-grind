@@ -155,21 +155,17 @@ describe("moveForKey Home, End and paging", () => {
 });
 
 describe("moveForKey modifiers", () => {
-	it.each<RovingPlatform>([
-		"windows",
-		"linux",
-		"android",
-		"macos",
-		"ios",
-		"web",
-	])("jumps to the ends with Ctrl+Home and Ctrl+End on %s", (platform) => {
-		const modifiers: Modifier[] = ["ctrl"];
-		for (const orientation of ["vertical", "grid"] as const) {
-			const keys = { modifiers, platform, orientation };
-			expect(keyFor({ key: "Home", ...keys })).toBe("first");
-			expect(keyFor({ key: "End", ...keys })).toBe("last");
-		}
-	});
+	it.each<RovingPlatform>(["windows", "linux", "android", "macos", "ios"])(
+		"jumps to the ends with Ctrl+Home and Ctrl+End on %s",
+		(platform) => {
+			const modifiers: Modifier[] = ["ctrl"];
+			for (const orientation of ["vertical", "grid"] as const) {
+				const keys = { modifiers, platform, orientation };
+				expect(keyFor({ key: "Home", ...keys })).toBe("first");
+				expect(keyFor({ key: "End", ...keys })).toBe("last");
+			}
+		},
+	);
 
 	it.each<RovingPlatform>(["macos", "ios"])(
 		"jumps to the ends with Cmd+ArrowUp and Cmd+ArrowDown on %s",
@@ -187,7 +183,7 @@ describe("moveForKey modifiers", () => {
 		},
 	);
 
-	it.each<RovingPlatform>(["windows", "linux", "android", "web"])(
+	it.each<RovingPlatform>(["windows", "linux", "android"])(
 		"leaves Meta+ArrowUp and Meta+ArrowDown to the system on %s",
 		(platform) => {
 			const keys = { modifiers: ["meta"] as Modifier[], platform };

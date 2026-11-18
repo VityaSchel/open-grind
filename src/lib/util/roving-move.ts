@@ -33,12 +33,6 @@ const commandArrowsReachEnds: Record<RovingPlatform, boolean> = {
 	windows: false,
 	linux: false,
 	android: false,
-	freebsd: false,
-	dragonfly: false,
-	netbsd: false,
-	openbsd: false,
-	solaris: false,
-	web: false,
 };
 
 const forwardMoves: ReadonlySet<RovingMove> = new Set<RovingMove>([

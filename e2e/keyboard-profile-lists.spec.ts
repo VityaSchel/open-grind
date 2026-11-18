@@ -21,7 +21,7 @@ test.use({ viewport: { width: 1280, height: 800 }, hasTouch: false });
 test.describe.configure({ timeout: 180_000 });
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 async function openBlockedList(page: Page): Promise<void> {

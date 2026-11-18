@@ -197,7 +197,7 @@ async function expectEscapeReturnsFocus({
 test.describe.configure({ timeout: 240_000 });
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 for (const drawer of DRAWERS) {

@@ -33,7 +33,7 @@ function focusedName(page: Page): Promise<string> {
 }
 
 async function openConversation(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await reactableActions(page).waitFor({ timeout: 60_000 });
 }

@@ -84,7 +84,7 @@ function rowLink(row: Locator): Locator {
 }
 
 async function openInbox(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await rowLink(conversationRows(page).first()).waitFor({
 		timeout: FIRST_ROUTE_COMPILE_MS,
@@ -105,7 +105,7 @@ async function cancelDeleteFromRowMenu(page: Page): Promise<void> {
 }
 
 async function openProfile(page: Page): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_PROFILE);
 	const nav = activeProfilePane(page).getByRole("navigation", {
 		name: "Chat and Tap",

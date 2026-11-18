@@ -50,7 +50,7 @@ async function watchLastKeydown(
 
 test.describe("the age wheel", () => {
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings/profile");
 	});
 
@@ -130,7 +130,7 @@ test.describe("the location picker", () => {
 			pathPrefix: "/v3/places/search?",
 			...placesAnswer,
 		});
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await openGrid(page);
 		await places.start();
 		await page.getByRole("button", { name: "Change location" }).click();
@@ -379,7 +379,7 @@ test.describe("the command center", () => {
 	test("Home and End go to the text field instead of the selection", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await openPalette(page);
 		await palette(page).fill("/");
 		await page.keyboard.press("ArrowDown");
@@ -418,7 +418,7 @@ test.describe("the profile top bar", () => {
 	test("Tab follows the visual order of the menu and favorite buttons", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/profile/100001");
 		const menu = page.getByRole("button", { name: "Profile menu" });
 		await menu.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

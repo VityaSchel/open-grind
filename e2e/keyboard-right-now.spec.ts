@@ -116,7 +116,7 @@ async function focusMessageLink(page: Page): Promise<number> {
 test.describe("the Right Now feed from the keyboard", () => {
 	test.beforeEach(async ({ page }) => {
 		test.setTimeout(240_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await goToRightNow(page);
 		await feedPosts(page)
 			.first()
@@ -307,7 +307,7 @@ test("a post that expires while focused hands focus to the post that takes its p
 }) => {
 	test.setTimeout(240_000);
 	await page.clock.install();
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await goToRightNow(page);
 	await feedPosts(page).first().waitFor({ timeout: RIGHT_NOW_FEED_TIMEOUT });
 

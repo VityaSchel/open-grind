@@ -115,7 +115,7 @@ async function openInbox(page: Page): Promise<void> {
 test.describe.configure({ timeout: 240_000 });
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test.describe("the navigation bar", () => {

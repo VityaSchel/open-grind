@@ -66,7 +66,7 @@ async function focusSlot({ page, slot }: { page: Page; slot: number }) {
 }
 
 async function openProfileEditor(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await page.goto("/settings/profile");
 	await page.locator(CELL).first().waitFor({ timeout: 60_000 });

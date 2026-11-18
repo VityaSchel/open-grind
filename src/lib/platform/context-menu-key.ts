@@ -9,12 +9,6 @@ const menuKeyOpensOn: Record<ReturnType<typeof currentPlatform>, KeyPhase> = {
 	windows: "keyup",
 	linux: "keydown",
 	android: "keydown",
-	freebsd: "keydown",
-	dragonfly: "keydown",
-	netbsd: "keydown",
-	openbsd: "keydown",
-	solaris: "keydown",
-	web: "keydown",
 };
 
 function openingPhase({

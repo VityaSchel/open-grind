@@ -43,7 +43,7 @@ test.describe.configure({ timeout: 300_000 });
 
 test.describe("the profile photo carousel", () => {
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto(DEMO_PROFILE);
 		await activeProfilePane(page)
 			.locator(PHOTO)

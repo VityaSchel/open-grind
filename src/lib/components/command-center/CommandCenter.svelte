@@ -31,12 +31,6 @@
 		windows: false,
 		linux: false,
 		android: false,
-		freebsd: false,
-		dragonfly: false,
-		netbsd: false,
-		openbsd: false,
-		solaris: false,
-		web: false,
 	};
 
 	onMount(() => {

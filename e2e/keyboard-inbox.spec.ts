@@ -61,7 +61,7 @@ async function openInbox(
 	page: Page,
 	{ path = "/chat" }: { path?: string } = {},
 ): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(path);
 	await conversationLinks(page)
 		.first()

@@ -29,7 +29,7 @@ async function tabFromNavBar(page: Page): Promise<void> {
 }
 
 async function openConversation(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page

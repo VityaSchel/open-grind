@@ -70,7 +70,7 @@ test.describe("Language", () => {
 		page.getByRole("listbox", { name: "Language" });
 
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto(`${APP_SETTINGS}/language`);
 		await languages(page)
 			.getByRole("option", { selected: true })
@@ -137,7 +137,7 @@ test.describe("Units", () => {
 		page.getByRole("radiogroup", { name: "Units" });
 
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await installPersistentAppData(page);
 		await page.goto(`${APP_SETTINGS}/display`);
 		await units(page)
@@ -188,7 +188,7 @@ test.describe("Discreet app icon", () => {
 		icons(page).getByRole("button", { name, exact: true });
 
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await offerDisguises(page);
 		await page.goto(`${APP_SETTINGS}/discreet-icon`);
 		await icon(page, "Papizza").waitFor({
@@ -258,7 +258,7 @@ test.describe("profile field chips", () => {
 	}
 
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings/profile");
 		await search(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 		await chooseUntil({ page, count: 3 });
