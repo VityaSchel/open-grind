@@ -12,8 +12,10 @@
 	let {
 		id,
 		...attributes
-	}: { id: number } & import("svelte/elements").HTMLAttributes<HTMLElement> =
-		$props();
+	}: { id: number } & Omit<
+		import("svelte/elements").HTMLAttributes<HTMLElement>,
+		"id"
+	> = $props();
 
 	const myProfile = $derived(getProfile(id));
 	const myProfilePhotos = $derived(

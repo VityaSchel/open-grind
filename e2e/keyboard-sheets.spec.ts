@@ -33,7 +33,7 @@ function focusedInside(composite: Locator): Promise<boolean> {
 
 function focusedIndex(cells: Locator): Promise<number> {
 	return cells.evaluateAll((elements) =>
-		elements.indexOf(document.activeElement as Element),
+		elements.indexOf(document.activeElement as HTMLElement),
 	);
 }
 

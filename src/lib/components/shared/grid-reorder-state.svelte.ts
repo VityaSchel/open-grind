@@ -8,7 +8,7 @@ import { type RovingMove, targetIndex } from "#lib/util/roving-move.ts";
 
 const TOUCH_LIFT_DELAY_MS = 300;
 const LIFT_TOLERANCE_PX = 10;
-const COLUMN_MOVES: ReadonlySet<RovingMove> = new Set([
+const COLUMN_MOVES: ReadonlySet<RovingMove> = new Set<RovingMove>([
 	"rowAbove",
 	"rowBelow",
 	"pageUp",

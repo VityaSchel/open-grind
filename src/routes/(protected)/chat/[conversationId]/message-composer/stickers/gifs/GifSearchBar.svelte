@@ -1,6 +1,8 @@
 <script lang="ts">
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 	import XIcon from "phosphor-svelte/lib/XIcon";
+	import { on } from "svelte/events";
+	import type { Attachment } from "svelte/attachments";
 
 	import * as InputGroup from "#lib/components/ui/input-group/index.ts";
 	import { t } from "#lib/i18n/index.ts";
@@ -26,6 +28,8 @@
 
 	let focused = $state(false);
 	let pointerPressed = false;
+	const notePointerPress: Attachment<HTMLElement> = (node) =>
+		on(node, "pointerdown", () => (pointerPressed = true));
 	let focusedByPointer = false;
 
 	function isCompositionKeydown(event: KeyboardEvent): boolean {
@@ -52,7 +56,7 @@
 <div
 	data-slot="gif-search-bar"
 	class="sticky top-0 z-10 bg-popover"
-	onpointerdown={() => (pointerPressed = true)}
+	{@attach notePointerPress}
 >
 	<div class="-mx-4 border-b-hairline border-border px-4 py-2">
 		<InputGroup.Root class="bg-muted">

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import type { HTMLButtonAttributes } from "svelte/elements";
-
-	import { Button } from "#lib/components/ui/button/index.ts";
+	import {
+		Button,
+		type ButtonProps,
+	} from "#lib/components/ui/button/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 
 	let {
@@ -17,7 +18,7 @@
 		drawerOpen?: boolean;
 		onclick: () => void;
 		children: import("svelte").Snippet;
-	} & Omit<HTMLButtonAttributes, "onclick" | "children"> = $props();
+	} & Omit<ButtonProps, "onclick" | "children"> = $props();
 
 	const activeDescriptionId = $props.id();
 

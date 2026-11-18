@@ -30,7 +30,7 @@
 		return () => clearTimeout(timeout);
 	});
 
-	let catalog: ReturnType<typeof tagCatalog> | null = $state.raw(null);
+	let catalog = $state.raw<ReturnType<typeof tagCatalog> | null>(null);
 	const tagsPromise = getTags().then((languages) => {
 		const loaded = tagCatalog({ languages, isOffered: isTagKeyOfferedNow });
 		const keys = loaded.keysOf(value);

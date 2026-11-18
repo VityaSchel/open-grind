@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import ContextMenuPanel from "./ContextMenuPanel.svelte";
 
-let itemSlot: HTMLElement | null = null;
+let itemSlot: Element | null = null;
 
 const items = createRawSnippet(() => ({
 	render: () =>

@@ -41,7 +41,7 @@ const commandArrowsReachEnds: Record<RovingPlatform, boolean> = {
 	web: false,
 };
 
-const forwardMoves: ReadonlySet<RovingMove> = new Set([
+const forwardMoves: ReadonlySet<RovingMove> = new Set<RovingMove>([
 	"next",
 	"rowBelow",
 	"rowEnd",

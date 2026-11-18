@@ -46,7 +46,7 @@ export function rovingList({
 	parent = document.body,
 	container = document.createElement("div"),
 	...options
-}: Partial<RovingFocusOptions> & {
+}: Partial<Omit<RovingFocusOptions, "keys">> & {
 	keys: RovingKey[];
 	mounted?: RovingKey[];
 	build?: Build;
