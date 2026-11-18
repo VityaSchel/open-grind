@@ -36,7 +36,7 @@ export type SystemBackAdapter = {
 	readonly passesOver: readonly BackGestureLayer[];
 	install: () => void;
 	readProgress: () => number | undefined;
-	expose: (gesture: SystemBackGesture) => () => void;
+	expose: (gesture: SystemBackGesture) => void;
 	arm: (arming: { gesture: SystemBackGesture; armed: boolean }) => void;
 };
 
@@ -50,7 +50,7 @@ const noSystemBack: SystemBackAdapter = {
 	passesOver: [],
 	install: () => {},
 	readProgress: () => undefined,
-	expose: () => () => {},
+	expose: () => {},
 	arm: () => {},
 };
 

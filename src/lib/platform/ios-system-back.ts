@@ -50,13 +50,8 @@ export class IosSystemBack implements SystemBackAdapter {
 		return this.#progress;
 	}
 
-	expose(gesture: SystemBackGesture): () => void {
+	expose(gesture: SystemBackGesture): void {
 		this.#gesture = gesture;
-		return () => {
-			if (this.#gesture !== gesture) return;
-			this.#gesture = null;
-			this.#push(false);
-		};
 	}
 
 	arm({ gesture, armed }: { gesture: SystemBackGesture; armed: boolean }) {

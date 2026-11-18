@@ -109,30 +109,17 @@ describe("IosSystemBack arming", () => {
 		expect(sentArmed()).toEqual([true]);
 	});
 
-	it("ignores a stack that is no longer the one exposed", () => {
-		const old = makeGesture().gesture;
-		const unexposeOld = systemBack.expose(old);
-		const current = makeGesture().gesture;
-		systemBack.expose(current);
-		systemBack.arm({ gesture: current, armed: true });
-		expect(sentArmed()).toEqual([true]);
-
-		systemBack.arm({ gesture: old, armed: false });
-		unexposeOld();
-
-		expect(sentArmed()).toEqual([true]);
-	});
-
-	it("disarms when the exposed stack goes away", () => {
+	it("sends no arm for a gesture other than the one exposed", () => {
 		const { gesture } = makeGesture();
-		const unexpose = systemBack.expose(gesture);
+		systemBack.arm({ gesture, armed: true });
+		expect(sentArmed(), "nothing is exposed yet").toEqual([]);
+
+		systemBack.expose(gesture);
+		systemBack.arm({ gesture: makeGesture().gesture, armed: true });
+		expect(sentArmed()).toEqual([]);
+
 		systemBack.arm({ gesture, armed: true });
 		expect(sentArmed()).toEqual([true]);
-
-		unexpose();
-
-		expect(sentArmed()).toEqual([true, false]);
-		expect(start()).toBe(false);
 	});
 
 	it("orders a page's arms after every arm of the page it replaced", () => {
@@ -279,16 +266,5 @@ describe("IosSystemBack prepare", () => {
 
 		window.dispatchEvent(new Event("touchend"));
 		expect(undo).toHaveBeenCalledOnce();
-	});
-
-	it("ignores a prepare once the stack has gone away", () => {
-		const { gesture, undo } = makeGesture();
-		systemBack.expose(gesture)();
-
-		window.__iosBack?.prepare();
-		window.dispatchEvent(new Event("touchend"));
-
-		expect(gesture.prepare).not.toHaveBeenCalled();
-		expect(undo).not.toHaveBeenCalled();
 	});
 });

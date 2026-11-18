@@ -6,7 +6,6 @@ import {
 	type BackGestureLayer,
 	overlayOpen,
 	runBackGestureHandlers,
-	topBackGestureHandler,
 	topBackGestureLayer,
 } from "./back-gesture-event.svelte";
 
@@ -32,7 +31,7 @@ describe("back gesture layers", () => {
 		const stack = register({ layer: "stack" });
 		const screen = register({ layer: "screen" });
 
-		expect(topBackGestureHandler()).toBe(overlay);
+		expect(topBackGestureLayer()).toBe("overlay");
 		expect(runBackGestureHandlers()).toBe(true);
 		expect(overlay).toHaveBeenCalledOnce();
 		expect(screen).not.toHaveBeenCalled();
@@ -43,7 +42,7 @@ describe("back gesture layers", () => {
 		const screen = register({ layer: "screen" });
 		const stack = register({ layer: "stack" });
 
-		expect(topBackGestureHandler()).toBe(screen);
+		expect(topBackGestureLayer()).toBe("screen");
 		expect(runBackGestureHandlers()).toBe(true);
 		expect(screen).toHaveBeenCalledOnce();
 		expect(stack).not.toHaveBeenCalled();
@@ -54,9 +53,9 @@ describe("back gesture layers", () => {
 		const guard = register({ layer: "guard" });
 		const screen = register({ layer: "screen" });
 
-		expect(topBackGestureHandler()).toBe(screen);
+		expect(topBackGestureLayer()).toBe("screen");
 		backGestureEventHandlers.delete(screen);
-		expect(topBackGestureHandler()).toBe(guard);
+		expect(topBackGestureLayer()).toBe("guard");
 		expect(runBackGestureHandlers()).toBe(true);
 		expect(guard).toHaveBeenCalledOnce();
 		expect(stack).not.toHaveBeenCalled();
@@ -66,7 +65,6 @@ describe("back gesture layers", () => {
 		const older = register({ layer: "overlay" });
 		const newer = register({ layer: "overlay" });
 
-		expect(topBackGestureHandler()).toBe(newer);
 		expect(runBackGestureHandlers()).toBe(true);
 		expect(newer).toHaveBeenCalledOnce();
 		expect(older).not.toHaveBeenCalled();
@@ -93,29 +91,23 @@ describe("back gesture layers", () => {
 		const olderScreen = register({ layer: "screen" });
 		const overlay = register({ layer: "overlay" });
 		const newerScreen = register({ layer: "screen" });
-		expect(topBackGestureHandler()).toBe(overlay);
+		expect(topBackGestureLayer()).toBe("overlay");
 
 		backGestureEventHandlers.delete(overlay);
-		expect(topBackGestureHandler()).toBe(newerScreen);
+		expect(runBackGestureHandlers()).toBe(true);
+		expect(newerScreen).toHaveBeenCalledOnce();
+		expect(olderScreen).not.toHaveBeenCalled();
 
 		backGestureEventHandlers.delete(newerScreen);
-		expect(topBackGestureHandler()).toBe(olderScreen);
+		expect(runBackGestureHandlers()).toBe(true);
+		expect(olderScreen).toHaveBeenCalledOnce();
+		expect(stack).not.toHaveBeenCalled();
 
 		backGestureEventHandlers.delete(olderScreen);
-		expect(topBackGestureHandler()).toBe(stack);
+		expect(topBackGestureLayer()).toBe("stack");
 
 		backGestureEventHandlers.delete(stack);
-		expect(topBackGestureHandler()).toBeUndefined();
-	});
-
-	it("skips the layers a caller passes over", () => {
-		const stack = register({ layer: "stack" });
-		register({ layer: "screen" });
-
-		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(stack);
-
-		const overlay = register({ layer: "overlay" });
-		expect(topBackGestureHandler({ skipping: ["screen"] })).toBe(overlay);
+		expect(topBackGestureLayer()).toBeUndefined();
 	});
 
 	it("reports the layer of the top handler past the layers a caller passes over", () => {
@@ -137,20 +129,20 @@ describe("back gesture layers", () => {
 		expect(topBackGestureLayer({ skipping: ["screen"] })).toBe("overlay");
 	});
 
-	it("tracks the top handler reactively", () => {
+	it("tracks the top layer reactively", () => {
 		const tops: unknown[] = [];
 		const stop = $effect.root(() => {
 			$effect(() => {
-				tops.push(topBackGestureHandler());
+				tops.push(topBackGestureLayer());
 			});
 		});
 		flushSync();
-		const stack = register({ layer: "stack" });
+		register({ layer: "stack" });
 		flushSync();
-		const overlay = register({ layer: "overlay" });
+		register({ layer: "overlay" });
 		flushSync();
 
-		expect(tops).toEqual([undefined, stack, overlay]);
+		expect(tops).toEqual([undefined, "stack", "overlay"]);
 		stop();
 	});
 

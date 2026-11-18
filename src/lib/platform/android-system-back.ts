@@ -27,12 +27,6 @@ export const androidSystemBack: SystemBackAdapter = {
 	expose: ({ start, cancel }) => {
 		window.__AndroidOnBackGestureStart = start;
 		window.__AndroidOnBackGestureCancel = cancel;
-		return () => {
-			if (window.__AndroidOnBackGestureStart === start)
-				delete window.__AndroidOnBackGestureStart;
-			if (window.__AndroidOnBackGestureCancel === cancel)
-				delete window.__AndroidOnBackGestureCancel;
-		};
 	},
 	arm: () => {},
 };
