@@ -38,10 +38,12 @@
 		pinPos = $bindable(),
 		locked = false,
 		initialView,
+		describedBy,
 	}: {
 		pinPos?: { lat: number; lon: number };
 		locked?: boolean;
 		initialView?: { lat: number; lon: number; zoom: number };
+		describedBy?: string;
 	} = $props();
 
 	const initial = untrack(() => initialView);
@@ -182,6 +184,13 @@
 
 	$effect(() => {
 		const container = map?.getContainer();
+		if (!container || describedBy === undefined) return;
+		container.setAttribute("aria-describedby", describedBy);
+		return () => container.removeAttribute("aria-describedby");
+	});
+
+	$effect(() => {
+		const container = map?.getContainer();
 		if (!container) return;
 		const openExternally = (event: MouseEvent) => {
 			if (event.target instanceof HTMLElement) {
@@ -229,7 +238,7 @@
 </script>
 
 <div
-	class="relative isolate h-full w-full rounded-[inherit] [--focus-ring:color-mix(in_oklab,var(--background)_50%,transparent)] [&_.leaflet-container]:rounded-[inherit] [&_.leaflet-container]:-outline-offset-2! [&_.leaflet-control-attribution_a]:-outline-offset-2"
+	class="relative isolate h-full w-full map-focus-ring rounded-[inherit] [&_.leaflet-container]:rounded-[inherit]"
 >
 	<Map
 		options={{

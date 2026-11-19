@@ -499,6 +499,16 @@ textarea,
 		pointer-events: none;
 	}
 }
+@utility map-focus-ring {
+	--focus-ring: color-mix(in oklab, var(--background) 50%, transparent);
+	& .leaflet-container {
+		outline-offset: -2px !important;
+	}
+	& .leaflet-control-attribution a {
+		outline-offset: -2px;
+		scroll-margin: 0;
+	}
+}
 @utility max-h-photo {
 	max-height: min(70vh, 500px);
 }

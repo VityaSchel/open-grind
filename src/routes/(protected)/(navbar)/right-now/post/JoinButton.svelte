@@ -11,11 +11,13 @@
 		compact = false,
 		onjoin,
 		onopen,
+		ref = $bindable(null),
 	}: {
 		ownPost: RightNowPostState;
 		compact?: boolean;
 		onjoin: () => void;
 		onopen: () => void;
+		ref?: HTMLElement | null;
 	} = $props();
 
 	const RING_RADIUS = 9;
@@ -76,6 +78,7 @@
 	>
 		{#if running}
 			<Button
+				bind:ref
 				variant="outline"
 				size="lg"
 				aria-label={runningLabel}
@@ -127,6 +130,7 @@
 			</Button>
 		{:else}
 			<Button
+				bind:ref
 				size="lg"
 				class="max-w-full shadow-sm"
 				disabled={exhausted || ownPost.joining}

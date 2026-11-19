@@ -335,6 +335,7 @@ for (const viewport of [PHONE, DESKTOP]) {
 			const pill = page.getByRole("button", {
 				name: /^Your Right Now post, .+ left$/,
 			});
+			await expect(pill).toBeFocused();
 			await openFromKeyboard({ trigger: pill, overlay: sheet });
 			await expect(sheet).toBeFocused();
 			await expect(

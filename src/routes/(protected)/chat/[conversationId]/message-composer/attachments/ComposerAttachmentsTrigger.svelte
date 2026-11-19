@@ -17,12 +17,15 @@
 
 <div
 	data-slot="composer-attachments-trigger"
-	class={["absolute right-8.5 bottom-0", { "pointer-events-none": disabled }]}
+	class={[
+		"absolute inset-e-8.5 bottom-0",
+		{ "pointer-events-none": disabled },
+	]}
 	transition:scale={{ duration: 400, easing: expoOut, start: 0 }}
 >
 	<ComposerButton
 		bind:ref
-		class="focus-ring-icon static ps-(--icon-start) pe-1.5 [--icon-size:--spacing(5.5)] [--icon-start:--spacing(2)]"
+		class="focus-ring-icon relative ps-(--icon-start) pe-1.5 [--icon-size:--spacing(5.5)] [--icon-start:--spacing(2)]"
 		aria-label={t("chat.composer.attachments.a11y.add")}
 		onclick={() => {
 			onClick?.();

@@ -53,7 +53,7 @@
 
 <div
 	data-slot="post-location-map"
-	class="leaflet-container relative isolate h-40 overflow-hidden rounded-sm md:h-60"
+	class="leaflet-container relative isolate h-40 map-focus-ring overflow-clip! rounded-sm md:h-60"
 >
 	<div
 		class="absolute -inset-1/2"

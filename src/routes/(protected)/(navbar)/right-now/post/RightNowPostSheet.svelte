@@ -28,7 +28,12 @@
 	let {
 		open = $bindable(),
 		ownPost,
-	}: { open: boolean; ownPost: RightNowPostState } = $props();
+		onCloseAutoFocus,
+	}: {
+		open: boolean;
+		ownPost: RightNowPostState;
+		onCloseAutoFocus?: (event: Event) => void;
+	} = $props();
 
 	const EMPTY_FORM: PostForm = {
 		text: "",
@@ -119,6 +124,7 @@
 			}}
 			dialogProps={{ showCloseButton: true }}
 			data-autofocus
+			{onCloseAutoFocus}
 		>
 			<ResponsiveDialog.Header
 				class="flex-row items-center justify-between gap-3 text-start"
@@ -162,6 +168,7 @@
 			<fieldset disabled={busy} class="contents">
 				<ResponsiveDialog.Body
 					class="flex flex-col gap-4"
+					dialogClass="-mx-1 px-1"
 					drawerClass="px-4 pb-2"
 				>
 					{#if ownPost.rejected.text || ownPost.rejected.photo}
