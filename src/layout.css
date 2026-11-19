@@ -226,7 +226,11 @@ body {
 }
 
 :root[data-keyboard-shrinks-page]
-	:is(.scroll-pb-nav-clear, .scroll-pb-nav-clear-above-safe-area) {
+	:is(
+		.scroll-pb-nav-clear,
+		.scroll-pb-nav-clear-above-safe-area,
+		.scroll-pb-profile-bar-clear
+	) {
 	scroll-padding-bottom: 0;
 }
 
@@ -432,6 +436,16 @@ textarea,
 @utility scroll-pb-nav-clear-above-safe-area {
 	scroll-padding-bottom: calc(
 		0.5rem + var(--nav-height) + var(--bar-content-gap)
+	);
+}
+@utility scroll-pb-save-bar-clear {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--content-pb) + var(--bar-content-gap) + --spacing(15)
+	);
+}
+@utility scroll-pb-profile-bar-clear {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--nav-height) + var(--bar-content-gap) + --spacing(16)
 	);
 }
 @utility pt-header-clear-* {

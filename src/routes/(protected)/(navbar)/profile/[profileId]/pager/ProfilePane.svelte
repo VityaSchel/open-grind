@@ -53,6 +53,7 @@
 	const scrollerHooks = $derived(
 		active ? { "data-slot": "profile-scroller" } : { tabindex: -1 },
 	);
+	const showsBottomBar = $derived(profile !== null && !ourProfile);
 	const showsErrorScreen = $derived(
 		error !== null && (row === null || isUnviewableProfileError(error)),
 	);
@@ -129,7 +130,11 @@
 			{...scrollerHooks}
 			class={[
 				"@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto",
-				{ "[scrollbar-gutter:stable]": holdsStill },
+				{
+					"[scrollbar-gutter:stable]": holdsStill,
+					"scroll-pb-nav-clear-above-safe-area": !showsBottomBar,
+					"scroll-pb-profile-bar-clear": showsBottomBar,
+				},
 			]}
 			{@attach active && scrollsToTopOnStatusBarTap}
 		>
