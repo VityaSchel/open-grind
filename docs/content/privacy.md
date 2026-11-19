@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-11-13
+Effective date: 2026-11-19
 
 Open Grind Governance, an unregistered project represented by Viktor Shchelochkov, makes the Open Grind app and runs the servers below. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
@@ -31,11 +31,14 @@ To stop sending data, turn the feature off or sign out. To delete data a service
 
 On iOS, a reinstall erases your session, and app data stays out of backups.
 
+The app's App Store privacy labels and privacy manifest list 12 data types as linked to you and used for app functionality, not for tracking. They describe what the app sends to Grindr, and to GIPHY for GIFs, to work. We receive none of it.
+
 ## Open Grind servers and websites
 
 Your IP address is only used to answer your requests, and it's not stored.
 
 - **opengrind.org**: this website.
+- **app.opengrind.org**: the file that lets iOS AutoFill offer passwords saved for this domain in the app. Apple's CDN fetches it, not the app.
 - **git.opengrind.org**: the app's update checks and add-on downloads.
   - _Only sign-up and sign-in pages_: uses **hCaptcha by Intuition Machines (US, certified under the EU-US Data Privacy Framework)**, which gets your IP address and browser data to check that you're human. [Policy](https://www.hcaptcha.com/privacy)
   - _Only if you create an account_: stores your username, email address and what you post until you delete the account; issues and comments you posted stay under a deleted-user placeholder unless you ask us to remove them.
