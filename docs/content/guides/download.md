@@ -11,7 +11,7 @@ titleTemplate: ':title — free & open source Grindr client'
 
 # Download Open Grind
 
-Never download Open Grind from unofficial sources. The only official sources of Open Grind are https://git.opengrind.org/open-grind/open-grind/releases, [Google Play](https://play.google.com/store/apps/details?id=org.opengrind) and [F-Droid](https://f-droid.org/packages/org.opengrind/). All releases are signed and reproducible.
+Never download Open Grind from unofficial sources. The only official sources of Open Grind are https://git.opengrind.org/open-grind/open-grind/releases, [Google Play](https://play.google.com/store/apps/details?id=org.opengrind), [F-Droid](https://f-droid.org/packages/org.opengrind/) and the [TestFlight beta](#testflight). All releases are signed and reproducible.
 
 > [!Warning] 🚧&nbsp;&nbsp;Open Grind is in active development.&nbsp;&nbsp;🚧
 > [Contribute to the project](https://git.opengrind.org/open-grind/open-grind/) or [join the discussion](https://matrix.to/#/#opengrind:opengrind.org) to help us prioritize features and improvements.
@@ -170,5 +170,31 @@ Always tap with the URL above. To uninstall, run `brew uninstall --cask open-gri
 
 ## iOS
 
-**iOS is currently not supported.** Open Grind iOS builds are likely to be released in Fall 2026 with the upcoming publishing in the third party app stores.
+Requires an iPhone with iOS 16.4 or later. There is no iPad build. Install the beta from TestFlight, or sideload the IPA with your own Apple ID.
+
+- **Notifications** aren't supported on iOS yet.
+- **To install updates**, use TestFlight or sideload the new IPA. Open Grind doesn't update itself on iOS.
+
+### TestFlight
+
+<div class="vpbuttons-row">
+    <VPButton href="https://testflight.apple.com/join/TESTFLIGHT-PUBLIC-LINK-PLACEHOLDER" size="medium">Join the beta on TestFlight</VPButton>
+</div>
+
+Install Apple's TestFlight app from the App Store, then open the link above on your iPhone. Apple reviews each build before it reaches TestFlight.
+
+- **Each build expires** 90 days after it's uploaded. Install a newer build from TestFlight before then.
+
+### Sideload the IPA
+
+<div class="vpbuttons-row">
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-rc.1.1/open-grind-v0.1.0-rc.1.1-ios.ipa" size="medium">Download for iPhone (ipa)</VPButton>
+</div>
+
+The IPA isn't signed by Apple, so iOS doesn't install it as is. Install it with [AltStore Classic](https://altstore.io), [SideStore](https://sidestore.io) or [Sideloadly](https://sideloadly.io), which sign it with your own Apple ID.
+
+- **With a free Apple ID**, refresh Open Grind in AltStore, SideStore or Sideloadly every 7 days, or it stops opening. With a paid Apple Developer account, it lasts a year.
+- **To verify the download**, follow [Reproducibility → iOS](https://git.opengrind.org/open-grind/open-grind/src/branch/main/REPRODUCIBILITY.md#ios).
+
+AltStore PAL support is planned.
 

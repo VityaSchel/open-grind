@@ -12,6 +12,8 @@ Starting with v0.1.0-beta.2 it's possible to authenticate if your account in Gri
 
 Just download the app and select “Sign in with Google” on the sign-in screen.
 
+On iPhone, Google's sign-in page opens in a sheet. To close it, tap “Cancel” or swipe it down.
+
 ## Android
 
 Due to security checks by Google, you must [install the Open Grind Google OAuth app (recommended)](#open-grind-google-oauth-app-recommended) or [paste the sign-in token manually](#manually-paste-google-oauth-token).

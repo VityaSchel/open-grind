@@ -58,3 +58,7 @@ Open Grind shows notifications through your desktop's notification service. GNOM
 Notifications only arrive when Open Grind is running.
 
 To change how notifications look or sound, use your desktop's notification settings.
+
+## iOS
+
+Notifications aren't supported on iOS yet.

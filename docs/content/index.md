@@ -18,7 +18,7 @@ hero:
         - { label: Android, icon: '<span class="vp-icon i-android"></span>' }
         - { label: Windows, icon: '<span class="vp-icon i-windows"></span>' }
         - { label: Linux, icon: '<span class="vp-icon i-linux"></span>' }
-        - { label: macOS, icon: '<span class="vp-icon i-apple"></span>' }
+        - { label: 'macOS, iOS', icon: '<span class="vp-icon i-apple"></span>' }
     - theme: alt
       text: Join the Matrix chat
       icon: '<span class="vp-icon i-chat"></span>'
@@ -47,7 +47,7 @@ features:
     link: /guides/features/no-ads
   - title: All platforms
     icon: '<span class="vp-icon i-platforms"></span>'
-    details: Download for free on Android, Windows, Linux, macOS, from Google Play, F-Droid, apt or directly
+    details: Download for free on Android, iPhone, Windows, Linux, macOS, from Google Play, F-Droid, TestFlight, apt or directly
     link: /guides/download
   - title: Privacy built-in
     icon: '<span class="vp-icon i-privacy"></span>'
