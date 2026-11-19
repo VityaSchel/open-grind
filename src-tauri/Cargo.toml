@@ -25,6 +25,7 @@ path = "../e2e-live/counterpart/main.rs"
 keychain = ["dep:apple-native-keyring-store", "dep:security-framework"]
 private-api = []
 devtools = ["dep:tauri-plugin-devtools"]
+demo = []
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
