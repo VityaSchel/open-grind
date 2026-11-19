@@ -67,8 +67,9 @@ export function measureGridWindow(page: Page) {
 					gridTop + (ordered.at(-1)! + 1) * stride >= view.bottom,
 				rowsAbove: grid.hasAttribute("data-rows-above"),
 				rowsBelow: grid.hasAttribute("data-rows-below"),
-				topLeftRadius: getComputedStyle(grid.firstElementChild!)
-					.borderTopLeftRadius,
+				topLeftRadius: getComputedStyle(
+					grid.querySelector(cellSelector)!,
+				).borderTopLeftRadius,
 				radiusBottom: style
 					.getPropertyValue("--grid-radius-bottom")
 					.trim(),

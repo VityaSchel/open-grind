@@ -30,7 +30,7 @@ test("hidden viewers stay unnamed while named-less viewers do not", async ({
 	await page.locator("nav a").first().waitFor({ timeout: 180_000 });
 
 	const previews = page
-		.locator(".photo-grid > *")
+		.locator('.photo-grid [role="gridcell"]')
 		.filter({ hasText: "Secret admirer" });
 	await expect(previews.first()).toBeVisible({ timeout: 60_000 });
 	await expect(previews.locator('[data-slot="badge"]')).toHaveCount(0);

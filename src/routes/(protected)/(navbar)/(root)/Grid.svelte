@@ -1,3 +1,7 @@
+<script module lang="ts">
+	let lastColumns: number | null = null;
+</script>
+
 <script lang="ts">
 	import { page } from "$app/state";
 
@@ -31,6 +35,7 @@
 	let wrapper: HTMLElement | null = null;
 
 	const empty = $derived(gridState.profiles.length === 0);
+	const placeholding = $derived(empty && gridState.loading);
 	const profileIds = $derived(gridState.profiles.map(({ id }) => id));
 	const pendingSkeletons = $derived(
 		gridState.paging.running ? PAGE_SKELETONS : 0,
@@ -49,6 +54,45 @@
 				Math.max(view.startIndex, gridState.profiles.length),
 		),
 	);
+	let columns = $state(lastColumns);
+	const cells = $derived([
+		...visibleProfiles.map((profile) => ({
+			key: `profile-${profile.id}`,
+			profile,
+		})),
+		...Array.from({ length: visibleSkeletons }, (_, index) => ({
+			key: `pending-${index}`,
+			profile: null,
+		})),
+	]);
+	const rows = $derived.by(() => {
+		if (columns === null) return [];
+		const perRow = columns;
+		const firstRow = Math.floor(view.startIndex / perRow);
+		return Array.from(
+			{ length: Math.ceil(cells.length / perRow) },
+			(_, at) => {
+				const rowCells = cells.slice(at * perRow, (at + 1) * perRow);
+				return {
+					index: firstRow + at,
+					cells: rowCells,
+					hasProfiles: rowCells.some(
+						({ profile }) => profile !== null,
+					),
+				};
+			},
+		);
+	});
+	const rowCount = $derived.by(() => {
+		if (
+			gridState.paging.running ||
+			(gridState.nextPage !== 0 && gridState.nextPage !== null)
+		)
+			return -1;
+		return columns === null
+			? undefined
+			: Math.ceil(gridState.profiles.length / columns);
+	});
 
 	function sitsInsideBand(key: RovingKey): boolean {
 		const index = profileIds.findIndex((profileId) => profileId === key);
@@ -100,13 +144,26 @@
 	});
 
 	export function focusFirstCard(): void {
-		const first = profileIds[0];
-		if (first !== undefined) void roving.focus({ key: first });
+		void roving.focusFirst();
 	}
 
 	$effect(() => {
 		if (roving.focusWithin && roving.activeKey !== null)
 			gridState.keyboardStop = roving.activeKey;
+	});
+
+	$effect(() => {
+		const grid = gridElement;
+		if (grid === null) return;
+		const measure = () => {
+			const measured = Math.max(1, gridColumns(grid));
+			lastColumns = measured;
+			columns = measured;
+		};
+		measure();
+		const resize = new ResizeObserver(measure);
+		resize.observe(grid);
+		return () => resize.disconnect();
 	});
 
 	$effect.pre(() => {
@@ -135,52 +192,75 @@
 		<div
 			bind:this={gridElement}
 			data-slot="grid-cells"
+			role={placeholding ? undefined : "grid"}
+			aria-label={placeholding
+				? undefined
+				: t("shell.navBar.tabs.browse")}
+			aria-rowcount={placeholding ? undefined : rowCount}
 			class="photo-grid"
 			style:padding-top="{view.paddingTopPx}px"
 			style:padding-bottom="{view.paddingBottomPx}px"
 			data-rows-above={view.hasRowsAbove || undefined}
 			data-rows-below={view.hasRowsBelow || undefined}
 		>
-			{#if empty && gridState.loading}
+			{#if placeholding}
 				{#each Array.from({ length: PAGE_SKELETONS })}
 					<GridCellSkeleton />
 				{/each}
 			{:else}
-				{#each visibleProfiles as item (item.id)}
-					{@const profileId = item.id}
-					{#if item.type === "rendered"}
-						<GridProfileMiniCard
-							{@attach roving.item(profileId)}
-							id={item.id}
-							displayName={item.displayName}
-							distance={item.distance}
-							unread={item.unread}
-							onlineUntil={item.onlineUntil}
-							isFavorite={item.isFavorite}
-							isVisiting={item.isVisiting}
-							hadRecentChat={item.hasChattedInLast24Hrs}
-							rightNow={item.rightNow}
-							medias={item.profilePhotosHashes?.map(
-								(mediaHash) => ({ mediaHash }),
-							) ?? []}
-						/>
-					{:else}
-						<GridCellSkeleton
-							{@attach roving.item(profileId)}
-							role="link"
-							aria-disabled="true"
-							aria-busy="true"
-							aria-label={t("browse.grid.a11y.loadingProfile")}
-							onVisible={() => {
-								gridState
-									.resolveProfile(item.id)
-									.catch((error) => console.error(error));
-							}}
-						/>
-					{/if}
-				{/each}
-				{#each Array.from({ length: visibleSkeletons })}
-					<GridCellSkeleton />
+				{#each rows as row (row.index)}
+					<div
+						role={row.hasProfiles ? "row" : undefined}
+						aria-rowindex={row.hasProfiles
+							? row.index + 1
+							: undefined}
+						class="row contents"
+					>
+						{#each row.cells as cell (cell.key)}
+							{@const item = cell.profile}
+							<div
+								role={item === null ? undefined : "gridcell"}
+								class="cell contents"
+							>
+								{#if item === null}
+									<GridCellSkeleton />
+								{:else if item.type === "rendered"}
+									<GridProfileMiniCard
+										{@attach roving.item(item.id)}
+										id={item.id}
+										displayName={item.displayName}
+										distance={item.distance}
+										unread={item.unread}
+										onlineUntil={item.onlineUntil}
+										isFavorite={item.isFavorite}
+										isVisiting={item.isVisiting}
+										hadRecentChat={item.hasChattedInLast24Hrs}
+										rightNow={item.rightNow}
+										medias={item.profilePhotosHashes?.map(
+											(mediaHash) => ({ mediaHash }),
+										) ?? []}
+									/>
+								{:else}
+									<GridCellSkeleton
+										{@attach roving.item(item.id)}
+										role="link"
+										aria-disabled="true"
+										aria-busy="true"
+										aria-label={t(
+											"browse.grid.a11y.loadingProfile",
+										)}
+										onVisible={() => {
+											gridState
+												.resolveProfile(item.id)
+												.catch((error) =>
+													console.error(error),
+												);
+										}}
+									/>
+								{/if}
+							</div>
+						{/each}
+					</div>
 				{/each}
 			{/if}
 		</div>

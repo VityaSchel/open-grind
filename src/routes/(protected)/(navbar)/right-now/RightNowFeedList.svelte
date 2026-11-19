@@ -41,6 +41,10 @@
 
 	let emptyFeed = $state<HTMLElement | null>(null);
 
+	export function focusFirstPost(): void {
+		void posts.focusFirst();
+	}
+
 	function refocusWhenReportedPostLeft(event: Event) {
 		const reported = report.target;
 		const stillListed =

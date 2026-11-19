@@ -270,7 +270,8 @@ textarea,
 	}
 
 	/* Requires an ancestor with @container/photo-grid — columns follow that container's width, not the viewport.
-	   Only cells may be direct children because corner rules apply based on position. */
+	   Only cells may be direct children because corner rules apply based on position, except for
+	   display:contents .row wrappers (holding cells or display:contents .cell wrappers) that carry an ARIA grid. */
 	.photo-grid {
 		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid;
 
@@ -288,6 +289,26 @@ textarea,
 			border-top-left-radius: var(--grid-radius-top);
 		}
 		> :last-child {
+			border-bottom-right-radius: var(--grid-radius-bottom);
+		}
+		> .row > :not(.cell),
+		> .row > .cell > * {
+			@apply focus-ring-overlay focus-visible:relative;
+		}
+		> .row:first-child > :first-child,
+		> .row:first-child > .cell:first-child > * {
+			border-top-left-radius: var(--grid-radius-top);
+		}
+		> .row:first-child > :last-child,
+		> .row:first-child > .cell:last-child > * {
+			border-top-right-radius: var(--grid-radius-top);
+		}
+		> .row:last-child > :first-child,
+		> .row:last-child > .cell:first-child > * {
+			border-bottom-left-radius: var(--grid-radius-bottom);
+		}
+		> .row:last-child > :last-child,
+		> .row:last-child > .cell:last-child > * {
 			border-bottom-right-radius: var(--grid-radius-bottom);
 		}
 	}

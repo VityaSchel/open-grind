@@ -20,7 +20,7 @@ const SCREENS: Screen[] = [
 	{
 		name: "the browse grid",
 		open: openGrid,
-		ready: '[data-slot="grid-cells"] > a',
+		ready: '[data-slot="grid-cells"] a[href^="/profile/"]',
 	},
 	{
 		name: "Right Now",

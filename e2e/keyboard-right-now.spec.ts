@@ -206,7 +206,7 @@ test.describe("the Right Now feed from the keyboard", () => {
 		await expect(refreshButton(page)).toBeFocused();
 	});
 
-	test("Down past the last rendered post loads more posts and moves into them", async ({
+	test("End on the last rendered post brings the next page in, and Down moves into it", async ({
 		page,
 	}) => {
 		const rendered = await feedPosts(page).count();
@@ -217,17 +217,18 @@ test.describe("the Right Now feed from the keyboard", () => {
 			post: rendered - 1,
 			cell: 0,
 		});
-
 		await expect
-			.poll(
-				async () => {
-					await page.keyboard.press("ArrowDown");
-					return (await focusedCell(page))?.post;
-				},
-				{ timeout: RIGHT_NOW_FEED_TIMEOUT },
-			)
-			.toBe(rendered);
-		expect(await feedPosts(page).count()).toBeGreaterThan(rendered);
+			.poll(() => feedPosts(page).count(), {
+				timeout: RIGHT_NOW_FEED_TIMEOUT,
+			})
+			.toBeGreaterThan(rendered);
+
+		await page.keyboard.press("ArrowDown");
+
+		expect(await focusedCell(page)).toMatchObject({
+			post: rendered,
+			cell: 0,
+		});
 	});
 
 	test("Down on the last post of a fully loaded feed passes on to the feed scroller", async ({
@@ -235,11 +236,17 @@ test.describe("the Right Now feed from the keyboard", () => {
 	}) => {
 		await loadEveryPost(page);
 		const lastPost = (await feedPosts(page).count()) - 1;
+		const scroller = page.locator(FEED_SCROLLER);
+		await scroller.evaluate((element) => {
+			element.scrollTop = 0;
+		});
 		await focusByKeyboard({ page, cell: feedStop(page) });
 		await page.keyboard.press("End");
 		const lastCell = await focusedCell(page);
 		expect(lastCell).toMatchObject({ post: lastPost, cell: 0 });
-		const scroller = page.locator(FEED_SCROLLER);
+		await page.evaluate(() =>
+			document.activeElement?.scrollIntoView({ block: "end" }),
+		);
 		const scrollTop = () =>
 			scroller.evaluate((element) => element.scrollTop);
 		const before = await scroller.evaluate((element) => ({
@@ -247,15 +254,26 @@ test.describe("the Right Now feed from the keyboard", () => {
 			room:
 				element.scrollHeight - element.clientHeight - element.scrollTop,
 		}));
+		expect(before.room).toBeGreaterThanOrEqual(1);
 
 		await page.keyboard.press("ArrowDown");
 
-		await expect
-			.poll(scrollTop)
-			.toBeGreaterThanOrEqual(
-				before.top + Math.min(1, Math.floor(before.room)),
-			);
+		await expect.poll(scrollTop).toBeGreaterThan(before.top);
 		expect(await focusedCell(page)).toEqual(lastCell);
+	});
+
+	test("Scroll to top from the keyboard puts focus on the first post", async ({
+		page,
+	}) => {
+		await scrollFeedToBottom(page);
+		const jump = page.getByRole("button", { name: /scroll to top$/i });
+		await jump.focus();
+		await page.keyboard.press("Enter");
+
+		await expect
+			.poll(() => focusedCell(page))
+			.toMatchObject({ post: 0, cell: 0 });
+		await expect(jump).toBeHidden();
 	});
 
 	test("going back from a profile opened with Enter returns focus to that post", async ({

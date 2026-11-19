@@ -5,9 +5,10 @@ import { arrowThrough, focusProblems } from "./support/focus";
 import { refreshButton } from "./support/pull";
 
 const GRID = '[data-slot="grid-cells"]';
-const TAB_STOP = `${GRID} > [tabindex="0"]`;
-const FIRST_CARD = `${GRID} > a[href^="/profile/"]`;
-const PAGING_SKELETON = `${GRID} > div:not([role])`;
+const CELL = `${GRID} > [role="row"] > [role="gridcell"]`;
+const TAB_STOP = `${CELL} > [tabindex="0"]`;
+const FIRST_CARD = `${CELL} > a[href^="/profile/"]`;
+const PAGING_SKELETON = `${GRID} > div > div:not([role]) > div`;
 const WALKED_CARDS = 12;
 const PAGES_TO_LOAD = 3;
 const TAB_LIMIT = 60;
@@ -54,7 +55,13 @@ async function tabRegions(page: Page): Promise<Region[]> {
 function focusedCell(page: Page): Promise<Cell | null> {
 	return page.locator(GRID).evaluate((grid) => {
 		const focused = document.activeElement;
-		if (!focused || focused.parentElement !== grid) return null;
+		const cell = focused?.parentElement;
+		if (
+			!focused ||
+			cell?.getAttribute("role") !== "gridcell" ||
+			cell.parentElement?.parentElement !== grid
+		)
+			return null;
 		const style = getComputedStyle(grid);
 		const tracks = style.gridTemplateColumns.trim().split(/\s+/);
 		const cellPx = Number.parseFloat(tracks[0]!);
@@ -136,8 +143,9 @@ function gridShape(page: Page): Promise<GridShape> {
 	return page
 		.locator(GRID)
 		.evaluate((grid) => ({
-			count: grid.querySelectorAll(':scope > a[href^="/profile/"]')
-				.length,
+			count: grid.querySelectorAll(
+				':scope > [role="row"] > [role="gridcell"] > a[href^="/profile/"]',
+			).length,
 			columns: getComputedStyle(grid)
 				.gridTemplateColumns.trim()
 				.split(/\s+/).length,
@@ -145,6 +153,45 @@ function gridShape(page: Page): Promise<GridShape> {
 				!grid.hasAttribute("data-rows-above") &&
 				!grid.hasAttribute("data-rows-below"),
 		}));
+}
+
+function drawnRows(page: Page) {
+	return page.locator(GRID).evaluate((grid) => {
+		const columns = getComputedStyle(grid)
+			.gridTemplateColumns.trim()
+			.split(/\s+/).length;
+		const rows = [...grid.querySelectorAll(':scope > [role="row"]')];
+		const cardsOf = (row: Element) => [
+			...row.querySelectorAll(':scope > [role="gridcell"] > *'),
+		];
+		const indexes = rows.map((row) =>
+			Number(row.getAttribute("aria-rowindex")),
+		);
+		return {
+			outsideCells: [
+				...grid.querySelectorAll('a[href^="/profile/"]'),
+			].filter(
+				(card) =>
+					card.parentElement?.getAttribute("role") !== "gridcell" ||
+					card.parentElement.parentElement?.getAttribute("role") !==
+						"row",
+			).length,
+			mixedRows: rows.filter(
+				(row) =>
+					new Set(
+						cardsOf(row).map((card) =>
+							Math.round(card.getBoundingClientRect().top),
+						),
+					).size !== 1,
+			).length,
+			shortRowsBeforeLast: rows
+				.slice(0, -1)
+				.filter((row) => cardsOf(row).length !== columns).length,
+			indexGaps: indexes.filter(
+				(index, at) => at > 0 && index !== indexes[at - 1]! + 1,
+			).length,
+		};
+	});
 }
 
 function gridHeight(page: Page): Promise<number> {
@@ -166,7 +213,10 @@ function tabStopIsFirstVisibleCard(page: Page): Promise<boolean> {
 		const top = view.top + Number.parseFloat(style.scrollPaddingTop);
 		const bottom =
 			view.bottom - Number.parseFloat(style.scrollPaddingBottom);
-		const firstVisible = [...grid.children].find((card) => {
+		const cards = grid.querySelectorAll(
+			':scope > [role="row"] > [role="gridcell"] > *',
+		);
+		const firstVisible = [...cards].find((card) => {
 			const box = card.getBoundingClientRect();
 			return box.top >= top - 0.5 && box.bottom <= bottom + 0.5;
 		});
@@ -426,7 +476,7 @@ test.describe("the browse grid from the keyboard", () => {
 
 		await page.goBack();
 		await expect(
-			page.locator(`${GRID} > a[href="${landed}"]`),
+			page.locator(`${CELL} > a[href="${landed}"]`),
 		).toBeFocused();
 		await expect(page.locator(TAB_STOP)).toHaveAttribute("href", landed);
 		expect(await focusedInsideBand(page)).toBe(true);
@@ -444,7 +494,7 @@ test.describe("the browse grid from the keyboard", () => {
 		await expect.poll(() => pathname(page)).toBe(card);
 
 		await page.keyboard.press("Escape");
-		await expect(page.locator(`${GRID} > a[href="${card}"]`)).toBeFocused();
+		await expect(page.locator(`${CELL} > a[href="${card}"]`)).toBeFocused();
 		await expect(page.locator(TAB_STOP)).toHaveAttribute("href", card!);
 	});
 
@@ -516,6 +566,24 @@ test.describe("the browse grid from the keyboard", () => {
 		await page.keyboard.press("Shift+Tab");
 
 		await expect(refreshButton(page)).toBeFocused();
+	});
+
+	test("is a grid named Browse whose rows hold one drawn row of cards each, at any width", async ({
+		page,
+	}) => {
+		const grid = page.getByRole("grid", { name: "Browse" });
+		await expect(grid).toBeVisible();
+		for (const width of [1280, 700]) {
+			await page.setViewportSize({ width, height: 800 });
+			await expect
+				.poll(() => drawnRows(page), { timeout: 10_000 })
+				.toMatchObject({
+					outsideCells: 0,
+					mixedRows: 0,
+					shortRowsBeforeLast: 0,
+					indexGaps: 0,
+				});
+		}
 	});
 
 	test("Scroll to top from the keyboard puts focus on the first card", async ({

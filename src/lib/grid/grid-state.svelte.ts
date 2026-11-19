@@ -210,6 +210,7 @@ class GridState {
 		this.error = null;
 		this.currentQuery = null;
 		this.revealProfileId = null;
+		this.keyboardStop = null;
 		this.#resolvingIds.clear();
 		this.#firstPageIds.clear();
 	}

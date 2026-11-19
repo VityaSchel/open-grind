@@ -349,12 +349,14 @@ describe("reveal on return", () => {
 		expect(gridState.consumeReveal()).toBeNull();
 	});
 
-	it("forgets the revealed profile when the grid is reset", () => {
+	it("forgets the revealed profile and the keyboard stop when the grid is reset", () => {
 		gridState.revealProfileId = 1;
+		gridState.keyboardStop = 1;
 
 		gridState.reset();
 
 		expect(gridState.consumeReveal()).toBeNull();
+		expect(gridState.keyboardStop).toBeNull();
 	});
 });
 

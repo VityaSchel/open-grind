@@ -17,18 +17,22 @@ function renderPreview({
 	maxDisplayCount = 99,
 	isSecretAdmirer = false,
 	lastViewed = null,
+	distance = null,
+	isFavorite = false,
 }: {
 	totalCount?: number;
 	maxDisplayCount?: number;
 	isSecretAdmirer?: boolean;
 	lastViewed?: number | null;
+	distance?: number | null;
+	isFavorite?: boolean;
 } = {}) {
 	return render(ViewedPreview, {
 		props: {
 			preview: {
 				profileImageMediaHash: null,
-				distance: null,
-				isFavorite: false,
+				distance,
+				isFavorite,
 				lastViewed,
 				isSecretAdmirer,
 				viewedCount: { totalCount, maxDisplayCount },
@@ -109,6 +113,34 @@ describe("ViewedPreview", () => {
 
 			expect(screen.getByRole("img", { name: label })).toBeTruthy();
 			expect(screen.getByText("5 mins")).toBeTruthy();
+		},
+	);
+
+	it.each([
+		{
+			distance: 300,
+			isFavorite: false,
+			totalCount: 1,
+			label: "Hidden viewer, 300 m",
+		},
+		{
+			distance: null,
+			isFavorite: true,
+			totalCount: 1,
+			label: "Hidden viewer, Favorite",
+		},
+		{
+			distance: 300,
+			isFavorite: true,
+			totalCount: 3,
+			label: "Hidden viewer, 300 m, Favorite, 3 views",
+		},
+	])(
+		"names the distance and favorite star it shows in the image name $label",
+		({ distance, isFavorite, totalCount, label }) => {
+			renderPreview({ distance, isFavorite, totalCount });
+
+			expect(screen.getByRole("img", { name: label })).toBeTruthy();
 		},
 	);
 
