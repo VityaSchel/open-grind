@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { afterNavigate, goto } from "$app/navigation";
 	import { navigating, page } from "$app/state";
-	import { onDestroy, onMount, untrack } from "svelte";
+	import { onDestroy, onMount, tick, untrack } from "svelte";
+	import { on } from "svelte/events";
 	import { tinykeys } from "tinykeys";
+	import type { Attachment } from "svelte/attachments";
 
+	import { holdScreenLanding } from "#lib/components/navigation/stack/screen-root.ts";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { stackInMotion } from "#lib/platform/system-back-gesture.svelte.ts";
 	import { navigationPending } from "#lib/util/history.ts";
 	import {
 		isPhotoSwipeBusy,
@@ -17,6 +21,7 @@
 		type ProfilePagerEntry,
 		ProfilePagerState,
 	} from "./profile-pager-state.svelte";
+	import { ProfileScrollMemory } from "./profile-scroll-memory";
 	import ProfilePane from "./ProfilePane.svelte";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
@@ -36,7 +41,15 @@
 			}),
 	);
 
+	const scrollMemory = new ProfileScrollMemory();
+	untrack(() =>
+		scrollMemory.enter({ traversal: navigating.type === "popstate" }),
+	);
+	let releaseLanding = holdScreenLanding();
+
+	let pagerNode: HTMLElement | null = null;
 	let pendingPathname: string | null = null;
+	let stackWasMoving = false;
 
 	const snap = new SnapPager({
 		count: () => pager.track.length,
@@ -46,6 +59,7 @@
 			if (
 				position === pager.activePosition ||
 				isPhotoSwipeBusy() ||
+				stackInMotion() ||
 				navigationPending({
 					owns: (pathname) => pathname === pendingPathname,
 				})
@@ -69,11 +83,65 @@
 		const next = entry;
 		untrack(() => {
 			if (!pager.needsReset(next)) return;
-			pager.reset({
-				...next,
-				historyTraversal: navigating.type === "popstate",
-			});
+			const historyTraversal = navigating.type === "popstate";
+			releaseLanding();
+			releaseLanding = holdScreenLanding();
+			scrollMemory.enter({ traversal: historyTraversal });
+			pager.reset({ ...next, historyTraversal });
 		});
+	});
+
+	const activeProfile = $derived(
+		pager.mounted.find(({ position }) => position === pager.activePosition)
+			?.state,
+	);
+
+	$effect(() => {
+		if (!activeProfile || activeProfile.loading) return;
+		const { profileId } = activeProfile;
+		const release = releaseLanding;
+		void tick().then(() => {
+			scrollMemory.restore({
+				profileId,
+				scroller:
+					pagerNode?.querySelector<HTMLElement>(
+						'[data-slot="profile-scroller"]',
+					) ?? null,
+			});
+			release();
+		});
+	});
+
+	const rememberScroll: Attachment<HTMLElement> = (node) => {
+		pagerNode = node;
+		const stopListening = on(
+			node,
+			"scroll",
+			({ target }) => {
+				const profileId = pager.activeId;
+				if (
+					profileId === undefined ||
+					!(target instanceof HTMLElement) ||
+					target.dataset.slot !== "profile-scroller"
+				)
+					return;
+				scrollMemory.remember({
+					profileId,
+					scrollTop: target.scrollTop,
+				});
+			},
+			{ capture: true, passive: true },
+		);
+		return () => {
+			stopListening();
+			if (pagerNode === node) pagerNode = null;
+		};
+	};
+
+	$effect(() => {
+		const moving = stackInMotion();
+		if (stackWasMoving && !moving) untrack(() => snap.settleNow());
+		stackWasMoving = moving;
 	});
 
 	$effect(() => {
@@ -115,7 +183,10 @@
 
 	$effect(() => onPhotoSwipeIdle(() => snap.settleNow()));
 
-	onDestroy(() => pager.destroy());
+	onDestroy(() => {
+		releaseLanding();
+		pager.destroy();
+	});
 </script>
 
 <div
@@ -123,6 +194,7 @@
 	tabindex="-1"
 	class="relative -mb-(--nav-height) no-scrollbar h-screen-safe w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain"
 	{@attach snap.attach}
+	{@attach rememberScroll}
 >
 	{#each pager.track as profileId, position (profileId)}
 		<div

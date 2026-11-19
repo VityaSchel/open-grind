@@ -1,8 +1,16 @@
 import { cleanup, render } from "@testing-library/svelte";
+import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "$app/navigation";
 
+import {
+	closeScreenLanding,
+	openScreenLanding,
+} from "#lib/components/navigation/stack/screen-root.ts";
+import { makeStack } from "#lib/platform/system-back-gesture-test-helpers.svelte.ts";
+import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.svelte.ts";
 import { runningOn } from "#lib/test/platform.ts";
+import { HISTORY_METADATA_KEY } from "#lib/util/history-index.ts";
 import { fakePagerLayout, WIDTH } from "#lib/util/snap-pager-test-helpers.ts";
 import type { Profile } from "#lib/model/users/profiles.ts";
 import ProfilePage from "./+page.svelte";
@@ -104,16 +112,24 @@ async function openProfile({
 	gridIds,
 	profileId,
 	origin,
+	historyIndex,
 }: {
 	gridIds: number[];
 	profileId: number;
 	origin?: "browse";
+	historyIndex?: number;
 }) {
 	grid.source = gridSource({ ids: gridIds });
 	page.params.profileId = String(profileId);
 	page.state = origin ? { profileOrigin: origin } : {};
 	page.url = new URL(`https://app.test/profile/${profileId}`);
-	window.history.replaceState(null, "", `/profile/${profileId}`);
+	window.history.replaceState(
+		historyIndex === undefined
+			? null
+			: { [HISTORY_METADATA_KEY]: { historyIndex } },
+		"",
+		`/profile/${profileId}`,
+	);
 
 	const layout = fakePagerLayout({
 		mount: () => {
@@ -454,5 +470,97 @@ describe("the profile page entered from anywhere else", () => {
 		expect(pager.panes().map(({ name }) => name)).toEqual([`Loaded ${B}`]);
 		expect(fetchedIds()).toEqual([B]);
 		expect(viewedIds()).toEqual([B]);
+	});
+});
+
+describe("the profile page under a back swipe", () => {
+	const scroller = (host: HTMLElement) =>
+		host.querySelector<HTMLElement>('[data-slot="profile-scroller"]')!;
+
+	async function landOn(options: Parameters<typeof openProfile>[0]) {
+		const landing = openScreenLanding();
+		const opened = await openProfile(options);
+		closeScreenLanding(landing);
+		await landing.released();
+		return opened;
+	}
+
+	it("commits no rest while a back swipe moves the screen, and the rest it held back once the swipe lets go", async () => {
+		const swipe = makeStack({ offers: false });
+		const detach = attachSystemBackGesture(swipe.stack);
+		const pager = await openProfile({
+			gridIds: [A, B, C],
+			profileId: B,
+			origin: "browse",
+		});
+		swipe.slide(true);
+		flushSync();
+
+		await pager.scroll(2 * WIDTH);
+		expect(goto).not.toHaveBeenCalled();
+
+		swipe.slide(false);
+		flushSync();
+		expect(goto).toHaveBeenCalledExactlyOnceWith(`/profile/${C}`, COMMIT);
+		detach();
+	});
+
+	it("scrolls a profile a traversal comes back to where the reader left it", async () => {
+		const left = await openProfile({
+			gridIds: [A, B],
+			profileId: B,
+			historyIndex: 4,
+		});
+		scroller(left.host).scrollTop = 640;
+		scroller(left.host).dispatchEvent(new Event("scroll"));
+		cleanup();
+
+		navigating.type = "popstate";
+		const back = await landOn({
+			gridIds: [A, B],
+			profileId: B,
+			historyIndex: 4,
+		});
+
+		expect(scroller(back.host).scrollTop).toBe(640);
+	});
+
+	it("opens a profile pushed onto that entry again at the top", async () => {
+		const left = await openProfile({
+			gridIds: [A, B],
+			profileId: B,
+			historyIndex: 4,
+		});
+		scroller(left.host).scrollTop = 640;
+		scroller(left.host).dispatchEvent(new Event("scroll"));
+		cleanup();
+
+		const again = await landOn({
+			gridIds: [A, B],
+			profileId: B,
+			historyIndex: 4,
+		});
+
+		expect(scroller(again.host).scrollTop).toBe(0);
+	});
+
+	it("holds the landing picture until the profile it opens on has its data", async () => {
+		let loaded!: (profile: Profile) => void;
+		getProfileMock.mockReturnValue(
+			new Promise((resolve) => {
+				loaded = resolve;
+			}),
+		);
+		const landing = openScreenLanding();
+		await openProfile({ gridIds: [A, B], profileId: B });
+		closeScreenLanding(landing);
+		const released = vi.fn();
+		void landing.released().then(released);
+
+		await flush();
+		expect(released).not.toHaveBeenCalled();
+
+		loaded(fullProfile({ profileId: B }));
+		await vi.waitFor(() => expect(released).toHaveBeenCalledOnce());
 	});
 });

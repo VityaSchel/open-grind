@@ -4,6 +4,7 @@
 	import DotsNineIcon from "phosphor-svelte/lib/DotsNineIcon";
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 	import { untrack } from "svelte";
+	import type { HTMLAttributes } from "svelte/elements";
 
 	import { getProfile, onProfileEdit } from "#lib/api/users/profiles.ts";
 	import { getOrCreateConversationsState } from "#lib/chat/conversations-context.svelte.ts";
@@ -21,7 +22,11 @@
 	import { isPlainClick } from "#lib/util/plain-click.ts";
 	import { bottomChrome } from "#lib/util/screen-chrome.svelte.ts";
 
-	let { ourProfileId }: { ourProfileId: number } = $props();
+	let {
+		ourProfileId,
+		...attachments
+	}: { ourProfileId: number } & Pick<HTMLAttributes<HTMLElement>, symbol> =
+		$props();
 
 	let myProfilePhotos = $state(
 		untrack(() =>
@@ -77,6 +82,8 @@
 {/snippet}
 
 <ProgressiveBlur
+	{...attachments}
+	data-slot="navbar"
 	direction="bottomToTop"
 	tag="nav"
 	aria-label={t("shell.navBar.a11y.navigation")}

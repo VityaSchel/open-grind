@@ -4,6 +4,7 @@ type PaneElements = {
 	front: HTMLElement | null;
 	back: HTMLElement | null;
 	dim: HTMLElement | null;
+	rider?: HTMLElement | null;
 };
 
 export type FrameAnimation = {
@@ -35,17 +36,18 @@ export function paneSurface({
 		paneFrame({ progress, parallax: parallax(), motion });
 
 	const apply = (progress: number) => {
-		const { front, back, dim } = panes();
+		const { front, back, dim, rider } = panes();
 		const frame = frameAt(progress);
 		if (front) Object.assign(front.style, frame.front);
 		if (back) Object.assign(back.style, frame.back);
 		if (dim) dim.style.opacity = String(frame.dim);
+		if (rider) rider.style.transform = frame.front.transform;
 	};
 
 	return {
 		apply,
 		animate: ({ from, to, duration, easing }) => {
-			const { front, back, dim } = panes();
+			const { front, back, dim, rider } = panes();
 			if (duration <= 0) {
 				apply(to);
 				return {
@@ -73,6 +75,13 @@ export function paneSurface({
 				),
 				dim?.animate(
 					[{ opacity: start.dim }, { opacity: end.dim }],
+					timing,
+				),
+				rider?.animate(
+					[
+						{ transform: start.front.transform },
+						{ transform: end.front.transform },
+					],
 					timing,
 				),
 			].filter((animation) => animation !== undefined);
@@ -112,6 +121,38 @@ export function paneSurface({
 					if (effect) effect.target = null;
 					return reached;
 				},
+			};
+		},
+	};
+}
+
+export function frontClearedAtRest({
+	surface,
+	front,
+	rider = () => null,
+}: {
+	surface: StackSurface;
+	front: () => HTMLElement | null;
+	rider?: () => HTMLElement | null;
+}): StackSurface {
+	const clear = () => {
+		front()?.style.removeProperty("transform");
+		rider()?.style.removeProperty("transform");
+	};
+	return {
+		apply: (progress) => {
+			surface.apply(progress);
+			if (progress === 0) clear();
+		},
+		animate: (options) => {
+			const animation = surface.animate(options);
+			if (options.to !== 0) return animation;
+			return {
+				...animation,
+				completed: animation.completed.then((completed) => {
+					if (completed) clear();
+					return completed;
+				}),
 			};
 		},
 	};

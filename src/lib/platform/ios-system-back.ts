@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { touchHeld } from "#lib/platform/held-touch.ts";
 import type {
+	SwipeArm,
 	SwipeBackRelease,
 	SystemBackAdapter,
 	SystemBackGesture,
@@ -26,8 +27,8 @@ export class IosSystemBack implements SystemBackAdapter {
 
 	#gesture: SystemBackGesture | null = null;
 	#progress: number | undefined;
-	#armed = false;
-	#sentArmed = false;
+	#arm: SwipeArm = { armed: false, edgeZone: "shared" };
+	#sentArm: SwipeArm = this.#arm;
 	#sending = false;
 	#armOrder = Date.now() * ARM_ORDERS_PER_MS;
 	#touch: ActiveTouch | null = null;
@@ -50,21 +51,16 @@ export class IosSystemBack implements SystemBackAdapter {
 		return this.#progress;
 	}
 
-	expose(gesture: SystemBackGesture): () => void {
+	expose(gesture: SystemBackGesture): void {
 		this.#gesture = gesture;
-		return () => {
-			if (this.#gesture !== gesture) return;
-			this.#gesture = null;
-			this.#push(false);
-		};
 	}
 
-	arm({ gesture, armed }: { gesture: SystemBackGesture; armed: boolean }) {
-		if (gesture === this.#gesture) this.#push(armed);
+	arm({ gesture, ...arm }: SwipeArm & { gesture: SystemBackGesture }) {
+		if (gesture === this.#gesture) this.#push(arm);
 	}
 
-	#push(armed: boolean): void {
-		this.#armed = armed;
+	#push(arm: SwipeArm): void {
+		this.#arm = arm;
 		if (this.#sending) return;
 		this.#sending = true;
 		setTimeout(() => this.#send());
@@ -72,11 +68,13 @@ export class IosSystemBack implements SystemBackAdapter {
 
 	#send(): void {
 		this.#sending = false;
-		const armed = this.#armed;
-		if (armed === this.#sentArmed) return;
-		this.#sentArmed = armed;
+		const { armed, edgeZone } = this.#arm;
+		const sent = this.#sentArm;
+		if (armed === sent.armed && edgeZone === sent.edgeZone) return;
+		this.#sentArm = this.#arm;
 		this.#armOrder += 1;
-		invoke("set_back_swipe_armed", { armed, order: this.#armOrder }).catch(
+		const order = this.#armOrder;
+		invoke("set_back_swipe_armed", { armed, edgeZone, order }).catch(
 			(error: unknown) => {
 				console.error("Failed to arm the back swipe", error);
 			},

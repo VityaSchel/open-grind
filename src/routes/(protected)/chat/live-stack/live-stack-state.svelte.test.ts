@@ -298,6 +298,19 @@ describe("LiveStackState between sheets and out of scope", () => {
 		expect(harness.applied.at(-1)).toBe(0);
 	});
 
+	it("jumps to a conversation opened from another, as from the message popup, and offers no swipe when Back lands on that conversation", async () => {
+		const harness = makeStack({ startAt: FIRST });
+		harness.landOnBase(false);
+
+		await navigate(harness, { from: FIRST, to: SECOND });
+
+		expect(harness.animations).toHaveLength(0);
+		expect(harness.stack.moving).toBe(false);
+		expect(harness.stack.sheetKey).toBe("3:4");
+		expect(harness.stack.offersSwipeBack).toBe(false);
+		expect(harness.stack.beginSwipeBack()).toBe(false);
+	});
+
 	it("leaves scope without animating", async () => {
 		const harness = makeStack({ startAt: FIRST });
 

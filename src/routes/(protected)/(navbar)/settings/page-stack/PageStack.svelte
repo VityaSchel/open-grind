@@ -8,13 +8,13 @@
 		STACK_Z,
 		stackMotion,
 	} from "#lib/components/navigation/stack/motion.ts";
+	import { screenSnapshots } from "#lib/components/navigation/stack/screen-snapshots.svelte.ts";
+	import { trackScrolled } from "#lib/components/navigation/stack/snapshot.ts";
 	import { paneSurface } from "#lib/components/navigation/stack/surface.ts";
-	import { followLocale } from "#lib/i18n/index.ts";
 	import { attachSystemBackGesture } from "#lib/platform/system-back-gesture.svelte.ts";
-	import { earlierPathnames } from "#lib/util/history.ts";
+	import { earlierPathnames, navigationPending } from "#lib/util/history.ts";
 	import { pushedFromChain } from "./hierarchy";
 	import { PageStackState } from "./page-stack-state.svelte";
-	import { trackScrolled } from "./snapshot";
 
 	let {
 		scope,
@@ -45,6 +45,8 @@
 			pathname: location.pathname,
 			earlier: earlierPathnames(),
 		}),
+		snapshots: screenSnapshots,
+		navigationPending: () => navigationPending({ owns: () => false }),
 	});
 
 	const liveZ = $derived(
@@ -63,8 +65,6 @@
 	};
 
 	onNavigate((navigation) => stack.navigate(navigation));
-
-	$effect(() => followLocale(() => stack.forgetSnapshots()));
 
 	$effect(() => attachSystemBackGesture(stack));
 </script>

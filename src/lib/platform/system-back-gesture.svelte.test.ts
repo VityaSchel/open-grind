@@ -21,76 +21,12 @@ import {
 	runBackGestureHandlers,
 } from "#lib/platform/back-gesture-event.svelte.ts";
 import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { makeStack } from "./system-back-gesture-test-helpers.svelte";
 import {
 	attachSystemBackGesture,
 	installSystemBack,
 	stackInMotion,
-	type SwipeBackStack,
-	type SwipeRelease,
 } from "./system-back-gesture.svelte";
-
-function makeStack({ offers = true }: { offers?: boolean } = {}) {
-	let tracking = $state(false);
-	let moving = $state(false);
-	let offersSwipeBack = $state(offers);
-	const calls = { begin: 0, commit: 0, cancel: 0, prepare: 0, undo: 0 };
-	const tracked: number[] = [];
-	const releases: (SwipeRelease | undefined)[] = [];
-
-	const stack: SwipeBackStack = {
-		get tracking() {
-			return tracking;
-		},
-		get moving() {
-			return moving;
-		},
-		get offersSwipeBack() {
-			return offersSwipeBack;
-		},
-		beginSwipeBack: () => {
-			calls.begin += 1;
-			tracking = true;
-			return true;
-		},
-		trackSwipeBack: (progress) => {
-			tracked.push(progress);
-		},
-		commitSwipeBack: (release) => {
-			releases.push(release);
-			calls.commit += 1;
-			tracking = false;
-		},
-		cancelSwipeBack: (release) => {
-			releases.push(release);
-			calls.cancel += 1;
-			tracking = false;
-		},
-		prepareSwipeBack: () => {
-			calls.prepare += 1;
-			return () => {
-				calls.undo += 1;
-			};
-		},
-	};
-
-	const offerSwipeBack = (offered: boolean) => {
-		offersSwipeBack = offered;
-		flushSync();
-	};
-
-	const slide = (sliding: boolean) => {
-		moving = sliding;
-	};
-
-	return { stack, calls, tracked, releases, offerSwipeBack, slide };
-}
-
-function armedPushes() {
-	vi.runOnlyPendingTimers();
-	return invoke.mock.calls
-		.filter(([command]) => command === "set_back_swipe_armed")
-		.map(([, args]) => (args as { armed: boolean }).armed);
-}
 
 beforeEach(() => {
 	runningOn("android");
@@ -111,12 +47,41 @@ afterEach(() => {
 });
 
 describe("attachSystemBackGesture", () => {
+	beforeEach(() => {
+		installSystemBack();
+	});
+
 	it("starts a swipe when nothing else owns the back gesture", () => {
 		const { stack, calls } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
 		expect(calls.begin).toBe(1);
+
+		detach();
+	});
+
+	it("tells native nothing of the edge zone, since Android's own Back gesture owns the edge", () => {
+		vi.useFakeTimers({
+			toFake: [
+				"setTimeout",
+				"clearTimeout",
+				"requestAnimationFrame",
+				"cancelAnimationFrame",
+			],
+		});
+		const { stack, calls } = makeStack({ edgeZone: "goes-back" });
+		const detach = attachSystemBackGesture(stack);
+		flushSync();
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(calls.begin).toBe(1);
+		vi.runOnlyPendingTimers();
+		expect(
+			invoke.mock.calls.filter(
+				([command]) => command === "set_back_swipe_armed",
+			),
+		).toEqual([]);
 
 		detach();
 	});
@@ -200,22 +165,203 @@ describe("attachSystemBackGesture", () => {
 		detach();
 	});
 
-	it("keeps the gesture of a host that attached before the old one detached", () => {
-		const old = makeStack();
-		const detachOld = attachSystemBackGesture(old.stack);
-		const current = makeStack();
-		const detachCurrent = attachSystemBackGesture(current.stack);
-
-		detachOld();
+	it("gives the gesture to the newest stack that offers a swipe back", () => {
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack();
+		const detachNewer = attachSystemBackGesture(newer.stack);
 
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
-		expect(current.calls.begin).toBe(1);
+		expect(newer.calls.begin).toBe(1);
+		expect(older.calls.begin).toBe(0);
 		window.__AndroidOnBackGestureCancel?.();
-		expect(current.calls.cancel).toBe(1);
-		expect(old.calls.begin).toBe(0);
+		expect(newer.calls.cancel).toBe(1);
+		expect(older.calls.cancel).toBe(0);
 
-		detachCurrent();
-		expect(window.__AndroidOnBackGestureStart).toBeUndefined();
+		detachNewer();
+		detachOlder();
+	});
+
+	it("hands the gesture back to an older stack once the newer one detaches", () => {
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack();
+		const detachNewer = attachSystemBackGesture(newer.stack);
+
+		detachNewer();
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(older.calls.begin).toBe(1);
+		expect(newer.calls.begin).toBe(0);
+		window.__AndroidOnBackGestureCancel?.();
+		expect(older.calls.cancel).toBe(1);
+
+		detachOlder();
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+		expect(older.calls.begin).toBe(1);
+	});
+
+	it("keeps the gesture with the newer stack when the older one detaches first", () => {
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack();
+		const detachNewer = attachSystemBackGesture(newer.stack);
+
+		detachOlder();
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(newer.calls.begin).toBe(1);
+		window.__AndroidOnBackGestureCancel?.();
+		expect(newer.calls.cancel).toBe(1);
+		expect(older.calls.begin).toBe(0);
+
+		detachNewer();
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+		expect(newer.calls.begin).toBe(1);
+	});
+
+	it("lets an older stack that offers a swipe back own the gesture under a newer one that offers none", () => {
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(older.calls.begin).toBe(1);
+		expect(newer.calls.begin).toBe(0);
+
+		expect(
+			runBackGestureHandlers(),
+			"Back commits the tracking stack",
+		).toBe(true);
+		expect(older.calls.commit).toBe(1);
+		expect(newer.calls.commit).toBe(0);
+
+		detachNewer();
+		detachOlder();
+	});
+
+	it.each(["overlay", "guard", "screen"] as const)(
+		"refuses to start any stack under a %s handler",
+		(layer) => {
+			const older = makeStack();
+			const detachOlder = attachSystemBackGesture(older.stack);
+			const newer = makeStack({ offers: false });
+			const detachNewer = attachSystemBackGesture(newer.stack);
+			const handler = () => false;
+			backGestureEventHandlers.set(handler, layer);
+
+			expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+			expect(older.calls.begin).toBe(0);
+			expect(newer.calls.begin).toBe(0);
+
+			backGestureEventHandlers.delete(handler);
+			expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+			expect(older.calls.begin).toBe(1);
+
+			detachNewer();
+			detachOlder();
+		},
+	);
+
+	it("starts no stack while an older one covers the screen it landed on, and starts the newer one once the cover drops", () => {
+		const older = makeStack({ offers: false });
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack();
+		const detachNewer = attachSystemBackGesture(newer.stack);
+		older.cover(true);
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+		expect(older.calls.begin).toBe(0);
+		expect(newer.calls.begin).toBe(0);
+
+		older.cover(false);
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(newer.calls.begin).toBe(1);
+		expect(older.calls.begin).toBe(0);
+
+		detachNewer();
+		detachOlder();
+	});
+
+	it("feeds the native progress to the older stack it started", () => {
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+		});
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
+		let progress = 0;
+		window.__AndroidBack = {
+			moveTaskToBack: () => {},
+			gestureProgress: () => progress,
+		};
+
+		window.__AndroidOnBackGestureStart?.();
+		progress = 0.25;
+		vi.advanceTimersToNextFrame();
+		window.__AndroidOnBackGestureCancel?.();
+		vi.advanceTimersToNextFrame();
+
+		expect(older.tracked).toEqual([0.25]);
+		expect(newer.tracked).toEqual([]);
+		expect(vi.getTimerCount(), "no frame may stay queued").toBe(0);
+
+		detachNewer();
+		detachOlder();
+	});
+
+	it("gives the gesture to an older stack still sliding when no stack offers a swipe back", () => {
+		const older = makeStack({ offers: false });
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
+		older.slide(true);
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(older.calls.begin).toBe(1);
+		expect(newer.calls.begin).toBe(0);
+
+		detachNewer();
+		detachOlder();
+	});
+
+	it("keeps feeding the tracking stack when an idle stack detaches, and stops once the tracking one detaches", () => {
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+		});
+		const older = makeStack();
+		const detachOlder = attachSystemBackGesture(older.stack);
+		const newer = makeStack({ offers: false });
+		const detachNewer = attachSystemBackGesture(newer.stack);
+		let progress = 0;
+		window.__AndroidBack = {
+			moveTaskToBack: () => {},
+			gestureProgress: () => progress,
+		};
+
+		window.__AndroidOnBackGestureStart?.();
+		progress = 0.25;
+		vi.advanceTimersToNextFrame();
+		detachNewer();
+		progress = 0.5;
+		vi.advanceTimersToNextFrame();
+
+		expect(older.tracked).toEqual([0.25, 0.5]);
+		expect(newer.tracked).toEqual([]);
+
+		detachOlder();
+		expect(vi.getTimerCount(), "no frame may stay queued").toBe(0);
+	});
+
+	it("keeps the hook defined and refusing once no stack is attached", () => {
+		const { stack } = makeStack();
+		attachSystemBackGesture(stack)();
+
+		expect(window.__AndroidOnBackGestureStart).toBeDefined();
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+		expect(backGestureEventHandlers.size).toBe(0);
 	});
 
 	it("feeds the stack the native progress once a frame until the swipe ends", () => {
@@ -285,170 +431,6 @@ describe("installSystemBack", () => {
 
 		expect(window.__AndroidOnBackGesture?.()).toBe(false);
 		expect(overlay).toHaveBeenCalledOnce();
-	});
-});
-
-describe("on iOS", () => {
-	const start = () => window.__iosBack?.start({ x: 2, y: 400 }) ?? false;
-
-	beforeEach(() => {
-		vi.useFakeTimers({
-			toFake: [
-				"setTimeout",
-				"clearTimeout",
-				"requestAnimationFrame",
-				"cancelAnimationFrame",
-			],
-		});
-		runningOn("ios");
-		document.elementFromPoint = () => document.body;
-		installSystemBack();
-	});
-
-	afterEach(() => {
-		vi.runOnlyPendingTimers();
-	});
-
-	it("installs the edge swipe hooks and no Android Back hooks", () => {
-		expect(window.__iosBack).toBeDefined();
-		expect(window.__AndroidOnBackGesture).toBeUndefined();
-		expect(addPluginListener).not.toHaveBeenCalled();
-	});
-
-	it("arms the edge swipe while the stack offers a swipe back, and disarms it when the stack detaches", () => {
-		const { stack, offerSwipeBack } = makeStack({ offers: false });
-		const detach = attachSystemBackGesture(stack);
-		flushSync();
-		expect(armedPushes()).toEqual([]);
-
-		offerSwipeBack(true);
-		offerSwipeBack(true);
-		expect(armedPushes()).toEqual([true]);
-
-		offerSwipeBack(false);
-		expect(armedPushes()).toEqual([true, false]);
-		offerSwipeBack(true);
-		expect(armedPushes()).toEqual([true, false, true]);
-		detach();
-		expect(armedPushes()).toEqual([true, false, true, false]);
-	});
-
-	it("disarms under an overlay and arms again once it closes", () => {
-		const { stack } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-		flushSync();
-		expect(armedPushes()).toEqual([true]);
-		const overlay = () => false;
-
-		backGestureEventHandlers.set(overlay, "overlay");
-		flushSync();
-		expect(armedPushes()).toEqual([true, false]);
-		expect(start()).toBe(false);
-		backGestureEventHandlers.delete(overlay);
-		flushSync();
-
-		expect(armedPushes()).toEqual([true, false, true]);
-		detach();
-	});
-
-	it("stays armed over a screen handler and pops without running it", () => {
-		const { stack, calls } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-		const cancelReply = vi.fn(() => false);
-		backGestureEventHandlers.set(cancelReply, "screen");
-		flushSync();
-
-		expect(armedPushes()).toEqual([true]);
-		expect(start()).toBe(true);
-		window.__iosBack?.finish({ commit: true, velocity: 1 });
-
-		expect(calls.commit).toBe(1);
-		expect(cancelReply).not.toHaveBeenCalled();
-		detach();
-	});
-
-	it("disarms while a guard on leaving the screen is up, and arms again once it goes", () => {
-		const { stack } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-		flushSync();
-		expect(armedPushes()).toEqual([true]);
-		const unsavedEdits = () => false;
-
-		backGestureEventHandlers.set(unsavedEdits, "guard");
-		flushSync();
-		expect(armedPushes()).toEqual([true, false]);
-		expect(start()).toBe(false);
-		backGestureEventHandlers.delete(unsavedEdits);
-		flushSync();
-
-		expect(armedPushes()).toEqual([true, false, true]);
-		detach();
-	});
-
-	it("keeps the swipe armed while it tracks, and cancels it when an overlay opens mid-swipe", () => {
-		const { stack, calls, offerSwipeBack } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-		flushSync();
-		expect(start()).toBe(true);
-		offerSwipeBack(false);
-		expect(armedPushes()).toEqual([true]);
-
-		backGestureEventHandlers.set(() => false, "overlay");
-		flushSync();
-		expect(armedPushes()).toEqual([true, false]);
-		window.__iosBack?.finish({ commit: false, velocity: 0 });
-
-		expect(calls.cancel).toBe(1);
-		expect(calls.commit).toBe(0);
-		detach();
-	});
-
-	it("disarms the edge swipe once a tracked swipe ends where the stack no longer offers one", () => {
-		const { stack, offerSwipeBack } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-		flushSync();
-		expect(start()).toBe(true);
-		offerSwipeBack(false);
-		expect(armedPushes()).toEqual([true]);
-
-		window.__iosBack?.finish({ commit: false, velocity: 0 });
-		flushSync();
-
-		expect(armedPushes()).toEqual([true, false]);
-		detach();
-	});
-
-	it("feeds the stack native progress once a frame and settles on the release", () => {
-		const { stack, calls, tracked, releases } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-		flushSync();
-
-		start();
-		window.__iosBack?.progress(0.25);
-		vi.advanceTimersToNextFrame();
-		window.__iosBack?.progress(0.5);
-		vi.advanceTimersToNextFrame();
-		window.__iosBack?.finish({ commit: false, velocity: -0.4 });
-		vi.advanceTimersToNextFrame();
-		window.__iosBack?.finish({ commit: true, velocity: 2 });
-
-		expect(tracked).toEqual([0.25, 0.5]);
-		expect(calls.cancel).toBe(1);
-		expect(releases).toEqual([{ velocity: -0.4 }]);
-		expect(calls.commit, "a finish after the swipe ended is stale").toBe(0);
-		expect(vi.getTimerCount()).toBe(0);
-		detach();
-	});
-
-	it("lets the stack prepare for a swipe and undo it", () => {
-		const { stack, calls } = makeStack();
-		const detach = attachSystemBackGesture(stack);
-
-		window.__iosBack?.prepare();
-		window.dispatchEvent(new Event("touchend"));
-
-		expect(calls).toMatchObject({ prepare: 1, undo: 1 });
-		detach();
 	});
 });
 

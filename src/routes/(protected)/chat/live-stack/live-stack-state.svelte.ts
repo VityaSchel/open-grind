@@ -7,12 +7,16 @@ import { BackWatchdog } from "#lib/util/history.ts";
 import { isWithin } from "#lib/util/pathname.ts";
 import type { StackMotion } from "#lib/components/navigation/stack/motion.ts";
 import type { StackSurface } from "#lib/components/navigation/stack/surface.ts";
-import type { SwipeRelease } from "#lib/platform/system-back-gesture.svelte.ts";
+import type {
+	EdgeZone,
+	SwipeRelease,
+} from "#lib/platform/system-back-gesture.svelte.ts";
 
 export class LiveStackState {
 	leaving = $state<string | null>(null);
 	moving = $state(false);
 	tracking = $state(false);
+	readonly edgeZone: EdgeZone = "shared";
 
 	readonly #settle: StackSettle;
 	readonly #top: () => string | null;
