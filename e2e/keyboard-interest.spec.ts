@@ -8,6 +8,7 @@ import {
 	TAPS_PANE,
 	VIEWS,
 	VIEWS_PANE,
+	VIEWS_SCROLLER,
 } from "./support/interest-pager";
 
 test.describe.configure({ timeout: 180_000 });
@@ -115,4 +116,101 @@ test("each tab controls its pane, and the pane off screen is hidden from focus u
 	await expect(taps).toHaveAttribute("inert", "");
 	await expect(views).not.toHaveAttribute("inert");
 	await expect(views).not.toHaveAttribute("aria-hidden");
+});
+
+test("Tab pressed while the pager glides to a picked tab lands in that tab's pane and lets the glide finish", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	const taps = page.locator(TAPS_PANE);
+	await tab(page, "Views").click();
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+	await expect.poll(() => pager.evaluate((node) => node.scrollLeft)).toBe(0);
+	await expect(taps).toHaveAttribute("inert", "");
+
+	await tab(page, "Taps").focus();
+	await page.keyboard.press("Enter");
+	await page.keyboard.press("Tab");
+
+	await expect.poll(() => focusInside(taps)).toBe(true);
+	await expect(page).toHaveURL(new RegExp(`${TAPS}$`));
+	await expect
+		.poll(() =>
+			pager.evaluate(
+				(node) => Math.abs(node.scrollLeft - node.clientWidth) < 1,
+			),
+		)
+		.toBe(true);
+	await expect(page.locator(VIEWS_PANE)).toHaveAttribute("inert", "");
+	expect(await focusInside(taps)).toBe(true);
+});
+
+test.describe("the Views grid", () => {
+	const viewsGrid = (page: Page) =>
+		page.locator(VIEWS_PANE).getByRole("grid", { name: "Views" });
+
+	test.beforeEach(async ({ page }) => {
+		await tab(page, "Views").click();
+		await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+		await viewsGrid(page)
+			.getByRole("gridcell")
+			.first()
+			.waitFor({ timeout: 60_000 });
+	});
+
+	test("is a grid named Views whose rows hold one drawn row of cells each", async ({
+		page,
+	}) => {
+		const rows = await viewsGrid(page).evaluate((grid) => {
+			const columns = getComputedStyle(grid)
+				.gridTemplateColumns.trim()
+				.split(/\s+/).length;
+			return [...grid.querySelectorAll(':scope > [role="row"]')].map(
+				(row) => {
+					const cells = [
+						...row.querySelectorAll(':scope > [role="gridcell"]'),
+					];
+					return {
+						columns,
+						cells: cells.length,
+						tops: new Set(
+							cells.map((cell) =>
+								Math.round(cell.getBoundingClientRect().top),
+							),
+						).size,
+					};
+				},
+			);
+		});
+
+		expect(rows.length).toBeGreaterThan(1);
+		for (const [at, row] of rows.entries()) {
+			expect(row.tops).toBe(1);
+			if (at < rows.length - 1) expect(row.cells).toBe(row.columns);
+		}
+	});
+
+	test("Scroll to top from the keyboard puts focus on the first cell", async ({
+		page,
+	}) => {
+		await page
+			.locator(VIEWS_SCROLLER)
+			.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+		const jump = page
+			.locator(VIEWS_PANE)
+			.getByRole("button", { name: "Scroll to top" });
+		await jump.focus();
+		await page.keyboard.press("Enter");
+
+		await expect
+			.poll(() =>
+				viewsGrid(page).evaluate(
+					(grid) =>
+						document.activeElement?.closest('[role="gridcell"]') ===
+						grid.querySelector('[role="gridcell"]'),
+				),
+			)
+			.toBe(true);
+		await expect(jump).toBeHidden();
+	});
 });
