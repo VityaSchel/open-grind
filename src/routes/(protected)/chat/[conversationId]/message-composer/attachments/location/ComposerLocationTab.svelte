@@ -46,5 +46,6 @@
 	<GeoMapPicker
 		bind:pinPos
 		initialView={pinPos ? { ...pinPos, zoom: PIN_ZOOM } : undefined}
+		describedBy={hintId}
 	/>
 </div>

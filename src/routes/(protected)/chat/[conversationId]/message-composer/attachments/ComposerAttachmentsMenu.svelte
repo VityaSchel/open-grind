@@ -98,11 +98,7 @@
 					onClose={() => (open = false)}
 				/>
 			</Tabs.Content>
-			<Tabs.Content
-				value="location"
-				tabindex={-1}
-				aria-describedby={locationHintId}
-			>
+			<Tabs.Content value="location" tabindex={-1}>
 				{#if selectedTab === "location"}
 					<ComposerLocationTab
 						bind:this={tabs.location}
