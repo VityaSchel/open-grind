@@ -35,7 +35,7 @@
 
 <div class="@container/photo-grid flex flex-1 flex-col rounded-grid">
 	{#if error !== null}
-		<div class="flex flex-1">
+		<div class="flex flex-1 pb-(--sheet-peek-height)">
 			<ApiErrorDisplay {error} {onRetry} class="m-auto" />
 		</div>
 	{:else if items === null}
@@ -49,7 +49,9 @@
 			{/each}
 		</div>
 	{:else if empty}
-		{@render emptyState?.()}
+		<div class="flex flex-1 flex-col pb-(--sheet-peek-height)">
+			{@render emptyState?.()}
+		</div>
 	{:else}
 		<div class={["photo-grid", gridClass]}>
 			{@render leading?.()}

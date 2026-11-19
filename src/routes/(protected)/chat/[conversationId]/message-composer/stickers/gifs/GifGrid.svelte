@@ -44,21 +44,27 @@
 			{/each}
 		</div>
 	{:else if feed.error}
-		<StickerLoadFailure
-			message={t("chat.composer.stickers.gifs.errors.loadFailed")}
-			onRetry={() => feed.retry()}
-		/>
+		<div
+			class="flex flex-1 flex-col justify-center pb-(--sheet-peek-height)"
+		>
+			<StickerLoadFailure
+				message={t("chat.composer.stickers.gifs.errors.loadFailed")}
+				onRetry={() => feed.retry()}
+			/>
+		</div>
 	{:else if feed.empty}
-		<Empty.Root class="flex-1">
-			<Empty.Header>
-				<Empty.Media variant="icon">
-					<MagnifyingGlassIcon weight="bold" />
-				</Empty.Media>
-				<Empty.Title
-					>{t("chat.composer.stickers.gifs.empty")}</Empty.Title
-				>
-			</Empty.Header>
-		</Empty.Root>
+		<div class="flex flex-1 flex-col pb-(--sheet-peek-height)">
+			<Empty.Root>
+				<Empty.Header>
+					<Empty.Media variant="icon">
+						<MagnifyingGlassIcon weight="bold" />
+					</Empty.Media>
+					<Empty.Title
+						>{t("chat.composer.stickers.gifs.empty")}</Empty.Title
+					>
+				</Empty.Header>
+			</Empty.Root>
+		</div>
 	{:else}
 		<div data-slot="sticker-grid" class={GRID_CLASS}>
 			{#each feed.gifs as gif (gif.id)}
