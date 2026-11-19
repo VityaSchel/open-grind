@@ -16,6 +16,8 @@
 	</dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>MKSellsDigitalGoods</key>
+	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Open Grind uses your location to show nearby profiles on the Grid and, when you choose, to share it in a chat.</string>
 	<key>UIApplicationSceneManifest</key>

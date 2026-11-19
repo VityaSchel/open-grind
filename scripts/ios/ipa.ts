@@ -10,6 +10,10 @@ import {
 export const IPA_APP = "Payload/Open Grind.app";
 const BINARY = `${IPA_APP}/Open Grind`;
 const MANIFEST = `${IPA_APP}/PrivacyInfo.xcprivacy`;
+const FALSE_INFO_PLIST_KEYS = [
+	"ITSAppUsesNonExemptEncryption",
+	"MKSellsDigitalGoods",
+];
 
 const lines = (output: string) => output.split("\n").filter(Boolean);
 
@@ -69,15 +73,10 @@ export async function verifyIpa({
 	if (!listing.includes(MANIFEST)) {
 		throw new Error(`${ipa} carries no PrivacyInfo.xcprivacy`);
 	}
-	if (
-		(await infoPlistValue({
-			ipa,
-			key: "ITSAppUsesNonExemptEncryption",
-		})) !== "false"
-	) {
-		throw new Error(
-			`${ipa} must set ITSAppUsesNonExemptEncryption to false`,
-		);
+	for (const key of FALSE_INFO_PLIST_KEYS) {
+		if ((await infoPlistValue({ ipa, key })) !== "false") {
+			throw new Error(`${ipa} must set ${key} to false`);
+		}
 	}
 	const built = await infoPlistValue({ ipa, key: "CFBundleVersion" });
 	if (built !== bundleVersion) {
