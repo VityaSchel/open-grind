@@ -14,10 +14,11 @@
 		ethnicities,
 		healthPracticeLabels,
 		hivStatusLabels,
-		lookingFor as lookingForLabels,
+		lookingForAfterLabel,
 		meetAt as meetAtLabels,
 		relationshipStatuses,
 		tribes,
+		tribesAfterLabel,
 		vaccines as vaccineLabels,
 	} from "#lib/model/users/profiles.ts";
 	import AboutMe from "./AboutMe.svelte";
@@ -140,14 +141,14 @@
 				icon={UsersThreeIcon}
 				label={t("profile.fields.imInto")}
 				value={tribesImInto}
-				options={tribes}
+				options={tribesAfterLabel}
 			/>
 			<LookupField
 				icon={EyesIcon}
 				weight="fill"
 				label={t("profile.fields.lookingFor")}
 				value={lookingFor}
-				options={lookingForLabels}
+				options={lookingForAfterLabel}
 			/>
 			<LookupField
 				icon={HouseIcon}

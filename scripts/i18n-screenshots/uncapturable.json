@@ -9,7 +9,7 @@
 	},
 	"chat.notification.*": {
 		"reason": "Only in the system notifications that the desktop and Android builds show for chat messages, which the system draws outside the page, so no page screenshot shows them.",
-		"explanation": "Body of the system notification that the desktop and Android apps show for a new chat message, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+		"explanation": "Body of the system notification that the desktop and Android apps show for a new chat message, under the sender’s name; the system draws it outside the app, so no screenshot shows it; the sender’s gender is unknown, so prefer wording without grammatical gender."
 	},
 	"chat.notification.you": {
 		"reason": "Only the user's name in the MessagingStyle of the Android chat notifications, which Android requires and uses only for messages from the user, and the system draws those notifications outside the page, so no page screenshot shows it.",
@@ -37,7 +37,7 @@
 	},
 	"interest.taps.notification": {
 		"reason": "Only in the system notification that the desktop and Android builds show for a received tap, which the system draws outside the page, so no page screenshot shows it.",
-		"explanation": "Body of the system notification that the desktop and Android apps show for a received tap, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+		"explanation": "Body of the system notification that the desktop and Android apps show for a received tap, under the sender’s name; the system draws it outside the app, so no screenshot shows it; the sender’s gender is unknown, so prefer wording without grammatical gender."
 	},
 	"media.picker.filters.*": {
 		"reason": "The native file dialog shows these file type names, and the web build has no native dialog.",

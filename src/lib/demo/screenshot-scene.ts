@@ -41,6 +41,7 @@ export type DemoProfilePatch = {
 	hivStatus?: number | null;
 	sexualHealth?: number[];
 	tribesImInto?: number[] | null;
+	lookingFor?: number[];
 	vaccines?: number[];
 	genders?: number[] | null;
 	pronouns?: number[] | null;

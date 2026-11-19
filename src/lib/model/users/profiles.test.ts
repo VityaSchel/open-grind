@@ -11,12 +11,14 @@ import {
 	hivStatusLabels,
 	isTribeOffered,
 	lookingFor,
+	lookingForAfterLabel,
 	meetAt,
 	profileSchema,
 	relationshipStatuses,
 	sexualPositions,
 	Tribe,
 	tribes,
+	tribesAfterLabel,
 	UnsettableHealthPractice,
 	vaccines,
 } from "#lib/model/users/profiles.ts";
@@ -174,5 +176,10 @@ describe("vocabulary labels", () => {
 				"1=Condoms|2=I’m on doxyPEP|3=I’m on PrEP|4=I’m HIV Undetectable|5=Prefer to Discuss|6=Sober|7=Drug-Free",
 			vaccines: "1=COVID-19|2=Monkeypox|3=Meningitis",
 		});
+	});
+
+	it("reads the same in English after its field label as on its own", () => {
+		expect(listed(lookingForAfterLabel)).toBe(listed(lookingFor));
+		expect(listed(tribesAfterLabel)).toBe(listed(tribes));
 	});
 });
