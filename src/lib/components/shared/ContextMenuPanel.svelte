@@ -19,7 +19,6 @@
 		keys: () => shownItems,
 		orientation: "vertical",
 		wrap: "loop",
-		stopTabindex: "explicit",
 		typeahead: (item) =>
 			item.getAttribute("aria-label") ?? item.textContent ?? "",
 	});

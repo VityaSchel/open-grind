@@ -27,6 +27,7 @@ import {
 	type RovingOrientation,
 	type RovingWrap,
 	rowsPerPage,
+	scrollStepOfMove,
 	skipStep,
 	targetIndex,
 	typeaheadIndex,
@@ -56,7 +57,6 @@ export type RovingFocusOptions = {
 	onEdge?: (edge: RovingEdge) => boolean;
 	pageRows?: () => number;
 	reveal?: (index: number) => void;
-	stopTabindex?: "explicit" | "native";
 	typeahead?: (item: HTMLElement) => string;
 	openerScope?: string;
 	returnFocusTo?: (opener: RovingKey) => RovingKey;
@@ -132,6 +132,10 @@ export class RovingFocusState {
 			capture: true,
 			signal,
 		});
+		document.addEventListener("click", this.#onDocumentClick, {
+			capture: true,
+			signal,
+		});
 		listenForScrollSettle({
 			scroller: this.#scroller ?? window,
 			signal,
@@ -192,15 +196,10 @@ export class RovingFocusState {
 		return true;
 	}
 
-	async move(move: RovingMove): Promise<boolean> {
-		if (isCellMove(move)) {
-			const at = this.#cellAt(document.activeElement);
-			return at !== null && this.#stepCell({ at, move });
-		}
+	async focusFirst(): Promise<void> {
 		const keys = this.#options.keys();
-		const index = this.#plan({ keys, from: this.#moveOrigin(keys), move });
-		if (index === null) return false;
-		return this.#land({ key: keys[index]!, preventScroll: false });
+		const first = keys.find((key) => this.#canTakeFocus(key));
+		if (first !== undefined) await this.focus({ key: first });
 	}
 
 	#register({ key, node }: { key: RovingKey; node: HTMLElement }) {
@@ -250,14 +249,6 @@ export class RovingFocusState {
 		return index < 0 ? active : keys[Math.min(index, keys.length - 1)]!;
 	}
 
-	#moveOrigin(keys: Keys): number {
-		const active = this.#repointedActiveKey(keys);
-		const listed = active === null ? -1 : keys.indexOf(active);
-		if (listed >= 0) return listed;
-		const stopKey = this.#itemAround(this.#stop)?.key;
-		return stopKey === undefined ? -1 : keys.indexOf(stopKey);
-	}
-
 	#preferredKeys(): RovingKey[] {
 		const resting = this.#focusWithin
 			? null
@@ -299,10 +290,7 @@ export class RovingFocusState {
 		if (this.#stop !== null && this.#stop !== holder)
 			this.#stop.setAttribute("tabindex", "-1");
 		this.#stop = holder;
-		if (holder === null) return;
-		if (this.#options.stopTabindex === "native")
-			holder.removeAttribute("tabindex");
-		else holder.setAttribute("tabindex", "0");
+		holder?.setAttribute("tabindex", "0");
 	}
 
 	#isInsideBand({ key, band }: { key: RovingKey; band: Band }): boolean {
@@ -316,22 +304,22 @@ export class RovingFocusState {
 			if (this.#isInsideBand({ key, band })) yield key;
 	}
 
-	#nearestMounted({ keys, index, band }: NearestQuery): LocatedItem | null {
+	#nearestTarget({ keys, index, band }: NearestQuery): HTMLElement | null {
+		const targetAt = (at: number) => {
+			const key = keys[at]!;
+			const item = this.#items.get(key);
+			const usable =
+				item !== undefined &&
+				item.closest("[inert]") === null &&
+				(band === undefined || this.#isInsideBand({ key, band }));
+			return usable ? this.#firstFocusTarget([key]) : null;
+		};
 		const found = nearestIndex({
 			from: index,
 			count: keys.length,
-			accepts: (at) => {
-				const item = this.#items.get(keys[at]!);
-				if (item === undefined || item.closest("[inert]") !== null)
-					return false;
-				return (
-					band === undefined ||
-					this.#isInsideBand({ key: keys[at]!, band })
-				);
-			},
+			accepts: (at) => targetAt(at) !== null,
 		});
-		if (found === null) return null;
-		return { key: keys[found]!, item: this.#items.get(keys[found]!)! };
+		return found === null ? null : targetAt(found);
 	}
 
 	#itemAround(target: EventTarget | null): LocatedItem | null {
@@ -395,9 +383,10 @@ export class RovingFocusState {
 			direction,
 		});
 		const handled = this.#options.onEdge?.(edge) ?? false;
+		const step = scrollStepOfMove[move];
 		if (handled || this.#options.consumeAtEdge?.includes(edge))
 			event.preventDefault();
-		else scrollTowardEdge({ event, edge, scroller: this.#scroller });
+		else scrollTowardEdge({ event, edge, step, scroller: this.#scroller });
 	};
 
 	#stepCell({ at, move }: CellMove): boolean {
@@ -552,6 +541,12 @@ export class RovingFocusState {
 			this.#focused = null;
 	};
 
+	#onDocumentClick = ({ target }: MouseEvent) => {
+		const container = this.#container;
+		if (container === null || container.contains(target as Node)) return;
+		this.#focusWithin = container.contains(document.activeElement);
+	};
+
 	#returnToOpener(keys: Keys): void {
 		const opener = this.#opener;
 		if (opener === null || opener.returning === null) return;
@@ -600,12 +595,10 @@ export class RovingFocusState {
 		if (!wasDisplaced({ element: focused.element, records })) return;
 		const keys = this.#options.keys();
 		const index = keys.indexOf(focused.key);
-		const refocused = this.#nearestMounted({
+		this.#nearestTarget({
 			keys,
 			index: index < 0 ? focused.index : index,
-		});
-		if (refocused !== null)
-			this.#focusTargetOf(refocused)?.focus({ preventScroll: true });
+		})?.focus({ preventScroll: true });
 	}
 
 	#holdIfFocusWasInside(key: RovingKey): void {
@@ -625,19 +618,24 @@ export class RovingFocusState {
 		const keys = this.#options.keys();
 		const listed = keys.indexOf(key);
 		if (listed >= 0) {
-			const query = { keys, index: listed };
+			const band = visibleBand(this.#scroller);
 			const nearest =
-				this.#nearestMounted({
-					...query,
-					band: visibleBand(this.#scroller),
-				}) ?? this.#nearestMounted(query);
-			if (nearest !== null)
-				this.#focusTargetOf(nearest)?.focus({ preventScroll: true });
+				this.#nearestTarget({ keys: [key], index: 0 }) ??
+				this.#nearestTarget({ keys, index: listed, band }) ??
+				this.#nearestTarget({ keys, index: listed });
+			nearest?.focus({ preventScroll: true });
 			return;
 		}
 		if (keys.length > 0) {
 			const clamped = Math.min(Math.max(index, 0), keys.length - 1);
-			void this.#land({ key: keys[clamped]!, preventScroll: false });
+			const revealing =
+				!this.#items.has(keys[clamped]!) &&
+				this.#options.reveal !== undefined;
+			const nearest = revealing
+				? null
+				: this.#nearestTarget({ keys, index: clamped });
+			if (nearest !== null) nearest.focus();
+			else void this.#land({ key: keys[clamped]!, preventScroll: false });
 			return;
 		}
 		this.#options.emptyFallback?.()?.focus();

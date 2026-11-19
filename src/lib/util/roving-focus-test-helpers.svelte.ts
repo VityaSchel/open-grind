@@ -112,8 +112,10 @@ export function press(
 	return event;
 }
 
-export function tabStops(container: HTMLElement): Element[] {
-	return [...container.querySelectorAll('[tabindex="0"]')];
+export function tabStops(container: HTMLElement): HTMLElement[] {
+	return [...container.querySelectorAll<HTMLElement>("*")].filter(
+		(element) => element.tabIndex >= 0,
+	);
 }
 
 export function outsideButton(): HTMLButtonElement {

@@ -19,12 +19,14 @@ afterEach(() => {
 function focusable({
 	tag,
 	keyboardFocus,
+	parent = document.body,
 }: {
 	tag: string;
 	keyboardFocus: boolean;
+	parent?: HTMLElement;
 }) {
 	const element = document.createElement(tag);
-	document.body.append(element);
+	parent.append(element);
 	const matches = element.matches.bind(element);
 	vi.spyOn(element, "matches").mockImplementation((selector) =>
 		selector === ":focus-visible" ? keyboardFocus : matches(selector),
@@ -91,6 +93,71 @@ describe("revealKeyboardFocus", () => {
 		element.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
 
 		expect(scrollIntoView).not.toHaveBeenCalled();
+	});
+
+	it("stops every scroller around the control before revealing it, past a sideways strip", () => {
+		startRevealing();
+		const scroller = (style: Partial<CSSStyleDeclaration>) => {
+			const element = document.createElement("div");
+			Object.assign(element.style, style);
+			const scrollTo = vi.fn();
+			element.scrollTo = scrollTo as typeof element.scrollTo;
+			return { element, scrollTo };
+		};
+		const messages = scroller({ overflowY: "auto" });
+		const rail = scroller({ overflowX: "auto", overflowY: "auto" });
+		document.body.append(messages.element);
+		messages.element.append(rail.element);
+		const { element, scrollIntoView } = focusable({
+			tag: "button",
+			keyboardFocus: true,
+			parent: rail.element,
+		});
+
+		element.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+
+		const [revealed] = scrollIntoView.mock.invocationCallOrder;
+		for (const { scrollTo } of [messages, rail]) {
+			expect(scrollTo).toHaveBeenCalledExactlyOnceWith({
+				top: 0,
+				left: 0,
+				behavior: "instant",
+			});
+			expect(scrollTo.mock.invocationCallOrder[0]).toBeLessThan(
+				revealed!,
+			);
+		}
+	});
+
+	it("leaves the page where it is when focus only comes back with the window", () => {
+		startRevealing();
+		const { element, scrollIntoView } = focusable({
+			tag: "button",
+			keyboardFocus: true,
+		});
+		element.focus();
+		scrollIntoView.mockClear();
+
+		window.dispatchEvent(new FocusEvent("blur"));
+		element.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+		expect(scrollIntoView).not.toHaveBeenCalled();
+
+		element.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+		expect(scrollIntoView).toHaveBeenCalledOnce();
+	});
+
+	it("still reveals another control focused after the window comes back", () => {
+		startRevealing();
+		const first = focusable({ tag: "button", keyboardFocus: true });
+		const second = focusable({ tag: "button", keyboardFocus: true });
+		first.element.focus();
+
+		window.dispatchEvent(new FocusEvent("blur"));
+		second.element.dispatchEvent(
+			new FocusEvent("focusin", { bubbles: true }),
+		);
+
+		expect(second.scrollIntoView).toHaveBeenCalledOnce();
 	});
 
 	it("stops revealing once released", () => {

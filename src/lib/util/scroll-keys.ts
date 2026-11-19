@@ -2,6 +2,7 @@ import { preferredScrollBehavior } from "#lib/util/reduced-motion.ts";
 import { typesText } from "#lib/util/text-entry.ts";
 
 type ScrollEdge = "up" | "down" | "left" | "right";
+export type ScrollStep = "line" | "page" | "end";
 
 const LINE_STEP_PX = 40;
 const PAGE_STEP_SHARE = 0.875;
@@ -32,19 +33,32 @@ export function consumesScrollKeys(target: EventTarget | null): boolean {
 	return typesText(target) || target instanceof HTMLSelectElement;
 }
 
-function keyStep({ key, span }: { key: string; span: number }): number {
-	if (key === "Home" || key === "End") return Number.POSITIVE_INFINITY;
-	if (key === "PageUp" || key === "PageDown") return span * PAGE_STEP_SHARE;
-	return LINE_STEP_PX;
+function stepLength({
+	step,
+	span,
+}: {
+	step: ScrollStep;
+	span: number;
+}): number {
+	switch (step) {
+		case "line":
+			return LINE_STEP_PX;
+		case "page":
+			return span * PAGE_STEP_SHARE;
+		case "end":
+			return Number.POSITIVE_INFINITY;
+	}
 }
 
 export function scrollTowardEdge({
 	event,
 	edge,
+	step,
 	scroller,
 }: {
 	event: KeyboardEvent;
 	edge: ScrollEdge;
+	step: ScrollStep;
 	scroller: Element | null;
 }): void {
 	scroller ??= document.documentElement;
@@ -58,9 +72,14 @@ export function scrollTowardEdge({
 	const [least, most] = rtl ? [-extent, 0] : [0, extent];
 	const target = Math.min(
 		most,
-		Math.max(least, position + toward * keyStep({ key: event.key, span })),
+		Math.max(least, position + toward * stepLength({ step, span })),
 	);
-	if (Math.abs(target - position) < 1) return;
+	if (Math.abs(target - position) < 1) {
+		const sidewaysKey =
+			event.key === "ArrowLeft" || event.key === "ArrowRight";
+		if (!vertical && !sidewaysKey) event.preventDefault();
+		return;
+	}
 	event.preventDefault();
 	scroller.scrollTo({
 		[vertical ? "top" : "left"]: target,

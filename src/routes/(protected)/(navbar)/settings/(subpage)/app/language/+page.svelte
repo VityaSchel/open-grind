@@ -32,7 +32,6 @@
 		orientation: "vertical",
 		wrap: "loop",
 		restingKey: () => checked,
-		stopTabindex: "explicit",
 		typeahead: (option) =>
 			option.querySelector('[data-slot="item-title"]')?.textContent ?? "",
 	});

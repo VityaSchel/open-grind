@@ -1,4 +1,5 @@
 import type { currentPlatform } from "#lib/platform/os.ts";
+import type { ScrollStep } from "#lib/util/scroll-keys.ts";
 
 export type RovingMove =
 	| "previous"
@@ -356,6 +357,21 @@ export const skipStep: Record<RovingMove, "previous" | "next"> = {
 	pageDown: "next",
 	previousCell: "previous",
 	nextCell: "next",
+};
+
+export const scrollStepOfMove: Record<RovingMove, ScrollStep> = {
+	previous: "line",
+	next: "line",
+	rowAbove: "line",
+	rowBelow: "line",
+	rowStart: "end",
+	rowEnd: "end",
+	first: "end",
+	last: "end",
+	pageUp: "page",
+	pageDown: "page",
+	previousCell: "line",
+	nextCell: "line",
 };
 
 export function rowsPerPage({

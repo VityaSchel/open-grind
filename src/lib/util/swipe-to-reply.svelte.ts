@@ -84,6 +84,7 @@ export class SwipeToReply {
 	#railGestureIsMouse = false;
 	#railSettling = false;
 	#railFallback: ReturnType<typeof setTimeout> | undefined;
+	#railFocusArrived = false;
 
 	readonly #wheelMode: WheelInputMode;
 	readonly #gesture: ScrollGestureState;
@@ -161,8 +162,10 @@ export class SwipeToReply {
 		const onScroll = () => this.#onRailScroll();
 		const onScrollEnd = () => this.#onRailRelease();
 		const onWheel = (event: WheelEvent) => this.#onRailWheel(event);
+		const onFocusIn = () => this.#onRailFocusIn();
 		node.addEventListener("scroll", onScroll, { passive: true });
 		node.addEventListener("scrollend", onScrollEnd, { passive: true });
+		node.addEventListener("focusin", onFocusIn);
 		// non-passive so a mouse's sideways jump can be cancelled before it
 		// scrolls the rail; vertical-dominant wheels are never cancelled
 		node.addEventListener("wheel", onWheel, { passive: false });
@@ -170,15 +173,29 @@ export class SwipeToReply {
 			node.removeEventListener("scroll", onScroll);
 			node.removeEventListener("scrollend", onScrollEnd);
 			node.removeEventListener("wheel", onWheel);
+			node.removeEventListener("focusin", onFocusIn);
 			clearTimeout(this.#railFallback);
 			this.#rail = null;
 			this.#railDrag = 0;
 		};
 	};
 
+	#onRailFocusIn(): void {
+		if (this.#railDrag > 0 || this.#railReturning) return;
+		this.#railFocusArrived = true;
+		requestAnimationFrame(() => {
+			this.#railFocusArrived = false;
+		});
+	}
+
 	#onRailScroll(): void {
 		const rail = this.#rail;
 		if (!rail) return;
+		if (this.#railFocusArrived) {
+			this.#railFocusArrived = false;
+			rail.scrollLeft = this.#railRest;
+			return;
+		}
 		const drag = (rail.scrollLeft - this.#railRest) * -this.#dragSign;
 		this.#railDrag = Math.max(drag, 0);
 		if (!this.#railReturning && !this.#railSettling)
@@ -204,6 +221,7 @@ export class SwipeToReply {
 				(horizontal && Math.abs(event.deltaX) >= RAIL_MOUSE_NOTCH_PX);
 		}
 		this.#railLastWheelAt = at;
+		this.#railFocusArrived = false;
 		// A released gesture's momentum keeps streaming wheels; letting them
 		// through would re-drag the row it just returned, over and over.
 		if (this.#railGestureIsMouse || this.#railSettling) {

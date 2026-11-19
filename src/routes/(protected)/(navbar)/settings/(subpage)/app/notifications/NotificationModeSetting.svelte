@@ -35,7 +35,6 @@
 		orientation: "vertical",
 		wrap: "loop",
 		restingKey: () => notificationSettings.mode,
-		stopTabindex: "explicit",
 	});
 
 	const locked = $derived(

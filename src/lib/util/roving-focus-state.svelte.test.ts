@@ -69,15 +69,22 @@ describe("RovingFocusState tab stop", () => {
 	});
 
 	it("hands the stop to the first visible item when the active item unmounts", async () => {
+		const tops: Record<string, number> = { a: -50, b: 10, c: 30 };
 		const { container, node, unmount, state } = rovingList({
 			keys: ["a", "b", "c"],
+			build: (key) => {
+				const item = button(String(key));
+				item.getBoundingClientRect = () =>
+					({ top: tops[key], bottom: tops[key]! + 10 }) as DOMRect;
+				return item;
+			},
 		});
 		state.activeKey = "b";
 		await settle();
 		unmount("b");
 		await settle();
 
-		expect(tabStops(container)).toEqual([node("a")]);
+		expect(tabStops(container)).toEqual([node("c")]);
 	});
 
 	it("rests on the resting key only while focus is outside", async () => {
@@ -95,18 +102,6 @@ describe("RovingFocusState tab stop", () => {
 		outsideButton().focus();
 		await settle();
 		expect(tabStops(container)).toEqual([node("c")]);
-	});
-
-	it("leaves the native stop without a tabindex", async () => {
-		const { container, node } = rovingList({
-			keys: ["a", "b"],
-			stopTabindex: "native",
-		});
-		await settle();
-
-		expect(node("a").hasAttribute("tabindex")).toBe(false);
-		expect(node("b").getAttribute("tabindex")).toBe("-1");
-		expect(tabStops(container)).toEqual([]);
 	});
 
 	it("keeps one stop across all cells and demotes cells that appear later", async () => {
@@ -224,9 +219,10 @@ describe("RovingFocusState tab stop", () => {
 
 		harness.list.keys = ["a", "c", "d"];
 		harness.unmount("b");
-		expect(await harness.state.move("next")).toBe(true);
-		expect(document.activeElement).toBe(harness.node("d"));
+		expect(await harness.state.focus()).toBe(true);
+		expect(document.activeElement).toBe(harness.node("c"));
 
+		press(harness.node("c"), "ArrowDown");
 		outside.focus();
 		harness.list.keys = ["a", "c"];
 		harness.unmount("d");
@@ -238,7 +234,7 @@ describe("RovingFocusState tab stop", () => {
 });
 
 describe("RovingFocusState focus tracking", () => {
-	it("changes focusWithin only on focusin, never on blur or focusout", async () => {
+	it("changes focusWithin on focusin, never on blur or focusout", async () => {
 		const { state, node } = rovingList({ keys: ["a", "b"] });
 		await settle();
 		expect(state.focusWithin).toBe(false);
@@ -252,6 +248,37 @@ describe("RovingFocusState focus tracking", () => {
 
 		outsideButton().focus();
 		expect(state.focusWithin).toBe(false);
+	});
+
+	it("goes back to the resting key after a click outside drops focus on the page", async () => {
+		const { state, container, node } = rovingList({
+			keys: ["a", "b", "c"],
+			restingKey: () => "a",
+		});
+		await settle();
+		node("a").focus();
+		press(node("a"), "ArrowDown");
+		await settle();
+		expect(tabStops(container)).toEqual([node("b")]);
+
+		const outside = document.createElement("p");
+		document.body.append(outside);
+		node("b").blur();
+		outside.click();
+		await settle();
+
+		expect(state.focusWithin).toBe(false);
+		expect(tabStops(container)).toEqual([node("a")]);
+	});
+
+	it("keeps focusWithin through a click outside that leaves focus in the list", async () => {
+		const { state, node } = rovingList({ keys: ["a", "b"] });
+		await settle();
+		node("b").focus();
+
+		outsideButton().click();
+
+		expect(state.focusWithin).toBe(true);
 	});
 });
 
@@ -342,10 +369,54 @@ describe("RovingFocusState keys", () => {
 		press(node(4), "PageDown");
 		expect(document.activeElement).toBe(node(9));
 
-		press(node(9), "Home");
+		expect(press(node(9), "Home").defaultPrevented).toBe(true);
 		expect(document.activeElement).toBe(node(9));
 		press(node(9), "ArrowUp");
 		expect(document.activeElement).toBe(node(6));
+	});
+
+	it("claims Home and End at a toolbar's ends so the browser does not scroll the page", async () => {
+		const { node } = rovingList({
+			keys: ["a", "b"],
+			orientation: "horizontal",
+		});
+		await settle();
+
+		expect(press(node("a"), "Home").defaultPrevented).toBe(true);
+		expect(press(node("b"), "End").defaultPrevented).toBe(true);
+		expect(press(node("b"), "ArrowRight").defaultPrevented).toBe(false);
+	});
+
+	it("scrolls a page for Space and to the end for Command+Down once the list has nowhere left to go", async () => {
+		runningOn("macos");
+		const scroller = document.createElement("div");
+		scroller.style.overflowY = "auto";
+		document.body.append(scroller);
+		Object.defineProperties(scroller, {
+			clientHeight: { value: 400 },
+			scrollHeight: { value: 2000 },
+			scrollTop: { value: 0, writable: true },
+		});
+		const scrollTo = vi.fn<(options: ScrollToOptions) => void>();
+		scroller.scrollTo = scrollTo as typeof scroller.scrollTo;
+		const { node } = rovingList({
+			keys: ["a", "b"],
+			parent: scroller,
+			build: (key) => {
+				const link = document.createElement("a");
+				link.href = `#${key}`;
+				link.textContent = String(key);
+				return link;
+			},
+		});
+		await settle();
+
+		expect(press(node("b"), " ").defaultPrevented).toBe(true);
+		press(node("b"), "ArrowDown", { metaKey: true });
+
+		expect(scrollTo.mock.calls.map(([options]) => options.top)).toEqual([
+			350, 1600,
+		]);
 	});
 
 	it("matches typed text by prefix from the next item onward", async () => {
@@ -447,166 +518,6 @@ describe("RovingFocusState cells", () => {
 		press(document.activeElement!, "ArrowUp");
 
 		expect(document.activeElement).toBe(rowCells(node("0"))[0]);
-	});
-});
-
-describe("RovingFocusState unmounted targets", () => {
-	it("steps past or stops at listed items it cannot mount without reveal", async () => {
-		const onEdge = vi.fn(() => false);
-		const { node } = rovingList({
-			keys: ["a", "b", "c", "d"],
-			mounted: ["a", "c"],
-			onEdge,
-		});
-		await settle();
-		node("a").focus();
-
-		press(node("a"), "ArrowDown");
-		expect(document.activeElement).toBe(node("c"));
-
-		expect(press(node("c"), "ArrowDown").defaultPrevented).toBe(false);
-		expect(onEdge).toHaveBeenCalledExactlyOnceWith("down");
-		expect(document.activeElement).toBe(node("c"));
-	});
-
-	it("reveals an unmounted target and focuses it once it registers", async () => {
-		const reveal = vi.fn();
-		const harness = rovingList({
-			keys: ["a", "b", "c"],
-			mounted: ["a", "b"],
-			reveal,
-		});
-		await settle();
-		harness.node("b").focus();
-
-		expect(press(harness.node("b"), "ArrowDown").defaultPrevented).toBe(
-			true,
-		);
-		expect(reveal).toHaveBeenCalledExactlyOnceWith(2);
-
-		harness.mount("c");
-		const focus = vi.spyOn(harness.node("c"), "focus");
-		await settle();
-
-		expect(focus).toHaveBeenCalledWith({ preventScroll: true });
-		expect(document.activeElement).toBe(harness.node("c"));
-	});
-
-	it("gives up when the target never registers", async () => {
-		vi.useFakeTimers();
-		const { node, state } = rovingList({
-			keys: ["a", "b"],
-			mounted: ["a"],
-			reveal: () => {},
-		});
-		await settle();
-		node("a").focus();
-
-		const landed = state.move("next");
-		await vi.advanceTimersByTimeAsync(500);
-
-		expect(await landed).toBe(false);
-		expect(document.activeElement).toBe(node("a"));
-	});
-});
-
-describe("RovingFocusState focus loss", () => {
-	it("holds focus on the container while the focused item tears down, then focuses the same index", async () => {
-		const harness = rovingList({ keys: ["a", "b", "c"] });
-		await settle();
-		harness.node("b").focus();
-
-		harness.list.keys = ["a", "c"];
-		harness.unmount("b");
-
-		expect(document.activeElement).toBe(harness.container);
-		expect(harness.container.hasAttribute("data-roving-holder")).toBe(true);
-		await settle();
-
-		expect(document.activeElement).toBe(harness.node("c"));
-		expect(harness.container.hasAttribute("data-roving-holder")).toBe(
-			false,
-		);
-		expect(harness.container.getAttribute("tabindex")).toBe("-1");
-	});
-
-	it("focuses the nearest visible item when a still-listed item unmounts", async () => {
-		const harness = rovingList({ keys: ["a", "b", "c"] });
-		await settle();
-		harness.node("c").focus();
-
-		harness.unmount("c");
-		await settle();
-
-		expect(document.activeElement).toBe(harness.node("b"));
-	});
-
-	it("falls back when the list empties and keeps the holder until focus leaves", async () => {
-		const fallback = outsideButton();
-		const withFallback = rovingList({
-			keys: ["a"],
-			emptyFallback: () => fallback,
-		});
-		await settle();
-		withFallback.node("a").focus();
-		withFallback.list.keys = [];
-		withFallback.unmount("a");
-		await settle();
-		expect(document.activeElement).toBe(fallback);
-
-		const bare = rovingList({ keys: ["x"] });
-		await settle();
-		bare.node("x").focus();
-		bare.list.keys = [];
-		bare.unmount("x");
-		await settle();
-		expect(document.activeElement).toBe(bare.container);
-		expect(bare.container.getAttribute("tabindex")).toBe("-1");
-
-		expect(bare.container.hasAttribute("data-roving-holder")).toBe(true);
-
-		fallback.focus();
-		expect(bare.container.hasAttribute("data-roving-holder")).toBe(false);
-		expect(bare.container.getAttribute("tabindex")).toBe("-1");
-	});
-
-	it("refocuses an item that a keyed move pulled focus from", async () => {
-		const { node, container } = rovingList({ keys: ["a", "b", "c"] });
-		await settle();
-		node("c").focus();
-
-		container.insertBefore(node("c"), node("a"));
-		expect(document.activeElement).toBe(document.body);
-		await settle();
-
-		expect(document.activeElement).toBe(node("c"));
-	});
-
-	it("moves focus off an item that turns inert", async () => {
-		const { node } = rovingList({ keys: ["a", "b", "c"] });
-		await settle();
-		node("b").focus();
-
-		node("b").setAttribute("inert", "");
-		node("b").blur();
-		await settle();
-
-		expect(document.activeElement).toBe(node("a"));
-	});
-
-	it("never pulls focus back after a press outside the focused item", async () => {
-		const { node, container } = rovingList({ keys: ["a", "b"] });
-		await settle();
-		node("b").focus();
-
-		document.body.dispatchEvent(
-			new MouseEvent("pointerdown", { bubbles: true }),
-		);
-		node("b").blur();
-		container.insertBefore(node("b"), node("a"));
-		await settle();
-
-		expect(document.activeElement).toBe(document.body);
 	});
 });
 

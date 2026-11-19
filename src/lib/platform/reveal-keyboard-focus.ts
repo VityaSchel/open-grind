@@ -13,22 +13,42 @@ const ROVING_HOLDER = "data-roving-holder";
 const SCROLL_SETTLE_FALLBACK_MS = 150;
 const LEFT_IN_PLACE = `input, textarea, [${ROVING_HOLDER}]`;
 
+function stopScrollersAround(target: Element): void {
+	for (
+		let scroller = nearestScrollableAncestor(target);
+		scroller !== null;
+		scroller = nearestScrollableAncestor(scroller)
+	)
+		stopScrollAnimation(scroller);
+}
+
 export function revealKeyboardFocus(): () => void {
 	const listening = new AbortController();
+	const { signal } = listening;
+	let focusedAcrossWindowBlur: Element | null = null;
+	window.addEventListener(
+		"blur",
+		() => {
+			focusedAcrossWindowBlur = document.activeElement;
+		},
+		{ signal },
+	);
 	document.addEventListener(
 		"focusin",
 		({ target }) => {
+			const returning = target === focusedAcrossWindowBlur;
+			focusedAcrossWindowBlur = null;
 			if (
+				!returning &&
 				target instanceof Element &&
 				target.matches(":focus-visible") &&
 				!target.matches(LEFT_IN_PLACE)
 			) {
-				const scroller = nearestScrollableAncestor(target);
-				if (scroller !== null) stopScrollAnimation(scroller);
+				stopScrollersAround(target);
 				target.scrollIntoView({ block: "nearest", inline: "nearest" });
 			}
 		},
-		{ signal: listening.signal },
+		{ signal },
 	);
 	return () => {
 		listening.abort();

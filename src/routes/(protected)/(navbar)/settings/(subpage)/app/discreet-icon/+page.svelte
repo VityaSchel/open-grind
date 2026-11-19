@@ -40,7 +40,6 @@
 		sectionStarts: () => [0, 1],
 		wrap: "rows",
 		restingKey: () => currentDisguise(),
-		stopTabindex: "explicit",
 	});
 
 	const escapeKeydownBehavior = $derived(applying ? "ignore" : "close");

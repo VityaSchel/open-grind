@@ -32,18 +32,25 @@ function press(key: string): KeyboardEvent {
 }
 
 describe("scrollTowardEdge", () => {
-	it("steps a line for an arrow, most of a view for a page key and all the way for Home and End", () => {
+	it("steps a line, most of a view or all the way as the move asks, whatever the key", () => {
 		const { element, scrollTo } = scroller({ top: 200 });
 
-		for (const [key, edge] of [
-			["ArrowDown", "down"],
-			["PageDown", "down"],
-			["Home", "up"],
+		for (const [key, step, edge] of [
+			["ArrowDown", "line", "down"],
+			["PageDown", "page", "down"],
+			[" ", "page", "down"],
+			["Home", "end", "up"],
+			["ArrowDown", "end", "down"],
 		] as const)
-			scrollTowardEdge({ event: press(key), edge, scroller: element });
+			scrollTowardEdge({
+				event: press(key),
+				edge,
+				step,
+				scroller: element,
+			});
 
 		expect(scrollTo.mock.calls.map(([options]) => options.top)).toEqual([
-			240, 550, 0,
+			240, 550, 550, 0, 600,
 		]);
 	});
 
@@ -52,12 +59,45 @@ describe("scrollTowardEdge", () => {
 		const atEdge = press("ArrowUp");
 		const inside = press("ArrowDown");
 
-		scrollTowardEdge({ event: atEdge, edge: "up", scroller: element });
-		scrollTowardEdge({ event: inside, edge: "down", scroller: element });
+		scrollTowardEdge({
+			event: atEdge,
+			edge: "up",
+			step: "line",
+			scroller: element,
+		});
+		scrollTowardEdge({
+			event: inside,
+			edge: "down",
+			step: "line",
+			scroller: element,
+		});
 
 		expect(atEdge.defaultPrevented).toBe(false);
 		expect(inside.defaultPrevented).toBe(true);
 		expect(scrollTo).toHaveBeenCalledTimes(1);
+	});
+
+	it("claims Home and End at a sideways edge with no room, where the browser would scroll the page instead", () => {
+		const { element, scrollTo } = scroller({ left: 0 });
+		const home = press("Home");
+		const arrow = press("ArrowLeft");
+
+		scrollTowardEdge({
+			event: home,
+			edge: "left",
+			step: "end",
+			scroller: element,
+		});
+		scrollTowardEdge({
+			event: arrow,
+			edge: "left",
+			step: "line",
+			scroller: element,
+		});
+
+		expect(home.defaultPrevented).toBe(true);
+		expect(arrow.defaultPrevented).toBe(false);
+		expect(scrollTo).not.toHaveBeenCalled();
 	});
 
 	it("stops at the far end instead of overshooting", () => {
@@ -66,6 +106,7 @@ describe("scrollTowardEdge", () => {
 		scrollTowardEdge({
 			event: press("ArrowDown"),
 			edge: "down",
+			step: "line",
 			scroller: element,
 		});
 
@@ -83,11 +124,13 @@ describe("scrollTowardEdge", () => {
 		scrollTowardEdge({
 			event: press("ArrowRight"),
 			edge: "right",
+			step: "line",
 			scroller: element,
 		});
 		scrollTowardEdge({
 			event: press("End"),
 			edge: "left",
+			step: "end",
 			scroller: element,
 		});
 
