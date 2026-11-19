@@ -26,7 +26,8 @@ vi.mock("#lib/api/current-session.ts", () => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
-import { runningOn } from "#lib/test/platform.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
 import { proxyMediaUrl } from "#lib/util/media.ts";
 import type { openLightbox } from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
@@ -68,10 +69,14 @@ function renderVideo({
 	body,
 	isOut = false,
 	status,
+	onReply,
+	onReact,
 }: {
 	body: Record<string, unknown>;
 	isOut?: boolean;
 	status?: "sent" | "pending" | "error";
+	onReply?: () => void;
+	onReact?: (reactionId: number) => void;
 }) {
 	return render(Message, {
 		props: {
@@ -81,6 +86,8 @@ function renderVideo({
 			indexInStack: 0,
 			stackLength: 1,
 			status,
+			onReply,
+			onReact,
 		},
 	});
 }
@@ -109,6 +116,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
+	resetPlatform();
 });
 
 describe("video message", () => {
@@ -239,6 +247,34 @@ describe("video message", () => {
 
 		expect(play.getAttribute("aria-disabled")).toBe("true");
 		expect(document.activeElement).not.toBe(play);
+	});
+
+	it("leaves a double click on the video out of replying to the message", async () => {
+		const onReply = vi.fn();
+		const { getByRole } = renderVideo({ body: {}, onReply });
+
+		await fireEvent.dblClick(getByRole("button", PLAY));
+
+		expect(onReply).not.toHaveBeenCalled();
+	});
+
+	it("still reacts to a double tap on the video", () => {
+		runningOn("android");
+		const onReply = vi.fn();
+		const onReact = vi.fn();
+		const { getByRole } = renderVideo({ body: {}, onReply, onReact });
+		const play = getByRole("button", PLAY);
+
+		for (let tap = 0; tap < 2; tap += 1) {
+			play.dispatchEvent(pointerEvent("pointerdown"));
+			play.dispatchEvent(pointerEvent("pointerup"));
+		}
+		play.dispatchEvent(
+			new MouseEvent("dblclick", { bubbles: true, cancelable: true }),
+		);
+
+		expect(onReact).toHaveBeenCalledExactlyOnceWith(1);
+		expect(onReply).not.toHaveBeenCalled();
 	});
 
 	it("spends another view on each play while views are left", async () => {

@@ -179,6 +179,7 @@
 			},
 		]}
 		onclick={openImage}
+		ondblclick={(event) => event.preventDefault()}
 		aria-disabled={imageState.status !== "idle"}
 		{@attach media.attach}
 	>

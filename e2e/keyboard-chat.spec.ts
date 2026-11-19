@@ -14,6 +14,7 @@ const MESSAGE_ACTIONS = { name: "Message actions" };
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const PLAY_VIDEO = { name: "Play expiring video" };
 const THEM = 100001;
+const ME = 123456000;
 
 function actionsButtons(page: Page): Locator {
 	return page.getByRole("button", MESSAGE_ACTIONS);
@@ -46,7 +47,10 @@ function focusIsInAMessage(page: Page): Promise<boolean> {
 	);
 }
 
-async function deliverVideo(page: Page): Promise<void> {
+async function deliverVideo(
+	page: Page,
+	{ senderId = THEM }: { senderId?: number } = {},
+): Promise<void> {
 	const timestamp = Date.now() + 60_000;
 	await emitMessageSent(page, {
 		type: "Video",
@@ -61,7 +65,7 @@ async function deliverVideo(page: Page): Promise<void> {
 		},
 		messageId: `ws-video-${timestamp}`,
 		conversationId: DEMO_CONVERSATION_ID,
-		senderId: THEM,
+		senderId,
 		timestamp,
 		unsent: false,
 		reactions: [],
@@ -173,6 +177,42 @@ test.describe("keyboard navigation in a conversation", () => {
 			true,
 		]);
 		await expect(page.getByText("Replying to")).toHaveCount(0);
+	});
+
+	test("Left and Right on an outgoing message follow its menu button over to the left of the video", async ({
+		page,
+	}) => {
+		await openConversation(page);
+		await deliverVideo(page, { senderId: ME });
+		await recordPreventedArrows(page);
+		const actions = actionsButtons(page).last();
+		const play = page.getByRole("button", PLAY_VIDEO).last();
+		await actions.focus();
+
+		await page.keyboard.press("ArrowRight");
+		await expect(play).toBeFocused();
+
+		await page.keyboard.press("ArrowRight");
+		await expect(play).toBeFocused();
+
+		await page.keyboard.press("ArrowLeft");
+		await expect(actions).toBeFocused();
+
+		await page.keyboard.press("ArrowLeft");
+		await expect(actions).toBeFocused();
+		expect(await page.evaluate(() => window.__preventedArrows)).toEqual([
+			true,
+			true,
+			true,
+			true,
+		]);
+		const actionsRight = await actions.evaluate(
+			(node) => node.getBoundingClientRect().right,
+		);
+		const playLeft = await play.evaluate(
+			(node) => node.getBoundingClientRect().left,
+		);
+		expect(actionsRight).toBeLessThanOrEqual(playLeft);
 	});
 
 	test("moving to another message lands on its menu button even after visiting media", async ({

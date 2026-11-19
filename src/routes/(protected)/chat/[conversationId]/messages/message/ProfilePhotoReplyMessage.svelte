@@ -116,6 +116,7 @@
 				loading = true;
 				open = true;
 			}}
+			ondblclick={(event) => event.preventDefault()}
 			aria-disabled={unavailable}
 		>
 			{@render photo()}

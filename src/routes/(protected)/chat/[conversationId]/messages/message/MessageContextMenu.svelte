@@ -18,6 +18,7 @@
 	let {
 		textContent,
 		reactionAvailable,
+		openedByKeyboard = false,
 		onDelete,
 		onUnsend,
 		onCopyError,
@@ -28,6 +29,7 @@
 	}: ComponentProps<typeof ContextMenu> & {
 		textContent?: string;
 		reactionAvailable?: boolean;
+		openedByKeyboard?: boolean;
 		onDelete?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
@@ -35,11 +37,6 @@
 		onReport?: () => void;
 		onReact?: (reactionId: number) => void;
 	} = $props();
-
-	const openedByKeyboard =
-		document.activeElement?.matches(
-			":focus-visible:not(input, textarea, select, [contenteditable])",
-		) ?? false;
 </script>
 
 <ContextMenu {...props}>
@@ -129,8 +126,8 @@
 				variant="ghost"
 				role="menuitem"
 				onclick={() => {
-					onCopyError();
 					props.onClose();
+					onCopyError();
 				}}
 			>
 				<WarningCircleIcon />

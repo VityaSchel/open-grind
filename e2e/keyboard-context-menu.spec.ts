@@ -250,6 +250,26 @@ test.describe("keyboard access to context menus", () => {
 		await expect(button).toHaveAttribute("aria-expanded", "false");
 	});
 
+	test("closing the report sheet a message's menu opened hands focus back to the message's menu button", async ({
+		page,
+	}) => {
+		await openConversation(page);
+		const button = messageActions(page, GREETING);
+		await button.focus();
+		await page.keyboard.press("Enter");
+		await page
+			.getByRole("menuitem", { name: "Report", exact: true })
+			.focus();
+		await page.keyboard.press("Enter");
+		const sheet = page.getByRole("dialog", { name: "Report Messages" });
+		await expect(sheet).toBeVisible();
+
+		await page.keyboard.press("Escape");
+
+		await expect(sheet).toBeHidden();
+		await expect(button).toBeFocused();
+	});
+
 	test("Space on a message's menu button opens the menu", async ({
 		page,
 	}) => {

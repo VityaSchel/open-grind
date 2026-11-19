@@ -160,6 +160,7 @@
 		aria-label={t("chat.message.video.a11y.play")}
 		aria-disabled={player.status !== "idle"}
 		onclick={play}
+		ondblclick={(event) => event.preventDefault()}
 		{@attach media.attach}
 	>
 		{@render bubbleContent()}
