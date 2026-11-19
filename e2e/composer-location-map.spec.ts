@@ -61,12 +61,10 @@ test("location sharing loads maps on demand and preserves the searched and panne
 	expect(tileRequests).toBe(0);
 	for (let opening = 0; opening < 2; opening++) {
 		await location.click();
-		await expect(
-			page.getByRole("tabpanel", { name: "Location", exact: true }),
-		).toHaveAccessibleDescription(
+		await expect(map).toBeVisible();
+		await expect(map).toHaveAccessibleDescription(
 			"Drag the map to place the pin on the location you want to share.",
 		);
-		await expect(map).toBeVisible();
 		await expect
 			.poll(async () => (await map.boundingBox())?.height ?? 0)
 			.toBeGreaterThan(200);
