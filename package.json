@@ -21,6 +21,7 @@
 		"dev": "bun dev:desktop",
 		"dev:android": "bash scripts/dev-android.sh",
 		"dev:desktop": "tauri dev --features devtools",
+		"dev:ios": "bash scripts/dev-ios.sh",
 		"docs": "bun run --cwd docs start",
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",

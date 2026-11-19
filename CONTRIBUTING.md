@@ -62,6 +62,7 @@ Projects reference:
 
     - Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app.
     - Run with `OPEN_GRIND_DEMO=1` to switch to SFW mock data. iOS builds also need `--features demo`, because Xcode runs cargo without `OPEN_GRIND_DEMO`.
+    - `bun dev:ios` runs `tauri ios dev` without the Nix shell's `DEVELOPER_DIR` and `SDKROOT` and adds `--features demo` under `OPEN_GRIND_DEMO=1`. Given no device, it picks the simulator `OG_SIMULATOR` names, if set.
     - `tauri android dev` launches `.MainActivity`, which is disabled while a discreet app icon is selected on the device. Switch back to the Open Grind icon first.
 
 ### Project structure
