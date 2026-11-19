@@ -1,5 +1,10 @@
 import { $ } from "bun";
 
+export async function removeSignature(binary: string): Promise<void> {
+	await $`codesign_allocate -i ${binary} -r -o ${binary}.unsigned`;
+	await $`mv ${binary}.unsigned ${binary}`;
+}
+
 export async function signAdHoc({
 	bundle,
 	executable,
@@ -9,9 +14,7 @@ export async function signAdHoc({
 	executable: string;
 	hardenedRuntime: boolean;
 }): Promise<void> {
-	const binary = `${bundle}/${executable}`;
 	const flags = hardenedRuntime ? ["--code-signature-flags", "runtime"] : [];
-	await $`codesign_allocate -i ${binary} -r -o ${binary}.unsigned`;
-	await $`mv ${binary}.unsigned ${binary}`;
+	await removeSignature(`${bundle}/${executable}`);
 	await $`rcodesign sign -C /dev/null ${flags} ${bundle}`;
 }

@@ -290,6 +290,7 @@ fi
     | Rust toolchain with `llvm-tools`, CMake, Perl, Go | `flake.lock`                                                          |
     | Checkout path and `CARGO_HOME`                    | remapped to `/open-grind` and `/cargo` by `nix/ios.nix`               |
     | `Info.plist`                                      | rewritten with sorted keys and without `BuildMachineOSBuild`          |
+    | Mach-O `LC_UUID`                                  | recomputed from the stripped binary, also in the archive's dSYM       |
     | Ad-hoc signature                                  | `flake.lock` (nixpkgs `rcodesign`)                                    |
     | Zip archive                                       | `flake.lock` (nixpkgs `zip`)                                          |
     | `codesign_allocate`                               | `flake.lock` (nixpkgs `cctools`)                                      |

@@ -3,6 +3,7 @@ import { existsSync, realpathSync } from "node:fs";
 import { $ } from "bun";
 
 import { IPA_APP, verifyIpa } from "./ios/ipa";
+import { contentUuid, withUuid } from "./ios/mach-o-uuid";
 import { plistXml } from "./ios/plist-xml";
 import {
 	IPHONEOS_SDK_BUILD,
@@ -10,7 +11,7 @@ import {
 	sideloadInfoPlist,
 	XCODE_BUILD,
 } from "./ios/sideload";
-import { signAdHoc } from "./lib/ad-hoc-sign";
+import { removeSignature, signAdHoc } from "./lib/ad-hoc-sign";
 import { assetSuffix } from "./lib/asset-suffix";
 import { archive, sourceDateStamp } from "./lib/deterministic-zip";
 import { XCRUN } from "./lib/xcrun";
@@ -29,6 +30,7 @@ const stamp = sourceDateStamp(NIX_APP);
 const archived = `${root}/src-tauri/gen/apple/build/open-grind_iOS.xcarchive`;
 const payload = `${root}/src-tauri/gen/apple/build/sideload/Payload`;
 const app = `${payload}/${APP_NAME}`;
+const dsym = `${archived}/dSYMs/${APP_NAME}.dSYM/Contents/Resources/DWARF/${EXECUTABLE}`;
 const out = `${root}/src-tauri/target/release/artifacts`;
 
 const { version } = await Bun.file(`${root}/src-tauri/tauri.conf.json`).json();
@@ -102,6 +104,18 @@ async function requireNoBuildPaths(): Promise<void> {
 	}
 }
 
+async function useContentUuid(): Promise<void> {
+	const binary = `${app}/${EXECUTABLE}`;
+	await removeSignature(binary);
+	const unsigned = await Bun.file(binary).bytes();
+	const uuid = contentUuid(unsigned);
+	await Bun.write(binary, withUuid({ binary: unsigned, uuid }));
+	await Bun.write(
+		dsym,
+		withUuid({ binary: await Bun.file(dsym).bytes(), uuid }),
+	);
+}
+
 async function verifySideload(): Promise<void> {
 	await verifyIpa({ ipa, bundleVersion });
 	const into = (await $`mktemp -d`.text()).trim();
@@ -139,6 +153,7 @@ await $`bun tauri ios build --no-sign --archive-only --ci -- ${cargoCFlags()}`.c
 await stageApp();
 await normalizeInfoPlist();
 await requireNoBuildPaths();
+await useContentUuid();
 await signAdHoc({
 	bundle: app,
 	executable: EXECUTABLE,
