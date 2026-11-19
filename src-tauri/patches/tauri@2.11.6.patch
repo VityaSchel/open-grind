@@ -10,7 +10,7 @@ index 2aab29e..dbc6a1b 100644
 +[lints.rust]
 +warnings = { level = "allow", priority = -1 }
 diff --git a/src/manager/mod.rs b/src/manager/mod.rs
-index c07ae0f..e5f956a 100644
+index c07ae0f..7ebd841 100644
 --- a/src/manager/mod.rs
 +++ b/src/manager/mod.rs
 @@ -219,6 +219,9 @@ pub struct AppManager<R: Runtime> {
@@ -18,30 +18,21 @@ index c07ae0f..e5f956a 100644
    /// and we will call `restart` on the next `RuntimeRunEvent::Exit` event
    pub(crate) restart_on_exit: AtomicBool,
 +
-+  /// The origin the `tauri` protocol is served from when `app > androidHostname` is set on Android.
++  /// The origin the `tauri` protocol is served from when `app > androidHostname` is set on Android or `app > iosHostname` on iOS.
 +  pub(crate) custom_app_origin: Option<Url>,
  }
  
  impl<R: Runtime> fmt::Debug for AppManager<R> {
-@@ -279,6 +282,17 @@ impl<R: Runtime> AppManager<R> {
+@@ -279,6 +282,8 @@ impl<R: Runtime> AppManager<R> {
        *key = uuid::Uuid::new_v4().to_string();
      }
  
-+    // unit tests exercise the Android-only `app > androidHostname` on every platform
-+    let custom_app_origin = context
-+      .config
-+      .app
-+      .android_hostname
-+      .as_ref()
-+      .filter(|_| cfg!(any(target_os = "android", test)))
-+      .map(|hostname| {
-+        Url::parse(&format!("https://{hostname}")).expect("`AndroidHostname` is a valid URL host")
-+      });
++    let custom_app_origin = crate::protocol::custom_app_origin(&context.config.app);
 +
      Self {
        runtime_authority: Mutex::new(context.runtime_authority),
        window: window::WindowManager {
-@@ -326,6 +340,7 @@ impl<R: Runtime> AppManager<R> {
+@@ -326,6 +331,7 @@ impl<R: Runtime> AppManager<R> {
        invoke_key,
        channel_interceptor,
        restart_on_exit: AtomicBool::new(false),
@@ -49,13 +40,13 @@ index c07ae0f..e5f956a 100644
      }
    }
  
-@@ -335,9 +350,12 @@ impl<R: Runtime> AppManager<R> {
+@@ -335,9 +341,12 @@ impl<R: Runtime> AppManager<R> {
    }
  
    /// The `tauri` custom protocol URL we use to serve the embedded assets.
 -  /// Returns `tauri://localhost` or its `wry` workaround URL `http://tauri.localhost`/`https://tauri.localhost`
 +  /// Returns `tauri://localhost` or its `wry` workaround URL `http://tauri.localhost`/`https://tauri.localhost`,
-+  /// or `https://<androidHostname>` on Android when `app > androidHostname` is set.
++  /// `https://<androidHostname>` on Android when `app > androidHostname` is set, or `tauri://<iosHostname>` on iOS when `app > iosHostname` is set.
    pub(crate) fn tauri_protocol_url(&self, https: bool) -> Cow<'_, Url> {
 -    if cfg!(windows) || cfg!(target_os = "android") {
 +    if let Some(origin) = &self.custom_app_origin {
@@ -65,7 +56,7 @@ index c07ae0f..e5f956a 100644
        Cow::Owned(Url::parse(&format!("{scheme}://tauri.localhost")).unwrap())
      } else {
 diff --git a/src/manager/webview.rs b/src/manager/webview.rs
-index 8c99afb..a3959ec 100644
+index 8c99afb..4aa2451 100644
 --- a/src/manager/webview.rs
 +++ b/src/manager/webview.rs
 @@ -439,7 +439,6 @@ impl<R: Runtime> WebviewManager<R> {
@@ -85,13 +76,15 @@ index 8c99afb..a3959ec 100644
          if is_app_url && PROXY_DEV_SERVER && is_local_network_url(&url) {
            Url::parse("tauri://localhost").unwrap()
          } else {
-@@ -474,6 +473,12 @@ impl<R: Runtime> WebviewManager<R> {
+@@ -474,6 +473,14 @@ impl<R: Runtime> WebviewManager<R> {
        _ => unimplemented!(),
      };
  
 +    if let Some(origin) = &app_manager.custom_app_origin {
-+      pending.webview_attributes.use_https_scheme = true;
-+      pending.webview_attributes.android_hostname = origin.host_str().map(ToOwned::to_owned);
++      if origin.scheme() == "https" {
++        pending.webview_attributes.use_https_scheme = true;
++        pending.webview_attributes.android_hostname = origin.host_str().map(ToOwned::to_owned);
++      }
 +      url = crate::protocol::with_custom_app_origin(url, origin);
 +    }
 +
@@ -99,20 +92,56 @@ index 8c99afb..a3959ec 100644
      if url.scheme() == "data" {
        return Err(crate::Error::InvalidWebviewUrl(
 diff --git a/src/protocol/mod.rs b/src/protocol/mod.rs
-index 8542e2a..36c2be4 100644
+index 8542e2a..6d3f695 100644
 --- a/src/protocol/mod.rs
 +++ b/src/protocol/mod.rs
-@@ -4,8 +4,91 @@
+@@ -4,8 +4,218 @@
  
  //! Custom protocol handlers
  
 +use url::Url;
++
++use crate::utils::config::AppConfig;
 +
  #[cfg(feature = "protocol-asset")]
  pub mod asset;
  #[cfg(feature = "isolation")]
  pub mod isolation;
  pub mod tauri;
++
++/// The origin the `tauri` protocol is served from, `https://<androidHostname>` on Android or `tauri://<iosHostname>` on iOS.
++/// Unit tests exercise both on every platform.
++pub(crate) fn custom_app_origin(app: &AppConfig) -> Option<Url> {
++  let android = app
++    .android_hostname
++    .as_ref()
++    .filter(|_| cfg!(any(target_os = "android", test)))
++    .map(|hostname| format!("https://{hostname}"));
++  let ios = app
++    .ios_hostname
++    .as_ref()
++    .filter(|_| cfg!(any(target_os = "ios", test)))
++    .map(|hostname| format!("tauri://{hostname}"));
++  android
++    .or(ios)
++    .map(|origin| Url::parse(&origin).expect("`AndroidHostname` is a valid URL host"))
++}
++
++/// Whether `url` is on the custom app origin. [`Url::origin`] can't tell, since it is opaque for `tauri://` URLs.
++pub(crate) fn is_custom_app_origin(url: &Url, custom_app_origin: &Url) -> bool {
++  url.scheme() == custom_app_origin.scheme()
++    && url.host() == custom_app_origin.host()
++    && url.port_or_known_default() == custom_app_origin.port_or_known_default()
++}
++
++/// The path of a `tauri` protocol request URI, which on iOS keeps the custom app origin.
++/// Empty when a request is made to `https://tauri.$P` on Windows and Android where `$P` is not `localhost/*`.
++pub(crate) fn asset_path<'a>(uri: &'a str, custom_app_origin: Option<&Url>) -> &'a str {
++  uri
++    .strip_prefix("tauri://localhost")
++    .or_else(|| custom_app_origin.and_then(|origin| uri.strip_prefix(origin.as_str().trim_end_matches('/'))))
++    .unwrap_or_default()
++}
 +
 +/// Rewrites a `tauri://localhost` URL to the custom app origin, matching the URL wry loads.
 +pub(crate) fn with_custom_app_origin(url: Url, custom_app_origin: &Url) -> Url {
@@ -141,10 +170,77 @@ index 8542e2a..36c2be4 100644
 +mod tests {
 +  use url::Url;
 +
-+  use super::{localhost_protocol, with_custom_app_origin};
++  use super::{
++    asset_path, custom_app_origin, is_custom_app_origin, localhost_protocol, with_custom_app_origin,
++  };
++  use crate::utils::config::AppConfig;
 +
 +  fn url(url: &str) -> Url {
 +    Url::parse(url).unwrap()
++  }
++
++  #[test]
++  fn custom_app_origin_is_https_on_android_and_tauri_on_ios() {
++    for (config, expected) in [
++      (serde_json::json!({}), None),
++      (
++        serde_json::json!({ "androidHostname": "app.example.com" }),
++        Some("https://app.example.com/"),
++      ),
++      (
++        serde_json::json!({ "iosHostname": "app.example.com" }),
++        Some("tauri://app.example.com"),
++      ),
++    ] {
++      let config: AppConfig = serde_json::from_value(config).unwrap();
++      assert_eq!(
++        custom_app_origin(&config).as_ref().map(Url::as_str),
++        expected
++      );
++    }
++  }
++
++  #[test]
++  fn only_the_exact_custom_app_origin_matches() {
++    let ios = url("tauri://app.example.com");
++    for same in [
++      "tauri://app.example.com",
++      "tauri://app.example.com/",
++      "tauri://app.example.com/chat/1?tab=albums#top",
++    ] {
++      assert!(is_custom_app_origin(&url(same), &ios), "{same}");
++    }
++    for other in [
++      "tauri://localhost/",
++      "tauri://APP.example.com/",
++      "tauri://app.example.com:8080/",
++      "tauri://sub.app.example.com/",
++      "tauri://app.example.com.evil.net/",
++      "https://app.example.com/",
++      "ipc://app.example.com/",
++    ] {
++      assert!(!is_custom_app_origin(&url(other), &ios), "{other}");
++    }
++
++    let android = url("https://app.example.com");
++    assert!(is_custom_app_origin(&url("https://APP.example.com:443/"), &android));
++    assert!(!is_custom_app_origin(&url("tauri://app.example.com/"), &android));
++  }
++
++  #[test]
++  fn assets_are_served_from_the_ios_custom_app_origin() {
++    let ios = url("tauri://app.example.com");
++    for (uri, origin, path) in [
++      ("tauri://localhost/_app/env.js", None, "/_app/env.js"),
++      ("tauri://localhost", None, ""),
++      ("tauri://app.example.com/_app/env.js", Some(&ios), "/_app/env.js"),
++      ("tauri://app.example.com", Some(&ios), ""),
++      ("tauri://localhost/index.html", Some(&ios), "/index.html"),
++      ("tauri://app.example.com/_app/env.js", None, ""),
++      ("tauri://other.example.com/_app/env.js", Some(&ios), ""),
++    ] {
++      assert_eq!(asset_path(uri, origin), path, "{uri}");
++    }
 +  }
 +
 +  #[test]
@@ -180,6 +276,30 @@ index 8542e2a..36c2be4 100644
 +  }
 +
 +  #[test]
++  fn tauri_localhost_moves_to_ios_custom_app_origin() {
++    let origin = url("tauri://app.example.com");
++    for (input, expected) in [
++      ("tauri://localhost", "tauri://app.example.com"),
++      ("tauri://localhost/", "tauri://app.example.com/"),
++      (
++        "tauri://localhost/nested/page.html?q=1#top",
++        "tauri://app.example.com/nested/page.html?q=1#top",
++      ),
++    ] {
++      assert_eq!(
++        with_custom_app_origin(url(input), &origin).as_str(),
++        expected
++      );
++    }
++    for unchanged in ["tauri://other/", "ogmedia://localhost/media"] {
++      assert_eq!(
++        with_custom_app_origin(url(unchanged), &origin).as_str(),
++        unchanged
++      );
++    }
++  }
++
++  #[test]
 +  fn tauri_localhost_is_not_a_protocol_with_custom_app_origin() {
 +    for (input, unmapped, mapped) in [
 +      ("https://tauri.localhost/", Some("tauri"), None),
@@ -195,10 +315,24 @@ index 8542e2a..36c2be4 100644
 +  }
 +}
 diff --git a/src/protocol/tauri.rs b/src/protocol/tauri.rs
-index 57a8690..089d483 100644
+index 57a8690..f8b387b 100644
 --- a/src/protocol/tauri.rs
 +++ b/src/protocol/tauri.rs
-@@ -169,8 +169,22 @@ async fn get_response<R: Runtime>(
+@@ -156,12 +156,7 @@ async fn get_response<R: Runtime>(
+       .into()
+   };
+ 
+-  let path = path
+-    .strip_prefix("tauri://localhost")
+-    .map(|p| p.to_string())
+-    // the `strip_prefix` only returns None when a request is made to `https://tauri.$P` on Windows and Android
+-    // where `$P` is not `localhost/*`
+-    .unwrap_or_default();
++  let path = crate::protocol::asset_path(&path, manager.custom_app_origin.as_ref()).to_string();
+ 
+   #[allow(unused_mut)]
+   let mut builder = HttpResponse::builder()
+@@ -169,8 +164,22 @@ async fn get_response<R: Runtime>(
      .header("Access-Control-Allow-Origin", window_origin);
  
    #[cfg(all(dev, mobile))]
@@ -208,11 +342,11 @@ index 57a8690..089d483 100644
 +    if let Some(origin) = manager
 +      .custom_app_origin
 +      .as_ref()
-+      .filter(|origin| manager.get_app_url(true).origin() == origin.origin())
++      .filter(|origin| crate::protocol::is_custom_app_origin(&manager.get_app_url(true), origin))
 +    {
 +      return Err(
 +        format!(
-+          "`app > androidHostname` requires `build > devUrl` in development, refusing to fetch {origin} from the network"
++          "`app > androidHostname` and `app > iosHostname` require `build > devUrl` in development, refusing to fetch {origin} from the network"
 +        )
 +        .into(),
 +      );
@@ -321,19 +455,20 @@ index f51c488..d6b03f1 100644
  
      Ok(DetachedWindow {
 diff --git a/src/test/mod.rs b/src/test/mod.rs
-index a1428c3..02d35f6 100644
+index a1428c3..b4d35ff 100644
 --- a/src/test/mod.rs
 +++ b/src/test/mod.rs
-@@ -121,6 +121,7 @@ pub fn mock_context<R: Runtime, A: Assets<R>>(assets: A) -> crate::Context<R> {
+@@ -121,6 +121,8 @@ pub fn mock_context<R: Runtime, A: Assets<R>>(assets: A) -> crate::Context<R> {
          tray_icon: None,
          macos_private_api: false,
          enable_gtk_app_id: false,
 +        android_hostname: None,
++        ios_hostname: None,
        },
        bundle: Default::default(),
        build: Default::default(),
 diff --git a/src/webview/mod.rs b/src/webview/mod.rs
-index b89d3c9..a5437b9 100644
+index b89d3c9..60fb11a 100644
 --- a/src/webview/mod.rs
 +++ b/src/webview/mod.rs
 @@ -1099,6 +1099,10 @@ fn main() {
@@ -356,7 +491,7 @@ index b89d3c9..a5437b9 100644
 -      current_url.scheme() == protocol_url.scheme()
 -      && current_url.domain() == protocol_url.domain()
 +    (match &self.manager().custom_app_origin {
-+      Some(origin) => current_url.origin() == origin.origin(),
++      Some(origin) => crate::protocol::is_custom_app_origin(current_url, origin),
 +      None => {
 +        let protocol_url = self.manager().tauri_protocol_url(uses_https);
 +        current_url.scheme() == protocol_url.scheme()
@@ -383,7 +518,7 @@ index b89d3c9..a5437b9 100644
  
            scheme && protocol
          };
-@@ -2476,6 +2484,129 @@ mod tests {
+@@ -2476,6 +2484,240 @@ mod tests {
      }
    }
  
@@ -502,6 +637,117 @@ index b89d3c9..a5437b9 100644
 +    }
 +
 +    if let Err(e) = invoke("https://app.example.com") {
++      let msg = e.to_string();
++      assert!(
++        !msg.contains("not allowed"),
++        "the app origin must not be rejected by the ACL, got: {msg}"
++      );
++    }
++  }
++
++  fn ios_hostname_app() -> crate::App<crate::test::MockRuntime> {
++    let mut context = crate::test::mock_context(crate::test::noop_assets());
++    context.config_mut().app.ios_hostname = Some("app.example.com".parse().unwrap());
++    crate::test::mock_builder().build(context).unwrap()
++  }
++
++  #[test]
++  fn ios_hostname_serves_app_from_custom_origin() {
++    let app = ios_hostname_app();
++
++    let main = crate::WebviewWindowBuilder::new(&app, "main", crate::WebviewUrl::default())
++      .build()
++      .unwrap();
++    assert_eq!(main.url().unwrap().as_str(), "tauri://app.example.com");
++    assert!(!main.webview.use_https_scheme());
++
++    let page = crate::WebviewWindowBuilder::new(
++      &app,
++      "page",
++      crate::WebviewUrl::App("nested/page.html".into()),
++    )
++    .build()
++    .unwrap();
++    assert_eq!(
++      page.url().unwrap().as_str(),
++      "tauri://app.example.com/nested/page.html"
++    );
++
++    let custom_protocol = crate::WebviewWindowBuilder::new(
++      &app,
++      "custom-protocol",
++      crate::WebviewUrl::CustomProtocol(Url::parse("tauri://localhost/page.html?q=1#top").unwrap()),
++    )
++    .build()
++    .unwrap();
++    assert_eq!(
++      custom_protocol.url().unwrap().as_str(),
++      "tauri://app.example.com/page.html?q=1#top"
++    );
++  }
++
++  #[test]
++  fn ios_hostname_is_local_only_for_exact_origin() {
++    let app = ios_hostname_app();
++    let webview = crate::WebviewWindowBuilder::new(&app, "test", crate::WebviewUrl::default())
++      .build()
++      .unwrap()
++      .webview;
++
++    let url = |s| Url::parse(s).unwrap();
++
++    assert!(webview.is_local_url(&url("tauri://app.example.com")));
++    assert!(webview.is_local_url(&url("tauri://app.example.com/chat/1?tab=albums#top")));
++
++    for remote in [
++      "tauri://localhost/",
++      "tauri://app.example.com:8080/",
++      "tauri://sub.app.example.com/",
++      "tauri://app.example.com.evil.net/",
++      "https://app.example.com/",
++      "http://tauri.localhost/",
++    ] {
++      assert!(
++        !webview.is_local_url(&url(remote)),
++        "{remote} must be remote"
++      );
++    }
++  }
++
++  #[test]
++  fn ios_hostname_remote_origin_blocked_for_custom_commands() {
++    use crate::test::INVOKE_KEY;
++    use crate::webview::InvokeRequest;
++
++    let app = ios_hostname_app();
++    let webview = crate::WebviewWindowBuilder::new(&app, "main", Default::default())
++      .build()
++      .unwrap();
++
++    let invoke = |url: &str| {
++      crate::test::get_ipc_response(
++        &webview,
++        InvokeRequest {
++          cmd: "any_custom_command".into(),
++          callback: crate::ipc::CallbackFn(0),
++          error: crate::ipc::CallbackFn(1),
++          url: url.parse().unwrap(),
++          body: crate::ipc::InvokeBody::default(),
++          headers: Default::default(),
++          invoke_key: INVOKE_KEY.to_string(),
++        },
++      )
++    };
++
++    for remote in ["tauri://localhost", "https://app.example.com"] {
++      let err = invoke(remote).expect_err("custom command must be rejected from a remote origin");
++      assert!(
++        err.to_string().contains("not allowed"),
++        "{remote} must be rejected by the ACL, got: {err}"
++      );
++    }
++
++    if let Err(e) = invoke("tauri://app.example.com") {
 +      let msg = e.to_string();
 +      assert!(
 +        !msg.contains("not allowed"),

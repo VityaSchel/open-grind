@@ -115,6 +115,15 @@ Embedded assets and CSP hashes are emitted in hash-map and `readdir` order. The 
 
 Backport of [tauri#16220](https://github.com/tauri-apps/tauri/pull/16220). **Delete when a tauri release ships `app > androidHostname`**, and move the host into `tauri.conf.json`. Until then these four crates, wry and tauri-codegen move together: tauri-codegen 2.7 already requires tauri-utils 2.10.
 
+`app > iosHostname` serves the iOS app from `tauri://<host>` instead of `tauri://localhost`, so the page host matches the Android origin and the associated domain. WKWebView refuses scheme handlers for `https`, so only the host changes.
+
+| Crate         | Change                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| `tauri-utils` | `AppConfig::ios_hostname`, validated as `AndroidHostname`.                                                |
+| `tauri`       | Move `tauri://localhost` URLs to the host, serve assets from it and trust only that exact origin for IPC. |
+
+Not a backport. **Keep it when the `app > androidHostname` hunks are deleted.**
+
 ## tauri-plugin-geolocation
 
 `play-services-location` put four proprietary Play Services AARs into the APK, and the plugin returned no fix at all without Play Services.

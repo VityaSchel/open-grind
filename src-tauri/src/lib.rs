@@ -216,7 +216,7 @@ pub fn run() {
 	let devtools = tauri_plugin_devtools::init();
 
 	let mut context = tauri::generate_context!();
-	context.config_mut().app.android_hostname = app_origin::android_hostname();
+	app_origin::serve_from_app_hostname(&mut context.config_mut().app);
 
 	let builder = tauri::Builder::default();
 
@@ -427,7 +427,7 @@ pub fn run() {
                     tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
                         .user_agent(&user_agent)
                         .on_navigation(|url| {
-                            app_origin::is_app_url(url, app_origin::SERVED_HOSTNAME)
+                            app_origin::is_app_url(url, app_origin::SERVED_ORIGIN)
                         });
                 #[cfg(any(target_os = "macos", target_os = "windows"))]
                 let builder = builder.disable_drag_drop_handler();
@@ -793,7 +793,7 @@ mod opener_scope_pins {
 			.map(|scope| scope["url"].as_str().unwrap())
 			.collect();
 		let android_origin =
-			format!("https://{}", crate::app_origin::ANDROID_HOSTNAME);
+			format!("https://{}", crate::app_origin::APP_HOSTNAME);
 		for origin in [
 			"http://tauri.localhost",
 			"https://tauri.localhost",

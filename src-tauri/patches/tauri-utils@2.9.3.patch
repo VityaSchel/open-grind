@@ -10,7 +10,7 @@ index 60afad6..bdded9c 100644
 +[lints.rust]
 +warnings = { level = "allow", priority = -1 }
 diff --git a/src/config.rs b/src/config.rs
-index a54c619..d185c41 100644
+index a54c619..08ef561 100644
 --- a/src/config.rs
 +++ b/src/config.rs
 @@ -2159,6 +2159,10 @@ pub struct WindowConfig {
@@ -158,7 +158,7 @@ index a54c619..d185c41 100644
  /// The App configuration object.
  ///
  /// See more: <https://v2.tauri.app/reference/config/#appconfig>
-@@ -3076,6 +3207,23 @@ pub struct AppConfig {
+@@ -3076,6 +3207,28 @@ pub struct AppConfig {
    /// If set to true "identifier" will be set as GTK app ID (on systems that use GTK).
    #[serde(rename = "enableGTKAppId", alias = "enable-gtk-app-id", default)]
    pub enable_gtk_app_id: bool,
@@ -179,24 +179,31 @@ index a54c619..d185c41 100644
 +  /// and localStorage. Backend CORS rules and Content Security Policy sources must allow the new origin.
 +  #[serde(alias = "android-hostname")]
 +  pub android_hostname: Option<AndroidHostname>,
++  /// Serves the app from `tauri://<iosHostname>` instead of `tauri://localhost` on iOS, with the rules of `app > androidHostname`.
++  ///
++  /// Setting or changing this value changes the app origin, so the app can't access its old IndexedDB, cookies and localStorage.
++  #[serde(alias = "ios-hostname")]
++  pub ios_hostname: Option<AndroidHostname>,
  }
  
  impl AppConfig {
-@@ -4374,6 +4522,7 @@ mod build {
+@@ -4374,6 +4527,8 @@ mod build {
        let macos_private_api = self.macos_private_api;
        let with_global_tauri = self.with_global_tauri;
        let enable_gtk_app_id = self.enable_gtk_app_id;
 +      let android_hostname = opt_lit(self.android_hostname.as_ref());
++      let ios_hostname = opt_lit(self.ios_hostname.as_ref());
  
        literal_struct!(
          tokens,
-@@ -4383,11 +4532,21 @@ mod build {
+@@ -4383,11 +4538,22 @@ mod build {
          tray_icon,
          macos_private_api,
          with_global_tauri,
 -        enable_gtk_app_id
 +        enable_gtk_app_id,
-+        android_hostname
++        android_hostname,
++        ios_hostname
        );
      }
    }
@@ -213,15 +220,16 @@ index a54c619..d185c41 100644
    impl ToTokens for PluginConfig {
      fn to_tokens(&self, tokens: &mut TokenStream) {
        // Pass a sorted vec so the HashMap constructor is deterministic
-@@ -4469,6 +4628,7 @@ mod test {
+@@ -4469,6 +4635,8 @@ mod test {
        macos_private_api: false,
        with_global_tauri: false,
        enable_gtk_app_id: false,
 +      android_hostname: None,
++      ios_hostname: None,
      };
  
      // create a build config
-@@ -4516,6 +4676,171 @@ mod test {
+@@ -4516,6 +4684,194 @@ mod test {
      assert_eq!(d_windows, app.windows);
    }
  
@@ -342,6 +350,29 @@ index a54c619..d185c41 100644
 +      err.to_string().contains("Use `app.example.com` instead"),
 +      "{err}"
 +    );
++  }
++
++  #[test]
++  fn ios_hostname_serde_round_trip() {
++    let config: AppConfig =
++      serde_json::from_value(serde_json::json!({ "iosHostname": "app.example.com" })).unwrap();
++    assert_eq!(config.ios_hostname, Some("app.example.com".parse().unwrap()));
++    assert_eq!(config.android_hostname, None);
++
++    let value = serde_json::to_value(&config).unwrap();
++    assert_eq!(value["iosHostname"], "app.example.com");
++    assert_eq!(serde_json::from_value::<AppConfig>(value).unwrap(), config);
++
++    let kebab_case: AppConfig =
++      serde_json::from_value(serde_json::json!({ "ios-hostname": "app.example.com" })).unwrap();
++    assert_eq!(kebab_case, config);
++
++    for invalid in ["localhost", "tauri://app.example.com", "app.example.com:443"] {
++      assert!(
++        serde_json::from_value::<AppConfig>(serde_json::json!({ "iosHostname": invalid })).is_err(),
++        "`{invalid}` must be rejected"
++      );
++    }
 +  }
 +
 +  #[cfg(feature = "schema")]
