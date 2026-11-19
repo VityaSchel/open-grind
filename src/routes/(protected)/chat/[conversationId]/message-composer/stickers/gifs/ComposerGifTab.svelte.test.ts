@@ -83,6 +83,30 @@ async function mount({
 const tile = (name: string) => screen.getByRole("button", { name });
 const pressed = (name: string) => tile(name).getAttribute("aria-pressed");
 
+function pressWith({
+	target,
+	pointerType,
+}: {
+	target: Element;
+	pointerType: "mouse" | "touch";
+}) {
+	const press = new MouseEvent("pointerdown", { bubbles: true });
+	Object.defineProperty(press, "pointerType", { value: pointerType });
+	target.dispatchEvent(press);
+}
+
+async function search({
+	searchbox,
+	query,
+}: {
+	searchbox: HTMLElement;
+	query: string;
+}) {
+	await fireEvent.input(searchbox, { target: { value: query } });
+	await fireEvent.keyDown(searchbox, { key: "Enter" });
+	await settle();
+}
+
 beforeEach(() => {
 	vi.stubGlobal("IntersectionObserver", InertIntersectionObserver);
 	reducedMotion.current = false;
@@ -285,6 +309,7 @@ describe("composer GIF tab", () => {
 	});
 
 	it("leaves the search to the debounce when Enter confirms an IME conversion", async () => {
+		api.searchGifs.mockResolvedValue(trendingPage(["s1"]));
 		await mount();
 		const searchbox = screen.getByRole("searchbox");
 		searchbox.focus();
@@ -299,11 +324,105 @@ describe("composer GIF tab", () => {
 		await fireEvent.keyDown(searchbox, { key: "Enter" });
 		await settle();
 
-		expect(document.activeElement).not.toBe(searchbox);
+		expect(document.activeElement).toBe(tile("Trending s1"));
 		expect(api.searchGifs).toHaveBeenCalledExactlyOnceWith({
 			query: "cat",
 			offset: 0,
 		});
+	});
+
+	it("keeps focus in the search when Enter finds no GIFs or the search fails", async () => {
+		await mount();
+		const searchbox = screen.getByRole("searchbox");
+		searchbox.focus();
+
+		await search({ searchbox, query: "zzzz" });
+
+		expect(screen.getByText("No GIFs Found")).toBeTruthy();
+		expect(document.activeElement).toBe(searchbox);
+
+		api.searchGifs.mockRejectedValue(new Error("offline"));
+		await search({ searchbox, query: "cat" });
+
+		expect(screen.getByText("Couldn’t load GIFs")).toBeTruthy();
+		expect(document.activeElement).toBe(searchbox);
+	});
+
+	it("starts a new feed's Tab stop and ArrowDown at its first GIF, not where the last one was left", async () => {
+		api.searchGifs.mockResolvedValue(trendingPage(["s1", "s2", "s3"]));
+		await mount();
+		const searchbox = screen.getByRole("searchbox");
+		searchbox.focus();
+		await search({ searchbox, query: "cat" });
+		tile("Trending s3").focus();
+		searchbox.focus();
+		api.getTrendingGifs.mockResolvedValue(trendingPage(["a", "b", "s3"]));
+
+		await fireEvent.input(searchbox, { target: { value: "" } });
+		await settle();
+
+		expect(tile("Trending a").getAttribute("tabindex")).toBe("0");
+		await fireEvent.keyDown(searchbox, { key: "ArrowDown" });
+		await settle();
+		expect(document.activeElement).toBe(tile("Trending a"));
+	});
+
+	it("moves Enter to the first result when a mouse focused the search", async () => {
+		api.searchGifs.mockResolvedValue(trendingPage(["s1"]));
+		await mount();
+		const searchbox = screen.getByRole("searchbox");
+		pressWith({ target: searchbox, pointerType: "mouse" });
+		searchbox.focus();
+		await fireEvent.click(searchbox);
+
+		await search({ searchbox, query: "cat" });
+
+		expect(document.activeElement).toBe(tile("Trending s1"));
+	});
+
+	it("dismisses the search on Enter after a tap, but not after a tap that only moved the caret before a keyboard return", async () => {
+		api.searchGifs.mockResolvedValue(trendingPage(["s1"]));
+		await mount();
+		const searchbox = screen.getByRole("searchbox");
+		pressWith({ target: searchbox, pointerType: "touch" });
+		searchbox.focus();
+		await fireEvent.click(searchbox);
+
+		await search({ searchbox, query: "cat" });
+
+		expect(document.activeElement).toBe(document.body);
+
+		searchbox.focus();
+		pressWith({ target: searchbox, pointerType: "touch" });
+		await fireEvent.click(searchbox);
+		tile("Trending s1").focus();
+		searchbox.focus();
+
+		await search({ searchbox, query: "dog" });
+
+		expect(document.activeElement).toBe(tile("Trending s1"));
+	});
+
+	it("still dismisses the search on Enter after a tap on Clear search", async () => {
+		api.searchGifs.mockResolvedValue(trendingPage(["s1"]));
+		await mount();
+		const searchbox = screen.getByRole("searchbox");
+		pressWith({ target: searchbox, pointerType: "touch" });
+		searchbox.focus();
+		await fireEvent.click(searchbox);
+		await fireEvent.input(searchbox, { target: { value: "cat" } });
+		await settle();
+
+		const clear = screen.getByRole("button", { name: "Clear search" });
+		pressWith({ target: clear, pointerType: "touch" });
+		clear.focus();
+		await fireEvent.click(clear);
+		await settle();
+		expect(document.activeElement).toBe(searchbox);
+
+		await search({ searchbox, query: "dog" });
+
+		expect(document.activeElement).toBe(document.body);
 	});
 
 	it("hides its tiles while another tab is open and brings them back", async () => {

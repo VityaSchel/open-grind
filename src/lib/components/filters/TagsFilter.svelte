@@ -26,7 +26,11 @@
 	let query = $state("");
 	$effect(() => {
 		const next = searchQuery.trim().toLowerCase();
-		const timeout = setTimeout(() => (query = next), SEARCH_DEBOUNCE_MS);
+		const timeout = setTimeout(() => {
+			if (next === query) return;
+			query = next;
+			chips.activeKey = null;
+		}, SEARCH_DEBOUNCE_MS);
 		return () => clearTimeout(timeout);
 	});
 

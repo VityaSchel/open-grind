@@ -24,7 +24,12 @@
 		onSearchFocus?: () => void;
 	} = $props();
 
-	const feed = new GifFeed({ onRestart: () => onFeedRestart?.() });
+	const feed = new GifFeed({
+		onRestart: () => {
+			results.activeKey = null;
+			onFeedRestart?.();
+		},
+	});
 	const results = new RovingFocusState({
 		keys: () => feed.gifs.map(({ id }) => id),
 		orientation: "grid",
@@ -45,10 +50,9 @@
 
 	async function focusFirstResult() {
 		await tick();
-		if (document.activeElement !== searchInput) return;
 		const first = feed.gifs[0];
-		if (first === undefined) searchInput?.blur();
-		else void results.focus({ key: first.id });
+		if (first !== undefined && document.activeElement === searchInput)
+			void results.focus({ key: first.id });
 	}
 
 	$effect(() => {

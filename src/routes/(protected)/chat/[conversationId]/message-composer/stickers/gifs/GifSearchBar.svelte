@@ -6,6 +6,7 @@
 
 	import * as InputGroup from "#lib/components/ui/input-group/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 	import { GIF_INPUT_MAX_LENGTH } from "./gif-feed.svelte";
 
 	let {
@@ -27,10 +28,24 @@
 	} = $props();
 
 	let focused = $state(false);
-	let pointerPressed = false;
-	const notePointerPress: Attachment<HTMLElement> = (node) =>
-		on(node, "pointerdown", () => (pointerPressed = true));
-	let focusedByPointer = false;
+	let touchPressed = false;
+	let focusedByTouch = false;
+	const noteTouchPress: Attachment<HTMLElement> = (node) => {
+		const forget = () => (touchPressed = false);
+		const stopListening = [
+			on(node, "pointerdown", (event) => {
+				if (!firedByTouch(event)) return;
+				touchPressed = true;
+				if (input !== null && document.activeElement === input)
+					focusedByTouch = true;
+			}),
+			on(node, "pointercancel", forget),
+			on(node, "click", forget),
+		];
+		return () => {
+			for (const stop of stopListening) stop();
+		};
+	};
 
 	function isCompositionKeydown(event: KeyboardEvent): boolean {
 		// https://bugs.webkit.org/show_bug.cgi?id=165004
@@ -42,7 +57,7 @@
 		if (event.key === "Enter") {
 			event.preventDefault();
 			onSubmit();
-			if (focusedByPointer) input?.blur();
+			if (focusedByTouch) input?.blur();
 			else onEnterFromKeyboard();
 			return;
 		}
@@ -56,7 +71,7 @@
 <div
 	data-slot="gif-search-bar"
 	class="sticky top-0 z-10 bg-popover"
-	{@attach notePointerPress}
+	{@attach noteTouchPress}
 >
 	<div class="-mx-4 border-b-hairline border-border px-4 py-2">
 		<InputGroup.Root class="bg-muted">
@@ -71,8 +86,8 @@
 				aria-label={t("chat.composer.stickers.gifs.search")}
 				onfocus={() => {
 					focused = true;
-					focusedByPointer = pointerPressed;
-					pointerPressed = false;
+					focusedByTouch = touchPressed;
+					touchPressed = false;
 					onFocus?.();
 				}}
 				onblur={() => (focused = false)}

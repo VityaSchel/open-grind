@@ -1,14 +1,17 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { ALBUM_TILE, openAlbums, SHARED_ALBUM } from "./support/albums";
+import { afterTwoFrames } from "./support/app";
 import { DRAWER, MEDIA_TILE, openAttachments } from "./support/drawer";
 import { arrowThrough, focusProblems, type FocusStop } from "./support/focus";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import {
+	DEMO_GIPHY_EMPTY_QUERY,
 	gaymojiPanel,
 	gaymojiRegion,
 	gaymojiSectionStrip,
 	gaymojiTiles,
+	gifPanel,
 	gifSearchBox,
 	gifTiles,
 	openGaymoji,
@@ -238,6 +241,29 @@ test.describe("the GIF grid", () => {
 		await expect(first).toBeFocused();
 	});
 
+	test("Enter after a mouse click into the search moves to the first result", async ({
+		page,
+	}) => {
+		await gifSearchBox(page).click();
+		await page.keyboard.type("cat");
+		await page.keyboard.press("Enter");
+		const first = gifTiles(page).first();
+		await expect(first).toHaveAccessibleName(/cat/i);
+		await expect(first).toBeFocused();
+	});
+
+	test("Enter on a search with no GIFs keeps focus in the search", async ({
+		page,
+	}) => {
+		const search = gifSearchBox(page);
+		await search.focus();
+		await page.keyboard.type(DEMO_GIPHY_EMPTY_QUERY);
+		await page.keyboard.press("Enter");
+		await expect(gifPanel(page).getByText("No GIFs Found")).toBeVisible();
+		await afterTwoFrames(page);
+		await expect(search).toBeFocused();
+	});
+
 	test("the active result survives a switch to the gaymoji tab and back", async ({
 		page,
 	}) => {
@@ -311,6 +337,30 @@ test.describe("the GIF search on a touch screen", () => {
 		);
 		expect(resultFocusedAfterLoad).toBe(false);
 	});
+
+	test("Enter after tapping Clear search still dismisses the search", async ({
+		page,
+	}) => {
+		const search = gifSearchBox(page);
+		await search.tap();
+		await page.keyboard.type("cat");
+		await gifPanel(page)
+			.getByRole("button", { name: "Clear search" })
+			.tap();
+		await expect(search).toBeFocused();
+		await expect(search).toHaveValue("");
+		await page.keyboard.type("dog");
+		await page.keyboard.press("Enter");
+		await expect(search).not.toBeFocused();
+		await expect(gifTiles(page).first()).toHaveAccessibleName(/dog/i);
+		await afterTwoFrames(page);
+		expect(
+			await page.evaluate(
+				(tile) => document.activeElement?.matches(tile) ?? false,
+				STICKER_TILE,
+			),
+		).toBe(false);
+	});
 });
 
 test.describe("the gaymoji tab", () => {
@@ -362,6 +412,44 @@ test.describe("the gaymoji tab", () => {
 		await expect(sectionTiles.first()).toHaveAttribute("tabindex", "0");
 		await page.keyboard.press("Tab");
 		await expect(sectionTiles.first()).toBeFocused();
+	});
+
+	test("Tab pressed while a jump still glides to an unrendered section lands on its first gaymoji", async ({
+		page,
+	}) => {
+		const button = gaymojiSectionStrip(page).getByRole("button", {
+			name: "Mood",
+		});
+		const sectionTiles = gaymojiRegion(page, { title: "Mood" }).locator(
+			STICKER_TILE,
+		);
+		await expect(sectionTiles).toHaveCount(0);
+		await button.focus();
+		await page.keyboard.press("Enter");
+		await page.keyboard.press("Tab");
+		await expect(sectionTiles.first()).toBeFocused();
+		await afterTwoFrames(page);
+		await expect(sectionTiles.first()).toBeFocused();
+		await expect(sectionTiles.first()).toBeInViewport();
+		await expect(button).toHaveAttribute("aria-current", "true");
+	});
+
+	test("an arrow along the strip while a jump glides keeps the picked section", async ({
+		page,
+	}) => {
+		const buttons = gaymojiSectionStrip(page).getByRole("button");
+		const mood = gaymojiSectionStrip(page).getByRole("button", {
+			name: "Mood",
+		});
+		await mood.focus();
+		await page.keyboard.press("Enter");
+		await page.keyboard.press("ArrowRight");
+		await expect(buttons.last()).toBeFocused();
+		await afterTwoFrames(page);
+		await expect(mood).toHaveAttribute("aria-current", "true");
+		await expect(
+			gaymojiRegion(page, { title: "Mood" }).getByRole("heading"),
+		).toBeInViewport();
 	});
 
 	test("the arrows cross sections and unrendered rows with a visible ring", async ({
