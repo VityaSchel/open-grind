@@ -174,7 +174,7 @@ test.describe("the iOS edge swipe in settings after a language change", () => {
 		await expectEdgeSwipeArmed(page, { armed: true });
 
 		await page
-			.getByRole("radio", { name: "German Deutsch", exact: true })
+			.getByRole("option", { name: "German Deutsch", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveAttribute("lang", "de");
 		await expectEdgeSwipeArmed(page, { armed: false });
