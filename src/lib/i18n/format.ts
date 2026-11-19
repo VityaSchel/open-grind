@@ -252,9 +252,12 @@ function listFormat(): Intl.ListFormat {
 	return cachedFormatter({
 		cache: listFormats,
 		locale: getLocale(),
-		preset: "unitShort",
+		preset: "conjunctionNarrow",
 		create: (locales) =>
-			new Intl.ListFormat(locales, { type: "unit", style: "short" }),
+			new Intl.ListFormat(locales, {
+				type: "conjunction",
+				style: "narrow",
+			}),
 	});
 }
 
