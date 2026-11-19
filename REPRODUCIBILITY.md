@@ -2,7 +2,7 @@
 
 Reproducibility verifies that a released artifact was built from a given source code snapshot. This is stronger than a simple artifact signature check, because it means you trust the code rather than whoever built it. Reproducibility verification requires [building](./BUILDING.md) the artifact in a deterministic way with pinned toolchain on a canonical OS and CPU arch. This means, you must pull ~30 GB of environment, allocate ~12 GB of RAM and run the build which takes up to 4 hours. If you trust Open Grind developers, simply [verify the signature](./BUILDING.md#verify-minisign-signature) instead.
 
-The Linux, Windows and macOS recipes need a checkout with submodules — `git clone --recurse-submodules https://git.opengrind.org/open-grind/open-grind.git`, or `git submodule update --init` after switching tags. `src-tauri/vendor/grindr-google-oauth-webextension` is compiled into the desktop binaries; without it the build fails in `include_str!`.
+The Linux, Windows, macOS and iOS recipes need a checkout with submodules — `git clone --recurse-submodules https://git.opengrind.org/open-grind/open-grind.git`, or `git submodule update --init` after switching tags. `src-tauri/vendor/grindr-google-oauth-webextension` is compiled into the desktop and iOS binaries; without it the build fails in `include_str!`.
 
 - [Open Grind Reproducibility](#open-grind-reproducibility)
     - [Trusting the build environment](#trusting-the-build-environment)
@@ -275,7 +275,7 @@ fi
 ## iOS
 
 - **Canonical builder:** macOS on Apple Silicon with Xcode 27.0 (build 27A266a, iOS SDK build 24A430) selected by `xcode-select`
-- **Official releases:** Built locally, not attested. Only the sideload IPA reproduces: TestFlight and AltStore PAL builds are encrypted and re-signed by Apple
+- **Official releases:** Built locally, not attested. Only the sideload IPA can be compared byte for byte: Apple encrypts (FairPlay) and re-signs TestFlight and AltStore PAL builds
 - Cross-compilation table **for iOS builds**:
 
     |          | On x86_64 | on arm64    |
@@ -284,17 +284,17 @@ fi
 
 - Pinned inputs:
 
-    | Component                                         | Where it's pinned                                                     |
-    | ------------------------------------------------- | --------------------------------------------------------------------- |
-    | Xcode (clang, ld, Swift, `ibtool`) and iOS SDK    | `scripts/ios/sideload.ts`, checked before the build and in Info.plist |
-    | Rust toolchain with `llvm-tools`, CMake, Perl, Go | `flake.lock`                                                          |
-    | Checkout path and `CARGO_HOME`                    | remapped to `/open-grind` and `/cargo` by `nix/ios.nix`               |
-    | `Info.plist`                                      | rewritten with sorted keys and without `BuildMachineOSBuild`          |
-    | Mach-O `LC_UUID`                                  | recomputed from the stripped binary, also in the archive's dSYM       |
-    | Ad-hoc signature                                  | `flake.lock` (nixpkgs `rcodesign`)                                    |
-    | Zip archive                                       | `flake.lock` (nixpkgs `zip`)                                          |
-    | `codesign_allocate`                               | `flake.lock` (nixpkgs `cctools`)                                      |
-    | App icon (`Assets.car`)                           | `src-tauri/gen/apple/AppIcon/`, committed (`actool` output varies)    |
+    | Component                                         | Where it's pinned                                                            |
+    | ------------------------------------------------- | ---------------------------------------------------------------------------- |
+    | Xcode (clang, ld, Swift, `ibtool`) and iOS SDK    | `scripts/ios/sideload.ts`, checked before the build and in Info.plist        |
+    | Rust toolchain with `llvm-tools`, CMake, Perl, Go | `rust-toolchain.toml` (Rust version) and `flake.lock`                        |
+    | Checkout path and `CARGO_HOME`                    | remapped to `/open-grind` and `/cargo` by `nix/common.nix` and `nix/ios.nix` |
+    | `Info.plist`                                      | rewritten with sorted keys and without `BuildMachineOSBuild`                 |
+    | Mach-O `LC_UUID`                                  | recomputed from the stripped binary, also in the archive's dSYM              |
+    | Ad-hoc signature                                  | `flake.lock` (nixpkgs `rcodesign`)                                           |
+    | Zip archive                                       | `flake.lock` (nixpkgs `zip`)                                                 |
+    | `codesign_allocate`                               | `flake.lock` (nixpkgs `cctools`)                                             |
+    | App icon (`Assets.car`)                           | `src-tauri/gen/apple/AppIcon/`, committed (`actool` output varies)           |
 
 The IPA is signed ad-hoc without entitlements, so sideloaders re-sign it with their own identity.
 

@@ -23,6 +23,11 @@ Pick your platform, then a method within it. Everything below the platform secti
         - [Build for the App Store](#build-for-the-app-store)
         - [Sign and notarize macOS build](#sign-and-notarize-macos-build)
         - [Verify macOS release](#verify-macos-release)
+    - [iOS](#ios)
+        - [Run iOS app in the simulator](#run-ios-app-in-the-simulator)
+        - [Build iOS sideload IPA](#build-ios-sideload-ipa)
+        - [Build for TestFlight](#build-for-testflight)
+        - [Verify iOS release](#verify-ios-release)
     - [Credential storage](#credential-storage)
     - [Reproducibility](#reproducibility)
     - [Verify minisign signature](#verify-minisign-signature)
@@ -282,6 +287,41 @@ MACOS_NOTARY_ISSUER=issuer-uuid \
 - [Verify minisign signature](#verify-minisign-signature) to prove the .zip was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#macos) to prove the .app was built from the open source code
 - Run `spctl -a -vv "/Applications/Open Grind.app"` to see that Apple notarized it: `source=Notarized Developer ID`
+
+## iOS
+
+An iOS build needs an Apple Silicon Mac with [Nix](https://nixos.org/download), [Bun](https://bun.sh) and Xcode 27.0 (27A266a) with the iOS 27 SDK (24A430), selected with `xcode-select`. The app runs on iPhone with iOS 16.4 or later.
+
+### Run iOS app in the simulator
+
+```bash
+bun run dev:ios
+```
+
+This runs `tauri ios dev` on a simulator. `OG_SIMULATOR=<name>` picks the simulator, `OPEN_GRIND_DEMO=1` builds the demo with mock data.
+
+### Build iOS sideload IPA
+
+```bash
+bun run package:ios
+```
+
+This runs `nix run .#build-ios`, which builds the app, signs it ad-hoc without entitlements and writes `src-tauri/target/release/artifacts/open-grind-v<version>-ios.ipa`. It stops unless the selected Xcode and iOS SDK are the builds above. The IPA [reproduces](./REPRODUCIBILITY.md#ios) byte for byte. To install it, re-sign it with your own Apple ID through AltStore Classic, SideStore or Sideloadly.
+
+### Build for TestFlight
+
+```bash
+APP_STORE_CONNECT_KEY_ID=KEYID \
+APP_STORE_CONNECT_ISSUER=issuer-uuid \
+  bun run package:ios -- --testflight --upload
+```
+
+The key must be an App Store Connect team API key with the Admin role, at `~/.appstoreconnect/private_keys/AuthKey_<key ID>.p8`; Xcode uses it to create the distribution certificate and profile. The build writes `src-tauri/gen/apple/build/arm64/Open Grind.ipa`. `--upload` sends it to App Store Connect; without it, the script prints the upload command. Apple encrypts and re-signs TestFlight builds, so they don't reproduce.
+
+### Verify iOS release
+
+- [Verify minisign signature](#verify-minisign-signature) to prove the .ipa was built by Open Grind developers
+- [Reproduce the release](./REPRODUCIBILITY.md#ios) to prove the .ipa was built from the open source code
 
 ## Credential storage
 
