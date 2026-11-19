@@ -184,6 +184,10 @@ export class SnapPager {
 		return Math.abs(this.#left - position * this.#width) < ALIGNED_PX;
 	}
 
+	#overscrolled(): boolean {
+		return this.#left < 0 || this.#left > (this.#count() - 1) * this.#width;
+	}
+
 	#overlapping(): VisiblePositions {
 		return {
 			first: this.#clamp(
@@ -344,7 +348,7 @@ export class SnapPager {
 		this.#releaseWatch = null;
 		if (!this.#canGlideToNearest()) return;
 		const position = this.#nearestPosition();
-		if (this.#aligned(position)) return;
+		if (this.#aligned(position) || this.#overscrolled()) return;
 		this.#stillFrames += 1;
 		if (this.#stillFrames < STILL_FRAMES_BEFORE_GLIDE) {
 			this.#releaseWatch = requestAnimationFrame(this.#checkRelease);
@@ -367,7 +371,7 @@ export class SnapPager {
 	#snapStranded(): void {
 		if (!this.#canGlideToNearest()) return;
 		const position = this.#nearestPosition();
-		if (!this.#aligned(position))
+		if (!this.#aligned(position) && !this.#overscrolled())
 			this.#scrollToPosition(position, { animated: true });
 	}
 
