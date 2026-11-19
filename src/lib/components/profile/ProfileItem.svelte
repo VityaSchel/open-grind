@@ -101,65 +101,79 @@
 	{...longPress}
 >
 	{#if avatar.link}
-		<a
-			href={avatar.link}
-			data-slot="profile-item-avatar-link"
-			aria-label={t("profile.item.a11y.profileLink", {
-				name: accessibleName,
-			})}
-			class="rounded-l-2xl @max-row:hidden"
-			tabindex={linkTabindex}
-		>
-			{@render avatarNode()}
-		</a>
-		<a
-			href={link}
-			data-slot="profile-item-link"
-			class="content gap-0.5 rounded-r-2xl p-4 ps-2 @max-row:hidden!"
-			tabindex={linkTabindex}
-		>
-			{@render contentNode()}
-		</a>
-		<a
-			href={link}
-			data-slot="profile-item-link"
-			aria-label={accessibleName}
-			class="min-w-24 rounded-2xl @row:hidden"
-			tabindex={linkTabindex}
-		>
-			{@render avatarNode()}
-		</a>
+		<div role="gridcell" class="contents @max-row:hidden">
+			<a
+				href={avatar.link}
+				data-slot="profile-item-avatar-link"
+				aria-label={t("profile.item.a11y.profileLink", {
+					name: accessibleName,
+				})}
+				class="rounded-l-2xl"
+				tabindex={linkTabindex}
+			>
+				{@render avatarNode()}
+			</a>
+		</div>
+		<div role="gridcell" class="contents @max-row:hidden">
+			<a
+				href={link}
+				data-slot="profile-item-link"
+				class="content gap-0.5 rounded-r-2xl p-4 ps-2"
+				tabindex={linkTabindex}
+			>
+				{@render contentNode()}
+			</a>
+		</div>
+		<div role="gridcell" class="contents @row:hidden">
+			<a
+				href={link}
+				data-slot="profile-item-link"
+				aria-label={accessibleName}
+				class="min-w-24 rounded-2xl"
+				tabindex={linkTabindex}
+			>
+				{@render avatarNode()}
+			</a>
+		</div>
 	{:else}
-		<a
-			href={link}
-			data-slot="profile-item-link"
-			class="content gap-2.5 overflow-clip rounded-2xl pe-4"
-			tabindex={linkTabindex}
-		>
-			{@render avatarNode()}
-			{@render contentNode()}
-		</a>
+		<div role="gridcell" class="contents">
+			<a
+				href={link}
+				data-slot="profile-item-link"
+				class="content gap-2.5 overflow-clip rounded-2xl pe-4"
+				tabindex={linkTabindex}
+			>
+				{@render avatarNode()}
+				{@render contentNode()}
+			</a>
+		</div>
 	{/if}
 	{#if control}
-		<div class="flex shrink-0 items-center ps-3 pe-4">
+		<div role="gridcell" class="flex shrink-0 items-center ps-3 pe-4">
 			{@render control()}
 		</div>
 	{/if}
-	{@render menuButton?.()}
+	{#if menuButton}
+		<div role="gridcell" class="contents">
+			{@render menuButton()}
+		</div>
+	{/if}
 	{#if selected}
 		<div
 			class="pointer-events-none absolute -inset-px z-1 rounded-[inherit] bg-primary/20"
 		></div>
 	{/if}
 	{#if onToggleSelected}
-		<button
-			type="button"
-			data-slot="profile-item-selection-toggle"
-			class="absolute inset-0 z-2 rounded-[inherit]"
-			aria-pressed={selected ?? false}
-			aria-label={accessibleName}
-			onclick={onToggleSelected}
-		></button>
+		<div role="gridcell" class="contents">
+			<button
+				type="button"
+				data-slot="profile-item-selection-toggle"
+				class="absolute inset-0 z-2 rounded-[inherit]"
+				aria-pressed={selected ?? false}
+				aria-label={accessibleName}
+				onclick={onToggleSelected}
+			></button>
+		</div>
 	{/if}
 </Item.Root>
 

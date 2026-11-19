@@ -51,6 +51,17 @@ describe("ProfileItem", () => {
 		expect(screen.getByRole("link", { name: label })).toBeTruthy();
 	});
 
+	it("puts each link in a grid cell of its own", () => {
+		renderItem({ value: "Sam" });
+
+		const cells = screen
+			.getAllByRole("link")
+			.map((link) => link.closest('[role="gridcell"]'));
+		expect(cells).toHaveLength(3);
+		expect(cells).not.toContain(null);
+		expect(new Set(cells).size).toBe(3);
+	});
+
 	it("announces a favorite badge", () => {
 		renderItem({ value: "Sam", badge: favoriteBadge });
 

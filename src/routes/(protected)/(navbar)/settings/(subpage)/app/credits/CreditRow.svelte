@@ -22,6 +22,14 @@
 	data-offscreen-skip
 	style:--offscreen-block-size="2.65625rem"
 >
-	<BlurbText name={entry.name} url={entry.url} {linkAttachment} />
-	<LicenseDisclosure {entry} {summaryAttachment} />
+	<div role="row" class="contents">
+		<div role="gridcell" class="contents">
+			<BlurbText name={entry.name} url={entry.url} {linkAttachment} />
+		</div>
+	</div>
+	<div role="row" class="contents">
+		<div role="gridcell" class="contents">
+			<LicenseDisclosure {entry} {summaryAttachment} />
+		</div>
+	</div>
 </div>

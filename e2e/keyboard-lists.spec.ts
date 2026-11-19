@@ -5,14 +5,11 @@ import {
 	installTauriShim,
 	pathname,
 } from "./support/app";
-import {
-	arrowThrough,
-	focusProblems,
-	measureFocusedElement,
-} from "./support/focus";
+import { arrowThrough, focusedProblems, focusProblems } from "./support/focus";
 import {
 	TAP_ROW,
 	TAPS,
+	TAPS_PANE,
 	TAPS_SCROLLER,
 	VIEWS,
 	VIEWS_SCROLLER,
@@ -56,6 +53,19 @@ function isFocused(target: Locator): Promise<boolean> {
 function focusedIndex(items: Locator): Promise<number> {
 	return items.evaluateAll((nodes) =>
 		nodes.findIndex((node) => node === document.activeElement),
+	);
+}
+
+function outsideGridCells(cells: Locator): Promise<string[]> {
+	return cells.evaluateAll((nodes) =>
+		nodes
+			.filter(
+				(node) =>
+					node.closest(
+						'[role="grid"] [role="row"] [role="gridcell"]',
+					) === null,
+			)
+			.map((node) => node.outerHTML.slice(0, 80)),
 	);
 }
 
@@ -140,9 +150,16 @@ for (const { name, path, opens } of SETTINGS_LISTS) {
 				page,
 			}) => {
 				const row = rows(page).filter({ hasText: opens.row });
+				await expect(row).toHaveCount(1);
+				const count = await rows(page).count();
 				await rows(page).first().focus();
-				while (!(await isFocused(row)))
+				for (
+					let step = 0;
+					step < count && !(await isFocused(row));
+					step++
+				)
 					await page.keyboard.press("ArrowDown");
+				await expect(row).toBeFocused();
 				await page.keyboard.press("Enter");
 				await expect.poll(() => pathname(page)).toBe(opens.path);
 				await page.goBack();
@@ -194,6 +211,37 @@ test.describe("the Taps list", () => {
 		}
 		await page.waitForTimeout(SETTLE_MS);
 		expect(await pathname(page)).toBe(TAPS);
+	});
+
+	test("is a grid named Taps whose links sit in cells of rows", async ({
+		page,
+	}) => {
+		const grid = page
+			.locator(TAPS_SCROLLER)
+			.getByRole("grid", { name: "Taps" });
+		await expect(grid).toBeVisible();
+		await expect(grid.getByRole("row")).toHaveCount(
+			await tapRows(page).count(),
+		);
+		expect(await outsideGridCells(tapRows(page))).toEqual([]);
+	});
+
+	test("puts focus on the first row after Scroll to top from the keyboard", async ({
+		page,
+	}) => {
+		const scroller = page.locator(TAPS_SCROLLER);
+		await scroller.evaluate((node) =>
+			node.scrollTo({ top: node.scrollHeight }),
+		);
+		const jump = page
+			.locator(TAPS_PANE)
+			.getByRole("button", { name: "Scroll to top" });
+		await jump.focus();
+		await page.keyboard.press("Enter");
+
+		await expect(tapRows(page).first()).toBeFocused();
+		await expect(jump).toBeHidden();
+		expect(await focusedProblems(page)).toEqual([]);
 	});
 
 	test("refocuses the opened row after going back", async ({ page }) => {
@@ -278,8 +326,7 @@ test.describe("the Views grid", () => {
 		await page.keyboard.press("Control+End");
 		const viewer = anonymousViewers(page).last();
 		expect(await isFocused(viewer)).toBe(true);
-		const measured = await page.evaluate(measureFocusedElement);
-		expect(focusProblems(measured ? [measured.stop] : [])).toEqual([]);
+		expect(await focusedProblems(page)).toEqual([]);
 		await page.keyboard.press("Enter");
 		await page.waitForTimeout(SETTLE_MS);
 		expect(await pathname(page)).toBe(VIEWS);
@@ -308,6 +355,25 @@ test.describe("the credits", () => {
 		await page
 			.getByRole("link", { name: "Suggest an edit" })
 			.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	});
+
+	test("makes each section a grid named by its heading, one row per link or license", async ({
+		page,
+	}) => {
+		const section = firstSection(page);
+		const heading = (await section.getByRole("heading").innerText()).trim();
+		const grid = section.getByRole("grid", { name: heading, exact: true });
+		await expect(grid).toHaveCount(1);
+		expect(await outsideGridCells(items(section))).toEqual([]);
+		const rowsHoldingOneItem = await items(section).evaluateAll((nodes) =>
+			nodes.every(
+				(node) =>
+					node
+						.closest('[role="row"]')
+						?.querySelectorAll("a[href], summary").length === 1,
+			),
+		);
+		expect(rowsHoldingOneItem).toBe(true);
 	});
 
 	test("makes each section one Tab stop", async ({ page }) => {
@@ -365,8 +431,7 @@ test.describe("the credits", () => {
 		const back = await focusedIndex(sectionItems);
 		expect(back).toBeGreaterThanOrEqual(0);
 		expect(back).toBeLessThan(paged);
-		const measured = await page.evaluate(measureFocusedElement);
-		expect(focusProblems(measured ? [measured.stop] : [])).toEqual([]);
+		expect(await focusedProblems(page)).toEqual([]);
 	});
 
 	test("jumps past other rows to the next name starting with a typed letter", async ({

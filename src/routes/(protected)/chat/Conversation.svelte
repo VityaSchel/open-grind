@@ -237,7 +237,9 @@
 {/snippet}
 
 {#if onEnterSelection}
-	{@render row()}
+	<div role="row">
+		{@render row()}
+	</div>
 {:else}
 	<ContextMenu.Root
 		bind:open={contextMenuOpen}
@@ -248,6 +250,7 @@
 		}}
 	>
 		<ContextMenu.Trigger
+			role="row"
 			class="rounded-2xl"
 			bind:ref={trigger}
 			{...triggerPress}

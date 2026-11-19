@@ -58,6 +58,32 @@ function conversationLinks(page: Page): Locator {
 	return scroller(page).locator(`${CONVERSATION_LINK}:visible`);
 }
 
+function misplacedGridParts(page: Page): Promise<string[]> {
+	return scroller(page).evaluate((node) => {
+		const focusable =
+			"a[href], button, input, select, textarea, [tabindex]";
+		const ownerRole = (element: Element) => {
+			for (
+				let owner = element.parentElement;
+				owner !== null;
+				owner = owner.parentElement
+			)
+				if (owner.hasAttribute("role") || owner.matches(focusable))
+					return owner.getAttribute("role");
+			return null;
+		};
+		const expected = { gridcell: "row", row: "grid" };
+		return Object.entries(expected).flatMap(([role, owner]) =>
+			[...node.querySelectorAll(`[role="${role}"]`)]
+				.filter((part) => ownerRole(part) !== owner)
+				.map(
+					(part) =>
+						`${role} in ${ownerRole(part)}: ${part.outerHTML.slice(0, 80)}`,
+				),
+		);
+	});
+}
+
 async function openInbox(
 	page: Page,
 	{ path = "/chat" }: { path?: string } = {},
@@ -226,6 +252,61 @@ test.describe("keyboard navigation in the inbox", () => {
 				),
 			).toEqual([]);
 		});
+
+		test("Scroll to top from the keyboard puts focus on the first conversation's link", async ({
+			page,
+		}) => {
+			await openInbox(page);
+			await addLaterConversations(page);
+			await scroller(page).evaluate((node) =>
+				node.scrollTo({ top: node.scrollHeight }),
+			);
+			const jump = page.getByRole("button", { name: "Scroll to top" });
+			await jump.focus();
+
+			await page.keyboard.press("Enter");
+
+			await expect(
+				rows(page).first().locator(`${CONVERSATION_LINK}:visible`),
+			).toBeFocused();
+			await expect(jump).toBeHidden();
+		});
+	});
+
+	test("is a grid named Inbox whose rows hold the links and the actions button in cells", async ({
+		page,
+	}) => {
+		await openInbox(page);
+		const grid = scroller(page).getByRole("grid", { name: "Inbox" });
+		await expect(grid).toBeVisible();
+		await expect(grid.getByRole("row")).toHaveCount(
+			await rows(page).count(),
+		);
+		const first = grid.getByRole("row").first();
+		await expect(first.getByRole("gridcell")).toHaveCount(3);
+		const outsideCells = await scroller(page)
+			.locator(
+				`${CONVERSATION_LINK}:visible, ${PROFILE_LINK}:visible, [data-slot="conversation-actions"]`,
+			)
+			.evaluateAll((nodes) =>
+				nodes
+					.filter(
+						(node) =>
+							node.closest(
+								'[role="grid"] [role="row"] [role="gridcell"]',
+							) === null,
+					)
+					.map((node) => node.outerHTML.slice(0, 80)),
+			);
+		expect(outsideCells).toEqual([]);
+	});
+
+	test("puts every cell straight in its row and every row straight in the grid", async ({
+		page,
+	}) => {
+		await openInbox(page);
+
+		expect(await misplacedGridParts(page)).toEqual([]);
 	});
 
 	test("only one conversation row holds a Tab stop", async ({ page }) => {
@@ -373,6 +454,19 @@ test.describe("keyboard navigation in the inbox", () => {
 
 	test.describe("beside an open conversation", () => {
 		test.use({ viewport: DESKTOP });
+
+		test("puts every cell straight in its row, the menu trigger being the row", async ({
+			page,
+		}) => {
+			await openInbox(page, { path: DEMO_CONVERSATION });
+
+			expect(await misplacedGridParts(page)).toEqual([]);
+			await expect(
+				rows(page)
+					.first()
+					.locator('[data-slot="context-menu-trigger"]'),
+			).toHaveAttribute("role", "row");
+		});
 
 		test("deleting a conversation from its context menu by keyboard hands focus to the row that takes its place", async ({
 			page,

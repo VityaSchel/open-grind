@@ -6,7 +6,7 @@ import {
 	installTauriShim,
 	pathname,
 } from "./support/app";
-import { arrowThrough, focusProblems } from "./support/focus";
+import { arrowThrough, focusedProblems, focusProblems } from "./support/focus";
 
 const BLOCKED_LIST = "/settings/account/blocked";
 const ROWS = '[data-slot="profile-list-rows"]';
@@ -171,11 +171,8 @@ test.describe("the blocked list from the keyboard", () => {
 		await expect
 			.poll(async () => (await focusedCell(page))?.row ?? 0)
 			.toBeGreaterThan(1);
-		expect(
-			focusProblems(
-				await arrowThrough(page, { key: "ArrowDown", stops: 1 }),
-			),
-		).toEqual([]);
+		await expect.poll(() => focusedInsideBand(page)).toBe(true);
+		expect(await focusedProblems(page)).toEqual([]);
 	});
 
 	test("keeps focus on a switch toggled from the keyboard", async ({
@@ -215,11 +212,38 @@ test.describe("the blocked list from the keyboard", () => {
 		await page.keyboard.press("PageUp");
 		await expect.poll(() => focusedInsideBand(page)).toBe(true);
 		expect(await focusedCell(page)).toMatchObject({ cell: "link" });
-		expect(
-			focusProblems(
-				await arrowThrough(page, { key: "ArrowUp", stops: 1 }),
-			),
-		).toEqual([]);
+		expect(await focusedProblems(page)).toEqual([]);
+	});
+
+	test("is a grid that counts every row and indexes the rendered ones", async ({
+		page,
+	}) => {
+		await page.setViewportSize(SHORT_VIEWPORT);
+		await page.goto(BLOCKED_LIST);
+		const firstLink = page.locator(ROW).first().getByRole("link");
+		await firstLink.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		const grid = page.getByRole("grid", { name: "Blocked" });
+		const gridRows = grid.getByRole("row");
+
+		await expect(grid).toHaveAttribute(
+			"aria-rowcount",
+			String(BLOCKED_ROWS),
+		);
+		await expect(gridRows.first()).toHaveAttribute("aria-rowindex", "1");
+		await expect(
+			gridRows.first().getByRole("gridcell").getByRole("switch"),
+		).toHaveCount(1);
+		expect(await gridRows.count()).toBeLessThan(BLOCKED_ROWS);
+
+		await firstLink.focus();
+		await page.keyboard.press("End");
+		await expect(gridRows.last()).toHaveAttribute(
+			"aria-rowindex",
+			String(BLOCKED_ROWS),
+		);
+		await expect(
+			gridRows.last().getByRole("gridcell").getByRole("link"),
+		).toBeFocused();
 	});
 
 	test("puts focus back on the row a profile was opened from after Back", async ({

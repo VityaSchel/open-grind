@@ -5,6 +5,7 @@
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { getTapsState } from "#lib/interest/taps-state.svelte.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
@@ -76,9 +77,15 @@
 				</div>
 			{:else}
 				{#if taps.taps.length > 0}
-					<div class="flex flex-col gap-1" {@attach rows.container}>
+					<div
+						role="grid"
+						aria-label={t("interest.tabs.taps")}
+						aria-rowcount={taps.hasMore ? -1 : undefined}
+						class="flex flex-col gap-1"
+						{@attach rows.container}
+					>
 						{#each taps.taps as tap (tap.profileId)}
-							<div {@attach rows.item(tap.profileId)}>
+							<div role="row" {@attach rows.item(tap.profileId)}>
 								<TapReceivedProfile {tap} />
 							</div>
 						{/each}
@@ -98,5 +105,11 @@
 			{/if}
 		</div>
 	</div>
-	<ScrollToTopButton {container} class="bottom-nav-clear" />
+	<ScrollToTopButton
+		{container}
+		class="bottom-nav-clear"
+		onjump={({ keyboardFocused }) => {
+			if (keyboardFocused) void rows.focusFirst();
+		}}
+	/>
 </div>

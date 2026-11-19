@@ -9,6 +9,7 @@
 	import { escapeMeansBack } from "#lib/components/navigation/escape-back.ts";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { t } from "#lib/i18n/index.ts";
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import { focusIsLost } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { below } from "#lib/util/breakpoints.svelte.ts";
@@ -336,6 +337,11 @@
 				>
 					<div
 						bind:this={rows}
+						role="grid"
+						aria-label={t("shell.navBar.tabs.inbox")}
+						aria-rowcount={conversations.nextPage === null
+							? undefined
+							: -1}
 						class="flex flex-col gap-1 empty:hidden"
 						{@attach roving.container}
 					>
@@ -373,6 +379,12 @@
 				</div>
 			{/if}
 		</div>
-		<ScrollToTopButton {container} class="bottom-(--nav-clear)" />
+		<ScrollToTopButton
+			{container}
+			class="bottom-(--nav-clear)"
+			onjump={({ keyboardFocused }) => {
+				if (keyboardFocused) void roving.focusFirst();
+			}}
+		/>
 	</div>
 </div>

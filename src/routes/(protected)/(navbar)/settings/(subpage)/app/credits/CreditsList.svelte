@@ -15,6 +15,8 @@
 
 	let { cards, groups }: Credits = $props();
 
+	const uid = $props.id();
+
 	const ROWS_PER_BATCH = 40;
 
 	const sharedTitleKeys = {
@@ -60,10 +62,13 @@
 	{@const shownBatches = revealed.count - batchesBefore(index)}
 	{#if shownBatches > 0}
 		<section class="flex min-w-0 flex-col" data-slot="credit-section">
-			<h2 class="mb-1">{sectionTitle(section)}</h2>
+			<h2 id="{uid}-{section.id}" class="mb-1">
+				{sectionTitle(section)}
+			</h2>
 			<CreditRows
 				batches={section.batches.slice(0, shownBatches)}
 				revealed={fullyRevealed}
+				labelledBy="{uid}-{section.id}"
 			/>
 		</section>
 	{/if}

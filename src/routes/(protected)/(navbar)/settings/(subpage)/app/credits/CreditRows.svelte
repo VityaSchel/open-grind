@@ -3,7 +3,11 @@
 	import type { LoadedEntry } from "#lib/credits/index.ts";
 	import CreditRow from "./CreditRow.svelte";
 
-	let { batches, revealed }: { batches: LoadedEntry[][]; revealed: boolean } =
+	let {
+		batches,
+		revealed,
+		labelledBy,
+	}: { batches: LoadedEntry[][]; revealed: boolean; labelledBy: string } =
 		$props();
 
 	function rowKey({ ecosystem, id, spdx }: LoadedEntry): string {
@@ -27,7 +31,12 @@
 	});
 </script>
 
-<div class="flex min-w-0 flex-col" {@attach revealed && rows.container}>
+<div
+	role="grid"
+	aria-labelledby={labelledBy}
+	class="flex min-w-0 flex-col"
+	{@attach revealed && rows.container}
+>
 	{#each batches as batch, batchIndex (batchIndex)}
 		{#each batch as entry (rowKey(entry))}
 			<CreditRow

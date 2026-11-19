@@ -19,6 +19,7 @@
 {/snippet}
 
 <ProfileList
+	name={t("settings.subpage.titles.hidden")}
 	eager
 	loadIds={getHiddenUserIdsNewestFirst}
 	setOn={({ profileId, on }) =>

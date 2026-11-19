@@ -37,7 +37,7 @@
 	);
 </script>
 
-<div data-slot="profile-list-row" class="grid" {...rest}>
+<div data-slot="profile-list-row" role="row" class="grid" {...rest}>
 	<ProfileItem
 		avatar={{ mediaHash: profile?.profileImageMediaHash ?? null }}
 		title={{
