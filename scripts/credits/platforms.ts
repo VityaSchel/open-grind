@@ -5,6 +5,7 @@ import {
 
 const platformAnchors: Record<CreditPlatform, string> = {
 	android: "jni",
+	ios: "objc2-ui-kit",
 	linux: "webkit2gtk",
 	macos: "objc2-app-kit",
 	windows: "webview2-com",
@@ -12,14 +13,11 @@ const platformAnchors: Record<CreditPlatform, string> = {
 
 const commonAnchor = "tauri";
 
-export const unshippedTargets = [
-	"aarch64-apple-ios",
-	"aarch64-apple-ios-sim",
-	"x86_64-apple-ios",
-];
+export const unshippedTargets = ["aarch64-apple-ios-sim", "x86_64-apple-ios"];
 
 const triplePatterns: Record<CreditPlatform, RegExp> = {
 	android: /-linux-android/,
+	ios: /-apple-ios(-sim)?$/,
 	linux: /-unknown-linux-/,
 	macos: /-apple-darwin$/,
 	windows: /-pc-windows-/,

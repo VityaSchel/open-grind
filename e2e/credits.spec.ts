@@ -31,6 +31,7 @@ const SECTION_ROWS = {
 	"Web Packages": sharedRows(["npm", "asset"]),
 	"Rust Crates": sharedRows(["rust"]),
 	"Android Libraries": platformRows("android"),
+	"iOS Libraries": platformRows("ios"),
 	"Linux Libraries": platformRows("linux"),
 	"macOS Libraries": platformRows("macos"),
 	"Windows Libraries": platformRows("windows"),

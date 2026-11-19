@@ -1803,7 +1803,6 @@
 			"id": "apple-native-keyring-store",
 			"name": "apple-native-keyring-store",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"1.0.1"
 			],
@@ -2284,7 +2283,6 @@
 			"id": "block2",
 			"name": "block2",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.6.2"
 			],
@@ -2830,7 +2828,6 @@
 			"id": "core-foundation",
 			"name": "core-foundation",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.9.4, 0.10.1"
 			],
@@ -3300,7 +3297,6 @@
 			"id": "dispatch2",
 			"name": "dispatch2",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.3.1"
 			],
@@ -4656,7 +4652,6 @@
 			"id": "hyper",
 			"name": "hyper",
 			"ecosystem": "rust",
-			"platform": "android",
 			"versions": [
 				"1.8.1"
 			],
@@ -4671,7 +4666,6 @@
 			"id": "hyper-util",
 			"name": "hyper-util",
 			"ecosystem": "rust",
-			"platform": "android",
 			"versions": [
 				"0.1.20"
 			],
@@ -4953,7 +4947,6 @@
 			"id": "iri-string",
 			"name": "iri-string",
 			"ecosystem": "rust",
-			"platform": "android",
 			"versions": [
 				"0.7.10"
 			],
@@ -5765,7 +5758,6 @@
 			"id": "objc2",
 			"name": "objc2",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.6.4"
 			],
@@ -5792,10 +5784,39 @@
 			]
 		},
 		{
+			"id": "objc2-cloud-kit",
+			"name": "objc2-cloud-kit",
+			"ecosystem": "rust",
+			"platform": "ios",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
+			"id": "objc2-core-data",
+			"name": "objc2-core-data",
+			"ecosystem": "rust",
+			"platform": "ios",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
 			"id": "objc2-core-foundation",
 			"name": "objc2-core-foundation",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.3.2"
 			],
@@ -5810,7 +5831,51 @@
 			"id": "objc2-core-graphics",
 			"name": "objc2-core-graphics",
 			"ecosystem": "rust",
-			"platform": "macos",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
+			"id": "objc2-core-image",
+			"name": "objc2-core-image",
+			"ecosystem": "rust",
+			"platform": "ios",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
+			"id": "objc2-core-location",
+			"name": "objc2-core-location",
+			"ecosystem": "rust",
+			"platform": "ios",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
+			"id": "objc2-core-text",
+			"name": "objc2-core-text",
+			"ecosystem": "rust",
+			"platform": "ios",
 			"versions": [
 				"0.3.2"
 			],
@@ -5825,7 +5890,6 @@
 			"id": "objc2-encode",
 			"name": "objc2-encode",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"4.1.0"
 			],
@@ -5840,7 +5904,6 @@
 			"id": "objc2-exception-helper",
 			"name": "objc2-exception-helper",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.1.1"
 			],
@@ -5855,7 +5918,6 @@
 			"id": "objc2-foundation",
 			"name": "objc2-foundation",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.3.2"
 			],
@@ -5870,7 +5932,21 @@
 			"id": "objc2-image-io",
 			"name": "objc2-image-io",
 			"ecosystem": "rust",
-			"platform": "macos",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
+			"id": "objc2-photos-ui",
+			"name": "objc2-photos-ui",
+			"ecosystem": "rust",
+			"platform": "ios",
 			"versions": [
 				"0.3.2"
 			],
@@ -5885,6 +5961,22 @@
 			"id": "objc2-quartz-core",
 			"name": "objc2-quartz-core",
 			"ecosystem": "rust",
+			"platform": "ios",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
+			"id": "objc2-ui-kit",
+			"name": "objc2-ui-kit",
+			"ecosystem": "rust",
+			"platform": "ios",
 			"versions": [
 				"0.3.2"
 			],
@@ -5899,7 +5991,6 @@
 			"id": "objc2-user-notifications",
 			"name": "objc2-user-notifications",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.3.2"
 			],
@@ -5914,7 +6005,6 @@
 			"id": "objc2-web-kit",
 			"name": "objc2-web-kit",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"0.3.2"
 			],
@@ -6291,7 +6381,6 @@
 			"id": "pin-utils",
 			"name": "pin-utils",
 			"ecosystem": "rust",
-			"platform": "android",
 			"versions": [
 				"0.1.0"
 			],
@@ -6764,7 +6853,6 @@
 			"id": "reqwest",
 			"name": "reqwest",
 			"ecosystem": "rust",
-			"platform": "android",
 			"versions": [
 				"0.13.2"
 			],
@@ -7047,7 +7135,6 @@
 			"id": "security-framework",
 			"name": "security-framework",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"3.7.0"
 			],
@@ -7062,7 +7149,6 @@
 			"id": "security-framework-sys",
 			"name": "security-framework-sys",
 			"ecosystem": "rust",
-			"platform": "macos",
 			"versions": [
 				"2.17.0"
 			],
@@ -8366,7 +8452,6 @@
 			"id": "tower-http",
 			"name": "tower-http",
 			"ecosystem": "rust",
-			"platform": "android",
 			"versions": [
 				"0.6.8"
 			],
