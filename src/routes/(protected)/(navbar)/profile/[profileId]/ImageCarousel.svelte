@@ -40,13 +40,21 @@
 
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
+	const COVER_SHOW_LINK = '[data-slot="mature-content-cover"] a[href]';
 
 	const covered = $derived(!own && matureContentCovered());
+
+	function coverShowLinks(item: HTMLElement) {
+		return [...item.querySelectorAll<HTMLElement>(COVER_SHOW_LINK)];
+	}
 
 	const photos = new RovingFocusState({
 		keys: () => [...medias.keys()],
 		orientation: "vertical",
 		followScroll: "first-visible",
+		get cells() {
+			return covered ? coverShowLinks : undefined;
+		},
 	});
 
 	let gallery: HTMLDivElement | null = $state(null);

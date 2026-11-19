@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	bracketCounts,
@@ -192,6 +192,93 @@ describe("ComboField chip keys", () => {
 		await tick();
 
 		expect(document.activeElement).toBe(removeButton("Otter"));
+	});
+
+	it("stays in the empty search while Backspace is held", async () => {
+		const { container } = renderField({ values: [1, 2] });
+		const input = screen.getByRole("combobox", { name: "Tribes" });
+		input.focus();
+
+		for (let press = 0; press < 3; press++)
+			await fireEvent.keyDown(input, { key: "Backspace", repeat: true });
+		await tick();
+
+		expect(document.activeElement).toBe(input);
+		expect(chipLabels(container)).toEqual(["Bear", "Otter"]);
+	});
+
+	describe("while the soft keyboard is shown", () => {
+		beforeEach(() => {
+			runningOn("android");
+			window.__AndroidInsets = {
+				top: () => 0,
+				bottom: () => 0,
+				left: () => 0,
+				right: () => 0,
+				imeVisible: () => true,
+			};
+		});
+
+		afterEach(() => {
+			delete window.__AndroidInsets;
+		});
+
+		it("keeps Backspace in the empty search", async () => {
+			renderField({ values: [1, 2] });
+			const input = screen.getByRole("combobox", { name: "Tribes" });
+			input.focus();
+
+			await fireEvent.keyDown(input, { key: "Backspace" });
+			await tick();
+
+			expect(document.activeElement).toBe(input);
+		});
+	});
+
+	it.each(["Delete", "Backspace", "Enter"])(
+		"removes only one chip while %s is held",
+		async (key) => {
+			const { container } = renderField({ values: [1, 2, 3] });
+			removeButton("Otter").focus();
+			await fireEvent.keyDown(removeButton("Otter"), { key: "Delete" });
+			await tick();
+
+			const kept = await fireEvent.keyDown(removeButton("Twink"), {
+				key,
+				repeat: true,
+			});
+			await tick();
+
+			expect(kept).toBe(false);
+			expect(chipLabels(container)).toEqual(["Bear", "Twink"]);
+			expect(document.activeElement).toBe(removeButton("Twink"));
+		},
+	);
+
+	it("announces a second removal of the same chip", async () => {
+		const { rerender } = renderField({ values: [1, 2, 3] });
+		removeButton("Otter").focus();
+		await fireEvent.keyDown(removeButton("Otter"), { key: "Delete" });
+		await vi.waitFor(() =>
+			expect(screen.getByRole("status").textContent).toBe(
+				"Removed Otter",
+			),
+		);
+		await rerender({ values: [1, 2, 3] });
+		const status = screen.getByRole("status");
+		const spoken: string[] = [];
+		const changes = new MutationObserver(() =>
+			spoken.push(status.textContent),
+		);
+		changes.observe(status, {
+			childList: true,
+			characterData: true,
+			subtree: true,
+		});
+
+		await fireEvent.keyDown(removeButton("Otter"), { key: "Delete" });
+		await vi.waitFor(() => expect(spoken).toContain("Removed Otter"));
+		changes.disconnect();
 	});
 });
 

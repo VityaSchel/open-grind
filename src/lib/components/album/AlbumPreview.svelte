@@ -66,7 +66,10 @@
 		stableSignedUrl({ latest: coverUrl, loaded: loadedCoverUrl }),
 	);
 
-	function open() {
+	function open(event: MouseEvent & { currentTarget: HTMLElement }) {
+		if (preview.status !== "idle") return;
+		if (!event.currentTarget.matches(":focus-visible"))
+			event.currentTarget.blur();
 		preview = { status: "loading" };
 	}
 
@@ -180,7 +183,7 @@
 		]}
 		aria-label={accessibleLabel}
 		onclick={open}
-		disabled={preview.status !== "idle"}
+		aria-disabled={preview.status !== "idle"}
 		{@attach attach}
 	>
 		{@render content()}

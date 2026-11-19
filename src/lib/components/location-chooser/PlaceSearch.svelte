@@ -19,6 +19,7 @@
 		clearsLocateButton?: boolean;
 	} = $props();
 
+	const resultsId = $props.id();
 	const CLOSE_AFTER_BLUR_MS = 200;
 	const caretKeys = new Set(["Home", "End"]);
 	const highlightKeys = new Set([
@@ -151,6 +152,9 @@
 					aria-activedescendant={highlightShown
 						? (props["aria-activedescendant"] as string | undefined)
 						: undefined}
+					aria-controls={showResults
+						? (listbox ?? panel)?.id || undefined
+						: undefined}
 					onkeydown={(event) =>
 						handleFieldKey({
 							event,
@@ -186,6 +190,7 @@
 					{:then response}
 						<div
 							bind:this={listbox}
+							id={resultsId}
 							role="listbox"
 							aria-label={t(
 								"browse.locationChooser.a11y.results",

@@ -104,6 +104,25 @@ test.describe("the profile photo carousel", () => {
 	});
 });
 
+test.describe("the favorite note editor", () => {
+	test("opened with the mouse, puts the caret in the note", async ({
+		page,
+	}) => {
+		await installTauriShim(page, { platform: "macos" });
+		await page.goto(DEMO_PROFILE);
+		const addNote = activeProfilePane(page).getByRole("button", {
+			name: "Add note",
+		});
+		await addNote.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+
+		await addNote.click();
+
+		await expect(
+			page.getByRole("dialog").getByRole("textbox").first(),
+		).toBeFocused();
+	});
+});
+
 test.describe("paging profiles from the keyboard", () => {
 	const menu = (pane: Locator) =>
 		pane.getByRole("button", { name: "Profile menu" });

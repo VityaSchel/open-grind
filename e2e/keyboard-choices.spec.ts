@@ -321,4 +321,28 @@ test.describe("profile field chips", () => {
 		await expect(removals).toHaveCount(0);
 		await expect(search(page)).toBeFocused();
 	});
+
+	test("a held Backspace clears the search without reaching the chips, and a held Delete removes one chip", async ({
+		page,
+	}) => {
+		const removals = chips(page).getByRole("button");
+		const count = await removals.count();
+		await search(page).focus();
+		await page.keyboard.type("ab");
+
+		for (let press = 0; press < 6; press++)
+			await page.keyboard.down("Backspace");
+		await page.keyboard.up("Backspace");
+
+		await expect(search(page)).toHaveValue("");
+		await expect(search(page)).toBeFocused();
+		await expect(removals).toHaveCount(count);
+
+		await removals.first().focus();
+		for (let press = 0; press < 6; press++)
+			await page.keyboard.down("Delete");
+		await page.keyboard.up("Delete");
+
+		await expect(removals).toHaveCount(count - 1);
+	});
 });

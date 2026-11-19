@@ -6,6 +6,7 @@
 	import * as Combobox from "#lib/components/ui/combobox/index.ts";
 	import { formatInteger } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { softKeyboardVisibility } from "#lib/platform/native-insets.ts";
 	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { Option } from "#lib/util/options.ts";
 
@@ -29,11 +30,13 @@
 		searchPlaceholder: string;
 	} = $props();
 
+	const REMOVE_KEYS = new Set(["Delete", "Backspace"]);
+	const CHIP_ACTIVATION_KEYS = new Set([...REMOVE_KEYS, "Enter"]);
+
 	const chips = new RovingFocusState({
 		keys: () => values,
 		orientation: "horizontal",
 		wrap: "loop",
-		stopTabindex: "explicit",
 	});
 
 	let searchValue = $state("");
@@ -101,11 +104,17 @@
 			: t("settings.profile.combo.selected", params);
 	});
 
-	function remove({ id, byKeyboard }: { id: T; byKeyboard: boolean }) {
-		const index = values.indexOf(id);
+	async function announceRemoval(id: T) {
+		removalAnnouncement = "";
+		await tick();
 		removalAnnouncement = t("settings.profile.combo.a11y.removed", {
 			label: labelFor(id),
 		});
+	}
+
+	function remove({ id, byKeyboard }: { id: T; byKeyboard: boolean }) {
+		const index = values.indexOf(id);
+		void announceRemoval(id);
 		values = values.filter((value) => value !== id);
 		if (!byKeyboard) return;
 		const neighbor = values[index] ?? values[index - 1];
@@ -113,9 +122,25 @@
 		else void chips.focus({ key: neighbor });
 	}
 
+	function removeOnKey({ event, id }: { event: KeyboardEvent; id: T }) {
+		if (event.repeat) {
+			if (CHIP_ACTIVATION_KEYS.has(event.key)) event.preventDefault();
+			return;
+		}
+		if (!REMOVE_KEYS.has(event.key)) return;
+		event.preventDefault();
+		remove({ id, byKeyboard: true });
+	}
+
 	function focusLastChipFromEmptyInput(event: KeyboardEvent) {
 		const last = values.at(-1);
-		if (event.key !== "Backspace" || inputEl?.value || last === undefined)
+		if (
+			event.key !== "Backspace" ||
+			event.repeat ||
+			inputEl?.value ||
+			last === undefined ||
+			softKeyboardVisibility() === true
+		)
 			return;
 		event.preventDefault();
 		void chips.focus({ key: last });
@@ -133,6 +158,7 @@
 		if (max !== undefined && newValue.length > max) return;
 		values = newValue;
 		searchValue = "";
+		removalAnnouncement = "";
 	}
 </script>
 
@@ -157,15 +183,8 @@
 									id: chip.id,
 									byKeyboard: event.detail === 0,
 								})}
-							onkeydown={(event) => {
-								if (
-									event.key !== "Delete" &&
-									event.key !== "Backspace"
-								)
-									return;
-								event.preventDefault();
-								remove({ id: chip.id, byKeyboard: true });
-							}}
+							onkeydown={(event) =>
+								removeOnKey({ event, id: chip.id })}
 							aria-label={t(
 								"settings.profile.combo.a11y.remove",
 								{ label: chip.label },

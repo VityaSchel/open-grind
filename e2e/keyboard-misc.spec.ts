@@ -8,7 +8,7 @@ import {
 	openGrid,
 } from "./support/app";
 import { answerDemoRequests } from "./support/demo-faults";
-import { focusProblems, measureFocusedElement } from "./support/focus";
+import { focusedProblems } from "./support/focus";
 
 const PLACES = [
 	{ name: "Paris", address: "France", lat: 48.8566, lon: 2.3522 },
@@ -18,11 +18,6 @@ const PLACES = [
 
 test.use({ viewport: { width: 1280, height: 800 }, hasTouch: false });
 test.describe.configure({ timeout: 240_000 });
-
-async function focusedProblems(page: Page): Promise<string[]> {
-	const measured = await page.evaluate(measureFocusedElement);
-	return measured ? focusProblems([measured.stop]) : ["body: no focus"];
-}
 
 async function isFocused(locator: Locator): Promise<boolean> {
 	return locator.evaluate((node) => node === document.activeElement);
@@ -160,6 +155,16 @@ test.describe("the location picker", () => {
 				name: "Copy error details",
 			});
 			await copyError.waitFor();
+			const controls = await search(page).getAttribute("aria-controls");
+			await expect(
+				dialog(page)
+					.locator(`[id="${controls}"]`)
+					.filter({
+						has: page.getByRole("button", {
+							name: "Copy error details",
+						}),
+					}),
+			).toHaveCount(1);
 
 			await page.keyboard.press("Tab");
 			await page.waitForTimeout(500);
@@ -201,6 +206,10 @@ test.describe("the location picker", () => {
 		}) => {
 			await showResults(page);
 			const options = results(page).getByRole("option");
+			await expect(search(page)).toHaveAttribute(
+				"aria-controls",
+				(await results(page).getAttribute("id"))!,
+			);
 			await expect(options.first()).toHaveCSS("outline-style", "none");
 			await expect(search(page)).not.toHaveAttribute(
 				"aria-activedescendant",

@@ -72,6 +72,12 @@
 		if (!reorderable) reorder.cancel();
 	});
 
+	async function announce(message: string): Promise<void> {
+		announcement = "";
+		await tick();
+		announcement = message;
+	}
+
 	function positionOf(index: number): { position: string; total: string } {
 		return {
 			position: formatInteger(index + 1),
@@ -83,14 +89,14 @@
 		const { to } = reorder;
 		reorder.release();
 		flushSync();
-		announcement = t("common.media.slots.a11y.dropped", positionOf(to));
+		void announce(t("common.media.slots.a11y.dropped", positionOf(to)));
 		const key = slots[to]?.key;
 		if (key !== undefined) void tiles.focus({ key });
 	}
 
 	function cancelHeldSlot(): void {
 		reorder.cancel();
-		announcement = t("common.media.slots.a11y.cancelled");
+		void announce(t("common.media.slots.a11y.cancelled"));
 	}
 
 	function steerHeldSlot({ event }: { event: KeyboardEvent }): void {
@@ -126,7 +132,7 @@
 		});
 		if (to === reorder.to) return;
 		reorder.aim(to);
-		announcement = t("common.media.slots.a11y.moved", positionOf(to));
+		void announce(t("common.media.slots.a11y.moved", positionOf(to)));
 		void tick().then(() => cell.scrollIntoView({ block: "nearest" }));
 	}
 
@@ -149,9 +155,8 @@
 			event.preventDefault();
 			if (!reorderable || repeat) return;
 			reorder.lift(index);
-			announcement = t(
-				"common.media.slots.a11y.lifted",
-				positionOf(index),
+			void announce(
+				t("common.media.slots.a11y.lifted", positionOf(index)),
 			);
 			return;
 		}
