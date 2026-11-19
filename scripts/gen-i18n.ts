@@ -268,14 +268,11 @@ const iosFiles = iosDrift({
 	translated: iosStrings,
 	existing: new Map(
 		await Promise.all(
-			globSync("*.lproj/InfoPlist.strings", {
-				cwd: path.join(ROOT, IOS_LOCALIZATIONS),
+			globSync(`${IOS_LOCALIZATIONS}/*.lproj/InfoPlist.strings`, {
+				cwd: ROOT,
 			})
 				.sort()
-				.map(async (relative) => {
-					const file = `${IOS_LOCALIZATIONS}/${relative}`;
-					return [file, await readText(file)] as const;
-				}),
+				.map(async (file) => [file, await readText(file)] as const),
 		),
 	),
 	release,
