@@ -150,6 +150,7 @@ export default defineConfig(async ({ command }) => ({
 			"scripts/credits/**/*.test.ts",
 			"scripts/i18n/**/*.test.ts",
 			"scripts/i18n-screenshots/**/*.test.ts",
+			"scripts/ios/**/*.test.ts",
 		],
 		setupFiles: ["src/test-setup.ts"],
 		// tinykeys caches navigator.platform at load, so vi.resetModules() cannot
