@@ -6,7 +6,11 @@ import {
 } from "../e2e/updater/lib/config";
 import { startServer, type Payload } from "../e2e/updater/lib/server";
 
-import { ARTIFACTS, assetSuffix, isArtifact } from "./lib/asset-suffix";
+import {
+	assetSuffix,
+	isUpdaterArtifact,
+	UPDATER_ARTIFACTS,
+} from "./lib/asset-suffix";
 
 const root = Bun.fileURLToPath(new URL("..", import.meta.url)).replace(
 	/\/$/,
@@ -38,11 +42,13 @@ function servedSuffix(): string {
 	const artifact = Bun.env.ARTIFACT;
 	if (!artifact) {
 		throw new Error(
-			`name the artifact to serve: ARTIFACT=${ARTIFACTS.join("|")}, or SUFFIX=<literal>`,
+			`name the artifact to serve: ARTIFACT=${UPDATER_ARTIFACTS.join("|")}, or SUFFIX=<literal>`,
 		);
 	}
-	if (!isArtifact(artifact)) {
-		throw new Error(`ARTIFACT must be one of ${ARTIFACTS.join(", ")}`);
+	if (!isUpdaterArtifact(artifact)) {
+		throw new Error(
+			`ARTIFACT must be one of ${UPDATER_ARTIFACTS.join(", ")}`,
+		);
 	}
 	return assetSuffix(artifact);
 }

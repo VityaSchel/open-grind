@@ -19,6 +19,7 @@ const TOOLING = {
 	AppImage: { binaries: ["minisign"], shell: "nix develop", rewrites: false },
 	exe: { binaries: ["minisign"], shell: "nix develop", rewrites: false },
 	zip: { binaries: ["minisign"], shell: "nix develop", rewrites: false },
+	ipa: { binaries: ["minisign"], shell: "nix develop", rewrites: false },
 };
 type Artifact = keyof typeof TOOLING;
 
