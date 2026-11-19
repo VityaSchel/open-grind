@@ -8,6 +8,7 @@
 	import { gaymojiSections } from "#lib/chat/gaymoji-sections.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { holdFocusInPlace } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { StickerPick } from "../sticker-pick";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
@@ -59,6 +60,7 @@
 	let manifest = $state.raw<Manifest>({ status: "idle" });
 	let content = $state<HTMLElement | null>(null);
 	let strip = $state<HTMLElement | null>(null);
+	let sectionsElement = $state<HTMLElement | null>(null);
 
 	const sections = $derived(
 		manifest.status === "ready" ? gaymojiSections(manifest.categories) : [],
@@ -77,13 +79,13 @@
 	const focusedSection = $derived.by(() => {
 		const active = tiles.activeKey;
 		if (!tiles.focusWithin || typeof active !== "number") return null;
-		const section = sectionStarts.findLastIndex((start) => start <= active);
-		return sections[section]?.key ?? null;
+		return sections[sectionIndexOf(active)]?.key ?? null;
 	});
 	const scroll = new SectionScroll({
 		keys: () => sections.map(({ key }) => key),
 		strip: () => strip,
 		holdSheetSize: () => holdSheetSize(),
+		onLand: (key) => landInSection(key),
 	});
 
 	$effect(() => {
@@ -100,8 +102,18 @@
 		}
 	}
 
+	function sectionIndexOf(tile: number): number {
+		return sectionStarts.findLastIndex((start) => start <= tile);
+	}
+
+	function sectionStartOf(key: string): number | undefined {
+		return sectionStarts[
+			sections.findIndex((candidate) => candidate.key === key)
+		];
+	}
+
 	function revealTile(index: number) {
-		const section = sectionStarts.findLastIndex((start) => start <= index);
+		const section = sectionIndexOf(index);
 		if (section < 0) return;
 		windows.revealItem({
 			key: sections[section]!.key,
@@ -112,10 +124,22 @@
 
 	function jumpToSection(key: string) {
 		scroll.jumpTo(key);
-		const section = sections.findIndex(
-			(candidate) => candidate.key === key,
-		);
-		tiles.activeKey = sectionStarts[section] ?? tiles.activeKey;
+		tiles.activeKey = sectionStartOf(key) ?? tiles.activeKey;
+	}
+
+	function landInSection(key: string) {
+		const start = sectionStartOf(key);
+		const active = tiles.activeKey;
+		if (
+			start === undefined ||
+			sectionsElement === null ||
+			typeof active !== "number" ||
+			sectionIndexOf(active) === sectionIndexOf(start)
+		)
+			return;
+		tiles.activeKey = start;
+		const release = holdFocusInPlace(sectionsElement);
+		void tiles.focus({ key: start }).finally(release);
 	}
 
 	function loadOnFirstVisit() {
@@ -140,7 +164,11 @@
 			restingKey={focusedSection ?? scroll.current}
 			onPick={jumpToSection}
 		/>
-		<div {@attach tiles.container} data-slot="gaymoji-sections">
+		<div
+			bind:this={sectionsElement}
+			{@attach tiles.container}
+			data-slot="gaymoji-sections"
+		>
 			{#each sections as section, sectionIndex (section.key)}
 				<GaymojiSection
 					{section}

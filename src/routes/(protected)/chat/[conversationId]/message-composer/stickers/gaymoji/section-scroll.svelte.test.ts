@@ -57,11 +57,13 @@ function mountSection({
 	scroller.scrollTo = scrollTo;
 	const release = vi.fn();
 	const holdSheetSize = vi.fn(() => release);
+	const onLand = vi.fn<(key: string) => void>();
 	const scroll = new SectionScroll({
 		keys: () =>
 			lastKey === undefined ? ["section"] : ["section", lastKey],
 		strip: () => strip,
 		holdSheetSize,
+		onLand,
 	});
 	scroll.headers.register("section")(header);
 	const stop = scroll.follow(content);
@@ -77,9 +79,26 @@ function mountSection({
 		scrollTopWrites,
 		holdSheetSize,
 		release,
+		onLand,
 		reach,
 		stop,
 	};
+}
+
+function stripButton({
+	strip,
+	focusVisible,
+}: {
+	strip: HTMLElement;
+	focusVisible: boolean;
+}): HTMLButtonElement {
+	const button = document.createElement("button");
+	Object.defineProperty(button, "matches", {
+		value: (selector: string) =>
+			selector === ":focus-visible" && focusVisible,
+	});
+	strip.append(button);
+	return button;
 }
 
 afterEach(() => {
@@ -237,16 +256,27 @@ describe("SectionScroll", () => {
 		stop();
 	});
 
-	it("lands a glide at once when focus moves into the sections, not along the strip", () => {
-		const { scroll, scroller, strip, scrollTo, release, reach, stop } =
-			mountSection({ contentTop: 314, stripHeight: 60, headerTop: 543 });
+	it("lands a glide at once when focus moves into the sections and hands focus to the picked section", () => {
+		const {
+			scroll,
+			scroller,
+			strip,
+			scrollTo,
+			release,
+			onLand,
+			reach,
+			stop,
+		} = mountSection({ contentTop: 314, stripHeight: 60, headerTop: 543 });
 		const tile = document.createElement("button");
 		scroller.firstElementChild!.append(tile);
 
 		scroll.jumpTo("section");
 		reach(200);
-		strip.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+		stripButton({ strip, focusVisible: false }).dispatchEvent(
+			new FocusEvent("focusin", { bubbles: true }),
+		);
 		expect(scrollTo).toHaveBeenCalledOnce();
+		expect(onLand).not.toHaveBeenCalled();
 
 		tile.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
 
@@ -254,8 +284,37 @@ describe("SectionScroll", () => {
 			top: 483,
 			behavior: "instant",
 		});
+		expect(onLand).toHaveBeenCalledExactlyOnceWith("section");
 		reach(483);
 		expect(release).toHaveBeenCalledOnce();
+		expect(scroll.current).toBe("section");
+		stop();
+	});
+
+	it("lands a glide at once when keyboard focus moves along the strip, keeping focus there", () => {
+		const {
+			scroll,
+			scroller,
+			strip,
+			scrollTo,
+			release,
+			onLand,
+			reach,
+			stop,
+		} = mountSection({ contentTop: 314, stripHeight: 60, headerTop: 543 });
+		scrollTo.mockImplementation(({ top, behavior }: ScrollToOptions) => {
+			if (behavior === "instant") reach(top!);
+		});
+
+		scroll.jumpTo("section");
+		reach(200);
+		stripButton({ strip, focusVisible: true }).dispatchEvent(
+			new FocusEvent("focusin", { bubbles: true }),
+		);
+
+		expect(scroller.scrollTop).toBe(483);
+		expect(release).toHaveBeenCalledOnce();
+		expect(onLand).not.toHaveBeenCalled();
 		expect(scroll.current).toBe("section");
 		stop();
 	});
