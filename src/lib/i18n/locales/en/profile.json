@@ -27,7 +27,15 @@
 		"friends": "Friends",
 		"networking": "Networking",
 		"relationship": "Relationship",
-		"hookups": "Hookups"
+		"hookups": "Hookups",
+		"afterLabel": {
+			"chat": "Chat",
+			"dates": "Dates",
+			"friends": "Friends",
+			"networking": "Networking",
+			"relationship": "Relationship",
+			"hookups": "Hookups"
+		}
 	},
 	"acceptNsfwPics": {
 		"never": "Never",
@@ -65,7 +73,22 @@
 		"rugged": "Rugged",
 		"trans": "Trans",
 		"twink": "Twink",
-		"sober": "Sober"
+		"sober": "Sober",
+		"afterLabel": {
+			"bear": "Bear",
+			"cleanCut": "Clean-Cut",
+			"daddy": "Daddy",
+			"discreet": "Discreet",
+			"geek": "Geek",
+			"jock": "Jock",
+			"leather": "Leather",
+			"otter": "Otter",
+			"poz": "Poz",
+			"rugged": "Rugged",
+			"trans": "Trans",
+			"twink": "Twink",
+			"sober": "Sober"
+		}
 	},
 	"meetAt": {
 		"myPlace": "My Place",

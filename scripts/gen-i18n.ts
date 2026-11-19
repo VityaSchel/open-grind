@@ -1,4 +1,4 @@
-import { existsSync, globSync, readdirSync, rmdirSync, rmSync } from "node:fs";
+import { globSync, readdirSync, rmdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
 import { SOURCE_LOCALE } from "../src/lib/i18n/syntax";
@@ -263,23 +263,16 @@ const drift = androidDrift({
 });
 
 const existingDesktop = await readText(DESKTOP_STRINGS);
-const iosLocalizations = path.join(ROOT, IOS_LOCALIZATIONS);
 
 const iosFiles = iosDrift({
 	translated: iosStrings,
 	existing: new Map(
 		await Promise.all(
-			(existsSync(iosLocalizations)
-				? globSync("*.lproj/InfoPlist.strings", {
-						cwd: iosLocalizations,
-					})
-				: []
-			)
+			globSync(`${IOS_LOCALIZATIONS}/*.lproj/InfoPlist.strings`, {
+				cwd: ROOT,
+			})
 				.sort()
-				.map(async (relative) => {
-					const file = `${IOS_LOCALIZATIONS}/${relative}`;
-					return [file, await readText(file)] as const;
-				}),
+				.map(async (file) => [file, await readText(file)] as const),
 		),
 	),
 	release,

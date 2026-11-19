@@ -24,12 +24,21 @@ export const STACK_PANE = '[data-slot="page-stack-pane"]';
 export const STACK_DIM = '[data-slot="page-stack-dim"]';
 export const STACK_GHOST = '[data-slot="page-stack-ghost"]';
 
+export const SCREEN_HOST = '[data-slot="screen-stack-host"]';
+export const SCREEN_DIM = '[data-slot="screen-stack-dim"]';
+export const SCREEN_GHOST = '[data-slot="screen-ghost"]';
+export const OUTSIDE_SCREEN_GHOSTS = `:not(${SCREEN_GHOST} *)`;
+
 export const pane = (page: Page) => page.locator(STACK_PANE);
 export const dim = (page: Page) => page.locator(STACK_DIM);
 export const ghost = (page: Page) => page.locator(STACK_GHOST);
+export const screenGhost = (page: Page) => page.locator(SCREEN_GHOST);
 
 export const stackSettled = (page: Page) =>
 	expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
+
+export const screenSettled = (page: Page) =>
+	expect(page.locator(SCREEN_DIM)).toHaveCount(0, { timeout: 5_000 });
 
 export async function openSettings(
 	page: Page,
@@ -90,21 +99,24 @@ const currentEntry = (page: Page) =>
 
 async function watchLeaving(page: Page) {
 	await stackSettled(page);
-	const from = await page.evaluate(() => {
+	await screenSettled(page);
+	const from = await page.evaluate((host) => {
 		const { id, index } = navigation.currentEntry!;
 		return {
 			entry: id,
 			pathname: location.pathname,
 			reducedMotion: matchMedia("(prefers-reduced-motion: reduce)")
 				.matches,
+			pictureBehind: document.querySelector(host) !== null,
 			earlier: navigation
 				.entries()
 				.slice(0, index)
 				.reverse()
 				.map(({ url }) => (url ? new URL(url).pathname : null)),
 		};
-	});
+	}, SCREEN_HOST);
 	const slid = await watchRendered(page, { selector: STACK_DIM });
+	const slidOverPicture = await watchRendered(page, { selector: SCREEN_DIM });
 	const slidesBackOnto = (destination: string | null | undefined) =>
 		!from.reducedMotion &&
 		isWithin({ pathname: from.pathname, root: SETTINGS }) &&
@@ -113,7 +125,13 @@ async function watchLeaving(page: Page) {
 	return {
 		canGoBack: from.earlier.length > 0,
 		previous: from.earlier[0],
-		landed: async ({ onto }: { onto: string | null | undefined }) => {
+		landed: async ({
+			onto,
+			tracked = false,
+		}: {
+			onto: string | null | undefined;
+			tracked?: boolean;
+		}) => {
 			await expect
 				.poll(() => currentEntry(page), {
 					message: `leaves ${from.pathname}`,
@@ -125,7 +143,19 @@ async function watchLeaving(page: Page) {
 						message: `${from.pathname} slides off the stack onto ${onto}`,
 					})
 					.toBe(true);
+			else if (tracked && from.pictureBehind)
+				await expect
+					.poll(slidOverPicture, {
+						message: `${from.pathname} slides off over a picture of ${onto}`,
+					})
+					.toBe(true);
 			await stackSettled(page);
+			await screenSettled(page);
+			if (!tracked && from.pictureBehind)
+				expect(
+					await slidOverPicture(),
+					`${from.pathname} cuts to ${onto}`,
+				).toBe(false);
 		},
 	};
 }
@@ -164,7 +194,10 @@ export async function systemBack(page: Page) {
 	const handled = (await commitSystemBack(page)) === false;
 	if (!handled) await webViewGoBack(page);
 	if (leaving.canGoBack && (tracked || !handled))
-		await leaving.landed({ onto: leaving.previous });
-	else await stackSettled(page);
+		await leaving.landed({ onto: leaving.previous, tracked });
+	else {
+		await stackSettled(page);
+		await screenSettled(page);
+	}
 	return { tracked, handled };
 }

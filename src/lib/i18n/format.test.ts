@@ -422,12 +422,22 @@ describe("formatListParts", () => {
 	});
 
 	it("takes the separators of the active locale", async () => {
-		await setLocale({ locale: "fr" });
-		expect(
+		const separators = () =>
 			formatListParts(["Top", "Bottom", "Versatile"])
 				.filter(({ type }) => type === "literal")
-				.map(({ value }) => value),
-		).toEqual([", ", " et "]);
+				.map(({ value }) => value);
+		await setLocale({ locale: "ja" });
+		expect(separators()).toEqual(["、", "、"]);
+		await setLocale({ locale: "de" });
+		expect(separators()).toEqual([", ", " und "]);
+	});
+
+	it("separates two items the way it separates three", async () => {
+		await setLocale({ locale: "ru" });
+		expect(formatList(["Top", "Bottom"])).toBe("Top, Bottom");
+		expect(formatList(["Top", "Bottom", "Versatile"])).toBe(
+			"Top, Bottom, Versatile",
+		);
 	});
 });
 

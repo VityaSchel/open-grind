@@ -60,6 +60,17 @@ const lookingForKeys = {
 
 export const lookingFor = translatedLabels(lookingForKeys);
 
+const lookingForAfterLabelKeys = {
+	[LookingFor.Chat]: "profile.lookingFor.afterLabel.chat",
+	[LookingFor.Dates]: "profile.lookingFor.afterLabel.dates",
+	[LookingFor.Friends]: "profile.lookingFor.afterLabel.friends",
+	[LookingFor.Networking]: "profile.lookingFor.afterLabel.networking",
+	[LookingFor.Relationship]: "profile.lookingFor.afterLabel.relationship",
+	[LookingFor.Hookups]: "profile.lookingFor.afterLabel.hookups",
+} as const satisfies Record<LookingForId, MessageKey>;
+
+export const lookingForAfterLabel = translatedLabels(lookingForAfterLabelKeys);
+
 export const lookingForSchema = z.enum(LookingFor);
 
 export type LookingForId = z.infer<typeof lookingForSchema>;
@@ -176,6 +187,24 @@ const tribeKeys = {
 } as const satisfies Record<TribeId, MessageKey>;
 
 export const tribes = translatedLabels(tribeKeys);
+
+const tribeAfterLabelKeys = {
+	[Tribe.Bear]: "profile.tribe.afterLabel.bear",
+	[Tribe.CleanCut]: "profile.tribe.afterLabel.cleanCut",
+	[Tribe.Daddy]: "profile.tribe.afterLabel.daddy",
+	[Tribe.Discreet]: "profile.tribe.afterLabel.discreet",
+	[Tribe.Geek]: "profile.tribe.afterLabel.geek",
+	[Tribe.Jock]: "profile.tribe.afterLabel.jock",
+	[Tribe.Leather]: "profile.tribe.afterLabel.leather",
+	[Tribe.Otter]: "profile.tribe.afterLabel.otter",
+	[Tribe.Poz]: "profile.tribe.afterLabel.poz",
+	[Tribe.Rugged]: "profile.tribe.afterLabel.rugged",
+	[Tribe.Sober]: "profile.tribe.afterLabel.sober",
+	[Tribe.Trans]: "profile.tribe.afterLabel.trans",
+	[Tribe.Twink]: "profile.tribe.afterLabel.twink",
+} as const satisfies Record<TribeId, MessageKey>;
+
+export const tribesAfterLabel = translatedLabels(tribeAfterLabelKeys);
 
 export const tribeSchema = z.enum(Tribe);
 

@@ -14,10 +14,11 @@
 		ethnicities,
 		healthPracticeLabels,
 		hivStatusLabels,
-		lookingFor as lookingForLabels,
+		lookingForAfterLabel,
 		meetAt as meetAtLabels,
 		relationshipStatuses,
 		tribes,
+		tribesAfterLabel,
 		vaccines as vaccineLabels,
 	} from "#lib/model/users/profiles.ts";
 	import AboutMe from "./AboutMe.svelte";
@@ -50,6 +51,7 @@
 		age,
 		onlineUntil,
 		seen,
+		isVisiting,
 		distance,
 		rightNow,
 		isNew,
@@ -89,6 +91,7 @@
 				onlineUntil={onlineUntil ?? null}
 				{seen}
 				self={ourProfile}
+				{isVisiting}
 			/>
 			<Distance {distance} />
 			<RightNowBadge status={rightNow} />
@@ -138,14 +141,14 @@
 				icon={UsersThreeIcon}
 				label={t("profile.fields.imInto")}
 				value={tribesImInto}
-				options={tribes}
+				options={tribesAfterLabel}
 			/>
 			<LookupField
 				icon={EyesIcon}
 				weight="fill"
 				label={t("profile.fields.lookingFor")}
 				value={lookingFor}
-				options={lookingForLabels}
+				options={lookingForAfterLabel}
 			/>
 			<LookupField
 				icon={HouseIcon}

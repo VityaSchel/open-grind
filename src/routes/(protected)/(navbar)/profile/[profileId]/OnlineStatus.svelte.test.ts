@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
@@ -59,6 +59,49 @@ describe("OnlineStatus", () => {
 		const { container } = render(OnlineStatus, props);
 
 		expect(statusText(container)).toBe(status);
+	});
+
+	it.each(states)(
+		"marks a visitor with an airplane in place of the online dot when $state",
+		({ props, status }) => {
+			const { container } = render(OnlineStatus, {
+				...props,
+				isVisiting: true,
+			});
+
+			expect(screen.getByTitle("Visiting").textContent.trim()).toBe(
+				"Visiting",
+			);
+			expect(
+				container.querySelector("[data-slot=online-status-dot]"),
+			).toBeNull();
+			expect(statusText(container)).toContain(status);
+		},
+	);
+
+	it("keeps the online dot and no visiting mark for a local profile", () => {
+		const { container } = render(OnlineStatus, {
+			onlineUntil: NOW + MINUTE,
+			seen: null,
+		});
+
+		expect(
+			container.querySelector("[data-slot=online-status-dot]"),
+		).not.toBeNull();
+		expect(screen.queryByTitle("Visiting")).toBeNull();
+	});
+
+	it("words the visiting mark in the active locale", async () => {
+		render(OnlineStatus, {
+			onlineUntil: null,
+			seen: null,
+			isVisiting: true,
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		const mark = screen.getByTitle(PSEUDO_MESSAGE);
+		expect(mark.textContent.trim()).toBe(mark.title);
 	});
 
 	it("keeps the time since last seen current", async () => {

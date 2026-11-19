@@ -1,4 +1,5 @@
 import { flushSync } from "svelte";
+import { vi } from "vitest";
 import type { OnNavigate } from "$app/navigation";
 
 import type { StackSurface } from "./surface";
@@ -49,11 +50,17 @@ export function fakeSurface() {
 	return { surface, applied, animations };
 }
 
-function navigationTarget(pathname: string) {
+function navigationTarget({
+	pathname,
+	route = null,
+}: {
+	pathname: string;
+	route?: string | null;
+}) {
 	return {
 		url: new URL(`http://app${pathname}`),
 		params: {},
-		route: { id: null },
+		route: { id: route },
 	};
 }
 
@@ -61,16 +68,18 @@ export function navigationEvent({
 	from,
 	to,
 	delta,
+	toRoute,
 }: {
 	from: string;
 	to: string;
 	delta?: number;
+	toRoute?: string;
 }): OnNavigate {
 	return {
 		type: delta === undefined ? "link" : "popstate",
 		delta,
-		from: navigationTarget(from),
-		to: navigationTarget(to),
+		from: navigationTarget({ pathname: from }),
+		to: navigationTarget({ pathname: to, route: toRoute }),
 	} as OnNavigate;
 }
 
@@ -82,4 +91,41 @@ export async function settleLast(animations: PendingAnimation[]) {
 	animations.at(-1)?.settle(true);
 	await flushMicrotasks();
 	flushSync();
+}
+
+export type FakeHistory = ReturnType<typeof fakeHistory>;
+
+export function fakeHistory({
+	paths,
+	index = paths.length - 1,
+}: {
+	paths: string[];
+	index?: number;
+}) {
+	const entries = { paths: [...paths], index };
+	vi.stubGlobal("navigation", {
+		get currentEntry() {
+			return { index: entries.index };
+		},
+		entries: () =>
+			entries.paths.map((path) => ({ url: `http://app${path}` })),
+	});
+
+	return {
+		index: () => entries.index,
+		path: () => entries.paths[entries.index],
+		push: (path: string) => {
+			entries.paths = [
+				...entries.paths.slice(0, entries.index + 1),
+				path,
+			];
+			entries.index += 1;
+		},
+		replace: (path: string) => {
+			entries.paths[entries.index] = path;
+		},
+		go: (delta: number) => {
+			entries.index += delta;
+		},
+	};
 }

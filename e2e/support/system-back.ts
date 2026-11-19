@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { afterTwoFrames } from "./app";
 
@@ -61,10 +61,30 @@ export const edgeSwipeArmed = (page: Page) =>
 export const edgeSwipeArmsSent = (page: Page) =>
 	page.evaluate(() => window.__backSwipeArms ?? []);
 
+export const edgeSwipeZone = (page: Page) =>
+	page.evaluate(() => window.__backSwipeEdgeZones?.at(-1));
+
+export const expectEdgeSwipeArmed = (
+	page: Page,
+	{ armed }: { armed: boolean },
+) => expect.poll(() => edgeSwipeArmed(page)).toBe(armed);
+
 export const startEdgeSwipeUnarmed = (page: Page) =>
 	page.evaluate(
 		() => window.__iosBack?.start({ x: 2, y: innerHeight / 2 }) ?? null,
 	);
+
+export async function expectEdgeSwipeStaysOff(page: Page) {
+	const sentBefore = (await edgeSwipeArmsSent(page)).length;
+	await afterTwoFrames(page);
+	await page.evaluate(() => new Promise((folded) => setTimeout(folded)));
+
+	expect((await edgeSwipeArmsSent(page)).slice(sentBefore)).not.toContain(
+		true,
+	);
+	expect(await edgeSwipeArmed(page)).toBe(false);
+	expect(await startEdgeSwipeUnarmed(page)).toBe(false);
+}
 
 export async function startEdgeSwipe(page: Page) {
 	return page.evaluate(() => {

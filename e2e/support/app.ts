@@ -79,6 +79,7 @@ export function animationsFinished(
 declare global {
 	interface Window {
 		__backSwipeArms?: boolean[];
+		__backSwipeEdgeZones?: string[];
 		__capturedInvokes?: Record<string, unknown[]>;
 		__emitTauriEvent?: (event: string, payload: unknown) => void;
 		__rendered?: Record<string, boolean>;
@@ -344,8 +345,12 @@ export async function installTauriShim(
 
 			if (cmd.startsWith("plugin:event|")) return null;
 			if (cmd === "set_back_swipe_armed") {
-				const { armed } = args as { armed: boolean };
+				const { armed, edgeZone } = args as {
+					armed: boolean;
+					edgeZone: string;
+				};
 				(window.__backSwipeArms ??= []).push(armed);
+				(window.__backSwipeEdgeZones ??= []).push(edgeZone);
 				return null;
 			}
 			if (cmd === "plugin:menu|new") {

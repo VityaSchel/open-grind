@@ -16,6 +16,7 @@ import {
 	openAppSettings,
 	openSettings,
 	pane,
+	SCREEN_DIM,
 	SETTINGS,
 	STACK_DIM,
 	STACK_GHOST,
@@ -248,6 +249,7 @@ test("the detour through your own profile cuts on every hop, both ways and from 
 	};
 	await openSettings(page, { platform: "android" });
 	const slid = await watchRendered(page, { selector: STACK_GHOST });
+	const slidOverPicture = await watchRendered(page, { selector: SCREEN_DIM });
 
 	await openProfileEditor();
 	await backLink(page).click();
@@ -259,6 +261,10 @@ test("the detour through your own profile cuts on every hop, both ways and from 
 	await clickMeTab(page);
 	await expect(viewProfile).toBeVisible();
 	expect(await slid(), "a page slid somewhere along the detour").toBe(false);
+	expect(
+		await slidOverPicture(),
+		"a screen slid over a picture somewhere along the detour",
+	).toBe(false);
 
 	await page.getByRole("link", { name: "Account Settings" }).click();
 	await expect(page).toHaveURL(/\/settings\/account$/);
@@ -284,6 +290,17 @@ test("Back still slides down the stack after a profile was opened from the block
 	await backLink(page).click();
 	await expect(page).toHaveURL(blockedList);
 	await expect(pane(page)).toBeVisible();
+	await stackSettled(page);
+
+	expect(
+		await startSystemBack(page),
+		"the remounted page follows the back gesture",
+	).toBe(true);
+	await progressSystemBack(page, 0.5);
+	await expect(ghost(page)).toContainText("Blocked Users");
+	await cancelSystemBack(page);
+	await stackSettled(page);
+	await expect(page).toHaveURL(blockedList);
 
 	for (const parent of [/\/settings\/account$/, /\/settings$/]) {
 		const slid = await watchRendered(page, { selector: STACK_DIM });

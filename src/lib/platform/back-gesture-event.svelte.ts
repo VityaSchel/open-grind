@@ -19,23 +19,22 @@ export const backGestureEventHandlers = new SvelteMap<
 
 type LayerSkip = { skipping?: readonly BackGestureLayer[] };
 
-function backGestureHandlersTopFirst({
-	skipping = [],
-}: LayerSkip = {}): BackGestureHandler[] {
+function backGestureHandlersTopFirst(): BackGestureHandler[] {
 	const newestFirst = [...backGestureEventHandlers].reverse();
-	return LAYERS_TOP_FIRST.filter(
-		(layer) => !skipping.includes(layer),
-	).flatMap((layer) =>
+	return LAYERS_TOP_FIRST.flatMap((layer) =>
 		newestFirst
 			.filter(([, handlerLayer]) => handlerLayer === layer)
 			.map(([handler]) => handler),
 	);
 }
 
-export function topBackGestureHandler(
-	skip: LayerSkip = {},
-): BackGestureHandler | undefined {
-	return backGestureHandlersTopFirst(skip)[0];
+export function topBackGestureLayer({ skipping = [] }: LayerSkip = {}):
+	| BackGestureLayer
+	| undefined {
+	const registered = [...backGestureEventHandlers.values()];
+	return LAYERS_TOP_FIRST.find(
+		(layer) => !skipping.includes(layer) && registered.includes(layer),
+	);
 }
 
 export function overlayOpen(): boolean {

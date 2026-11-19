@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { tick, untrack } from "svelte";
+	import { onDestroy, tick, untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 	import type { Attachment } from "svelte/attachments";
 
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import { edgeGap } from "#lib/components/feedback/refresh/scroll-geometry.ts";
+	import { holdScreenLanding } from "#lib/components/navigation/stack/screen-root.ts";
 	import { Spinner } from "#lib/components/ui/spinner/index.ts";
 	import { keyboardDragDismiss } from "#lib/platform/keyboard-drag-dismiss.ts";
 	import { answerStatusBarTaps } from "#lib/platform/status-bar-tap.ts";
@@ -26,6 +27,9 @@
 
 	let container: HTMLDivElement | null = $state(null);
 	let refreshControl: DataRefreshControl | undefined = $state();
+
+	const releaseLanding = holdScreenLanding();
+	onDestroy(releaseLanding);
 
 	const FLOOR_SLOP_PX = 16;
 
@@ -169,7 +173,7 @@
 	function scrollToRestWhenLoaded(): void {
 		if (!conversationState.loading && !scrollDone && container) {
 			scrollDone = true;
-			void scrollToRest("instant");
+			void scrollToRest("instant").finally(releaseLanding);
 		}
 	}
 

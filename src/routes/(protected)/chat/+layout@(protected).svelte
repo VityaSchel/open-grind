@@ -7,6 +7,7 @@
 		getOrCreateConversationsState,
 		setConversations,
 	} from "#lib/chat/conversations-context.svelte.ts";
+	import { screenRoot } from "#lib/components/navigation/stack/screen-root.ts";
 	import NavBar from "#lib/components/shared/NavBar.svelte";
 	import PageTitle from "#lib/components/shared/PageTitle.svelte";
 	import * as Card from "#lib/components/ui/card/index.ts";
@@ -121,22 +122,27 @@
 	<PageTitle page={t("shell.navBar.tabs.inbox")} />
 {/if}
 {#if mobile.current}
-	<LiveStack
-		basePath="/chat"
-		keyOf={(target) => target.params?.conversationId ?? null}
+	<div
+		class="contents data-raised:fixed data-raised:inset-0 data-raised:block data-raised:**:data-[slot=live-stack-base]:invisible"
+		{@attach screenRoot}
 	>
-		{#snippet base({ covered, uncovering })}
-			<main class="flex min-h-0 flex-1 flex-col">
-				<ConversationsList {covered} filtersLocked={uncovering} />
-			</main>
-			<NavBar ourProfileId={data.ourProfileId} />
-		{/snippet}
-		{#snippet sheet(id, { leaving })}
-			<main class="flex min-h-0 flex-1 flex-col">
-				{@render conversationScreen(id, leaving)}
-			</main>
-		{/snippet}
-	</LiveStack>
+		<LiveStack
+			basePath="/chat"
+			keyOf={(target) => target.params?.conversationId ?? null}
+		>
+			{#snippet base({ covered, uncovering })}
+				<main class="flex min-h-0 flex-1 flex-col">
+					<ConversationsList {covered} filtersLocked={uncovering} />
+				</main>
+				<NavBar ourProfileId={data.ourProfileId} />
+			{/snippet}
+			{#snippet sheet(id, { leaving })}
+				<main class="flex min-h-0 flex-1 flex-col">
+					{@render conversationScreen(id, leaving)}
+				</main>
+			{/snippet}
+		</LiveStack>
+	</div>
 {:else}
 	<main class="flex h-dvh w-full flex-1 p-safe">
 		<Resizable.PaneGroup
