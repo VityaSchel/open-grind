@@ -50,6 +50,7 @@
 		age,
 		onlineUntil,
 		seen,
+		isVisiting,
 		distance,
 		rightNow,
 		isNew,
@@ -89,6 +90,7 @@
 				onlineUntil={onlineUntil ?? null}
 				{seen}
 				self={ourProfile}
+				{isVisiting}
 			/>
 			<Distance {distance} />
 			<RightNowBadge status={rightNow} />

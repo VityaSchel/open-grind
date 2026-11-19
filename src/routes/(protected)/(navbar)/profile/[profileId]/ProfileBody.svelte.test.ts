@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render } from "@testing-library/svelte";
+import { render, within } from "@testing-library/svelte";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -71,5 +71,14 @@ describe("ProfileBody", () => {
 			) ?? []),
 		].map((badge) => badge.textContent.trim());
 		expect(badges).toEqual(["Hosting", "New"]);
+	});
+
+	it("marks a visiting profile with an airplane in the status row", () => {
+		const container = renderBody({ isVisiting: true });
+
+		const row = container.querySelector<HTMLElement>(
+			"[data-slot=profile-status-row]",
+		);
+		expect(row && within(row).queryByTitle("Visiting")).not.toBeNull();
 	});
 });

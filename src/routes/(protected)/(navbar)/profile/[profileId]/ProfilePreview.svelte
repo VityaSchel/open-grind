@@ -19,6 +19,7 @@
 			onlineUntil={row.onlineUntil}
 			seen={row.seen}
 			self={ourProfile}
+			isVisiting={row.isVisiting}
 		/>
 		<Distance distance={row.distance} />
 		<RightNowBadge status={row.rightNow} />
