@@ -7,7 +7,7 @@ const root = Bun.fileURLToPath(new URL("..", import.meta.url)).replace(
 	/\/$/,
 	"",
 );
-const usage = "usage: bun run package:ios -- --testflight [--upload]";
+const usage = "usage: bun run package:ios [-- --testflight [--upload]]";
 const IPA = `${root}/src-tauri/gen/apple/build/arm64/Open Grind.ipa`;
 const EXPORT_OPTIONS = `${root}/src-tauri/gen/apple/ExportOptions.plist`;
 const BUILD_ENVIRONMENT_LEAKS = [
@@ -52,7 +52,14 @@ function buildEnvironment(key: AppStoreConnectKey): Record<string, string> {
 	};
 }
 
-if (!Bun.argv.includes("--testflight")) fail(usage);
+if (!Bun.argv.includes("--testflight")) {
+	if (Bun.argv.length > 2) fail(usage);
+	const sideload = Bun.spawn(["nix", "run", ".#build-ios"], {
+		cwd: root,
+		stdio: ["inherit", "inherit", "inherit"],
+	});
+	process.exit(await sideload.exited);
+}
 
 const key = await appStoreConnectKey();
 const { bundle } = await Bun.file(

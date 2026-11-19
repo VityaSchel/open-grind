@@ -13,6 +13,7 @@ The Linux, Windows and macOS recipes need a checkout with submodules — `git cl
     - [Linux](#linux)
     - [Windows](#windows)
     - [macOS](#macos)
+    - [iOS](#ios)
 
 ## Trusting the build environment
 
@@ -267,6 +268,50 @@ if cmp -s "$LOCAL" "$RESIGNED"; then
   echo "✓ zip matches"
 else
   echo "✗ zip mismatch, local build does not match the published zip" >&2
+  exit 1
+fi
+```
+
+## iOS
+
+- **Canonical builder:** macOS on Apple Silicon with Xcode 27.0 (build 27A266a, iOS SDK build 24A430) selected by `xcode-select`
+- **Official releases:** Built locally, not attested. Only the sideload IPA reproduces: TestFlight and AltStore PAL builds are encrypted and re-signed by Apple
+- Cross-compilation table **for iOS builds**:
+
+    |          | On x86_64 | on arm64    |
+    | -------- | --------- | ----------- |
+    | On macOS | Untested  | _Canonical_ |
+
+- Pinned inputs:
+
+    | Component                                         | Where it's pinned                                                     |
+    | ------------------------------------------------- | --------------------------------------------------------------------- |
+    | Xcode (clang, ld, Swift, `ibtool`) and iOS SDK    | `scripts/ios/sideload.ts`, checked before the build and in Info.plist |
+    | Rust toolchain with `llvm-tools`, CMake, Perl, Go | `flake.lock`                                                          |
+    | Checkout path and `CARGO_HOME`                    | remapped to `/open-grind` and `/cargo` by `nix/ios.nix`               |
+    | `Info.plist`                                      | rewritten with sorted keys and without `BuildMachineOSBuild`          |
+    | Ad-hoc signature                                  | `flake.lock` (nixpkgs `rcodesign`)                                    |
+    | Zip archive                                       | `flake.lock` (nixpkgs `zip`)                                          |
+    | `codesign_allocate`                               | `flake.lock` (nixpkgs `cctools`)                                      |
+    | App icon (`Assets.car`)                           | `src-tauri/gen/apple/AppIcon/`, committed (`actool` output varies)    |
+
+The IPA is signed ad-hoc without entitlements, so sideloaders re-sign it with their own identity.
+
+```bash
+# 1. Reproduce the IPA locally
+git checkout v<tag>
+nix run .#build-ios
+LOCAL=src-tauri/target/release/artifacts/open-grind-v<tag>-ios.ipa
+
+# 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
+PUBLISHED=/path/to/open-grind-v<tag>-ios.ipa
+
+# 3. Confirm the IPA reproduces
+shasum -a 256 "$LOCAL" "$PUBLISHED"
+if cmp -s "$LOCAL" "$PUBLISHED"; then
+  echo "✓ IPA matches"
+else
+  echo "✗ IPA mismatch, local build does not match the published IPA" >&2
   exit 1
 fi
 ```

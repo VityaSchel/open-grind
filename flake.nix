@@ -66,7 +66,13 @@
             macos = import ./nix/macos.nix { inherit pkgs lib common; };
           };
 
-          renamed = f: lib.mapAttrs' (n: t: lib.nameValuePair "build-${n}" (f t)) targets;
+          builds =
+            targets
+            // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+              ios = import ./nix/ios.nix { inherit pkgs common; };
+            };
+
+          renamed = f: lib.mapAttrs' (n: t: lib.nameValuePair "build-${n}" (f t)) builds;
         in
         {
           packages = renamed (t: t.package);
