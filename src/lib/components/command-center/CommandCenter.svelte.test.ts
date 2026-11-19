@@ -2,20 +2,12 @@
 
 import { fireEvent, screen, within } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-const { currentPlatformMock } = vi.hoisted(() => ({
-	currentPlatformMock: vi.fn(() => "linux"),
-}));
-
-vi.mock("#lib/platform/os.ts", async (importOriginal) => ({
-	...(await importOriginal<typeof import("#lib/platform/os.ts")>()),
-	currentPlatform: currentPlatformMock,
-}));
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { slot } from "#lib/i18n/fixtures/dom.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	enterQuery,
 	expectCommandGroup,
@@ -40,9 +32,13 @@ async function openGoToWithFirstSelected() {
 	await tick();
 }
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(async () => {
 	resetCommandCenter();
-	currentPlatformMock.mockReset();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -154,7 +150,7 @@ describe("CommandCenter", () => {
 	it.each(["macos", "ios"] as const)(
 		"leaves Control+J to the text field on %s",
 		async (textFieldPlatform) => {
-			currentPlatformMock.mockReturnValue(textFieldPlatform);
+			runningOn(textFieldPlatform);
 			await openGoToWithFirstSelected();
 
 			const reachesTextField = await fireEvent.keyDown(
@@ -168,7 +164,7 @@ describe("CommandCenter", () => {
 	);
 
 	it("moves the selection with Control+J on Windows", async () => {
-		currentPlatformMock.mockReturnValue("windows");
+		runningOn("windows");
 		await openGoToWithFirstSelected();
 
 		const reachesTextField = await fireEvent.keyDown(

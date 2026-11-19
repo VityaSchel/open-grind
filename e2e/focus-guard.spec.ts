@@ -26,6 +26,27 @@ const FIXTURE_STYLE = `
 		outline-offset: -2px;
 	}
 	.banded:focus::after { box-shadow: inset 0 0 0 4px #000; }
+	[data-slot="pill"] {
+		position: relative;
+		width: 200px;
+		height: 60px;
+		overflow: hidden;
+		background: #eee;
+	}
+	.icon { width: 32px; height: 44px; background: transparent; }
+	.icon:focus { outline: none; }
+	.icon:focus::after {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: var(--icon-center);
+		width: 36px;
+		height: 36px;
+		margin-top: -18px;
+		margin-left: -18px;
+		border-radius: 9999px;
+		outline: 2px solid rgb(0 0 0 / 60%);
+	}
 `;
 
 async function focusProblemsOfButtonIn(
@@ -138,5 +159,27 @@ test.describe("the focus guard", () => {
 			}),
 			"without the band the ring vanishes into the white tile",
 		).toEqual(['button "Photo": focus indicator contrast 1:1']);
+	});
+
+	test("reports an icon ring drawn past its button and cut by a clipping ancestor", async ({
+		page,
+	}) => {
+		expect(
+			await focusProblemsOfButtonIn(page, {
+				markup: `<div data-slot="pill"><div style="position: absolute; top: 8px; left: 8px; width: 32px; height: 44px"><button class="icon" aria-label="Record" style="--icon-center: 2px"></button></div></div>`,
+			}),
+		).toEqual([
+			'button "Record": focus indicator clipped by div pill (left)',
+		]);
+	});
+
+	test("accepts an icon ring that stays inside its clipping ancestor", async ({
+		page,
+	}) => {
+		expect(
+			await focusProblemsOfButtonIn(page, {
+				markup: `<div data-slot="pill"><button class="icon" aria-label="Record" style="position: absolute; top: 8px; left: 84px; --icon-center: 16px"></button></div>`,
+			}),
+		).toEqual([]);
 	});
 });

@@ -12,6 +12,7 @@ import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 const ADD_TILE = '[data-slot="add-tile"]';
 const GRID = '[data-slot="media-slot-grid"]';
 const STATUS = '[data-slot="media-slot-grid-status"]';
+const BACK_SETTLE_MS = 500;
 
 test.describe.configure({ timeout: 120_000 });
 
@@ -46,6 +47,25 @@ function offsetInGrid(cell: Locator): Promise<{ x: number; y: number }> {
 		const gridBox = grid.getBoundingClientRect();
 		return { x: cellBox.x - gridBox.x, y: cellBox.y - gridBox.y };
 	});
+}
+
+async function watchNavigations(page: Page): Promise<() => Promise<string[]>> {
+	await page.evaluate(() => {
+		const log: string[] = [];
+		(window as unknown as { __navigations: string[] }).__navigations = log;
+		navigation.addEventListener("navigate", (event) => {
+			log.push(`${event.navigationType} ${event.destination.url}`);
+		});
+		addEventListener("popstate", () =>
+			log.push(`popstate ${location.href}`),
+		);
+	});
+	return () =>
+		page.evaluate(
+			() =>
+				(window as unknown as { __navigations: string[] })
+					.__navigations,
+		);
 }
 
 function announcement(page: Page): Locator {
@@ -171,6 +191,7 @@ test.describe("keyboard reorder of album media", () => {
 		const before = await mediaOrder(page);
 		const url = page.url();
 		await focusSlot({ page, slot: 1 });
+		const navigations = await watchNavigations(page);
 
 		await page.keyboard.press("Space");
 		await page.keyboard.press("ArrowRight");
@@ -178,9 +199,18 @@ test.describe("keyboard reorder of album media", () => {
 
 		await expect(announcement(page)).toHaveText("Move cancelled");
 		await expect(page.locator(`${CELL}[data-dragging]`)).toHaveCount(0);
-		expect(page.url(), "Escape did not go back").toBe(url);
+		await page.waitForTimeout(BACK_SETTLE_MS);
+		expect(await navigations(), "Escape did not go back").toEqual([]);
+		expect(page.url()).toBe(url);
 		expect(await mediaOrder(page)).toEqual(before);
 		expect(await focusedCellIndex(page)).toBe(1);
+
+		await page.keyboard.press("Escape");
+		await expect
+			.poll(navigations, {
+				message: "a second Escape, with nothing held, goes back",
+			})
+			.not.toEqual([]);
 	});
 
 	test("Tab away from a lifted item puts it back", async ({ page }) => {

@@ -11,8 +11,10 @@ import {
 import {
 	arrowThrough,
 	focusProblems,
+	type FocusStop,
 	tabCycle,
 	tabThrough,
+	walkFocus,
 } from "./support/focus";
 
 const STOPS = 30;
@@ -81,7 +83,8 @@ const COMPOSITE_SCREENS: CompositeScreen[] = [
 	{
 		name: "the browse grid",
 		open: openGrid,
-		ready: (page) => page.locator('[data-slot="grid-cells"] > a'),
+		ready: (page) =>
+			page.locator('[data-slot="grid-cells"] a[href^="/profile/"]'),
 		composites: [
 			{
 				name: "the quick filters",
@@ -254,10 +257,37 @@ async function expectOneStopPerComposite({
 	}
 }
 
-async function pressEnterOn(trigger: Locator, ready: Locator): Promise<void> {
+async function pressEnterOn({
+	trigger,
+	ready,
+}: {
+	trigger: Locator;
+	ready: Locator;
+}): Promise<void> {
 	await trigger.focus();
 	await trigger.page().keyboard.press("Enter");
 	await ready.waitFor();
+}
+
+async function tabThroughOverlay(
+	page: Page,
+	{ key }: { key?: string } = {},
+): Promise<FocusStop[]> {
+	const overlay = page.getByRole("dialog");
+	return walkFocus(page, {
+		key: key ?? "Tab",
+		stops: STOPS,
+		from: "currentFocus",
+		whenLost: "report",
+		onStop: async () => {
+			expect(
+				await overlay.evaluate((node) =>
+					node.contains(document.activeElement),
+				),
+				"Tab stays in the overlay",
+			).toBe(true);
+		},
+	});
 }
 
 async function waitForFocusIn(dialog: Locator): Promise<void> {
@@ -280,10 +310,10 @@ const OVERLAYS: Overlay[] = [
 	{
 		name: "all filters",
 		open: async (page) => {
-			await pressEnterOn(
-				page.getByRole("button", { name: "All filters" }),
-				page.getByRole("button", { name: "Apply" }),
-			);
+			await pressEnterOn({
+				trigger: page.getByRole("button", { name: "All filters" }),
+				ready: page.getByRole("button", { name: "Apply" }),
+			});
 			await waitForFocusIn(page.getByRole("dialog"));
 		},
 		minStops: 15,
@@ -291,10 +321,10 @@ const OVERLAYS: Overlay[] = [
 	{
 		name: "the age filter",
 		open: async (page) => {
-			await pressEnterOn(
-				page.getByRole("button", { name: "Age", exact: true }),
-				page.getByRole("slider", { name: "Minimum Age" }),
-			);
+			await pressEnterOn({
+				trigger: page.getByRole("button", { name: "Age", exact: true }),
+				ready: page.getByRole("slider", { name: "Minimum Age" }),
+			});
 			const drawer = page.getByRole("dialog");
 			await waitForFocusIn(drawer);
 			await animationsFinished(drawer);
@@ -304,10 +334,10 @@ const OVERLAYS: Overlay[] = [
 	{
 		name: "the location picker",
 		open: async (page) => {
-			await pressEnterOn(
-				page.getByRole("button", { name: "Change location" }),
-				page.getByPlaceholder("Search places…"),
-			);
+			await pressEnterOn({
+				trigger: page.getByRole("button", { name: "Change location" }),
+				ready: page.getByPlaceholder("Search places…"),
+			});
 			await waitForFocusIn(page.getByRole("dialog"));
 		},
 		minStops: 4,
@@ -356,11 +386,7 @@ test.describe("keyboard focus stays visible and unclipped", () => {
 		test(`in ${name}`, async ({ page }) => {
 			await openGrid(page);
 			await open(page);
-			const stops = await tabThrough(page, {
-				stops: STOPS,
-				key,
-				fromCurrentFocus: true,
-			});
+			const stops = await tabThroughOverlay(page, { key });
 			expect(stops.length).toBeGreaterThanOrEqual(minStops);
 			expect(focusProblems(stops)).toEqual([]);
 		});
@@ -384,15 +410,12 @@ test.describe("keyboard focus stays visible and unclipped", () => {
 
 		test("in all filters", async ({ page }) => {
 			await openGrid(page);
-			await pressEnterOn(
-				page.getByRole("button", { name: "All filters" }),
-				page.getByRole("button", { name: "Apply" }),
-			);
-			await waitForFocusIn(page.getByRole("dialog"));
-			const stops = await tabThrough(page, {
-				stops: STOPS,
-				fromCurrentFocus: true,
+			await pressEnterOn({
+				trigger: page.getByRole("button", { name: "All filters" }),
+				ready: page.getByRole("button", { name: "Apply" }),
 			});
+			await waitForFocusIn(page.getByRole("dialog"));
+			const stops = await tabThroughOverlay(page);
 			expect(stops.length).toBeGreaterThanOrEqual(20);
 			expect(focusProblems(stops)).toEqual([]);
 		});
@@ -402,7 +425,10 @@ test.describe("keyboard focus stays visible and unclipped", () => {
 		await page.goto("/profile/100001");
 		const menuButton = page.getByRole("button", { name: "Profile menu" });
 		await menuButton.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-		await pressEnterOn(menuButton, page.getByRole("menu"));
+		await pressEnterOn({
+			trigger: menuButton,
+			ready: page.getByRole("menu"),
+		});
 		await waitForFocusIn(page.getByRole("menu"));
 		const stops = await arrowThrough(page, {
 			key: "ArrowDown",

@@ -4,15 +4,21 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	openGrid,
-	pathname,
 } from "./support/app";
 import { arrowThrough, focusProblems } from "./support/focus";
+import {
+	openTile,
+	pagerGeometry,
+	profileUrl,
+	restsOn,
+	tileIds,
+} from "./support/profile-pager";
 import { goToRightNow, RIGHT_NOW_FEED_TIMEOUT } from "./support/right-now";
 
 const PHONE = { width: 420, height: 800 };
 const DESKTOP = { width: 1280, height: 800 };
 const COLLAPSED_SELECTION_BAR = { width: 290, height: 800 };
-const DEMO_PROFILE = "/profile/100001";
+const PAGING_SETTLE_MS = 600;
 
 const navTabs = (page: Page) =>
 	page
@@ -105,6 +111,18 @@ async function expectVisibleArrowLoop({
 	}
 }
 
+async function openProfileBetweenNeighbors(page: Page): Promise<number[]> {
+	await openGrid(page);
+	await expect
+		.poll(async () => (await tileIds(page)).length, {
+			timeout: FIRST_ROUTE_COMPILE_MS,
+		})
+		.toBeGreaterThan(2);
+	const tiles = await tileIds(page);
+	await openTile(page, { tiles, nth: 1 });
+	return tiles;
+}
+
 async function openInbox(page: Page): Promise<void> {
 	await page.goto("/chat");
 	await conversationRows(page)
@@ -156,20 +174,39 @@ test.describe("the navigation bar", () => {
 	test("rests on the first section on a profile and keeps arrows from paging profiles", async ({
 		page,
 	}) => {
-		await page.goto(DEMO_PROFILE);
+		const tiles = await openProfileBetweenNeighbors(page);
 		const browse = navTabs(page).getByRole("link", { name: "Browse" });
-		await browse.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 		await expect(browse).toHaveAttribute("tabindex", "0");
+		const { scrollLeft } = await pagerGeometry(page);
+		const expectPagerUnmoved = async (focused: string) => {
+			await page.waitForTimeout(PAGING_SETTLE_MS);
+			expect(await focusedName(page)).toBe(focused);
+			expect(
+				(await pagerGeometry(page)).scrollLeft,
+				"the arrows stay in the navigation bar",
+			).toBe(scrollLeft);
+			expect(page.url()).toMatch(profileUrl(tiles[1]!));
+		};
 		await browse.focus();
 		await page.keyboard.press("ArrowLeft");
+		await expectPagerUnmoved("Me");
 		await page.keyboard.press("ArrowRight");
 		await page.keyboard.press("ArrowRight");
-		expect(await focusedName(page)).toBe("Right Now");
-		expect(await pathname(page)).toBe(DEMO_PROFILE);
+		await expectPagerUnmoved("Right Now");
 		await page.keyboard.press("Shift+Tab");
 		expect(await focusInside(navTabs(page))).toBe(false);
 		await page.keyboard.press("Tab");
 		expect(await isFocused(browse)).toBe(true);
+
+		await page.evaluate(() =>
+			(document.activeElement as HTMLElement | null)?.blur(),
+		);
+		await page.keyboard.press("ArrowRight");
+		await restsOn(page, { position: 2 });
+		await expect(
+			page,
+			"the same arrow outside the navigation bar pages",
+		).toHaveURL(profileUrl(tiles[2]!));
 	});
 });
 

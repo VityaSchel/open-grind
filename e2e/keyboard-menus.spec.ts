@@ -147,8 +147,15 @@ test.describe("message menu on a touch screen", () => {
 			messageMenu(page).getByRole("menuitem", REACT),
 		).toHaveCount(0);
 		await expect(page.getByText("Double tap to")).toBeVisible();
+		const shown = messageMenu(page).getByRole("menuitem");
+		await expect(shown.first()).toBeFocused();
 		const walk = await arrowThrough(page, { key: "ArrowDown", stops: 10 });
 		expect(walk.map(({ element }) => element)).not.toContain("body");
+		expect(walk).toHaveLength(await shown.count());
+		await expect(
+			shown.first(),
+			"Down on the last item wraps past the hidden fire item",
+		).toBeFocused();
 	});
 
 	test("keeps the double-tap hint when a long press opens the menu while typing in the composer", async ({
