@@ -6,11 +6,13 @@
 	import { mediaFailure, remedyFor } from "#lib/platform/media-failure.ts";
 	import { now } from "#lib/util/clock.ts";
 	import {
+		isOnScreen,
 		loadWhenVisible,
 		TRANSPARENT_PIXEL,
 	} from "#lib/util/load-when-visible.ts";
 	import {
 		acquireMediaLoadSlot,
+		recentlyLoadedMedia,
 		releaseWhenSettled,
 	} from "#lib/util/media-load-slots.ts";
 	import { probeMedia } from "#lib/util/media-probe.ts";
@@ -56,9 +58,6 @@
 	const MAX_REARMS = 3;
 	const REARM_SPACING_MS = 30 * 1000;
 
-	let armed = $state(false);
-	const deferred = $derived(loading === "lazy" && !armed);
-
 	let recovery = $state<{
 		src: string;
 		retrying: boolean;
@@ -70,9 +69,15 @@
 			? retryMediaSrc({ src, attempt: recovering.attempt })
 			: src,
 	);
+	const remembered = $derived(
+		src !== null && recovering === null && recentlyLoadedMedia.has(src),
+	);
+
+	let armed = $state(false);
+	const waitsForView = $derived(loading === "lazy" && !armed);
 	const requested = $derived(
 		pending ||
-			deferred ||
+			waitsForView ||
 			failedSrc === src ||
 			recovering?.retrying === false
 			? null
@@ -191,7 +196,14 @@
 
 	let slotGranted = $state(false);
 	let shownSrc = $state<string | null>(null);
-	const loaded = $derived(shownSrc !== null && shownSrc === loadSrc);
+	const loaded = $derived(
+		(remembered && !waitsForView) ||
+			(shownSrc !== null && shownSrc === loadSrc),
+	);
+
+	const armRememberedOnScreen: Attachment<HTMLElement> = (node) => {
+		if (waitsForView && remembered && isOnScreen(node)) armed = true;
+	};
 	const fetching = $derived(requested !== null && !loaded);
 	let imageElement = $state<HTMLImageElement>();
 	let releaseSlot = () => {};
@@ -199,6 +211,11 @@
 	$effect.pre(() => {
 		slotGranted = false;
 		if (requested === null) return;
+		if (remembered) {
+			releaseSlot = () => {};
+			slotGranted = true;
+			return;
+		}
 		const handed = handedSlot;
 		handedSlot = null;
 		const release =
@@ -226,7 +243,8 @@
 		src={slotGranted ? loadSrc : (shownSrc ?? TRANSPARENT_PIXEL)}
 		{alt}
 		{loading}
-		use:loadWhenVisible={deferred ? () => (armed = true) : undefined}
+		use:loadWhenVisible={waitsForView ? () => (armed = true) : undefined}
+		{@attach armRememberedOnScreen}
 		draggable="false"
 		class={[
 			{
@@ -244,7 +262,9 @@
 		onerror={() => {
 			if (!slotGranted) return;
 			releaseSlot();
-			if (src !== null) void recover(src);
+			if (src === null) return;
+			recentlyLoadedMedia.forget(src);
+			void recover(src);
 		}}
 		onload={(event) => {
 			const image = event.currentTarget;
@@ -256,6 +276,7 @@
 				return;
 			}
 			shownSrc = loadSrc;
+			if (loadSrc !== null) recentlyLoadedMedia.remember(loadSrc);
 			renewedSinceLoad = false;
 			stalled = null;
 			onload?.(image);

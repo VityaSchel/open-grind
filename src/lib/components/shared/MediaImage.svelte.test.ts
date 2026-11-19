@@ -5,6 +5,7 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
+import { recentlyLoadedMedia } from "#lib/util/media-load-slots.ts";
 import MediaImage from "./MediaImage.svelte";
 
 const loadSlots = vi.hoisted(() => ({
@@ -77,6 +78,15 @@ function renderLazySkeleton() {
 	return container.querySelector("img")!;
 }
 
+function placeImagesAt(top: number) {
+	vi.spyOn(
+		HTMLImageElement.prototype,
+		"getBoundingClientRect",
+	).mockReturnValue(
+		DOMRect.fromRect({ x: 0, y: top, width: 100, height: 100 }),
+	);
+}
+
 async function comeIntoView(image: HTMLImageElement) {
 	FakeIntersectionObserver.latest!.enter();
 	await tick();
@@ -89,11 +99,13 @@ describe("MediaImage", () => {
 			typeof import("#lib/util/media-load-slots.ts")
 		>("#lib/util/media-load-slots.ts");
 		loadSlots.oneAtATime = new LoadSlots(1);
+		recentlyLoadedMedia.clear();
 	});
 
 	afterEach(() => {
 		cleanup();
 		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
 		FakeIntersectionObserver.latest = null;
 	});
 
@@ -417,6 +429,70 @@ describe("MediaImage", () => {
 		await tick();
 
 		expect(third.container.querySelector("img")?.src).toBe(OTHER_SRC);
+	});
+
+	it("paints an on-screen source that loaded before at once, without the skeleton or a load slot", async () => {
+		const first = render(MediaImage, { props: { src: SRC } });
+		await loadedImage(first.container.querySelector("img")!, 320);
+		first.unmount();
+		render(MediaImage, { props: { src: OTHER_SRC } });
+		placeImagesAt(0);
+
+		const image = renderLazySkeleton();
+		await tick();
+
+		expect(image.getAttribute("src")).toBe(SRC);
+		expect(image.classList).not.toContain("bg-muted");
+		expect(image.classList).not.toContain("animate-pulse");
+	});
+
+	it("holds an off-screen source that loaded before back until it comes into view", async () => {
+		recentlyLoadedMedia.remember(SRC);
+		placeImagesAt(innerHeight + 2000);
+
+		const image = renderLazySkeleton();
+		await tick();
+
+		expect(image.getAttribute("src")).toBe(TRANSPARENT_PIXEL);
+		expect(image.classList).toContain("bg-muted");
+		await comeIntoView(image);
+		expect(image.getAttribute("src")).toBe(SRC);
+		expect(image.classList).not.toContain("bg-muted");
+	});
+
+	it("waits for a load slot again once a source that loaded before fails", async () => {
+		const first = render(MediaImage, { props: { src: SRC } });
+		await loadedImage(first.container.querySelector("img")!, 320);
+		first.unmount();
+		const second = render(MediaImage, { props: { src: SRC } });
+		await fireEvent.error(second.container.querySelector("img")!);
+		second.unmount();
+		render(MediaImage, { props: { src: OTHER_SRC } });
+
+		const { container } = render(MediaImage, { props: { src: SRC } });
+
+		expect(container.querySelector("img")?.getAttribute("src")).toBe(
+			TRANSPARENT_PIXEL,
+		);
+	});
+
+	it("holds a new lazy source back until in view after a source that loaded before", async () => {
+		vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+		recentlyLoadedMedia.remember(SRC);
+		placeImagesAt(innerHeight + 2000);
+		const { container, rerender } = render(MediaImage, {
+			props: { src: SRC, loading: "lazy" as const },
+		});
+
+		await rerender({ src: OTHER_SRC });
+		expect(container.querySelector("img")?.getAttribute("src")).toBe(
+			TRANSPARENT_PIXEL,
+		);
+
+		FakeIntersectionObserver.latest!.enter();
+		await tick();
+
+		expect(container.querySelector("img")?.src).toBe(OTHER_SRC);
 	});
 
 	it("holds no load slot while a lazy image is out of view", () => {
