@@ -4383,7 +4383,7 @@
 			"name": "grindr",
 			"ecosystem": "rust",
 			"versions": [
-				"0.34.0+26.24.0.195444"
+				"0.35.0+26.25.0.197500"
 			],
 			"spdx": "MIT",
 			"shipped": "MIT",
