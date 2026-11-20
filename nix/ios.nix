@@ -20,6 +20,7 @@
         ZIP ZIPOPT "''${!RCODESIGN_@}"
       export CARGO_TARGET_AARCH64_APPLE_IOS_RUSTFLAGS="--remap-path-prefix=$CARGO_HOME=/cargo --remap-path-prefix=$ROOT=/open-grind"
       ${common.freshCheckout}
+      rm -rf "$ROOT/src-tauri/.patched" "$ROOT/src-tauri/target/aarch64-apple-ios"
       bun ci
       bun scripts/package-ios-sideload.ts "$@"
     '';
