@@ -1,8 +1,5 @@
-import {
-	type FormatDistanceFn,
-	formatDistanceStrict,
-	type FormatDistanceToken,
-} from "date-fns";
+import { formatDistanceStrict } from "date-fns/formatDistanceStrict";
+import type { FormatDistanceFn, FormatDistanceToken } from "date-fns/locale";
 
 import { t } from "./index";
 import {

@@ -1,4 +1,4 @@
-import { isSameYear } from "date-fns";
+import { isSameYear } from "date-fns/isSameYear";
 
 import { formatDate } from "#lib/i18n/format.ts";
 import { now } from "#lib/util/clock.ts";

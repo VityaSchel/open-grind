@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { isToday, startOfToday } from "date-fns";
+	import { isToday } from "date-fns/isToday";
+	import { startOfToday } from "date-fns/startOfToday";
 
 	import { formatDate } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
