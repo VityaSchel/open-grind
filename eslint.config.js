@@ -231,6 +231,12 @@ export default defineConfig(
 							message:
 								'Import each icon from "phosphor-svelte/lib/<Name>".',
 						},
+						{
+							name: "date-fns",
+							allowTypeImports: true,
+							message:
+								'Import each function from "date-fns/<name>".',
+						},
 					],
 				},
 			],

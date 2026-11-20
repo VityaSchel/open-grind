@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format } from "date-fns/format";
 
 import { httpStatusOf } from "#lib/api/api-error.ts";
 import {

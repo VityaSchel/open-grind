@@ -1,4 +1,4 @@
-import { formatDistanceStrict } from "date-fns";
+import { formatDistanceStrict } from "date-fns/formatDistanceStrict";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { restoreCountFormatter } from "./fixtures/count-formatter";

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { listen } from "@tauri-apps/api/event";
-	import { isSameYear } from "date-fns";
+	import { isSameYear } from "date-fns/isSameYear";
 	import ArrowUpRightIcon from "phosphor-svelte/lib/ArrowUpRightIcon";
 	import { onMount } from "svelte";
 
