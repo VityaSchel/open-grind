@@ -14,6 +14,12 @@ title: "FAQ"
 
 :::
 
+::: details Is Open Grind available on iPhone?
+
+Yes, on iPhone with iOS 16.4 or later. Install the beta from TestFlight or sideload the IPA, see [Download → iOS](/guides/download#ios). There is no iPad build, and notifications aren't supported on iOS yet.
+
+:::
+
 ::: details When will an “X” feature be available? When does the next update come out?
 
 Visit [issues tracker](https://git.opengrind.org/open-grind/open-grind/issues) to search for a specific feature and track its status.
@@ -51,7 +57,7 @@ The only indirect counters are:
 
 Open Grind has opt-in auto-updater that sends an anonymous request to git.opengrind.org. These requests are not logged or analyzed. Installs through the auto-updater (including add-on installs) are counted towards the download count on Releases pages.
 
-Open Grind installed from F-Droid, Google Play or .deb never updates itself, and updates are managed by your package manager or app store.
+Open Grind installed from F-Droid, Google Play or .deb never updates itself, and updates are managed by your package manager or app store. Open Grind on iOS doesn't update itself either.
 
 **As of October 2nd, 2026, the estimated number of users is ~61 000 based on the downloads counter.**
 

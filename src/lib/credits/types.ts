@@ -4,6 +4,7 @@ export type CreditEcosystem = "rust" | "npm" | "android" | "asset";
 
 export const creditPlatforms = [
 	"android",
+	"ios",
 	"linux",
 	"macos",
 	"windows",

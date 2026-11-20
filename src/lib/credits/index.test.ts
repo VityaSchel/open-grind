@@ -27,6 +27,7 @@ describe("loadCredits", () => {
 			"webPackages",
 			"rustCrates",
 			"android",
+			"ios",
 			"linux",
 			"macos",
 			"windows",

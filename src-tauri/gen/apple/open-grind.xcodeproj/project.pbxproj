@@ -17,6 +17,7 @@
 		958AEB08DC253BDEBCDAD1DD /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 24921155B146EBBBD04774DF /* main.mm */; };
 		CC009F7CD2502D7359D5A12F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 945C140FF298948FFB951EB6 /* LaunchScreen.storyboard */; };
 		CC4D74F2B527F040A25EF420 /* AppIcon60x60@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF759DB2FAE7F79210473AA0 /* AppIcon60x60@2x.png */; };
+		D9EEDCAA8AE9636C944DAFA0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EAB7DD3E89C9208FC22E4E58 /* PrivacyInfo.xcprivacy */; };
 		E8A5D61B0A5A10B6890873A3 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 7BC715B4E517EFC458993030 /* assets */; };
 		F6B3441FE45B1E54BA09CFB9 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04C410E122DCFD78C7B7D5CD /* WebKit.framework */; };
 		F8B006C1A6DA759FAEC25D16 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E9207576D4E967417A5DBBB /* UIKit.framework */; };
@@ -38,6 +39,7 @@
 		945C140FF298948FFB951EB6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A91A089C261322DFE2F0A2D5 /* open-grind_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "open-grind_iOS.entitlements"; sourceTree = "<group>"; };
 		BF759DB2FAE7F79210473AA0 /* AppIcon60x60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon60x60@2x.png"; sourceTree = "<group>"; };
+		EAB7DD3E89C9208FC22E4E58 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		EEC93743796E4ECF80423973 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FDC1C337938A7C29DC568A1A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -73,6 +75,7 @@
 			children = (
 				7BC715B4E517EFC458993030 /* assets */,
 				945C140FF298948FFB951EB6 /* LaunchScreen.storyboard */,
+				EAB7DD3E89C9208FC22E4E58 /* PrivacyInfo.xcprivacy */,
 				D342FAE361D61A84F4513E36 /* AppIcon */,
 				1E242929559516AAB0A9C939 /* Externals */,
 				672E0F9CCAF84A32846F46CA /* open-grind_iOS */,
@@ -213,6 +216,7 @@
 				CC4D74F2B527F040A25EF420 /* AppIcon60x60@2x.png in Resources */,
 				20D03BFC35657CE0525D4475 /* Assets.car in Resources */,
 				CC009F7CD2502D7359D5A12F /* LaunchScreen.storyboard in Resources */,
+				D9EEDCAA8AE9636C944DAFA0 /* PrivacyInfo.xcprivacy in Resources */,
 				E8A5D61B0A5A10B6890873A3 /* assets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

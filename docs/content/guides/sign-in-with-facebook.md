@@ -9,3 +9,5 @@ title: 'Sign in with Facebook'
 Starting with v0.1.0-beta.5 it's possible to authenticate if your account in Grindr was created with Facebook.
 
 Select “Sign in with Facebook” on the sign-in screen and follow the instructions on screen.
+
+On iPhone, Facebook's sign-in page opens in a sheet. To close it, tap “Cancel” or swipe it down.

@@ -12,6 +12,7 @@
 - **[Source releases page](https://git.opengrind.org/open-grind/open-grind/releases)** at git.opengrind.org/open-grind/open-grind
 - **[Google Play](https://play.google.com/store/apps/details?id=org.opengrind)** for Android
 - **[F-Droid](https://f-droid.org/packages/org.opengrind/)** for Android
+- **TestFlight** for iPhone, through the link on the [download page](https://opengrind.org/download#testflight)
 
 Never install Open Grind from sources not listed above.
 

@@ -48,6 +48,7 @@ const metadata = ({
 
 const triples = {
 	android: "aarch64-linux-android",
+	ios: "aarch64-apple-ios",
 	linux: "x86_64-unknown-linux-gnu",
 	macos: "aarch64-apple-darwin",
 	windows: "x86_64-pc-windows-msvc",
@@ -157,6 +158,7 @@ describe("classifyCrates", () => {
 		const platformOf = classify({
 			perPlatform: {
 				android: [{ from: "app", to: "tauri-build", kind: "build" }],
+				ios: [{ from: "app", to: "tauri-build", kind: "build" }],
 				linux: [{ from: "app", to: "tauri-build", kind: "build" }],
 				windows: [{ from: "app", to: "tauri-build", kind: "build" }],
 				macos: [
@@ -174,6 +176,7 @@ describe("classifyCrates", () => {
 			procMacros: ["tauri-macros"],
 			perPlatform: {
 				android: [{ from: "app", to: "tauri-macros" }],
+				ios: [{ from: "app", to: "tauri-macros" }],
 				linux: [{ from: "app", to: "tauri-macros" }],
 				windows: [{ from: "app", to: "tauri-macros" }],
 				macos: [
@@ -229,6 +232,7 @@ describe("classifyCrates", () => {
 		const platformOf = classify({
 			perPlatform: {
 				android: [{ from: "app", to: "tauri-build", kind: "build" }],
+				ios: [{ from: "app", to: "tauri-build", kind: "build" }],
 				linux: [{ from: "app", to: "tauri-build", kind: "build" }],
 				windows: [{ from: "app", to: "tauri-build", kind: "build" }],
 				macos: [
@@ -324,6 +328,7 @@ describe("exclusivePlatform", () => {
 describe("misplacedAnchors", () => {
 	const anchored = [
 		{ name: "jni", platform: "android" },
+		{ name: "objc2-ui-kit", platform: "ios" },
 		{ name: "webkit2gtk", platform: "linux" },
 		{ name: "objc2-app-kit", platform: "macos" },
 		{ name: "webview2-com", platform: "windows" },
@@ -349,7 +354,7 @@ describe("misplacedAnchors", () => {
 	it("names tauri when one platform claims it", () => {
 		expect(
 			misplacedAnchors([
-				...anchored.slice(0, 4),
+				...anchored.slice(0, 5),
 				{ name: "tauri", platform: "linux" },
 			]),
 		).toEqual([
@@ -364,7 +369,7 @@ describe("misplacedAnchors", () => {
 	});
 
 	it("names tauri when it is no longer credited", () => {
-		expect(misplacedAnchors(anchored.slice(0, 4))).toEqual([
+		expect(misplacedAnchors(anchored.slice(0, 5))).toEqual([
 			"tauri must be credited as shared but is not credited at all",
 		]);
 	});
@@ -374,6 +379,9 @@ describe("platformOfTriple", () => {
 	it.each([
 		["aarch64-linux-android", "android"],
 		["armv7-linux-androideabi", "android"],
+		["aarch64-apple-ios", "ios"],
+		["aarch64-apple-ios-sim", "ios"],
+		["x86_64-apple-ios", "ios"],
 		["aarch64-unknown-linux-gnu", "linux"],
 		["x86_64-apple-darwin", "macos"],
 		["aarch64-pc-windows-msvc", "windows"],
@@ -382,8 +390,8 @@ describe("platformOfTriple", () => {
 	});
 
 	it("refuses a target no release is classified for and says where to resolve it", () => {
-		expect(() => platformOfTriple("aarch64-apple-ios")).toThrow(
-			"the target aarch64-apple-ios belongs to no credits platform: teach triplePatterns about it, or remove it from the targets in src-tauri/about.toml and deny.toml if no release is built for it",
+		expect(() => platformOfTriple("aarch64-apple-ios-macabi")).toThrow(
+			"the target aarch64-apple-ios-macabi belongs to no credits platform: teach triplePatterns about it, or remove it from the targets in src-tauri/about.toml and deny.toml if no release is built for it",
 		);
 	});
 });

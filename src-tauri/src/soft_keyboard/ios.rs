@@ -20,6 +20,7 @@ use objc2_ui_kit::{
 	UIKeyboardFrameEndUserInfoKey, UIKeyboardIsLocalUserInfoKey,
 	UIKeyboardWillChangeFrameNotification, UIKeyboardWillHideNotification,
 	UIKeyboardWillShowNotification, UIResponder, UIScrollView,
+	UIScrollViewContentInsetAdjustmentBehavior,
 	UIScrollViewKeyboardDismissMode, UIView, UIViewAutoresizing,
 };
 use tauri::{Manager, WebviewWindow};
@@ -386,6 +387,11 @@ fn attach(mtm: MainThreadMarker, webview: Retained<UIView>) {
 		};
 	}
 	webview.setAutoresizingMask(UIViewAutoresizing::empty());
+	if let Some(scroller) = uikit::page_scroller(&webview) {
+		scroller.setContentInsetAdjustmentBehavior(
+			UIScrollViewContentInsetAdjustmentBehavior::Never,
+		);
+	}
 
 	let frame = KeyboardFrame::new(mtm, &webview, host.bounds());
 	frame.setAutoresizingMask(

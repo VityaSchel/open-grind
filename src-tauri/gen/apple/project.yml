@@ -26,6 +26,8 @@ targets:
         buildPhase: resources
         type: folder
       - path: LaunchScreen.storyboard
+      - path: PrivacyInfo.xcprivacy
+        buildPhase: resources
     info:
       path: open-grind_iOS/Info.plist
       properties:

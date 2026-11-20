@@ -2,7 +2,7 @@ use serde_json::json;
 use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
-use super::SERVED_HOSTNAME;
+use super::SERVED_ORIGIN;
 
 const LEGACY_ORIGIN: &str = "http://tauri.localhost";
 
@@ -22,15 +22,18 @@ pub fn plugin() -> TauriPlugin<Wry> {
 }
 
 pub fn prepare_served_origin(app: &AppHandle) {
-	let Some(hostname) = SERVED_HOSTNAME else {
+	let Some(origin) = SERVED_ORIGIN else {
 		return;
 	};
 	let plugin = &app.state::<AppOrigin>().0;
 	for (command, args) in [
-		("exemptFromSafeBrowsing", json!({ "host": hostname })),
+		("exemptFromSafeBrowsing", json!({ "host": origin.hostname })),
 		(
 			"moveLocalStorage",
-			json!({ "from": LEGACY_ORIGIN, "to": format!("https://{hostname}") }),
+			json!({
+				"from": LEGACY_ORIGIN,
+				"to": format!("{}://{}", origin.scheme, origin.hostname),
+			}),
 		),
 	] {
 		if let Err(error) =

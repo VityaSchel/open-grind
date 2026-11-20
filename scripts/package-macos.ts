@@ -2,7 +2,9 @@ import { basename, dirname, resolve } from "node:path";
 
 import { $ } from "bun";
 
+import { signAdHoc } from "./lib/ad-hoc-sign";
 import { assetSuffix } from "./lib/asset-suffix";
+import { archive, sourceDateStamp } from "./lib/deterministic-zip";
 import { MACOS_TARGET, macosBundle } from "./lib/macos-bundle";
 import { only } from "./lib/only";
 import { XCRUN } from "./lib/xcrun";
@@ -26,13 +28,7 @@ const identity = Bun.env.MACOS_SIGN_IDENTITY ?? "-";
 const adHoc = identity === "-";
 const notary = await notaryCredentials();
 
-const epoch = Bun.env.SOURCE_DATE_EPOCH;
-if (!epoch) {
-	throw new Error("SOURCE_DATE_EPOCH is unset, run `nix run .#build-macos`");
-}
-const stamp = new Date(Number(epoch) * 1000)
-	.toISOString()
-	.replace(".000Z", "Z");
+const stamp = sourceDateStamp("build-macos");
 
 const { version } = await Bun.file(`${root}/src-tauri/tauri.conf.json`).json();
 const { identifier } = await Bun.file(
@@ -93,22 +89,6 @@ async function useSystemDylibs(binary: string): Promise<void> {
 	}
 }
 
-async function signAdHoc(app: string): Promise<void> {
-	const binary = `${app}/${EXECUTABLE}`;
-	await $`codesign_allocate -i ${binary} -r -o ${binary}.unsigned`;
-	await $`mv ${binary}.unsigned ${binary}`;
-	await $`rcodesign sign -C /dev/null --code-signature-flags runtime ${app}`;
-}
-
-async function archive(app: string, zip: string): Promise<void> {
-	await $`rm -f ${zip}`;
-	await $`chmod -R u=rwX,go=rX ${app}`;
-	await $`find ${app} -depth -exec touch -h -d ${stamp} '{}' +`;
-	await $`find ${basename(app)} | sort | zip -q -X -y -9 -@ ${zip}`.cwd(
-		dirname(app),
-	);
-}
-
 async function unpack(zip: string): Promise<string> {
 	const into = (await $`mktemp -d`.text()).trim();
 	await $`ditto -x -k ${zip} ${into}`;
@@ -137,8 +117,12 @@ async function notarize(zip: string, credentials: string[]): Promise<void> {
 async function resignAdHoc(zip: string, into: string): Promise<void> {
 	const app = await unpack(zip);
 	await $`rm -f ${app}/Contents/CodeResources`;
-	await signAdHoc(app);
-	await archive(app, into);
+	await signAdHoc({
+		bundle: app,
+		executable: EXECUTABLE,
+		hardenedRuntime: true,
+	});
+	await archive({ root: app, zip: into, stamp });
 	await $`rm -rf ${dirname(app)}`;
 }
 
@@ -238,8 +222,12 @@ async function build(): Promise<void> {
 	const zip = `${out}/${zipName}`;
 
 	if (adHoc) {
-		await signAdHoc(app);
-		await archive(app, zip);
+		await signAdHoc({
+			bundle: app,
+			executable: EXECUTABLE,
+			hardenedRuntime: true,
+		});
+		await archive({ root: app, zip, stamp });
 		await verifyShipped(zip, "ad-hoc");
 		console.log(`
 ${zip}
@@ -252,17 +240,21 @@ ${zip}
 	const unsigned = `${adHocOut}/${basename(app)}`;
 	await $`mkdir -p ${adHocOut}`;
 	await $`ditto ${app} ${unsigned}`;
-	await signAdHoc(unsigned);
-	await archive(unsigned, reference);
+	await signAdHoc({
+		bundle: unsigned,
+		executable: EXECUTABLE,
+		hardenedRuntime: true,
+	});
+	await archive({ root: unsigned, zip: reference, stamp });
 	await $`rm -rf ${unsigned}`;
 
 	await $`codesign --force --sign ${identity} --options runtime --timestamp ${app}`;
 	if (notary) {
-		await archive(app, zip);
+		await archive({ root: app, zip, stamp });
 		await notarize(zip, notary);
 		await $`${XCRUN} stapler staple ${app}`.quiet();
 	}
-	await archive(app, zip);
+	await archive({ root: app, zip, stamp });
 	await verifyShipped(zip, notary ? "notarized" : "Developer ID");
 	await assertReproduces(zip, reference);
 

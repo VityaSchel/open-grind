@@ -1,6 +1,30 @@
-export type Artifact = "apk" | "deb" | "AppImage" | "exe" | "zip";
+export type Artifact = "apk" | "deb" | "AppImage" | "exe" | "zip" | "ipa";
 
-export const ARTIFACTS: Artifact[] = ["apk", "deb", "AppImage", "exe", "zip"];
+export const ARTIFACTS: Artifact[] = [
+	"apk",
+	"deb",
+	"AppImage",
+	"exe",
+	"zip",
+	"ipa",
+];
+
+export type UpdaterArtifact = Exclude<Artifact, "ipa">;
+
+function hasUpdater(artifact: Artifact): artifact is UpdaterArtifact {
+	switch (artifact) {
+		case "apk":
+		case "deb":
+		case "AppImage":
+		case "exe":
+		case "zip":
+			return true;
+		case "ipa":
+			return false;
+	}
+}
+
+export const UPDATER_ARTIFACTS = ARTIFACTS.filter(hasUpdater);
 
 export const ANDROID_SPLITS = {
 	aarch64: { flavor: "arm64", abi: "arm64-v8a" },
@@ -19,8 +43,8 @@ export function androidSplitSuffix(target: AndroidTarget): string {
 	return `-android-${ANDROID_SPLITS[target].abi}.apk`;
 }
 
-export function isArtifact(value: string): value is Artifact {
-	return (ARTIFACTS as string[]).includes(value);
+export function isUpdaterArtifact(value: string): value is UpdaterArtifact {
+	return (UPDATER_ARTIFACTS as string[]).includes(value);
 }
 
 export function assetSuffix(artifact: Artifact): string {
@@ -36,5 +60,7 @@ export function assetSuffix(artifact: Artifact): string {
 			return `-linux-${arch}.deb`;
 		case "AppImage":
 			return `-linux-${arch}.AppImage`;
+		case "ipa":
+			return "-ios.ipa";
 	}
 }

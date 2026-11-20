@@ -33,7 +33,9 @@ fn main() {
 fn declare_demo_build() {
 	println!("cargo:rustc-check-cfg=cfg(demo)");
 	println!("cargo:rerun-if-env-changed=OPEN_GRIND_DEMO");
-	if std::env::var("OPEN_GRIND_DEMO").as_deref() == Ok("1") {
+	let from_env = std::env::var("OPEN_GRIND_DEMO").as_deref() == Ok("1");
+	let from_feature = std::env::var_os("CARGO_FEATURE_DEMO").is_some();
+	if from_env || from_feature {
 		println!("cargo:rustc-cfg=demo");
 	}
 }
