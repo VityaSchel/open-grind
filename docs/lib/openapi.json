@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.23.0.194910 (2026-11-03)"
+		"version": "26.24.0.195444 (2026-11-06)"
 	},
 	"servers": [
 		{
@@ -291,6 +291,10 @@
 		{
 			"name": "system",
 			"description": "App bootstrap, notifications, modals, logging, and other platform plumbing."
+		},
+		{
+			"name": "messaging/roger",
+			"description": "Roger: AI companions to chat with. Replies stream over the [Roger stream](/grindr-api/websocket/roger) WebSocket."
 		}
 	],
 	"paths": {
@@ -6903,6 +6907,126 @@
 				"summary": "Get matches"
 			}
 		},
+		"/v1/matches/{matchId}": {
+			"delete": {
+				"tags": [
+					"interest/matches"
+				],
+				"operationId": "deleteMatch",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Delete match",
+				"parameters": [
+					{
+						"name": "matchId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v1/story/media/upload": {
+			"post": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "uploadStoryMedia",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Upload story media",
+				"description": "Uploads a JPEG for [Create story](/grindr-api/users/stories#create-story). To mark it as Taken on Grindr, send `takenOnGrindr=true` together with a device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing). Without them the upload is unsigned.",
+				"parameters": [
+					{
+						"name": "takenOnGrindr",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						},
+						"description": "boolean, media captured with the in-app camera"
+					},
+					{
+						"name": "X-Key-Id",
+						"in": "header",
+						"required": false,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing), optional"
+					},
+					{
+						"name": "X-Sig",
+						"in": "header",
+						"required": false,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing), optional"
+					},
+					{
+						"name": "X-Timestamp",
+						"in": "header",
+						"required": false,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing), optional"
+					},
+					{
+						"name": "X-Nonce",
+						"in": "header",
+						"required": false,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing), optional"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"image/jpeg": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"mediaId": {
+											"type": "integer",
+											"format": "int64"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
 		"/v1/stories": {
 			"post": {
 				"tags": [
@@ -7141,7 +7265,73 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Record story view"
+				"summary": "Record story view",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.24.0. Superseded by [Record story views](/grindr-api/users/stories#record-story-views)."
+			}
+		},
+		"/v1/views/stories": {
+			"post": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "recordStoryViews",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Record story views",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"views"
+								],
+								"properties": {
+									"views": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"required": [
+												"storyId",
+												"posterId",
+												"timestamp"
+											],
+											"properties": {
+												"storyId": {
+													"type": "integer",
+													"format": "int64"
+												},
+												"posterId": {
+													"type": "integer",
+													"format": "int64",
+													"description": "long integer, profile ID of the story author"
+												},
+												"timestamp": {
+													"allOf": [
+														{
+															"$ref": "#/components/schemas/TimestampMs"
+														}
+													],
+													"description": "unix timestamp in milliseconds, when the story was viewed"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
 			}
 		},
 		"/v1/stories/reactions": {
@@ -13236,6 +13426,29 @@
 				}
 			}
 		},
+		"/v1/roger/stream": {
+			"get": {
+				"tags": [
+					"websocket"
+				],
+				"operationId": "openRogerStream",
+				"servers": [
+					{
+						"url": "wss://grindr.mobi"
+					}
+				],
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"101": {
+						"description": "Switching Protocols"
+					}
+				}
+			}
+		},
 		"/v1/store/googleplay/products/profile_drawer": {
 			"get": {
 				"tags": [
@@ -13444,7 +13657,7 @@
 					}
 				],
 				"summary": "Submit ban appeal",
-				"description": "Appeals a moderation decision (ban). `countryCode` added in app 26.14.0.",
+				"description": "Removed in the official Android client v26.24.0. Superseded by [Submit ban appeal (reCAPTCHA)](/grindr-api/safety/appeals#submit-ban-appeal-recaptcha-wip).\n\nAppeals a moderation decision (ban). `countryCode` added in app 26.14.0.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -13467,7 +13680,8 @@
 						}
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true
 			},
 			"get": {
 				"tags": [
@@ -13515,7 +13729,7 @@
 					}
 				],
 				"summary": "Submit ban appeal (reCAPTCHA)",
-				"description": "Like [Submit ban appeal](/grindr-api/safety/appeals#submit-ban-appeal) but with a reCAPTCHA Enterprise `captchaToken`, chosen when `recaptcha_sift_appeal` server flag is set.",
+				"description": "Like [Submit ban appeal](/grindr-api/safety/appeals#submit-ban-appeal-deprecated-wip) but with a reCAPTCHA Enterprise `captchaToken`.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -15203,7 +15417,9 @@
 					"200": {
 						"description": "OK"
 					}
-				}
+				},
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.24.0. Superseded by [Delete opt out consent](/grindr-api/safety/legal-agreements#delete-opt-out-consent) with `PROFILE_INSIGHTS_DELETION_REQUESTED`."
 			}
 		},
 		"/v3/profile-insights/me/settings": {
@@ -15685,6 +15901,201 @@
 					},
 					"409": {
 						"description": "Conflicts with the current post state."
+					}
+				}
+			}
+		},
+		"/v1/roger/profiles": {
+			"get": {
+				"tags": [
+					"messaging/roger"
+				],
+				"operationId": "getRogerProfiles",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Roger profiles",
+				"parameters": [
+					{
+						"name": "limit",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, maximum number of profiles"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"profiles": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/RogerProfile"
+											}
+										}
+									},
+									"required": [
+										"profiles"
+									]
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v1/roger/profiles/{profileId}/thread": {
+			"post": {
+				"tags": [
+					"messaging/roger"
+				],
+				"operationId": "createRogerThread",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Start Roger thread",
+				"parameters": [
+					{
+						"name": "profileId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"threadId": {
+											"type": "string"
+										},
+										"created": {
+											"type": "boolean",
+											"description": "boolean, appears to be `false` when a thread with this profile already exists"
+										}
+									},
+									"required": [
+										"threadId"
+									]
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v1/roger/threads": {
+			"get": {
+				"tags": [
+					"messaging/roger"
+				],
+				"operationId": "getRogerThreads",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Roger threads",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"conversations": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/RogerThread"
+											}
+										}
+									},
+									"required": [
+										"conversations"
+									]
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v1/roger/threads/{threadId}/messages": {
+			"get": {
+				"tags": [
+					"messaging/roger"
+				],
+				"operationId": "getRogerThreadMessages",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Roger thread messages",
+				"parameters": [
+					{
+						"name": "threadId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, maximum number of messages"
+					},
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"messages": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/RogerMessage"
+											}
+										}
+									},
+									"required": [
+										"messages"
+									]
+								}
+							}
+						},
+						"description": "OK"
 					}
 				}
 			}
@@ -16252,6 +16663,9 @@
 					},
 					"isNsfw": {
 						"type": "boolean"
+					},
+					"takenOnGrindr": {
+						"type": "boolean"
 					}
 				}
 			},
@@ -16347,6 +16761,12 @@
 						"type": "string",
 						"nullable": true,
 						"description": "string, `\"NOT_ACTIVE\"`, `\"HOSTING\"` or `\"NOT_HOSTING\"`, or `null`"
+					},
+					"isBlockable": {
+						"type": "boolean"
+					},
+					"isSuggestion": {
+						"type": "boolean"
 					}
 				}
 			},
@@ -16464,7 +16884,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, `mediaId` from [POST /v2/media/upload](/grindr-api/right-now#upload-right-now-media-v2)"
+											"description": "long integer, `mediaId` from [Upload story media](/grindr-api/users/stories#upload-story-media)"
 										}
 									}
 								}
@@ -19371,6 +19791,11 @@
 								"type": "boolean",
 								"nullable": true,
 								"description": "boolean or `null`, No Pic No Chat: profiles without a photo must send a photo or album in their first message"
+							},
+							"blurImageMode": {
+								"type": "string",
+								"nullable": true,
+								"description": "string or `null`, `\"OFF\"` or `\"ALWAYS\"`, blur explicit images in chats"
 							}
 						}
 					}
@@ -19439,6 +19864,11 @@
 										"type": "boolean",
 										"nullable": true,
 										"description": "boolean or `null`, No Pic No Chat: profiles without a photo must send a photo or album in their first message, optional"
+									},
+									"blurImageMode": {
+										"type": "string",
+										"nullable": true,
+										"description": "string or `null`, `\"OFF\"` or `\"ALWAYS\"`, blur explicit images in chats, optional"
 									}
 								}
 							}
@@ -21392,6 +21822,11 @@
 							}
 						],
 						"nullable": true
+					},
+					"shouldBlur": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "boolean or `null`, `true` when the image should be shown blurred"
 					}
 				},
 				"description": "Body for `\"Image\"` message type. Additional fields are present only for regular (non-expiring) images.",
@@ -23171,6 +23606,11 @@
 					"upsellItemType": {
 						"type": "string",
 						"description": "string, e.g. `\"xtra_mpu_v1\"`"
+					},
+					"isRewardUnlockable": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "boolean or `null`"
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -24879,7 +25319,8 @@
 					"CASCADE_PROFILES_UNLOCK",
 					"TAPS_RECEIVED_UNLOCK",
 					"INCOGNITO_SESSION",
-					"FREE_BOOST"
+					"FREE_BOOST",
+					"SINGLE_PROFILE_UNLOCK"
 				],
 				"description": "Feature that can be temporarily unlocked by watching a rewarded ad.",
 				"x-enum-labels": {
@@ -24889,7 +25330,8 @@
 					"CASCADE_PROFILES_UNLOCK": "Unlock additional cascade (grid) profiles",
 					"TAPS_RECEIVED_UNLOCK": "Reveal taps you have received",
 					"INCOGNITO_SESSION": "Temporarily enable Incognito",
-					"FREE_BOOST": "Start a free boost"
+					"FREE_BOOST": "Start a free boost",
+					"SINGLE_PROFILE_UNLOCK": "Unlock a single cascade (grid) profile"
 				},
 				"x-render-on-tag": "commerce/rewarded-ads",
 				"x-display-name": "Rewarded Ad Type"
@@ -24977,6 +25419,11 @@
 						"type": "integer",
 						"format": "int64",
 						"description": "Time remaining before an `EXHAUSTED` reward becomes `ELIGIBLE` again. `null` unless applicable."
+					},
+					"remaining": {
+						"type": "integer",
+						"nullable": true,
+						"description": "integer or `null`"
 					}
 				},
 				"x-render-on-tag": "commerce/rewarded-ads",
@@ -26699,6 +27146,161 @@
 					"createdAt",
 					"status"
 				]
+			},
+			"RogerProfile": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"age": {
+						"type": "integer",
+						"nullable": true
+					},
+					"bio": {
+						"type": "string"
+					},
+					"tribe": {
+						"type": "string"
+					},
+					"profession": {
+						"type": "string"
+					},
+					"position": {
+						"type": "string"
+					},
+					"ethnicity": {
+						"type": "string"
+					},
+					"height": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					},
+					"imageUrl": {
+						"type": "string",
+						"description": "string, URL"
+					},
+					"imageUrls": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "array of strings, URLs"
+					},
+					"isAi": {
+						"type": "boolean"
+					},
+					"mediaSafety": {
+						"type": "object",
+						"nullable": true,
+						"properties": {
+							"rating": {
+								"type": "string",
+								"description": "string, e.g. `\"sfw\"`"
+							}
+						},
+						"required": [
+							"rating"
+						]
+					}
+				},
+				"required": [
+					"id",
+					"name"
+				],
+				"x-render-on-tag": "messaging/roger"
+			},
+			"RogerThread": {
+				"type": "object",
+				"properties": {
+					"threadId": {
+						"type": "string"
+					},
+					"profile": {
+						"$ref": "#/components/schemas/RogerProfile"
+					},
+					"lastMessage": {
+						"type": "object",
+						"nullable": true,
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"text": {
+								"type": "string"
+							},
+							"imageUrl": {
+								"type": "string",
+								"nullable": true,
+								"description": "string or `null`, URL"
+							},
+							"isUser": {
+								"type": "boolean",
+								"description": "boolean, `true` for your own message"
+							}
+						},
+						"required": [
+							"id"
+						]
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "string, ISO 8601 instant"
+					}
+				},
+				"required": [
+					"threadId",
+					"profile"
+				],
+				"x-render-on-tag": "messaging/roger"
+			},
+			"RogerMessage": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"messageText": {
+						"type": "string",
+						"nullable": true
+					},
+					"isUser": {
+						"type": "boolean",
+						"description": "boolean, `true` for your own message"
+					},
+					"messageMedia": {
+						"type": "object",
+						"nullable": true,
+						"properties": {
+							"type": {
+								"type": "string",
+								"nullable": true,
+								"description": "string or `null`, e.g. `\"image\"`"
+							},
+							"url": {
+								"type": "string",
+								"nullable": true,
+								"description": "string or `null`, URL"
+							}
+						}
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true,
+						"description": "string or `null`, ISO 8601 instant"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"x-render-on-tag": "messaging/roger"
 			}
 		}
 	},
@@ -26713,6 +27315,7 @@
 				"messaging/drawer",
 				"messaging/gifs",
 				"messaging/albums",
+				"messaging/roger",
 				"messaging/misc"
 			]
 		},

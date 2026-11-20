@@ -27,6 +27,7 @@ const staticPages: StaticSidebarPages = {
 					link: "/grindr-api/websocket/notification-event",
 				},
 				{ text: "Commands", link: "/grindr-api/websocket/commands" },
+				{ text: "Roger stream", link: "/grindr-api/websocket/roger" },
 			],
 		},
 		{ text: "Push Notifications", link: "/grindr-api/push-notifications" },
