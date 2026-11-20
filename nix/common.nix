@@ -93,6 +93,15 @@ rec {
     export NODE_OPTIONS="''${NODE_OPTIONS:---max-old-space-size=4096}"
   '';
 
+  freshCheckout = ''
+    if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+      echo "FATAL: release builds need a clean checkout; commit or remove these first:" >&2
+      git -C "$ROOT" status --short >&2
+      exit 1
+    fi
+    rm -rf "$ROOT/node_modules"
+  '';
+
   mkDesktopScript =
     {
       name,

@@ -34,6 +34,7 @@ in
       done
 
       unset ZIP ZIPOPT "''${!RCODESIGN_@}"
+      ${common.freshCheckout}
       bun ci
       bun scripts/package-macos.ts "$@"
     '';

@@ -19,6 +19,7 @@
       unset DEVELOPER_DIR SDKROOT RUSTFLAGS CARGO_ENCODED_RUSTFLAGS OPEN_GRIND_DEMO PUBLIC_TEST_INSETS \
         ZIP ZIPOPT "''${!RCODESIGN_@}"
       export CARGO_TARGET_AARCH64_APPLE_IOS_RUSTFLAGS="--remap-path-prefix=$CARGO_HOME=/cargo --remap-path-prefix=$ROOT=/open-grind"
+      ${common.freshCheckout}
       bun ci
       bun scripts/package-ios-sideload.ts "$@"
     '';
