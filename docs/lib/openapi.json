@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.22.0.192710 (2026-10-24)"
+		"version": "26.23.0.194910 (2026-11-03)"
 	},
 	"servers": [
 		{
@@ -2040,6 +2040,15 @@
 							"type": "string"
 						},
 						"description": "string, `\"AI_CONSENT\"`; `\"PRIVACY_SETTINGS\"` is accepted but publishes no experience"
+					},
+					{
+						"name": "variant",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, experiment variant"
 					}
 				],
 				"responses": {
@@ -2268,12 +2277,16 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"optOutType"
 								],
-								"x-original-type": "ConsentRequest"
+								"properties": {
+									"optOutType": {
+										"type": "string",
+										"description": "string, opt-out type, see [Get opt statuses](/grindr-api/safety/legal-agreements#get-opt-statuses)"
+									}
+								}
 							}
 						}
 					}
@@ -2282,8 +2295,7 @@
 					"200": {
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			},
 			"delete": {
 				"tags": [
@@ -2295,12 +2307,16 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"optOutType"
 								],
-								"x-original-type": "ConsentRequest"
+								"properties": {
+									"optOutType": {
+										"type": "string",
+										"description": "string, opt-out type, see [Get opt statuses](/grindr-api/safety/legal-agreements#get-opt-statuses)"
+									}
+								}
 							}
 						}
 					}
@@ -2309,8 +2325,7 @@
 					"200": {
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			},
 			"post": {
 				"tags": [
@@ -2330,7 +2345,7 @@
 								"properties": {
 									"optOutType": {
 										"type": "string",
-										"description": "string, e.g. `\"TOP_PICKS\"`"
+										"description": "string, opt-out type, see [Get opt statuses](/grindr-api/safety/legal-agreements#get-opt-statuses)"
 									}
 								}
 							}
@@ -2347,16 +2362,16 @@
 										"isOptedOut": {
 											"type": "boolean"
 										}
-									}
+									},
+									"required": [
+										"isOptedOut"
+									]
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true,
-				"deprecated": true,
-				"description": "Superseded by [Get opt statuses](/grindr-api/safety/legal-agreements#get-opt-statuses)."
+				}
 			}
 		},
 		"/v1/opt-status": {
@@ -2388,7 +2403,7 @@
 										"items": {
 											"type": "string"
 										},
-										"description": "array of strings, opt-out types to look up, may be empty; known types: `\"TOP_PICKS\"`, `\"AI_NON_SENSITIVE\"`, `\"GAI\"`, `\"CHAT_SUGGESTIONS\"`, `\"ALBUM_UPDATES_SHARING\"`"
+										"description": "array of strings, opt-out types to look up, may be empty; known types: `\"TOP_PICKS\"`, `\"AI_NON_SENSITIVE\"`, `\"GAI\"`, `\"CHAT_SUGGESTIONS\"`, `\"ALBUM_UPDATES_SHARING\"`, `\"SHOW_ON_MAP\"`, `\"PROFILE_INSIGHTS_DELETION_REQUESTED\"`"
 									},
 									"optInTypes": {
 										"type": "array",
@@ -6976,6 +6991,9 @@
 											"items": {
 												"$ref": "#/components/schemas/StoryPoster"
 											}
+										},
+										"hasMore": {
+											"type": "boolean"
 										}
 									}
 								}
@@ -7199,6 +7217,14 @@
 								"schema": {
 									"type": "object",
 									"properties": {
+										"poster": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/StoryPoster"
+												}
+											],
+											"nullable": true
+										},
 										"stories": {
 											"type": "array",
 											"nullable": true,
@@ -8567,6 +8593,46 @@
 					}
 				],
 				"summary": "Get expiring video allowance",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"total": {
+											"type": "integer",
+											"description": "integer, total allowance"
+										},
+										"available": {
+											"type": "integer",
+											"description": "integer, remaining allowance"
+										}
+									},
+									"required": [
+										"total",
+										"available"
+									]
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v4/albums/expiring/status": {
+			"get": {
+				"tags": [
+					"messaging/albums"
+				],
+				"operationId": "getExpiringAlbumShareStatus",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get expiring album share allowance",
 				"responses": {
 					"200": {
 						"content": {
@@ -10042,7 +10108,7 @@
 				"operationId": "loginThirdParty",
 				"summary": "Login via third party",
 				"x-wip": true,
-				"description": "Single endpoint used for both **initial third-party sign-in** and **third-party session refresh**, distinguished by the request body shape (`oneOf`).\n\n**Facebook (vendor `1`):** the Facebook **user access token** (scopes `public_profile` and `email`, app id `1273378622718674`) is sent here verbatim as `thirdPartyToken` (`ThirdPartyRequest`). There is no exchange step, and nothing else from the Facebook session — user id, `signed_request`, `id_token`, granted scopes, expiry — is forwarded. See [Facebook login dialog](/grindr-api/third-party-integrations/facebook#facebook-login-dialog) for how that token is obtained.\n\n**Google (vendor `2`):** a Google *server auth code* obtained on-device is exchanged for a Google `access_token` via [Exchange Google auth code](/grindr-api/authentication#exchange-google-auth-code-wip) (`POST /v3/users/thirdparty/exchange`), and that token is sent here as `thirdPartyToken`.\n\nWhen `registered` is `true`, `authenticationResponse` carries the session. When `registered` is `false`, the identity has no account yet: the server resolves the provider identity from the token on its own and returns it as `thirdPartyUserInfo`, and sign-up continues at [Create third party account](/grindr-api/settings/account#create-third-party-account-wip).\n\nA third outcome is possible on this call and on the account-creation calls: HTTP 403 with `ERR_VERIFICATION_REQUIRED` (Grindr error code 30) and a profile id in the error body. That profile must pass phone verification (`POST /v4/sms/verification/{profileId}/sendcode` then `/verifycode`, see [SMS verification](/grindr-api/settings/sms-verification)) before a session can be obtained.\n\n**Session refresh** reuses this same URL with `ThirdPartySessionRequest` (`{ thirdPartyUserId, authToken, geohash }`): the provider token is **not** re-sent — only the stable `thirdPartyUserId` and the rolling Grindr `authToken`. The response is the same `ThirdPartyAuthResponse`, yielding a fresh `sessionId` (JWT) and a rotated `authToken`.\n\nThere is no reCAPTCHA variant of this endpoint and no `captchaToken` field: the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) only switches [Sign in](/grindr-api/authentication#sign-in) between `/v8/sessions` and `/v9/sessions`, and `recaptcha_third_party` only affects account creation.",
+				"description": "Single endpoint used for both **initial third-party sign-in** and **third-party session refresh**, distinguished by the request body shape (`oneOf`).\n\n**Facebook (vendor `1`):** the Facebook **user access token** (scopes `public_profile` and `email`, app id `1273378622718674`) is sent here verbatim as `thirdPartyToken` (`ThirdPartyRequest`). There is no exchange step, and nothing else from the Facebook session — user id, `signed_request`, `id_token`, granted scopes, expiry — is forwarded. See [Facebook login dialog](/grindr-api/third-party-integrations/facebook#facebook-login-dialog) for how that token is obtained.\n\n**Google (vendor `2`):** a Google *server auth code* obtained on-device is exchanged for a Google `access_token` via [Exchange Google auth code](/grindr-api/authentication#exchange-google-auth-code-wip) (`POST /v3/users/thirdparty/exchange`), and that token is sent here as `thirdPartyToken`.\n\nWhen `registered` is `true`, `authenticationResponse` carries the session. When `registered` is `false`, the identity has no account yet: the server resolves the provider identity from the token on its own and returns it as `thirdPartyUserInfo`, and sign-up continues at [Create third party account (reCAPTCHA)](/grindr-api/settings/account#create-third-party-account-recaptcha-wip).\n\nA third outcome is possible on this call and on the account-creation calls: HTTP 403 with `ERR_VERIFICATION_REQUIRED` (Grindr error code 30) and a profile id in the error body. That profile must pass phone verification (`POST /v4/sms/verification/{profileId}/sendcode` then `/verifycode`, see [SMS verification](/grindr-api/settings/sms-verification)) before a session can be obtained.\n\n**Session refresh** reuses this same URL with `ThirdPartySessionRequest` (`{ thirdPartyUserId, authToken, geohash }`): the provider token is **not** re-sent — only the stable `thirdPartyUserId` and the rolling Grindr `authToken`. The response is the same `ThirdPartyAuthResponse`, yielding a fresh `sessionId` (JWT) and a rotated `authToken`.\n\nThere is no reCAPTCHA variant of this endpoint and no `captchaToken` field: the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) only switches [Sign in](/grindr-api/authentication#sign-in) between `/v8/sessions` and `/v9/sessions`.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -10371,7 +10437,8 @@
 				},
 				"summary": "Create third party account",
 				"x-wip": true,
-				"description": "Creates a Grindr account for a Facebook or Google identity, used when [Login via third party](/grindr-api/authentication#login-via-third-party-wip) returns `registered: false`. The URL is chosen from the `recaptcha_third_party` [assignment](/grindr-api/analytics/assignments) — **not** the first-party one that governs [Sign in](/grindr-api/authentication#sign-in): assignment off → `POST /v7/users/thirdparty` (this endpoint) with no `captchaToken`; assignment on → [`POST /v8/users/thirdparty`](/grindr-api/settings/account#create-third-party-account-recaptcha-wip); assignment on and the captcha token is the literal `dummyToken` → [`POST /v8/dev/users/thirdparty`](/grindr-api/settings/account#create-third-party-account-dev-wip). The body is `ThirdPartyAccountRequest` in all three cases — on this URL the shared schema's `captchaToken` is simply never populated.\n\nThe response carries no session: [Login via third party](/grindr-api/authentication#login-via-third-party-wip) is repeated with the same vendor and provider token to obtain one."
+				"description": "Removed in the official Android client v26.23.0. Superseded by [Create third party account (reCAPTCHA)](/grindr-api/settings/account#create-third-party-account-recaptcha-wip).\n\nCreates a Grindr account for a Facebook or Google identity, used when [Login via third party](/grindr-api/authentication#login-via-third-party-wip) returns `registered: false`. The body is `ThirdPartyAccountRequest` without `captchaToken`.\n\nThe response carries no session: [Login via third party](/grindr-api/authentication#login-via-third-party-wip) is repeated with the same vendor and provider token to obtain one.",
+				"deprecated": true
 			}
 		},
 		"/v3/users/forgot-password": {
@@ -12486,6 +12553,22 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "pageSize",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
 					}
 				],
 				"responses": {
@@ -12544,6 +12627,11 @@
 												}
 											],
 											"nullable": true
+										},
+										"totalCount": {
+											"type": "integer",
+											"nullable": true,
+											"description": "integer or `null`"
 										}
 									}
 								}
@@ -12834,13 +12922,18 @@
 														"age": {
 															"type": "object",
 															"properties": {
-																"ageBracket": {
+																"age": {
 																	"type": "string",
-																	"description": "string, `\"AGE_18_19\"` … `\"AGE_58_59\"` in two-year steps, or `\"AGE_60_PLUS\"`"
+																	"description": "string, `\"AGE_18\"` … `\"AGE_59\"` in one-year steps, or `\"AGE_60_PLUS\"`"
 																},
 																"frequency": {
 																	"type": "string",
 																	"description": "string, `\"OFTEN\"`, `\"SOMETIMES\"` or `\"RARELY\"`"
+																},
+																"lift": {
+																	"type": "integer",
+																	"nullable": true,
+																	"description": "integer or `null`"
 																}
 															}
 														},
@@ -12885,9 +12978,9 @@
 															"items": {
 																"type": "object",
 																"properties": {
-																	"ageBracket": {
+																	"age": {
 																		"type": "string",
-																		"description": "string, `\"AGE_18_19\"` … `\"AGE_58_59\"` in two-year steps, or `\"AGE_60_PLUS\"`"
+																		"description": "string, `\"AGE_18\"` … `\"AGE_59\"` in one-year steps, or `\"AGE_60_PLUS\"`"
 																	},
 																	"frequency": {
 																		"type": "integer"
@@ -14809,7 +14902,7 @@
 				},
 				"summary": "Create third party account (reCAPTCHA)",
 				"x-wip": true,
-				"description": "reCAPTCHA variant of [Create third party account](/grindr-api/settings/account#create-third-party-account-wip) (`POST /v7/users/thirdparty`), selected when the `recaptcha_third_party` [assignment](/grindr-api/analytics/assignments) is enabled. The body then carries a `captchaToken` minted for the `sign_up` action; if that token is the literal `dummyToken` the request goes to [`POST /v8/dev/users/thirdparty`](/grindr-api/settings/account#create-third-party-account-dev-wip) instead. The body is `ThirdPartyAccountRequest` in all variants."
+				"description": "reCAPTCHA variant of [Create third party account](/grindr-api/settings/account#create-third-party-account-deprecated-wip) (`POST /v7/users/thirdparty`). The body carries a `captchaToken` minted for the `sign_up` action; if that token is the literal `dummyToken` the request goes to [`POST /v8/dev/users/thirdparty`](/grindr-api/settings/account#create-third-party-account-dev-wip) instead. The body is `ThirdPartyAccountRequest` in all variants.\n\nThe response carries no session: [Login via third party](/grindr-api/authentication#login-via-third-party-wip) is repeated with the same vendor and provider token to obtain one."
 			}
 		},
 		"/v8/dev/users/thirdparty": {
@@ -14819,7 +14912,7 @@
 				],
 				"operationId": "createThirdPartyAccountV8Dev",
 				"summary": "Create third party account (dev)",
-				"description": "Development twin of [Create third party account (reCAPTCHA)](/grindr-api/settings/account#create-third-party-account-recaptcha-wip). Used instead of `/v8/users/thirdparty` when the `recaptcha_third_party` [assignment](/grindr-api/analytics/assignments) is enabled **and** the captcha token obtained is the literal string `dummyToken`, i.e. on builds wired to a stub reCAPTCHA provider. The body and response are the same as the other two variants.",
+				"description": "Development twin of [Create third party account (reCAPTCHA)](/grindr-api/settings/account#create-third-party-account-recaptcha-wip). Used instead of `/v8/users/thirdparty` when the captcha token is the literal string `dummyToken`. The body and response are the same as the other two variants.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -15004,7 +15097,7 @@
 					}
 				],
 				"summary": "Get profile-insight opt-out status",
-				"description": "Per-insight opt-out state; `sectionTitles` is for deleted or pending insights without content.",
+				"description": "Removed in the official Android client v26.23.0. Superseded by [Get opt out status](/grindr-api/safety/legal-agreements#get-opt-out-status) with `PROFILE_INSIGHTS_DELETION_REQUESTED`.",
 				"responses": {
 					"200": {
 						"content": {
@@ -15051,7 +15144,8 @@
 						},
 						"description": "OK"
 					}
-				}
+				},
+				"deprecated": true
 			}
 		},
 		"/v1/profile-insights/opt-outs": {
@@ -15080,7 +15174,9 @@
 					"200": {
 						"description": "OK"
 					}
-				}
+				},
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.22.0."
 			},
 			"delete": {
 				"tags": [
@@ -16154,9 +16250,6 @@
 						"type": "boolean",
 						"nullable": true
 					},
-					"shouldBlur": {
-						"type": "boolean"
-					},
 					"isNsfw": {
 						"type": "boolean"
 					}
@@ -16169,42 +16262,17 @@
 						"type": "integer",
 						"format": "int64"
 					},
-					"profileId": {
-						"type": "integer",
-						"format": "int64"
-					},
-					"displayName": {
+					"status": {
 						"type": "string",
-						"nullable": true
-					},
-					"mediaHash": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/MediaHash"
-							}
-						],
-						"nullable": true
-					},
-					"onlineUntil": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/TimestampMs"
-							}
-						],
-						"nullable": true
-					},
-					"distanceMeters": {
-						"type": "integer",
 						"nullable": true,
-						"description": "integer, meters, or `null`"
+						"description": "`\"PENDING\"`, `\"ACTIVE\"`, `\"REJECTED\"`, `\"EXPIRED\"` or `null`"
 					},
 					"media": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/StoryMedia"
-							}
-						],
-						"nullable": true
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/StoryMedia"
+						}
 					},
 					"caption": {
 						"type": "object",
@@ -16263,6 +16331,11 @@
 							}
 						],
 						"nullable": true
+					},
+					"distanceMeters": {
+						"type": "integer",
+						"nullable": true,
+						"description": "integer, meters, or `null`"
 					},
 					"unseenStories": {
 						"type": "boolean"
@@ -16351,21 +16424,10 @@
 						],
 						"nullable": true
 					},
-					"views": {
-						"type": "array",
+					"totalViews": {
+						"type": "integer",
 						"nullable": true,
-						"items": {
-							"type": "object",
-							"properties": {
-								"profileId": {
-									"type": "integer",
-									"format": "int64"
-								},
-								"timestamp": {
-									"$ref": "#/components/schemas/TimestampMs"
-								}
-							}
-						}
+						"description": "integer or `null`, number of views"
 					}
 				}
 			},
@@ -17372,7 +17434,7 @@
 			},
 			"ThirdPartyAuthResponse": {
 				"type": "object",
-				"description": "Response from [Login via third party](/grindr-api/authentication#login-via-third-party-wip) and from third-party session refresh. When `registered` is `true`, `authenticationResponse` carries the session. When `registered` is `false`, no account is linked yet and sign-up continues at [Create third party account](/grindr-api/settings/account#create-third-party-account-wip) using `thirdPartyUserInfo`.",
+				"description": "Response from [Login via third party](/grindr-api/authentication#login-via-third-party-wip) and from third-party session refresh. When `registered` is `true`, `authenticationResponse` carries the session. When `registered` is `false`, no account is linked yet and sign-up continues at [Create third party account](/grindr-api/settings/account#create-third-party-account-deprecated-wip) using `thirdPartyUserInfo`.",
 				"properties": {
 					"registered": {
 						"type": "boolean",
@@ -17457,7 +17519,7 @@
 			},
 			"ThirdPartyAccountRequest": {
 				"type": "object",
-				"description": "Request body for [Create third party account](/grindr-api/settings/account#create-third-party-account-wip) and both of its reCAPTCHA variants — the shape is identical on all three URLs.\n\n`thirdPartyVendor` and `thirdPartyToken` repeat the pair that [Login via third party](/grindr-api/authentication#login-via-third-party-wip) just used; `thirdPartyUserId` and `email` are echoed from the `thirdPartyUserInfo` that call returned. Fields with no value are omitted, not sent as `null`.",
+				"description": "Request body for [Create third party account](/grindr-api/settings/account#create-third-party-account-deprecated-wip) and both of its reCAPTCHA variants — the shape is identical on all three URLs.\n\n`thirdPartyVendor` and `thirdPartyToken` repeat the pair that [Login via third party](/grindr-api/authentication#login-via-third-party-wip) just used; `thirdPartyUserId` and `email` are echoed from the `thirdPartyUserInfo` that call returned. Fields with no value are omitted, not sent as `null`.",
 				"properties": {
 					"thirdPartyVendor": {
 						"type": "integer",
@@ -17490,7 +17552,7 @@
 					},
 					"captchaToken": {
 						"type": "string",
-						"description": "reCAPTCHA Enterprise token for the `sign_up` action, sent only when the `recaptcha_third_party` [assignment](/grindr-api/analytics/assignments) is enabled. With the assignment off the field is omitted rather than sent as `null`, and the request goes to `/v7/users/thirdparty` instead"
+						"description": "reCAPTCHA Enterprise token for the `sign_up` action; omitted on `/v7/users/thirdparty`"
 					}
 				},
 				"required": [
@@ -17502,7 +17564,7 @@
 			},
 			"ThirdPartyAccountResponse": {
 				"type": "object",
-				"description": "Response from [Create third party account](/grindr-api/settings/account#create-third-party-account-wip). It carries no session: [Login via third party](/grindr-api/authentication#login-via-third-party-wip) is run again with the same vendor and provider token to obtain one.",
+				"description": "Response from [Create third party account](/grindr-api/settings/account#create-third-party-account-deprecated-wip). It carries no session: [Login via third party](/grindr-api/authentication#login-via-third-party-wip) is run again with the same vendor and provider token to obtain one.",
 				"properties": {
 					"profileId": {
 						"type": "string",
@@ -18409,6 +18471,19 @@
 							"chatMinAppVersion": {
 								"type": "string",
 								"description": "string, lowest app version that can open a chat with this profile, compared dot-segment by segment; may be absent"
+							},
+							"npncRequired": {
+								"type": "boolean",
+								"nullable": true,
+								"description": "boolean or `null`, `true` when the profile requires a photo or album in the first message from a profile without a photo"
+							},
+							"chatPreferences": {
+								"type": "array",
+								"nullable": true,
+								"items": {
+									"$ref": "#/components/schemas/ChatPreference"
+								},
+								"description": "array of [chat preferences](/grindr-api/users/profiles#chat-preference) or `null`"
 							}
 						}
 					}
@@ -18644,6 +18719,14 @@
 						"type": "number",
 						"nullable": true,
 						"description": "number in grams"
+					},
+					"chatPreferences": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/ChatPreference"
+						},
+						"description": "array of [chat preferences](/grindr-api/users/profiles#chat-preference)"
 					}
 				}
 			},
@@ -19273,6 +19356,23 @@
 						"type": "string",
 						"nullable": true,
 						"description": "string, reminder time as 24-hour `HH:mm`, or `null`"
+					},
+					"showNudity": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "boolean or `null`, nudity opt-in"
+					},
+					"inboxControls": {
+						"type": "object",
+						"nullable": true,
+						"description": "object or `null`, inbox controls",
+						"properties": {
+							"npncEnabled": {
+								"type": "boolean",
+								"nullable": true,
+								"description": "boolean or `null`, No Pic No Chat: profiles without a photo must send a photo or album in their first message"
+							}
+						}
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -19324,6 +19424,23 @@
 							"prepReminderTime": {
 								"type": "string",
 								"description": "string, reminder time as 24-hour `HH:mm`"
+							},
+							"showNudity": {
+								"type": "boolean",
+								"nullable": true,
+								"description": "boolean or `null`, nudity opt-in, optional"
+							},
+							"inboxControls": {
+								"type": "object",
+								"nullable": true,
+								"description": "object or `null`, inbox controls, optional",
+								"properties": {
+									"npncEnabled": {
+										"type": "boolean",
+										"nullable": true,
+										"description": "boolean or `null`, No Pic No Chat: profiles without a photo must send a photo or album in their first message, optional"
+									}
+								}
 							}
 						}
 					}
@@ -21032,21 +21149,21 @@
 						"nullable": true,
 						"description": "the reaction, for `REACTION`"
 					},
-					"storyOwnerId": {
+					"posterId": {
 						"type": "integer",
 						"format": "int64",
 						"nullable": true,
 						"description": "integer or `null`, author of the story"
 					},
-					"storyThumbnail": {
+					"thumbnailUrl": {
 						"type": "string",
 						"nullable": true
 					},
-					"isNSFW": {
+					"isNsfw": {
 						"type": "boolean",
 						"nullable": true
 					},
-					"expiresAt": {
+					"expiration": {
 						"nullable": true,
 						"description": "unix timestamp in milliseconds or `null`",
 						"allOf": [
@@ -23584,6 +23701,10 @@
 								},
 								"isOnPrep": {
 									"type": "boolean"
+								},
+								"recommendationUuid": {
+									"type": "string",
+									"nullable": true
 								}
 							},
 							"required": [
@@ -24343,6 +24464,22 @@
 				},
 				"x-render-on-tag": "users/profiles",
 				"x-display-name": "Sexual position ID"
+			},
+			"ChatPreference": {
+				"type": "string",
+				"enum": [
+					"FACE_PICS_FIRST",
+					"BODY_PICS_FIRST",
+					"ALBUM_FIRST"
+				],
+				"description": "What a profile asks to receive first in a new chat.",
+				"x-enum-labels": {
+					"FACE_PICS_FIRST": "Face pics first",
+					"BODY_PICS_FIRST": "Body pics first",
+					"ALBUM_FIRST": "Album first"
+				},
+				"x-render-on-tag": "users/profiles",
+				"x-display-name": "Chat Preference"
 			},
 			"Ethnicity": {
 				"type": "object",
