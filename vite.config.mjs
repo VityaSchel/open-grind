@@ -144,6 +144,7 @@ export default defineConfig(async ({ command }) => ({
 
 	test: {
 		environment: "jsdom",
+		pool: "threads",
 		include: [
 			"src/**/*.test.ts",
 			"e2e-live/support/**/*.test.ts",
