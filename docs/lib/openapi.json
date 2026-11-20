@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.24.0.195444 (2026-11-06)"
+		"version": "26.25.0.197500 (2026-11-18)"
 	},
 	"servers": [
 		{
@@ -7038,6 +7038,17 @@
 						"Grindr3Auth": []
 					}
 				],
+				"parameters": [
+					{
+						"name": "geohash",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/Geohash"
+						},
+						"description": "string, [geohash](/grindr-api/browse/location#geohash) of the viewer's location"
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -7100,6 +7111,15 @@
 							"type": "integer"
 						},
 						"description": "integer, number of posters per page"
+					},
+					{
+						"name": "geohash",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/Geohash"
+						},
+						"description": "string, [geohash](/grindr-api/browse/location#geohash) of the viewer's location"
 					}
 				],
 				"responses": {
@@ -7398,6 +7418,15 @@
 				"parameters": [
 					{
 						"$ref": "#/components/parameters/ProfileIdIntegerPath"
+					},
+					{
+						"name": "geohash",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/Geohash"
+						},
+						"description": "string, [geohash](/grindr-api/browse/location#geohash) of the viewer's location"
 					}
 				],
 				"responses": {
@@ -9826,6 +9855,16 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/EntitlementLimitProblemResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "The message cannot be sent: `urn:gr:err:app_update_required` when it needs a newer app, `urn:gr:err:unauthorized_action` otherwise. The body is a [ChatSendProblemResponse](/grindr-api/messaging/messages#chatsendproblemresponse).",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ChatSendProblemResponse"
 								}
 							}
 						}
@@ -15495,9 +15534,14 @@
 								"interestsTab",
 								"forYou",
 								"rightNowFeed",
-								"rightNowMap"
+								"rightNowMap",
+								"explore",
+								"roam",
+								"profile",
+								"inboxFab",
+								"interestFab"
 							],
-							"description": "Woodwork placement slot to fetch: `interestsTab`, `forYou`, `rightNowFeed`, or `rightNowMap`"
+							"description": "Woodwork placement slot to fetch: `interestsTab`, `forYou`, `rightNowFeed`, `rightNowMap`, `explore`, `roam`, `profile`, `inboxFab`, or `interestFab`"
 						}
 					}
 				],
@@ -16767,6 +16811,11 @@
 					},
 					"isSuggestion": {
 						"type": "boolean"
+					},
+					"unlockTier": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, subscription tier needed to open the poster's stories: `FREE`, `XTRA` or a higher tier"
 					}
 				}
 			},
@@ -19374,6 +19423,11 @@
 					"traceId": {
 						"type": "string"
 					},
+					"code": {
+						"type": "integer",
+						"nullable": true,
+						"description": "integer or `null`, error code"
+					},
 					"display_name": {
 						"allOf": [
 							{
@@ -21259,7 +21313,8 @@
 						"type": "boolean"
 					},
 					"chemistryOnly": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "boolean, optional"
 					},
 					"favoritesOnly": {
 						"type": "boolean"
@@ -21290,7 +21345,6 @@
 				"x-render-on-tag": "messaging/conversations",
 				"required": [
 					"unreadOnly",
-					"chemistryOnly",
 					"favoritesOnly",
 					"rightNowOnly",
 					"onlineNowOnly",
@@ -22361,6 +22415,16 @@
 								"$ref": "#/components/schemas/ConversationProfileMini"
 							}
 						]
+					},
+					"chatMinAppVersion": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, lowest app version that can send messages in this conversation, compared dot-segment by segment"
+					},
+					"npncRequired": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "boolean or `null`, `true` when the other profile requires a photo or album in the first message from a profile without a photo"
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
@@ -22677,6 +22741,30 @@
 						"type": "string"
 					}
 				},
+				"x-render-on-tag": "messaging/messages"
+			},
+			"ChatSendProblemResponse": {
+				"type": "object",
+				"description": "RFC-7807 problem body returned on a `403` when a message cannot be sent.",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "error URN — `urn:gr:err:app_update_required` or `urn:gr:err:unauthorized_action`"
+					},
+					"feature": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, the feature that needs a newer app, with `urn:gr:err:app_update_required`"
+					},
+					"minAppVersion": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, lowest app version that supports `feature`"
+					}
+				},
+				"required": [
+					"type"
+				],
 				"x-render-on-tag": "messaging/messages"
 			},
 			"TieredFeatureProblemResponse": {
@@ -25224,6 +25312,14 @@
 							},
 							"roaming": {
 								"type": "boolean"
+							},
+							"isBoosting": {
+								"type": "boolean",
+								"description": "boolean, optional"
+							},
+							"isStudfinder": {
+								"type": "boolean",
+								"description": "boolean, optional"
 							}
 						}
 					}
