@@ -24,7 +24,6 @@ export function matchesInboxFilters({
 	if (filters.unreadOnly && data.unreadCount === 0) return false;
 	if (filters.onlineNowOnly && !data.onlineUntil) return false;
 	if (filters.rightNowOnly && data.rightNow === "NOT_ACTIVE") return false;
-	if (filters.chemistryOnly && !participant?.hasDatingPotential) return false;
 	if (
 		(participant?.distanceMetres ?? Infinity) >
 		(filters.distanceMeters ?? Infinity)

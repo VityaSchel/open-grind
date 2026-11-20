@@ -501,7 +501,6 @@ describe("demo route data matches the real schemas", () => {
 			expect(
 				inboxIds({
 					unreadOnly: false,
-					chemistryOnly: false,
 					favoritesOnly: false,
 					rightNowOnly: false,
 					onlineNowOnly: false,
@@ -527,13 +526,6 @@ describe("demo route data matches the real schemas", () => {
 
 		it("keeps only conversations whose peer is right now active", () => {
 			expectMatches({ filters: { rightNowOnly: true }, matches: [theo] });
-		});
-
-		it("keeps only conversations with dating potential", () => {
-			expectMatches({
-				filters: { chemistryOnly: true },
-				matches: [henry],
-			});
 		});
 
 		it("treats distanceMeters as an inclusive maximum", () => {

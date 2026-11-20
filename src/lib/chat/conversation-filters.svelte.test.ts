@@ -9,7 +9,6 @@ import {
 
 const UNFILTERED = {
 	unreadOnly: false,
-	chemistryOnly: false,
 	favoritesOnly: false,
 	rightNowOnly: false,
 	onlineNowOnly: false,
@@ -77,7 +76,6 @@ describe("inboxFilterRequest", () => {
 			}),
 		).toEqual({
 			unreadOnly: true,
-			chemistryOnly: false,
 			favoritesOnly: true,
 			rightNowOnly: true,
 			onlineNowOnly: true,

@@ -12,7 +12,6 @@ export function inboxFilterRequest(
 	if (deepEqual(values, defaultConversationFilters)) return null;
 	return {
 		unreadOnly: values.unread,
-		chemistryOnly: false,
 		favoritesOnly: values.favorites,
 		rightNowOnly: values.rightNow,
 		onlineNowOnly: values.online,

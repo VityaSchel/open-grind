@@ -105,7 +105,6 @@ const loaded = (state: ConversationsState) =>
 
 const FAVORITES_BODY = {
 	unreadOnly: false,
-	chemistryOnly: false,
 	favoritesOnly: true,
 	rightNowOnly: false,
 	onlineNowOnly: false,

@@ -17,7 +17,6 @@ const conversationsSchema = z.object({
 
 export type InboxFilterRequest = {
 	unreadOnly: boolean;
-	chemistryOnly: boolean;
 	favoritesOnly: boolean;
 	rightNowOnly: boolean;
 	onlineNowOnly: boolean;

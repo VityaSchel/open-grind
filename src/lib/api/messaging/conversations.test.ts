@@ -104,7 +104,6 @@ describe("conversation API wrappers", () => {
 		fetchRestMock.mockResolvedValue(response(data));
 		const filters = {
 			unreadOnly: false,
-			chemistryOnly: false,
 			favoritesOnly: true,
 			rightNowOnly: false,
 			onlineNowOnly: false,
