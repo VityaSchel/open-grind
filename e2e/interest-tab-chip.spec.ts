@@ -129,7 +129,7 @@ test.describe("on Android", () => {
 		await expect.poll(animations, "at rest on Views").toEqual(atRest);
 		expect(await chipProgress(page)).toBeCloseTo(0, 2);
 
-		await page.getByRole("link", { name: "Taps" }).click();
+		await page.getByRole("tab", { name: "Taps" }).click();
 		await expect(page).toHaveURL(new RegExp(`${TAPS}$`));
 		await expect
 			.poll(() => pager.evaluate((el) => el.scrollLeft))
@@ -221,7 +221,7 @@ test.describe("off Android", () => {
 		const chip = async () => (await page.locator(CHIP).boundingBox())!;
 		const { views, span } = await tabTrack(page);
 		const taps = (await page
-			.getByRole("link", { name: "Taps" })
+			.getByRole("tab", { name: "Taps" })
 			.boundingBox())!;
 
 		await expect.poll(async () => (await chip()).x).toBeCloseTo(taps.x, 0);

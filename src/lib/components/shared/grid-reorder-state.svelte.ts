@@ -4,9 +4,16 @@ import type { Attachment } from "svelte/attachments";
 import { playHaptic } from "#lib/haptics.ts";
 import { holdTouch } from "#lib/platform/held-touch.ts";
 import { nearestSlot, previewSlot } from "#lib/util/reorder.ts";
+import { type RovingMove, targetIndex } from "#lib/util/roving-move.ts";
 
 const TOUCH_LIFT_DELAY_MS = 300;
 const LIFT_TOLERANCE_PX = 10;
+const COLUMN_MOVES: ReadonlySet<RovingMove> = new Set<RovingMove>([
+	"rowAbove",
+	"rowBelow",
+	"pageUp",
+	"pageDown",
+]);
 
 type Point = { x: number; y: number };
 
@@ -17,6 +24,34 @@ function centerOf(node: HTMLElement): Point {
 
 function snapToDevicePixels(length: number): number {
 	return Math.round(length * devicePixelRatio) / devicePixelRatio;
+}
+
+export function keyboardDropSlot({
+	move,
+	from,
+	count,
+	columns,
+	leadingTiles,
+}: {
+	move: RovingMove;
+	from: number;
+	count: number;
+	columns: number;
+	leadingTiles: number;
+}): number {
+	const landing = targetIndex({
+		move,
+		from: from + leadingTiles,
+		geometry: {
+			count: count + leadingTiles,
+			columns,
+			sectionStarts: [],
+			pageRows: 1,
+		},
+		wrap: "rows",
+	});
+	if (landing >= leadingTiles) return landing - leadingTiles;
+	return COLUMN_MOVES.has(move) ? from : 0;
 }
 
 export class GridReorderState {
@@ -40,6 +75,7 @@ export class GridReorderState {
 	from = $state(-1);
 	to = $state(-1);
 	#offset = $state<Point>({ x: 0, y: 0 });
+	#heldByKeyboard = $state(false);
 
 	constructor({
 		onReorder,
@@ -51,6 +87,10 @@ export class GridReorderState {
 
 	get dragging(): boolean {
 		return this.from >= 0;
+	}
+
+	get heldByKeyboard(): boolean {
+		return this.#heldByKeyboard;
 	}
 
 	grid: Attachment<HTMLElement> = (node) => {
@@ -77,6 +117,7 @@ export class GridReorderState {
 
 	press({ event, index }: { event: PointerEvent; index: number }): void {
 		if (event.button > 0) return;
+		if (this.#heldByKeyboard) this.cancel();
 		this.#clearTimer();
 		const origin = { x: event.clientX, y: event.clientY };
 		this.#pressed = {
@@ -123,8 +164,30 @@ export class GridReorderState {
 		this.#pressed = null;
 		this.#releaseTouch?.();
 		this.#releaseTouch = null;
+		this.#heldByKeyboard = false;
 		this.from = -1;
 		this.to = -1;
+	}
+
+	lift(index: number): void {
+		this.cancel();
+		this.#centers = this.#measureCenters();
+		if (this.#centers[index] === undefined) return;
+		this.#offset = { x: 0, y: 0 };
+		this.#heldByKeyboard = true;
+		this.from = index;
+		this.to = index;
+	}
+
+	aim(to: number): void {
+		const origin = this.#centers[this.from];
+		const target = this.#centers[to];
+		if (!this.#heldByKeyboard || !origin || !target) return;
+		this.#offset = {
+			x: snapToDevicePixels(target.x - origin.x),
+			y: snapToDevicePixels(target.y - origin.y),
+		};
+		this.to = to;
 	}
 
 	transformFor(index: number): string | undefined {
@@ -144,9 +207,7 @@ export class GridReorderState {
 	#lift(at: Point): void {
 		const pressed = this.#pressed;
 		if (pressed === null) return;
-		this.#centers = [...this.#nodes]
-			.sort(([a], [b]) => a - b)
-			.map(([, element]) => centerOf(element));
+		this.#centers = this.#measureCenters();
 		const center = this.#centers[pressed.index];
 		if (center === undefined) return;
 		this.#gridAtLift = this.#gridCorner();
@@ -171,6 +232,12 @@ export class GridReorderState {
 		};
 		this.#offset = { x: held.x - origin.x, y: held.y - origin.y };
 		this.to = nearestSlot({ centers: this.#centers, ...held });
+	}
+
+	#measureCenters(): Point[] {
+		return [...this.#nodes]
+			.sort(([a], [b]) => a - b)
+			.map(([, element]) => centerOf(element));
 	}
 
 	#gridCorner(): Point {

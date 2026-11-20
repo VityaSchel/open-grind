@@ -17,8 +17,10 @@
 		description,
 		actions,
 		control,
+		menuButton,
 		onToggleSelected,
 		onLongPress,
+		managedTabStops = false,
 	}: {
 		avatar: {
 			mediaHash: string | null;
@@ -37,14 +39,18 @@
 		description?: import("svelte").Snippet;
 		actions?: import("svelte").Snippet;
 		control?: import("svelte").Snippet;
+		menuButton?: import("svelte").Snippet;
 		onToggleSelected?: () => void;
 		onLongPress?: () => void;
+		managedTabStops?: boolean;
 	} = $props();
 
 	const longPress = $derived(
 		onLongPress ? longPressHandlers(onLongPress) : {},
 	);
-	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
+	const linkTabindex = $derived(
+		onToggleSelected || managedTabStops ? -1 : undefined,
+	);
 	const accessibleName = $derived(
 		title.value ?? title.fallback ?? t("common.someone"),
 	);
@@ -95,44 +101,61 @@
 	{...longPress}
 >
 	{#if avatar.link}
-		<a
-			href={avatar.link}
-			aria-label={t("profile.item.a11y.profileLink", {
-				name: accessibleName,
-			})}
-			class="rounded-l-2xl @max-row:hidden"
-			tabindex={linkTabindex}
-		>
-			{@render avatarNode()}
-		</a>
-		<a
-			href={link}
-			class="content gap-0.5 rounded-r-2xl p-4 ps-2 @max-row:hidden!"
-			tabindex={linkTabindex}
-		>
-			{@render contentNode()}
-		</a>
-		<a
-			href={link}
-			aria-label={accessibleName}
-			class="min-w-24 rounded-2xl @row:hidden"
-			tabindex={linkTabindex}
-		>
-			{@render avatarNode()}
-		</a>
+		<div role="gridcell" class="contents @max-row:hidden">
+			<a
+				href={avatar.link}
+				data-slot="profile-item-avatar-link"
+				aria-label={t("profile.item.a11y.profileLink", {
+					name: accessibleName,
+				})}
+				class="rounded-l-2xl"
+				tabindex={linkTabindex}
+			>
+				{@render avatarNode()}
+			</a>
+		</div>
+		<div role="gridcell" class="contents @max-row:hidden">
+			<a
+				href={link}
+				data-slot="profile-item-link"
+				class="content gap-0.5 rounded-r-2xl p-4 ps-2"
+				tabindex={linkTabindex}
+			>
+				{@render contentNode()}
+			</a>
+		</div>
+		<div role="gridcell" class="contents @row:hidden">
+			<a
+				href={link}
+				data-slot="profile-item-link"
+				aria-label={accessibleName}
+				class="min-w-24 rounded-2xl"
+				tabindex={linkTabindex}
+			>
+				{@render avatarNode()}
+			</a>
+		</div>
 	{:else}
-		<a
-			href={link}
-			class="content gap-2.5 overflow-clip rounded-2xl pe-4"
-			tabindex={linkTabindex}
-		>
-			{@render avatarNode()}
-			{@render contentNode()}
-		</a>
+		<div role="gridcell" class="contents">
+			<a
+				href={link}
+				data-slot="profile-item-link"
+				class="content gap-2.5 overflow-clip rounded-2xl pe-4"
+				tabindex={linkTabindex}
+			>
+				{@render avatarNode()}
+				{@render contentNode()}
+			</a>
+		</div>
 	{/if}
 	{#if control}
-		<div class="flex shrink-0 items-center ps-3 pe-4">
+		<div role="gridcell" class="flex shrink-0 items-center ps-3 pe-4">
 			{@render control()}
+		</div>
+	{/if}
+	{#if menuButton}
+		<div role="gridcell" class="contents">
+			{@render menuButton()}
 		</div>
 	{/if}
 	{#if selected}
@@ -141,13 +164,16 @@
 		></div>
 	{/if}
 	{#if onToggleSelected}
-		<button
-			type="button"
-			class="absolute inset-0 z-2 rounded-[inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-			aria-pressed={selected ?? false}
-			aria-label={accessibleName}
-			onclick={onToggleSelected}
-		></button>
+		<div role="gridcell" class="contents">
+			<button
+				type="button"
+				data-slot="profile-item-selection-toggle"
+				class="absolute inset-0 z-2 rounded-[inherit]"
+				aria-pressed={selected ?? false}
+				aria-label={accessibleName}
+				onclick={onToggleSelected}
+			></button>
+		</div>
 	{/if}
 </Item.Root>
 

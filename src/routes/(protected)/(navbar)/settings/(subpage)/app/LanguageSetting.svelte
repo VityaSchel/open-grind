@@ -5,10 +5,13 @@
 	import { t } from "#lib/i18n/index.ts";
 	import { getListedLanguage } from "#lib/i18n/listed-languages.ts";
 
+	let attributes: import("svelte/elements").HTMLAttributes<HTMLElement> =
+		$props();
+
 	const current = $derived(getListedLanguage());
 </script>
 
-<Item.Root variant="outline" class="flex-nowrap">
+<Item.Root variant="outline" class="flex-nowrap" {...attributes}>
 	{#snippet child({ props })}
 		<a href="/settings/app/language" {...props}>
 			<Item.Content class="min-w-0 flex-initial">

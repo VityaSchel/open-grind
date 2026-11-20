@@ -54,13 +54,15 @@ const saves = [
 	},
 ];
 
-function renderEditor() {
+function renderEditor({
+	note = { notes: "old note", phoneNumber: "" },
+}: { note?: { notes: string; phoneNumber: string } } = {}) {
 	const onSave = vi.fn();
 	const stored = $state({ open: true });
 	render(FavoriteNoteEditor, {
 		props: {
 			profileId: PROFILE_ID,
-			note: { notes: "old note", phoneNumber: "" },
+			note,
 			onSave,
 			get open() {
 				return stored.open;
@@ -299,5 +301,37 @@ describe("closing the note editor", () => {
 
 		expect(stored.open).toBe(true);
 		expect(discardPrompt()).toBeNull();
+	});
+});
+
+describe("opening the note editor on a wide window", () => {
+	beforeEach(() => {
+		vi.spyOn(window, "matchMedia").mockImplementation(
+			(query) =>
+				({
+					matches: query.includes(">= 48rem"),
+					media: query,
+					onchange: null,
+					addEventListener: () => {},
+					removeEventListener: () => {},
+					addListener: () => {},
+					removeListener: () => {},
+					dispatchEvent: () => false,
+				}) as MediaQueryList,
+		);
+	});
+
+	it.each([
+		{
+			kind: "an existing note",
+			note: { notes: "old note", phoneNumber: "" },
+		},
+		{ kind: "a new note", note: { notes: "", phoneNumber: "" } },
+	])("puts the caret in the note field for $kind", async ({ note }) => {
+		renderEditor({ note });
+
+		await vi.waitFor(() =>
+			expect(document.activeElement).toBe(notesField()),
+		);
 	});
 });

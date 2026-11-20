@@ -96,7 +96,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={submitting} class="contents">
-				<AlertDialog.Cancel
+				<AlertDialog.Cancel data-autofocus="keyboard"
 					>{t("common.actions.close")}</AlertDialog.Cancel
 				>
 				<AlertDialog.Action

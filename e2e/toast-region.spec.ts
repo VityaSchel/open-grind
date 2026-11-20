@@ -16,7 +16,7 @@ const TOAST_GONE_MS = 15_000;
 test.describe.configure({ timeout: 180_000 });
 
 const pseudoAccents = (page: Page) =>
-	page.getByRole("radio", {
+	page.getByRole("option", {
 		name: "English (Pseudo-Accents) English (Pseudo-Accents)",
 		exact: true,
 	});

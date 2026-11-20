@@ -54,7 +54,7 @@ test("Shift-click on an interest tab still replaces the history entry", async ({
 	const atTaps = await historyDepth(page);
 
 	await page
-		.getByRole("link", { name: "Views" })
+		.getByRole("tab", { name: "Views" })
 		.click({ modifiers: ["Shift"] });
 
 	await expect(page).toHaveURL(/\/interest\/views$/);

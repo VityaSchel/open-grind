@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Attachment } from "svelte/attachments";
+
 	import Link from "#lib/components/ui/link/Link.svelte";
 	import Rich from "#lib/i18n/Rich.svelte";
 	import type { HighlightBlurbKey } from "#lib/credits/types.ts";
@@ -7,14 +9,21 @@
 		name,
 		blurb,
 		url,
-	}: { name: string; blurb?: HighlightBlurbKey; url?: string } = $props();
+		linkAttachment,
+	}: {
+		name: string;
+		blurb?: HighlightBlurbKey;
+		url?: string;
+		linkAttachment?: Attachment<HTMLElement>;
+	} = $props();
 </script>
 
 {#snippet projectLink()}
 	{#if url}<Link
 			href={url}
 			class="font-semibold hover:underline"
-			translate="no">{name}</Link
+			translate="no"
+			{@attach linkAttachment}>{name}</Link
 		>{:else}<span class="font-semibold" translate="no">{name}</span>{/if}
 {/snippet}
 

@@ -30,7 +30,7 @@ test("right-clicking a message opens its context menu", async ({ page }) => {
 	await bubble.click({ button: "right" });
 
 	await expect(
-		page.getByRole("button", { name: "Copy message" }),
+		page.getByRole("menuitem", { name: "Copy message" }),
 	).toBeVisible();
 });
 
@@ -133,7 +133,7 @@ test("a message's context menu stays on it when the soft keyboard closes", async
 		})
 		.toBeLessThanOrEqual(12);
 	await expect(
-		page.getByRole("button", { name: "Copy message" }),
+		page.getByRole("menuitem", { name: "Copy message" }),
 	).toBeInViewport({ ratio: 1 });
 });
 
@@ -143,7 +143,7 @@ test("a message arriving under an open context menu leaves the menu in place", a
 	await openConversation(page, { width: 420, height: 800 });
 	const sent = await deliver(page, { text: "Ours", senderId: ME });
 	await openMenuOn(sent);
-	const copy = page.getByRole("button", { name: "Copy message" });
+	const copy = page.getByRole("menuitem", { name: "Copy message" });
 	const copyTop = await topOf(copy);
 
 	await deliver(page, { text: LONG_TEXT, senderId: THEM });
@@ -233,7 +233,7 @@ test("a message taller than the screen keeps its whole context menu in reach", a
 
 	expect(await systemBarOverlap(page)).toBe(0);
 	await expect(
-		page.getByRole("button", { name: "Delete for me" }),
+		page.getByRole("menuitem", { name: "Delete for me" }),
 	).toBeInViewport({ ratio: 1 });
 });
 

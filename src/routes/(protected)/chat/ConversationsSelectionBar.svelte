@@ -6,12 +6,14 @@
 	import PushPinSlashIcon from "phosphor-svelte/lib/PushPinSlashIcon";
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import XIcon from "phosphor-svelte/lib/XIcon";
+	import type { Attachment } from "svelte/attachments";
 
 	import ProgressiveBlur from "#lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { below } from "#lib/util/breakpoints.svelte.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import { topChrome } from "#lib/util/screen-chrome.svelte.ts";
 
 	let {
@@ -31,6 +33,9 @@
 		onDelete: () => void;
 		onClose: () => void;
 	} = $props();
+
+	const BAR_CLASS =
+		"flex h-full items-center gap-1.5 px-3 pt-(--safe-area-top) max-selection-bar-compact:gap-1 max-selection-bar-compact:px-2";
 
 	const collapsed = below("selection-bar-collapse");
 
@@ -64,82 +69,106 @@
 			onSelect: onDelete,
 		},
 	]);
+
+	const toolbar = new RovingFocusState({
+		keys: () => ["exit", ...actions.map(({ key }) => key)],
+		orientation: "horizontal",
+		wrap: "loop",
+	});
 </script>
 
-<ProgressiveBlur
-	direction="topToBottom"
-	class="fixed top-0 left-0 z-20 h-[calc(var(--selection-bar-height)+var(--safe-area-top))] w-full px-safe"
-	bgClass="bg-linear-to-b from-background to-transparent"
-	contentClass="flex h-full items-center gap-1.5 px-3 pt-(--safe-area-top) max-selection-bar-compact:gap-1 max-selection-bar-compact:px-2"
-	tag="nav"
-	aria-label={t("chat.conversations.selectionBar.a11y.navigation")}
-	{@attach topChrome}
->
+{#snippet exitAndCount(exitAttachment?: Attachment<HTMLElement>)}
 	<Button
 		size="icon-lg"
 		variant="ghost"
 		class="max-selection-bar-compact:size-9"
 		aria-label={t("chat.conversations.selectionBar.a11y.exit")}
 		onclick={onClose}
+		{@attach exitAttachment}
 	>
 		<XIcon class="size-6 max-selection-bar-compact:size-5" />
 	</Button>
 	<span class="flex-1 truncate text-lg font-medium">
 		{t("chat.conversations.selectionBar.selected", { count })}
 	</span>
+{/snippet}
+
+<ProgressiveBlur
+	direction="topToBottom"
+	class="fixed top-0 left-0 z-20 h-[calc(var(--selection-bar-height)+var(--safe-area-top))] w-full px-safe"
+	bgClass="bg-linear-to-b from-background to-transparent"
+	contentClass="h-full"
+	tag="nav"
+	aria-label={t("chat.conversations.selectionBar.a11y.navigation")}
+	{@attach topChrome}
+>
 	{#if collapsed.current}
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props: { class: className, ...props } })}
-					<Button
-						size="icon-lg"
-						variant="secondary"
-						class={[
-							className,
-							"size-12 max-selection-bar-compact:size-10",
-						]}
-						aria-label={t(
-							"chat.conversations.selectionBar.a11y.actions",
-						)}
-						{...props}
-					>
-						<DotsThreeVerticalIcon
-							class="size-6 max-selection-bar-compact:size-5"
-						/>
-					</Button>
-				{/snippet}
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="end">
-				{#each actions as action (action.key)}
-					{@const Icon = action.icon}
-					<DropdownMenu.Item
-						variant={action.destructive ? "destructive" : "default"}
-						onSelect={action.onSelect}
-					>
-						<Icon weight={action.weight} class="size-5" />
-						{action.label}
-					</DropdownMenu.Item>
-				{/each}
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+		<div class={BAR_CLASS}>
+			{@render exitAndCount()}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props: { class: className, ...props } })}
+						<Button
+							size="icon-lg"
+							variant="secondary"
+							class={[
+								className,
+								"size-12 max-selection-bar-compact:size-10",
+							]}
+							aria-label={t(
+								"chat.conversations.selectionBar.a11y.actions",
+							)}
+							{...props}
+						>
+							<DotsThreeVerticalIcon
+								class="size-6 max-selection-bar-compact:size-5"
+							/>
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					{#each actions as action (action.key)}
+						{@const Icon = action.icon}
+						<DropdownMenu.Item
+							variant={action.destructive
+								? "destructive"
+								: "default"}
+							onSelect={action.onSelect}
+						>
+							<Icon weight={action.weight} class="size-5" />
+							{action.label}
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		</div>
 	{:else}
-		{#each actions as action (action.key)}
-			{@const Icon = action.icon}
-			<Button
-				size="icon-lg"
-				variant="secondary"
-				class={[
-					"size-12 max-selection-bar-compact:size-10",
-					{ "text-destructive": action.destructive },
-				]}
-				aria-label={action.label}
-				onclick={action.onSelect}
-			>
-				<Icon
-					weight={action.weight}
-					class="size-6 max-selection-bar-compact:size-5"
-				/>
-			</Button>
-		{/each}
+		<div
+			role="toolbar"
+			aria-label={t("chat.conversations.selectionBar.a11y.actions")}
+			class={BAR_CLASS}
+			{@attach toolbar.container}
+		>
+			{@render exitAndCount(toolbar.item("exit"))}
+			{#each actions as action (action.key)}
+				{@const Icon = action.icon}
+				<Button
+					size="icon-lg"
+					variant="secondary"
+					class={[
+						"size-12 max-selection-bar-compact:size-10",
+						{ "text-destructive": action.destructive },
+					]}
+					aria-label={action.label}
+					onclick={action.onSelect}
+					{@attach toolbar.item(action.key)}
+				>
+					<Icon
+						weight={action.weight}
+						class="size-6 max-selection-bar-compact:size-5"
+					/>
+				</Button>
+			{/each}
+		</div>
 	{/if}
 </ProgressiveBlur>

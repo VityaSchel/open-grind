@@ -27,6 +27,28 @@ function setThumbsVisibility({
 	});
 }
 
+export function applyThumbnailHandoff({
+	lightbox,
+	gallery,
+}: {
+	lightbox: PhotoSwipeLightbox;
+	gallery: HTMLElement;
+}): void {
+	const hideThumbs = () =>
+		setThumbsVisibility({ gallery, visibility: "hidden" });
+	const showThumbs = () => setThumbsVisibility({ gallery, visibility: "" });
+	lightbox.on("openingAnimationStart", hideThumbs);
+	lightbox.on("closingAnimationStart", hideThumbs);
+	lightbox.on("closingAnimationEnd", showThumbs);
+	lightbox.on("destroy", () => {
+		showThumbs();
+		const pswp = lightbox.pswp;
+		if (pswp === undefined || !gallery.contains(document.activeElement))
+			return;
+		pswp.getItemData(pswp.currIndex).element?.focus();
+	});
+}
+
 function scaleThumbSize({
 	lightbox,
 	thumbScale,
@@ -79,13 +101,7 @@ function configure({
 	}
 	applyPhotoSwipeViewportSync(lightbox);
 	applyPhotoSwipeBackGesture(lightbox);
-	const hideThumbs = () =>
-		setThumbsVisibility({ gallery, visibility: "hidden" });
-	lightbox.on("openingAnimationStart", hideThumbs);
-	lightbox.on("closingAnimationStart", hideThumbs);
-	lightbox.on("destroy", () =>
-		setThumbsVisibility({ gallery, visibility: "" }),
-	);
+	applyThumbnailHandoff({ lightbox, gallery });
 }
 
 export function attachGalleryLightbox({

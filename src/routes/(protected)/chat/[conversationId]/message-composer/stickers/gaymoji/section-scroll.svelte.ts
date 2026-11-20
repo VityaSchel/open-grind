@@ -7,6 +7,7 @@ const JUMP_QUIET_MS = 1000;
 const TAKEOVER_EVENTS = ["pointerdown", "pointercancel", "wheel"] as const;
 
 type Jump = {
+	key: string;
 	top: number;
 	timer: ReturnType<typeof setTimeout>;
 	release: () => void;
@@ -19,6 +20,7 @@ export class SectionScroll {
 	#keys: () => string[];
 	#strip: () => HTMLElement | null;
 	#holdSheetSize: () => () => void;
+	#onLand: (key: string) => void;
 	#scroller: Element | null = null;
 	#jump: Jump | null = null;
 	#landedTop: number | null = null;
@@ -27,14 +29,17 @@ export class SectionScroll {
 		keys,
 		strip,
 		holdSheetSize,
+		onLand,
 	}: {
 		keys: () => string[];
 		strip: () => HTMLElement | null;
 		holdSheetSize: () => () => void;
+		onLand: (key: string) => void;
 	}) {
 		this.#keys = keys;
 		this.#strip = strip;
 		this.#holdSheetSize = holdSheetSize;
+		this.#onLand = onLand;
 	}
 
 	follow(content: HTMLElement): () => void {
@@ -62,14 +67,25 @@ export class SectionScroll {
 				this.#strip()?.contains(event.target);
 			if (!pressedStrip) this.#endJump(scroller);
 		};
+		const landOnFocus = ({ target }: Event) => {
+			const jump = this.#jump;
+			if (jump === null || !(target instanceof Element)) return;
+			const inStrip = this.#strip()?.contains(target) ?? false;
+			if (inStrip && !target.matches(":focus-visible")) return;
+			scroller.scrollTo({ top: jump.top, behavior: "instant" });
+			if (arrived({ scroller, top: jump.top })) this.#endJump(scroller);
+			if (!inStrip) this.#onLand(jump.key);
+		};
 		onScroll();
 		scroller.addEventListener("scroll", onScroll, { passive: true });
 		scroller.addEventListener("scrollend", endJump);
+		scroller.addEventListener("focusin", landOnFocus);
 		for (const type of TAKEOVER_EVENTS)
 			scroller.addEventListener(type, takeOver, { passive: true });
 		return () => {
 			scroller.removeEventListener("scroll", onScroll);
 			scroller.removeEventListener("scrollend", endJump);
+			scroller.removeEventListener("focusin", landOnFocus);
 			for (const type of TAKEOVER_EVENTS)
 				scroller.removeEventListener(type, takeOver);
 			this.#scroller = null;
@@ -100,16 +116,25 @@ export class SectionScroll {
 			scroller.scrollHeight - scroller.clientHeight,
 		);
 		this.current = key;
-		this.#startJump({ scroller, top });
+		this.#startJump({ scroller, key, top });
 		scroller.scrollTo({ top, behavior: preferredScrollBehavior() });
 		if (arrived({ scroller, top })) this.#endJump(scroller);
 	}
 
-	#startJump({ scroller, top }: { scroller: Element; top: number }) {
+	#startJump({
+		scroller,
+		key,
+		top,
+	}: {
+		scroller: Element;
+		key: string;
+		top: number;
+	}) {
 		const running = this.#jump;
 		if (running !== null) clearTimeout(running.timer);
 		this.#landedTop = null;
 		this.#jump = {
+			key,
 			top,
 			timer: this.#quietTimer(scroller),
 			release: running?.release ?? this.#holdSheetSize(),

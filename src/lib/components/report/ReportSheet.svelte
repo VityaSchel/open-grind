@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ArrowUpRightIcon from "phosphor-svelte/lib/ArrowUpRightIcon";
-	import { untrack } from "svelte";
+	import { flushSync, untrack } from "svelte";
 
 	import { blockUser } from "#lib/api/browse/blocks.ts";
 	import { showErrorToast } from "#lib/api/error-toast.ts";
@@ -30,7 +30,13 @@
 		open = $bindable(),
 		target,
 		onBlock,
-	}: { open: boolean; target: ReportTarget; onBlock?: () => void } = $props();
+		onCloseAutoFocus,
+	}: {
+		open: boolean;
+		target: ReportTarget;
+		onBlock?: () => void;
+		onCloseAutoFocus?: (event: Event) => void;
+	} = $props();
 
 	const reasonKeys = {
 		SPAM: "profile.report.reason.spam",
@@ -89,6 +95,7 @@
 	let comment = $state("");
 	let submitting = $state(false);
 	let submitted = $state(false);
+	let doneButton = $state<HTMLElement | null>(null);
 
 	const copy = $derived(targetKeys[target.kind]);
 	const isInPersonIncident = $derived(
@@ -123,7 +130,10 @@
 					report,
 				});
 			else await reportProfile({ profileId: target.profileId, report });
-			submitted = true;
+			flushSync(() => {
+				submitted = true;
+			});
+			doneButton?.focus();
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
@@ -160,6 +170,7 @@
 		class="flex flex-col gap-4"
 		drawerClass="mx-auto max-w-160"
 		dialogProps={{ showCloseButton: true }}
+		{onCloseAutoFocus}
 	>
 		<ResponsiveDialog.Header>
 			<ResponsiveDialog.Title>
@@ -193,7 +204,11 @@
 						{t("profile.topNav.actionsMenu.block")}
 					</Button>
 				{/if}
-				<Button variant="secondary" onclick={() => (open = false)}>
+				<Button
+					variant="secondary"
+					bind:ref={doneButton}
+					onclick={() => (open = false)}
+				>
 					{t("profile.report.done")}
 				</Button>
 			</ResponsiveDialog.Footer>
@@ -214,6 +229,7 @@
 							spacing={2}
 							aria-label={t("profile.report.a11y.reason")}
 							class="w-full"
+							data-autofocus
 							bind:value={
 								() => reason ?? "",
 								(next: string) =>

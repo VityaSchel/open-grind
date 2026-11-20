@@ -26,6 +26,8 @@
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
 	--ring: oklch(0.556 0 0);
+	--focus-ring: color-mix(in oklab, var(--foreground) 40%, transparent);
+	--focus-ring-offset: 0px;
 	--chart-1: oklch(0.905 0.182 98.111);
 	--chart-2: oklch(86.521% 0.17664 90.372);
 	--chart-3: oklch(0.681 0.162 75.834);
@@ -69,6 +71,7 @@
 	--color-chart-2: var(--chart-2);
 	--color-chart-1: var(--chart-1);
 	--color-ring: var(--ring);
+	--color-focus-ring: var(--focus-ring);
 	--color-input: var(--input);
 	--color-border: var(--border);
 	--color-destructive: var(--destructive);
@@ -176,6 +179,15 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+	:focus-visible {
+		@apply scroll-m-2 focus-ring;
+	}
+	:root:not([data-hover-pointer]) :is(input, textarea):focus-visible {
+		outline-style: none;
+	}
+	:where(p, li) :where(a):focus-visible {
+		@apply rounded-sm;
+	}
 	body {
 		@apply bg-background text-foreground;
 	}
@@ -213,6 +225,19 @@ body {
 	--nav-height: 0px;
 }
 
+:root[data-keyboard-shrinks-page]
+	:is(
+		.scroll-pb-nav-clear,
+		.scroll-pb-nav-clear-above-safe-area,
+		.scroll-pb-profile-bar-clear
+	) {
+	scroll-padding-bottom: 0;
+}
+
+:root[data-keyboard-shrinks-page] :is(input, textarea):focus-visible {
+	scroll-margin-bottom: 0;
+}
+
 a {
 	-webkit-user-drag: none;
 }
@@ -245,7 +270,8 @@ textarea,
 	}
 
 	/* Requires an ancestor with @container/photo-grid — columns follow that container's width, not the viewport.
-	   Only cells may be direct children because corner rules apply based on position. */
+	   Only cells may be direct children because corner rules apply based on position, except for
+	   display:contents .row wrappers (holding cells or display:contents .cell wrappers) that carry an ARIA grid. */
 	.photo-grid {
 		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid;
 
@@ -253,10 +279,36 @@ textarea,
 		--grid-radius-bottom: var(--radius-grid);
 		--photo-grid-aspect: 1 / 1;
 
+		:focus-visible {
+			@apply -outline-offset-2;
+		}
+		> * {
+			@apply focus-ring-overlay focus-visible:relative;
+		}
 		> :first-child {
 			border-top-left-radius: var(--grid-radius-top);
 		}
 		> :last-child {
+			border-bottom-right-radius: var(--grid-radius-bottom);
+		}
+		> .row > :not(.cell),
+		> .row > .cell > * {
+			@apply focus-ring-overlay focus-visible:relative;
+		}
+		> .row:first-child > :first-child,
+		> .row:first-child > .cell:first-child > * {
+			border-top-left-radius: var(--grid-radius-top);
+		}
+		> .row:first-child > :last-child,
+		> .row:first-child > .cell:last-child > * {
+			border-top-right-radius: var(--grid-radius-top);
+		}
+		> .row:last-child > :first-child,
+		> .row:last-child > .cell:first-child > * {
+			border-bottom-left-radius: var(--grid-radius-bottom);
+		}
+		> .row:last-child > :last-child,
+		> .row:last-child > .cell:last-child > * {
 			border-bottom-right-radius: var(--grid-radius-bottom);
 		}
 	}
@@ -397,11 +449,86 @@ textarea,
 @utility pb-nav-clear {
 	padding-bottom: calc(0.5rem + var(--content-pb) + var(--bar-content-gap));
 }
+@utility scroll-pb-nav-clear {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--content-pb) + var(--bar-content-gap)
+	);
+}
+@utility scroll-pb-nav-clear-above-safe-area {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--nav-height) + var(--bar-content-gap)
+	);
+}
+@utility scroll-pb-save-bar-clear {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--content-pb) + var(--bar-content-gap) + --spacing(15)
+	);
+}
+@utility scroll-pb-profile-bar-clear {
+	scroll-padding-bottom: calc(
+		0.5rem + var(--nav-height) + var(--bar-content-gap) + --spacing(16)
+	);
+}
 @utility pt-header-clear-* {
 	padding-top: calc(--spacing(--value(integer)) + var(--bar-content-gap));
 }
+@utility scroll-pt-header-clear-* {
+	scroll-padding-top: calc(
+		--spacing(--value(integer)) + var(--bar-content-gap)
+	);
+}
 @utility bottom-nav-clear {
 	bottom: calc(var(--nav-clear) + var(--safe-area-bottom));
+}
+@utility focus-ring {
+	@apply outline-2 outline-offset-(--focus-ring-offset) outline-focus-ring outline-solid;
+}
+@utility focus-ring-overlay {
+	&:focus-visible {
+		isolation: isolate;
+		outline-style: none;
+	}
+	&:focus-visible::after {
+		@apply focus-ring;
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 10;
+		border-radius: inherit;
+		pointer-events: none;
+		outline-offset: -2px;
+		box-shadow: inset 0 0 0 4px var(--color-background);
+	}
+}
+@utility focus-ring-icon {
+	&:focus-visible {
+		outline-style: none;
+	}
+	&:focus-visible::after {
+		@apply focus-ring;
+		content: "";
+		position: absolute;
+		top: 50%;
+		inset-inline-start: calc(
+			var(--icon-start, 0px) + var(--icon-size, 1.25rem) / 2
+		);
+		width: var(--icon-ring, 2.25rem);
+		height: var(--icon-ring, 2.25rem);
+		margin-top: calc(var(--icon-ring, 2.25rem) / -2);
+		margin-inline-start: calc(var(--icon-ring, 2.25rem) / -2);
+		border-radius: 9999px;
+		pointer-events: none;
+	}
+}
+@utility map-focus-ring {
+	--focus-ring: color-mix(in oklab, var(--background) 50%, transparent);
+	& .leaflet-container {
+		outline-offset: -2px !important;
+	}
+	& .leaflet-control-attribution a {
+		outline-offset: -2px;
+		scroll-margin: 0;
+	}
 }
 @utility max-h-photo {
 	max-height: min(70vh, 500px);

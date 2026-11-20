@@ -8,6 +8,7 @@
 	import MediaGrid from "#lib/components/shared/MediaGrid.svelte";
 	import * as Empty from "#lib/components/ui/empty/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import { SelectionSet } from "#lib/util/selection.svelte.ts";
 	import type { MyAlbum } from "#lib/model/messaging/albums.ts";
 	import { getConversationState } from "../../../conversation-state.svelte";
@@ -26,6 +27,11 @@
 	const profileId = $derived(conversationState.profile?.profileId ?? null);
 	const selected = new SelectionSet<number>(10);
 	const shareActions = new AlbumShareActions();
+	const tiles = new RovingFocusState({
+		keys: () => (albums ?? []).map(({ albumId }) => albumId),
+		orientation: "grid",
+		wrap: "rows",
+	});
 
 	let albums = $state<MyAlbum[] | null>(null);
 	let error = $state<unknown>(null);
@@ -148,6 +154,7 @@
 	onRetry={() => void load()}
 	skeletons={9}
 	{selected}
+	roving={tiles}
 	gridClass="[--photo-grid-aspect:3/4]"
 >
 	{#snippet emptyState()}
@@ -181,6 +188,7 @@
 			dimmed={isIncompatible || locked}
 			disabled={!isSelectable}
 			clickable={isSelectable && (selected.canSelectMore || isSelected)}
+			attach={tiles.item(album.albumId)}
 			onclick={() => toggleSelected(album.albumId)}
 		/>
 	{/snippet}

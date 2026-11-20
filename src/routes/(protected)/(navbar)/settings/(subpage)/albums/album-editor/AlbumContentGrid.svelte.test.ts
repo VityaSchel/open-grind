@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, within } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { albumProcessingPlaceholderUrl } from "#lib/demo/mock/albums.ts";
@@ -53,6 +59,12 @@ const processingVideo: AlbumContent = {
 	processing: true,
 	rejectionId: null,
 };
+
+async function expectAddTileIgnoresClicks(tile: HTMLElement): Promise<void> {
+	expect(tile.getAttribute("aria-disabled")).toBe("true");
+	await fireEvent.click(tile);
+	expect(screen.queryByRole("dialog"), "the sheet stays closed").toBeNull();
+}
 
 function cells(container: HTMLElement): HTMLElement[] {
 	return [
@@ -204,7 +216,7 @@ describe("album content grid", () => {
 		).toBeTruthy();
 	});
 
-	it("disables adding while a save runs", () => {
+	it("disables adding while a save runs", async () => {
 		const { getByRole } = render(AlbumContentGrid, {
 			props: {
 				uploads,
@@ -219,13 +231,13 @@ describe("album content grid", () => {
 			},
 		});
 
-		expect(
+		await expectAddTileIgnoresClicks(
 			getByRole("button", { name: "Add photos or videos" }),
-		).toHaveProperty("disabled", true);
+		);
 	});
 
 	it("keeps adding open for a video once the album holds every photo it can", () => {
-		const { container } = render(AlbumContentGrid, {
+		const { getByRole } = render(AlbumContentGrid, {
 			props: {
 				uploads,
 				albumId: 903,
@@ -242,12 +254,14 @@ describe("album content grid", () => {
 		});
 
 		expect(
-			container.querySelector('[data-slot="add-tile"]'),
-		).toHaveProperty("disabled", false);
+			getByRole("button", { name: "Add photos or videos" }).getAttribute(
+				"aria-disabled",
+			),
+		).toBe("false");
 	});
 
-	it("stops adding once the album holds every photo and video it can", () => {
-		const { container } = render(AlbumContentGrid, {
+	it("stops adding once the album holds every photo and video it can", async () => {
+		const { getByRole } = render(AlbumContentGrid, {
 			props: {
 				uploads,
 				albumId: 903,
@@ -264,25 +278,28 @@ describe("album content grid", () => {
 			},
 		});
 
+		await expectAddTileIgnoresClicks(
+			getByRole("button", { name: "Add photos or videos" }),
+		);
+		const unknownLimits = render(AlbumContentGrid, {
+			props: {
+				uploads,
+				albumId: 903,
+				content: [readyPhoto],
+				pending: [],
+				removed: [],
+				saving: false,
+				limits: null,
+				onToggleRemoved: () => {},
+				onReorder: () => {},
+			},
+		});
 		expect(
-			container.querySelector('[data-slot="add-tile"]'),
-		).toHaveProperty("disabled", true);
-		expect(
-			render(AlbumContentGrid, {
-				props: {
-					uploads,
-					albumId: 903,
-					content: [readyPhoto],
-					pending: [],
-					removed: [],
-					saving: false,
-					limits: null,
-					onToggleRemoved: () => {},
-					onReorder: () => {},
-				},
-			}).container.querySelector('[data-slot="add-tile"]'),
+			within(unknownLimits.container)
+				.getByRole("button", { name: "Add photos or videos" })
+				.getAttribute("aria-disabled"),
 			"unknown limits leave adding open",
-		).toHaveProperty("disabled", false);
+		).toBe("false");
 	});
 
 	it("stops adding from the empty state when the album is full", () => {

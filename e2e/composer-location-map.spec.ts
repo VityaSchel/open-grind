@@ -61,12 +61,10 @@ test("location sharing loads maps on demand and preserves the searched and panne
 	expect(tileRequests).toBe(0);
 	for (let opening = 0; opening < 2; opening++) {
 		await location.click();
-		await expect(
-			page.getByRole("tabpanel", { name: "Location", exact: true }),
-		).toHaveAccessibleDescription(
+		await expect(map).toBeVisible();
+		await expect(map).toHaveAccessibleDescription(
 			"Drag the map to place the pin on the location you want to share.",
 		);
-		await expect(map).toBeVisible();
 		await expect
 			.poll(async () => (await map.boundingBox())?.height ?? 0)
 			.toBeGreaterThan(200);
@@ -80,7 +78,7 @@ test("location sharing loads maps on demand and preserves the searched and panne
 	await page.getByPlaceholder("Search places…").fill("Paris");
 	const viewportWithSearchKeyboard = { width: 420, height: 500 };
 	await page.setViewportSize(viewportWithSearchKeyboard);
-	await page.getByRole("button", { name: "Paris France" }).click();
+	await page.getByRole("option", { name: "Paris France" }).click();
 	await expect.poll(pinOffsetFromCenter).toBeLessThan(3);
 	await page.setViewportSize({ width: 420, height: 800 });
 	await expect

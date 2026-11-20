@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { untrack } from "svelte";
+	import { tick, untrack } from "svelte";
 
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import QuickFiltersBar from "#lib/components/filters/QuickFiltersBar.svelte";
 	import LocationChange from "#lib/components/location-chooser/LocationChange.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { t } from "#lib/i18n/index.ts";
+	import { focusIsLost } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import { TOP_SLOP_PX } from "#lib/util/scroll.ts";
 	import RightNowPostControls from "./post/RightNowPostControls.svelte";
@@ -21,6 +22,7 @@
 	const ownPost = untrack(() => getRightNowPostState(ourProfileId));
 
 	let container: HTMLDivElement | null = $state(null);
+	let list: ReturnType<typeof RightNowFeedList> | undefined = $state();
 	let sheetOpen = $state(false);
 	let labeledChip = $state(false);
 
@@ -45,6 +47,20 @@
 			if (container) container.scrollTop = 0;
 		}),
 	);
+
+	async function jumpToTop({
+		keyboardFocused,
+	}: {
+		keyboardFocused: boolean;
+	}) {
+		if (!feed.hasNewPosts) {
+			if (keyboardFocused) list?.focusFirstPost();
+			return;
+		}
+		await feed.refresh();
+		await tick();
+		if (keyboardFocused && focusIsLost()) list?.focusFirstPost();
+	}
 </script>
 
 <main class="screen-nav-host">
@@ -64,7 +80,7 @@
 	<div
 		bind:this={container}
 		data-slot="right-now-scroller"
-		class="relative pull-scroller [scrollbar-gutter:stable_both-edges]"
+		class="relative pull-scroller scroll-pt-header-clear-17 scroll-pb-nav-clear [scrollbar-gutter:stable_both-edges]"
 		onscroll={() => feed.followScroll(container?.scrollTop ?? 0)}
 	>
 		<div
@@ -72,6 +88,7 @@
 			class="mx-auto min-h-overscrollable flex w-full max-w-160 flex-col px-4 pt-header-clear-17 pb-nav-clear"
 		>
 			<RightNowFeedList
+				bind:this={list}
 				{feed}
 				{ourProfileId}
 				ownPostId={ownPost.post?.id ?? null}
@@ -85,7 +102,7 @@
 	<ScrollToTopButton
 		{container}
 		text={feed.hasNewPosts ? t("browse.rightNow.feed.newPosts") : undefined}
-		onjump={feed.hasNewPosts ? () => void feed.refresh() : undefined}
+		onjump={(jump) => void jumpToTop(jump)}
 		bind:labeled={labeledChip}
 		class="bottom-nav-clear"
 	/>

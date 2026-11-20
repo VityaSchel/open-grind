@@ -14,8 +14,11 @@
 		dialogProps,
 		drawerProps,
 		children,
+		...restProps
 	}: {
 		class?: ClassValue;
+		"data-autofocus"?: true;
+		onCloseAutoFocus?: (event: Event) => void;
 		dialogClass?: ClassValue;
 		drawerClass?: ClassValue;
 		dialogProps?: WithoutChildrenOrChild<
@@ -31,12 +34,17 @@
 </script>
 
 {#if context.desktop}
-	<Dialog.Content class={cn(className, dialogClass)} {...dialogProps}>
+	<Dialog.Content
+		class={cn(className, dialogClass)}
+		{...restProps}
+		{...dialogProps}
+	>
 		{@render children()}
 	</Dialog.Content>
 {:else}
 	<Drawer.Content
 		class={cn(className, drawerClass)}
+		{...restProps}
 		{...drawerProps}
 		onInteractOutside={(event) => {
 			drawerProps?.onInteractOutside?.(event);

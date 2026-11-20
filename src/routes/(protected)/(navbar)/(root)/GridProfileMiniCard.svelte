@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import type { HTMLAnchorAttributes } from "svelte/elements";
 
 	import ProfileMiniCard from "#lib/components/profile/ProfileMiniCard.svelte";
 	import { isPlainClick } from "#lib/util/plain-click.ts";
@@ -17,6 +18,7 @@
 		isVisiting = false,
 		hadRecentChat = false,
 		rightNow = "NOT_ACTIVE",
+		...rest
 	}: {
 		id: number;
 		displayName?: string | null;
@@ -29,7 +31,7 @@
 		isVisiting?: boolean;
 		hadRecentChat?: boolean;
 		rightNow?: RightNowStatus;
-	} = $props();
+	} & Omit<HTMLAnchorAttributes, "id" | "href" | "onclick"> = $props();
 
 	function openInPager(event: MouseEvent) {
 		if (!isPlainClick(event)) return;
@@ -38,17 +40,17 @@
 	}
 </script>
 
-<ProfileMiniCard
-	mediaHash={medias?.[0]?.mediaHash ?? null}
-	{displayName}
-	{age}
-	{distance}
-	{unread}
-	{onlineUntil}
-	{isFavorite}
-	{isVisiting}
-	{hadRecentChat}
-	{rightNow}
-	href="/profile/{id}"
-	onclick={openInPager}
-/>
+<a href="/profile/{id}" onclick={openInPager} class="overflow-hidden" {...rest}>
+	<ProfileMiniCard
+		mediaHash={medias?.[0]?.mediaHash ?? null}
+		{displayName}
+		{age}
+		{distance}
+		{unread}
+		{onlineUntil}
+		{isFavorite}
+		{isVisiting}
+		{hadRecentChat}
+		{rightNow}
+	/>
+</a>

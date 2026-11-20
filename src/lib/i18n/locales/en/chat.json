@@ -1,6 +1,9 @@
 {
 	"layout": {
-		"selectConversation": "Select a conversation to start chatting"
+		"selectConversation": "Select a conversation to start chatting",
+		"a11y": {
+			"resizeList": "Resize conversation list"
+		}
 	},
 	"messagePreview": {
 		"album": "Album",
@@ -168,6 +171,9 @@
 				"unpin": "Unpin",
 				"mute": "Mute",
 				"unmute": "Unmute"
+			},
+			"a11y": {
+				"actions": "Conversation actions"
 			}
 		},
 		"selectionBar": {
@@ -202,7 +208,8 @@
 	"filters": {
 		"unread": "Unread",
 		"a11y": {
-			"favoritesOnly": "Favorites Only"
+			"favoritesOnly": "Favorites Only",
+			"toolbar": "Conversation filters"
 		}
 	},
 	"composer": {

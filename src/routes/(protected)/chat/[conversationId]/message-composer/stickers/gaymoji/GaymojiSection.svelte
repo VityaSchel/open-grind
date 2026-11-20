@@ -2,6 +2,7 @@
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import type { GaymojiItem } from "#lib/api/messaging/gaymoji.ts";
 	import type { GaymojiSection } from "#lib/chat/gaymoji-sections.ts";
+	import type { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import StickerTile from "../StickerTile.svelte";
 	import type { ElementRegistry } from "./element-registry";
 	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";
@@ -9,14 +10,18 @@
 
 	let {
 		section,
+		firstIndex,
 		headers,
 		windows,
+		tiles,
 		pickedId,
 		onToggle,
 	}: {
 		section: GaymojiSection;
+		firstIndex: number;
 		headers: ElementRegistry<HTMLElement>;
 		windows: SectionWindows;
+		tiles: RovingFocusState;
 		pickedId: string | null;
 		onToggle: (gaymoji: GaymojiItem) => void;
 	} = $props();
@@ -51,11 +56,13 @@
 		style:padding-top="{view.paddingTopPx}px"
 		style:padding-bottom="{view.paddingBottomPx}px"
 	>
-		{#each visibleItems as gaymoji (gaymoji.id)}
+		{#each visibleItems as gaymoji, offset (gaymoji.id)}
+			{@const tileKey = firstIndex + view.startIndex + offset}
 			<StickerTile
 				label={gaymoji.label}
 				translateLabel={false}
 				selected={gaymoji.id === pickedId}
+				attach={tiles.item(tileKey)}
 				onclick={() => onToggle(gaymoji)}
 				class="aspect-square"
 			>

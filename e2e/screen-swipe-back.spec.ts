@@ -419,7 +419,7 @@ test.describe("the iOS edge swipe on a profile after a language change", () => {
 			timeout: FIRST_ROUTE_COMPILE_MS,
 		});
 		await page
-			.getByRole("radio", { name: "German Deutsch", exact: true })
+			.getByRole("option", { name: "German Deutsch", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveAttribute("lang", "de");
 

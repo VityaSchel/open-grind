@@ -21,12 +21,14 @@
 	import { t } from "#lib/i18n/index.ts";
 	import { blockNativeMenu } from "#lib/platform/block-native-menu.ts";
 	import { blockZoom } from "#lib/platform/block-zoom.ts";
+	import { bindContextMenuKey } from "#lib/platform/context-menu-key.ts";
 	import { trackHoverPointer } from "#lib/platform/hover-pointer.ts";
 	import { keepLinksInApp } from "#lib/platform/in-app-links.ts";
 	import {
 		installNativeInsets,
 		type NativeInsets,
 	} from "#lib/platform/native-insets.ts";
+	import { revealKeyboardFocus } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { installScrollGestureBridge } from "#lib/platform/scroll-gesture.ts";
 	import { applySoftKeyboardLayout } from "#lib/platform/soft-keyboard.svelte.ts";
 	import { installSystemBack } from "#lib/platform/system-back-gesture.svelte.ts";
@@ -53,7 +55,9 @@
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
 		const releaseHoverPointer = trackHoverPointer();
+		const releaseContextMenuKey = bindContextMenuKey();
 		const releaseInAppLinks = keepLinksInApp();
+		const releaseKeyboardFocusReveal = revealKeyboardFocus();
 		installSystemBack();
 		installVoiceOverWatch();
 		void hydratePreferences().catch((error: unknown) => {
@@ -66,7 +70,9 @@
 			releaseZoomBlock();
 			releaseNativeMenuBlock();
 			releaseHoverPointer();
+			releaseContextMenuKey();
 			releaseInAppLinks();
+			releaseKeyboardFocusReveal();
 		};
 	});
 

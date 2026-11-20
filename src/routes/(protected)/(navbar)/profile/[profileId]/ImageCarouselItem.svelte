@@ -10,6 +10,7 @@
 		createdAt,
 		label,
 		covered = false,
+		...attributes
 	}: {
 		src: string;
 		mediaHash: string;
@@ -17,26 +18,37 @@
 		createdAt: number | null;
 		label: string;
 		covered?: boolean;
-	} = $props();
+	} & import("svelte/elements").HTMLAttributes<HTMLElement> = $props();
 
 	let width: number | null = $state(null);
 	let height: number | null = $state(null);
 	let failedSrc: string | null = $state(null);
 	const failed = $derived(failedSrc === src);
+	const role = $derived.by(() => {
+		if (covered) {
+			return "group";
+		}
+		if (failed) {
+			return "img";
+		}
+		return undefined;
+	});
 </script>
 
 <svelte:element
 	this={covered ? "div" : "a"}
-	class="item relative block aspect-auto h-full max-h-[inherit] w-full shrink-0 bg-stone-700"
+	class="item focus-ring-overlay relative block aspect-auto h-full max-h-[inherit] w-full shrink-0 bg-stone-700"
+	data-slot="image-carousel-item"
 	data-cropped="true"
 	data-pswp-width={width}
 	data-pswp-height={height}
 	data-created-at={createdAt}
 	data-media-hash={mediaHash}
 	href={covered || failed ? undefined : src}
-	role={covered ? "group" : undefined}
+	{role}
 	aria-disabled={failed ? "true" : undefined}
 	aria-label={label}
+	{...attributes}
 >
 	{#if eager}
 		<MediaImage

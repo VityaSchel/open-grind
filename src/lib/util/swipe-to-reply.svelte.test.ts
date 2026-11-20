@@ -7,6 +7,7 @@ import { wheelInputMode } from "#lib/util/swipe-to-reply.svelte.ts";
 import {
 	drag,
 	pointer,
+	railHarness,
 	swipeToReply,
 	touchOnlyHarness,
 	TRIGGER_DISTANCE_PX,
@@ -174,6 +175,39 @@ describe("SwipeToReply", () => {
 		swipe.handlers.onpointerup?.(pointer() as never);
 
 		expect(onArm).not.toHaveBeenCalled();
+	});
+});
+
+describe("SwipeToReply rail and keyboard focus", () => {
+	function focusInside(rail: HTMLElement): void {
+		const actions = document.createElement("button");
+		rail.append(actions);
+		actions.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+	}
+
+	it("puts the row straight back when revealing focus inside scrolls it", () => {
+		for (const direction of ["right", "left"] as const) {
+			const h = railHarness({ direction });
+			focusInside(h.rail);
+
+			h.rail.scrollLeft = h.rest + (direction === "right" ? -8 : 8);
+			h.rail.dispatchEvent(new Event("scroll"));
+
+			expect(h.rail.scrollLeft).toBe(h.rest);
+			expect(h.swipe.progress).toBe(0);
+			expect(h.swipe.dragging).toBe(false);
+			h.detach();
+		}
+	});
+
+	it("still follows a trackpad swipe that starts right after focus arrives", () => {
+		const h = railHarness();
+		focusInside(h.rail);
+
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		h.lift();
+
+		expect(h.onReply).toHaveBeenCalledOnce();
 	});
 });
 

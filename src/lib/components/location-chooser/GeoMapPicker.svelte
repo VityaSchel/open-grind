@@ -6,10 +6,12 @@
 		pinPos = $bindable(),
 		locked = false,
 		initialView,
+		describedBy,
 	}: {
 		pinPos?: Coordinates;
 		locked?: boolean;
 		initialView?: Coordinates & { zoom: number };
+		describedBy?: string;
 	} = $props();
 </script>
 
@@ -18,5 +20,5 @@
 		<Spinner class="size-8" />
 	</div>
 {:then { default: GeoMap }}
-	<GeoMap bind:pinPos {initialView} {locked} />
+	<GeoMap bind:pinPos {initialView} {locked} {describedBy} />
 {/await}

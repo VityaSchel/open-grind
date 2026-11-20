@@ -505,7 +505,7 @@ test.describe("an armed reply under a sheet carried across the split breakpoint"
 				const composerTextFocusCount =
 					await countComposerTextFocus(page);
 				await repliableMessage(page).click({ button: "right" });
-				await page.getByRole("button", { name: "Reply" }).click();
+				await page.getByRole("menuitem", { name: "Reply" }).click();
 				await expect(cancelReply(page)).toBeVisible();
 				await expect(composerText(page)).toBeFocused();
 				const focusedByArming = await composerTextFocusCount();

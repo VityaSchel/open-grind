@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { LoadSlots, mediaLoadCapacity } from "./media-load-slots";
+import { clearAccountCaches } from "#lib/api/account-caches.ts";
+import {
+	LoadSlots,
+	mediaLoadCapacity,
+	RecentLoads,
+	recentlyLoadedMedia,
+} from "./media-load-slots";
 
 describe("mediaLoadCapacity", () => {
 	it("leaves one of the Android WebView intercept workers free", () => {
@@ -109,5 +115,41 @@ describe("LoadSlots", () => {
 		for (const grant of grants) slots.acquire(grant);
 
 		for (const grant of grants) expect(grant).toHaveBeenCalledOnce();
+	});
+});
+
+describe("RecentLoads", () => {
+	it("remembers a loaded source until it is told to forget it", () => {
+		const recent = new RecentLoads(2);
+
+		recent.remember("a");
+		expect(recent.has("a")).toBe(true);
+		expect(recent.has("b")).toBe(false);
+
+		recent.forget("a");
+		expect(recent.has("a")).toBe(false);
+	});
+
+	it("drops the source that loaded longest ago once it is full", () => {
+		const recent = new RecentLoads(2);
+
+		recent.remember("a");
+		recent.remember("b");
+		recent.remember("a");
+		recent.remember("c");
+
+		expect(recent.has("a")).toBe(true);
+		expect(recent.has("b")).toBe(false);
+		expect(recent.has("c")).toBe(true);
+	});
+
+	it("forgets every source when the account signs out", () => {
+		recentlyLoadedMedia.remember("a");
+		recentlyLoadedMedia.remember("b");
+
+		clearAccountCaches();
+
+		expect(recentlyLoadedMedia.has("a")).toBe(false);
+		expect(recentlyLoadedMedia.has("b")).toBe(false);
 	});
 });

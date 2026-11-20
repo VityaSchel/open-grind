@@ -8,6 +8,8 @@
 	import { gaymojiSections } from "#lib/chat/gaymoji-sections.ts";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { holdFocusInPlace } from "#lib/platform/reveal-keyboard-focus.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { StickerPick } from "../sticker-pick";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";
@@ -45,18 +47,45 @@
 	];
 
 	const windows = new SectionWindows();
+	const tiles = new RovingFocusState({
+		keys: () => tileKeys,
+		orientation: "grid",
+		columns: () => windows.columns,
+		sectionStarts: () => sectionStarts,
+		wrap: "rows",
+		pageRows: () => windows.rowsPerPage(strip),
+		reveal: (index) => revealTile(index),
+	});
 
 	let manifest = $state.raw<Manifest>({ status: "idle" });
 	let content = $state<HTMLElement | null>(null);
 	let strip = $state<HTMLElement | null>(null);
+	let sectionsElement = $state<HTMLElement | null>(null);
 
 	const sections = $derived(
 		manifest.status === "ready" ? gaymojiSections(manifest.categories) : [],
 	);
+	const sectionStarts = $derived.by(() => {
+		let start = 0;
+		return sections.map(({ items }) => {
+			const sectionStart = start;
+			start += items.length;
+			return sectionStart;
+		});
+	});
+	const tileKeys = $derived(
+		sections.flatMap(({ items }) => items).map((_, index) => index),
+	);
+	const focusedSection = $derived.by(() => {
+		const active = tiles.activeKey;
+		if (!tiles.focusWithin || typeof active !== "number") return null;
+		return sections[sectionIndexOf(active)]?.key ?? null;
+	});
 	const scroll = new SectionScroll({
 		keys: () => sections.map(({ key }) => key),
 		strip: () => strip,
 		holdSheetSize: () => holdSheetSize(),
+		onLand: (key) => landInSection(key),
 	});
 
 	$effect(() => {
@@ -71,6 +100,46 @@
 			console.error(error);
 			manifest = { status: "failed" };
 		}
+	}
+
+	function sectionIndexOf(tile: number): number {
+		return sectionStarts.findLastIndex((start) => start <= tile);
+	}
+
+	function sectionStartOf(key: string): number | undefined {
+		return sectionStarts[
+			sections.findIndex((candidate) => candidate.key === key)
+		];
+	}
+
+	function revealTile(index: number) {
+		const section = sectionIndexOf(index);
+		if (section < 0) return;
+		windows.revealItem({
+			key: sections[section]!.key,
+			index: index - sectionStarts[section]!,
+			stickyTop: strip,
+		});
+	}
+
+	function jumpToSection(key: string) {
+		scroll.jumpTo(key);
+		tiles.activeKey = sectionStartOf(key) ?? tiles.activeKey;
+	}
+
+	function landInSection(key: string) {
+		const start = sectionStartOf(key);
+		const active = tiles.activeKey;
+		if (
+			start === undefined ||
+			sectionsElement === null ||
+			typeof active !== "number" ||
+			sectionIndexOf(active) === sectionIndexOf(start)
+		)
+			return;
+		tiles.activeKey = start;
+		const release = holdFocusInPlace(sectionsElement);
+		void tiles.focus({ key: start }).finally(release);
 	}
 
 	function loadOnFirstVisit() {
@@ -92,24 +161,33 @@
 			bind:ref={strip}
 			{sections}
 			current={scroll.current}
-			onPick={(key) => scroll.jumpTo(key)}
+			restingKey={focusedSection ?? scroll.current}
+			onPick={jumpToSection}
 		/>
-		{#each sections as section (section.key)}
-			<GaymojiSection
-				{section}
-				headers={scroll.headers}
-				{windows}
-				{pickedId}
-				onToggle={(gaymoji) =>
-					onPick({
-						id: gaymoji.id,
-						message: {
-							type: "Gaymoji",
-							body: { imageHash: gaymoji.imageHash },
-						},
-					})}
-			/>
-		{/each}
+		<div
+			bind:this={sectionsElement}
+			{@attach tiles.container}
+			data-slot="gaymoji-sections"
+		>
+			{#each sections as section, sectionIndex (section.key)}
+				<GaymojiSection
+					{section}
+					firstIndex={sectionStarts[sectionIndex]!}
+					headers={scroll.headers}
+					{windows}
+					{tiles}
+					{pickedId}
+					onToggle={(gaymoji) =>
+						onPick({
+							id: gaymoji.id,
+							message: {
+								type: "Gaymoji",
+								body: { imageHash: gaymoji.imageHash },
+							},
+						})}
+				/>
+			{/each}
+		</div>
 	{:else if manifest.status === "loading"}
 		<div
 			data-slot="sticker-grid-skeleton"

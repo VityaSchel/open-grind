@@ -8,6 +8,7 @@
 
 	import { holdScreenLanding } from "#lib/components/navigation/stack/screen-root.ts";
 	import { gridState } from "#lib/grid/grid-state.svelte.ts";
+	import { focusIsLost } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { stackInMotion } from "#lib/platform/system-back-gesture.svelte.ts";
 	import { navigationPending } from "#lib/util/history.ts";
 	import {
@@ -16,6 +17,7 @@
 		onPhotoSwipeOpening,
 	} from "#lib/util/photoswipe/index.ts";
 	import { SnapPager } from "#lib/util/snap-pager.ts";
+	import { locatePaneControl, paneFocusTarget } from "./focus-handoff";
 	import { arrowKeyAction } from "./keyboard-paging";
 	import {
 		type ProfilePagerEntry,
@@ -50,6 +52,29 @@
 	let pagerNode: HTMLElement | null = null;
 	let pendingPathname: string | null = null;
 	let stackWasMoving = false;
+	let keyboardFocus: Element | null = null;
+
+	function noteKeyboardFocus({ target }: FocusEvent) {
+		keyboardFocus =
+			target instanceof Element && target.matches(":focus-visible")
+				? target
+				: null;
+	}
+
+	async function handOffKeyboardFocus() {
+		const left = keyboardFocus;
+		if (left === null) return;
+		const control = locatePaneControl(left);
+		await tick();
+		const host = pagerNode;
+		const pane = host?.querySelector(
+			'[data-slot="profile-pane"]:not([aria-hidden])',
+		);
+		const focused = document.activeElement;
+		if (!host || !pane || pane.contains(focused)) return;
+		if (focusIsLost() || host.contains(focused))
+			paneFocusTarget({ pane, control })?.focus();
+	}
 
 	const snap = new SnapPager({
 		count: () => pager.track.length,
@@ -67,6 +92,7 @@
 				return;
 			const profileId = pager.commit({ position });
 			if (profileId === null) return;
+			void handOffKeyboardFocus();
 			const pathname = `/profile/${profileId}`;
 			pendingPathname = pathname;
 			void goto(pathname, {
@@ -192,6 +218,7 @@
 <div
 	data-slot="profile-pager"
 	tabindex="-1"
+	onfocusin={noteKeyboardFocus}
 	class="relative -mb-(--nav-height) no-scrollbar h-screen-safe w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain"
 	{@attach snap.attach}
 	{@attach rememberScroll}

@@ -19,6 +19,7 @@
 {/snippet}
 
 <ProfileList
+	name={t("settings.subpage.titles.blocked")}
 	loadIds={async () =>
 		(await getBlockedUsers()).map(({ profileId }) => profileId)}
 	setOn={({ profileId, on }) =>

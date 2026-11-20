@@ -11,12 +11,14 @@
 	import MessageQuote from "./MessageQuote.svelte";
 
 	let {
+		id,
 		clone = false,
 		quoted,
 		setRefs,
 		adornments,
 		children,
 	}: {
+		id?: string;
 		clone?: boolean;
 		quoted?: QuotedMessage | null;
 		setRefs: (refs: MessageRefs) => void;
@@ -48,6 +50,7 @@
 </script>
 
 <div
+	{id}
 	{@attach attachFrame}
 	style:pointer-events={clone ? "none" : undefined}
 	class={[

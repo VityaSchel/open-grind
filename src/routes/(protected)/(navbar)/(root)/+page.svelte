@@ -12,6 +12,7 @@
 	import TopBar from "./top-bar/TopBar.svelte";
 
 	let gridContainer: HTMLElement | null = $state(null);
+	let grid: ReturnType<typeof Grid> | undefined = $state();
 
 	restoreScrollOnce({
 		container: () => gridContainer,
@@ -66,7 +67,7 @@
 			{/if}
 			<div
 				data-slot="grid-scroller"
-				class="pull-scroller"
+				class="pull-scroller scroll-pt-header-clear-17 scroll-pb-nav-clear"
 				bind:this={gridContainer}
 				onscroll={() =>
 					(gridState.scrollY = gridContainer?.scrollTop ?? 0)}
@@ -76,12 +77,15 @@
 					data-refresh-content
 					class="@container/photo-grid min-h-overscrollable flex flex-col gap-4 px-4 pt-header-clear-17 pb-nav-clear"
 				>
-					<Grid {geohash} />
+					<Grid bind:this={grid} {geohash} />
 				</div>
 			</div>
 			<ScrollToTopButton
 				container={gridContainer}
 				class="bottom-nav-clear"
+				onjump={({ keyboardFocused }) => {
+					if (keyboardFocused) grid?.focusFirstCard();
+				}}
 			/>
 		</main>
 	{/snippet}

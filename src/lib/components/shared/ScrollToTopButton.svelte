@@ -21,7 +21,7 @@
 	}: {
 		container: HTMLElement | null;
 		text?: string;
-		onjump?: () => void;
+		onjump?: (jump: { keyboardFocused: boolean }) => void;
 		labeled?: boolean;
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
@@ -62,8 +62,10 @@
 	function scrollToTop() {
 		const el = container;
 		if (!el) return;
+		const keyboardFocused =
+			document.activeElement?.matches(":focus-visible") ?? false;
 		atTop = true;
-		onjump?.();
+		onjump?.({ keyboardFocused });
 		jumpThenGlideToTop({ element: el });
 	}
 </script>

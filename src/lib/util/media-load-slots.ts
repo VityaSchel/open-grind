@@ -1,9 +1,11 @@
+import { registerAccountCache } from "#lib/api/account-caches.ts";
 import { currentPlatform, type SupportedPlatform } from "#lib/platform/os.ts";
 
 const MIN_ANDROID_INTERCEPT_WORKERS = 3;
 const CORES_WITHOUT_ANDROID_INTERCEPT_WORKER = 2;
 const INTERCEPT_WORKERS_KEPT_FOR_BYTE_DELIVERY = 1;
 const DETACHED_LOAD_TIMEOUT_MS = 30_000;
+const REMEMBERED_MEDIA_LOADS = 500;
 
 export function mediaLoadCapacity({
 	platform,
@@ -63,6 +65,39 @@ export class LoadSlots {
 		next();
 	}
 }
+
+export class RecentLoads {
+	readonly #capacity: number;
+	readonly #sources = new Set<string>();
+
+	constructor(capacity: number) {
+		this.#capacity = capacity;
+	}
+
+	has(src: string): boolean {
+		return this.#sources.has(src);
+	}
+
+	remember(src: string): void {
+		this.#sources.delete(src);
+		this.#sources.add(src);
+		const [oldest] = this.#sources;
+		if (this.#sources.size > this.#capacity && oldest !== undefined)
+			this.#sources.delete(oldest);
+	}
+
+	forget(src: string): void {
+		this.#sources.delete(src);
+	}
+
+	clear(): void {
+		this.#sources.clear();
+	}
+}
+
+export const recentlyLoadedMedia = new RecentLoads(REMEMBERED_MEDIA_LOADS);
+
+registerAccountCache({ reset: () => recentlyLoadedMedia.clear() });
 
 let mediaLoadSlots: LoadSlots | undefined;
 

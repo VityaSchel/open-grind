@@ -2,6 +2,7 @@
 	import { Drawer as DrawerPrimitive } from "vaul-svelte";
 	import type { ComponentProps } from "svelte";
 
+	import { focusOnOpen } from "#lib/components/ui/dialog/open-auto-focus.ts";
 	import { stopOtherPointerOutWhilePressed } from "#lib/util/pressed-pointer.ts";
 	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
 	import { cn } from "#lib/util/utils.ts";
@@ -16,6 +17,7 @@
 		portalProps,
 		children,
 		onInteractOutside,
+		onOpenAutoFocus,
 		preventOverflowTextSelection = false,
 		...restProps
 	}: DrawerPrimitive.ContentProps & {
@@ -43,8 +45,13 @@
 		bind:ref
 		data-slot="drawer-content"
 		onInteractOutside={exemptToastsFromDismissal(onInteractOutside)}
+		onOpenAutoFocus={focusOnOpen({
+			content: () => ref,
+			fallback: "content",
+			onOpenAutoFocus,
+		})}
 		class={cn(
-			"group/drawer-content fixed z-50 flex h-auto flex-col bg-transparent p-4 text-sm before:absolute before:inset-2 before:-z-10 before:rounded-4xl before:border before:border-border before:bg-popover before:shadow-xl data-[vaul-drawer-direction=bottom]:inset-x-safe data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:mb-(--safe-area-bottom) data-[vaul-drawer-direction=bottom]:max-h-screen-safe data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:inset-x-safe data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-screen-safe data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
+			"group/drawer-content fixed z-50 flex h-auto flex-col bg-transparent p-4 text-sm outline-none before:absolute before:inset-2 before:-z-10 before:rounded-4xl before:border before:border-border before:bg-popover before:shadow-xl data-[vaul-drawer-direction=bottom]:inset-x-safe data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:mb-(--safe-area-bottom) data-[vaul-drawer-direction=bottom]:max-h-screen-safe data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:inset-x-safe data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-screen-safe data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
 			className,
 		)}
 		{preventOverflowTextSelection}

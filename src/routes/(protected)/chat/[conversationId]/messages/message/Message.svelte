@@ -1,17 +1,18 @@
 <script lang="ts">
 	import ArrowBendUpLeftIcon from "phosphor-svelte/lib/ArrowBendUpLeftIcon";
 	import DotsThreeIcon from "phosphor-svelte/lib/DotsThreeIcon";
-	import { untrack } from "svelte";
+	import { flushSync, untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";
+	import type { Attachment } from "svelte/attachments";
 
 	import { Button } from "#lib/components/ui/button/index.ts";
 	import { formatClockTime } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { focusIsLost } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { menuPressHandlers } from "#lib/util/long-press.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
 	import { scale } from "#lib/util/reduced-motion.ts";
-	import { returnFocus } from "#lib/util/return-focus.ts";
 	import {
 		MAX_DRAG_PX,
 		SwipeToReply,
@@ -38,6 +39,7 @@
 
 	let {
 		message,
+		rovingItem,
 		isOut,
 		isRead,
 		indexInStack,
@@ -53,6 +55,7 @@
 		onReport,
 	}: {
 		message: ApiResponseMessage;
+		rovingItem?: Attachment<HTMLElement>;
 		isOut: boolean;
 		isRead: boolean | null;
 		indexInStack: number;
@@ -60,7 +63,7 @@
 		dayStart?: number;
 		status?: "sent" | "pending" | "error";
 		onReact?: (reactionId: number) => void;
-		onDelete?: () => void;
+		onDelete?: (handoff: { fromKeyboard: boolean }) => void;
 		onVisible?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
@@ -108,16 +111,18 @@
 
 	const ACTIONS_GAP_PX = 4;
 
+	const uid = $props.id();
+	const contentId = `${uid}-content`;
+	const statusId = `${uid}-status`;
+
 	let contextMenuOpen = $state(false);
+	let openedByKeyboard = $state(false);
 	let menuOpener: HTMLElement | null = null;
 	let rowElement: HTMLElement | null = $state(null);
 	let frameElement: HTMLElement | null = $state(null);
 	let messageElement: HTMLElement | null = $state(null);
+	let actionsButton: HTMLElement | null = $state(null);
 	let actionsFocused = $state(false);
-	let actionsPlacement = $state({ inset: 0, top: 0 });
-	const actionsStyle = $derived(
-		`top: ${actionsPlacement.top}px; ${isOut ? "right" : "left"}: min(${actionsPlacement.inset}px, 100% - 2rem)`,
-	);
 
 	function setRefs({ frame, content }: MessageRefs) {
 		frameElement = frame;
@@ -158,7 +163,7 @@
 		if (!hasMenuActions) contextMenuOpen = false;
 	});
 
-	function openContextMenu(): boolean {
+	function openContextMenu({ byKeyboard }: { byKeyboard: boolean }): boolean {
 		if (!messageElement || !frameElement || !hasMenuActions) return false;
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
@@ -169,27 +174,33 @@
 			focused instanceof HTMLElement && rowElement?.contains(focused)
 				? focused
 				: null;
+		openedByKeyboard = byKeyboard;
 		contextMenuOpen = true;
 		return true;
 	}
 
 	function closeContextMenu() {
-		contextMenuOpen = false;
-		if (menuOpener !== null) returnFocus(menuOpener);
+		const opener = menuOpener;
 		menuOpener = null;
+		contextMenuOpen = false;
+		flushSync();
+		if (opener?.isConnected && focusIsLost())
+			opener.focus({ preventScroll: true });
 	}
 
 	function placeActions() {
-		if (!rowElement || !messageElement) return;
+		if (!rowElement || !messageElement || !actionsButton) return;
 		const row = rowElement.getBoundingClientRect();
 		const bubble = messageElement.getBoundingClientRect();
-		const beside = isOut
-			? row.right - bubble.left
-			: bubble.right - row.left;
-		actionsPlacement = {
-			inset: beside + ACTIONS_GAP_PX,
-			top: bubble.top - row.top + bubble.height / 2,
-		};
+		const rtl = getComputedStyle(rowElement).direction === "rtl";
+		const rightOfBubble = isOut === rtl;
+		const beside = rightOfBubble
+			? bubble.right - row.left
+			: row.right - bubble.left;
+		const inset = `min(${beside + ACTIONS_GAP_PX}px, 100% - 2rem)`;
+		actionsButton.style.top = `${bubble.top - row.top + bubble.height / 2}px`;
+		actionsButton.style.left = rightOfBubble ? inset : "";
+		actionsButton.style.right = rightOfBubble ? "" : inset;
 	}
 
 	$effect(() => {
@@ -234,11 +245,22 @@
 
 	const rowPress = menuPressHandlers({
 		openMenu: ({ byTouch }) => {
-			const opened = openContextMenu();
+			const opened = openContextMenu({ byKeyboard: false });
 			if (opened && byTouch) swipe?.resetTouch();
 			return opened;
 		},
 	});
+
+	function onRowContextMenu(
+		event: MouseEvent & { currentTarget: EventTarget & HTMLDivElement },
+	) {
+		if ((event as Partial<PointerEvent>).pointerType !== "") {
+			rowPress.oncontextmenu?.(event);
+			return;
+		}
+		event.preventDefault();
+		openContextMenu({ byKeyboard: true });
+	}
 
 	const wheelMode = wheelInputMode();
 	const railWheel = wheelMode === "rail";
@@ -273,8 +295,31 @@
 	</div>
 {/snippet}
 
+{#snippet actions()}
+	<Button
+		bind:ref={actionsButton}
+		data-slot="message-actions"
+		variant="secondary"
+		size="icon-sm"
+		aria-label={t("chat.message.a11y.actions")}
+		aria-describedby={lastInStack ? `${contentId} ${statusId}` : contentId}
+		aria-haspopup="menu"
+		aria-expanded={contextMenuOpen}
+		class="absolute size-8 -translate-y-1/2 transition-none not-focus-visible:sr-only"
+		onfocus={() => {
+			placeActions();
+			actionsFocused = true;
+		}}
+		onblur={() => (actionsFocused = false)}
+		onclick={(event) => openContextMenu({ byKeyboard: event.detail === 0 })}
+	>
+		<DotsThreeIcon weight="bold" />
+	</Button>
+{/snippet}
+
 {#snippet content(clone?: boolean)}
 	<MessageWrapper
+		id={clone ? undefined : contentId}
 		{clone}
 		{setRefs}
 		{adornments}
@@ -372,6 +417,7 @@
 					},
 				]}
 				role="article"
+				{@attach rovingItem}
 				onpointerdown={(event) => {
 					lastPointerType = event.pointerType;
 					if (hasMenuActions) rowPress.onpointerdown?.(event);
@@ -395,38 +441,24 @@
 						}
 						return;
 					}
-					if (onReply) {
+					if (onReply && !event.defaultPrevented) {
 						event.preventDefault();
 						onReply();
 						selection?.removeAllRanges();
 					}
 				}}
-				oncontextmenu={rowPress.oncontextmenu}
+				oncontextmenu={onRowContextMenu}
 				style:visibility={contextMenuOpen ? "hidden" : undefined}
 				style:transform={swipe?.deltaX
 					? `translateX(${swipe.deltaX}px)`
 					: undefined}
 			>
+				{#if hasMenuActions && isOut}
+					{@render actions()}
+				{/if}
 				{@render content()}
-				{#if hasMenuActions}
-					<Button
-						data-slot="message-actions"
-						variant="secondary"
-						size="icon-sm"
-						aria-label={t("chat.message.a11y.actions")}
-						aria-haspopup="dialog"
-						aria-expanded={contextMenuOpen}
-						class="absolute size-8 -translate-y-1/2 scroll-my-20 transition-none not-focus-visible:sr-only"
-						style={actionsStyle}
-						onfocus={() => {
-							placeActions();
-							actionsFocused = true;
-						}}
-						onblur={() => (actionsFocused = false)}
-						onclick={() => openContextMenu()}
-					>
-						<DotsThreeIcon weight="bold" />
-					</Button>
+				{#if hasMenuActions && !isOut}
+					{@render actions()}
 				{/if}
 			</div>
 			{#if swipe && railWheel && isOut}
@@ -436,6 +468,7 @@
 	</div>
 	{#if lastInStack}
 		<span
+			id={statusId}
 			class={[
 				"mx-3 mt-0.5 text-xs text-muted-foreground",
 				{ "text-right": isOut },
@@ -470,7 +503,9 @@
 		reactionAvailable={message.reactions.length === 0 &&
 			!isOut &&
 			!message.unsent}
-		{onDelete}
+		{openedByKeyboard}
+		onDelete={onDelete &&
+			(() => onDelete({ fromKeyboard: openedByKeyboard }))}
 		{onUnsend}
 		{onCopyError}
 		{onReply}

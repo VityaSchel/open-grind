@@ -18,6 +18,7 @@ vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE, t } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	expectCommandGroup,
 	openWith,
@@ -47,12 +48,14 @@ function badges(): { name: string; value: string }[] {
 }
 
 beforeEach(() => {
+	runningOn("linux");
 	gotoMock.mockReset().mockResolvedValue(undefined);
 	showErrorToastMock.mockReset();
 });
 
 afterEach(async () => {
 	resetCommandCenter();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 

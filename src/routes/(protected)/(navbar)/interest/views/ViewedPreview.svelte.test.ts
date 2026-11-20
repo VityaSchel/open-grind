@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
@@ -16,18 +16,24 @@ function renderPreview({
 	totalCount = 5,
 	maxDisplayCount = 99,
 	isSecretAdmirer = false,
+	lastViewed = null,
+	distance = null,
+	isFavorite = false,
 }: {
 	totalCount?: number;
 	maxDisplayCount?: number;
 	isSecretAdmirer?: boolean;
+	lastViewed?: number | null;
+	distance?: number | null;
+	isFavorite?: boolean;
 } = {}) {
 	return render(ViewedPreview, {
 		props: {
 			preview: {
 				profileImageMediaHash: null,
-				distance: null,
-				isFavorite: false,
-				lastViewed: null,
+				distance,
+				isFavorite,
+				lastViewed,
 				isSecretAdmirer,
 				viewedCount: { totalCount, maxDisplayCount },
 				rightNowStatus: "NONE",
@@ -74,6 +80,67 @@ describe("ViewedPreview", () => {
 			const { container } = renderPreview({ isSecretAdmirer });
 
 			expect(screenReaderTexts(container)).toEqual([viewer, "views"]);
+		},
+	);
+
+	it.each([
+		{ isSecretAdmirer: true, totalCount: 1, label: "Secret admirer" },
+		{
+			isSecretAdmirer: false,
+			totalCount: 5,
+			label: "Hidden viewer, 5 views",
+		},
+	])(
+		"is an image named $label for keyboard and screen reader users",
+		({ isSecretAdmirer, totalCount, label }) => {
+			renderPreview({ isSecretAdmirer, totalCount });
+
+			expect(screen.getByRole("img", { name: label })).toBeTruthy();
+		},
+	);
+
+	it.each([
+		{ totalCount: 1, label: "Secret admirer, 5 mins" },
+		{ totalCount: 3, label: "Secret admirer, 5 mins, 3 views" },
+	])(
+		"names the last view time it shows in the image name $label",
+		({ totalCount, label }) => {
+			renderPreview({
+				isSecretAdmirer: true,
+				totalCount,
+				lastViewed: Date.now() - 5 * 60_000,
+			});
+
+			expect(screen.getByRole("img", { name: label })).toBeTruthy();
+			expect(screen.getByText("5 mins")).toBeTruthy();
+		},
+	);
+
+	it.each([
+		{
+			distance: 300,
+			isFavorite: false,
+			totalCount: 1,
+			label: "Hidden viewer, 300 m",
+		},
+		{
+			distance: null,
+			isFavorite: true,
+			totalCount: 1,
+			label: "Hidden viewer, Favorite",
+		},
+		{
+			distance: 300,
+			isFavorite: true,
+			totalCount: 3,
+			label: "Hidden viewer, 300 m, Favorite, 3 views",
+		},
+	])(
+		"names the distance and favorite star it shows in the image name $label",
+		({ distance, isFavorite, totalCount, label }) => {
+			renderPreview({ distance, isFavorite, totalCount });
+
+			expect(screen.getByRole("img", { name: label })).toBeTruthy();
 		},
 	);
 

@@ -99,7 +99,7 @@ test("Escape cancels a pending reply before it closes the chat", async ({
 		.locator(MESSAGE_ROW)
 		.filter({ hasText: "consectetur adipiscing elit" })
 		.click({ button: "right" });
-	await page.getByRole("button", { name: "Reply" }).click();
+	await page.getByRole("menuitem", { name: "Reply" }).click();
 	const replyBar = page.getByLabel("Cancel reply");
 	await expect(replyBar).toBeVisible();
 

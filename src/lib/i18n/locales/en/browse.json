@@ -1,7 +1,8 @@
 {
 	"grid": {
 		"a11y": {
-			"loadingMore": "Loading more profiles"
+			"loadingMore": "Loading more profiles",
+			"loadingProfile": "Loading profile"
 		},
 		"empty": {
 			"noProfiles": {
@@ -46,7 +47,8 @@
 	},
 	"quickFilters": {
 		"a11y": {
-			"allFilters": "All filters"
+			"allFilters": "All filters",
+			"toolbar": "Quick filters"
 		}
 	},
 	"filters": {
@@ -270,7 +272,8 @@
 		"a11y": {
 			"title": "Choose Location",
 			"description": "Drag the map to place the pin where you want to browse from.",
-			"locateMe": "Go to current location"
+			"locateMe": "Go to current location",
+			"results": "Places"
 		}
 	},
 	"location": {

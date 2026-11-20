@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { onDestroy, untrack } from "svelte";
+	import type { Attachment } from "svelte/attachments";
 
 	import {
 		getOrCreateConversationsState,
@@ -13,6 +14,7 @@
 	import * as Resizable from "#lib/components/ui/resizable/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import { defaultConversationFilters } from "#lib/model/messaging/conversation-filters.ts";
+	import { keepOutOfSequentialFocus } from "#lib/platform/sequential-focus.ts";
 	import { below } from "#lib/util/breakpoints.svelte.ts";
 	import ConversationScreen from "./[conversationId]/ConversationScreen.svelte";
 	import {
@@ -36,8 +38,17 @@
 
 	const CONVERSATIONS_LIST_MIN_WIDTH_PX = 200;
 	const PAGE_CONTENT_MIN_WIDTH_PX = 280;
+	const SEPARATOR_KEY_ACTIONS: Record<
+		string,
+		(pane: Resizable.Pane) => void
+	> = {
+		Enter: (pane) => (pane.isCollapsed() ? pane.expand() : pane.collapse()),
+		Home: (pane) => pane.collapse(),
+		End: (pane) => pane.resize(100),
+	};
 
 	let paneGroup: HTMLElement | null = $state(null);
+	let conversationsListPane: Resizable.Pane | undefined = $state();
 	let conversationsListCollapsedSizePercentage = $state(0);
 	let conversationsListMinWidthPercentage = $state(0);
 	let pageContentMinWidthPercentage = $state(0);
@@ -66,6 +77,37 @@
 	$effect(() => sendMediaOffer.keepFor(conversationId));
 
 	const mobile = below("split");
+
+	const sizeListFromSeparatorKeys: Attachment<HTMLElement> = (group) => {
+		const onKeydown = (event: KeyboardEvent) => {
+			const action = SEPARATOR_KEY_ACTIONS[event.key];
+			const unmodified = !(
+				event.altKey ||
+				event.ctrlKey ||
+				event.metaKey ||
+				event.shiftKey
+			);
+			const onSeparator =
+				event.target instanceof Element &&
+				event.target.matches("[data-pane-resizer]");
+			if (
+				action === undefined ||
+				!unmodified ||
+				!onSeparator ||
+				event.defaultPrevented ||
+				conversationsListPane === undefined
+			)
+				return;
+			event.preventDefault();
+			action(conversationsListPane);
+		};
+		const releaseTabOrder = keepOutOfSequentialFocus(group);
+		group.addEventListener("keydown", onKeydown, { capture: true });
+		return () => {
+			group.removeEventListener("keydown", onKeydown, { capture: true });
+			releaseTabOrder();
+		};
+	};
 </script>
 
 {#snippet conversationScreen(id: string, leaving = false)}
@@ -108,8 +150,11 @@
 			class="mx-auto h-auto! max-h-full max-w-300"
 			bind:ref={paneGroup}
 			autoSaveId="/(protected)/chat/layout"
+			keyboardResizeBy={5}
+			{@attach sizeListFromSeparatorKeys}
 		>
 			<Resizable.Pane
+				bind:this={conversationsListPane}
 				defaultSize={43}
 				minSize={conversationsListMinWidthPercentage * 100}
 				collapsedSize={conversationsListCollapsedSizePercentage * 100}
@@ -119,7 +164,9 @@
 				<ConversationsList class="pe-0.75" />
 			</Resizable.Pane>
 			<Resizable.Handle
-				class="cursor-col-resize! bg-transparent px-2"
+				class="cursor-col-resize! rounded-full bg-transparent px-2 -outline-offset-2"
+				aria-label={t("chat.layout.a11y.resizeList")}
+				aria-orientation="vertical"
 				withHandle
 			/>
 			<Resizable.Pane

@@ -24,6 +24,9 @@
 		onpointerdown={holdFieldFocus}
 		onmousedown={holdFieldFocus}
 		{...props}
-		class={["absolute right-0 bottom-0 rounded-e-composer pe-3", className]}
+		class={[
+			"absolute inset-e-0 bottom-0 rounded-e-composer pe-3",
+			className,
+		]}
 	/>
 </div>

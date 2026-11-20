@@ -30,7 +30,7 @@ const englishNames = (page: Page) =>
 		.allTextContents();
 
 const option = (page: Page, name: string) =>
-	page.getByRole("radio", { name, exact: true });
+	page.getByRole("option", { name, exact: true });
 
 const subpageNavigation = (page: Page) =>
 	page.locator("nav", { has: page.locator(`a[href="${APP_SETTINGS}"]`) });
@@ -69,13 +69,13 @@ test("switches to German and back from the Language page", async ({ page }) => {
 	);
 	await expect(
 		option(page, "English (United States) English"),
-	).toHaveAttribute("aria-checked", "true");
+	).toHaveAttribute("aria-selected", "true");
 
 	await option(page, "German Deutsch").click();
 
 	await expect(page.locator("html")).toHaveAttribute("lang", "de");
 	await expect(option(page, "German Deutsch")).toHaveAttribute(
-		"aria-checked",
+		"aria-selected",
 		"true",
 	);
 	await expect(page).toHaveURL(new RegExp(`${LANGUAGE_PAGE}$`));
@@ -124,7 +124,7 @@ test("words the Language page in the chosen language but keeps its English names
 test("opens the Language page at the checked language", async ({ page }) => {
 	const vietnamese = option(page, "Vietnamese Tiếng Việt");
 	await page.goto(`${LANGUAGE_PAGE}?locale=vi`);
-	await expect(vietnamese).toHaveAttribute("aria-checked", "true", {
+	await expect(vietnamese).toHaveAttribute("aria-selected", "true", {
 		timeout: FIRST_ROUTE_COMPILE_MS,
 	});
 	await expect(vietnamese).toBeInViewport({ ratio: 1 });

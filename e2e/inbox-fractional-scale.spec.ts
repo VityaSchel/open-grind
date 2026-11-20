@@ -10,6 +10,7 @@ const CONVERSATIONS_MODULE_URL =
 	"/src/lib/chat/conversations-context.svelte.ts";
 const SCROLLER = '[data-slot="conversations-scroller"]';
 const PLACEHOLDER = '[data-slot="conversation-placeholder"]';
+const ROW = '[data-slot="conversation-row"]';
 const ROW_LINK = 'a[href^="/chat/"]';
 const LATER_CONVERSATIONS = 6;
 
@@ -42,7 +43,7 @@ test("a conversation still waiting to mount takes up exactly the height of its r
 		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 	const waiting = await page.evaluate(
-		async ({ module, me, count, placeholderSelector }) => {
+		async ({ module, me, count, placeholderSelector, rowSelector }) => {
 			const { getOrCreateConversationsState } = await import(module);
 			const conversations = getOrCreateConversationsState(me);
 			const placeholders = new Promise<
@@ -57,8 +58,8 @@ test("a conversation still waiting to mount takes up exactly the height of its r
 					resolve(
 						found.map((placeholder) => ({
 							position: [
-								...placeholder.parentElement!.children,
-							].indexOf(placeholder),
+								...document.querySelectorAll(rowSelector),
+							].indexOf(placeholder.closest(rowSelector)!),
 							height: placeholder.getBoundingClientRect().height,
 						})),
 					);
@@ -83,6 +84,7 @@ test("a conversation still waiting to mount takes up exactly the height of its r
 			me: ME,
 			count: LATER_CONVERSATIONS,
 			placeholderSelector: PLACEHOLDER,
+			rowSelector: ROW,
 		},
 	);
 	expect(waiting.length, "later conversations wait to mount").toBeGreaterThan(
@@ -91,14 +93,16 @@ test("a conversation still waiting to mount takes up exactly the height of its r
 
 	await expect(page.locator(PLACEHOLDER)).toHaveCount(0);
 	const mounted = await page.locator(SCROLLER).evaluate(
-		(scroller, positions) =>
-			positions.map(
-				(position) =>
-					scroller.firstElementChild!.children[
-						position
-					]!.getBoundingClientRect().height,
-			),
-		waiting.map(({ position }) => position),
+		(scroller, { positions, rowSelector }) => {
+			const rows = scroller.querySelectorAll(rowSelector);
+			return positions.map(
+				(position) => rows[position]!.getBoundingClientRect().height,
+			);
+		},
+		{
+			positions: waiting.map(({ position }) => position),
+			rowSelector: ROW,
+		},
 	);
 
 	const mismatch = mounted.map((height, index) =>

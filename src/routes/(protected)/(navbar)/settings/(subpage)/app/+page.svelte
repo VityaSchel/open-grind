@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import ArrowSquareOutIcon from "phosphor-svelte/lib/ArrowSquareOutIcon";
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import type { IconComponentProps } from "phosphor-svelte";
@@ -8,6 +9,7 @@
 	import { hapticsAvailable } from "#lib/haptics.ts";
 	import { type PlainMessageKey, t } from "#lib/i18n/index.ts";
 	import { currentPlatform } from "#lib/platform/os.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import LanguageSetting from "./LanguageSetting.svelte";
 	import { updateSettingsOffered } from "./updates/update-settings-offered";
 
@@ -36,6 +38,59 @@
 			case "ios":
 				return "settings.app.sectionDescriptions.security.iconOnly";
 		}
+	});
+
+	const LANGUAGE = "/settings/app/language";
+	const PRIVACY_POLICY = "https://opengrind.org/privacy";
+	const CREDITS = "/settings/app/credits";
+
+	const subscreens = $derived([
+		{
+			title: t("settings.app.sections.display"),
+			description: hapticsAvailable()
+				? t("settings.app.sectionDescriptions.display.withHaptics")
+				: t("settings.app.sectionDescriptions.display.withoutHaptics"),
+			href: "/settings/app/display",
+		},
+		...(notificationsDescription === null
+			? []
+			: [
+					{
+						title: t("settings.subpage.titles.notifications"),
+						description: t(notificationsDescription),
+						href: "/settings/app/notifications",
+					},
+				]),
+		{
+			title: t("settings.app.sections.privacy"),
+			description: t("settings.app.sectionDescriptions.privacy"),
+			href: "/settings/app/privacy",
+		},
+		{
+			title: t("settings.app.sections.security"),
+			description: t(securityDescription),
+			href: "/settings/app/security",
+		},
+		...(updateSettingsOffered()
+			? [
+					{
+						title: t("settings.app.sections.updates"),
+						href: "/settings/app/updates",
+					},
+				]
+			: []),
+	]);
+	const keys = $derived([
+		LANGUAGE,
+		...subscreens.map(({ href }) => href),
+		PRIVACY_POLICY,
+		CREDITS,
+	]);
+
+	const links = new RovingFocusState({
+		keys: () => keys,
+		orientation: "both",
+		openerScope: page.url.pathname,
 	});
 </script>
 
@@ -87,56 +142,36 @@
 				{...props}
 				aria-labelledby="{id}-title"
 				aria-describedby={description && `${id}-description`}
+				{@attach links.item(href)}
 			>
 				{@render rowContent({ title, description, id })}
 			</a>
 		{/snippet}
 	</Item.Root>
 {/snippet}
-<LanguageSetting />
-<span role="separator"></span>
-{@render linkItem({
-	title: t("settings.app.sections.display"),
-	description: hapticsAvailable()
-		? t("settings.app.sectionDescriptions.display.withHaptics")
-		: t("settings.app.sectionDescriptions.display.withoutHaptics"),
-	href: "/settings/app/display",
-})}
-{#if notificationsDescription !== null}
+<div class="contents" {@attach links.container}>
+	<LanguageSetting {@attach links.item(LANGUAGE)} />
+	<span role="separator"></span>
+	{#each subscreens as subscreen (subscreen.href)}
+		{@render linkItem(subscreen)}
+	{/each}
+	<span role="separator"></span>
+	<Item.Root variant="outline">
+		{#snippet child({ props })}
+			<Link
+				href={PRIVACY_POLICY}
+				{...props}
+				{@attach links.item(PRIVACY_POLICY)}
+			>
+				{@render rowContent({
+					title: t("settings.app.privacyPolicy"),
+					trailingIcon: ArrowSquareOutIcon,
+				})}
+			</Link>
+		{/snippet}
+	</Item.Root>
 	{@render linkItem({
-		title: t("settings.subpage.titles.notifications"),
-		description: t(notificationsDescription),
-		href: "/settings/app/notifications",
+		title: t("settings.subpage.titles.credits"),
+		href: CREDITS,
 	})}
-{/if}
-{@render linkItem({
-	title: t("settings.app.sections.privacy"),
-	description: t("settings.app.sectionDescriptions.privacy"),
-	href: "/settings/app/privacy",
-})}
-{@render linkItem({
-	title: t("settings.app.sections.security"),
-	description: t(securityDescription),
-	href: "/settings/app/security",
-})}
-{#if updateSettingsOffered()}
-	{@render linkItem({
-		title: t("settings.app.sections.updates"),
-		href: "/settings/app/updates",
-	})}
-{/if}
-<span role="separator"></span>
-<Item.Root variant="outline">
-	{#snippet child({ props })}
-		<Link href="https://opengrind.org/privacy" {...props}>
-			{@render rowContent({
-				title: t("settings.app.privacyPolicy"),
-				trailingIcon: ArrowSquareOutIcon,
-			})}
-		</Link>
-	{/snippet}
-</Item.Root>
-{@render linkItem({
-	title: t("settings.subpage.titles.credits"),
-	href: "/settings/app/credits",
-})}
+</div>

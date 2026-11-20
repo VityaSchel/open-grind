@@ -26,6 +26,7 @@
 		dialogClass="max-h-[calc(var(--screen-safe)-4rem)] sm:max-w-md"
 		drawerClass="max-h-screen-safe"
 		dialogProps={{ showCloseButton: true }}
+		data-autofocus
 	>
 		<ResponsiveDialog.Header class="pb-2">
 			<ResponsiveDialog.Title>
@@ -39,6 +40,7 @@
 			drawerClass="px-4 pb-4"
 		>
 			<ProfileList
+				name={t("media.albums.sharedWith.title")}
 				loadIds={() => shares.load()}
 				setOn={({ profileId, on }) =>
 					shares.setShared({ profileId, shared: on })}

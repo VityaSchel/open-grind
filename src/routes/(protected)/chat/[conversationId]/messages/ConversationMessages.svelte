@@ -286,10 +286,11 @@
 <div class="relative flex min-h-0 max-w-full flex-1 flex-col">
 	<div
 		data-slot="messages-scroller"
-		class="flex min-h-0 max-w-full flex-1 flex-col gap-1 overflow-auto overscroll-contain p-2 pt-20 *:first:mt-auto"
+		class="flex min-h-0 max-w-full flex-1 scroll-pt-20 scroll-pb-(--composer-clearance) flex-col gap-1 overflow-auto overscroll-contain p-2 pt-20 pb-(--composer-clearance) *:first:mt-auto"
 		bind:this={container}
 		style:overflow-anchor="none"
-		style:padding-bottom="calc({composerHeight}px + var(--spacing) * 3)"
+		style:--composer-clearance="calc({composerHeight}px + var(--spacing) *
+		3)"
 		onscroll={onContainerScroll}
 		onscrollend={onContainerScrollEnd}
 		{@attach keyboardDragDismiss}
@@ -312,7 +313,9 @@
 					{/if}
 				</div>
 				<ConversationPaginationSentinel {container} />
-				<MessagesList {seenMessageIds} />
+				{#key conversationState.conversationId}
+					<MessagesList {seenMessageIds} />
+				{/key}
 			</div>
 		{/if}
 	</div>

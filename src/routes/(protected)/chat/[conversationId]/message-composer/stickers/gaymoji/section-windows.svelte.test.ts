@@ -373,4 +373,67 @@ describe("SectionWindows", () => {
 
 		expect(browseEnd).toBe(1000);
 	});
+
+	describe("keyboard reveal", () => {
+		const STRIP_BOTTOM_PX = 60;
+
+		function revealSetup({ gridTop }: { gridTop: number }) {
+			const scroller = container({ scrolls: true });
+			stubRect(scroller, () => ({
+				top: 0,
+				height: VIEWPORT_PX,
+				bottom: VIEWPORT_PX,
+			}));
+			const strip = document.createElement("nav");
+			stubRect(strip, () => ({ bottom: STRIP_BOTTOM_PX }));
+			const { grid } = sectionGrid({ parent: scroller, top: gridTop });
+			const mounted = mountWindows([{ key: "body", count: 300 }]);
+			mounted.track({ key: "body", grid });
+			flushSync();
+			observeResize();
+			return { scroller, strip, ...mounted };
+		}
+
+		it("scrolls a row below the view up just far enough to show it whole", () => {
+			const { scroller, strip, windows, stop } = revealSetup({
+				gridTop: 0,
+			});
+
+			windows.revealItem({
+				key: "body",
+				index: 10 * COLUMNS + 1,
+				stickyTop: strip,
+			});
+
+			expect(scroller.scrollTop).toBe(
+				10 * ROW_STRIDE + CELL_PX - VIEWPORT_PX,
+			);
+			stop();
+		});
+
+		it("scrolls a row hidden under the sticky strip down to just below it", () => {
+			const { scroller, strip, windows, stop } = revealSetup({
+				gridTop: -5 * ROW_STRIDE,
+			});
+			scroller.scrollTop = 1000;
+
+			windows.revealItem({
+				key: "body",
+				index: 5 * COLUMNS,
+				stickyTop: strip,
+			});
+
+			expect(scroller.scrollTop).toBe(1000 - STRIP_BOTTOM_PX);
+			stop();
+		});
+
+		it("pages by the whole rows that fit between the sticky strip and the bottom of the view", () => {
+			const { strip, windows, stop } = revealSetup({ gridTop: 0 });
+
+			expect(windows.rowsPerPage(strip)).toBe(
+				Math.floor((VIEWPORT_PX - STRIP_BOTTOM_PX) / ROW_STRIDE),
+			);
+			stop();
+		});
+	});
 });

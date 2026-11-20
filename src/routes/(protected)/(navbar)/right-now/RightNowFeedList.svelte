@@ -3,7 +3,9 @@
 	import { RightNowPostReportState } from "#lib/components/report/right-now-post-report-state.svelte.ts";
 	import RightNowPostReportSheet from "#lib/components/report/RightNowPostReportSheet.svelte";
 	import Skeleton from "#lib/components/ui/skeleton/skeleton.svelte";
+	import { holdFocusInPlace } from "#lib/platform/reveal-keyboard-focus.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { RightNowPostId } from "#lib/model/safety/reports.ts";
 	import DiscreetPostCard from "./DiscreetPostCard.svelte";
 	import EmptyRightNowFeed from "./EmptyRightNowFeed.svelte";
@@ -27,6 +29,35 @@
 	} = $props();
 
 	const report = new RightNowPostReportState();
+	const posts = new RovingFocusState({
+		keys: () => feed.entries.map((item) => item.data.id),
+		orientation: "vertical",
+		cells: (item) => [
+			...item.querySelectorAll<HTMLElement>("a[href], button"),
+		],
+		cellOnRowChange: "primary",
+		openerScope: "/right-now",
+	});
+
+	let emptyFeed = $state<HTMLElement | null>(null);
+
+	export function focusFirstPost(): void {
+		void posts.focusFirst();
+	}
+
+	function refocusWhenReportedPostLeft(event: Event) {
+		const reported = report.target;
+		const stillListed =
+			reported?.kind === "rightNowPost" &&
+			feed.entries.some((item) => item.data.id === reported.postId);
+		if (stillListed) return;
+		event.preventDefault();
+		void posts.focus({ preventScroll: true }).then((landed) => {
+			if (landed || emptyFeed === null) return;
+			const release = holdFocusInPlace(emptyFeed);
+			release();
+		});
+	}
 </script>
 
 {#if feed.loading}
@@ -52,15 +83,17 @@
 		/>
 	</div>
 {:else if feed.entries.length === 0}
-	<EmptyRightNowFeed
-		filters={feed.filters}
-		ownPostRunning={ownPostId !== null}
-		{joinable}
-	/>
+	<div bind:this={emptyFeed} class="flex flex-1 flex-col">
+		<EmptyRightNowFeed
+			filters={feed.filters}
+			ownPostRunning={ownPostId !== null}
+			{joinable}
+		/>
+	</div>
 {:else}
-	<ul class="flex flex-col">
+	<ul class="flex flex-col" {@attach posts.container}>
 		{#each feed.entries as item (item.data.id)}
-			<li>
+			<li {@attach posts.item(item.data.id)}>
 				{#if item.type === "right_now_post_v3" || item.type === "locked_post_v1"}
 					<RightNowPostCard
 						post={item.data}
@@ -101,4 +134,7 @@
 	<div data-slot="right-now-join-clearance" class="h-12 shrink-0"></div>
 {/if}
 
-<RightNowPostReportSheet {report} />
+<RightNowPostReportSheet
+	{report}
+	onCloseAutoFocus={refocusWhenReportedPostLeft}
+/>

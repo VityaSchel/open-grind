@@ -15,7 +15,7 @@
 
 <ComposerButton
 	bind:ref
-	class="left-0 rounded-s-composer ps-2.75 pe-1.5"
+	class="focus-ring-icon inset-s-0 rounded-s-composer ps-(--icon-start) pe-1.5 [--icon-size:--spacing(5.5)] [--icon-start:--spacing(2.75)]"
 	aria-label={t("chat.composer.stickers.a11y.open")}
 	onclick={onClick}
 	{disabled}

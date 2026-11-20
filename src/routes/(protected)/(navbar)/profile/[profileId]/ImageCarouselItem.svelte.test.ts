@@ -42,6 +42,7 @@ describe("ImageCarouselItem", () => {
 		const anchor = container.querySelector("a")!;
 		expect(anchor.hasAttribute("href")).toBe(false);
 		expect(anchor.getAttribute("aria-disabled")).toBe("true");
+		expect(screen.getByRole("img", { name: PROPS.label })).toBe(anchor);
 		expect(anchor.classList.contains("item")).toBe(true);
 		expect(
 			container.querySelector('[data-slot="broken-media"]'),

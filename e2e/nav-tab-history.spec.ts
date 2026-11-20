@@ -21,7 +21,7 @@ test("switching interest tabs never grows history", async ({ page }) => {
 		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	const atTaps = await historyDepth(page);
 
-	await page.getByRole("link", { name: "Views" }).click();
+	await page.getByRole("tab", { name: "Views" }).click();
 	await expect(page).toHaveURL(/\/interest\/views$/);
 	const atViews = await historyDepth(page);
 

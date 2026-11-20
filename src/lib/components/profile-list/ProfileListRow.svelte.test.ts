@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/svelte";
+import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { createRawSnippet } from "svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -49,6 +49,15 @@ describe("ProfileListRow", () => {
 		expect(
 			screen.getByRole("switch", { name: "Blocked: ID 100802" }),
 		).toBeTruthy();
+	});
+
+	it("is a row whose link and toggle sit in cells of their own", () => {
+		renderRow({ profile: null, control: "button", label: "Blocked" });
+
+		const cells = within(screen.getByRole("row")).getAllByRole("gridcell");
+		expect(cells).toHaveLength(2);
+		expect(within(cells[0]!).getByRole("link")).toBeTruthy();
+		expect(within(cells[1]!).getByRole("switch")).toBeTruthy();
 	});
 
 	it("names the toggle after the profile it changes", () => {

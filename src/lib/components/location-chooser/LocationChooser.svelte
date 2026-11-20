@@ -97,6 +97,7 @@
 		<Switch
 			id="track-gps-automatically"
 			disabled={!preferencesLoaded()}
+			data-autofocus={autoUpdateLocation || undefined}
 			bind:checked={
 				() => autoUpdateLocation,
 				(newValue: boolean) => void setAutoUpdateLocation(newValue)
@@ -113,6 +114,7 @@
 			class="flex flex-col"
 			dialogClass="h-[calc(var(--screen-safe)-4rem)] sm:max-w-200"
 			drawerClass="mt-0! mb-(--safe-area-bottom) h-full!"
+			data-autofocus
 		>
 			<ResponsiveDialog.Header class="sr-only">
 				<ResponsiveDialog.Title>

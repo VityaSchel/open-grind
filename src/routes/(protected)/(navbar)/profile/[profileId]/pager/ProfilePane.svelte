@@ -53,6 +53,7 @@
 	const scrollerHooks = $derived(
 		active ? { "data-slot": "profile-scroller" } : { tabindex: -1 },
 	);
+	const showsBottomBar = $derived(profile !== null && !ourProfile);
 	const showsErrorScreen = $derived(
 		error !== null && (row === null || isUnviewableProfileError(error)),
 	);
@@ -89,7 +90,8 @@
 	{#if showsErrorScreen}
 		<main
 			inert={!active}
-			class="flex size-full overflow-y-auto pb-(--nav-height)"
+			tabindex="-1"
+			class="flex size-full overflow-y-auto pb-(--nav-height) outline-none"
 		>
 			{#if error instanceof BlockedProfileError}
 				<BlockedProfile
@@ -128,14 +130,19 @@
 			{...scrollerHooks}
 			class={[
 				"@container h-full overflow-x-hidden overflow-y-auto overscroll-contain overscroll-x-auto",
-				{ "[scrollbar-gutter:stable]": holdsStill },
+				{
+					"[scrollbar-gutter:stable]": holdsStill,
+					"scroll-pb-nav-clear-above-safe-area": !showsBottomBar,
+					"scroll-pb-profile-bar-clear": showsBottomBar,
+				},
 			]}
 			{@attach active && scrollsToTopOnStatusBarTap}
 		>
 			<main
 				inert={!active}
+				tabindex="-1"
 				data-refresh-content
-				class="relative mx-auto min-h-overscrollable w-full max-w-200"
+				class="relative mx-auto min-h-overscrollable w-full max-w-200 outline-none"
 			>
 				<div
 					data-slot="profile-photo-row"

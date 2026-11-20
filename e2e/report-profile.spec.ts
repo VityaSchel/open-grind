@@ -125,7 +125,7 @@ test("reporting a chat message titles the sheet for the message and prefills the
 	await page.locator(MESSAGE_ROW).first().waitFor();
 
 	await page.locator(INCOMING_ROW).first().click({ button: "right" });
-	await page.getByRole("button", { name: "Report", exact: true }).click();
+	await page.getByRole("menuitem", { name: "Report", exact: true }).click();
 
 	const drawer = page.locator(DRAWER);
 	await drawer.waitFor({ timeout: 10_000 });

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { tick } from "svelte";
+
 	import { promptCopyError } from "#lib/api/error-copy.ts";
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { tieredFeature } from "#lib/api/error-urn.ts";
@@ -12,6 +14,8 @@
 		reportRefusedDespiteBypass,
 	} from "#lib/entitlements/bypass.svelte.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { focusIsLost } from "#lib/platform/reveal-keyboard-focus.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import {
 		type ConversationState,
 		getConversationState,
@@ -23,11 +27,48 @@
 
 	let { seenMessageIds }: { seenMessageIds: Set<string> } = $props();
 
+	const MESSAGE_CELL = "a[href], button";
+
 	let reportOpen = $state(false);
 	let reportProfileId = $state<number | null>(null);
 
 	const conversationState = $derived(getConversationState()());
 	setMediaRenewal(() => conversationState.dynamicRefresh.renewMedia());
+
+	const chronological = $derived(conversationState.messages.toReversed());
+	const messageIds = $derived(
+		chronological.map((message) => message.messageId),
+	);
+
+	function messageCells(article: HTMLElement): HTMLElement[] {
+		return [...article.querySelectorAll<HTMLElement>(MESSAGE_CELL)].filter(
+			(cell) => cell.getClientRects().length > 0,
+		);
+	}
+
+	const roving = new RovingFocusState({
+		keys: () => messageIds,
+		orientation: "vertical",
+		cells: messageCells,
+		primaryCell: (cells) =>
+			cells.find((cell) => cell.dataset.slot === "message-actions") ??
+			cells[0]!,
+		cellOnRowChange: "primary",
+		followScroll: "last-visible",
+		consumeAtEdge: ["left", "right"],
+	});
+
+	$effect(() => {
+		roving.activeKey ??= messageIds.at(-1) ?? null;
+	});
+
+	async function focusMessageAt(index: number) {
+		await tick();
+		if (!focusIsLost() || messageIds.length === 0) return;
+		void roving.focus({
+			key: messageIds[Math.min(index, messageIds.length - 1)],
+		});
+	}
 
 	const layoutByMessageId = $derived(
 		new Map(
@@ -80,9 +121,17 @@
 		}
 	}
 
-	async function deleteForMe(message: OptimisticMessage) {
+	async function deleteForMe({
+		message,
+		fromKeyboard,
+	}: {
+		message: OptimisticMessage;
+		fromKeyboard: boolean;
+	}) {
 		const state = conversationState;
+		const index = messageIds.indexOf(message.messageId);
 		const { revert } = state.remove(message.messageId);
+		if (fromKeyboard) void focusMessageAt(index);
 		if (message.status === "error") return;
 		try {
 			await deleteMessageForMe({
@@ -100,66 +149,70 @@
 	}
 </script>
 
-{#each conversationState.messages.toReversed() as message (message.messageId)}
-	{@const isOut = message.senderId === conversationState.ourProfileId}
-	{@const delivered = message.status === "sent"}
-	{@const layout = layoutByMessageId.get(message.messageId)}
-	{@const indexInStack = layout?.indexInStack ?? 0}
-	{@const stackLength = layout?.stackLength ?? 1}
-	{@const dayStart = layout?.dayStart}
-	{@const isRead =
-		isOut && message.messageId === conversationState.messages[0]?.messageId
-			? conversationState.lastReadTimestamp === message.timestamp
-			: null}
-	<Message
-		{message}
-		{isOut}
-		{indexInStack}
-		{stackLength}
-		{dayStart}
-		status={message.status}
-		{isRead}
-		onVisible={!isOut
-			? () => {
-					seenMessageIds.add(message.messageId);
-					conversationState.reportRead(message);
+<div class="flex flex-col gap-1 empty:hidden" {@attach roving.container}>
+	{#each chronological as message (message.messageId)}
+		{@const isOut = message.senderId === conversationState.ourProfileId}
+		{@const delivered = message.status === "sent"}
+		{@const layout = layoutByMessageId.get(message.messageId)}
+		{@const indexInStack = layout?.indexInStack ?? 0}
+		{@const stackLength = layout?.stackLength ?? 1}
+		{@const dayStart = layout?.dayStart}
+		{@const isRead =
+			isOut &&
+			message.messageId === conversationState.messages[0]?.messageId
+				? conversationState.lastReadTimestamp === message.timestamp
+				: null}
+		<Message
+			{message}
+			rovingItem={roving.item(message.messageId)}
+			{isOut}
+			{indexInStack}
+			{stackLength}
+			{dayStart}
+			status={message.status}
+			{isRead}
+			onVisible={!isOut
+				? () => {
+						seenMessageIds.add(message.messageId);
+						conversationState.reportRead(message);
+					}
+				: undefined}
+			onDelete={message.status === "pending"
+				? undefined
+				: ({ fromKeyboard }) => deleteForMe({ message, fromKeyboard })}
+			onReply={delivered && !message.unsent
+				? () => conversationState.setReplyTo(message)
+				: undefined}
+			onReport={!isOut && conversationState.profile
+				? () => {
+						reportProfileId =
+							conversationState.profile?.profileId ?? null;
+						reportOpen = reportProfileId !== null;
+					}
+				: undefined}
+			onReact={async (reactionType: number) => {
+				try {
+					await conversationState.reactTo({
+						messageId: message.messageId,
+						reactionType,
+					});
+				} catch (error) {
+					console.error(error);
+					showErrorToast({
+						label: t("chat.messages.errors.reactFailed"),
+						error,
+					});
 				}
-			: undefined}
-		onDelete={message.status === "pending"
-			? undefined
-			: () => deleteForMe(message)}
-		onReply={delivered && !message.unsent
-			? () => conversationState.setReplyTo(message)
-			: undefined}
-		onReport={!isOut && conversationState.profile
-			? () => {
-					reportProfileId =
-						conversationState.profile?.profileId ?? null;
-					reportOpen = reportProfileId !== null;
-				}
-			: undefined}
-		onReact={async (reactionType: number) => {
-			try {
-				await conversationState.reactTo({
-					messageId: message.messageId,
-					reactionType,
-				});
-			} catch (error) {
-				console.error(error);
-				showErrorToast({
-					label: t("chat.messages.errors.reactFailed"),
-					error,
-				});
-			}
-		}}
-		onUnsend={isOut && delivered && !message.unsent
-			? () => void requestUnsend(message.messageId)
-			: undefined}
-		onCopyError={message.status === "error"
-			? () => void promptCopyError(message.sendError).catch(() => {})
-			: undefined}
-	/>
-{/each}
+			}}
+			onUnsend={isOut && delivered && !message.unsent
+				? () => void requestUnsend(message.messageId)
+				: undefined}
+			onCopyError={message.status === "error"
+				? () => void promptCopyError(message.sendError).catch(() => {})
+				: undefined}
+		/>
+	{/each}
+</div>
 
 {#if reportProfileId !== null}
 	<ReportSheet

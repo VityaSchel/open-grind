@@ -1,9 +1,19 @@
 <script lang="ts">
+	import type { Attachment } from "svelte/attachments";
+
 	import type { LoadedEntry } from "#lib/credits/index.ts";
 	import BlurbText from "./BlurbText.svelte";
 	import LicenseDisclosure from "./LicenseDisclosure.svelte";
 
-	let { entry }: { entry: LoadedEntry } = $props();
+	let {
+		entry,
+		linkAttachment,
+		summaryAttachment,
+	}: {
+		entry: LoadedEntry;
+		linkAttachment?: Attachment<HTMLElement>;
+		summaryAttachment?: Attachment<HTMLElement>;
+	} = $props();
 </script>
 
 <div
@@ -12,6 +22,14 @@
 	data-offscreen-skip
 	style:--offscreen-block-size="2.65625rem"
 >
-	<BlurbText name={entry.name} url={entry.url} />
-	<LicenseDisclosure {entry} />
+	<div role="row" class="contents">
+		<div role="gridcell" class="contents">
+			<BlurbText name={entry.name} url={entry.url} {linkAttachment} />
+		</div>
+	</div>
+	<div role="row" class="contents">
+		<div role="gridcell" class="contents">
+			<LicenseDisclosure {entry} {summaryAttachment} />
+		</div>
+	</div>
 </div>

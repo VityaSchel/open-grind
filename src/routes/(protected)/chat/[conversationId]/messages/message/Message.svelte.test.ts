@@ -21,19 +21,32 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
 import { contextMenuEvent } from "#lib/test/context-menu.ts";
 import { useHoldClock } from "#lib/test/long-press.ts";
-import { runningOn } from "#lib/test/platform.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { pointerEvent } from "#lib/test/pointer.ts";
 import { untranslatableTexts } from "#lib/test/untranslatable.ts";
 import { LONG_PRESS_DURATION_MS } from "#lib/util/long-press.ts";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';
+const MESSAGE_CELL = "a[href], button";
 const SENT_AT = new Date(2026, 9, 5, 9, 5);
+const PLAY_VIDEO = { name: "Play expiring video" };
+const VIDEO_BODY = {
+	mediaId: 900_001,
+	url: "https://cdns.grindr.com/videos/chat/clip.mp4",
+	contentType: "video/mp4",
+	length: 8000,
+	maxViews: 2,
+	viewsRemaining: 2,
+	looping: false,
+};
 
 type MessageActions = Pick<
 	ComponentProps<typeof Message>,
-	"onDelete" | "onReact" | "onReply"
+	"onDelete" | "onReact" | "onReply" | "onReport" | "onCopyError"
 >;
+
+type Box = Pick<DOMRect, "top" | "left" | "width" | "height">;
 
 function renderMessage({
 	type,
@@ -41,6 +54,7 @@ function renderMessage({
 	replyToMessage,
 	isRead = null,
 	status,
+	isOut = false,
 	actions = {},
 }: {
 	type: string;
@@ -48,6 +62,7 @@ function renderMessage({
 	replyToMessage?: { type: string; body: Record<string, unknown> };
 	isRead?: boolean | null;
 	status?: "sent" | "pending" | "error";
+	isOut?: boolean;
 	actions?: MessageActions;
 }) {
 	const { container } = render(Message, {
@@ -55,7 +70,7 @@ function renderMessage({
 			message: apiResponseMessageSchema.parse({
 				messageId: "m1",
 				conversationId: "100001:100002",
-				senderId: 100002,
+				senderId: isOut ? 100001 : 100002,
 				timestamp: SENT_AT.getTime(),
 				type,
 				body,
@@ -65,7 +80,7 @@ function renderMessage({
 					...replyToMessage,
 				},
 			}),
-			isOut: false,
+			isOut,
 			isRead,
 			indexInStack: 0,
 			stackLength: 1,
@@ -107,6 +122,27 @@ async function openMenu(row: HTMLElement): Promise<HTMLDialogElement> {
 	return menuDialog();
 }
 
+function fireMenuItem(dialog: HTMLDialogElement): HTMLElement {
+	return within(dialog).getByRole("menuitem", { name: "React with fire" });
+}
+
+function stubBox({ element, box }: { element: Element; box: Box }) {
+	vi.spyOn(element, "getBoundingClientRect").mockReturnValue({
+		...box,
+		x: box.left,
+		y: box.top,
+		right: box.left + box.width,
+		bottom: box.top + box.height,
+		toJSON: () => box,
+	});
+}
+
+function cellSlots(row: HTMLElement): (string | undefined)[] {
+	return [...row.querySelectorAll<HTMLElement>(MESSAGE_CELL)].map(
+		(cell) => cell.dataset.slot,
+	);
+}
+
 beforeEach(() => {
 	runningOn("windows");
 });
@@ -114,6 +150,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.resetAllMocks();
+	resetPlatform();
 });
 
 describe("message translation boundary", () => {
@@ -262,7 +299,7 @@ describe("message menu", () => {
 		const row = renderTextMessage();
 		const dialog = await openMenu(row);
 
-		within(dialog).getByRole("button", { name: "Copy message" }).click();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).click();
 
 		await vi.waitFor(() => {
 			expect(toastMock.success).toHaveBeenCalledExactlyOnceWith(
@@ -280,7 +317,7 @@ describe("message menu", () => {
 		const row = renderTextMessage();
 		const dialog = await openMenu(row);
 
-		within(dialog).getByRole("button", { name: "Copy message" }).click();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).click();
 
 		await vi.waitFor(() => {
 			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
@@ -300,7 +337,7 @@ describe("message actions button", () => {
 		expect(row.hasAttribute("tabindex")).toBe(false);
 		expect(row.hasAttribute("aria-keyshortcuts")).toBe(false);
 		expect(button.dataset.slot).toBe("message-actions");
-		expect(button.getAttribute("aria-haspopup")).toBe("dialog");
+		expect(button.getAttribute("aria-haspopup")).toBe("menu");
 		expect(button.getAttribute("aria-expanded")).toBe("false");
 	});
 
@@ -341,7 +378,7 @@ describe("message actions button", () => {
 		const button = actionsButton(row);
 		button.focus();
 		const dialog = await openMenu(row);
-		within(dialog).getByRole("button", { name: "Copy message" }).focus();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).focus();
 
 		dialog.close();
 
@@ -357,7 +394,7 @@ describe("message actions button", () => {
 		row.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
 		await tick();
 		const dialog = menuDialog();
-		within(dialog).getByRole("button", { name: "Copy message" }).focus();
+		within(dialog).getByRole("menuitem", { name: "Copy message" }).focus();
 
 		dialog.close();
 
@@ -365,6 +402,174 @@ describe("message actions button", () => {
 		await tick();
 		expect(document.activeElement).toBe(document.body);
 		composer.remove();
+	});
+
+	it("says which message it acts on", () => {
+		const row = renderTextMessage();
+
+		expect(
+			within(row).getByRole("button", {
+				name: "Message actions",
+				description: "hello there 9:05 AM",
+			}),
+		).toBe(actionsButton(row));
+	});
+
+	it("sits beside the bubble by the time anything reacts to focus landing on it", () => {
+		const row = renderTextMessage();
+		const bubble = row.querySelector('[data-slot="message-bubble"]');
+		if (bubble === null) throw new Error("Missing message bubble");
+		stubBox({
+			element: row,
+			box: { top: 100, left: 0, width: 400, height: 200 },
+		});
+		stubBox({
+			element: bubble,
+			box: { top: 140, left: 12, width: 180, height: 120 },
+		});
+		const button = actionsButton(row);
+		let topWhenFocused = "";
+		const readTop = () => (topWhenFocused = button.style.top);
+		document.addEventListener("focusin", readTop);
+
+		button.focus();
+
+		document.removeEventListener("focusin", readTop);
+		expect(topWhenFocused).toBe("100px");
+	});
+
+	it.each([
+		{
+			side: "an incoming",
+			isOut: false,
+			cells: ["video-message", "message-actions"],
+		},
+		{
+			side: "an outgoing",
+			isOut: true,
+			cells: ["message-actions", "video-message"],
+		},
+	])(
+		"comes on the side of $side bubble it is drawn on",
+		({ isOut, cells }) => {
+			const row = renderMessage({
+				type: "Video",
+				body: VIDEO_BODY,
+				isOut,
+				actions: { onDelete: vi.fn() },
+			});
+
+			expect(cellSlots(row)).toEqual(cells);
+		},
+	);
+});
+
+describe("message menu opening modality", () => {
+	it("hands focus on after a delete from a menu the keyboard opened", async () => {
+		const onDelete = vi.fn();
+		const row = renderTextMessage({ onDelete });
+		actionsButton(row).focus();
+		const dialog = await openMenu(row);
+
+		within(dialog).getByRole("menuitem", { name: "Delete for me" }).click();
+
+		expect(onDelete).toHaveBeenCalledExactlyOnceWith({
+			fromKeyboard: true,
+		});
+	});
+
+	it("leaves focus alone after a right-click delete, even when the click focused a control in the message", async () => {
+		const onDelete = vi.fn();
+		const row = renderMessage({
+			type: "Video",
+			body: VIDEO_BODY,
+			actions: { onDelete },
+		});
+		const play = within(row).getByRole("button", PLAY_VIDEO);
+		play.focus();
+		play.dispatchEvent(contextMenuEvent({ pointerType: "mouse" }));
+		await tick();
+
+		within(menuDialog())
+			.getByRole("menuitem", { name: "Delete for me" })
+			.click();
+
+		expect(onDelete).toHaveBeenCalledExactlyOnceWith({
+			fromKeyboard: false,
+		});
+	});
+
+	it("offers the fire reaction as an item when the keyboard opens the menu", async () => {
+		const row = renderTextMessage();
+		actionsButton(row).focus();
+
+		const dialog = await openMenu(row);
+
+		expect(fireMenuItem(dialog).classList.contains("hidden")).toBe(false);
+	});
+
+	it("offers the fire reaction as an item when the context menu key opens the menu", async () => {
+		const row = renderTextMessage();
+		actionsButton(row).focus();
+
+		actionsButton(row).dispatchEvent(contextMenuEvent({ pointerType: "" }));
+		await tick();
+
+		expect(fireMenuItem(menuDialog()).classList.contains("hidden")).toBe(
+			false,
+		);
+	});
+
+	it("keeps a long press on the touch layout while another control holds keyboard focus", async () => {
+		const row = renderTextMessage();
+		const elsewhere = document.createElement("button");
+		document.body.append(elsewhere);
+		elsewhere.focus();
+
+		row.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
+		await tick();
+
+		expect(fireMenuItem(menuDialog()).classList.contains("hidden")).toBe(
+			true,
+		);
+		elsewhere.remove();
+	});
+});
+
+describe("message menu follow-up overlays", () => {
+	it("puts focus back on the menu button before Report opens its sheet", async () => {
+		let focusedOnReport: Element | null = null;
+		const row = renderTextMessage({
+			onReport: () => (focusedOnReport = document.activeElement),
+		});
+		const button = actionsButton(row);
+		button.focus();
+		const dialog = await openMenu(row);
+
+		within(dialog).getByRole("menuitem", { name: "Report" }).click();
+
+		expect(focusedOnReport).toBe(button);
+	});
+
+	it("puts focus back on the menu button before Copy error details opens its alert", async () => {
+		let focusedOnCopy: Element | null = null;
+		const row = renderMessage({
+			type: "Text",
+			body: { text: "hello there" },
+			status: "error",
+			actions: {
+				onCopyError: () => (focusedOnCopy = document.activeElement),
+			},
+		});
+		const button = actionsButton(row);
+		button.focus();
+		const dialog = await openMenu(row);
+
+		within(dialog)
+			.getByRole("menuitem", { name: "Copy error details" })
+			.click();
+
+		expect(focusedOnCopy).toBe(button);
 	});
 });
 

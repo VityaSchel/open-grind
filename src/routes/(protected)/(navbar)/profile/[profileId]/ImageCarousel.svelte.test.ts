@@ -8,7 +8,20 @@ import {
 	within,
 } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const matureContent = vi.hoisted(() => ({ covered: false }));
+
+vi.mock(
+	"#lib/components/mature-content/mature-content.ts",
+	async (importOriginal) => ({
+		...(await importOriginal<
+			typeof import("#lib/components/mature-content/mature-content.ts")
+		>()),
+		matureContentCovered: () => matureContent.covered,
+	}),
+);
 
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
@@ -386,5 +399,45 @@ describe("ImageCarousel", () => {
 
 		unmount();
 		expect(isPhotoSwipeBusy()).toBe(false);
+	});
+});
+
+describe("ImageCarousel with mature content covered", () => {
+	const THREE_PHOTOS = SEVEN_PHOTOS.slice(0, 3);
+	const showLinks = () =>
+		screen.getAllByRole("link", { name: "Show mature content" });
+
+	beforeEach(() => {
+		matureContent.covered = true;
+	});
+
+	afterEach(() => {
+		cleanup();
+		matureContent.covered = false;
+	});
+
+	it("is one Tab stop, resting on the first photo's Show link", async () => {
+		const { container } = render(ImageCarousel, {
+			props: { medias: THREE_PHOTOS },
+		});
+		await tick();
+
+		const carousel = container.querySelector<HTMLElement>(".carousel")!;
+		const tabStops = [
+			...carousel.querySelectorAll<HTMLElement>("a[href], [tabindex]"),
+		].filter((element) => element.tabIndex >= 0);
+		expect(showLinks()).toHaveLength(THREE_PHOTOS.length);
+		expect(tabStops).toEqual([showLinks()[0]]);
+	});
+
+	it("walks the Show links with the down arrow", async () => {
+		render(ImageCarousel, { props: { medias: THREE_PHOTOS } });
+		await tick();
+		const [first, second] = showLinks();
+		first!.focus();
+
+		await fireEvent.keyDown(first!, { key: "ArrowDown" });
+
+		await vi.waitFor(() => expect(document.activeElement).toBe(second));
 	});
 });

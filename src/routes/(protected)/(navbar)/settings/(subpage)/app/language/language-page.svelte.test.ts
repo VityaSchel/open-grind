@@ -8,6 +8,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/svelte";
+import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -76,6 +77,7 @@ import {
 } from "#lib/app-data/preferences.svelte.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import LanguagePage from "./+page.svelte";
 
 const OFFERED = [
@@ -90,16 +92,16 @@ const OFFERED = [
 ];
 
 const option = (english: string) =>
-	screen.getByRole("radio", {
+	screen.getByRole("option", {
 		name: new RegExp(`^${english.replace(/[()]/g, "\\$&")} `),
 	});
 
 function lines(
-	radio: HTMLElement,
+	choice: HTMLElement,
 ): { text: string; lang: string | null; translate: string | null }[] {
 	return [
-		radio.querySelector('[data-slot="item-title"]'),
-		radio.querySelector('[data-slot="item-description"]'),
+		choice.querySelector('[data-slot="item-title"]'),
+		choice.querySelector('[data-slot="item-description"]'),
 	].map((line) => ({
 		text: line?.textContent.trim() ?? "",
 		lang: line?.getAttribute("lang") ?? null,
@@ -109,15 +111,15 @@ function lines(
 
 function englishNames(): string[] {
 	return screen
-		.getAllByRole("radio")
-		.map((radio) => lines(radio)[0]?.text ?? "");
+		.getAllByRole("option")
+		.map((choice) => lines(choice)[0]?.text ?? "");
 }
 
 function checkedNames(): string[] {
 	return screen
-		.getAllByRole("radio")
-		.filter((radio) => radio.getAttribute("aria-checked") === "true")
-		.map((radio) => lines(radio)[0]?.text ?? "");
+		.getAllByRole("option")
+		.filter((choice) => choice.getAttribute("aria-selected") === "true")
+		.map((choice) => lines(choice)[0]?.text ?? "");
 }
 
 const ENGAGE_PAGE = "https://i18n.opengrind.org/engage/open-grind/";
@@ -128,6 +130,7 @@ const helpTranslateLink = () =>
 const scrollIntoView = vi.fn();
 
 beforeEach(async () => {
+	runningOn("linux");
 	navigated.length = 0;
 	scrollIntoView.mockReset();
 	Element.prototype.scrollIntoView = scrollIntoView;
@@ -145,6 +148,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -152,9 +156,9 @@ describe("the Language page", () => {
 	it("lists each offered language by its English name over its own name", () => {
 		render(LanguagePage);
 
-		const radios = screen.getAllByRole("radio");
+		const choices = screen.getAllByRole("option");
 		expect(
-			radios.map((radio) => lines(radio).map(({ text }) => text)),
+			choices.map((choice) => lines(choice).map(({ text }) => text)),
 		).toEqual(OFFERED);
 		expect(lines(option("German"))).toEqual([
 			{ text: "German", lang: "en", translate: "no" },
@@ -163,9 +167,9 @@ describe("the Language page", () => {
 		expect(lines(option("Spanish (Latin America)"))[1]?.lang).toBe(
 			"es-419",
 		);
-		expect(radios.filter((radio) => radio.querySelector("div, p"))).toEqual(
-			[],
-		);
+		expect(
+			choices.filter((choice) => choice.querySelector("div, p")),
+		).toEqual([]);
 	});
 
 	it("links translators to Weblate below the languages", () => {
@@ -176,7 +180,7 @@ describe("the Language page", () => {
 		expect(link.getAttribute("data-slot")).toBe("help-translate");
 		expect(link.querySelector("svg")).not.toBeNull();
 		expect(
-			screen.getByRole("radiogroup").compareDocumentPosition(link) &
+			screen.getByRole("listbox").compareDocumentPosition(link) &
 				Node.DOCUMENT_POSITION_FOLLOWING,
 		).toBeTruthy();
 	});
@@ -249,7 +253,7 @@ describe("the Language page", () => {
 
 	it("keeps the English names when the page changes language", async () => {
 		render(LanguagePage);
-		const group = screen.getByRole("radiogroup");
+		const group = screen.getByRole("listbox");
 		expect(group.getAttribute("aria-label")).toBe("Language");
 
 		await fireEvent.click(option("English (Pseudo-Accents)"));
@@ -277,7 +281,7 @@ describe("the Language page", () => {
 
 	it("moves focus with the arrow keys without switching", async () => {
 		render(LanguagePage);
-		const [first, second] = screen.getAllByRole("radio");
+		const [first, second] = screen.getAllByRole("option");
 		first?.focus();
 
 		await fireEvent.keyDown(first as HTMLElement, { key: "ArrowDown" });
@@ -286,6 +290,31 @@ describe("the Language page", () => {
 		expect(checkedNames()).toEqual(["English (United States)"]);
 		expect(document.documentElement.lang).toBe("en-US");
 		expect(writeMock).not.toHaveBeenCalled();
+	});
+
+	it("rests the single Tab stop on the checked language", async () => {
+		await setLocale({ locale: "de-AT" });
+		render(LanguagePage);
+		await tick();
+
+		expect(
+			screen
+				.getAllByRole("option")
+				.filter((choice) => choice.getAttribute("tabindex") === "0")
+				.map((choice) => lines(choice)[0]?.text),
+		).toEqual(["German"]);
+	});
+
+	it("jumps to the language whose English name starts with the typed letters", async () => {
+		render(LanguagePage);
+		const [first] = screen.getAllByRole("option");
+		first?.focus();
+
+		await fireEvent.keyDown(first as HTMLElement, { key: "s" });
+		await tick();
+
+		expect(document.activeElement).toBe(option("Spanish (Latin America)"));
+		expect(checkedNames()).toEqual(["English (United States)"]);
 	});
 
 	it("ignores a click on the checked language", async () => {

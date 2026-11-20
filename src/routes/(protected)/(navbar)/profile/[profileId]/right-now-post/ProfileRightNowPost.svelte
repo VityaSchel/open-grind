@@ -17,6 +17,7 @@
 	import { getNow } from "#lib/util/now.ts";
 	import { preloadFullImage } from "#lib/util/photoswipe/full-size.ts";
 	import type { RightNowPostDetails } from "#lib/model/right-now/post.ts";
+	import { paneFocusTarget } from "../pager/focus-handoff.ts";
 	import { openRightNowPostViewer } from "./right-now-viewer.ts";
 
 	let {
@@ -53,11 +54,24 @@
 
 	let viewing = $state(false);
 	let openButton: HTMLButtonElement | null = $state(null);
+	let pane: Element | null = null;
 	let photoFrame: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (fullSrc !== null) void preloadFullImage(fullSrc);
 	});
+
+	$effect(() => {
+		if (openButton) pane = openButton.closest('[data-slot="profile-pane"]');
+	});
+
+	function refocusWhenPostLeft(event: Event) {
+		if (openButton?.isConnected) return;
+		const target = pane && paneFocusTarget({ pane, control: null });
+		if (!target) return;
+		event.preventDefault();
+		target.focus({ preventScroll: true });
+	}
 
 	$effect(() => {
 		if (!viewing) return;
@@ -108,7 +122,7 @@
 		class="mt-6"
 	>
 		<Card.Root
-			class="relative isolate gap-3 transition-colors has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-ring/50 can-hover:has-[button:hover]:bg-muted"
+			class="relative isolate gap-3 transition-colors has-[button:focus-visible]:focus-ring can-hover:has-[button:hover]:bg-muted"
 		>
 			<p
 				class="flex min-w-0 items-center gap-1.5 px-6 text-muted-foreground"
@@ -181,4 +195,4 @@
 		</Card.Root>
 	</section>
 {/if}
-<RightNowPostReportSheet {report} />
+<RightNowPostReportSheet {report} onCloseAutoFocus={refocusWhenPostLeft} />

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import DotsThreeIcon from "phosphor-svelte/lib/DotsThreeIcon";
+
 	import { showErrorToast } from "#lib/api/error-toast.ts";
 	import { sendTap } from "#lib/api/interest/taps.ts";
 	import TapIcon from "#lib/components/profile/TapIcon.svelte";
@@ -21,10 +23,26 @@
 		onTap: (tapType: TapType | null) => void;
 	} = $props();
 
+	const hintId = $props.id();
+
 	let customAnchor: HTMLButtonElement | null = $state(null);
 	let open = $state(false);
 	let sending = $state(false);
 	let heldOpen = false;
+	let keyboardOpener: HTMLElement | null = null;
+
+	function openPicker(opener: HTMLElement | null) {
+		keyboardOpener = opener;
+		open = true;
+	}
+
+	function returnFocusToOpener(event: Event) {
+		const opener = keyboardOpener;
+		if (open || opener === null) return;
+		keyboardOpener = null;
+		event.preventDefault();
+		(unavailable || !opener.isConnected ? customAnchor : opener)?.focus();
+	}
 
 	async function send(reaction: TapType) {
 		if (sending || tapType !== null) return;
@@ -59,6 +77,7 @@
 	} as const satisfies Record<TapType, MessageKey>;
 
 	const sent = $derived(tapType !== null);
+	const unavailable = $derived(sent || sending);
 
 	const press = menuPressHandlers({
 		openMenu: () => {
@@ -72,34 +91,72 @@
 		...press,
 		onpointerdown(event) {
 			heldOpen = false;
+			keyboardOpener = null;
 			press.onpointerdown?.(event);
+		},
+		oncontextmenu(event) {
+			if (unavailable) {
+				event.preventDefault();
+				return;
+			}
+			const focused = event.currentTarget.matches(":focus-visible");
+			keyboardOpener = focused ? event.currentTarget : null;
+			press.oncontextmenu?.(event);
 		},
 	};
 </script>
 
-<Button
-	size="icon-lg"
-	variant={sent ? "default" : "outline"}
-	aria-label={tapType === null
-		? t(sendKeys[defaultTapType])
-		: t(sentKeys[tapType])}
-	bind:ref={customAnchor}
-	{...pickerPress}
-	onclick={(event) => {
-		const holdsClick = heldOpen && event.detail !== 0;
-		heldOpen = false;
-		if (holdsClick) return;
-		void send(defaultTapType);
-	}}
-	disabled={sent || sending}
-	class={{ "disabled:opacity-100": sent }}
->
-	{#if tapType === null}
-		<TapIcon tapType={defaultTapType} />
-	{:else}
-		<TapIcon {tapType} />
+<div class="relative flex shrink-0">
+	<Button
+		size="icon-lg"
+		variant={sent ? "default" : "outline"}
+		aria-label={tapType === null
+			? t(sendKeys[defaultTapType])
+			: t(sentKeys[tapType])}
+		aria-describedby={sent ? undefined : hintId}
+		aria-disabled={unavailable}
+		bind:ref={customAnchor}
+		{...pickerPress}
+		onclick={(event) => {
+			const holdsClick = heldOpen && event.detail !== 0;
+			heldOpen = false;
+			if (holdsClick) return;
+			void send(defaultTapType);
+		}}
+		class={[
+			"aria-disabled:pointer-events-none",
+			{
+				"aria-disabled:opacity-100": sent,
+				"aria-disabled:opacity-50": !sent,
+			},
+		]}
+	>
+		{#if tapType === null}
+			<TapIcon tapType={defaultTapType} />
+		{:else}
+			<TapIcon {tapType} />
+		{/if}
+	</Button>
+	{#if !sent}
+		<span id={hintId} hidden>{t("profile.tap.a11y.otherTapsHint")}</span>
+		<Button
+			data-slot="tap-options"
+			variant="secondary"
+			size="icon-sm"
+			aria-label={t("profile.tap.a11y.chooseTap")}
+			aria-haspopup="menu"
+			aria-expanded={open}
+			class="absolute bottom-full left-1/2 mb-2 size-8 -translate-x-1/2 transition-none not-focus-visible:sr-only"
+			onclick={(event) => openPicker(event.currentTarget)}
+			oncontextmenu={(event) => {
+				event.preventDefault();
+				openPicker(event.currentTarget);
+			}}
+		>
+			<DotsThreeIcon weight="bold" />
+		</Button>
 	{/if}
-</Button>
+</div>
 {#snippet tapOption(tapType: TapType)}
 	<DropdownMenu.Item
 		class="w-10 px-2"
@@ -114,6 +171,7 @@
 		class="w-13 min-w-0 rounded-2xl"
 		align="center"
 		{customAnchor}
+		onCloseAutoFocus={returnFocusToOpener}
 	>
 		{@render tapOption(TapType.Friendly)}
 		{@render tapOption(TapType.Hot)}

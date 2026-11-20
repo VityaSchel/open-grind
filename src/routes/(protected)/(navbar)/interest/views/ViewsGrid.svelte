@@ -1,3 +1,7 @@
+<script module lang="ts">
+	let lastColumns: number | null = null;
+</script>
+
 <script lang="ts">
 	import { untrack } from "svelte";
 
@@ -5,7 +9,12 @@
 	import DataRefreshControl from "#lib/components/feedback/DataRefreshControl.svelte";
 	import ScrollToTopButton from "#lib/components/shared/ScrollToTopButton.svelte";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.ts";
+	import { t } from "#lib/i18n/index.ts";
 	import { observeIntersection } from "#lib/util/observe-intersection.ts";
+	import {
+		gridColumns,
+		RovingFocusState,
+	} from "#lib/util/roving-focus-state.svelte.ts";
 	import { restoreScrollOnce } from "#lib/util/scroll-restore.svelte.ts";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import UntrackedViewsGrid from "./UntrackedViewsGrid.svelte";
@@ -21,9 +30,49 @@
 		return state;
 	});
 
+	const grid = new RovingFocusState({
+		keys: () => views.views.map(({ key }) => key),
+		orientation: "grid",
+		wrap: "rows",
+		cells: (item) => [
+			item.querySelector<HTMLElement>(':scope > :is(a, [role="img"])') ??
+				item,
+		],
+		consumeAtEdge: ["left", "right"],
+		openerScope: "/interest/views",
+	});
+
 	let container: HTMLDivElement | null = $state(null);
+	let columns = $state(lastColumns);
+
+	const rows = $derived.by(() => {
+		if (columns === null) return [];
+		const perRow = columns;
+		return Array.from(
+			{ length: Math.ceil(views.views.length / perRow) },
+			(_, index) => ({
+				index,
+				entries: views.views.slice(
+					index * perRow,
+					(index + 1) * perRow,
+				),
+			}),
+		);
+	});
 
 	restoreScrollOnce({ container: () => container, state: views });
+
+	function followColumns(grid: HTMLElement) {
+		const measure = () => {
+			const measured = Math.max(1, gridColumns(grid));
+			lastColumns = measured;
+			columns = measured;
+		};
+		measure();
+		const resize = new ResizeObserver(measure);
+		resize.observe(grid);
+		return () => resize.disconnect();
+	}
 </script>
 
 <div class="screen-nav-host">
@@ -39,7 +88,7 @@
 	<div
 		bind:this={container}
 		data-slot="views-scroller"
-		class="pull-scroller overscroll-x-auto"
+		class="pull-scroller scroll-pt-header-clear-16 scroll-pb-nav-clear overscroll-x-auto"
 		onscroll={() => (views.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div
@@ -68,13 +117,32 @@
 			{:else if views.views.length === 0}
 				<EmptyViewsGrid />
 			{:else}
-				<div class="photo-grid">
-					{#each views.views as entry (entry.key)}
-						{#if entry.type === "profile"}
-							<ViewedProfile view={entry.profile} />
-						{:else}
-							<ViewedPreview preview={entry.preview} />
-						{/if}
+				<div
+					role="grid"
+					aria-label={t("interest.tabs.views")}
+					aria-rowcount={views.hasMore ? -1 : undefined}
+					class="photo-grid"
+					{@attach grid.container}
+					{@attach followColumns}
+				>
+					{#each rows as row (row.index)}
+						<div role="row" class="row contents">
+							{#each row.entries as entry (entry.key)}
+								{#if entry.type === "profile"}
+									<ViewedProfile
+										role="gridcell"
+										view={entry.profile}
+										{@attach grid.item(entry.key)}
+									/>
+								{:else}
+									<ViewedPreview
+										role="gridcell"
+										preview={entry.preview}
+										{@attach grid.item(entry.key)}
+									/>
+								{/if}
+							{/each}
+						</div>
 					{/each}
 				</div>
 				{#if views.hasMore}
@@ -89,5 +157,11 @@
 			{/if}
 		</div>
 	</div>
-	<ScrollToTopButton {container} class="bottom-nav-clear" />
+	<ScrollToTopButton
+		{container}
+		class="bottom-nav-clear"
+		onjump={({ keyboardFocused }) => {
+			if (keyboardFocused) void grid.focusFirst();
+		}}
+	/>
 </div>

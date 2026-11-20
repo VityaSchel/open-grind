@@ -18,7 +18,8 @@ vi.mock("#lib/api/current-session.ts", () => ({
 }));
 
 import { apiResponseMessageSchema } from "#lib/model/messaging/messages.ts";
-import { runningOn } from "#lib/test/platform.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
+import { pointerEvent } from "#lib/test/pointer.ts";
 import { profileMediaUrl } from "#lib/util/media.ts";
 import * as photoswipe from "#lib/util/photoswipe/index.ts";
 import Message from "./Message.svelte";
@@ -28,7 +29,14 @@ const PHOTO_HASH = "a".repeat(40);
 function renderPhoto({
 	isOut = false,
 	imageHash = PHOTO_HASH,
-}: { isOut?: boolean; imageHash?: string } = {}) {
+	onReply,
+	onReact,
+}: {
+	isOut?: boolean;
+	imageHash?: string;
+	onReply?: () => void;
+	onReact?: (reactionId: number) => void;
+} = {}) {
 	return render(Message, {
 		props: {
 			message: apiResponseMessageSchema.parse({
@@ -43,6 +51,8 @@ function renderPhoto({
 			isRead: null,
 			indexInStack: 0,
 			stackLength: 1,
+			onReply,
+			onReact,
 		},
 	});
 }
@@ -77,13 +87,14 @@ afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
 	vi.clearAllMocks();
+	resetPlatform();
 });
 
 describe("profile photo reply messages", () => {
 	it("keeps reply text and blocks loading an invalid peer photo hash", async () => {
 		const open = vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();
 		renderPhoto({ imageHash: "../invalid?hash" });
-		expect(photoButton().hasAttribute("disabled")).toBe(true);
+		expect(photoButton().getAttribute("aria-disabled")).toBe("true");
 		expect(within(photoButton()).queryByRole("presentation")).toBeNull();
 		expect(screen.getByText("Nice photo!")).toBeTruthy();
 		await fireEvent.click(photoButton());
@@ -186,6 +197,60 @@ describe("profile photo reply messages", () => {
 			);
 		},
 	);
+
+	it("keeps focus on a photo opened from the keyboard while its viewer opens and ignores a second press", async () => {
+		const open = vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();
+		renderPhoto();
+		const button = photoButton();
+		button.focus();
+
+		await fireEvent.click(button);
+		await fireEvent.click(button);
+
+		expect(open).toHaveBeenCalledOnce();
+		expect(button.getAttribute("aria-disabled")).toBe("true");
+		expect(button.hasAttribute("disabled")).toBe(false);
+		expect(document.activeElement).toBe(button);
+	});
+
+	it("lets go of focus when the photo is opened with a pointer, so the closing viewer leaves no ring on it", async () => {
+		vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();
+		renderPhoto();
+		const button = photoButton();
+		button.focus();
+
+		await pointerClick(button, "mouse");
+
+		expect(document.activeElement).not.toBe(button);
+	});
+
+	it("leaves a double click on the photo out of replying to the message", async () => {
+		const onReply = vi.fn();
+		renderPhoto({ onReply });
+
+		await fireEvent.dblClick(photoButton());
+
+		expect(onReply).not.toHaveBeenCalled();
+	});
+
+	it("still reacts to a double tap on the photo", () => {
+		runningOn("android");
+		const onReply = vi.fn();
+		const onReact = vi.fn();
+		renderPhoto({ onReply, onReact });
+		const button = photoButton();
+
+		for (let tap = 0; tap < 2; tap += 1) {
+			button.dispatchEvent(pointerEvent("pointerdown"));
+			button.dispatchEvent(pointerEvent("pointerup"));
+		}
+		button.dispatchEvent(
+			new MouseEvent("dblclick", { bubbles: true, cancelable: true }),
+		);
+
+		expect(onReact).toHaveBeenCalledExactlyOnceWith(1);
+		expect(onReply).not.toHaveBeenCalled();
+	});
 
 	it("aborts an opening viewer when unmounted", async () => {
 		const open = vi.spyOn(photoswipe, "openLightbox").mockResolvedValue();

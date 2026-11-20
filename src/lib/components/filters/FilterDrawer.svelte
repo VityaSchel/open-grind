@@ -44,7 +44,10 @@
 				<Switch aria-label={switchLabel} bind:checked={enabled} />
 			</div>
 		</Drawer.Header>
-		<Drawer.Body class="mb-2 flex flex-col gap-1.5 px-4">
+		<Drawer.Body
+			class="-mt-1 mb-1 flex flex-col gap-1.5 px-4 py-1"
+			data-autofocus
+		>
 			{@render children()}
 		</Drawer.Body>
 		<Drawer.Footer>

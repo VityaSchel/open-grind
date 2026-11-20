@@ -45,10 +45,16 @@
 		});
 	});
 
+	const adding = $derived(!note.notes && !note.phoneNumber);
 	const over = $derived(notes.length > favoriteNoteLimits.notes);
 	const dirty = $derived(
 		notes !== note.notes || phoneNumber !== note.phoneNumber,
 	);
+
+	function noteAutofocus(desktop: boolean) {
+		if (desktop) return true;
+		return adding ? "keyboard" : undefined;
+	}
 
 	function askToDiscard() {
 		if (!saving && dirty) confirmingDiscard = true;
@@ -89,53 +95,57 @@
 	dismissible={!saving && !dirty}
 	onDismissBlocked={askToDiscard}
 >
-	<ResponsiveDialog.Content
-		class="flex flex-col gap-4"
-		drawerClass="**:[fieldset>div]:px-4"
-		dialogProps={{ showCloseButton: true }}
-	>
-		<ResponsiveDialog.Header drawerClass="p-0">
-			<ResponsiveDialog.Title>
-				{t("profile.favoriteNote.title")}
-			</ResponsiveDialog.Title>
-			<ResponsiveDialog.Description class="sr-only">
-				{t("profile.favoriteNote.a11y.description")}
-			</ResponsiveDialog.Description>
-		</ResponsiveDialog.Header>
-		<fieldset disabled={saving} class="contents">
-			<ResponsiveDialog.Body
-				class="flex flex-col gap-4 pt-1"
-				dialogClass="-mx-1 px-1"
-			>
-				<MultilineField
-					bind:value={notes}
-					maxLength={favoriteNoteLimits.notes}
-					placeholder={t("profile.favoriteNote.placeholder")}
-				/>
-				<TextField
-					label={t("profile.favoriteNote.phoneNumber.label")}
-					bind:value={phoneNumber}
-					maxLength={favoriteNoteLimits.phoneNumber}
-					type="tel"
-					placeholder={t(
-						"profile.favoriteNote.phoneNumber.placeholder",
-					)}
-				/>
-			</ResponsiveDialog.Body>
-			<ResponsiveDialog.Footer drawerClass="pt-0">
-				<Button
-					disabled={!dirty || over}
-					aria-busy={saving}
-					onclick={() => save()}
+	{#snippet children({ desktop })}
+		<ResponsiveDialog.Content
+			class="flex flex-col gap-4"
+			drawerClass="**:[fieldset>div]:px-4"
+			dialogProps={{ showCloseButton: true }}
+			data-autofocus
+		>
+			<ResponsiveDialog.Header drawerClass="p-0">
+				<ResponsiveDialog.Title>
+					{t("profile.favoriteNote.title")}
+				</ResponsiveDialog.Title>
+				<ResponsiveDialog.Description class="sr-only">
+					{t("profile.favoriteNote.a11y.description")}
+				</ResponsiveDialog.Description>
+			</ResponsiveDialog.Header>
+			<fieldset disabled={saving} class="contents">
+				<ResponsiveDialog.Body
+					class="flex flex-col gap-4 pt-1"
+					dialogClass="-mx-1 px-1"
+					data-autofocus={noteAutofocus(desktop)}
 				>
-					{#if saving}
-						<Spinner aria-hidden="true" />
-					{/if}
-					{t("common.actions.save")}
-				</Button>
-			</ResponsiveDialog.Footer>
-		</fieldset>
-	</ResponsiveDialog.Content>
+					<MultilineField
+						bind:value={notes}
+						maxLength={favoriteNoteLimits.notes}
+						placeholder={t("profile.favoriteNote.placeholder")}
+					/>
+					<TextField
+						label={t("profile.favoriteNote.phoneNumber.label")}
+						bind:value={phoneNumber}
+						maxLength={favoriteNoteLimits.phoneNumber}
+						type="tel"
+						placeholder={t(
+							"profile.favoriteNote.phoneNumber.placeholder",
+						)}
+					/>
+				</ResponsiveDialog.Body>
+				<ResponsiveDialog.Footer drawerClass="pt-0">
+					<Button
+						disabled={!dirty || over}
+						aria-busy={saving}
+						onclick={() => save()}
+					>
+						{#if saving}
+							<Spinner aria-hidden="true" />
+						{/if}
+						{t("common.actions.save")}
+					</Button>
+				</ResponsiveDialog.Footer>
+			</fieldset>
+		</ResponsiveDialog.Content>
+	{/snippet}
 </ResponsiveDialog.Root>
 <DiscardChangesDialog
 	bind:open={confirmingDiscard}

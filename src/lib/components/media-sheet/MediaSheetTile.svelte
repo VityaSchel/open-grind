@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
+	import type { Attachment } from "svelte/attachments";
 
 	import MediaImage from "#lib/components/shared/MediaImage.svelte";
 	import VideoPreview from "#lib/components/shared/VideoPreview.svelte";
@@ -16,6 +17,7 @@
 		clickable,
 		busy = false,
 		lifted = false,
+		attach,
 		onclick,
 		onMenu,
 		overlay,
@@ -27,6 +29,7 @@
 		clickable: boolean;
 		busy?: boolean;
 		lifted?: boolean;
+		attach?: Attachment<HTMLElement>;
 		onclick: () => void;
 		onMenu?: (tile: HTMLButtonElement) => void;
 		overlay?: Snippet;
@@ -60,6 +63,7 @@
 
 <button
 	bind:this={tile}
+	{@attach attach}
 	type="button"
 	data-slot="media-tile"
 	data-vaul-no-drag={lifted ? "" : undefined}

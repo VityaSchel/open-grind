@@ -15,7 +15,7 @@
 	bgClass="bg-linear-to-t from-background to-transparent"
 	contentClass="grid grid-cols-[1fr_auto_1fr] items-end gap-x-2 px-4 pt-1 pb-2"
 >
-	<Tabs.List class="col-start-2">
+	<Tabs.List class="col-start-2" data-autofocus>
 		{@render children()}
 	</Tabs.List>
 	{#if trailing}

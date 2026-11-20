@@ -33,7 +33,7 @@ async function replyToAMessage(page: Page) {
 		.locator(MESSAGE_ROW)
 		.filter({ hasText: REPLIABLE })
 		.click({ button: "right" });
-	await page.getByRole("button", { name: "Reply" }).click();
+	await page.getByRole("menuitem", { name: "Reply" }).click();
 }
 
 test("every message row occupies real space", async ({ page }) => {
@@ -287,10 +287,10 @@ test("an unsent message offers no reply", async ({ page }) => {
 	await expect(unsent).toHaveCount(1);
 	await unsent.click({ button: "right" });
 
-	await expect(page.getByRole("button", { name: "Report" })).toHaveCount(0);
-	await expect(page.getByRole("button", { name: "Reply" })).toHaveCount(0);
+	await expect(page.getByRole("menuitem", { name: "Report" })).toHaveCount(0);
+	await expect(page.getByRole("menuitem", { name: "Reply" })).toHaveCount(0);
 	await expect(
-		page.getByRole("button", { name: "React with fire" }),
+		page.getByRole("menuitem", { name: "React with fire" }),
 	).toHaveCount(0);
 	await expect(page.getByText("Double tap to")).toBeHidden();
 });

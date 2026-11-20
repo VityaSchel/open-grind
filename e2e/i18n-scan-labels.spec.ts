@@ -347,9 +347,10 @@ test("the scan compares credit rows that content-visibility skips below the fold
 		.last()
 		.evaluate(
 			(row) =>
-				row.firstElementChild?.checkVisibility({
-					contentVisibilityAuto: true,
-				}) === false,
+				row
+					.querySelector("p")
+					?.checkVisibility({ contentVisibilityAuto: true }) ===
+				false,
 		);
 
 	await recordEnglish(page);

@@ -31,6 +31,7 @@
 	});
 	let open = $state(false);
 	let loading = $state(false);
+	const unavailable = $derived(src === null || open);
 	let image: HTMLImageElement | undefined;
 	$effect(() => {
 		if (!open || src === null) return;
@@ -109,11 +110,14 @@
 				"block aspect-3/4 w-32 overflow-hidden rounded-lg",
 				{ "opacity-50": loading },
 			]}
-			onclick={() => {
+			onclick={(event) => {
+				if (unavailable) return;
+				if (event.detail > 0) event.currentTarget.blur();
 				loading = true;
 				open = true;
 			}}
-			disabled={src === null || open}
+			ondblclick={(event) => event.preventDefault()}
+			aria-disabled={unavailable}
 		>
 			{@render photo()}
 		</button>

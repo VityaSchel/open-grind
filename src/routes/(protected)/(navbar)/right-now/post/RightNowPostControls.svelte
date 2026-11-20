@@ -16,6 +16,26 @@
 	} = $props();
 
 	let confirmOpen = $state(false);
+	let postButton = $state<HTMLElement | null>(null);
+	let opener: Element | null = null;
+
+	$effect.pre(() => {
+		if (sheetOpen) opener = document.activeElement;
+	});
+
+	function openerStillFocusable(): boolean {
+		return (
+			opener instanceof HTMLElement &&
+			opener !== document.body &&
+			opener.isConnected
+		);
+	}
+
+	function focusPostButton(event: Event): void {
+		if (postButton === null || openerStillFocusable()) return;
+		event.preventDefault();
+		postButton.focus({ preventScroll: true });
+	}
 
 	$effect(() => ownPost.attachView());
 
@@ -31,6 +51,7 @@
 </script>
 
 <JoinButton
+	bind:ref={postButton}
 	{ownPost}
 	{compact}
 	onjoin={() => (confirmOpen = true)}
@@ -41,4 +62,8 @@
 	{ownPost}
 	onjoined={() => (sheetOpen = true)}
 />
-<RightNowPostSheet bind:open={sheetOpen} {ownPost} />
+<RightNowPostSheet
+	bind:open={sheetOpen}
+	{ownPost}
+	onCloseAutoFocus={focusPostButton}
+/>

@@ -9,6 +9,7 @@
 	import { t } from "#lib/i18n/index.ts";
 	import { tagCatalog } from "#lib/model/browse/grid/filters.ts";
 	import { deepEqual } from "#lib/util/deep-equal.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {
@@ -25,11 +26,15 @@
 	let query = $state("");
 	$effect(() => {
 		const next = searchQuery.trim().toLowerCase();
-		const timeout = setTimeout(() => (query = next), SEARCH_DEBOUNCE_MS);
+		const timeout = setTimeout(() => {
+			if (next === query) return;
+			query = next;
+			chips.activeKey = null;
+		}, SEARCH_DEBOUNCE_MS);
 		return () => clearTimeout(timeout);
 	});
 
-	let catalog: ReturnType<typeof tagCatalog> | null = $state.raw(null);
+	let catalog = $state.raw<ReturnType<typeof tagCatalog> | null>(null);
 	const tagsPromise = getTags().then((languages) => {
 		const loaded = tagCatalog({ languages, isOffered: isTagKeyOfferedNow });
 		const keys = loaded.keysOf(value);
@@ -49,6 +54,36 @@
 	const valueLabel = $derived(
 		formatList(value.map((key) => catalog?.textOf(key) ?? key)),
 	);
+
+	const filtered = $derived(
+		catalog && query
+			? catalog.flat
+					.filter(containsQuery)
+					.sort(
+						(a, b) =>
+							Number(startsWithQuery(b)) -
+							Number(startsWithQuery(a)),
+					)
+			: [],
+	);
+	const shown = $derived(filtered.slice(0, MAX_SEARCH_RESULTS));
+	const browsedCategories = $derived(
+		(catalog?.categories ?? []).filter(
+			(category, index) =>
+				category.tags.length > 0 && (expanded || index < 2),
+		),
+	);
+
+	const chips = new RovingFocusState({
+		keys: () =>
+			query
+				? shown.map((tag) => tag.key)
+				: browsedCategories.flatMap((category) =>
+						category.tags.map((tag) => tag.key),
+					),
+		orientation: "horizontal",
+		wrap: "loop",
+	});
 </script>
 
 <FilterDropdown
@@ -82,24 +117,16 @@
 			<div class="flex justify-center py-4">
 				<Spinner />
 			</div>
-		{:then { categories, flat }}
-			{@const filtered = query
-				? flat
-						.filter(containsQuery)
-						.sort(
-							(a, b) =>
-								Number(startsWithQuery(b)) -
-								Number(startsWithQuery(a)),
-						)
-				: []}
-			{@const shown = filtered.slice(0, MAX_SEARCH_RESULTS)}
-
+		{:then}
 			<ToggleGroup.Root
 				size="sm"
 				type="multiple"
 				variant="outline"
 				spacing={2}
 				class="w-full flex-wrap gap-1"
+				rovingFocus={false}
+				aria-label={t("common.filters.tags.label")}
+				{@attach chips.container}
 				bind:value={
 					() => value,
 					(v: string[]) => {
@@ -111,7 +138,10 @@
 				{#if query}
 					{#if shown.length > 0}
 						{#each shown as tag (tag.key)}
-							<ToggleGroup.Item value={tag.key}>
+							<ToggleGroup.Item
+								value={tag.key}
+								{@attach chips.item(tag.key)}
+							>
 								{tag.text}
 							</ToggleGroup.Item>
 						{/each}
@@ -142,19 +172,20 @@
 						</div>
 					{/if}
 				{:else}
-					{#each categories as category, catIndex (category.text)}
-						{#if category.tags.length > 0 && (expanded || catIndex < 2)}
-							<div
-								class="mt-1.5 mb-1 w-full px-1 text-3xs font-semibold tracking-wider text-muted-foreground uppercase"
+					{#each browsedCategories as category (category.text)}
+						<div
+							class="mt-1.5 mb-1 w-full px-1 text-3xs font-semibold tracking-wider text-muted-foreground uppercase"
+						>
+							{category.text}
+						</div>
+						{#each category.tags as tag (tag.tagId)}
+							<ToggleGroup.Item
+								value={tag.key}
+								{@attach chips.item(tag.key)}
 							>
-								{category.text}
-							</div>
-							{#each category.tags as tag (tag.tagId)}
-								<ToggleGroup.Item value={tag.key}>
-									{tag.text}
-								</ToggleGroup.Item>
-							{/each}
-						{/if}
+								{tag.text}
+							</ToggleGroup.Item>
+						{/each}
 					{/each}
 				{/if}
 			</ToggleGroup.Root>

@@ -107,6 +107,9 @@
 			"acceptNsfwPics": "Accept NSFW Pics",
 			"lookingFor": "Looking For",
 			"meetAt": "Meet At"
+		},
+		"a11y": {
+			"applied": "Applied"
 		}
 	},
 	"media": {
@@ -133,6 +136,16 @@
 		"drop": {
 			"onlyPhotosAndVideos": "Only photos and videos can be dropped here",
 			"onlyPhotos": "Only photos can be dropped here"
+		},
+		"slots": {
+			"a11y": {
+				"removed": "{{label}}, marked for removal",
+				"reorderHint": "To move it, press Space, use the arrow keys, then press Space again",
+				"lifted": "Picked up at {{position}} of {{total}}",
+				"moved": "Moved to {{position}} of {{total}}",
+				"dropped": "Dropped at {{position}} of {{total}}",
+				"cancelled": "Move cancelled"
+			}
 		}
 	},
 	"albumShare": {
@@ -149,7 +162,8 @@
 		},
 		"a11y": {
 			"profileId": "ID {{id}}",
-			"toggle": "{{label}}: {{name}}"
+			"toggle": "{{label}}: {{name}}",
+			"loadingProfile": "Loading profile"
 		}
 	},
 	"location": {

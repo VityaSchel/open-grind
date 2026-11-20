@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { tick } from "svelte";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	bracketCounts,
@@ -9,6 +10,7 @@ import {
 } from "#lib/i18n/fixtures/count-formatter.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import type { Option } from "#lib/util/options.ts";
 import ComboField from "./ComboField.svelte";
 
@@ -63,8 +65,13 @@ async function search(input: HTMLInputElement, query: string) {
 	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(async () => {
 	cleanup();
+	resetPlatform();
 	restoreCountFormatter();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
@@ -106,6 +113,172 @@ describe("ComboField chips", () => {
 		const { container } = renderField();
 
 		expect(chipLabels(container)).toEqual([]);
+	});
+});
+
+describe("ComboField chip keys", () => {
+	function removeButton(label: string): HTMLButtonElement {
+		return screen.getByRole("button", { name: `Remove ${label}` });
+	}
+
+	it("makes the chip row one Tab stop named after the field", async () => {
+		renderField({ values: [1, 2, 3] });
+		await tick();
+
+		const toolbar = screen.getByRole("toolbar", { name: "Tribes" });
+		expect(
+			[...toolbar.querySelectorAll("button")].map((button) =>
+				button.getAttribute("tabindex"),
+			),
+		).toEqual(["0", "-1", "-1"]);
+	});
+
+	it.each(["Delete", "Backspace"])(
+		"removes the focused chip with %s and moves to the next one",
+		async (key) => {
+			const { container } = renderField({ values: [1, 2, 3] });
+			removeButton("Otter").focus();
+
+			await fireEvent.keyDown(removeButton("Otter"), { key });
+			await tick();
+
+			expect(chipLabels(container)).toEqual(["Bear", "Twink"]);
+			expect(document.activeElement).toBe(removeButton("Twink"));
+			expect(screen.getByRole("status").textContent).toBe(
+				"Removed Otter",
+			);
+		},
+	);
+
+	it("moves to the previous chip after removing the last one by keyboard", async () => {
+		renderField({ values: [1, 2] });
+		removeButton("Otter").focus();
+
+		await fireEvent.click(removeButton("Otter"), { detail: 0 });
+		await tick();
+
+		expect(document.activeElement).toBe(removeButton("Bear"));
+	});
+
+	it("hands focus to the search input after removing the only chip by keyboard", async () => {
+		renderField({ values: [1] });
+		removeButton("Bear").focus();
+
+		await fireEvent.keyDown(removeButton("Bear"), { key: "Delete" });
+		await tick();
+
+		expect(document.activeElement).toBe(
+			screen.getByRole("combobox", { name: "Tribes" }),
+		);
+	});
+
+	it("leaves focus alone when a pointer removes the only chip", async () => {
+		renderField({ values: [1] });
+
+		await fireEvent.click(removeButton("Bear"), { detail: 1 });
+		await tick();
+
+		expect(document.activeElement).not.toBe(
+			screen.getByRole("combobox", { name: "Tribes" }),
+		);
+	});
+
+	it("focuses the last chip on Backspace in the empty search input", async () => {
+		renderField({ values: [1, 2] });
+		const input = screen.getByRole("combobox", { name: "Tribes" });
+		input.focus();
+
+		await fireEvent.keyDown(input, { key: "Backspace" });
+		await tick();
+
+		expect(document.activeElement).toBe(removeButton("Otter"));
+	});
+
+	it("stays in the empty search while Backspace is held", async () => {
+		const { container } = renderField({ values: [1, 2] });
+		const input = screen.getByRole("combobox", { name: "Tribes" });
+		input.focus();
+
+		for (let press = 0; press < 3; press++)
+			await fireEvent.keyDown(input, { key: "Backspace", repeat: true });
+		await tick();
+
+		expect(document.activeElement).toBe(input);
+		expect(chipLabels(container)).toEqual(["Bear", "Otter"]);
+	});
+
+	describe("while the soft keyboard is shown", () => {
+		beforeEach(() => {
+			runningOn("android");
+			window.__AndroidInsets = {
+				top: () => 0,
+				bottom: () => 0,
+				left: () => 0,
+				right: () => 0,
+				imeVisible: () => true,
+			};
+		});
+
+		afterEach(() => {
+			delete window.__AndroidInsets;
+		});
+
+		it("keeps Backspace in the empty search", async () => {
+			renderField({ values: [1, 2] });
+			const input = screen.getByRole("combobox", { name: "Tribes" });
+			input.focus();
+
+			await fireEvent.keyDown(input, { key: "Backspace" });
+			await tick();
+
+			expect(document.activeElement).toBe(input);
+		});
+	});
+
+	it.each(["Delete", "Backspace", "Enter"])(
+		"removes only one chip while %s is held",
+		async (key) => {
+			const { container } = renderField({ values: [1, 2, 3] });
+			removeButton("Otter").focus();
+			await fireEvent.keyDown(removeButton("Otter"), { key: "Delete" });
+			await tick();
+
+			const kept = await fireEvent.keyDown(removeButton("Twink"), {
+				key,
+				repeat: true,
+			});
+			await tick();
+
+			expect(kept).toBe(false);
+			expect(chipLabels(container)).toEqual(["Bear", "Twink"]);
+			expect(document.activeElement).toBe(removeButton("Twink"));
+		},
+	);
+
+	it("announces a second removal of the same chip", async () => {
+		const { rerender } = renderField({ values: [1, 2, 3] });
+		removeButton("Otter").focus();
+		await fireEvent.keyDown(removeButton("Otter"), { key: "Delete" });
+		await vi.waitFor(() =>
+			expect(screen.getByRole("status").textContent).toBe(
+				"Removed Otter",
+			),
+		);
+		await rerender({ values: [1, 2, 3] });
+		const status = screen.getByRole("status");
+		const spoken: string[] = [];
+		const changes = new MutationObserver(() =>
+			spoken.push(status.textContent),
+		);
+		changes.observe(status, {
+			childList: true,
+			characterData: true,
+			subtree: true,
+		});
+
+		await fireEvent.keyDown(removeButton("Otter"), { key: "Delete" });
+		await vi.waitFor(() => expect(spoken).toContain("Removed Otter"));
+		changes.disconnect();
 	});
 });
 

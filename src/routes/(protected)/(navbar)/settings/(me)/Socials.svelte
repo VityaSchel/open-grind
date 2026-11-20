@@ -5,10 +5,14 @@
 	import MegaphoneIcon from "phosphor-svelte/lib/MegaphoneIcon";
 
 	import { t } from "#lib/i18n/index.ts";
+	import type { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import Link from "./LinkItem.svelte";
+
+	let { links }: { links: RovingFocusState } = $props();
 </script>
 
 <Link
+	{@attach links.item("website")}
 	destination="https://opengrind.org/"
 	label={t("settings.me.socials.website")}
 >
@@ -18,6 +22,7 @@
 </Link>
 
 <Link
+	{@attach links.item("sourceCode")}
 	destination="https://git.opengrind.org/open-grind/open-grind/"
 	label={t("settings.me.socials.sourceCode")}
 >
@@ -26,6 +31,7 @@
 	{/snippet}
 </Link>
 <Link
+	{@attach links.item("announcements")}
 	destination="https://t.me/opengrind"
 	label={t("settings.me.socials.announcements")}
 	warning={{
@@ -46,6 +52,7 @@
 	{/snippet}
 </Link>
 <Link
+	{@attach links.item("discussion")}
 	destination="https://matrix.to/#/#general:opengrind.org"
 	label={t("settings.me.socials.discussion")}
 >

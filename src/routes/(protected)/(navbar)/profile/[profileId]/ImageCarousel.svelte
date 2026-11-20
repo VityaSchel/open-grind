@@ -8,6 +8,7 @@
 	import { formatDate, formatInteger } from "#lib/i18n/format.ts";
 	import { followLocale, t } from "#lib/i18n/index.ts";
 	import { profileMediaUrl } from "#lib/util/media.ts";
+	import { applyThumbnailHandoff } from "#lib/util/photoswipe/gallery-lightbox.ts";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
@@ -19,6 +20,7 @@
 		ZOOM_SVG,
 	} from "#lib/util/photoswipe/index.ts";
 	import { applyProfilePhotoReply } from "#lib/util/photoswipe/profile-photo-reply.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import { devicePixelHeight } from "./device-pixel-height";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
@@ -38,8 +40,22 @@
 
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
+	const COVER_SHOW_LINK = '[data-slot="mature-content-cover"] a[href]';
 
 	const covered = $derived(!own && matureContentCovered());
+
+	function coverShowLinks(item: HTMLElement) {
+		return [...item.querySelectorAll<HTMLElement>(COVER_SHOW_LINK)];
+	}
+
+	const photos = new RovingFocusState({
+		keys: () => [...medias.keys()],
+		orientation: "vertical",
+		followScroll: "first-visible",
+		get cells() {
+			return covered ? coverShowLinks : undefined;
+		},
+	});
 
 	let gallery: HTMLDivElement | null = $state(null);
 	let viewer = $state.raw<PhotoSwipeLightbox>();
@@ -89,26 +105,13 @@
 				lightbox.on("beforeOpen", () => {
 					raiseReach(medias.length - 1);
 				});
-				lightbox.on("openingAnimationStart", () => {
-					gallery?.querySelectorAll(".item").forEach((item) => {
-						if (item instanceof HTMLElement) {
-							item.style.visibility = "hidden";
-						}
-					});
-				});
+				applyThumbnailHandoff({ lightbox, gallery });
 				lightbox.on("change", () => {
 					gallery?.scrollTo({
 						top:
 							lightbox?.pswp?.currSlide?.data.element
 								?.offsetTop ?? 0,
 						behavior: "instant",
-					});
-				});
-				lightbox.on("destroy", () => {
-					gallery?.querySelectorAll(".item").forEach((item) => {
-						if (item instanceof HTMLElement) {
-							item.style.visibility = "visible";
-						}
 					});
 				});
 				lightbox.on("uiRegister", () => {
@@ -187,6 +190,7 @@
 		<div
 			class="carousel relative flex size-full max-h-(--device-pixel-height) snap-y snap-mandatory flex-col overflow-auto *:snap-center"
 			bind:this={gallery}
+			{@attach photos.container}
 			onscroll={() => {
 				if (!gallery) return;
 				const photoHeight = gallery.getBoundingClientRect().height;
@@ -215,6 +219,7 @@
 			{#each medias as { mediaHash, createdAt }, index (mediaHash + index)}
 				{@const src = profileMediaUrl({ mediaHash, size: "full" })}
 				<ImageCarouselItem
+					{@attach photos.item(index)}
 					{src}
 					{mediaHash}
 					eager={index <= reach}

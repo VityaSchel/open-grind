@@ -75,6 +75,7 @@
 		<MediaSheetBody fullsize={isFullsizeTab}>
 			<Tabs.Content
 				value="media"
+				tabindex={-1}
 				class="flex-1 flex-col data-[state=active]:flex"
 			>
 				<ComposerMediaTab
@@ -87,6 +88,7 @@
 			</Tabs.Content>
 			<Tabs.Content
 				value="albums"
+				tabindex={-1}
 				class="flex-1 flex-col data-[state=active]:flex"
 			>
 				<ComposerAlbumsTab
@@ -96,7 +98,7 @@
 					onClose={() => (open = false)}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value="location" aria-describedby={locationHintId}>
+			<Tabs.Content value="location" tabindex={-1}>
 				{#if selectedTab === "location"}
 					<ComposerLocationTab
 						bind:this={tabs.location}

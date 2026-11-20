@@ -4,6 +4,7 @@
 	import type { ClassValue } from "svelte/elements";
 
 	import ScreenChromeCover from "#lib/components/shared/ScreenChromeCover.svelte";
+	import { focusOnOpen } from "#lib/components/ui/dialog/open-auto-focus.ts";
 	import { exemptToastsFromDismissal } from "#lib/util/toast-interaction.ts";
 	import {
 		cn,
@@ -21,6 +22,7 @@
 		portalProps,
 		preventOverflowTextSelection = false,
 		onInteractOutside,
+		onOpenAutoFocus,
 		children,
 		...restProps
 	}: WithoutChild<AlertDialogPrimitive.ContentProps> & {
@@ -44,6 +46,11 @@
 		)}
 		{preventOverflowTextSelection}
 		onInteractOutside={exemptToastsFromDismissal(onInteractOutside)}
+		onOpenAutoFocus={focusOnOpen({
+			content: () => ref,
+			fallback: "library",
+			onOpenAutoFocus,
+		})}
 		{...restProps}
 	>
 		<ScreenChromeCover />

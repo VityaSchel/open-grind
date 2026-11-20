@@ -32,13 +32,13 @@ test.describe("with a cursor", () => {
 		await openConversation(page);
 		await reactable(page).click({ button: "right" });
 
-		const react = page.getByRole("button", REACT_BUTTON);
+		const react = page.getByRole("menuitem", REACT_BUTTON);
 		await expect(react).toBeVisible();
 		await expect(page.getByText(HINT)).toBeHidden();
 
 		await react.click();
 
-		await expect(page.getByRole("button", REACT_BUTTON)).toBeHidden();
+		await expect(page.getByRole("menuitem", REACT_BUTTON)).toBeHidden();
 		await expect(reactable(page).locator(CHIP)).toBeVisible();
 	});
 
@@ -55,8 +55,10 @@ test.describe("with a cursor", () => {
 
 		await own.click({ button: "right" });
 
-		await expect(page.getByRole("button", { name: "Reply" })).toBeVisible();
-		await expect(page.getByRole("button", REACT_BUTTON)).toHaveCount(0);
+		await expect(
+			page.getByRole("menuitem", { name: "Reply" }),
+		).toBeVisible();
+		await expect(page.getByRole("menuitem", REACT_BUTTON)).toHaveCount(0);
 		await expect(page.getByText(HINT)).toBeHidden();
 	});
 });
@@ -73,11 +75,11 @@ test("the menu header follows the pointer in use: a finger gets the double-tap h
 	await bubble.dispatchEvent("contextmenu");
 
 	await expect(page.getByText(HINT)).toBeVisible();
-	await expect(page.getByRole("button", REACT_BUTTON)).toBeHidden();
+	await expect(page.getByRole("menuitem", REACT_BUTTON)).toBeHidden();
 
 	await hoverPen({ page, target: page.getByText(HINT) });
 
-	await expect(page.getByRole("button", REACT_BUTTON)).toBeVisible();
+	await expect(page.getByRole("menuitem", REACT_BUTTON)).toBeVisible();
 	await expect(page.getByText(HINT)).toBeHidden();
 });
 

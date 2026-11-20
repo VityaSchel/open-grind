@@ -39,6 +39,7 @@
 	const WHEEL_ITEM_SIZE = 30;
 	const WHEEL_ITEM_COUNT = 18;
 	const WHEEL_ITEMS_IN_VIEW = 4;
+	const PAGE_STEP = 10;
 
 	const WHEEL_ITEM_RADIUS = CIRCLE_DEGREES / WHEEL_ITEM_COUNT;
 	const IN_VIEW_DEGREES = WHEEL_ITEM_RADIUS * WHEEL_ITEMS_IN_VIEW;
@@ -158,6 +159,45 @@
 		rotate(api);
 	}
 
+	function steppedValue(step: number) {
+		const next = value + step;
+		if (loop) {
+			return (
+				min + ((((next - min) % slideCount) + slideCount) % slideCount)
+			);
+		}
+		return Math.max(min, Math.min(max, next));
+	}
+
+	function valueForKey(key: string) {
+		switch (key) {
+			case "ArrowUp":
+			case "ArrowRight":
+				return steppedValue(1);
+			case "ArrowDown":
+			case "ArrowLeft":
+				return steppedValue(-1);
+			case "PageUp":
+				return steppedValue(PAGE_STEP);
+			case "PageDown":
+				return steppedValue(-PAGE_STEP);
+			case "Home":
+				return min;
+			case "End":
+				return max;
+			default:
+				return null;
+		}
+	}
+
+	function onkeydown(event: KeyboardEvent) {
+		if (disabled || event.altKey || event.ctrlKey || event.metaKey) return;
+		const next = valueForKey(event.key);
+		if (next === null) return;
+		event.preventDefault();
+		value = next;
+	}
+
 	$effect(() => {
 		if (!emblaApi) return;
 		const target = clampIndex(value - min);
@@ -169,14 +209,17 @@
 	bind:this={ref}
 	data-slot="wheel-picker"
 	role="slider"
+	tabindex={disabled ? -1 : 0}
+	aria-orientation="vertical"
 	aria-valuenow={value}
 	aria-valuemin={min}
 	aria-valuemax={max}
 	aria-valuetext={valueText?.(value) ??
 		(unit ? `${formatInteger(value)} ${unit}` : undefined)}
 	aria-disabled={disabled}
+	{onkeydown}
 	class={cn(
-		"relative mx-auto flex h-44 w-full touch-pan-x items-center justify-center overflow-hidden select-none",
+		"relative mx-auto flex h-44 w-full touch-pan-x items-center justify-center overflow-hidden rounded-xl select-none",
 		disabled && "pointer-events-none opacity-50",
 		className,
 	)}
@@ -184,6 +227,7 @@
 >
 	<div
 		class="h-8 w-full touch-pan-x overflow-visible overscroll-contain [-webkit-tap-highlight-color:transparent] perspective-[1000px]"
+		tabindex="-1"
 		use:emblaCarouselSvelte={{ options, plugins: [] }}
 		onemblaInit={onInit}
 	>

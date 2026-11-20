@@ -1,17 +1,22 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { page } from "$app/state";
-import { flushSync } from "svelte";
+import { flushSync, tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "$app/navigation";
 import type { ResolvedPathname } from "$app/types";
 
-import { runningOn } from "#lib/test/platform.ts";
+import { scrollGesture } from "#lib/platform/scroll-gesture.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { fakePagerLayout, WIDTH } from "#lib/util/snap-pager-test-helpers.ts";
 import InterestPager from "./InterestPager.svelte";
 
 const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
 const REPLACE = { replace: true, reset: false };
+const TAB_IDS = [
+	{ tab: "tab-views", panel: "panel-views" },
+	{ tab: "tab-taps", panel: "panel-taps" },
+];
 
 const { goto, afterNavigate, navigating } = vi.hoisted(() => ({
 	goto: vi.fn(),
@@ -44,6 +49,7 @@ function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
 			const { container } = render(InterestPager, {
 				props: {
 					ourProfileId: 1,
+					tabIds: TAB_IDS,
 					onUnsettle: () => {
 						settling.unsettled = true;
 					},
@@ -98,26 +104,59 @@ function clickSwallowed(pane: Element) {
 	return unheard;
 }
 
+function isInert(element: Element): boolean {
+	return (
+		element.hasAttribute("inert") ||
+		(element instanceof HTMLElement && element.inert === true)
+	);
+}
+
 function markup(pager: { node: HTMLElement }) {
 	flushSync();
 	return [pager.node, ...pager.node.children].map((element) => ({
 		attributes: element
 			.getAttributeNames()
 			.map((name) => `${name}=${element.getAttribute(name)}`),
-		inert:
-			element.hasAttribute("inert") ||
-			(element instanceof HTMLElement && element.inert === true),
+		inert: isInert(element),
 	}));
 }
 
-function panesSwallowingClicks(pager: { node: HTMLElement }) {
-	expect(
-		markup(pager).filter(({ inert }) => inert),
-		"no pane is made inert",
-	).toEqual([]);
+function hiddenPanes(pager: { node: HTMLElement }) {
+	flushSync();
 	return [...pager.node.children]
-		.filter(clickSwallowed)
+		.filter(
+			(pane) =>
+				isInert(pane) && pane.getAttribute("aria-hidden") === "true",
+		)
 		.map((pane) => pane.getAttribute("data-slot"));
+}
+
+function onScreen({
+	pager,
+	pane,
+}: {
+	pager: { node: HTMLElement };
+	pane: number;
+}) {
+	const left = pager.node.scrollLeft;
+	return pane * WIDTH < left + WIDTH - 1 && (pane + 1) * WIDTH > left + 1;
+}
+
+function panesSwallowingClicks(pager: { node: HTMLElement }) {
+	flushSync();
+	return [...pager.node.children]
+		.filter(
+			(element, pane) =>
+				(isInert(element) && onScreen({ pager, pane })) ||
+				clickSwallowed(element),
+		)
+		.map((pane) => pane.getAttribute("data-slot"));
+}
+
+function pane(pager: { node: HTMLElement }, tab: "views" | "taps") {
+	return pager.node.querySelector<HTMLElement>(
+		`[data-slot="interest-pane-${tab}"]`,
+	)!;
 }
 
 function restOnViews({
@@ -143,6 +182,9 @@ beforeEach(() => {
 describe("InterestPager", () => {
 	afterEach(() => {
 		cleanup();
+		scrollGesture.ingest({ state: "idle" });
+		resetPlatform();
+		vi.useRealTimers();
 		vi.unstubAllGlobals();
 		goto.mockReset();
 		afterNavigate.mockReset();
@@ -359,11 +401,12 @@ describe("InterestPager", () => {
 		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-views"]);
 	});
 
-	it("swallows clicks on the tab being left from the first scroll of a glide to a tab picked outside the pager", () => {
+	it("swallows clicks on the tab being left from the moment a tab is picked outside the pager", () => {
 		const pager = mountPager();
+		pager.scrollTo.mockImplementation(() => {});
 
 		route(VIEWS);
-		expect(panesSwallowingClicks(pager)).toEqual([]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-taps"]);
 
 		pager.scroll(0.9 * WIDTH);
 
@@ -389,11 +432,11 @@ describe("InterestPager", () => {
 		expect(panesSwallowingClicks(pager)).toEqual([]);
 	});
 
-	it("leaves the attributes of the pager and its tabs as they were through a drag and the glide after it", () => {
+	it("leaves the attributes of the pager and its tabs as a landing finger set them through the drag and the glide after it", () => {
 		const pager = mountPager();
-		const resting = markup(pager);
 
 		pager.touch("touchstart");
+		const resting = markup(pager);
 		pager.scroll(0.6 * WIDTH);
 		expect(markup(pager)).toEqual(resting);
 
@@ -403,9 +446,184 @@ describe("InterestPager", () => {
 		pager.touch("touchend");
 		pager.scroll(0.2 * WIDTH);
 		expect(markup(pager)).toEqual(resting);
+	});
+
+	it("leaves the attributes of the pager and its tabs as picking a tab outside the pager set them through the glide", () => {
+		const pager = mountPager();
+
+		route(VIEWS);
+		const resting = markup(pager);
+		pager.scroll(0.9 * WIDTH);
+		pager.scroll(0.1 * WIDTH);
+
+		expect(markup(pager)).toEqual(resting);
+	});
+
+	it("lets both tabs take input from the moment a finger lands, and hides the one it rests away from once it rests", () => {
+		const pager = mountPager();
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-views"]);
+
+		pager.touch("touchstart");
+		expect(hiddenPanes(pager)).toEqual([]);
+		pager.scroll(0.6 * WIDTH);
+		expect(hiddenPanes(pager)).toEqual([]);
+
+		pager.touch("touchend");
+		pager.scroll(0);
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("never makes the tab a drag pulls in inert", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart");
+		for (const progress of [0.9, 0.6, 0.4, 0.1]) {
+			pager.scroll(progress * WIDTH);
+			flushSync();
+			expect(isInert(pane(pager, "views")), `at ${progress}`).toBe(false);
+		}
+	});
+
+	it("lets both tabs take input from the moment trackpad fingers land, and hides one only once the momentum has ended", () => {
+		runningOn("macos");
+		const pager = mountPager();
+
+		scrollGesture.ingest({ state: "fingers", dx: 0, dy: 0 });
+		expect(hiddenPanes(pager)).toEqual([]);
+		pager.scroll(0.4 * WIDTH);
+		scrollGesture.ingest({ state: "released" });
+		scrollGesture.ingest({ state: "momentum" });
+		pager.scroll(0);
+		route(VIEWS);
+		expect(hiddenPanes(pager)).toEqual([]);
+
+		scrollGesture.ingest({ state: "idle" });
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("lets both tabs take input from the first sideways wheel, and not from an upright one", () => {
+		const pager = mountPager();
+
+		pager.node.dispatchEvent(
+			new WheelEvent("wheel", { deltaY: 40, bubbles: true }),
+		);
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-views"]);
+
+		pager.node.dispatchEvent(
+			new WheelEvent("wheel", { deltaX: -40, bubbles: true }),
+		);
+		expect(hiddenPanes(pager)).toEqual([]);
 
 		pager.scroll(0);
-		expect(markup(pager)).toEqual(resting);
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("hides the tab it rests away from again when a sideways wheel cannot move the pager", () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		const pager = mountPager();
+
+		pager.node.dispatchEvent(
+			new WheelEvent("wheel", { deltaX: 40, bubbles: true }),
+		);
+		expect(hiddenPanes(pager)).toEqual([]);
+
+		vi.runAllTimers();
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-views"]);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it("keeps both tabs taking input while a sideways wheel has moved the pager off its tab", () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		const pager = mountPager();
+
+		pager.node.dispatchEvent(
+			new WheelEvent("wheel", { deltaX: -40, bubbles: true }),
+		);
+		pager.scroll(0.7 * WIDTH);
+		vi.runAllTimers();
+
+		expect(hiddenPanes(pager)).toEqual([]);
+	});
+
+	it("hides the tab panel being left as soon as a tab is picked outside the pager", () => {
+		const pager = mountPager();
+
+		route(VIEWS);
+
+		expect(hiddenPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("moves focus out of the tab panel it hides onto the one it rests on", async () => {
+		const pager = mountPager();
+		const row = pane(pager, "taps").appendChild(
+			document.createElement("button"),
+		);
+		row.focus();
+
+		pager.scroll(0);
+		await tick();
+
+		expect(document.activeElement).toBe(pane(pager, "views"));
+		row.remove();
+	});
+
+	it("moves focus out of the tab panel a swipe leaves although the swipe let both take input", async () => {
+		const pager = mountPager();
+		const row = pane(pager, "taps").appendChild(
+			document.createElement("button"),
+		);
+		row.focus();
+
+		pager.touch("touchstart");
+		pager.scroll(0);
+		pager.touch("touchend");
+		await tick();
+
+		expect(document.activeElement).toBe(pane(pager, "views"));
+		row.remove();
+	});
+
+	it("moves focus onto the picked tab's panel when picking it hides the one holding focus", async () => {
+		const pager = mountPager();
+		const row = pane(pager, "taps").appendChild(
+			document.createElement("button"),
+		);
+		row.focus();
+
+		route(VIEWS);
+		await tick();
+
+		expect(document.activeElement).toBe(pane(pager, "views"));
+		row.remove();
+	});
+
+	it("leaves focus outside the pager where it is when a tab panel is hidden", async () => {
+		const pager = mountPager();
+		const outside = document.body.appendChild(
+			document.createElement("button"),
+		);
+		outside.focus();
+
+		pager.scroll(0);
+		await tick();
+
+		expect(document.activeElement).toBe(outside);
+		outside.remove();
+	});
+
+	it("labels each pane as the tab panel its tab controls", () => {
+		const pager = mountPager();
+
+		expect(
+			[...pager.node.children].map((pane) => ({
+				role: pane.getAttribute("role"),
+				id: pane.id,
+				labelledBy: pane.getAttribute("aria-labelledby"),
+			})),
+		).toEqual([
+			{ role: "tabpanel", id: "panel-views", labelledBy: "tab-views" },
+			{ role: "tabpanel", id: "panel-taps", labelledBy: "tab-taps" },
+		]);
 	});
 
 	it("is unsettled from the moment a finger lands on it until that finger lifts on a tab", () => {

@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 
-import { screen, within } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, screen, within } from "@testing-library/svelte";
+import { tick } from "svelte";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { slot } from "#lib/i18n/fixtures/dom.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import {
 	enterQuery,
 	expectCommandGroup,
@@ -20,8 +22,23 @@ import {
 
 const GO_TO_TOKENS = ["/grid", "/chat", "/taps", "/views", "/right-now"];
 
+function selectedText(): string {
+	return textOf(screen.getByRole("option", { selected: true }));
+}
+
+async function openGoToWithFirstSelected() {
+	await openWith("/");
+	await vi.waitFor(() => expect(selectedText()).toBe("/grid"));
+	await tick();
+}
+
+beforeEach(() => {
+	runningOn("linux");
+});
+
 afterEach(async () => {
 	resetCommandCenter();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -128,5 +145,34 @@ describe("CommandCenter", () => {
 
 		expectCommandGroup({ name: PSEUDO_MESSAGE, value: "quick-go-to" });
 		expect(options().map(textOf)).toEqual(GO_TO_TOKENS);
+	});
+
+	it.each(["macos", "ios"] as const)(
+		"leaves Control+J to the text field on %s",
+		async (textFieldPlatform) => {
+			runningOn(textFieldPlatform);
+			await openGoToWithFirstSelected();
+
+			const reachesTextField = await fireEvent.keyDown(
+				screen.getByRole("combobox"),
+				{ key: "j", ctrlKey: true },
+			);
+
+			expect(reachesTextField).toBe(true);
+			expect(selectedText()).toBe("/grid");
+		},
+	);
+
+	it("moves the selection with Control+J on Windows", async () => {
+		runningOn("windows");
+		await openGoToWithFirstSelected();
+
+		const reachesTextField = await fireEvent.keyDown(
+			screen.getByRole("combobox"),
+			{ key: "j", ctrlKey: true },
+		);
+
+		expect(reachesTextField).toBe(false);
+		await vi.waitFor(() => expect(selectedText()).toBe("/chat"));
 	});
 });

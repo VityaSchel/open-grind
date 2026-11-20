@@ -1,40 +1,78 @@
 <script lang="ts">
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 	import XIcon from "phosphor-svelte/lib/XIcon";
+	import { on } from "svelte/events";
+	import type { Attachment } from "svelte/attachments";
 
 	import * as InputGroup from "#lib/components/ui/input-group/index.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { firedByTouch } from "#lib/platform/touch-origin.ts";
 	import { GIF_INPUT_MAX_LENGTH } from "./gif-feed.svelte";
 
 	let {
+		input = $bindable(null),
 		value,
 		onInput,
 		onSubmit,
+		onEnterFromKeyboard,
+		onArrowDown,
 		onFocus,
 	}: {
+		input?: HTMLInputElement | null;
 		value: string;
 		onInput: (value: string) => void;
 		onSubmit: () => void;
+		onEnterFromKeyboard: () => void;
+		onArrowDown: () => boolean;
 		onFocus?: () => void;
 	} = $props();
 
-	let input = $state<HTMLInputElement | null>(null);
 	let focused = $state(false);
+	let touchPressed = false;
+	let focusedByTouch = false;
+	const noteTouchPress: Attachment<HTMLElement> = (node) => {
+		const forget = () => (touchPressed = false);
+		const stopListening = [
+			on(node, "pointerdown", (event) => {
+				if (!firedByTouch(event)) return;
+				touchPressed = true;
+				if (input !== null && document.activeElement === input)
+					focusedByTouch = true;
+			}),
+			on(node, "pointercancel", forget),
+			on(node, "click", forget),
+		];
+		return () => {
+			for (const stop of stopListening) stop();
+		};
+	};
 
 	function isCompositionKeydown(event: KeyboardEvent): boolean {
 		// https://bugs.webkit.org/show_bug.cgi?id=165004
 		return event.isComposing || event.keyCode === 229;
 	}
 
-	function submitOnEnter(event: KeyboardEvent) {
-		if (event.key !== "Enter" || isCompositionKeydown(event)) return;
-		event.preventDefault();
-		onSubmit();
-		input?.blur();
+	function leaveToResults(event: KeyboardEvent) {
+		if (isCompositionKeydown(event)) return;
+		if (event.key === "Enter") {
+			event.preventDefault();
+			onSubmit();
+			if (focusedByTouch) input?.blur();
+			else onEnterFromKeyboard();
+			return;
+		}
+		const { altKey, ctrlKey, metaKey, shiftKey } = event;
+		const modified = altKey || ctrlKey || metaKey || shiftKey;
+		if (event.key === "ArrowDown" && !modified && onArrowDown())
+			event.preventDefault();
 	}
 </script>
 
-<div data-slot="gif-search-bar" class="sticky top-0 z-10 bg-popover">
+<div
+	data-slot="gif-search-bar"
+	class="sticky top-0 z-10 bg-popover"
+	{@attach noteTouchPress}
+>
 	<div class="-mx-4 border-b-hairline border-border px-4 py-2">
 		<InputGroup.Root class="bg-muted">
 			<InputGroup.Input
@@ -48,6 +86,8 @@
 				aria-label={t("chat.composer.stickers.gifs.search")}
 				onfocus={() => {
 					focused = true;
+					focusedByTouch = touchPressed;
+					touchPressed = false;
 					onFocus?.();
 				}}
 				onblur={() => (focused = false)}
@@ -58,7 +98,7 @@
 					)
 						queueMicrotask(onSubmit);
 				}}
-				onkeydown={submitOnEnter}
+				onkeydown={leaveToResults}
 			/>
 			<InputGroup.Addon>
 				<MagnifyingGlassIcon />

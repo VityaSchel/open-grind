@@ -32,7 +32,8 @@
 	}}
 >
 	<AlertDialog.Content
-		class="shrink-0 max-sm:max-w-[calc(100%-2rem-var(--safe-area-left)-var(--safe-area-right))]!"
+		class="z-modal shrink-0 max-sm:max-w-[calc(100%-2rem-var(--safe-area-left)-var(--safe-area-right))]!"
+		overlayClass="z-modal"
 		interactOutsideBehavior="close"
 	>
 		<div class="grid grid-rows-[auto_minmax(0,1fr)_auto] gap-4">
@@ -46,7 +47,7 @@
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<div
-				class="flex max-w-full min-w-0 flex-col overflow-clip rounded-[22px] bg-muted"
+				class="flex max-w-full min-w-0 flex-col rounded-[22px] bg-muted"
 			>
 				<Label
 					for="redact-sensitive-info"
@@ -62,16 +63,17 @@
 					</span>
 				</Label>
 				<div
-					class="max-h-[max(40dvh,160px)] min-h-0 w-full overflow-auto border border-border/30"
+					class="max-h-[max(40dvh,160px)] min-h-0 w-full overflow-auto border border-border/30 -outline-offset-2"
 				>
 					<pre
 						class="size-max rounded-none p-3 text-left text-xs whitespace-pre-wrap">{preview}</pre>
 				</div>
-				<div class="flex flex-col">
+				<div class="flex flex-col rounded-b-[inherit]">
 					<Button
 						onclick={() => settleCopyErrorConfirm({ redact })}
 						class="rounded-t-none rounded-b-[inherit] border-0"
 						size="lg"
+						data-autofocus
 					>
 						{t("feedback.copyErrorConfirm.copy")}
 					</Button>

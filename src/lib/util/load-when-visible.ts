@@ -57,6 +57,18 @@ function reachesViewport(entry: IntersectionObserverEntry): boolean {
 	);
 }
 
+export function isOnScreen(node: Element): boolean {
+	const rect = node.getBoundingClientRect();
+	if (rect.width === 0 || rect.height === 0) return false;
+	const view = nearestScrollableAncestor(node)?.getBoundingClientRect();
+	return (
+		rect.bottom > Math.max(view?.top ?? 0, 0) &&
+		rect.top < Math.min(view?.bottom ?? innerHeight, innerHeight) &&
+		rect.right > Math.max(view?.left ?? 0, 0) &&
+		rect.left < Math.min(view?.right ?? innerWidth, innerWidth)
+	);
+}
+
 export function loadWhenVisible(
 	node: HTMLElement,
 	commit: (() => void) | undefined,

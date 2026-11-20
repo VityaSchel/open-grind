@@ -61,13 +61,32 @@ function renderPreview(label?: string): HTMLButtonElement {
 	return preview;
 }
 
+function focusPreview({
+	preview,
+	from,
+}: {
+	preview: Element;
+	from: "keyboard" | "pointer";
+}): HTMLButtonElement {
+	if (!(preview instanceof HTMLButtonElement))
+		throw new Error("album preview is not a button");
+	const matches = preview.matches.bind(preview);
+	vi.spyOn(preview, "matches").mockImplementation((selector) =>
+		selector === ":focus-visible" ? from === "keyboard" : matches(selector),
+	);
+	preview.focus();
+	return preview;
+}
+
 async function failedToastLabel(preview: HTMLButtonElement): Promise<unknown> {
 	const consoleError = vi
 		.spyOn(console, "error")
 		.mockImplementation(() => {});
 	await fireEvent.click(preview);
 	await vi.waitFor(() => expect(sonner.toast.error).toHaveBeenCalledOnce());
-	await vi.waitFor(() => expect(preview.disabled).toBe(false));
+	await vi.waitFor(() =>
+		expect(preview.getAttribute("aria-disabled")).toBe("false"),
+	);
 	expect(consoleError).toHaveBeenCalledOnce();
 	return sonner.toast.error.mock.calls[0]?.[0];
 }
@@ -121,9 +140,11 @@ describe("album preview", () => {
 		}) as HTMLButtonElement;
 
 		await fireEvent.click(button);
-		expect(button.disabled).toBe(true);
+		expect(button.getAttribute("aria-disabled")).toBe("true");
 		answer([]);
-		await vi.waitFor(() => expect(button.disabled).toBe(false));
+		await vi.waitFor(() =>
+			expect(button.getAttribute("aria-disabled")).toBe("false"),
+		);
 
 		expect(lightbox.loadAlbumSlides).toHaveBeenCalledWith(900);
 		expect(lightbox.openAlbumLightbox).not.toHaveBeenCalled();
@@ -168,6 +189,87 @@ describe("album preview", () => {
 
 		expect(named.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
 		expect(custom.getAttribute("aria-label")).toBe("Studio");
+	});
+
+	it("keeps focus on a preview pressed from the keyboard while it loads and after the album closes", async () => {
+		const slides = [{ contentId: 1 }];
+		lightbox.loadAlbumSlides.mockResolvedValue(slides);
+		let closeAlbum = () => {};
+		lightbox.openAlbumLightbox.mockImplementation(
+			({ onClosed }: { onClosed: () => void }) => {
+				closeAlbum = onClosed;
+				return Promise.resolve();
+			},
+		);
+		const preview = focusPreview({
+			preview: renderPreview(),
+			from: "keyboard",
+		});
+
+		await fireEvent.click(preview, { detail: 0 });
+		await fireEvent.click(preview, { detail: 0 });
+
+		expect(preview.disabled).toBe(false);
+		expect(preview.getAttribute("aria-disabled")).toBe("true");
+		expect(document.activeElement).toBe(preview);
+		await vi.waitFor(() =>
+			expect(lightbox.openAlbumLightbox).toHaveBeenCalledOnce(),
+		);
+		expect(lightbox.loadAlbumSlides).toHaveBeenCalledOnce();
+
+		closeAlbum();
+		await vi.waitFor(() =>
+			expect(preview.getAttribute("aria-disabled")).toBe("false"),
+		);
+		expect(document.activeElement).toBe(preview);
+	});
+
+	it("lets go of focus when a pointer opens the album", async () => {
+		lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
+		const preview = focusPreview({
+			preview: renderPreview(),
+			from: "pointer",
+		});
+
+		await fireEvent.click(preview, { detail: 1 });
+
+		expect(document.activeElement).not.toBe(preview);
+	});
+
+	it("lets go of focus when a pointer opens an album in chat once the double click window passes", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		try {
+			lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
+			const preview = focusPreview({
+				preview: previewWithCover(null, { chat: true }),
+				from: "pointer",
+			});
+
+			await fireEvent.pointerDown(preview);
+			await fireEvent.click(preview, { detail: 1 });
+			expect(document.activeElement).toBe(preview);
+			await vi.advanceTimersByTimeAsync(300);
+
+			expect(lightbox.loadAlbumSlides).toHaveBeenCalledExactlyOnceWith(
+				900,
+			);
+			expect(document.activeElement).not.toBe(preview);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("keeps focus on an album in chat pressed from the keyboard", async () => {
+		lightbox.loadAlbumSlides.mockReturnValue(new Promise(() => {}));
+		const preview = focusPreview({
+			preview: previewWithCover(null, { chat: true }),
+			from: "keyboard",
+		});
+
+		await fireEvent.click(preview, { detail: 0 });
+
+		expect(lightbox.loadAlbumSlides).toHaveBeenCalledExactlyOnceWith(900);
+		expect(document.activeElement).toBe(preview);
 	});
 });
 

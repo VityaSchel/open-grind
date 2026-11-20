@@ -11,6 +11,7 @@
 	import { cn, type WithoutChildrenOrChild } from "#lib/util/utils.ts";
 	import DialogPortal from "./dialog-portal.svelte";
 	import * as Dialog from "./index.js";
+	import { focusOnOpen } from "./open-auto-focus.ts";
 
 	let {
 		ref = $bindable(null),
@@ -20,6 +21,7 @@
 		showCloseButton,
 		preventOverflowTextSelection = false,
 		onInteractOutside,
+		onOpenAutoFocus,
 		...restProps
 	}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
 		portalProps?: WithoutChildrenOrChild<
@@ -41,6 +43,11 @@
 		)}
 		{preventOverflowTextSelection}
 		onInteractOutside={exemptToastsFromDismissal(onInteractOutside)}
+		onOpenAutoFocus={focusOnOpen({
+			content: () => ref,
+			fallback: "library",
+			onOpenAutoFocus,
+		})}
 		{...restProps}
 	>
 		<ScreenChromeCover />

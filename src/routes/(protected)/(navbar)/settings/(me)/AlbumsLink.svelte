@@ -11,7 +11,12 @@
 	import { t } from "#lib/i18n/index.ts";
 	import { proxyMediaUrl } from "#lib/util/media.ts";
 
-	let { ourProfileId }: { ourProfileId: number } = $props();
+	let {
+		ourProfileId,
+		...attributes
+	}: {
+		ourProfileId: number;
+	} & import("svelte/elements").HTMLAttributes<HTMLElement> = $props();
 
 	const myAlbums = untrack(() => getMyAlbumsState(ourProfileId));
 
@@ -27,7 +32,7 @@
 	void myAlbums.refresh();
 </script>
 
-<Item.Root variant="outline">
+<Item.Root variant="outline" {...attributes}>
 	{#snippet child({ props })}
 		<a
 			href="/settings/albums"

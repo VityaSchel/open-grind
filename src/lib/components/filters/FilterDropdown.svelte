@@ -37,7 +37,7 @@
 		(): TransitionConfig => ({
 			duration: 400,
 			css: (t: number) =>
-				`grid-template-rows: minmax(0, ${t}fr); opacity: ${t}`,
+				`overflow: clip; grid-template-rows: minmax(0, ${t}fr); opacity: ${t}`,
 			easing: expoOut,
 		}),
 	);
@@ -71,7 +71,7 @@
 		/>
 	</FilterBoolean>
 	{#if expanded}
-		<div class="grid shrink-0 grid-cols-1 overflow-clip" transition:hide>
+		<div class="grid shrink-0 grid-cols-1" transition:hide>
 			<div class={["ps-6 pt-2", contentClass]}>
 				{@render children?.()}
 			</div>

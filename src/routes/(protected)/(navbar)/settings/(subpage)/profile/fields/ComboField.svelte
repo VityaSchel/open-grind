@@ -6,6 +6,8 @@
 	import * as Combobox from "#lib/components/ui/combobox/index.ts";
 	import { formatInteger } from "#lib/i18n/format.ts";
 	import { t } from "#lib/i18n/index.ts";
+	import { softKeyboardVisibility } from "#lib/platform/native-insets.ts";
+	import { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import type { Option } from "#lib/util/options.ts";
 
 	let {
@@ -28,9 +30,19 @@
 		searchPlaceholder: string;
 	} = $props();
 
+	const REMOVE_KEYS = new Set(["Delete", "Backspace"]);
+	const CHIP_ACTIVATION_KEYS = new Set([...REMOVE_KEYS, "Enter"]);
+
+	const chips = new RovingFocusState({
+		keys: () => values,
+		orientation: "horizontal",
+		wrap: "loop",
+	});
+
 	let searchValue = $state("");
 	let open = $state(false);
 	let inputEl = $state<HTMLInputElement | null>(null);
+	let removalAnnouncement = $state("");
 
 	const filtered = $derived(
 		searchValue.trim() === ""
@@ -92,8 +104,46 @@
 			: t("settings.profile.combo.selected", params);
 	});
 
-	function remove(id: T) {
+	async function announceRemoval(id: T) {
+		removalAnnouncement = "";
+		await tick();
+		removalAnnouncement = t("settings.profile.combo.a11y.removed", {
+			label: labelFor(id),
+		});
+	}
+
+	function remove({ id, byKeyboard }: { id: T; byKeyboard: boolean }) {
+		const index = values.indexOf(id);
+		void announceRemoval(id);
 		values = values.filter((value) => value !== id);
+		if (!byKeyboard) return;
+		const neighbor = values[index] ?? values[index - 1];
+		if (neighbor === undefined) inputEl?.focus();
+		else void chips.focus({ key: neighbor });
+	}
+
+	function removeOnKey({ event, id }: { event: KeyboardEvent; id: T }) {
+		if (event.repeat) {
+			if (CHIP_ACTIVATION_KEYS.has(event.key)) event.preventDefault();
+			return;
+		}
+		if (!REMOVE_KEYS.has(event.key)) return;
+		event.preventDefault();
+		remove({ id, byKeyboard: true });
+	}
+
+	function focusLastChipFromEmptyInput(event: KeyboardEvent) {
+		const last = values.at(-1);
+		if (
+			event.key !== "Backspace" ||
+			event.repeat ||
+			inputEl?.value ||
+			last === undefined ||
+			softKeyboardVisibility() === true
+		)
+			return;
+		event.preventDefault();
+		void chips.focus({ key: last });
 	}
 
 	async function clearTypedQuery() {
@@ -108,13 +158,19 @@
 		if (max !== undefined && newValue.length > max) return;
 		values = newValue;
 		searchValue = "";
+		removalAnnouncement = "";
 	}
 </script>
 
 <Field {label} hint={effectiveHint}>
 	{#snippet picker({ labelId })}
 		{#if selectedChips.length}
-			<div class="flex flex-wrap gap-1.5">
+			<div
+				role="toolbar"
+				aria-labelledby={labelId}
+				class="flex flex-wrap gap-1.5"
+				{@attach chips.container}
+			>
 				{#each selectedChips as chip (chip.id)}
 					<span
 						class="inline-flex items-center gap-1 rounded-full bg-secondary py-1 pr-1.5 pl-3 text-sm text-secondary-foreground"
@@ -122,12 +178,19 @@
 						<span translate="no">{chip.label}</span>
 						<button
 							type="button"
-							onclick={() => remove(chip.id)}
+							onclick={(event) =>
+								remove({
+									id: chip.id,
+									byKeyboard: event.detail === 0,
+								})}
+							onkeydown={(event) =>
+								removeOnKey({ event, id: chip.id })}
 							aria-label={t(
 								"settings.profile.combo.a11y.remove",
 								{ label: chip.label },
 							)}
 							class="-my-1 grid size-5 place-items-center rounded-full transition-colors hover:bg-foreground/10"
+							{@attach chips.item(chip.id)}
 						>
 							<XIcon class="size-3.5" />
 						</button>
@@ -158,12 +221,14 @@
 					oninput={(event) =>
 						(searchValue = event.currentTarget.value)}
 					onclick={() => (open = true)}
+					onkeydown={focusLastChipFromEmptyInput}
 					placeholder={searchPlaceholder}
 					aria-labelledby={labelId}
 				/>
 				<Combobox.Trigger
 					aria-label={t("settings.profile.combo.a11y.toggleList")}
 				/>
+				<span role="status" class="sr-only">{removalAnnouncement}</span>
 			</div>
 
 			<Combobox.Content aria-labelledby={labelId}>

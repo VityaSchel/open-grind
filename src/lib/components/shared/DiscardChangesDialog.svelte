@@ -22,7 +22,7 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">
+			<AlertDialog.Cancel size="lg" data-autofocus>
 				{t("shell.discardChangesDialog.keepEditing")}
 			</AlertDialog.Cancel>
 			<AlertDialog.Action

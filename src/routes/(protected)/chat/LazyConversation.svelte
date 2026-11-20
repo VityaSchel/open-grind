@@ -48,15 +48,20 @@
 		{onRequestDelete}
 	/>
 {:else}
-	<div
-		data-slot="conversation-placeholder"
-		class="box-content h-24 shrink-0 rounded-2xl border border-transparent bg-muted/30"
-		{@attach enqueue}
-		{@attach promoteInView}
-		use:observeIntersection={{
-			handle: () => ticket?.promote(),
-			rootMargin: "600px",
-			once: true,
-		}}
-	></div>
+	<div role="row">
+		<div
+			role="gridcell"
+			data-slot="conversation-placeholder"
+			aria-busy="true"
+			class="box-content h-24 shrink-0 rounded-2xl border border-transparent bg-muted/30"
+			onfocus={() => ticket?.promote({ inView: true })}
+			{@attach enqueue}
+			{@attach promoteInView}
+			use:observeIntersection={{
+				handle: () => ticket?.promote(),
+				rootMargin: "600px",
+				once: true,
+			}}
+		></div>
+	</div>
 {/if}

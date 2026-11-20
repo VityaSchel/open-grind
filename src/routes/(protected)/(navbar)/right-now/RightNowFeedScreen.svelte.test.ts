@@ -4,10 +4,14 @@ import { cleanup, render } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { scrollToTop } = vi.hoisted(() => ({
+const { scrollToTop, feedList } = vi.hoisted(() => ({
 	scrollToTop: {
-		props: null as { text?: string; onjump?: () => void } | null,
+		props: null as {
+			text?: string;
+			onjump?: (jump: { keyboardFocused: boolean }) => void;
+		} | null,
 	},
+	feedList: { focusFirstPost: vi.fn() },
 }));
 
 class FakeFeedState {
@@ -60,7 +64,7 @@ vi.mock("#lib/util/scroll-restore.svelte.ts", () => ({
 	restoreScrollOnce: () => {},
 }));
 vi.mock("./top-bar/QuickFilters.svelte", () => ({ default: () => {} }));
-vi.mock("./RightNowFeedList.svelte", () => ({ default: () => {} }));
+vi.mock("./RightNowFeedList.svelte", () => ({ default: () => feedList }));
 vi.mock("./post/RightNowPostControls.svelte", () => ({ default: () => {} }));
 
 import RightNowFeedScreen from "./RightNowFeedScreen.svelte";
@@ -94,6 +98,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	scrollToTop.props = null;
+	feedList.focusFirstPost.mockReset();
 });
 
 describe("the Right Now feed screen", () => {
@@ -101,7 +106,11 @@ describe("the Right Now feed screen", () => {
 		const button = mountedScrollToTop();
 
 		expect(button.text).toBeUndefined();
-		expect(button.onjump).toBeUndefined();
+
+		button.onjump?.({ keyboardFocused: false });
+
+		expect(fakeFeed.refresh).not.toHaveBeenCalled();
+		expect(feedList.focusFirstPost).not.toHaveBeenCalled();
 	});
 
 	it("labels the scroll-to-top button New posts while posts are held back and refreshes on its tap", () => {
@@ -112,9 +121,33 @@ describe("the Right Now feed screen", () => {
 
 		expect(button.text).toBe("New posts");
 
-		button.onjump?.();
+		button.onjump?.({ keyboardFocused: false });
 
 		expect(fakeFeed.refresh).toHaveBeenCalledOnce();
+	});
+
+	it("puts focus on the first post when Scroll to top is pressed from the keyboard", () => {
+		const button = mountedScrollToTop();
+
+		button.onjump?.({ keyboardFocused: true });
+
+		expect(feedList.focusFirstPost).toHaveBeenCalledOnce();
+	});
+
+	it("puts focus on the first post once the new posts are in when New posts is pressed from the keyboard", async () => {
+		const button = mountedScrollToTop();
+		const refreshed = Promise.withResolvers<void>();
+		fakeFeed.refresh.mockReturnValueOnce(refreshed.promise);
+		fakeFeed.hasNewPosts = true;
+		flushSync();
+
+		button.onjump?.({ keyboardFocused: true });
+		expect(feedList.focusFirstPost).not.toHaveBeenCalled();
+
+		refreshed.resolve();
+		await vi.waitFor(() => {
+			expect(feedList.focusFirstPost).toHaveBeenCalledOnce();
+		});
 	});
 
 	it("tells the feed how far the list is scrolled", () => {

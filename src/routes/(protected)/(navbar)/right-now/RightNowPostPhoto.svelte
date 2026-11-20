@@ -59,16 +59,14 @@
 	<div
 		data-slot="right-now-post-photo"
 		class="w-full max-w-3xs"
+		tabindex="-1"
 		{@attach attachLightbox}
 	>
 		<a
 			href={fullSrc}
 			rel="noreferrer"
 			aria-label={t("browse.rightNow.photo.a11y.open")}
-			class={[
-				frameClass,
-				"item outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-			]}
+			class={[frameClass, "item"]}
 		>
 			{@render photo()}
 		</a>

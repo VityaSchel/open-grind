@@ -32,6 +32,7 @@ vi.mock("#lib/platform/media-failure.ts", async (importOriginal) => ({
 import { runningOn } from "#lib/test/platform.ts";
 import { resetNowForTesting, setNowForTesting } from "#lib/util/clock.ts";
 import { TRANSPARENT_PIXEL } from "#lib/util/load-when-visible.ts";
+import { recentlyLoadedMedia } from "#lib/util/media-load-slots.ts";
 import { mediaRetry } from "#lib/util/media-retry.svelte.ts";
 import MediaImage from "./MediaImage.svelte";
 
@@ -100,6 +101,7 @@ beforeEach(() => {
 	probeMediaMock.mockReset();
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 	failures.mediaFailure.mockReset();
+	recentlyLoadedMedia.clear();
 });
 
 afterEach(() => {
@@ -121,6 +123,21 @@ describe("MediaImage recovery", () => {
 
 		expect(tile.image()?.getAttribute("src")).toBe(`${SRC}?retry=1`);
 		expect(failures.mediaFailure).toHaveBeenCalledWith(SRC);
+	});
+
+	it("retries a lazy photo that loaded before once it fails on a dropped connection", async () => {
+		recentlyLoadedMedia.remember(SRC);
+		failures.mediaFailure.mockResolvedValue(failure({ kind: "transport" }));
+		const { container } = render(MediaImage, {
+			props: { src: SRC, loading: "lazy" },
+		});
+		const image = () => container.querySelector("img");
+		expect(image()?.getAttribute("src")).toBe(SRC);
+
+		await failed(image());
+		await vi.advanceTimersByTimeAsync(2000);
+
+		expect(image()?.getAttribute("src")).toBe(`${SRC}?retry=1`);
 	});
 
 	it("retries a server error but gives up when the retry fails too", async () => {

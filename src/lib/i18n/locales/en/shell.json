@@ -50,7 +50,8 @@
 	"navBar": {
 		"a11y": {
 			"navigation": "Main",
-			"me": "Me"
+			"me": "Me",
+			"sections": "Sections"
 		},
 		"tabs": {
 			"browse": "Browse",

@@ -102,7 +102,7 @@ const growers: Grower[] = [
 			// the newest row is the only one on screen at the floor, and
 			// dispatching stops playwright scrolling what we measure
 			await page.locator(MESSAGE_ROW).last().dispatchEvent("contextmenu");
-			await page.getByRole("button", { name: "Reply" }).click();
+			await page.getByRole("menuitem", { name: "Reply" }).click();
 			await page.getByLabel("Cancel reply").waitFor();
 		},
 		shrink: async (page) => {
@@ -214,7 +214,7 @@ test.describe("a composer resize is undone exactly when it is reversed", () => {
 		};
 
 		await page.locator(MESSAGE_ROW).last().dispatchEvent("contextmenu");
-		await page.getByRole("button", { name: "Reply" }).click();
+		await page.getByRole("menuitem", { name: "Reply" }).click();
 		const opening = await sample();
 		expect(opening.animated, "the bar really animates").toBeGreaterThan(8);
 		expect(

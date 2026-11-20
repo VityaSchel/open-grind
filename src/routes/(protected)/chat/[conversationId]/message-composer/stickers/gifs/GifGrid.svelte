@@ -7,6 +7,7 @@
 	import * as Empty from "#lib/components/ui/empty/index.ts";
 	import { t } from "#lib/i18n/index.ts";
 	import type { GiphyTile } from "#lib/api/messaging/gifs.ts";
+	import type { RovingFocusState } from "#lib/util/roving-focus-state.svelte.ts";
 	import GifBadge from "../../../giphy/GifBadge.svelte";
 	import StickerLoadFailure from "../StickerLoadFailure.svelte";
 	import StickerTile from "../StickerTile.svelte";
@@ -16,10 +17,12 @@
 	let {
 		feed,
 		pickedId,
+		roving,
 		onToggle,
 	}: {
 		feed: GifFeed;
 		pickedId: string | null;
+		roving: RovingFocusState;
 		onToggle: (gif: GiphyTile) => void;
 	} = $props();
 
@@ -66,12 +69,17 @@
 			</Empty.Root>
 		</div>
 	{:else}
-		<div data-slot="sticker-grid" class={GRID_CLASS}>
+		<div
+			{@attach roving.container}
+			data-slot="sticker-grid"
+			class={GRID_CLASS}
+		>
 			{#each feed.gifs as gif (gif.id)}
 				<StickerTile
 					label={gifAltText(gif.alt)}
 					translateLabel={gif.alt.kind !== "title"}
 					selected={gif.id === pickedId}
+					attach={roving.item(gif.id)}
 					onclick={() => onToggle(gif)}
 					class="aspect-4/3 bg-muted"
 				>

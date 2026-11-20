@@ -27,22 +27,22 @@
 {#if ourProfile || profile}
 	<nav
 		aria-label={t("profile.topNav.a11y.navigation")}
-		class="absolute right-2 flex -translate-y-1/2 flex-row-reverse items-center gap-1.5"
+		class="absolute right-2 flex -translate-y-1/2 items-center gap-1.5"
 		{@attach holdsStillOnPull}
 	>
 		{#if ourProfile}
 			<EditProfileButton />
 		{:else if profile}
-			<FavoriteProfileToggle
-				profileId={profile.profileId}
-				isFavorite={profile.isFavorite}
-				{onFavorite}
-			/>
 			<ProfileActionsMenu
 				profileId={profile.profileId}
 				{changingViewability}
 				{markBlocked}
 				{markHidden}
+			/>
+			<FavoriteProfileToggle
+				profileId={profile.profileId}
+				isFavorite={profile.isFavorite}
+				{onFavorite}
 			/>
 		{/if}
 	</nav>

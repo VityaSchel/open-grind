@@ -33,6 +33,7 @@ vi.mock("#lib/grid/grid-state.svelte.ts", () => ({
 import { setPreferences } from "#lib/app-data/preferences.svelte.ts";
 import { PSEUDO_MESSAGE } from "#lib/i18n/fixtures/pseudo-message.ts";
 import { setLocale, SOURCE_LOCALE } from "#lib/i18n/index.ts";
+import { resetPlatform, runningOn } from "#lib/test/platform.ts";
 import { commandCenterState } from "../command-center-state.svelte";
 import {
 	enterQuery,
@@ -48,6 +49,7 @@ import {
 const GEOHASH = "u33dc0cpgp00";
 
 beforeEach(async () => {
+	runningOn("linux");
 	readMock.mockReset().mockResolvedValue(encode({}));
 	writeMock.mockReset().mockResolvedValue(undefined);
 	writeTextMock.mockReset().mockResolvedValue(undefined);
@@ -60,6 +62,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	resetCommandCenter();
+	resetPlatform();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 

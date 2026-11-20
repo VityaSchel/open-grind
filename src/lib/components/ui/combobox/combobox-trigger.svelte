@@ -16,7 +16,7 @@
 	bind:ref
 	data-slot="combobox-trigger"
 	class={cn(
-		"absolute inset-y-0 right-0 grid w-9 place-items-center text-muted-foreground",
+		"absolute inset-y-0 right-0 grid w-9 place-items-center rounded-full text-muted-foreground",
 		className,
 	)}
 	{...restProps}

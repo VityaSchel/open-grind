@@ -28,7 +28,7 @@ test.describe("composer albums tab", () => {
 			timeout: 30_000,
 		});
 		await expect(
-			page.locator(`${ALBUM_TILE}[disabled]`),
+			page.locator(`${ALBUM_TILE}[aria-disabled="true"]`),
 			"a non-shareable album cannot be picked",
 		).toHaveCount(1);
 

@@ -58,7 +58,11 @@
 			"deletePermanently": "Delete permanently",
 			"a11y": {
 				"photoOptions": "Photo options",
-				"videoOptions": "Video options"
+				"videoOptions": "Video options",
+				"trigger": {
+					"photo": "Photo {{position}} options",
+					"video": "Video {{position}} options"
+				}
 			}
 		},
 		"deleteDialog": {

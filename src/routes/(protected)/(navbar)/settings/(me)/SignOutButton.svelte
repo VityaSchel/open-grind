@@ -10,6 +10,9 @@
 	import { dismissOnBackGesture } from "#lib/platform/back-gesture-event.svelte.ts";
 	import ButtonItemContent from "./ButtonItemContent.svelte";
 
+	let attributes: import("svelte/elements").HTMLAttributes<HTMLElement> =
+		$props();
+
 	let alertOpen = $state(false);
 	let signingOut = $state(false);
 
@@ -33,7 +36,7 @@
 	}
 </script>
 
-<Item.Root variant="outline">
+<Item.Root variant="outline" {...attributes}>
 	{#snippet child({ props })}
 		<ButtonItemContent
 			{...props}
@@ -68,7 +71,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={signingOut} class="contents">
-				<AlertDialog.Cancel size="lg">
+				<AlertDialog.Cancel size="lg" data-autofocus>
 					{t("common.actions.cancel")}
 				</AlertDialog.Cancel>
 				<AlertDialog.Action

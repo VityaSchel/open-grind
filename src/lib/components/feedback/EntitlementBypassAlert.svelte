@@ -53,7 +53,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={entitlementBypassState.busy} class="contents">
-				<AlertDialog.Cancel size="lg"
+				<AlertDialog.Cancel size="lg" data-autofocus="keyboard"
 					>{t("common.actions.cancel")}</AlertDialog.Cancel
 				>
 				<AlertDialog.Action

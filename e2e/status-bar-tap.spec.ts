@@ -222,8 +222,12 @@ test("a status-bar tap does nothing while a drawer is open over the grid", async
 
 	await page.keyboard.press("Escape");
 	await expect(page.getByRole("dialog")).toHaveCount(0);
-	await tapStatusBar(page);
-	await expect.poll(() => scrollTop(grid)).toBe(0);
+	await expect
+		.poll(async () => {
+			await tapStatusBar(page);
+			return scrollTop(grid);
+		})
+		.toBe(0);
 });
 
 test("a status-bar tap does nothing while a popup is open, even one that leaves the list in view", async ({
@@ -233,7 +237,13 @@ test("a status-bar tap does nothing while a popup is open, even one that leaves 
 	const scroller = page.locator(SUBPAGE_SCROLLER);
 	const tags = page.getByRole("combobox", { name: "Tags", exact: true });
 	await tags.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await tags.evaluate((input) => input.scrollIntoView({ block: "center" }));
+	await tags.evaluate((input, selector) => {
+		const host = input.closest(selector)!;
+		const box = host.getBoundingClientRect();
+		const field = input.getBoundingClientRect();
+		host.scrollTop +=
+			field.top + field.height / 2 - (box.top + box.height / 2);
+	}, SUBPAGE_SCROLLER);
 	await tags.click();
 	const list = page.getByRole("listbox", { name: "Tags" });
 	await expect(list).toBeVisible();
