@@ -349,24 +349,19 @@ test.describe("the browse grid from the keyboard", () => {
 		page,
 	}) => {
 		await focusFirstCard(page);
-		const prevented = page.evaluate(
-			() =>
-				new Promise<boolean[]>((resolve) => {
-					const seen: boolean[] = [];
-					window.addEventListener("keydown", function record(event) {
-						setTimeout(() => {
-							seen.push(event.defaultPrevented);
-							if (seen.length < 2) return;
-							window.removeEventListener("keydown", record);
-							resolve(seen);
-						});
-					});
-				}),
-		);
+		const prevented = await page.evaluateHandle(() => {
+			const seen: boolean[] = [];
+			window.addEventListener("keydown", (event) => {
+				setTimeout(() => seen.push(event.defaultPrevented));
+			});
+			return seen;
+		});
 		await page.keyboard.press("ArrowUp");
 		await page.keyboard.press("ArrowLeft");
 
-		expect(await prevented).toEqual([false, false]);
+		await expect
+			.poll(() => prevented.evaluate((seen) => [...seen]))
+			.toEqual([false, false]);
 		expect(await focusedCell(page)).toMatchObject({ row: 0, column: 0 });
 	});
 
