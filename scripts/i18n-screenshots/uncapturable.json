@@ -27,6 +27,30 @@
 		"reason": "Only the iOS photo picker reports picked items that never loaded, and demo builds pick from a file input instead, so no page screenshot shows it.",
 		"explanation": "Error toast that the iOS app shows after you pick photos or videos when some of them couldn’t be loaded from the photo library; screenshots come from a build without the iOS photo picker, so none shows it."
 	},
+	"common.media.slots.a11y.cancelled": {
+		"reason": "Only announced in the visually hidden status region of MediaSlotGrid when Escape cancels a keyboard move, so no screenshot shows it.",
+		"explanation": "Screen reader announcement when Escape cancels moving a photo or video tile with the keyboard and puts it back where it was; it is only read aloud, so no screenshot shows it."
+	},
+	"common.media.slots.a11y.dropped": {
+		"reason": "Only announced in the visually hidden status region of MediaSlotGrid when Space puts a held tile down, so no screenshot shows it.",
+		"explanation": "Screen reader announcement when Space puts a photo or video tile down after moving it with the keyboard; {{position}} is the place it now has and {{total}} is the number of tiles, and it is only read aloud."
+	},
+	"common.media.slots.a11y.lifted": {
+		"reason": "Only announced in the visually hidden status region of MediaSlotGrid when Space picks a tile up, so no screenshot shows it.",
+		"explanation": "Screen reader announcement when Space picks up a photo or video tile to move it with the keyboard; {{position}} is the place it has and {{total}} is the number of tiles, and it is only read aloud."
+	},
+	"common.media.slots.a11y.moved": {
+		"reason": "Only announced in the visually hidden status region of MediaSlotGrid while the arrow keys move a held tile, so no screenshot shows it.",
+		"explanation": "Screen reader announcement each time an arrow key moves a picked-up photo or video tile one place; {{position}} is its new place and {{total}} is the number of tiles, and it is only read aloud."
+	},
+	"common.media.slots.a11y.removed": {
+		"reason": "Only the accessible name of a tile marked for removal, and no view marks one, so no screenshot shows it.",
+		"explanation": "Screen reader name of a photo or video tile marked for removal in Edit Profile or the album editor; {{label}} is the tile’s usual name, and it is only read aloud, so no screenshot shows it."
+	},
+	"common.media.slots.a11y.reorderHint": {
+		"reason": "Only in the hidden element that aria-describedby points each reorderable tile to, so no screenshot shows it.",
+		"explanation": "Screen reader hint read with each photo or video tile in Edit Profile and the album editor, telling how to move the tile with the keyboard; it is only read aloud, so no screenshot shows it."
+	},
 	"feedback.appError.contentTooLarge": {
 		"reason": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
 		"explanation": "Error message for a file larger than the upload limit, shown in an error toast; files that are too large name the limit in their own message instead, so this text never appears today."
